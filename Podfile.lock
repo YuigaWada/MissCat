@@ -1,0 +1,92 @@
+PODS:
+  - Agrume (5.3.2):
+    - SwiftyGif
+  - CocoaLumberjack (3.6.0):
+    - CocoaLumberjack/Core (= 3.6.0)
+  - CocoaLumberjack/Core (3.6.0)
+  - Differentiator (4.0.1)
+  - Down (0.9.0)
+  - FloatingPanel (1.7.1)
+  - MisskeyKit (1.0):
+    - Starscream
+  - PolioPager (2.2)
+  - RxCocoa (5.0.1):
+    - RxRelay (~> 5)
+    - RxSwift (~> 5)
+  - RxDataSources (4.0.1):
+    - Differentiator (~> 4.0)
+    - RxCocoa (~> 5.0)
+    - RxSwift (~> 5.0)
+  - RxRelay (5.0.1):
+    - RxSwift (~> 5)
+  - RxSwift (5.0.1)
+  - SkeletonView (1.8.2)
+  - Starscream (3.1.1)
+  - SVGKit (2.1.0):
+    - CocoaLumberjack (~> 3.0)
+  - SwiftyGif (5.2.0)
+  - XLPagerTabStrip (9.0.0)
+
+DEPENDENCIES:
+  - Agrume
+  - Down
+  - FloatingPanel
+  - MisskeyKit
+  - PolioPager
+  - RxCocoa (~> 5)
+  - RxDataSources
+  - RxSwift (~> 5)
+  - SkeletonView
+  - Starscream
+  - SVGKit (from `https://github.com/SVGKit/SVGKit.git`, branch `3.x`)
+  - XLPagerTabStrip
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - Agrume
+    - CocoaLumberjack
+    - Differentiator
+    - Down
+    - FloatingPanel
+    - MisskeyKit
+    - PolioPager
+    - RxCocoa
+    - RxDataSources
+    - RxRelay
+    - RxSwift
+    - SkeletonView
+    - Starscream
+    - SwiftyGif
+    - XLPagerTabStrip
+
+EXTERNAL SOURCES:
+  SVGKit:
+    :branch: 3.x
+    :git: https://github.com/SVGKit/SVGKit.git
+
+CHECKOUT OPTIONS:
+  SVGKit:
+    :commit: 8560ef56bd61e34d5cd8d9739954f9765e3ac794
+    :git: https://github.com/SVGKit/SVGKit.git
+
+SPEC CHECKSUMS:
+  Agrume: 171c1d1079324195c7ce04af4c7a66d86a9cf952
+  CocoaLumberjack: 78b0c238666f4f58db069738ec176f4519557516
+  Differentiator: 886080237d9f87f322641dedbc5be257061b0602
+  Down: 1cdbca4963b542d0ef34ebb3e10ff48382bdf761
+  FloatingPanel: 2f87246071476cf05d77ba3f50a373ca4b04549e
+  MisskeyKit: 98130650ff56aab911cbb821a89a234dd32db8ef
+  PolioPager: 324dc97f5bb029eb0e892b59265be4abce1c6290
+  RxCocoa: e741b9749968e8a143e2b787f1dfbff2b63d0a5c
+  RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
+  RxRelay: 89d54507f4fd4d969e6ec1d4bd7f3673640b4640
+  RxSwift: e2dc62b366a3adf6a0be44ba9f405efd4c94e0c4
+  SkeletonView: bb27c39857e5492136f02ee8a3aa78de55d12ecd
+  Starscream: 4bb2f9942274833f7b4d296a55504dcfc7edb7b0
+  SVGKit: 8a2fc74258bdb2abb54d3b65f3dd68b0277a9c4d
+  SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
+  XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
+
+PODFILE CHECKSUM: 4b0df2535452cf551182e8214360eebd29dca9cd
+
+COCOAPODS: 1.7.1

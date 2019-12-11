@@ -1,0 +1,6 @@
+framework module Pods_MissCat {
+  umbrella header "Pods-MissCat-umbrella.h"
+
+  export *
+  module * { export * }
+}

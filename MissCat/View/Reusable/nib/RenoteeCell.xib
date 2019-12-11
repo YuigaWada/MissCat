@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15510"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="RenoteeCell" customModule="MissCat" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="414" height="27"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Retweet" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nXK-RP-pqn">
+                    <rect key="frame" x="0.0" y="5" width="83" height="17"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="17" id="QZm-Yp-rl8"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="〇〇さんがRenote" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="evQ-M5-neF">
+                    <rect key="frame" x="91" y="5.5" width="303" height="16"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="16" id="yfW-rC-5Zw"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+            </subviews>
+            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstItem="evQ-M5-neF" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="BIT-hp-4CC"/>
+                <constraint firstItem="nXK-RP-pqn" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="Kzc-ST-DQd"/>
+                <constraint firstAttribute="trailing" secondItem="evQ-M5-neF" secondAttribute="trailing" constant="20" id="R2g-9Z-I8d"/>
+                <constraint firstItem="nXK-RP-pqn" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="VDI-fQ-y33"/>
+                <constraint firstItem="nXK-RP-pqn" firstAttribute="width" secondItem="iN0-l3-epB" secondAttribute="width" multiplier="0.200483" id="pvY-el-OAc"/>
+                <constraint firstItem="evQ-M5-neF" firstAttribute="leading" secondItem="nXK-RP-pqn" secondAttribute="trailing" constant="8" id="vUc-nh-XP3"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
+            <connections>
+                <outlet property="renoteMarkLabel" destination="nXK-RP-pqn" id="EfB-LM-YGh"/>
+                <outlet property="renoteeLabel" destination="evQ-M5-neF" id="MAm-gR-gGJ"/>
+            </connections>
+            <point key="canvasLocation" x="137.68115942028987" y="-17.745535714285712"/>
+        </view>
+    </objects>
+</document>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15510"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="EmojiViewCell" customModule="MissCat" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="58" height="51"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Nrc-GD-ZLa" customClass="EmojiView" customModule="MissCat" customModuleProvider="target">
+                    <rect key="frame" x="0.0" y="0.0" width="58" height="51"/>
+                    <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                </view>
+            </subviews>
+            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstAttribute="bottom" secondItem="Nrc-GD-ZLa" secondAttribute="bottom" id="0N5-uw-Agb"/>
+                <constraint firstItem="Nrc-GD-ZLa" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="QJw-An-SIz"/>
+                <constraint firstAttribute="trailing" secondItem="Nrc-GD-ZLa" secondAttribute="trailing" id="UFG-hw-Dav"/>
+                <constraint firstItem="Nrc-GD-ZLa" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="wgR-yO-z0L"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
+            <connections>
+                <outlet property="mainView" destination="Nrc-GD-ZLa" id="4We-Zz-iUp"/>
+            </connections>
+            <point key="canvasLocation" x="139" y="121"/>
+        </view>
+    </objects>
+</document>

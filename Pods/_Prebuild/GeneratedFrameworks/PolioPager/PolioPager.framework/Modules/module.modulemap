@@ -1,0 +1,11 @@
+framework module PolioPager {
+  umbrella header "PolioPager-umbrella.h"
+
+  export *
+  module * { export * }
+}
+
+module PolioPager.Swift {
+    header "PolioPager-Swift.h"
+    requires objc
+}
