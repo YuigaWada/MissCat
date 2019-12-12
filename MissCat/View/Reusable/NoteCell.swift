@@ -112,6 +112,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     override public func layoutSubviews() {
         super.layoutSubviews()
         self.setupComponents()
+        
+        self.binding()
     }
     
     private func setupComponents() {
@@ -133,6 +135,12 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         setupSkeltonMode()
         setupProfileGesture() // プロフィールに飛ぶtapgestureを設定する
+    }
+    
+    
+    private func binding() {
+        viewModel.shapedNote.bind(to: self.noteView.rx.attributedText).disposed(by: disposeBag)
+        viewModel.iconImage.bind(to: self.iconView.rx.image).disposed(by: disposeBag)
     }
     
     private func setupProfileGesture() {
@@ -195,6 +203,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.renoteButton.setTitle("", for: .normal)
         self.reactionButton.setTitle("", for: .normal)
         
+        self.binding()
 //        changeSkeltonState(on: true)
     }
     
@@ -236,10 +245,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         
         //main
-        let cachedNote = Cache.shared.getNote(noteId: noteId) // セルが再利用されるのでキャッシュは中央集権的に
-        let hasCachedNote: Bool = cachedNote != nil
-        
-        
         self.isReplyTarget = item.isReplyTarget
         
         self.noteId = item.noteId
@@ -247,33 +252,17 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.agoLabel.text = item.ago.calculateAgo()
         self.displayNameLabel.text = item.displayName
         self.usernameLabel.text = "@" + item.username
-        self.noteView.attributedText = viewModel.shapeNote(identifier: item.identity,
-                                                           note: item.note,
-                                                           cache: hasCachedNote ? cachedNote : nil,
-                                                           isReply: item.isReply,
-                                                           externalEmojis: item.emojis,
-                                                           isDetailMode: isDetailMode)
         
-        if !hasCachedNote {
-            Cache.shared.saveNote(noteId: noteId, note: self.noteView.attributedText) // CHACHE!
-        }
+        viewModel.shapeNote(identifier: item.identity,
+                            note: item.note,
+                            noteId: item.noteId,
+                            isReply: item.isReply,
+                            externalEmojis: item.emojis,
+                            isDetailMode: isDetailMode)
         
         
-        if let image = Cache.shared.getIcon(username: item.username) {
-            self.iconView.image = image
-        }
-        else if let iconImageUrl = item.iconImageUrl, let iconUrl = URL(string: iconImageUrl) {
-            self.iconImageUrl = iconImageUrl
-            
-            iconUrl.toUIImage{ [weak self] image in
-                guard let self = self, let image = image else { return }
-                
-                DispatchQueue.main.async {
-                    Cache.shared.saveIcon(username: item.username, image: image) // CHACHE!
-                    self.iconView.image = image
-                }
-            }
-        }
+        
+        self.iconImageUrl = viewModel.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
         
         //file
         if let files = Cache.shared.getFiles(noteId: noteId) {
@@ -503,23 +492,6 @@ extension NoteCell {
             return lhs.identity == rhs.identity
         }
         
-//        static func fakeReactionGenCell(baseNoteId: String)-> NoteCell.Model {
-//            return NoteCell.Model(isReactionGenCell: true,
-//                                  baseNoteId: baseNoteId,
-//                                  noteId: "",
-//                                  iconImageUrl: "",
-//                                  iconImage: nil,
-//                                  displayName: "",
-//                                  username: "",
-//                                  note: "",
-//                                  ago: "",
-//                                  replyCount: 0,
-//                                  renoteCount: 0,
-//                                  reactions: [],
-//                                  myReaction: nil,
-//                                  files: [],
-//                                  emojis: [])
-//        }
 
         static func fakeRenoteecell(renotee: String, baseNoteId: String)-> NoteCell.Model {
             

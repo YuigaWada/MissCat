@@ -68,7 +68,7 @@ public class ReactionCell: UIView {
             UIView.animate(withDuration: 0.3,
                            animations: {
                             self.changeColor(isMyReaction: self.isMyReaction)
-//                            self.incrementCounter()
+                            self.incrementCounter()
             },
                            completion: { _ in
                             guard let delegate = self.delegate,
@@ -123,5 +123,9 @@ public class ReactionCell: UIView {
         self.reactionCounterLabel.textColor = isMyReaction ? .white : self.defaultTextColor
     }
     
+    private func incrementCounter() {
+        guard let count = self.reactionCounterLabel.text else { return }
+        self.reactionCounterLabel.text = count.increment()
+    }
     
 }

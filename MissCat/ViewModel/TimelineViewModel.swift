@@ -228,8 +228,8 @@ class TimelineViewModel
                     self.initialNoteIds.append(noteId)
                 }
                 
-                //セルの描画は必ずメインスレッドで行われるのでさすがにここでやると重い
-                //self.updateNotes(new: self.cellsModel)
+                //MEMO: セルの描画は必ずメインスレッドで行われるのでさすがにここでやると重い　→ なんかそうでもなさそう
+                self.updateNotes(new: self.cellsModel)
             }
             
             if let completion = completion { completion() }
