@@ -20,33 +20,35 @@ public class NoteCellViewModel {
     public func shapeNote(identifier: String, note: String, noteId: String? ,isReply: Bool, externalEmojis: [EmojiModel?]?, isDetailMode: Bool) {
         guard let noteId = noteId else { return }
         
-        let cachedNote = Cache.shared.getNote(noteId: noteId) // セルが再利用されるのでキャッシュは中央集権的に
-        let hasCachedNote: Bool = cachedNote != nil
-        
-        let treatedNote = model.shapeNote(cache: cachedNote,
-                                          identifier: identifier,
-                                          note: note,
-                                          isReply: isReply,
-                                          externalEmojis: externalEmojis,
-                                          isDetailMode: isDetailMode)
-        
-        if !hasCachedNote, let treatedNote = treatedNote {
-            Cache.shared.saveNote(noteId: noteId, note: treatedNote) // CHACHE!
-        }
-        
-        shapedNote.onNext(treatedNote)
+//        DispatchQueue.global(qos: .background).async {
+            let cachedNote = Cache.shared.getNote(noteId: noteId) // セルが再利用されるのでキャッシュは中央集権的に
+            let hasCachedNote: Bool = cachedNote != nil
+             
+            let treatedNote = self.model.shapeNote(cache: cachedNote,
+                                              identifier: identifier,
+                                              note: note,
+                                              isReply: isReply,
+                                              externalEmojis: externalEmojis,
+                                              isDetailMode: isDetailMode)
+            
+            if !hasCachedNote, let treatedNote = treatedNote {
+                Cache.shared.saveNote(noteId: noteId, note: treatedNote) // CHACHE!
+            }
+            
+            self.shapedNote.onNext(treatedNote)
+//        }
     }
     
     
     public func setImage(username: String, imageRawUrl: String?)-> String? {
         if let image = Cache.shared.getIcon(username: username) {
-           iconImage.onNext(image)
+            iconImage.onNext(image)
         }
         else if let imageRawUrl = imageRawUrl, let imageUrl = URL(string: imageRawUrl) {
             
             imageUrl.toUIImage{ [weak self] image in
                 guard let self = self, let image = image else { return }
-                    Cache.shared.saveIcon(username: username, image: image) // CHACHE!
+                Cache.shared.saveIcon(username: username, image: image) // CHACHE!
                 self.iconImage.onNext(image)
             }
             

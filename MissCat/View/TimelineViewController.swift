@@ -7,8 +7,8 @@
 //
 
 import UIKit
-import MisskeyKit
 import RxSwift
+import RxCocoa
 import RxDataSources
 import SafariServices
 import FloatingPanel
@@ -20,7 +20,9 @@ public protocol TimelineDelegate {
 }
 
 typealias NotesDataSource = RxTableViewSectionedAnimatedDataSource<NoteCell.Section>
-class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBarDelegate, NoteCellDelegate,IndicatorInfoProvider {
+fileprivate typealias ViewModel = TimelineViewModel
+
+class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBarDelegate, NoteCellDelegate, IndicatorInfoProvider {
     @IBOutlet weak var mainTableView: UITableView!
     @IBOutlet weak var bottomConstraint: NSLayoutConstraint!
     
@@ -33,6 +35,8 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     private var withNavBar: Bool = true
     private var scrollable: Bool = true
     private var streamConnecting: Bool = false
+    
+    private lazy var dataSource = self.setupDataSource()
     
     public var homeViewController: TimelineDelegate?
     public var xlTitle: IndicatorInfo? // XLPagerTabStripで用いるtitle
@@ -47,13 +51,15 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
                       withNavBar: Bool = true,
                       scrollable: Bool = true,
                       xlTitle: IndicatorInfo? = nil) {
-        self.viewModel = .init(type: type,
-                               includeReplies: includeReplies,
-                               onlyFiles: onlyFiles,
-                               userId: userId,
-                               listId: listId,
-                               disposeBag: disposeBag)
         
+        let input = ViewModel.Input(dataSource: dataSource,
+                                    type: type,
+                                    includeReplies: includeReplies,
+                                    onlyFiles: onlyFiles,
+                                    userId: userId,
+                                    listId: listId)
+        
+        self.viewModel = ViewModel(with: input, and: disposeBag)
         self.streamConnecting = type.needsStreaming
         self.xlTitle = xlTitle
         self.withNavBar = withNavBar
@@ -71,8 +77,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
             self.setup(type: .Home)
         }
         
-        viewModel!.dataSource = self.setupDataSource() // viewModelの中身は保証されているので強制アンラップでOK
-        self.binding(dataSource: viewModel!.dataSource)
+        self.binding(dataSource: dataSource)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -90,7 +95,6 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     //MARK: Setup TableView
     private func setupTableView() {
         self.mainTableView.register(UINib(nibName: "NoteCell", bundle: nil), forCellReuseIdentifier: "NoteCell")
-        //        self.mainTableView.register(UINib(nibName: "ReactionGenCell", bundle: nil), forCellReuseIdentifier: "ReactionGenCell")
         self.mainTableView.register(UINib(nibName: "RenoteeCell", bundle: nil), forCellReuseIdentifier: "RenoteeCell")
         
         self.mainTableView.rx.setDelegate(self).disposed(by: disposeBag)
@@ -101,24 +105,24 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         let dataSource = NotesDataSource(
             animationConfiguration: AnimationConfiguration(insertAnimation: .fade, reloadAnimation: .none, deleteAnimation: .fade),
             configureCell: { dataSource, tableView, indexPath, item in
-                return self.setupCell(dataSource,self.mainTableView,indexPath)
+                return self.setupCell(dataSource, self.mainTableView, indexPath)
         })
-        
         
         return dataSource
     }
     
+    
+    //MARK: Binding
     private func binding(dataSource: NotesDataSource?) {
         guard let viewModel = viewModel, let dataSource = dataSource else { return }
         
-        viewModel.notes
-            .bind(to: self.mainTableView.rx.items(dataSource: dataSource))
-            .disposed(by: disposeBag)
+        let output = viewModel.output
+         output.notes.drive(self.mainTableView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
         
-        viewModel.forceUpdateIndex.subscribe(onNext: updateForcibly).disposed(by: disposeBag)
+        output.forceUpdateIndex.drive(onNext: updateForcibly).disposed(by: disposeBag)
     }
     
-    
+    //MARK: Gesture
     private func setupPullGesture() {
         self.refreshControl.attributedTitle = NSAttributedString(string: "Refresh...")
         self.refreshControl.addTarget(self, action: #selector(refreshTableView(_:)), for: UIControl.Event.valueChanged)
@@ -145,25 +149,14 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         let index = indexPath.row
         let item = viewModel.cellsModel[index]
         
-        //View側で  NoteCell / RenoteeCellを区別する
-        //        if let baseNoteId = item.baseNoteId, item.isReactionGenCell {
-        //            guard let reactionGenCell = tableView.dequeueReusableCell(withIdentifier: "ReactionGenCell", for: indexPath) as? ReactionGenCell
-        //                else { return ReactionGenCell() }
-        //
-        //            reactionGenCell.setTargetNoteId(item.baseNoteId)
-        //            viewModel.resetReactionGenCell(baseNoteId: baseNoteId) //すでに表示してあるReactionGenCellを消す
-        //            return reactionGenCell
-        //        }
+        // View側で NoteCell / RenoteeCellを区別する
         if item.isRenoteeCell {
             guard let renoteeCell = tableView.dequeueReusableCell(withIdentifier: "RenoteeCell", for: indexPath) as? RenoteeCell
                 else { return RenoteeCell() }
             
             renoteeCell.setRenotee(item.renotee ?? "")
-            //            renoteeCell.frame = CGRect(x: renoteeCell.frame.origin.x,y: renoteeCell.frame.origin.y,width: renoteeCell.frame.width,height: 16)
             return renoteeCell
         }
-        
-        
         
         //通常のcellをつくる
         guard let itemCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell else {fatalError("Internal Error.")}
@@ -198,6 +191,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         guard let height = self.cellHeightCache[id] else { return UITableView.automaticDimension }
         return height
     }
+    
     //セル選択後すぐに選択をキャンセルする & ReactionGenCellを消す
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let viewModel = viewModel else { return }
@@ -206,11 +200,6 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         
         self.showDetailView(item: viewModel.cellsModel[index])
         tableView.deselectRow(at: indexPath as IndexPath, animated: true)
-        
-        if viewModel.isReactionGenCell(index: indexPath.row) {
-            viewModel.resetReactionGenCell(allClear: true)
-        }
-        
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
@@ -226,7 +215,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         
         
         //下位20cellsでセル更新
-        guard self.loadCompleted, viewModel.cellCount - indexPath.row < 10 else { return }
+        guard self.loadCompleted, viewModel.state.cellCount - indexPath.row < 10 else { return }
         
         
         print("loadUntilNotes...")

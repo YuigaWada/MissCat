@@ -62,10 +62,10 @@
             filePath = "MissCat/View/TimelineViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "129"
-            endingLineNumber = "129"
-            landmarkName = "setupPullGesture()"
-            landmarkType = "7">
+            startingLineNumber = "126"
+            endingLineNumber = "126"
+            landmarkName = "TimelineViewController"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -78,8 +78,8 @@
             filePath = "MissCat/View/TimelineViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "269"
-            endingLineNumber = "269"
+            startingLineNumber = "251"
+            endingLineNumber = "251"
             landmarkName = "TimelineViewController"
             landmarkType = "3">
          </BreakpointContent>
@@ -94,9 +94,9 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "310"
-            endingLineNumber = "310"
-            landmarkName = "tappedReaction(noteId:hasMarked:)"
+            startingLineNumber = "227"
+            endingLineNumber = "227"
+            landmarkName = "analyzeHyperLink(_:)"
             landmarkType = "7">
             <Locations>
                <Location
@@ -142,24 +142,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "312"
-            endingLineNumber = "312"
-            landmarkName = "tappedReaction(noteId:hasMarked:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "CDE19A25-5BE3-4B9F-B6C1-985AEAA3AD32"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "343"
-            endingLineNumber = "343"
+            startingLineNumber = "229"
+            endingLineNumber = "229"
             landmarkName = "TimelineViewModel"
             landmarkType = "3">
          </BreakpointContent>
@@ -174,9 +158,9 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "338"
-            endingLineNumber = "338"
-            landmarkName = "isReactionGenCell(index:)"
+            startingLineNumber = "240"
+            endingLineNumber = "240"
+            landmarkName = "tappedReaction(noteId:hasMarked:)"
             landmarkType = "7">
             <Locations>
                <Location
@@ -252,10 +236,10 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "339"
-            endingLineNumber = "339"
-            landmarkName = "isReactionGenCell(index:)"
-            landmarkType = "7">
+            startingLineNumber = "241"
+            endingLineNumber = "241"
+            landmarkName = "TimelineViewModel"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -268,57 +252,9 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "316"
-            endingLineNumber = "316"
-            landmarkName = "TimelineViewModel"
-            landmarkType = "3">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "6FB57D63-68A0-41D6-A882-D9B2D6D1B58C"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "326"
-            endingLineNumber = "326"
-            landmarkName = "resetReactionGenCell(allClear:baseNoteId:baseEqual:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "B8A42CBD-3853-4AEE-A688-2AF424261BEB"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "327"
-            endingLineNumber = "327"
-            landmarkName = "resetReactionGenCell(allClear:baseNoteId:baseEqual:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "5D7F1211-13D3-4A7E-880B-92B746C08A79"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "329"
-            endingLineNumber = "329"
-            landmarkName = "resetReactionGenCell(allClear:baseNoteId:baseEqual:)"
+            startingLineNumber = "233"
+            endingLineNumber = "233"
+            landmarkName = "tappedReaction(noteId:hasMarked:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -991,22 +927,6 @@
             startingLineNumber = "63"
             endingLineNumber = "63"
             landmarkName = "getNote(noteId:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "3EA9122B-06E2-4EFB-A851-1C439391349C"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/View/TimelineViewController.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "173"
-            endingLineNumber = "173"
-            landmarkName = "setupCell(_:_:_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -2021,22 +1941,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "6BB56C1D-319D-49C1-91A1-AEE7912BA330"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "89"
-            endingLineNumber = "89"
-            landmarkName = "handleStream(response:channel:type:error:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "6F661817-1AF3-4445-838F-34E04FC78140"
             shouldBeEnabled = "No"
             ignoreCount = "0"
@@ -2430,8 +2334,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "98"
             endingLineNumber = "98"
-            landmarkName = "TimelineViewController"
-            landmarkType = "3">
+            landmarkName = "setupTableView()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -2446,8 +2350,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "70"
             endingLineNumber = "70"
-            landmarkName = "viewDidLoad()"
-            landmarkType = "7">
+            landmarkName = "TimelineViewController"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -2764,73 +2668,9 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "177"
-            endingLineNumber = "177"
+            startingLineNumber = "124"
+            endingLineNumber = "124"
             landmarkName = "updateReaction(targetNoteId:reaction:isMyReaction:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "98D8DED1-01E5-42EA-A40D-2D00F8F504E2"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "111"
-            endingLineNumber = "111"
-            landmarkName = "handleStream(response:channel:type:error:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "A865C682-FE51-4A2C-8B04-3EDF047A8E39"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "106"
-            endingLineNumber = "106"
-            landmarkName = "handleStream(response:channel:type:error:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "5A247B62-DF65-4B8B-A3C1-3E898D2908FE"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "105"
-            endingLineNumber = "105"
-            landmarkName = "handleStream(response:channel:type:error:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "12D0310C-53E9-42A0-BBAC-E5FCB2C5D5B7"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "108"
-            endingLineNumber = "108"
-            landmarkName = "handleStream(response:channel:type:error:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3100,9 +2940,9 @@
             filePath = "MissCat/View/TimelineViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "192"
-            endingLineNumber = "192"
-            landmarkName = "tableView(_:estimatedHeightForRowAt:)"
+            startingLineNumber = "178"
+            endingLineNumber = "178"
+            landmarkName = "showDetailView(item:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3116,25 +2956,9 @@
             filePath = "MissCat/View/TimelineViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "203"
-            endingLineNumber = "203"
-            landmarkName = "tableView(_:didSelectRowAt:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "8CB59B64-D9C8-4ABB-ABC2-F37C9E557874"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/View/TimelineViewController.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "179"
-            endingLineNumber = "179"
-            landmarkName = "showDetailView(item:)"
+            startingLineNumber = "189"
+            endingLineNumber = "189"
+            landmarkName = "tableView(_:estimatedHeightForRowAt:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3182,8 +3006,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "63"
             endingLineNumber = "63"
-            landmarkName = "TimelineViewController"
-            landmarkType = "3">
+            landmarkName = "setup(type:includeReplies:onlyFiles:userId:listId:withNavBar:scrollable:xlTitle:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -3388,73 +3212,9 @@
             filePath = "MissCat/View/TimelineViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "311"
-            endingLineNumber = "311"
-            landmarkName = "tappedLink(text:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "9723CBD8-C774-4D1E-9273-867F50987567"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "271"
-            endingLineNumber = "271"
-            landmarkName = "analyzeHyperLink(_:)"
-            landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "9723CBD8-C774-4D1E-9273-867F50987567 - 2beded82d0268cda"
-                  shouldBeEnabled = "No"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "MissCat.TimelineViewModel.analyzeHyperLink(Swift.String) -&gt; (linkType: Swift.String, value: Swift.String)"
-                  moduleName = "MissCat"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/ViewModel/TimelineViewModel.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "260"
-                  endingLineNumber = "260"
-                  offsetFromSymbolStart = "447">
-               </Location>
-               <Location
-                  uuid = "9723CBD8-C774-4D1E-9273-867F50987567 - 37ab1a4d97c2c4a1"
-                  shouldBeEnabled = "No"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 (Swift.String) -&gt; () in MissCat.TimelineViewModel.analyzeHyperLink(Swift.String) -&gt; (linkType: Swift.String, value: Swift.String)"
-                  moduleName = "MissCat"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/ViewModel/TimelineViewModel.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "261"
-                  endingLineNumber = "261"
-                  offsetFromSymbolStart = "321">
-               </Location>
-            </Locations>
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "FE84DD15-A651-4399-94A6-1DD6636FD847"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "247"
-            endingLineNumber = "247"
-            landmarkName = "loadNotes(untilId:completion:)"
+            startingLineNumber = "293"
+            endingLineNumber = "293"
+            landmarkName = "tappedOthers()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3468,9 +3228,9 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "208"
-            endingLineNumber = "208"
-            landmarkName = "loadNotes(untilId:completion:)"
+            startingLineNumber = "155"
+            endingLineNumber = "155"
+            landmarkName = "updateReaction(targetNoteId:reaction:isMyReaction:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3484,9 +3244,9 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "210"
-            endingLineNumber = "210"
-            landmarkName = "loadNotes(untilId:completion:)"
+            startingLineNumber = "157"
+            endingLineNumber = "157"
+            landmarkName = "updateReaction(targetNoteId:reaction:isMyReaction:)"
             landmarkType = "7">
             <Locations>
                <Location
@@ -3532,9 +3292,9 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "211"
-            endingLineNumber = "211"
-            landmarkName = "loadNotes(untilId:completion:)"
+            startingLineNumber = "158"
+            endingLineNumber = "158"
+            landmarkName = "updateReaction(targetNoteId:reaction:isMyReaction:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3548,25 +3308,9 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "214"
-            endingLineNumber = "214"
-            landmarkName = "loadNotes(untilId:completion:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "4EF015C7-D475-4687-8316-7D57D3ED87AF"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "218"
-            endingLineNumber = "218"
-            landmarkName = "loadNotes(untilId:completion:)"
+            startingLineNumber = "161"
+            endingLineNumber = "161"
+            landmarkName = "updateReaction(targetNoteId:reaction:isMyReaction:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3580,9 +3324,9 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "222"
-            endingLineNumber = "222"
-            landmarkName = "loadNotes(untilId:completion:)"
+            startingLineNumber = "167"
+            endingLineNumber = "167"
+            landmarkName = "loadUntilNotes(completion:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3596,25 +3340,9 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "228"
-            endingLineNumber = "228"
-            landmarkName = "loadNotes(untilId:completion:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "BB7A8C7D-0833-4F9B-B3B4-2F8E6B7A7841"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "235"
-            endingLineNumber = "235"
-            landmarkName = "loadNotes(untilId:completion:)"
+            startingLineNumber = "173"
+            endingLineNumber = "173"
+            landmarkName = "loadUntilNotes(completion:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3628,9 +3356,9 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "223"
-            endingLineNumber = "223"
-            landmarkName = "loadNotes(untilId:completion:)"
+            startingLineNumber = "168"
+            endingLineNumber = "168"
+            landmarkName = "loadUntilNotes(completion:)"
             landmarkType = "7">
             <Locations>
                <Location
@@ -3669,54 +3397,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "70040197-9F12-4679-99E4-8EF855A4A7D5"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "50"
-            endingLineNumber = "50"
-            landmarkName = "init(type:includeReplies:onlyFiles:userId:listId:disposeBag:)"
-            landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "70040197-9F12-4679-99E4-8EF855A4A7D5 - 3172ccf69fbf1944"
-                  shouldBeEnabled = "No"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 () -&gt; () in MissCat.TimelineViewModel.init(type: MissCat.TimelineType, includeReplies: Swift.Optional&lt;Swift.Bool&gt;, onlyFiles: Swift.Optional&lt;Swift.Bool&gt;, userId: Swift.Optional&lt;Swift.String&gt;, listId: Swift.Optional&lt;Swift.String&gt;, disposeBag: RxSwift.DisposeBag) -&gt; MissCat.TimelineViewModel"
-                  moduleName = "MissCat"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/ViewModel/TimelineViewModel.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "50"
-                  endingLineNumber = "50"
-                  offsetFromSymbolStart = "246">
-               </Location>
-               <Location
-                  uuid = "70040197-9F12-4679-99E4-8EF855A4A7D5 - 970b31d0162bcbde"
-                  shouldBeEnabled = "No"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 () -&gt; () in closure #1 () -&gt; () in MissCat.TimelineViewModel.init(type: MissCat.TimelineType, includeReplies: Swift.Optional&lt;Swift.Bool&gt;, onlyFiles: Swift.Optional&lt;Swift.Bool&gt;, userId: Swift.Optional&lt;Swift.String&gt;, listId: Swift.Optional&lt;Swift.String&gt;, disposeBag: RxSwift.DisposeBag) -&gt; MissCat.TimelineViewModel"
-                  moduleName = "MissCat"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/ViewModel/TimelineViewModel.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "50"
-                  endingLineNumber = "50"
-                  offsetFromSymbolStart = "19">
-               </Location>
-            </Locations>
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "3B875040-24EA-4D35-9AA3-4C18D3947C7B"
             shouldBeEnabled = "No"
             ignoreCount = "0"
@@ -3724,58 +3404,10 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "47"
-            endingLineNumber = "47"
-            landmarkName = "init(type:includeReplies:onlyFiles:userId:listId:disposeBag:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "3E394003-AB78-41B7-89C6-3B6A68C099B8"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "46"
-            endingLineNumber = "46"
-            landmarkName = "init(type:includeReplies:onlyFiles:userId:listId:disposeBag:)"
-            landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "3E394003-AB78-41B7-89C6-3B6A68C099B8 - 9c44d1d7804e1640"
-                  shouldBeEnabled = "No"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "MissCat.TimelineViewModel.init(type: MissCat.TimelineType, includeReplies: Swift.Optional&lt;Swift.Bool&gt;, onlyFiles: Swift.Optional&lt;Swift.Bool&gt;, userId: Swift.Optional&lt;Swift.String&gt;, listId: Swift.Optional&lt;Swift.String&gt;, disposeBag: RxSwift.DisposeBag) -&gt; MissCat.TimelineViewModel"
-                  moduleName = "MissCat"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/ViewModel/TimelineViewModel.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "46"
-                  endingLineNumber = "46"
-                  offsetFromSymbolStart = "1959">
-               </Location>
-               <Location
-                  uuid = "3E394003-AB78-41B7-89C6-3B6A68C099B8 - 3172ccf69fbf1944"
-                  shouldBeEnabled = "No"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 () -&gt; () in MissCat.TimelineViewModel.init(type: MissCat.TimelineType, includeReplies: Swift.Optional&lt;Swift.Bool&gt;, onlyFiles: Swift.Optional&lt;Swift.Bool&gt;, userId: Swift.Optional&lt;Swift.String&gt;, listId: Swift.Optional&lt;Swift.String&gt;, disposeBag: RxSwift.DisposeBag) -&gt; MissCat.TimelineViewModel"
-                  moduleName = "MissCat"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/ViewModel/TimelineViewModel.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "47"
-                  endingLineNumber = "47"
-                  offsetFromSymbolStart = "148">
-               </Location>
-            </Locations>
+            startingLineNumber = "64"
+            endingLineNumber = "64"
+            landmarkName = "TimelineViewModel"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -3932,25 +3564,9 @@
             filePath = "MissCat/View/TimelineViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "137"
-            endingLineNumber = "137"
-            landmarkName = "refreshTableView(_:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "2B37C53D-31BF-4834-91F3-BA3711F60824"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/View/TimelineViewController.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "57"
-            endingLineNumber = "57"
-            landmarkName = "setup(type:includeReplies:onlyFiles:userId:listId:withNavBar:scrollable:xlTitle:)"
+            startingLineNumber = "134"
+            endingLineNumber = "134"
+            landmarkName = "setupPullGesture()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3980,10 +3596,10 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "37"
-            endingLineNumber = "37"
-            landmarkName = "shapeNote(identifier:note:noteId:isReply:externalEmojis:isDetailMode:)"
-            landmarkType = "7">
+            startingLineNumber = "38"
+            endingLineNumber = "38"
+            landmarkName = "unknown"
+            landmarkType = "0">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4014,8 +3630,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "21"
             endingLineNumber = "21"
-            landmarkName = "shapeNote(identifier:note:noteId:isReply:externalEmojis:isDetailMode:)"
-            landmarkType = "7">
+            landmarkName = "unknown"
+            landmarkType = "0">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4031,6 +3647,422 @@
             startingLineNumber = "206"
             endingLineNumber = "206"
             landmarkName = "initialize(hasFile:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "A33EC2F4-10DC-4B7B-9843-09C8D6B508F0"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/View/TimelineViewController.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "222"
+            endingLineNumber = "222"
+            landmarkName = "tableView(_:willDisplay:forRowAt:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "901DBE49-6EF1-424A-96AB-A5EDFC0F42FA"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "144"
+            endingLineNumber = "144"
+            landmarkName = "connectStream(type:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "901DBE49-6EF1-424A-96AB-A5EDFC0F42FA - 38c1712a047af4f9"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "MissCat.TimelineModel.connectStream(type: MissCat.TimelineType) -&gt; RxSwift.Observable&lt;MissCat.NoteCell.Model&gt;"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/Model/TimelineModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "121"
+                  endingLineNumber = "121"
+                  offsetFromSymbolStart = "129">
+               </Location>
+               <Location
+                  uuid = "901DBE49-6EF1-424A-96AB-A5EDFC0F42FA - dfe754f56e996656"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (RxSwift.AnyObserver&lt;MissCat.NoteCell.Model&gt;) -&gt; RxSwift.Disposable in MissCat.TimelineModel.connectStream(type: MissCat.TimelineType) -&gt; RxSwift.Observable&lt;MissCat.NoteCell.Model&gt;"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/Model/TimelineModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "118"
+                  endingLineNumber = "118"
+                  offsetFromSymbolStart = "223">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "B579A342-D375-41E7-822A-F52CAF6C832B"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "145"
+            endingLineNumber = "145"
+            landmarkName = "connectStream(type:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "BC66DFA4-6DA8-4ADD-9449-449C42EB4915"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "147"
+            endingLineNumber = "147"
+            landmarkName = "connectStream(type:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "BC66DFA4-6DA8-4ADD-9449-449C42EB4915 - dfe754f56e996656"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (RxSwift.AnyObserver&lt;MissCat.NoteCell.Model&gt;) -&gt; RxSwift.Disposable in MissCat.TimelineModel.connectStream(type: MissCat.TimelineType) -&gt; RxSwift.Observable&lt;MissCat.NoteCell.Model&gt;"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/Model/TimelineModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "124"
+                  endingLineNumber = "124"
+                  offsetFromSymbolStart = "479">
+               </Location>
+               <Location
+                  uuid = "BC66DFA4-6DA8-4ADD-9449-449C42EB4915 - 121481428ce315f2"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.Optional&lt;Any&gt;, Swift.Optional&lt;MisskeyKit.SentStreamModel.Channel&gt;, Swift.Optional&lt;Swift.String&gt;, Swift.Optional&lt;MisskeyKit.MisskeyKitError&gt;) -&gt; () in closure #1 (RxSwift.AnyObserver&lt;MissCat.NoteCell.Model&gt;) -&gt; RxSwift.Disposable in MissCat.TimelineModel.connectStream(type: MissCat.TimelineType) -&gt; RxSwift.Observable&lt;MissCat.NoteCell.Model&gt;"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/Model/TimelineModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "125"
+                  endingLineNumber = "125"
+                  offsetFromSymbolStart = "100">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "93CEC833-C328-4493-8129-2FC6738BC34B"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "151"
+            endingLineNumber = "151"
+            landmarkName = "connectStream(type:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "991DFFC6-EFF4-4F1B-A431-91554E0320BE"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "148"
+            endingLineNumber = "148"
+            landmarkName = "connectStream(type:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "DBFC3576-FFF6-48C2-9173-EC996F56C4F9"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "164"
+            endingLineNumber = "164"
+            landmarkName = "handleStream(response:channel:typeString:error:observer:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "2F528689-3B7D-40FE-9507-CB99F20B7CC0"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "198"
+            endingLineNumber = "198"
+            landmarkName = "handleStream(response:channel:typeString:error:observer:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "A68C2DDA-4C26-4B16-9F28-38543F86A136"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "94"
+            endingLineNumber = "94"
+            landmarkName = "connectStream()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "C1EB6CCB-7414-45B4-85B7-8A2671EFC016"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "74"
+            endingLineNumber = "74"
+            landmarkName = "init(with:and:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "C1EB6CCB-7414-45B4-85B7-8A2671EFC016 - 644d0208a074e2b"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "MissCat.TimelineViewModel.init(with: MissCat.TimelineViewModel.Input, and: RxSwift.DisposeBag) -&gt; MissCat.TimelineViewModel"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/ViewModel/TimelineViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "74"
+                  endingLineNumber = "74"
+                  offsetFromSymbolStart = "1347">
+               </Location>
+               <Location
+                  uuid = "C1EB6CCB-7414-45B4-85B7-8A2671EFC016 - b3379ab4f4a8f617"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 () -&gt; () in MissCat.TimelineViewModel.init(with: MissCat.TimelineViewModel.Input, and: RxSwift.DisposeBag) -&gt; MissCat.TimelineViewModel"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/ViewModel/TimelineViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "75"
+                  endingLineNumber = "75"
+                  offsetFromSymbolStart = "153">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "BF5D79FB-2EC5-4372-B6C9-7F89B58CA5CA"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "189"
+            endingLineNumber = "189"
+            landmarkName = "loadNotes(untilId:completion:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "AD229D6D-E402-4D01-8346-1C56985EB333"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/ViewModel/TimelineViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "195"
+            endingLineNumber = "195"
+            landmarkName = "loadNotes(untilId:completion:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "57CCD429-E532-470F-8602-AFDBE0F2D4CB"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "90"
+            endingLineNumber = "90"
+            landmarkName = "loadNotes(with:completion:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "736329D9-AC4D-4E0C-A4E8-12ACEC9AC6F2"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "85"
+            endingLineNumber = "85"
+            landmarkName = "loadNotes(with:completion:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "736329D9-AC4D-4E0C-A4E8-12ACEC9AC6F2 - c3b5693b384ba46d"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.Optional&lt;Swift.Array&lt;MisskeyKit.NoteModel&gt;&gt;, Swift.Optional&lt;MisskeyKit.MisskeyKitError&gt;) -&gt; () in closure #1 (RxSwift.AnyObserver&lt;MissCat.NoteCell.Model&gt;) -&gt; RxSwift.Disposable in MissCat.TimelineModel.loadNotes(with: MissCat.TimelineModel.LoadOption, completion: Swift.Optional&lt;() -&gt; ()&gt;) -&gt; RxSwift.Observable&lt;MissCat.NoteCell.Model&gt;"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/Model/TimelineModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "85"
+                  endingLineNumber = "85"
+                  offsetFromSymbolStart = "382">
+               </Location>
+               <Location
+                  uuid = "736329D9-AC4D-4E0C-A4E8-12ACEC9AC6F2 - 91f47eeb8d7762b4"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (MisskeyKit.NoteModel) -&gt; () in closure #1 (Swift.Optional&lt;Swift.Array&lt;MisskeyKit.NoteModel&gt;&gt;, Swift.Optional&lt;MisskeyKit.MisskeyKitError&gt;) -&gt; () in closure #1 (RxSwift.AnyObserver&lt;MissCat.NoteCell.Model&gt;) -&gt; RxSwift.Disposable in MissCat.TimelineModel.loadNotes(with: MissCat.TimelineModel.LoadOption, completion: Swift.Optional&lt;() -&gt; ()&gt;) -&gt; RxSwift.Observable&lt;MissCat.NoteCell.Model&gt;"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/Model/TimelineModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "86"
+                  endingLineNumber = "86"
+                  offsetFromSymbolStart = "320">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "794ECFD1-A41B-4D02-9589-B3ECE58F0232"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "85"
+            endingLineNumber = "85"
+            landmarkName = "loadNotes(with:completion:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "B9219A27-9E41-4861-A9A3-72C926CD55A9"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "86"
+            endingLineNumber = "86"
+            landmarkName = "loadNotes(with:completion:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "047C6B70-D3A0-4534-BC35-08D5F47C2D1E"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "89"
+            endingLineNumber = "89"
+            landmarkName = "loadNotes(with:completion:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "E36BF8FF-2E16-4F3A-8EC9-F8B9CACC81EC"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "113"
+            endingLineNumber = "113"
+            landmarkName = "loadNotes(with:completion:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

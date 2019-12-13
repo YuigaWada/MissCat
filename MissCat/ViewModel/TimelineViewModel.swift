@@ -6,47 +6,75 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import RxCocoa
 import RxSwift
 import MisskeyKit
 
+fileprivate typealias Model = TimelineModel
 
-class TimelineViewModel
+class TimelineViewModel: ViewModelType
 {
-    public let notes: PublishSubject<[NoteCell.Section]> = .init()
-    public let forceUpdateIndex: PublishSubject<Int> = .init()
-    public var dataSource: NotesDataSource?
-    public var cellCount: Int { return cellsModel.count }
+    
+    //MARK: I/O
+    struct Input {
+        let dataSource: NotesDataSource
+        
+        let type: TimelineType
+        let includeReplies: Bool?
+        let onlyFiles: Bool?
+        let userId: String?
+        let listId: String?
+    }
+    
+    struct Output {
+        let notes: Driver<[NoteCell.Section]>
+        let forceUpdateIndex: Driver<Int>
+    }
+    
+    class State {
+        var cellCount: Int
+        init(cellCount: Int) {
+            self.cellCount = cellCount
+        }
+    }
+    
+    private let input: Input?
+    public lazy var output: Output = .init(notes: self.notes.asDriver(onErrorJustReturn: []),
+                                           forceUpdateIndex: self.forceUpdateIndex.asDriver(onErrorJustReturn: 0))
+    public var state: State {
+        return .init(cellCount: { return cellsModel.count }())
+    }
+    
+    //MARK: PublishSubject
+    private let notes: PublishSubject<[NoteCell.Section]> = .init()
+    private let forceUpdateIndex: PublishSubject<Int> = .init()
+    
+    
+    
+    private var dataSource: NotesDataSource?
+    
+    
     
     
     private var hasReactionGenCell: Bool = false
     public var cellsModel: [NoteCell.Model] = [] //TODO: エラー再発しないか意識しておく
     private var initialNoteIds: [String] = [] // WebSocketの接続が確立してからcaptureするためのキャッシュ
     
-    private let handleTargetType: [String] = ["note", "CapturedNoteUpdated"]
+    
     private lazy var model = TimelineModel()
-    private lazy var streaming = MisskeyKit.Streaming()
     
-    private var type: TimelineType = .Home
-    private var userId: String? = nil
-    private var listId: String? = nil
-    private var includeReplies: Bool? = nil
-    private var onlyFiles: Bool? = nil
-    
+    private var disposeBag: DisposeBag
     
     //MARK: Life Cycle
-    init(type: TimelineType, includeReplies: Bool? = nil, onlyFiles: Bool? = nil, userId: String? = nil, listId: String? = nil, disposeBag: DisposeBag) {
+    public init(with input: Input, and disposeBag: DisposeBag) {
         
-        self.type = type
-        self.userId = userId
-        self.listId = listId
-        
-        self.includeReplies = includeReplies
-        self.onlyFiles = onlyFiles
+        self.input = input
+        self.disposeBag = disposeBag
         
         self.loadNotes(){
             self.updateNotes(new: self.cellsModel)
             
-            if type.needsStreaming {
+            if input.type.needsStreaming {
                 DispatchQueue.main.async { self.connectStream() }
             }
             
@@ -58,87 +86,32 @@ class TimelineViewModel
     
     //MARK: Streaming
     private func connectStream() { //streamingのresponseを捌くのはhandleStreamで行う
-        guard let apiKey = MisskeyKit.auth.getAPIKey(), let channel = self.type.convert2Channel() else { return }
+        guard let input = input else { return }
         
-        let _ = streaming.connect(apiKey: apiKey, channels: [channel], response: self.handleStream)
-    }
-    
-    private func handleStream(response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) {
-        let isInitialConnection = initialNoteIds.count > 0 //初期接続かどうか
-        if isInitialConnection {
-            self.captureNotes(initialNoteIds) //websocket接続が確定してからcapture
-            initialNoteIds = []
-        }
-        
-        
-        if let error = error {
-            print(error)
-            if error == .CannotConnectStream || error == .NoStreamConnection { self.connectStream() }
-            return
-        }
-        guard let _ = channel, let type = type, self.handleTargetType.contains(type) else {
-            return }
-        
-        if type == "CapturedNoteUpdated" {
-            guard let updateContents = response as? NoteUpdatedModel, let updateType = updateContents.type, let userId = updateContents.userId else { return }
-            
-            switch updateType {
-            case .reacted:
-                userId.isMe { isMyReaction in //自分のリアクションかどうかチェックする
-                    self.updateReaction(targetNoteId: updateContents.targetNoteId,
-                                        reaction: updateContents.reaction,
-                                        isMyReaction: isMyReaction) }
+        model.connectStream(type: input.type)
+            .subscribe(onNext: { cellModel in
                 
-                break
+                self.cellsModel.insert(cellModel, at: 0)
+                self.updateNotes(new: self.cellsModel)
                 
-            case .pollVoted:
-                break
-            case .deleted:
-                guard let targetNoteId = updateContents.targetNoteId else { return }
-                self.removeNoteCell(noteId: targetNoteId)
-            }
-            
-        }
+            })
+            .disposed(by: disposeBag)
         
-        guard let post = response as? NoteModel else { return }
+        model.trigger.removeTargetTrigger.subscribe(onNext: { noteId in
+            self.removeNoteCell(noteId: noteId)
+        })
+        .disposed(by: disposeBag)
         
-        if let renoteId = post.renoteId, let user = post.user, let renote = post.renote {
-            guard let cellModel = renote.getNoteCellModel() else { return }
-            self.cellsModel.insert(cellModel, at:0)
-            
-            let renoteeCellModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "", baseNoteId: renoteId)
-            self.cellsModel.insert(renoteeCellModel, at:0)
-        }
-        else {
-            var newCellsModel = self.model.getCellsModel(post)
-            guard newCellsModel != nil else { return }
-            
-            newCellsModel!.reverse()//reverseしてからinsert
-            newCellsModel!.forEach{ self.cellsModel.insert($0, at:0) }
-        }
+        model.trigger.updateReactionTrigger.subscribe(onNext: { info in
+            self.updateReaction(targetNoteId: info.targetNoteId, reaction: info.rawReaction, isMyReaction: info.isMyReaction)
+        })
+        .disposed(by: disposeBag)
         
-        self.updateNotes(new: self.cellsModel)
-        self.captureNote(noteId: post.id)
+        
     }
     
     
-    //Capture
-    private func captureNote(noteId: String?) {
-        guard let noteId = noteId else { return }
-        self.captureNotes([noteId])
-    }
-    
-    private func captureNotes(_ noteIds: [String]) {
-        noteIds.forEach { id in
-            do {
-                try streaming.captureNote(noteId: id)
-            }
-            catch {
-                /* Ignore :P */
-            }
-        }
-    }
-    
+    //MARK: Remove / Update Cell
     private func removeNoteCell(noteId: String) {
         let targetCell = self.cellsModel.filter { $0.noteId == noteId }
         if targetCell.count > 0, let targetIndex = self.cellsModel.firstIndex(of: targetCell[0]) {
@@ -188,9 +161,7 @@ class TimelineViewModel
         }
     }
     
-    
-    
-    //MARK: Communicate with View
+    //MARK: REST
     
     //古い投稿から順にfetchしてくる
     public func loadUntilNotes(completion: (()->())? = nil) {
@@ -204,58 +175,28 @@ class TimelineViewModel
     
     //投稿をfetchしてくる
     public func loadNotes(untilId: String? = nil, completion: (()->())? = nil) {
-        let handleResult = { (posts: [NoteModel]?, error: MisskeyKitError?) in
-            guard let posts = posts, error == nil else { /* Error */ print(error ?? "error is nil"); return }
+        guard let input = input else { return }
+        
+        let option = Model.LoadOption(type: input.type,
+                                      userId: input.userId,
+                                      untilId: untilId,
+                                      includeReplies: input.includeReplies,
+                                      onlyFiles: input.onlyFiles,
+                                      listId: input.listId)
+        
+        model.loadNotes(with: option) {
             
-            posts.forEach{ post in
-                print("post!\(posts.count)")
-                dump(post)
-                
-                if let renoteId = post.renoteId, let user = post.user, let renote = post.renote {
-                    let renoteeCellModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "", baseNoteId: renoteId)
-                    self.cellsModel.append(renoteeCellModel)
-                    
-                    guard let cellModel = renote.getNoteCellModel() else { return }
-                    self.cellsModel.append(cellModel)
-                }
-                else {
-                    guard let newCellsModel = self.model.getCellsModel(post) else { return }
-                    newCellsModel.forEach{ self.cellsModel.append($0) }
-                }
-                
-                if let noteId = post.id {
-                    //ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
-                    self.initialNoteIds.append(noteId)
-                }
-                
-                //MEMO: セルの描画は必ずメインスレッドで行われるのでさすがにここでやると重い　→ なんかそうでもなさそう
-                self.updateNotes(new: self.cellsModel)
-            }
-            
+            self.initialNoteIds = self.model.initialNoteIds
             if let completion = completion { completion() }
+            
         }
-        
-        switch type {
-        case .Home: MisskeyKit.notes.getTimeline(limit: 40, untilId: untilId ?? "", completion: handleResult)
+        .subscribe(onNext: { cellModel in
             
-        case .Local: MisskeyKit.notes.getLocalTimeline(limit: 40, untilId: untilId ?? "", completion: handleResult)
+            self.cellsModel.append(cellModel)
+            self.updateNotes(new: self.cellsModel)
             
-        case .Global: MisskeyKit.notes.getGlobalTimeline(limit: 40, untilId: untilId ?? "", completion: handleResult)
-            
-        case .OneUser:
-            guard let userId = userId else { return }
-            MisskeyKit.notes.getUserNotes(includeReplies: includeReplies ?? true,
-                                          userId: userId,
-                                          withFiles: onlyFiles ?? false,
-                                          limit: 40,
-                                          untilId: untilId ?? "",
-                                          completion: handleResult)
-            
-        case .UserList:
-            guard let listId = listId else { return }
-            MisskeyKit.notes.getUserListTimeline(listId: listId, limit: 40, untilId: untilId ?? "", completion: handleResult)
-        }
-        
+        }, onCompleted: nil, onDisposed: nil)
+            .disposed(by: disposeBag)
     }
     
     
@@ -263,6 +204,8 @@ class TimelineViewModel
         return itemCell.shapeCell(item: item)
     }
     
+    
+    //MARK: Utilities
     //HyperLinkを用途ごとに捌く
     public func analyzeHyperLink(_ text: String)-> (linkType: String, value: String) {
         let magicHeaders = ["http://tapevents.misscat/": "User", "http://hashtags.misscat/": "Hashtag"]
@@ -288,57 +231,14 @@ class TimelineViewModel
         
         guard self.cellsModel.filter({ $0.baseNoteId == noteId }).count == 0 else {
             //複数個reactiongencellを挿入させない
-            self.resetReactionGenCell(baseNoteId: noteId, baseEqual: true)
             return
         }
         
         if hasMarked {
             return
         }
-        
-//        guard let dataSource = self.dataSource else { return }
-        //        let cells = dataSource.sectionModels[0].items
-        
-        //        let noteCell = cells.filter { $0.noteId == noteId }
-        
-        //Viewが実際にReactionGenCellを挿入するので、model上でReactionGenCellと区別する
-        //        if noteCell.count > 0, let cellIndex = cells.firstIndex(of: noteCell[0]) {
-        //            let reactionGenCell = NoteCell.Model.fakeReactionGenCell(baseNoteId: noteId)
-        //
-        //            cellsModel.insert(reactionGenCell, at:cellIndex + 1)
-        //            self.updateNotes(new: self.cellsModel)
-        //            self.hasReactionGenCell = true
-        //        }
     }
     
-    // ReactionGenCellをtableViewから取り除く
-    // allClear: 除去条件を制定するかどうか、すなわち全ReactionGenCellを消すかどうか
-    // baseEqual: 除去条件がbaseNoteIdの一致であるかどうか
-    public func resetReactionGenCell(allClear: Bool = false, baseNoteId: String = "", baseEqual: Bool = false) {
-        guard self.hasReactionGenCell else { return }
-        
-        
-        //reactionGenCellのみ削除
-        if !allClear {
-            self.cellsModel = self.cellsModel.filter { cell in
-                let isResetTarget = (cell.baseNoteId != baseNoteId) == !baseEqual //NOT ( baseNoteId is equal (XOR) baseEqual )
-                return !(cell.isReactionGenCell && isResetTarget)
-            }
-        }
-        else {
-            self.cellsModel = self.cellsModel.filter { !$0.isReactionGenCell }
-        }
-        
-        
-        self.hasReactionGenCell = false
-        self.updateNotes(new: self.cellsModel)
-    }
-    
-    public func isReactionGenCell(index: Int)-> Bool {
-        guard self.cellsModel.count >= index else { return false }
-        
-        return self.cellsModel[index].isReactionGenCell
-    }
     
     
     //MARK: RxSwift
