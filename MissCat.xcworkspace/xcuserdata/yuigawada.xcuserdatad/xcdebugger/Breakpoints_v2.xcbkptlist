@@ -94,8 +94,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "227"
-            endingLineNumber = "227"
+            startingLineNumber = "225"
+            endingLineNumber = "225"
             landmarkName = "analyzeHyperLink(_:)"
             landmarkType = "7">
             <Locations>
@@ -142,8 +142,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "229"
-            endingLineNumber = "229"
+            startingLineNumber = "227"
+            endingLineNumber = "227"
             landmarkName = "TimelineViewModel"
             landmarkType = "3">
          </BreakpointContent>
@@ -158,8 +158,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "240"
-            endingLineNumber = "240"
+            startingLineNumber = "238"
+            endingLineNumber = "238"
             landmarkName = "tappedReaction(noteId:hasMarked:)"
             landmarkType = "7">
             <Locations>
@@ -236,8 +236,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "241"
-            endingLineNumber = "241"
+            startingLineNumber = "239"
+            endingLineNumber = "239"
             landmarkName = "TimelineViewModel"
             landmarkType = "3">
          </BreakpointContent>
@@ -252,8 +252,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "233"
-            endingLineNumber = "233"
+            startingLineNumber = "231"
+            endingLineNumber = "231"
             landmarkName = "tappedReaction(noteId:hasMarked:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -2668,8 +2668,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "124"
-            endingLineNumber = "124"
+            startingLineNumber = "122"
+            endingLineNumber = "122"
             landmarkName = "updateReaction(targetNoteId:reaction:isMyReaction:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3036,8 +3036,8 @@
             filePath = "MissCat/View/TimelineViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "16"
-            endingLineNumber = "16"
+            startingLineNumber = "15"
+            endingLineNumber = "15"
             landmarkName = "unknown"
             landmarkType = "0">
          </BreakpointContent>
@@ -3228,8 +3228,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "155"
-            endingLineNumber = "155"
+            startingLineNumber = "153"
+            endingLineNumber = "153"
             landmarkName = "updateReaction(targetNoteId:reaction:isMyReaction:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3244,8 +3244,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "157"
-            endingLineNumber = "157"
+            startingLineNumber = "155"
+            endingLineNumber = "155"
             landmarkName = "updateReaction(targetNoteId:reaction:isMyReaction:)"
             landmarkType = "7">
             <Locations>
@@ -3292,8 +3292,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "158"
-            endingLineNumber = "158"
+            startingLineNumber = "156"
+            endingLineNumber = "156"
             landmarkName = "updateReaction(targetNoteId:reaction:isMyReaction:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3308,8 +3308,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "161"
-            endingLineNumber = "161"
+            startingLineNumber = "159"
+            endingLineNumber = "159"
             landmarkName = "updateReaction(targetNoteId:reaction:isMyReaction:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3324,8 +3324,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "167"
-            endingLineNumber = "167"
+            startingLineNumber = "165"
+            endingLineNumber = "165"
             landmarkName = "loadUntilNotes(completion:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3340,8 +3340,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "173"
-            endingLineNumber = "173"
+            startingLineNumber = "171"
+            endingLineNumber = "171"
             landmarkName = "loadUntilNotes(completion:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3356,8 +3356,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "168"
-            endingLineNumber = "168"
+            startingLineNumber = "166"
+            endingLineNumber = "166"
             landmarkName = "loadUntilNotes(completion:)"
             landmarkType = "7">
             <Locations>
@@ -3404,8 +3404,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "64"
-            endingLineNumber = "64"
+            startingLineNumber = "61"
+            endingLineNumber = "61"
             landmarkName = "TimelineViewModel"
             landmarkType = "3">
          </BreakpointContent>
@@ -3548,8 +3548,8 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "159"
-            endingLineNumber = "159"
+            startingLineNumber = "151"
+            endingLineNumber = "151"
             landmarkName = "setupProfileGesture()"
             landmarkType = "7">
          </BreakpointContent>
@@ -3596,58 +3596,10 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "38"
-            endingLineNumber = "38"
-            landmarkName = "unknown"
-            landmarkType = "0">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "DAC360DA-F9A0-4AA2-A01E-2B3AD7E0BC7E"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/View/Reusable/NoteCell.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "142"
-            endingLineNumber = "142"
-            landmarkName = "binding()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "27370CF3-9C02-4498-8007-1A4ADA9FD296"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "21"
-            endingLineNumber = "21"
-            landmarkName = "unknown"
-            landmarkType = "0">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "F9BEB8F8-7CD2-403F-A86C-7BE9A2275764"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/View/Reusable/NoteCell.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "206"
-            endingLineNumber = "206"
-            landmarkName = "initialize(hasFile:)"
-            landmarkType = "7">
+            startingLineNumber = "53"
+            endingLineNumber = "53"
+            landmarkName = "NoteCellViewModel"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -3676,8 +3628,8 @@
             filePath = "MissCat/Model/TimelineModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "144"
-            endingLineNumber = "144"
+            startingLineNumber = "146"
+            endingLineNumber = "146"
             landmarkName = "connectStream(type:)"
             landmarkType = "7">
             <Locations>
@@ -3724,8 +3676,8 @@
             filePath = "MissCat/Model/TimelineModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "145"
-            endingLineNumber = "145"
+            startingLineNumber = "147"
+            endingLineNumber = "147"
             landmarkName = "connectStream(type:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3740,8 +3692,8 @@
             filePath = "MissCat/Model/TimelineModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "147"
-            endingLineNumber = "147"
+            startingLineNumber = "149"
+            endingLineNumber = "149"
             landmarkName = "connectStream(type:)"
             landmarkType = "7">
             <Locations>
@@ -3788,8 +3740,8 @@
             filePath = "MissCat/Model/TimelineModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "151"
-            endingLineNumber = "151"
+            startingLineNumber = "153"
+            endingLineNumber = "153"
             landmarkName = "connectStream(type:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3804,8 +3756,8 @@
             filePath = "MissCat/Model/TimelineModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "148"
-            endingLineNumber = "148"
+            startingLineNumber = "150"
+            endingLineNumber = "150"
             landmarkName = "connectStream(type:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3820,8 +3772,8 @@
             filePath = "MissCat/Model/TimelineModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "164"
-            endingLineNumber = "164"
+            startingLineNumber = "166"
+            endingLineNumber = "166"
             landmarkName = "handleStream(response:channel:typeString:error:observer:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3836,8 +3788,8 @@
             filePath = "MissCat/Model/TimelineModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "198"
-            endingLineNumber = "198"
+            startingLineNumber = "200"
+            endingLineNumber = "200"
             landmarkName = "handleStream(response:channel:typeString:error:observer:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3852,8 +3804,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "94"
-            endingLineNumber = "94"
+            startingLineNumber = "92"
+            endingLineNumber = "92"
             landmarkName = "connectStream()"
             landmarkType = "7">
          </BreakpointContent>
@@ -3916,8 +3868,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "189"
-            endingLineNumber = "189"
+            startingLineNumber = "187"
+            endingLineNumber = "187"
             landmarkName = "loadNotes(untilId:completion:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3932,8 +3884,8 @@
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "195"
-            endingLineNumber = "195"
+            startingLineNumber = "193"
+            endingLineNumber = "193"
             landmarkName = "loadNotes(untilId:completion:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3948,8 +3900,8 @@
             filePath = "MissCat/Model/TimelineModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "90"
-            endingLineNumber = "90"
+            startingLineNumber = "92"
+            endingLineNumber = "92"
             landmarkName = "loadNotes(with:completion:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3964,8 +3916,8 @@
             filePath = "MissCat/Model/TimelineModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "85"
-            endingLineNumber = "85"
+            startingLineNumber = "87"
+            endingLineNumber = "87"
             landmarkName = "loadNotes(with:completion:)"
             landmarkType = "7">
             <Locations>
@@ -4012,8 +3964,8 @@
             filePath = "MissCat/Model/TimelineModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "85"
-            endingLineNumber = "85"
+            startingLineNumber = "87"
+            endingLineNumber = "87"
             landmarkName = "loadNotes(with:completion:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4028,8 +3980,8 @@
             filePath = "MissCat/Model/TimelineModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "86"
-            endingLineNumber = "86"
+            startingLineNumber = "88"
+            endingLineNumber = "88"
             landmarkName = "loadNotes(with:completion:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4044,8 +3996,8 @@
             filePath = "MissCat/Model/TimelineModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "89"
-            endingLineNumber = "89"
+            startingLineNumber = "91"
+            endingLineNumber = "91"
             landmarkName = "loadNotes(with:completion:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4060,8 +4012,8 @@
             filePath = "MissCat/Model/TimelineModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "113"
-            endingLineNumber = "113"
+            startingLineNumber = "115"
+            endingLineNumber = "115"
             landmarkName = "loadNotes(with:completion:)"
             landmarkType = "7">
          </BreakpointContent>

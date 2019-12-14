@@ -45,16 +45,13 @@ class TimelineViewModel: ViewModelType
         return .init(cellCount: { return cellsModel.count }())
     }
     
+    
+    
     //MARK: PublishSubject
     private let notes: PublishSubject<[NoteCell.Section]> = .init()
     private let forceUpdateIndex: PublishSubject<Int> = .init()
     
-    
-    
-    private var dataSource: NotesDataSource?
-    
-    
-    
+
     
     private var hasReactionGenCell: Bool = false
     public var cellsModel: [NoteCell.Model] = [] //TODO: エラー再発しないか意識しておく
@@ -62,8 +59,11 @@ class TimelineViewModel: ViewModelType
     
     
     private lazy var model = TimelineModel()
-    
+    private var dataSource: NotesDataSource?
     private var disposeBag: DisposeBag
+    
+    
+    
     
     //MARK: Life Cycle
     public init(with input: Input, and disposeBag: DisposeBag) {
@@ -74,10 +74,8 @@ class TimelineViewModel: ViewModelType
         self.loadNotes(){
             self.updateNotes(new: self.cellsModel)
             
-            if input.type.needsStreaming {
-                DispatchQueue.main.async { self.connectStream() }
-            }
-            
+            guard input.type.needsStreaming else { return }
+            DispatchQueue.main.async { self.connectStream() }
         }
     }
     
@@ -193,7 +191,7 @@ class TimelineViewModel: ViewModelType
         .subscribe(onNext: { cellModel in
             
             self.cellsModel.append(cellModel)
-            self.updateNotes(new: self.cellsModel)
+//            self.updateNotes(new: self.cellsModel)
             
         }, onCompleted: nil, onDisposed: nil)
             .disposed(by: disposeBag)

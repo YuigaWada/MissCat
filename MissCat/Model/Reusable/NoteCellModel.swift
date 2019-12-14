@@ -40,3 +40,6 @@ public class NoteCellModel {
         return attributedText
     }
 }
+
+
+

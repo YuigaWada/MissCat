@@ -1,0 +1,11 @@
+framework module MisskeyKit {
+  umbrella header "MisskeyKit-umbrella.h"
+
+  export *
+  module * { export * }
+}
+
+module MisskeyKit.Swift {
+    header "MisskeyKit-Swift.h"
+    requires objc
+}

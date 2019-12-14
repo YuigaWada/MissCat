@@ -14,7 +14,7 @@ import SafariServices
 import FloatingPanel
 import XLPagerTabStrip
 
-public protocol TimelineDelegate {
+public protocol TimelineDelegate { // For HomeViewController
     func tappedCell(item: NoteCell.Model)
     func move2Profile(userId: String)
 }
@@ -27,9 +27,10 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     @IBOutlet weak var bottomConstraint: NSLayoutConstraint!
     
     private let disposeBag = DisposeBag()
-    private lazy var refreshControl = UIRefreshControl()
-    
     private var viewModel: TimelineViewModel?
+    
+    private lazy var refreshControl = UIRefreshControl()
+
     private var loadCompleted: Bool = true
     private var cellHeightCache: [String: CGFloat] = [:] //String → identifier
     private var withNavBar: Bool = true

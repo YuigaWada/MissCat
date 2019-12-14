@@ -9,6 +9,7 @@
 import UIKit
 import WebKit
 import RxSwift
+import RxCocoa
 import RxDataSources
 import MisskeyKit
 import Agrume
@@ -24,6 +25,7 @@ public protocol NoteCellDelegate {
     func move2Profile(userId: String)
 }
 
+fileprivate typealias ViewModel = NoteCellViewModel
 public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate {
     
     //MARK: IBOutlet (UIView)
@@ -67,37 +69,24 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     public var userId: String?
     public var iconImageUrl: String?
     
-    public var isDetailMode: Bool = false {//投稿の詳細表示もこのNoteCellが担う
-        didSet {
-            guard isDetailMode else { return }
-            
-            // If isDetailMode == true ...
-            
-            // Constraint
-            displayName2MainStackConstraint.isActive = false
-            icon2MainStackConstraint.isActive = false
-        }
-    }
-    public var isReplyTarget: Bool = false  { // リプライ先の投稿であるかどうか
-        didSet {
-            guard self.isReplyTarget else { return }
-            
-            self.backgroundColor = self.replyTargetColor
-            
-            self.separatorBorder.isHidden = true
-            self.replyIndicator.isHidden = false
-        }
-    }
-    
-    
     
     
     //MARK: Private Var
     private let disposeBag = DisposeBag()
-    private let replyTargetColor = UIColor(hex: "f0f0f0")
     
-    private var viewModel = NoteCellViewModel()
+    private var viewModel: ViewModel?
     
+    
+    private func getViewModel(item: NoteCell.Model, isDetailMode: Bool)-> ViewModel {
+        let input: ViewModel.Input = .init(cellModel: item,
+                                           isDetailMode: isDetailMode)
+        
+        
+        let viewModel = NoteCellViewModel(with: input, and: self.disposeBag)
+        
+        self.binding(viewModel: viewModel)
+        return viewModel
+    }
     
     //MARK: Life Cycle
     override public func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {
@@ -112,8 +101,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     override public func layoutSubviews() {
         super.layoutSubviews()
         self.setupComponents()
-        
-        self.binding()
     }
     
     private func setupComponents() {
@@ -138,9 +125,25 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }
     
     
-    private func binding() {
-        viewModel.shapedNote.bind(to: self.noteView.rx.attributedText).disposed(by: disposeBag)
-        viewModel.iconImage.bind(to: self.iconView.rx.image).disposed(by: disposeBag)
+    private func binding(viewModel: ViewModel) {
+        let output = viewModel.output
+        
+        output.ago.drive(self.agoLabel.rx.text).disposed(by: disposeBag)
+        output.displayName.drive(self.displayNameLabel.rx.text).disposed(by: disposeBag)
+        output.username.drive(self.usernameLabel.rx.text).disposed(by: disposeBag)
+        
+        output.shapedNote.drive(self.noteView.rx.attributedText).disposed(by: disposeBag)
+        output.iconImage.drive(self.iconView.rx.image).disposed(by: disposeBag)
+        
+        //        displayName2MainStackConstraint.isActive = false
+        //        icon2MainStackConstraint.isActive = false
+        output.defaultConstraintActive.drive(self.displayName2MainStackConstraint.rx.active).disposed(by: disposeBag)
+        output.defaultConstraintActive.drive(self.icon2MainStackConstraint.rx.active).disposed(by: disposeBag)
+        
+        output.backgroundColor.drive(self.rx.backgroundColor).disposed(by: disposeBag)
+        
+        output.isReplyTarget.drive(self.separatorBorder.rx.isHidden).disposed(by: disposeBag)
+        output.isReplyTarget.map{!$0}.drive(self.replyIndicator.rx.isHidden).disposed(by: disposeBag)
     }
     
     private func setupProfileGesture() {
@@ -148,16 +151,10 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         gestureTargets.forEach {
             guard let view = $0 else { return }
-            
-            let tapGesture = UITapGestureRecognizer()
-            
-            tapGesture.rx.event.bind{ _ in
+            view.setTapGesture(disposeBag) {
                 guard let delegate = self.delegate, let userId = self.userId else { return }
                 delegate.move2Profile(userId: userId)
-            }.disposed(by: self.disposeBag)
-            
-            view.isUserInteractionEnabled = true
-            view.addGestureRecognizer(tapGesture)
+            }
         }
     }
     
@@ -167,14 +164,11 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }
     
     //MARK: Public Methods
-    public func initialize(hasFile: Bool) {
-        
-        self.viewModel = NoteCellViewModel()
+    public func initializeComponent(hasFile: Bool) {
         
         self.delegate = nil
         self.noteId = nil
         self.userId = nil
-        self.isReplyTarget = false
         
         self.backgroundColor = .white
         self.separatorBorder.isHidden = false
@@ -203,26 +197,11 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.renoteButton.setTitle("", for: .normal)
         self.reactionButton.setTitle("", for: .normal)
         
-        self.binding()
-//        changeSkeltonState(on: true)
+        //        changeSkeltonState(on: true)
     }
     
     public func setupFileImage(_ image: UIImage, originalImageUrl: String) {
         //self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
-        
-        let tapGesture = UITapGestureRecognizer()
-        tapGesture.rx.event.bind{ _ in
-            originalImageUrl.toUIImage{ image in
-                guard let image = image, let delegate = self.delegate as? UIViewController else { return }
-                
-                DispatchQueue.main.async {
-                    let agrume = Agrume(image: image)
-                    agrume.show(from: delegate) // 画像を表示
-                }
-            }
-        }.disposed(by: self.disposeBag)
-        
-        
         DispatchQueue.main.async {
             let imageView = UIImageView(image: image)
             imageView.contentMode = .center
@@ -230,7 +209,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             imageView.layer.cornerRadius = 10
             imageView.isUserInteractionEnabled = true
             //tap gestureを付加する
-            imageView.addGestureRecognizer(tapGesture)
+            imageView.setTapGesture(self.disposeBag, closure: { self.showImage(url: originalImageUrl) })
             
             
             self.fileImageView.addArrangedSubview(imageView)
@@ -238,31 +217,30 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         }
     }
     
+    private func showImage(url: String) {
+        url.toUIImage{ image in
+            guard let image = image, let delegate = self.delegate as? UIViewController else { return }
+            
+            DispatchQueue.main.async {
+                let agrume = Agrume(image: image)
+                agrume.show(from: delegate) // 画像を表示
+            }
+        }
+    }
     
-    public func shapeCell(item: NoteCell.Model)-> NoteCell {
+    
+    public func shapeCell(item: NoteCell.Model, isDetailMode: Bool = false)-> NoteCell {
         guard let noteId = item.noteId else { return NoteCell() }
-        self.initialize(hasFile: item.files.count > 0) // Initialize because NoteCell is reused by TableView.
         
+        self.initializeComponent(hasFile: item.files.count > 0) // Initialize because NoteCell is reused by TableView.
+        self.viewModel = getViewModel(item: item, isDetailMode: isDetailMode)
+        viewModel!.setCell()
         
         //main
-        self.isReplyTarget = item.isReplyTarget
-        
         self.noteId = item.noteId
         self.userId = item.userId
-        self.agoLabel.text = item.ago.calculateAgo()
-        self.displayNameLabel.text = item.displayName
-        self.usernameLabel.text = "@" + item.username
         
-        viewModel.shapeNote(identifier: item.identity,
-                            note: item.note,
-                            noteId: item.noteId,
-                            isReply: item.isReply,
-                            externalEmojis: item.emojis,
-                            isDetailMode: isDetailMode)
-        
-        
-        
-        self.iconImageUrl = viewModel.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
+        self.iconImageUrl = viewModel!.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
         
         //file
         if let files = Cache.shared.getFiles(noteId: noteId) {
@@ -353,7 +331,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         
         
-//        changeSkeltonState(on: false)
+        //        changeSkeltonState(on: false)
         return self
     }
     
@@ -415,6 +393,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }
     
     public func tappedReaction(noteId: String, reaction: String, isRegister: Bool) {
+        guard let viewModel = viewModel else { return }
+        
         if isRegister {
             viewModel.registerReaction(noteId: noteId, reaction: reaction)
         }
@@ -492,7 +472,7 @@ extension NoteCell {
             return lhs.identity == rhs.identity
         }
         
-
+        
         static func fakeRenoteecell(renotee: String, baseNoteId: String)-> NoteCell.Model {
             
             var renotee = renotee

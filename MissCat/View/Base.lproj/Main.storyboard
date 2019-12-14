@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="1xz-U6-Gb6">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="1xz-U6-Gb6">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15510"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="collection view cell content view" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -238,6 +238,10 @@
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                     </textView>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="REl-1x-M7t">
+                                        <rect key="frame" x="354" y="0.0" width="30" height="30"/>
+                                        <state key="normal" title="cog"/>
+                                    </button>
                                 </subviews>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                 <constraints>
@@ -246,10 +250,12 @@
                                     <constraint firstItem="7LQ-Y2-MF5" firstAttribute="leading" secondItem="ld0-RN-wpl" secondAttribute="leading" constant="20" id="CG6-Ed-9JU"/>
                                     <constraint firstItem="6Lp-0O-FvA" firstAttribute="top" secondItem="Y77-CL-VDH" secondAttribute="bottom" id="JuW-AG-3DA"/>
                                     <constraint firstItem="Y77-CL-VDH" firstAttribute="leading" secondItem="7LQ-Y2-MF5" secondAttribute="trailing" constant="8" id="LMn-qX-fey"/>
+                                    <constraint firstAttribute="trailing" secondItem="REl-1x-M7t" secondAttribute="trailing" id="NDa-J0-Pio"/>
                                     <constraint firstItem="Y77-CL-VDH" firstAttribute="top" secondItem="7LQ-Y2-MF5" secondAttribute="top" id="Onw-ac-4p6"/>
                                     <constraint firstItem="6Lp-0O-FvA" firstAttribute="height" secondItem="ld0-RN-wpl" secondAttribute="height" multiplier="0.493333" id="Xbt-3M-tCq"/>
                                     <constraint firstAttribute="trailing" secondItem="Y77-CL-VDH" secondAttribute="trailing" constant="20" id="aj8-EC-V6q"/>
                                     <constraint firstAttribute="trailing" secondItem="6Lp-0O-FvA" secondAttribute="trailing" constant="20" id="bZ5-In-MxS"/>
+                                    <constraint firstItem="REl-1x-M7t" firstAttribute="top" secondItem="ld0-RN-wpl" secondAttribute="top" id="cBQ-lG-nIj"/>
                                     <constraint firstAttribute="height" constant="75" id="o2B-dd-WAq"/>
                                     <constraint firstItem="7LQ-Y2-MF5" firstAttribute="top" secondItem="ld0-RN-wpl" secondAttribute="top" constant="12" id="sHb-La-Mwo"/>
                                 </constraints>
@@ -324,6 +330,7 @@
                         <outlet property="displayNameLabel" destination="Y77-CL-VDH" id="aCm-hg-mY7"/>
                         <outlet property="emojiCollectionView" destination="OgS-1x-Vgm" id="IxT-K8-B8P"/>
                         <outlet property="iconImageView" destination="7LQ-Y2-MF5" id="g1c-N9-5NX"/>
+                        <outlet property="settingsButton" destination="REl-1x-M7t" id="UPb-c8-5ld"/>
                         <outlet property="targetNoteTextView" destination="6Lp-0O-FvA" id="hsj-eq-4rE"/>
                         <outlet property="textFiled" destination="YdR-vm-cc8" id="p0S-hi-CWG"/>
                     </connections>

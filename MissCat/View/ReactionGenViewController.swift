@@ -24,6 +24,7 @@ public class ReactionGenViewController: UIViewController, UITextFieldDelegate, U
     @IBOutlet weak var targetNoteTextView: UITextView!
     @IBOutlet weak var textFiled: UITextField!
     
+    @IBOutlet weak var settingsButton: UIButton!
     @IBOutlet weak var emojiCollectionView: UICollectionView!
     
     
@@ -76,8 +77,10 @@ public class ReactionGenViewController: UIViewController, UITextFieldDelegate, U
         self.textFiled.delegate = self
         
     
-        targetNoteTextView.textContainer.lineBreakMode = .byTruncatingTail
-        targetNoteTextView.textContainer.maximumNumberOfLines = 2
+        self.targetNoteTextView.textContainer.lineBreakMode = .byTruncatingTail
+        self.targetNoteTextView.textContainer.maximumNumberOfLines = 2
+        
+        self.settingsButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
     }
     
     private func setupCollectionViewLayout() {

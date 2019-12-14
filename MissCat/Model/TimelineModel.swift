@@ -32,6 +32,8 @@ public enum TimelineType {
         }
     }
 }
+
+//MARK: CLASS
 class TimelineModel {
     
     //MARK: I/O
@@ -72,7 +74,7 @@ class TimelineModel {
     
     
     
-    //MARK: REST
+    //MARK: REST API
     public func loadNotes(with option: LoadOption, completion: (()->())? = nil)-> Observable<NoteCell.Model> {
         let dispose = Disposables.create()
         
@@ -136,7 +138,7 @@ class TimelineModel {
     }
     
     
-    //MARK: Streaming
+    //MARK: Streaming API
     public func connectStream(type: TimelineType)-> Observable<NoteCell.Model> { //streamingのresponseを捌くのはhandleStreamで行う
         let dipose = Disposables.create()
         self.type = type

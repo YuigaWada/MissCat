@@ -1,5 +1,5 @@
 PODS:
-  - Agrume (5.3.2):
+  - Agrume (5.3.6):
     - SwiftyGif
   - CocoaLumberjack (3.6.0):
     - CocoaLumberjack/Core (= 3.6.0)
@@ -7,7 +7,7 @@ PODS:
   - Differentiator (4.0.1)
   - Down (0.9.0)
   - FloatingPanel (1.7.1)
-  - MisskeyKit (1.0):
+  - MisskeyKit (1.1):
     - Starscream
   - PolioPager (2.2)
   - RxCocoa (5.0.1):
@@ -70,12 +70,12 @@ CHECKOUT OPTIONS:
     :git: https://github.com/SVGKit/SVGKit.git
 
 SPEC CHECKSUMS:
-  Agrume: 171c1d1079324195c7ce04af4c7a66d86a9cf952
+  Agrume: 32400f14de8864d666aeb70a20192a0c48695c22
   CocoaLumberjack: 78b0c238666f4f58db069738ec176f4519557516
   Differentiator: 886080237d9f87f322641dedbc5be257061b0602
   Down: 1cdbca4963b542d0ef34ebb3e10ff48382bdf761
   FloatingPanel: 2f87246071476cf05d77ba3f50a373ca4b04549e
-  MisskeyKit: 98130650ff56aab911cbb821a89a234dd32db8ef
+  MisskeyKit: 765086bda350af5a17023e78595bdd1e96bf4b1e
   PolioPager: 324dc97f5bb029eb0e892b59265be4abce1c6290
   RxCocoa: e741b9749968e8a143e2b787f1dfbff2b63d0a5c
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
@@ -87,6 +87,6 @@ SPEC CHECKSUMS:
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
 
-PODFILE CHECKSUM: 4b0df2535452cf551182e8214360eebd29dca9cd
+PODFILE CHECKSUM: b0774612fb6b43c94e97fa97844e1765681d47f1
 
 COCOAPODS: 1.7.1

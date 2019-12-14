@@ -7,8 +7,21 @@
 //
 
 import UIKit
+import RxSwift
 
 extension UIView {
+    
+    func setTapGesture(_ disposeBag: DisposeBag, closure: @escaping ()->()) {
+        let tapGesture = UITapGestureRecognizer()
+        
+        tapGesture.rx.event.bind{ _ in
+            closure()
+        }.disposed(by: disposeBag)
+        
+        self.isUserInteractionEnabled = true
+        self.addGestureRecognizer(tapGesture)
+    }
+    
     func toImage(with view: UIView) -> UIImage? {
         UIGraphicsBeginImageContextWithOptions(view.bounds.size, view.isOpaque, 0.0)
         defer { UIGraphicsEndImageContext() }

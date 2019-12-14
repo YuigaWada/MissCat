@@ -9,6 +9,7 @@
 import Foundation
 
 protocol ViewModelType {
+    // Input: rx.tap等のイベントはtriggerとしてInputに打ち込むが、hogehoge.rx.textのようなBinderに対するbindingはView側で行う
     associatedtype Input
     associatedtype Output
     associatedtype State
