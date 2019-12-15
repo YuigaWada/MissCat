@@ -15,14 +15,15 @@ public protocol ReactionGenViewControllerDelegate {
     func scrollUp() //半モーダルviewを上まで引き上げる
 }
 
-
+fileprivate typealias ViewModel = ReactionGenViewModel
 public typealias EmojisDataSource = RxCollectionViewSectionedReloadDataSource<ReactionGenViewController.EmojisSection>
-public class ReactionGenViewController: UIViewController, UITextFieldDelegate, UIScrollViewDelegate {
+public class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScrollViewDelegate, UICollectionViewDelegate {
     
+    @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var iconImageView: UIImageView!
     @IBOutlet weak var displayNameLabel: UILabel!
     @IBOutlet weak var targetNoteTextView: UITextView!
-    @IBOutlet weak var textFiled: UITextField!
+    
     
     @IBOutlet weak var settingsButton: UIButton!
     @IBOutlet weak var emojiCollectionView: UICollectionView!
@@ -30,8 +31,10 @@ public class ReactionGenViewController: UIViewController, UITextFieldDelegate, U
     
     public var delegate: ReactionGenViewControllerDelegate?
     
-    private lazy var viewModel: ReactionGenViewModel = .init(disposeBag: disposeBag)
+    private var viewModel: ReactionGenViewModel?
     private let disposeBag = DisposeBag()
+    
+    private var viewDidAppeared: Bool = false
     
     
     public override func viewDidLoad() {
@@ -39,14 +42,39 @@ public class ReactionGenViewController: UIViewController, UITextFieldDelegate, U
         self.setupComponents()
         self.setupCollectionViewLayout()
         
-        let dataSource = self.setupDataSource()
-        self.binding(dataSource: dataSource)
+        self.setupViewModel()
     }
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         self.iconImageView.layer.cornerRadius =  self.iconImageView.frame.width / 2
+    }
+    
+    public override func viewDidAppear(_ animated: Bool) {
+        self.setNextEmojis()
+        super.viewDidAppear(animated)
+        
+        self.viewDidAppeared = true
+    }
+    
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        self.viewDidAppeared = false
+    }
+    
+    
+    private func setNextEmojis() {
+        guard let viewModel = viewModel else { return }
+        viewModel.getNextEmojis()
+    }
+    
+    private func setupViewModel() {
+        self.viewModel = .init(and: disposeBag)
+        
+        let dataSource = self.setupDataSource()
+        self.binding(dataSource: dataSource, viewModel: self.viewModel!)
     }
     
     private func setupDataSource()-> EmojisDataSource {
@@ -58,15 +86,16 @@ public class ReactionGenViewController: UIViewController, UITextFieldDelegate, U
         return dataSource
     }
     
-    private func binding(dataSource: EmojisDataSource?) {
+    private func binding(dataSource: EmojisDataSource?, viewModel: ViewModel) {
         guard let dataSource = dataSource else { return }
         
-        let presets = viewModel.getPresets()
+        let output = viewModel.output
         
-        Observable.just(presets)
+        Observable.just(viewModel.output.favorites)
             .bind(to: self.emojiCollectionView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)
         
+        output.otherEmojis.bind(to: self.emojiCollectionView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
     }
     
     
@@ -74,9 +103,9 @@ public class ReactionGenViewController: UIViewController, UITextFieldDelegate, U
     private func setupComponents() {
         self.emojiCollectionView.register(UINib(nibName: "EmojiViewCell", bundle: nil), forCellWithReuseIdentifier: "EmojiCell")
         self.emojiCollectionView.rx.setDelegate(self).disposed(by: disposeBag)
-        self.textFiled.delegate = self
+        self.searchBar.delegate = self
         
-    
+        
         self.targetNoteTextView.textContainer.lineBreakMode = .byTruncatingTail
         self.targetNoteTextView.textContainer.maximumNumberOfLines = 2
         
@@ -102,10 +131,10 @@ public class ReactionGenViewController: UIViewController, UITextFieldDelegate, U
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as? EmojiViewCell else {fatalError("Internal Error.")}
         
         cell.mainView.emoji = item.defaultEmoji ?? "👍"
-//        cell.frame = CGRect(x: cell.frame.origin.x,
-//                            y: cell.frame.origin.y,
-//                            width: self.view.frame.width / 7,
-//                            height: self.view.frame.width / 7)
+        //        cell.frame = CGRect(x: cell.frame.origin.x,
+        //                            y: cell.frame.origin.y,
+        //                            width: self.view.frame.width / 7,
+        //                            height: self.view.frame.width / 7)
         setupTapGesture(to: cell, emoji: item.defaultEmoji ?? "👍")
         
         
@@ -114,7 +143,7 @@ public class ReactionGenViewController: UIViewController, UITextFieldDelegate, U
     
     
     public func setTargetNoteId(_ id: String?) {
-        viewModel.targetNoteId = id
+        viewModel!.targetNoteId = id
     }
     
     private func setupTapGesture(to view: EmojiViewCell, emoji: String) {
@@ -123,13 +152,13 @@ public class ReactionGenViewController: UIViewController, UITextFieldDelegate, U
         
         //各々のEmojiViewに対してtap gestureを付加する
         tapGesture.rx.event.bind{ _ in
-            guard let targetNoteId = self.viewModel.targetNoteId else { return }
+            guard let targetNoteId = self.viewModel!.targetNoteId else { return }
             
-            if self.viewModel.hasMarked {
-                self.viewModel.cancelReaction(noteId: targetNoteId)
+            if self.viewModel!.hasMarked {
+                self.viewModel!.cancelReaction(noteId: targetNoteId)
             }
             else {
-                self.viewModel.registerReaction(noteId: targetNoteId, reaction: emoji)
+                self.viewModel!.registerReaction(noteId: targetNoteId, reaction: emoji)
             }
             
             self.dismiss(animated: true, completion: nil) // 半モーダルを消す
@@ -138,6 +167,19 @@ public class ReactionGenViewController: UIViewController, UITextFieldDelegate, U
         view.addGestureRecognizer(tapGesture)
     }
     
+    
+    //MARK: CollectionView Delegate
+    public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        guard let viewModel = viewModel else { return }
+        let index = indexPath.row
+        
+        //下位10cellsでセル更新
+        guard self.viewDidAppeared,
+            collectionView.visibleCells.count > 0,
+            collectionView.visibleCells.count / 6 - index < 10 else { return }
+        
+//        viewModel.getNextEmojis()
+    }
     
     //MARK: Public Methods
     public func setTargetNote(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
@@ -186,10 +228,46 @@ public extension ReactionGenViewController {
         public var items: [Item]
     }
     
-    struct EmojiModel {
+    @objc(EmojiModel)class EmojiModel: NSObject, NSCoding {
         public let isDefault: Bool
         public let defaultEmoji: String?
         public let customEmojiUrl: String?
+        
+        init(isDefault: Bool, defaultEmoji: String?, customEmojiUrl: String?) {
+            self.isDefault = isDefault
+            self.defaultEmoji = defaultEmoji
+            self.customEmojiUrl = customEmojiUrl
+        }
+        
+        //MARK: UserDefaults Init
+        required public init?(coder aDecoder: NSCoder) {
+            self.isDefault = (aDecoder.decodeObject(forKey: "isDefault") ?? true) as! Bool
+            self.defaultEmoji = aDecoder.decodeObject(forKey: "defaultEmoji") as? String
+            self.customEmojiUrl = aDecoder.decodeObject(forKey: "customEmojiUrl") as? String
+        }
+        
+        public func encode(with aCoder: NSCoder) {
+            aCoder.encode(isDefault, forKey: "isDefault")
+            aCoder.encode(defaultEmoji, forKey: "defaultEmoji")
+            aCoder.encode(customEmojiUrl, forKey: "customEmojiUrl")
+        }
+        
+        
+        //MARK: GET/SET
+        public static func getModelArray()-> [EmojiModel]? {
+            guard let array = UserDefaults.standard.data(forKey: "[EmojiModel]") else { return nil }
+            return NSKeyedUnarchiver.unarchiveObject(with: array) as? Array<EmojiModel> // nil許容なのでOK
+        }
+        
+        public static func saveModelArray(with target: [EmojiModel]) {
+            let targetRawData = NSKeyedArchiver.archivedData(withRootObject: target)
+            UserDefaults.standard.set(targetRawData, forKey: "[EmojiModel]")
+            UserDefaults.standard.synchronize()
+        }
+        
+        public static func checkSavedArray()-> Bool { // UserDefaultsに保存されてるかcheck
+            return UserDefaults.standard.object(forKey: "[EmojiModel]") != nil
+        }
     }
 }
 

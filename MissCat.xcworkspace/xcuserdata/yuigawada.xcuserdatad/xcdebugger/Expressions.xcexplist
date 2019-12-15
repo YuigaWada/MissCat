@@ -203,6 +203,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #1 in TimelineModel.loadNotes(with:completion:):TimelineModel.swift">
+      </ContextState>
+      <ContextState
          contextName = "ReactionCell.loadNib():ReactionCell.swift">
          <PersistentStrings>
             <PersistentString
@@ -570,6 +573,14 @@
             </PersistentString>
             <PersistentString
                value = "customEmojis">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ReactionGenViewController.EmojiModel.init(coder:):ReactionGenViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "aDecoder.decodeObject(forKey: &quot;customEmojiUrl&quot;) as? String">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

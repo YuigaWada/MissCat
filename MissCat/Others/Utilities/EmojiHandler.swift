@@ -10,8 +10,8 @@ import MisskeyKit
 
 public class EmojiHandler {
     
-    private var defaultEmojis: [DefaultEmojiModel]?
-    private var customEmojis: [EmojiModel]?
+    public var defaultEmojis: [DefaultEmojiModel]?
+    public var customEmojis: [EmojiModel]?
     
     public static let handler = EmojiHandler()
     

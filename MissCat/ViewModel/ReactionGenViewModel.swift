@@ -9,8 +9,37 @@
 import RxSwift
 import MisskeyKit
 
-public class ReactionGenViewModel {
-    public let emojis: PublishSubject<[ReactionGenViewController.EmojisSection]> = .init()
+class ReactionGenViewModel: ViewModelType {
+    
+    
+    //MARK: I/O
+    struct Input {
+        
+    }
+    
+    struct Output {
+        let favorites: [ReactionGenViewController.EmojisSection] // 同期
+        let otherEmojis: PublishSubject<[ReactionGenViewController.EmojisSection]> // 非同期
+    }
+    
+    struct State {
+        
+    }
+    
+    //    private let input: Input
+    public lazy var output: Output = {
+        let presets = model.getPresets()
+        let favorites = [ReactionGenViewController.EmojisSection(items: presets)]
+        
+        return .init(favorites: favorites,
+                     otherEmojis: self.otherEmojis)
+    }()
+    
+    private var otherEmojisList: [ReactionGenViewController.EmojiModel] = []
+    private let otherEmojis: PublishSubject<[ReactionGenViewController.EmojisSection]> = .init()
+    
+    
+    
     public var dataSource: EmojisDataSource?
     public var targetNoteId: String?
     public var hasMarked: Bool { //リアクションが登録されているか?
@@ -20,16 +49,36 @@ public class ReactionGenViewModel {
     
     private var myReaction: String?
     private let model = ReactionGenModel()
-    //    private var emojisModel: [ReactionGenViewController.EmojiModel] = []
+    private let disposeBag: DisposeBag
     
+    private var isLoading: Bool = false
     
-    
-    public func getPresets()-> [ReactionGenViewController.EmojisSection] {
-        let presets = model.getPresets()
-        
-        return [ReactionGenViewController.EmojisSection(items: presets)]
+    init(and disposeBag: DisposeBag) { //init(with input: Input, and disposeBag: DisposeBag) {
+        //        self.input = input
+        self.disposeBag = disposeBag
     }
     
+    public func getNextEmojis() {
+        guard !self.isLoading else { return }
+        
+        self.model.getNextDefaultEmojis().subscribe(onNext: { emojis in
+            self.isLoading = true
+            
+//            self.otherEmojisList.append(emojis)
+            
+            let section = ReactionGenViewController.EmojisSection(items: emojis)
+            self.otherEmojis.onNext([section])
+            
+            self.isLoading = false
+        }).disposed(by: disposeBag)
+        
+//        self.model.getCustomEmojis().subscribe(onNext: { emojis in
+//            self.otherEmojisList.append(emojis)
+//
+//            let section = ReactionGenViewController.EmojisSection(items: self.otherEmojisList)
+//            self.otherEmojis.onNext([section])
+//        }).disposed(by: disposeBag)
+    }
     
     
     public func registerReaction(noteId: String, reaction: String) {
@@ -50,16 +99,5 @@ public class ReactionGenViewModel {
     }
     
     
-    
-    
-    init(disposeBag: DisposeBag) {
-        let presets = model.getPresets()
-        
-        self.updateEmojis(new: [ReactionGenViewController.EmojisSection(items: presets)])
-    }
-    
-    private func updateEmojis(new: [ReactionGenViewController.EmojisSection]) {
-        self.emojis.onNext(new)
-    }
     
 }
