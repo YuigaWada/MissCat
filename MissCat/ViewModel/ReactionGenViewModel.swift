@@ -11,7 +11,6 @@ import MisskeyKit
 
 class ReactionGenViewModel: ViewModelType {
     
-    
     //MARK: I/O
     struct Input {
         

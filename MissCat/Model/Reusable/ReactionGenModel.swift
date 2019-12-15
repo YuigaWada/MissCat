@@ -8,6 +8,7 @@
 
 import MisskeyKit
 import RxSwift
+import RxDataSources
 
 fileprivate typealias EmojiModel = ReactionGenViewController.EmojiModel
 public class ReactionGenModel {
@@ -27,6 +28,8 @@ public class ReactionGenModel {
     fileprivate class CustomEmojis: Emojis {
         lazy var emojis = EmojiHandler.handler.customEmojis
     }
+    
+    fileprivate lazy var presetEmojiModels = EmojiModel.getModelArray()
    
     //MARK: Private Vars
     private var defaultEmojis = DefaultEmojis()
@@ -43,8 +46,7 @@ public class ReactionGenModel {
     //MARK: Public Methods
     //プリセットｎ絵文字を取得
     public func getPresets()-> [ReactionGenViewController.EmojiModel] {
-        
-        if !EmojiModel.checkSavedArray() {
+        guard EmojiModel.checkSavedArray() else { //UserDefaultsが存在しないならUserDefaultsセットしておく
             var emojiModels: [EmojiModel] = []
             self.defaultPreset.forEach { char in
                 emojiModels.append(EmojiModel(isDefault: true,
@@ -56,8 +58,7 @@ public class ReactionGenModel {
         }
         
         //UserDefaultsが存在したら...
-        guard let emojiModels = EmojiModel.getModelArray() else { fatalError("Internal Error.") }
-
+        guard let emojiModels = ReactionGenModel.fileShared.presetEmojiModels else { fatalError("Internal Error.") }
         return emojiModels
     }
     
@@ -129,4 +130,66 @@ public class ReactionGenModel {
     }
     
     
+}
+
+
+
+//MARK: ReactionGenCell.Model
+
+public extension ReactionGenViewController {
+    struct EmojisSection {
+        public var items: [Item]
+    }
+    
+    @objc(EmojiModel)class EmojiModel: NSObject, NSCoding {
+        public let isDefault: Bool
+        public let defaultEmoji: String?
+        public let customEmojiUrl: String?
+        
+        init(isDefault: Bool, defaultEmoji: String?, customEmojiUrl: String?) {
+            self.isDefault = isDefault
+            self.defaultEmoji = defaultEmoji
+            self.customEmojiUrl = customEmojiUrl
+        }
+        
+        //MARK: UserDefaults Init
+        required public init?(coder aDecoder: NSCoder) {
+            self.isDefault = (aDecoder.decodeObject(forKey: "isDefault") ?? true) as! Bool
+            self.defaultEmoji = aDecoder.decodeObject(forKey: "defaultEmoji") as? String
+            self.customEmojiUrl = aDecoder.decodeObject(forKey: "customEmojiUrl") as? String
+        }
+        
+        public func encode(with aCoder: NSCoder) {
+            aCoder.encode(isDefault, forKey: "isDefault")
+            aCoder.encode(defaultEmoji, forKey: "defaultEmoji")
+            aCoder.encode(customEmojiUrl, forKey: "customEmojiUrl")
+        }
+        
+        
+        //MARK: GET/SET
+        public static func getModelArray()-> [EmojiModel]? {
+            guard let array = UserDefaults.standard.data(forKey: "[EmojiModel]") else { return nil }
+            return NSKeyedUnarchiver.unarchiveObject(with: array) as? Array<EmojiModel> // nil許容なのでOK
+        }
+        
+        public static func saveModelArray(with target: [EmojiModel]) {
+            let targetRawData = NSKeyedArchiver.archivedData(withRootObject: target)
+            UserDefaults.standard.set(targetRawData, forKey: "[EmojiModel]")
+            UserDefaults.standard.synchronize()
+        }
+        
+        public static func checkSavedArray()-> Bool { // UserDefaultsに保存されてるかcheck
+            return UserDefaults.standard.object(forKey: "[EmojiModel]") != nil
+        }
+    }
+}
+
+
+extension ReactionGenViewController.EmojisSection: SectionModelType {
+    public typealias Item = ReactionGenViewController.EmojiModel
+    
+    public init(original: ReactionGenViewController.EmojisSection, items: [Item]) {
+        self = original
+        self.items = items
+    }
 }
