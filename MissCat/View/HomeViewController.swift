@@ -178,7 +178,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         self.nowPage = .PostDetails
         self.navBar.isHidden = false
         self.navBar.barTitle = ""
-        self.navBar.setButton(style: .Left, leftText: "reply", leftFont: .awesomeSolid(fontSize: 16.0))
+        self.navBar.setButton(style: .Left, leftText: "chevron-left", leftFont: .awesomeSolid(fontSize: 16.0))
         
         self.view.bringSubviewToFront(self.navBar)
         self.view.bringSubviewToFront(self.footerTab)
