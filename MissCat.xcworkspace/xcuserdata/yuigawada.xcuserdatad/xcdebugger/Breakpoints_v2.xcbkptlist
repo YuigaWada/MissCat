@@ -460,9 +460,9 @@
             filePath = "MissCat/ViewModel/PostViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "50"
-            endingLineNumber = "50"
-            landmarkName = "uploadFile(_:completion:)"
+            startingLineNumber = "68"
+            endingLineNumber = "68"
+            landmarkName = "uploadFiles(completion:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -1260,8 +1260,8 @@
             filePath = "MissCat/ViewModel/PostViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "24"
-            endingLineNumber = "24"
+            startingLineNumber = "35"
+            endingLineNumber = "35"
             landmarkName = "init(disposeBag:)"
             landmarkType = "7">
             <Locations>
@@ -1308,8 +1308,8 @@
             filePath = "MissCat/ViewModel/PostViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "26"
-            endingLineNumber = "26"
+            startingLineNumber = "37"
+            endingLineNumber = "37"
             landmarkName = "init(disposeBag:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -1324,8 +1324,8 @@
             filePath = "MissCat/ViewModel/PostViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "25"
-            endingLineNumber = "25"
+            startingLineNumber = "36"
+            endingLineNumber = "36"
             landmarkName = "init(disposeBag:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4191,6 +4191,70 @@
             startingLineNumber = "61"
             endingLineNumber = "61"
             landmarkName = "getPresets()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "A6C16FF4-0D83-42C2-B0DF-0DA619527F26"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/ViewModel/PostViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "43"
+            endingLineNumber = "43"
+            landmarkName = "submitNote(_:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "A6C16FF4-0D83-42C2-B0DF-0DA619527F26 - edec2423b936fc2e"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.Array&lt;Swift.String&gt;) -&gt; () in MissCat.PostViewModel.submitNote(Swift.String) -&gt; ()"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/ViewModel/PostViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "43"
+                  endingLineNumber = "43"
+                  offsetFromSymbolStart = "152">
+               </Location>
+               <Location
+                  uuid = "A6C16FF4-0D83-42C2-B0DF-0DA619527F26 - c47718ac723934e"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.Bool) -&gt; () in closure #1 (Swift.Array&lt;Swift.String&gt;) -&gt; () in MissCat.PostViewModel.submitNote(Swift.String) -&gt; ()"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/ViewModel/PostViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "44"
+                  endingLineNumber = "44"
+                  offsetFromSymbolStart = "100">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "C9604F53-2B67-43AA-933D-B8B557AC125A"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/ViewModel/PostViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "65"
+            endingLineNumber = "65"
+            landmarkName = "uploadFiles(completion:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

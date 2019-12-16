@@ -158,10 +158,8 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         
         self.showPhotoEditor(with: image).subscribe(onNext: { editedImage in // 画像エディタを表示
             guard let editedImage = editedImage else { return }
-            self.viewModel.uploadFile(editedImage)
+            self.viewModel.stackFile(editedImage)
         }).disposed(by: disposeBag)
         
     }
-    
-    
 }

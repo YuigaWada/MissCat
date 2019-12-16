@@ -73,6 +73,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #1 in closure #1 in PostViewModel.uploadFiles(completion:):PostViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "attachmentImages">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TimelineViewModel.analyzeHyperLink(_:):TimelineViewModel.swift">
          <PersistentStrings>
             <PersistentString

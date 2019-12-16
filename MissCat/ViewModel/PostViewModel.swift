@@ -11,12 +11,23 @@ import RxSwift
 
 public class PostViewModel {
     
+    private struct AttachmentImage {
+        fileprivate let id: String = UUID().uuidString
+        fileprivate var order: Int = 0
+        fileprivate var image: UIImage?
+        
+        init(image: UIImage, order: Int) {
+            self.image = image
+            self.order = order
+        }
+    }
+    
     public var iconImage: PublishSubject<UIImage> = .init()
     public var isSuccess: PublishSubject<Bool> = .init()
     
     private let model = PostModel()
     private var disposeBag: DisposeBag
-    private var fileIds: [String] = []
+    private var attachmentImages: [AttachmentImage] = []
     
     init(disposeBag: DisposeBag) {
         self.disposeBag = disposeBag
@@ -28,10 +39,13 @@ public class PostViewModel {
     }
     
     public func submitNote(_ note: String) {
-        let fileIds = self.fileIds.count > 0 ? self.fileIds : nil
+        guard self.attachmentImages.count > 0 else {
+            self.model.submitNote(note, fileIds: nil){ self.isSuccess.onNext($0) }
+            return 
+        }
         
-        self.model.submitNote(note, fileIds: fileIds){
-            self.isSuccess.onNext($0)
+        self.uploadFiles { fileIds in
+            self.model.submitNote(note, fileIds: fileIds){ self.isSuccess.onNext($0) }
         }
     }
     
@@ -39,18 +53,29 @@ public class PostViewModel {
         
     }
     
-    public func pickImage(on view: UIViewController, type: UIImagePickerController.SourceType) {
+    
+    
+    public func uploadFiles(completion: @escaping ([String])->()) {
+        var fileIds: [String] = []
         
-        
+        attachmentImages.forEach{ image in
+            guard let image = image.image else { return }
+            
+            self.model.uploadFile(image) { fileId in
+                guard let fileId = fileId else { return }
+                fileIds.append(fileId)
+                
+                if fileIds.count == self.attachmentImages.count { completion(fileIds) }
+            }
+        }
         
     }
     
-    
-    public func uploadFile(_ image: UIImage) {
-        self.model.uploadFile(image) { fileId in
-        guard let fileId = fileId else { return }
-        self.fileIds.append(fileId)
-        }
+    //画像をスタックさせておいて、アップロードは直前に
+    public func stackFile(_ image: UIImage) {
+        let targetImage = AttachmentImage(image: image, order: self.attachmentImages.count + 1)
+        
+        self.attachmentImages.append(targetImage)
     }
     
 }
