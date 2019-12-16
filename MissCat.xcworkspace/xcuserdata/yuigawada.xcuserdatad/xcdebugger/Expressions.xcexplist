@@ -41,10 +41,10 @@
                value = "item.displayName">
             </PersistentString>
             <PersistentString
-               value = "item.note">
+               value = "item.reactions">
             </PersistentString>
             <PersistentString
-               value = "item.reactions">
+               value = "item.note">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -92,10 +92,10 @@
          contextName = "ProfileViewController.timelineDidScroll(_:scroll:):ProfileViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "containerScrollView.contentOffset.y">
+               value = "pagerTab.frame.origin.y">
             </PersistentString>
             <PersistentString
-               value = "pagerTab.frame.origin.y">
+               value = "containerScrollView.contentOffset.y">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -126,6 +126,14 @@
          <PersistentStrings>
             <PersistentString
                value = "defaultEmojis">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "PhotoEditorViewController.setImageView(image:):PhotoEditorViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "stickersViewController">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -452,10 +460,10 @@
                value = " MisskeyKit.auth.appSecret">
             </PersistentString>
             <PersistentString
-               value = "UIScreen.main.bounds.size.height">
+               value = "self.footerTab">
             </PersistentString>
             <PersistentString
-               value = "self.footerTab">
+               value = "UIScreen.main.bounds.size.height">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -588,10 +596,10 @@
          contextName = "static Requestor.post(url:rawJson:data:completion:):Requestor.swift">
          <PersistentStrings>
             <PersistentString
-               value = "request.httpAdditionalHeaders">
+               value = "String(data: bodyData)">
             </PersistentString>
             <PersistentString
-               value = "String(data: bodyData)">
+               value = "request.httpAdditionalHeaders">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

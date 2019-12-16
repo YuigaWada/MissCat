@@ -29,3 +29,4 @@ ${PODS_ROOT}/Starscream/Starscream.framework.dSYM
 ${PODS_ROOT}/SwiftyGif/SwiftyGif.framework
 ${PODS_ROOT}/SwiftyGif/SwiftyGif.framework.dSYM
 ${BUILT_PRODUCTS_DIR}/XLPagerTabStrip/XLPagerTabStrip.framework
+${BUILT_PRODUCTS_DIR}/iOSPhotoEditor/iOSPhotoEditor.framework

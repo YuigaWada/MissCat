@@ -40,16 +40,16 @@ public class PostViewModel {
     }
     
     public func pickImage(on view: UIViewController, type: UIImagePickerController.SourceType) {
-
+        
         
         
     }
     
     
-    public func uploadFile(_ image: UIImage, completion: @escaping (String?)->()) {
+    public func uploadFile(_ image: UIImage) {
         self.model.uploadFile(image) { fileId in
-            guard let fileId = fileId else { return }
-            self.fileIds.append(fileId)
+        guard let fileId = fileId else { return }
+        self.fileIds.append(fileId)
         }
     }
     

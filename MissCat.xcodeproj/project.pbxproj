@@ -15,6 +15,7 @@
 		8D0AC5BA237B5D0D00530508 /* Font Awesome 5 Free-Solid-900.otf in Resources */ = {isa = PBXBuildFile; fileRef = 8D0AC5B7237B5AD900530508 /* Font Awesome 5 Free-Solid-900.otf */; };
 		8D0AC5BE237B714900530508 /* EmojiHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0AC5BD237B714900530508 /* EmojiHandler.swift */; };
 		8D0AC5C1237B865B00530508 /* TimelineModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0AC5C0237B865B00530508 /* TimelineModel.swift */; };
+		8D0D47AA23A74EC80095361D /* UIViewController+PhotoEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0D47A923A74EC80095361D /* UIViewController+PhotoEditor.swift */; };
 		8D0F7D0F2398F21F009B45E1 /* ReactionGenPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */; };
 		8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */; };
 		8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D16656823A0DB3100C03764 /* MFMEngine.swift */; };
@@ -98,6 +99,7 @@
 		8D0AC5B7237B5AD900530508 /* Font Awesome 5 Free-Solid-900.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Font Awesome 5 Free-Solid-900.otf"; sourceTree = "<group>"; };
 		8D0AC5BD237B714900530508 /* EmojiHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiHandler.swift; sourceTree = "<group>"; };
 		8D0AC5C0237B865B00530508 /* TimelineModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineModel.swift; sourceTree = "<group>"; };
+		8D0D47A923A74EC80095361D /* UIViewController+PhotoEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+PhotoEditor.swift"; sourceTree = "<group>"; };
 		8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenPanel.swift; sourceTree = "<group>"; };
 		8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		8D16656823A0DB3100C03764 /* MFMEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MFMEngine.swift; sourceTree = "<group>"; };
@@ -273,6 +275,7 @@
 				8DC16153238BBD0C007793B7 /* NoteModel+MissCat.swift */,
 				8D84061C238FFC5C00EED595 /* UIImage+MissCat.swift */,
 				8DA36F852394B9D000512459 /* UIFont+MissCat.swift */,
+				8D0D47A923A74EC80095361D /* UIViewController+PhotoEditor.swift */,
 			);
 			path = Extension;
 			sourceTree = "<group>";
@@ -584,6 +587,7 @@
 				8D8863B02384147100A7A5A8 /* UIColor+MissCat.swift in Sources */,
 				8D42C3A8238076B600337DD2 /* Double+MissCat.swift in Sources */,
 				8D8863A92383F8A900A7A5A8 /* NoteCellViewModel.swift in Sources */,
+				8D0D47AA23A74EC80095361D /* UIViewController+PhotoEditor.swift in Sources */,
 				8D84061D238FFC5C00EED595 /* UIImage+MissCat.swift in Sources */,
 				8DC16154238BBD0C007793B7 /* NoteModel+MissCat.swift in Sources */,
 				8D8863B62384951300A7A5A8 /* RenoteeCell.swift in Sources */,

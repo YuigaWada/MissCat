@@ -206,6 +206,7 @@ if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${PODS_ROOT}/SwiftyGif/SwiftyGif.framework"
   install_dsym "${PODS_ROOT}/SwiftyGif/SwiftyGif.framework.dSYM"
   install_framework "${BUILT_PRODUCTS_DIR}/XLPagerTabStrip/XLPagerTabStrip.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/iOSPhotoEditor/iOSPhotoEditor.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${PODS_ROOT}/Agrume/Agrume.framework"
@@ -238,6 +239,7 @@ if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${PODS_ROOT}/SwiftyGif/SwiftyGif.framework"
   install_dsym "${PODS_ROOT}/SwiftyGif/SwiftyGif.framework.dSYM"
   install_framework "${BUILT_PRODUCTS_DIR}/XLPagerTabStrip/XLPagerTabStrip.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/iOSPhotoEditor/iOSPhotoEditor.framework"
 fi
 if [ "${COCOAPODS_PARALLEL_CODE_SIGN}" == "true" ]; then
   wait

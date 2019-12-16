@@ -214,7 +214,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     }
     
     //MARK: TextField Delegate
-    public func textFieldDidBeginEditing(_ textField: UITextField) {
+    public func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
         guard let delegate = delegate else { return }
         
         delegate.scrollUp()

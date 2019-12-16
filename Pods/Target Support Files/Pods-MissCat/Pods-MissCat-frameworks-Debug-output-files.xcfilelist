@@ -28,3 +28,4 @@ ${DWARF_DSYM_FOLDER_PATH}/Starscream.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyGif.framework
 ${DWARF_DSYM_FOLDER_PATH}/SwiftyGif.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/XLPagerTabStrip.framework
+${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/iOSPhotoEditor.framework

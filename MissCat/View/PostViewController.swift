@@ -7,9 +7,12 @@
 //
 
 import UIKit
+import iOSPhotoEditor
 import RxSwift
 
 public class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    
+    @IBOutlet weak var attachmentCollectionView: UICollectionView!
     
     @IBOutlet weak var cancelButton: UIButton!
     @IBOutlet weak var submitButton: UIButton!
@@ -52,7 +55,6 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         viewModel.isSuccess.subscribe { _ in
             
         }.disposed(by: disposeBag)
-        
         
         
         self.cancelButton.rx.tap.asObservable().subscribe{ _ in
@@ -127,8 +129,9 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     private func pickImage(type: UIImagePickerController.SourceType) {
         if UIImagePickerController.isSourceTypeAvailable(.savedPhotosAlbum) {
             let picker = UIImagePickerController()
-            picker.sourceType = .photoLibrary
+            picker.sourceType = type
             picker.delegate = self
+        
             self.present(picker, animated: true, completion: nil)
         }
     }
@@ -149,10 +152,16 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     }
     
     public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
-            viewModel.uploadFile(image){_ in}
-        }
+        
+        picker.dismiss(animated: true, completion: nil)
+        guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else { return }
+        
+        self.showPhotoEditor(with: image).subscribe(onNext: { editedImage in // 画像エディタを表示
+            guard let editedImage = editedImage else { return }
+            self.viewModel.uploadFile(editedImage)
+        }).disposed(by: disposeBag)
+        
     }
-
+    
     
 }
