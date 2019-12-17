@@ -128,9 +128,11 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     //MARK: Setup Initial View
     private func setupNotificationsVC() {
         if self.notificationsViewController == nil {
-            guard let storyboard = self.storyboard else { return }
-            self.notificationsViewController = storyboard.instantiateViewController(withIdentifier: "notifications")
-            self.notificationsViewController!.view.isHidden = true
+            guard let storyboard = self.storyboard, let notificationsViewController = storyboard.instantiateViewController(withIdentifier: "notifications") as? NotificationsViewController else { return }
+            notificationsViewController.view.isHidden = true
+            notificationsViewController.homeViewController = self
+            self.notificationsViewController = notificationsViewController
+
             
             self.navBar.barTitle = "Notifications"
             self.navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
@@ -187,6 +189,8 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     }
     
     private func showProfileView(userId: String, isMe: Bool = false) {
+        
+        self.nowPage = .Profile
         if isMe, let myProfileViewController = myProfileViewController {
             myProfileViewController.view.isHidden = false
             return
@@ -203,7 +207,6 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         vc.setUserId(userId)
         vc.view.frame = self.getDisplayRect(needNavBar: false)
         
-        self.nowPage = .Profile
         self.addChild(vc)
         self.view.addSubview(vc.view)
         
@@ -274,6 +277,9 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         
         if type != .Profile, let myProfileViewController = self.myProfileViewController {
             myProfileViewController.view.isHidden = true
+        }
+        if type != .Profile, let currentProfileViewController = self.currentProfileViewController {
+            currentProfileViewController.view.isHidden = true
         }
     }
     

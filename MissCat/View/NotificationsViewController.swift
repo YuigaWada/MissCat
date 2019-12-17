@@ -12,7 +12,7 @@ import RxSwift
 import RxDataSources
 
 public typealias NotificationDataSource = RxTableViewSectionedAnimatedDataSource<NotificationCell.Section>
-public class NotificationsViewController: UIViewController, UITableViewDelegate, FooterTabBarDelegate {
+public class NotificationsViewController: UIViewController, UITableViewDelegate, FooterTabBarDelegate, NoteCellDelegate {
     @IBOutlet weak var mainTableView: UITableView!
     
     private var viewModel: NotificationsViewModel?
@@ -20,6 +20,7 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
     private var loadCompleted: Bool = true
     private var cellHeightCache: [String: CGFloat] = [:] //String → identifier
     
+    public var homeViewController: TimelineDelegate?
     
     //MARK: Life Cycle
     public override func loadView() {
@@ -76,13 +77,17 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         if item.type == .reply || item.type == .mention {
             guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell, let replyNote = item.replyNote
                 else { return NoteCell() }
-
-            return noteCell.shapeCell(item: replyNote)
+            
+            let shapedCell = noteCell.shapeCell(item: replyNote)
+            shapedCell.delegate = self
+            
+            return shapedCell
         }
         else if item.type == .reaction || item.type == .renote {
             guard let notificationCell = tableView.dequeueReusableCell(withIdentifier: "NotificationCell", for: indexPath) as? NotificationCell
                 else { return NotificationCell() }
             
+            //            notificationCell.delegate = self
             return notificationCell.shapeCell(item: item)
         }
         
@@ -150,6 +155,45 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
     
     public func tappedProfile() {
         
+    }
+    
+    
+    //MARK: NoteCellDelegate
+    public func tappedReply() {
+        
+    }
+    
+    public func tappedRenote() {
+        
+    }
+    
+    public func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
+        self.presentReactionGen(noteId: noteId, iconUrl: iconUrl, displayName: displayName, username: username, note: note, hasFile: hasFile, hasMarked: hasMarked)
+    }
+    
+    public func tappedOthers() {
+        
+    }
+    
+    public func tappedLink(text: String) {
+        guard let viewModel = viewModel else { return }
+        
+        let (linkType, value) = text.analyzeHyperLink()
+        
+        switch linkType {
+        case "URL":
+            self.openLink(url: value)
+        case "User":
+            break
+        default:
+            break
+        }
+        
+    }
+    
+    public func move2Profile(userId: String) {
+        guard let homeViewController = self.homeViewController else { return }
+        homeViewController.move2Profile(userId: userId)
     }
     
     

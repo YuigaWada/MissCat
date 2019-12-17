@@ -9,8 +9,16 @@
 import UIKit
 import RxSwift
 import FloatingPanel
+import SafariServices
 
 extension UIViewController {
+    
+    private func getViewController(name: String)-> UIViewController {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let viewController = storyboard.instantiateViewController(withIdentifier: name)
+        
+        return viewController
+    }
     
     //MARK: Present
     func presentOnFullScreen(_ viewControllerToPresent: UIViewController, animated: Bool, completion: (()->Void)?) {
@@ -50,6 +58,29 @@ extension UIViewController {
                       width: self.view.frame.width - notSafeWidth,
                       height:  height)
     }
+    
+    func presentReactionGen(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
+        guard let reactionGen = self.getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+        
+        self.presentWithSemiModal(reactionGen, animated: true, completion: nil)
+        
+        reactionGen.setTargetNote(noteId: noteId,
+                                  iconUrl: iconUrl,
+                                  displayName: displayName,
+                                  username: username,
+                                  note: note,
+                                  hasFile: hasFile,
+                                  hasMarked: hasMarked)
+    }
+    
+    func openLink(url: String) {
+        guard let url = URL(string: url), let rootVC = UIApplication.shared.windows[0].rootViewController else { return }
+        let safari = SFSafariViewController(url: url)
+        
+        // i dont know why but it seems that we must launch a safari VC from the root VC.
+        rootVC.present(safari, animated: true, completion: nil)
+    }
+    
     
 }
 

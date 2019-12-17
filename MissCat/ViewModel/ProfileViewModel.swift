@@ -66,6 +66,9 @@ class ProfileViewModel: ViewModelType {
             
             intro.accept(shaped.toAttributedString(family: "Helvetica", size: 11.0) ?? .init())
         }
+        else {
+            intro.accept("自己紹介はありません".toAttributedString(family: "Helvetica", size: 11.0) ?? .init())
+        }
         
         // Banner Image
         if let bannerUrl = user.bannerUrl {

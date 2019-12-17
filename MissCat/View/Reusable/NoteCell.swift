@@ -362,30 +362,19 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         if on {
             self.usernameLabel.text = nil
             self.agoLabel.text = nil
-            
-            self.separatorBorder.showAnimatedGradientSkeleton()
-            self.replyIndicator.showAnimatedGradientSkeleton()
+            self.noteView.text = nil
             
             self.displayNameLabel.showAnimatedGradientSkeleton()
-            
             self.iconView.showAnimatedGradientSkeleton()
             
-            self.noteView.showAnimatedGradientSkeleton()
-            
-            self.reactionsStackView.showAnimatedGradientSkeleton()
+            self.reactionsStackView.isHidden = true
             self.fileImageView.showAnimatedGradientSkeleton()
         }
         else {
-            self.separatorBorder.hideSkeleton()
-            self.replyIndicator.hideSkeleton()
-            
             self.displayNameLabel.hideSkeleton()
-            
             self.iconView.hideSkeleton()
             
-            self.noteView.hideSkeleton()
-            
-            self.reactionsStackView.hideSkeleton()
+            self.reactionsStackView.isHidden = false
             self.fileImageView.hideSkeleton()
         }
     }

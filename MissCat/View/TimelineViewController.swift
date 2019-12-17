@@ -10,7 +10,6 @@ import UIKit
 import RxSwift
 import RxCocoa
 import RxDataSources
-import SafariServices
 import FloatingPanel
 import XLPagerTabStrip
 
@@ -240,20 +239,6 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         DispatchQueue.main.async { self.mainTableView.reloadRows(at: [row], with: .none) }
     }
     
-    private func presentReactionGen(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
-        guard let reactionGen = self.getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
-        
-        self.presentWithSemiModal(reactionGen, animated: true, completion: nil)
-        
-        reactionGen.setTargetNote(noteId: noteId,
-                                  iconUrl: iconUrl,
-                                  displayName: displayName,
-                                  username: username,
-                                  note: note,
-                                  hasFile: hasFile,
-                                  hasMarked: hasMarked)
-    }
-    
     private func getViewController(name: String)-> UIViewController {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let viewController = storyboard.instantiateViewController(withIdentifier: name)
@@ -302,7 +287,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     func tappedLink(text: String) {
         guard let viewModel = viewModel else { return }
         
-        let (linkType, value) = viewModel.analyzeHyperLink(text)
+        let (linkType, value) = text.analyzeHyperLink()
         
         switch linkType {
         case "URL":
@@ -320,15 +305,6 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         homeViewController.move2Profile(userId: userId)
     }
     
-    
-    
-    private func openLink(url: String) {
-        guard let url = URL(string: url), let rootVC = UIApplication.shared.windows[0].rootViewController else { return }
-        let safari = SFSafariViewController(url: url)
-        
-        // i dont know why but it seems that we must launch a safari VC from the root VC.
-        rootVC.present(safari, animated: true, completion: nil)
-    }
     
     
     //MARK: XLPagerTabStrip delegate

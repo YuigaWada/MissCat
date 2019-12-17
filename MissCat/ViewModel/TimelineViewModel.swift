@@ -206,26 +206,6 @@ class TimelineViewModel: ViewModelType
     
     
     //MARK: Utilities
-    //HyperLinkを用途ごとに捌く
-    public func analyzeHyperLink(_ text: String)-> (linkType: String, value: String) {
-        let magicHeaders = ["http://tapevents.misscat/": "User", "http://hashtags.misscat/": "Hashtag"]
-        var result = (linkType: "URL", value: text)
-        
-        magicHeaders.keys.forEach { magicHeader in
-            guard let type = magicHeaders[magicHeader], text.count > magicHeader.count else { return }
-            
-            let header = String(text.prefix(magicHeader.count))
-            let value = text.suffix(text.count - magicHeader.count)
-            
-            //ヘッダーが一致するものをresultに返す
-            guard header == magicHeader else { return }
-            result = (linkType: type, value: String(value))
-        }
-        
-        // if header != magicHeader
-        return result
-    }
-    
     //dataSourceからnoteを探してtargetのindexの下にreactiongencell入れる
     public func tappedReaction(noteId: String, hasMarked: Bool) {
         

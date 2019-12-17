@@ -222,6 +222,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #1 in closure #1 in NoteCell.setupProfileGesture():NoteCell.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.delegate">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "specialized closure #1 in static MisskeyKit.handleAPI&lt;A&gt;(needApiKey:api:params:data:fileType:type:missingCount:callback:):MisskeyKit.swift">
          <PersistentStrings>
             <PersistentString
@@ -310,14 +318,6 @@
          <PersistentStrings>
             <PersistentString
                value = "item">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "NotificationsViewController.tableView(_:willDisplay:forRowAt:):NotificationsViewController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "loadCompleted">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

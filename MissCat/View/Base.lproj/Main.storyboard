@@ -381,7 +381,7 @@
                                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                                         <subviews>
                                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="BPw-nG-rsB">
-                                                <rect key="frame" x="0.0" y="0.0" width="414" height="137.5"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="414" height="147.5"/>
                                             </imageView>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MTL-6d-wBR" userLabel="NameTag">
                                                 <rect key="frame" x="98" y="95" width="54" height="42.5"/>
@@ -470,7 +470,7 @@
                                             <constraint firstAttribute="trailing" secondItem="Ck2-Ts-76E" secondAttribute="trailing" id="88T-xt-MOa"/>
                                             <constraint firstItem="DKm-jx-5xf" firstAttribute="top" secondItem="Cmd-dt-Rnt" secondAttribute="bottom" constant="8" id="IuH-dy-lMr"/>
                                             <constraint firstItem="MTL-6d-wBR" firstAttribute="top" secondItem="rGP-dP-dhq" secondAttribute="top" id="LKG-46-O7m"/>
-                                            <constraint firstItem="BPw-nG-rsB" firstAttribute="bottom" secondItem="MTL-6d-wBR" secondAttribute="bottom" id="Lck-cB-RVq"/>
+                                            <constraint firstItem="BPw-nG-rsB" firstAttribute="bottom" secondItem="MTL-6d-wBR" secondAttribute="bottom" constant="10" id="Lck-cB-RVq"/>
                                             <constraint firstItem="BPw-nG-rsB" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" id="Ma4-mg-bIO"/>
                                             <constraint firstItem="BPw-nG-rsB" firstAttribute="width" secondItem="fb3-8M-JPG" secondAttribute="width" id="O4z-eE-9z1"/>
                                             <constraint firstItem="MTL-6d-wBR" firstAttribute="height" secondItem="rGP-dP-dhq" secondAttribute="height" multiplier="0.546667" id="RT1-u3-BWd"/>
