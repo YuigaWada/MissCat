@@ -3,6 +3,14 @@
    version = "1.0">
    <ContextStates>
       <ContextState
+         contextName = "PhotoEditorViewController.viewDidLoad():PhotoEditorViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "image">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in closure #1 in TimelineModel.loadNotes(with:completion:):TimelineModel.swift">
          <PersistentStrings>
             <PersistentString
@@ -73,14 +81,6 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "closure #1 in closure #1 in PostViewModel.uploadFiles(completion:):PostViewModel.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "attachmentImages">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "TimelineViewModel.analyzeHyperLink(_:):TimelineViewModel.swift">
          <PersistentStrings>
             <PersistentString
@@ -134,14 +134,6 @@
          <PersistentStrings>
             <PersistentString
                value = "defaultEmojis">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "PhotoEditorViewController.setImageView(image:):PhotoEditorViewController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "stickersViewController">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -322,18 +314,32 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "closure #1 in TimelineViewModel.tappedReaction(noteId:hasMarked:):TimelineViewModel.swift">
+         contextName = "NotificationsViewController.tableView(_:willDisplay:forRowAt:):NotificationsViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "self.hasReactionGenCell">
+               value = "loadCompleted">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "closure #1 in TimelineViewModel.loadNotes(untilId:completion:):TimelineViewModel.swift">
+         contextName = "NavBarPageViewController.touchesMoved(_:with:):NavBarPageViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "cellsModel">
+               value = "dxProportion">
+            </PersistentString>
+            <PersistentString
+               value = "self.view.frame.width">
+            </PersistentString>
+            <PersistentString
+               value = "self.parent">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in TimelineViewModel.tappedReaction(noteId:hasMarked:):TimelineViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.hasReactionGenCell">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -394,6 +400,14 @@
             </PersistentString>
             <PersistentString
                value = "self.cellsModel">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in TimelineViewModel.loadNotes(untilId:completion:):TimelineViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "cellsModel">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

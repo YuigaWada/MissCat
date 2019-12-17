@@ -23,7 +23,27 @@ public class NotificationsViewModel
     private lazy var model = NotificationsModel()
     
     init(disposeBag: DisposeBag) {
-        model.loadNotification { results in
+        self.loadNotification{
+            //読み込み完了後、Viewに伝達 & Streamingに接続
+            self.update(new: self.cellsModel)
+            self.connectStream()
+        }
+        
+    }
+    
+    
+    public func loadUntilNotification(completion: (()->())? = nil) {
+        let untilId = self.cellsModel[self.cellsModel.count - 1].notificationId
+        
+        self.loadNotification(untilId: untilId) {
+            self.update(new: self.cellsModel)
+            if let completion = completion { completion() }
+        }
+    }
+    
+    
+    public func loadNotification(untilId: String? = nil, completion: (()->())? = nil) {
+        self.model.loadNotification(untilId: untilId) { results in
             guard let results = results else { return }
             
             results.forEach{ notification in
@@ -31,11 +51,8 @@ public class NotificationsViewModel
                 self.cellsModel.append(cellModel)
             }
             
-            //読み込み完了後、Viewに伝達 & Streamingに接続
-            self.update(new: self.cellsModel)
-            self.connectStream()
+            if let completion = completion { completion() }
         }
-        
     }
     
     

@@ -38,7 +38,7 @@ class TimelineViewModel: ViewModelType
         }
     }
     
-    private let input: Input?
+    private let input: Input
     public lazy var output: Output = .init(notes: self.notes.asDriver(onErrorJustReturn: []),
                                            forceUpdateIndex: self.forceUpdateIndex.asDriver(onErrorJustReturn: 0))
     public var state: State {
@@ -67,31 +67,35 @@ class TimelineViewModel: ViewModelType
     
     //MARK: Life Cycle
     public init(with input: Input, and disposeBag: DisposeBag) {
-        
         self.input = input
         self.disposeBag = disposeBag
-        
+    }
+    
+    public func setupInitialCell() {
+        self.setSkeltonCell()
         self.loadNotes(){
-            self.updateNotes(new: self.cellsModel)
-            
-            guard input.type.needsStreaming else { return }
-            DispatchQueue.main.async { self.connectStream() }
+            DispatchQueue.main.async {
+                self.updateNotes(new: self.cellsModel)
+                self.removeSkeltonCell()
+                
+                guard self.input.type.needsStreaming else { return }
+                self.connectStream()
+                
+            }
         }
     }
     
     
-    
-    
     //MARK: Streaming
-    private func connectStream() { //streamingのresponseを捌くのはhandleStreamで行う
-        guard let input = input else { return }
-        
+    private func connectStream() {
         model.connectStream(type: input.type)
             .subscribe(onNext: { cellModel in
                 
                 self.cellsModel.insert(cellModel, at: 0)
                 self.updateNotes(new: self.cellsModel)
                 
+            }, onError: { error in
+                self.connectStream()
             })
             .disposed(by: disposeBag)
         
@@ -173,8 +177,6 @@ class TimelineViewModel: ViewModelType
     
     //投稿をfetchしてくる
     public func loadNotes(untilId: String? = nil, completion: (()->())? = nil) {
-        guard let input = input else { return }
-        
         let option = Model.LoadOption(type: input.type,
                                       userId: input.userId,
                                       untilId: untilId,
@@ -237,7 +239,21 @@ class TimelineViewModel: ViewModelType
         }
     }
     
+    private func setSkeltonCell() {
+        for _ in 0..<10 {
+            let skeltonCellModel = NoteCell.Model.fakeSkeltonCell()
+            self.cellsModel.append(skeltonCellModel)
+        }
+        
+        self.updateNotes(new: self.cellsModel)
+    }
     
+    private func removeSkeltonCell() {
+        let removed = self.cellsModel.suffix(self.cellsModel.count - 10)
+        self.cellsModel = Array(removed)
+        
+        self.updateNotes(new: self.cellsModel)
+    }
     
     //MARK: RxSwift
     private func updateNotes(new: [NoteCell.Model]) {
@@ -245,7 +261,6 @@ class TimelineViewModel: ViewModelType
     }
     
     private func updateNotes(new: [NoteCell.Section]) {
-        //        DispatchQueue.main.async { self.notes.onNext(new) }
         self.notes.onNext(new)
     }
     

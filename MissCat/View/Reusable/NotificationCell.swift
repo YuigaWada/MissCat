@@ -165,6 +165,7 @@ extension NotificationCell {
         public typealias Identity = String
         public let identity: String = String(Float.random(in: 1 ..< 100))
         
+        var notificationId: String
         var type: ActionType = .reply
         
         let myNote: NoteCell.Model? // 自分のどの投稿に対してか

@@ -79,6 +79,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         }
         
         self.binding(dataSource: dataSource)
+        viewModel!.setupInitialCell()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -201,6 +202,10 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         
         self.showDetailView(item: viewModel.cellsModel[index])
         tableView.deselectRow(at: indexPath as IndexPath, animated: true)
+        
+        
+        //TODO: renoteeCellをタップしたらrenote先までタップしたことにする
+        //tableView.selectRow(at: <#T##IndexPath?#>, animated: true, scrollPosition: .none)
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {

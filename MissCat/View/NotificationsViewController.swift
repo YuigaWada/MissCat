@@ -17,7 +17,7 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
     
     private var viewModel: NotificationsViewModel?
     private let disposeBag = DisposeBag()
-    private var loadCompleted: Bool = false
+    private var loadCompleted: Bool = true
     private var cellHeightCache: [String: CGFloat] = [:] //String → identifier
     
     
@@ -125,9 +125,9 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         
         print("loadUntilNotes...")
         self.loadCompleted = false
-        //            self.viewModel.loadUntilNotes() {
-        //                self.loadCompleted = true //セル更新最中に多重更新されないように
-        //            }
+        viewModel.loadUntilNotification() {
+            self.loadCompleted = true //セル更新最中に多重更新されないように
+        }
     }
     
     

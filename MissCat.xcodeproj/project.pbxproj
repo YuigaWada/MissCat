@@ -16,6 +16,7 @@
 		8D0AC5BE237B714900530508 /* EmojiHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0AC5BD237B714900530508 /* EmojiHandler.swift */; };
 		8D0AC5C1237B865B00530508 /* TimelineModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0AC5C0237B865B00530508 /* TimelineModel.swift */; };
 		8D0D47AA23A74EC80095361D /* UIViewController+PhotoEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0D47A923A74EC80095361D /* UIViewController+PhotoEditor.swift */; };
+		8D0D47AC23A7738F0095361D /* NavBarPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0D47AB23A7738F0095361D /* NavBarPageViewController.swift */; };
 		8D0F7D0F2398F21F009B45E1 /* ReactionGenPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */; };
 		8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */; };
 		8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D16656823A0DB3100C03764 /* MFMEngine.swift */; };
@@ -100,6 +101,7 @@
 		8D0AC5BD237B714900530508 /* EmojiHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiHandler.swift; sourceTree = "<group>"; };
 		8D0AC5C0237B865B00530508 /* TimelineModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineModel.swift; sourceTree = "<group>"; };
 		8D0D47A923A74EC80095361D /* UIViewController+PhotoEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+PhotoEditor.swift"; sourceTree = "<group>"; };
+		8D0D47AB23A7738F0095361D /* NavBarPageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavBarPageViewController.swift; sourceTree = "<group>"; };
 		8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenPanel.swift; sourceTree = "<group>"; };
 		8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		8D16656823A0DB3100C03764 /* MFMEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MFMEngine.swift; sourceTree = "<group>"; };
@@ -288,6 +290,7 @@
 				8D0AC5BD237B714900530508 /* EmojiHandler.swift */,
 				8D3037012389018800BA6D38 /* Cache.swift */,
 				8D16656823A0DB3100C03764 /* MFMEngine.swift */,
+				8D0D47AB23A7738F0095361D /* NavBarPageViewController.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -597,6 +600,7 @@
 				8D065B17237AC3D0003DFB7C /* TimelineViewModel.swift in Sources */,
 				8D42C3A623804B6200337DD2 /* UIViewController+MissCat.swift in Sources */,
 				8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */,
+				8D0D47AC23A7738F0095361D /* NavBarPageViewController.swift in Sources */,
 				8D502D5A2380270A00525A96 /* TabBar.swift in Sources */,
 				8DD8898B23935CC400D22910 /* PostDetailViewModel.swift in Sources */,
 			);

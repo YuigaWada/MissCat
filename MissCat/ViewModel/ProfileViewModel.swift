@@ -8,17 +8,40 @@
 
 import UIKit
 import RxSwift
+import RxCocoa
 import MisskeyKit
 
-class ProfileViewModel {
+class ProfileViewModel: ViewModelType {
     
-    public var bannerImage: PublishSubject<UIImage> = .init()
+    struct Input {
+        
+    }
     
-    public var displayName: PublishSubject<String> = .init()
-    public var username: PublishSubject<String> = .init()
+    struct Output {
+        let bannerImage: Driver<UIImage>
+        let displayName: Driver<String>
+        let username: Driver<String>
+        let iconImage: Driver<UIImage>
+        let intro: Driver<NSAttributedString>
+    }
     
-    public var iconImage: PublishSubject<UIImage> = .init()
-    public var intro: PublishSubject<NSAttributedString> = .init()
+    struct State {
+    
+    }
+    
+    public lazy var output: Output = .init(bannerImage: self.bannerImage.asDriver(onErrorJustReturn: UIImage()),
+                                           displayName: self.displayName.asDriver(onErrorJustReturn: ""),
+                                           username: self.username.asDriver(onErrorJustReturn: ""),
+                                           iconImage: self.iconImage.asDriver(onErrorJustReturn: UIImage()),
+                                           intro: self.intro.asDriver(onErrorJustReturn: NSAttributedString()))
+    
+    private var bannerImage: PublishRelay<UIImage> = .init()
+    
+    private var displayName: PublishRelay<String> = .init()
+    private var username: PublishRelay<String> = .init()
+    
+    private var iconImage: PublishRelay<UIImage> = .init()
+    private var intro: PublishRelay<NSAttributedString> = .init()
     
     private lazy var model = ProfileModel()
     
@@ -33,7 +56,7 @@ class ProfileViewModel {
         if let iconImageUrl = user.avatarUrl {
             iconImageUrl.toUIImage { image in
                 guard let image = image else { return }
-                self.iconImage.onNext(image)
+                self.iconImage.accept(image)
             }
         }
         
@@ -41,21 +64,21 @@ class ProfileViewModel {
         if let description = user.description {
             let shaped = model.shape(description: description)
             
-            intro.onNext(shaped.toAttributedString(family: "Helvetica", size: 11.0) ?? .init())
+            intro.accept(shaped.toAttributedString(family: "Helvetica", size: 11.0) ?? .init())
         }
         
         // Banner Image
         if let bannerUrl = user.bannerUrl {
             bannerUrl.toUIImage { image in
                 guard let image = image else { return }
-                self.bannerImage.onNext(image)
+                self.bannerImage.accept(image)
             }
         }
         
         // username / displayName
         if let username = user.username {
-            self.username.onNext("@" + username)
-            displayName.onNext(user.name ?? username)
+            self.username.accept("@" + username)
+            self.displayName.accept(user.name ?? username)
         }
         
     }

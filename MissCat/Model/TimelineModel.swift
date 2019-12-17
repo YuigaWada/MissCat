@@ -165,7 +165,9 @@ class TimelineModel {
         
         if let error = error {
             print(error)
-            if error == .CannotConnectStream || error == .NoStreamConnection { } //TODO: ここONError流す
+            if error == .CannotConnectStream || error == .NoStreamConnection {
+                observer.onError(error)
+            }
             return
         }
         

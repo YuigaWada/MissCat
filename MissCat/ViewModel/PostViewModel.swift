@@ -41,7 +41,7 @@ public class PostViewModel {
     public func submitNote(_ note: String) {
         guard self.attachmentImages.count > 0 else {
             self.model.submitNote(note, fileIds: nil){ self.isSuccess.onNext($0) }
-            return 
+            return
         }
         
         self.uploadFiles { fileIds in

@@ -37,7 +37,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     private var childVCs: [TimelineViewController] = []
     
     private var maxScroll: CGFloat {
-        return pagerTab.frame.origin.y - self.getSafeAreaSize().height - 20 // 20 = 微調整
+        return pagerTab.frame.origin.y - self.getSafeAreaSize().height - 10 // 10 = 微調整
     }
     
     
@@ -46,6 +46,8 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         self.setupTabStyle()
         
         super.viewDidLoad()
+        
+         self.setupSkeltonMode()
         self.binding()
         self.setBannerBlur()
         
@@ -62,6 +64,9 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         self.childVCs.forEach { // VCの表示がずれるのを防ぐ(XLPagerTabStripの不具合？？)
             $0.view.frame = CGRect(x:0, y: 0, width: self.view.frame.width, height: $0.view.frame.height)
         }
+        
+        //Fix: ここにおくとanimatorの関係でたまに失敗する？ animatorが不当なタイミングで破棄される問題
+//        self.setBlurAnimator()
     }
     
     public override func viewWillAppear(_ animated: Bool) {
@@ -93,11 +98,21 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     }
     
     private func binding() {
-        viewModel.iconImage.bind(to: self.iconImageView.rx.image).disposed(by: disposeBag)
-        viewModel.intro.bind(to: self.introTextView.rx.attributedText).disposed(by: disposeBag)
-        viewModel.bannerImage.bind(to: self.bannerImageView.rx.image).disposed(by: disposeBag)
-        viewModel.displayName.bind(to: self.displayName.rx.text).disposed(by: disposeBag)
-        viewModel.username.bind(to: self.usernameLabel.rx.text).disposed(by: disposeBag)
+        let output = viewModel.output
+        
+        output.iconImage.drive(onNext: { image in
+            self.iconImageView.hideSkeleton()
+            self.self.iconImageView.image = image
+        }).disposed(by: disposeBag)
+        
+        output.intro.drive(onNext: { attributedText in
+            self.introTextView.hideSkeleton()
+            self.introTextView.attributedText = attributedText
+        }).disposed(by: disposeBag)
+        
+        output.bannerImage.drive(self.bannerImageView.rx.image).disposed(by: disposeBag)
+        output.displayName.drive(self.displayName.rx.text).disposed(by: disposeBag)
+        output.username.drive(self.usernameLabel.rx.text).disposed(by: disposeBag)
     }
     
     private func setBannerBlur() {
@@ -214,6 +229,29 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
             if 0 < blurProportion, blurProportion < 1 {
                 blurAnimator.fractionComplete = blurProportion //ブラーアニメーションをかける
             }
+        }
+    }
+    
+    
+    //MARK: SkeltonView Utilities
+    private func setupSkeltonMode() {
+        self.iconImageView.isSkeletonable = true
+        self.introTextView.isSkeletonable = true
+        self.displayName.text = nil
+        self.usernameLabel.text = nil
+        
+        self.changeSkeltonState(on: true)
+    }
+    
+    
+    private func changeSkeltonState(on: Bool) {
+        if on {
+            self.iconImageView.showAnimatedGradientSkeleton()
+            self.introTextView.showAnimatedGradientSkeleton()
+        }
+        else {
+            self.iconImageView.hideSkeleton()
+            self.introTextView.hideSkeleton()
         }
     }
 }

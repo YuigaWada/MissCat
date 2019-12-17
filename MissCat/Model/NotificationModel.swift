@@ -12,8 +12,8 @@ public class NotificationsModel {
     
     private let needMyNoteType = ["mention", "reply", "renote", "quote", "reaction"]
     
-    public func loadNotification(completion: @escaping ([NotificationModel]?)->()) {
-        MisskeyKit.notifications.get(limit: 20, following: false){ results, error in
+    public func loadNotification(untilId: String? = nil, completion: @escaping ([NotificationModel]?)->()) {
+        MisskeyKit.notifications.get(limit: 20, untilId: untilId ?? "", following: false){ results, error in
             guard let results = results, results.count > 0, error == nil else { completion(nil); return }
             
             if let notificationId = results[0].id {
@@ -25,7 +25,7 @@ public class NotificationsModel {
     }
     
     public func getModel(notification: NotificationModel)-> NotificationCell.Model? {
-        guard let type = notification.type, let user = notification.user, let note = notification.note else { return nil }
+        guard let id = notification.id, let type = notification.type, let user = notification.user, let note = notification.note else { return nil }
         
         let isReply = type == .mention || type == .reply
         let isRenote = type == .renote
@@ -46,7 +46,8 @@ public class NotificationsModel {
             myNote = note.getNoteCellModel()
         }
         
-        let cellModel = NotificationCell.Model(type: type,
+        let cellModel = NotificationCell.Model(notificationId: id,
+                                               type: type,
                                                myNote: myNote,
                                                replyNote: replyNote,
                                                fromUser: user,
@@ -77,7 +78,8 @@ public class NotificationsModel {
     private func convertNoteModel(_ target: Any)-> NotificationCell.Model? {
         guard let note = target as? NoteModel, let myNote = note.reply, let fromUser = note.user  else { return nil }
         
-        return  NotificationCell.Model(type: .reply,
+        return  NotificationCell.Model(notificationId: note.id ?? "",
+                                       type: .reply,
                                        myNote: myNote.getNoteCellModel(),
                                        replyNote: note.getNoteCellModel(),
                                        fromUser: fromUser,
@@ -88,7 +90,8 @@ public class NotificationsModel {
     private func convertNotification(_ target: Any)-> NotificationCell.Model? {
         guard let target = target as? StreamingModel, let reaction = target.reaction, let toNote = target.note, let fromUser = target.user  else { return nil }
         
-        return  NotificationCell.Model(type: .reaction,
+        return  NotificationCell.Model(notificationId: target.id ?? "",
+                                       type: .reaction,
                                        myNote: toNote.getNoteCellModel(),
                                        replyNote: nil,
                                        fromUser: fromUser,

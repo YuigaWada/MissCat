@@ -230,6 +230,13 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     
     public func shapeCell(item: NoteCell.Model, isDetailMode: Bool = false)-> NoteCell {
+        guard !item.isSkelton else { //SkeltonViewを表示する
+            self.changeSkeltonState(on: true)
+            return self
+        }
+        
+        self.changeSkeltonState(on: false)
+        
         guard let noteId = item.noteId else { return NoteCell() }
         
         self.initializeComponent(hasFile: item.files.count > 0) // Initialize because NoteCell is reused by TableView.
@@ -353,26 +360,29 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     private func changeSkeltonState(on: Bool) {
         if on {
-            self.separatorBorder.showAnimatedSkeleton()
-            self.replyIndicator.showAnimatedSkeleton()
+            self.usernameLabel.text = nil
+            self.agoLabel.text = nil
             
-            self.displayNameLabel.showAnimatedSkeleton()
-            self.usernameLabel.showAnimatedSkeleton()
-            self.iconView.showAnimatedSkeleton()
-            self.agoLabel.showAnimatedSkeleton()
-            self.noteView.showAnimatedSkeleton()
+            self.separatorBorder.showAnimatedGradientSkeleton()
+            self.replyIndicator.showAnimatedGradientSkeleton()
             
-            self.reactionsStackView.showAnimatedSkeleton()
-            self.fileImageView.showAnimatedSkeleton()
+            self.displayNameLabel.showAnimatedGradientSkeleton()
+            
+            self.iconView.showAnimatedGradientSkeleton()
+            
+            self.noteView.showAnimatedGradientSkeleton()
+            
+            self.reactionsStackView.showAnimatedGradientSkeleton()
+            self.fileImageView.showAnimatedGradientSkeleton()
         }
         else {
             self.separatorBorder.hideSkeleton()
             self.replyIndicator.hideSkeleton()
             
             self.displayNameLabel.hideSkeleton()
-            self.usernameLabel.hideSkeleton()
+            
             self.iconView.hideSkeleton()
-            self.agoLabel.hideSkeleton()
+            
             self.noteView.hideSkeleton()
             
             self.reactionsStackView.hideSkeleton()
@@ -441,6 +451,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
 extension NoteCell {
     public struct Model: IdentifiableType, Equatable {
         
+        var isSkelton = false
         var isReactionGenCell = false
         var isRenoteeCell = false
         var renotee: String? = nil
@@ -483,6 +494,29 @@ extension NoteCell {
             return NoteCell.Model(isRenoteeCell: true,
                                   renotee: renotee,
                                   baseNoteId: baseNoteId,
+                                  noteId: "",
+                                  iconImageUrl: "",
+                                  iconImage: nil,
+                                  userId: "",
+                                  displayName: "",
+                                  username: "",
+                                  note: "",
+                                  ago: "",
+                                  replyCount: 0,
+                                  renoteCount: 0,
+                                  reactions: [],
+                                  myReaction: nil,
+                                  files: [],
+                                  emojis: [])
+            
+        }
+        
+        static func fakeSkeltonCell()-> NoteCell.Model {
+            
+            return NoteCell.Model(isSkelton: true,
+                                  isRenoteeCell: false,
+                                  renotee: "",
+                                  baseNoteId: "",
                                   noteId: "",
                                   iconImageUrl: "",
                                   iconImage: nil,
