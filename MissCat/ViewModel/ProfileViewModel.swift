@@ -23,6 +23,8 @@ class ProfileViewModel: ViewModelType {
         let username: Driver<String>
         let iconImage: Driver<UIImage>
         let intro: Driver<NSAttributedString>
+        
+        let isMe: Driver<Bool>
     }
     
     struct State {

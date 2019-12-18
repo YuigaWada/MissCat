@@ -25,7 +25,7 @@ import MisskeyKit
 
 // (OOPの対極的存在である)一時的なキャッシュ管理についてはsingletonのCacheクラスを使用。
 
-public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate, TimelineDelegate, NavBarDelegate {
+public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate, TimelineDelegate, NavBarDelegate, UIGestureRecognizerDelegate {
     private var isXSeries = UIScreen.main.bounds.size.height > 811
     private let footerTabHeight: CGFloat = 55
     
@@ -84,9 +84,17 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         super.viewDidLoad()
     }
     
+    override public func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
     override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.setupFooterTab()
+        
+        self.navigationController?.interactivePopGestureRecognizer?.delegate = self
+        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
     }
     
     override public func viewDidLayoutSubviews() {
@@ -96,7 +104,9 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         self.setupNavTab()
     }
     
-    
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
+    }
     
     
     //MARK: Setup Tab
@@ -132,7 +142,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
             notificationsViewController.view.isHidden = true
             notificationsViewController.homeViewController = self
             self.notificationsViewController = notificationsViewController
-
+            
             
             self.navBar.barTitle = "Notifications"
             self.navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
@@ -174,8 +184,9 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         detailViewController.view.frame = self.getDisplayRect()
         detailViewController.item = item
         
-        self.addChild(detailViewController)
-        self.view.addSubview(detailViewController.view)
+        //        self.addChild(detailViewController)
+        //        self.view.addSubview(detailViewController.view)
+        self.navigationController?.pushViewController(detailViewController, animated: true)
         
         self.nowPage = .PostDetails
         self.navBar.isHidden = false
@@ -195,26 +206,21 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
             myProfileViewController.view.isHidden = false
             return
         }
-        else if !isMe, let currentProfileViewController = currentProfileViewController {
-            currentProfileViewController.view.isHidden = false
-            return
-        }
         
         // If myProfileViewController, currentProfileViewController is nil...
         guard let storyboard = self.storyboard,
-            let vc = storyboard.instantiateViewController(withIdentifier: "profile") as? ProfileViewController else { return }
+            let profileViewController = storyboard.instantiateViewController(withIdentifier: "profile") as? ProfileViewController else { return }
         
-        vc.setUserId(userId)
-        vc.view.frame = self.getDisplayRect(needNavBar: false)
-        
-        self.addChild(vc)
-        self.view.addSubview(vc.view)
+        profileViewController.setUserId(userId)
+        profileViewController.view.frame = self.getDisplayRect(needNavBar: false)
         
         if isMe {
-            self.myProfileViewController = vc
+            self.addChild(profileViewController)
+            self.view.addSubview(profileViewController.view)
+            self.myProfileViewController = profileViewController
         }
         else {
-            self.currentProfileViewController = vc
+            self.navigationController?.pushViewController(profileViewController, animated: true)
         }
     }
     

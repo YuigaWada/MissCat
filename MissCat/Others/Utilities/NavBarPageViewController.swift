@@ -7,11 +7,15 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 class NavBarPageViewController: UIViewController {
     
     private var animator: UIViewPropertyAnimator?
     private var previousPositionX: CGFloat = 0
+    
+    private let disposeBag = DisposeBag()
     
     
     
@@ -37,10 +41,12 @@ class NavBarPageViewController: UIViewController {
         let frame = self.view.frame
         //        if 0 <= fractionComplete, fractionComplete <= 1 {
         //            animator.fractionComplete = fractionComplete
-        self.view.frame = CGRect(x: frame.origin.x + dx,
-                                 y: frame.origin.y,
-                                 width: frame.width,
-                                 height: frame.height)
+        DispatchQueue.main.async {
+            self.view.frame = CGRect(x: frame.origin.x + dx,
+                                     y: frame.origin.y,
+                                     width: frame.width,
+                                     height: frame.height)
+        }
         //        }
         //        else {
         //            //            print("animator.fractionComplete: \(animator.fractionComplete)\n new: \(touch.location(in: self.view).x), old: \(previousPositionX)\ndx:\(dxProportion)\nnew fractionComplete: \(fractionComplete)\ndxProportion: \(dxProportion)")
@@ -50,6 +56,7 @@ class NavBarPageViewController: UIViewController {
     }
     
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        print("end")
         super.touchesEnded(touches, with: event)
         
         guard let animator = animator else { return }
@@ -63,6 +70,7 @@ class NavBarPageViewController: UIViewController {
         
         animator.startAnimation()
     }
+    
     
     
     private func generateAnimator()-> UIViewPropertyAnimator {
@@ -92,6 +100,6 @@ extension UIScrollView {
     
     override open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         self.superview?.touchesEnded(touches, with: event)
-        super.touchesEnded(touches, with: event)
+        
     }
 }

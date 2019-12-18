@@ -222,14 +222,6 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "closure #1 in closure #1 in NoteCell.setupProfileGesture():NoteCell.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "self.delegate">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "specialized closure #1 in static MisskeyKit.handleAPI&lt;A&gt;(needApiKey:api:params:data:fileType:type:missingCount:callback:):MisskeyKit.swift">
          <PersistentStrings>
             <PersistentString
@@ -425,6 +417,9 @@
             <PersistentString
                value = "cellHeightCache">
             </PersistentString>
+            <PersistentString
+               value = "self.viewModel">
+            </PersistentString>
          </PersistentStrings>
       </ContextState>
       <ContextState
@@ -464,6 +459,14 @@
          <PersistentStrings>
             <PersistentString
                value = "self.footerTab">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "HomeViewController.showProfileView(userId:isMe:):HomeViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "navigationController">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

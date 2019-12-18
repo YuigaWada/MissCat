@@ -1516,8 +1516,8 @@
             filePath = "MissCat/View/HomeViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "122"
-            endingLineNumber = "122"
+            startingLineNumber = "132"
+            endingLineNumber = "132"
             landmarkName = "setupNavTab()"
             landmarkType = "7">
          </BreakpointContent>
@@ -1532,8 +1532,8 @@
             filePath = "MissCat/View/HomeViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "111"
-            endingLineNumber = "111"
+            startingLineNumber = "121"
+            endingLineNumber = "121"
             landmarkName = "HomeViewController"
             landmarkType = "3">
          </BreakpointContent>
@@ -1548,8 +1548,8 @@
             filePath = "MissCat/View/HomeViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "225"
-            endingLineNumber = "225"
+            startingLineNumber = "231"
+            endingLineNumber = "231"
             landmarkName = "getViewController(name:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -1564,8 +1564,8 @@
             filePath = "MissCat/View/HomeViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "266"
-            endingLineNumber = "266"
+            startingLineNumber = "272"
+            endingLineNumber = "272"
             landmarkName = "generateTimelineVC(type:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -1580,8 +1580,8 @@
             filePath = "MissCat/View/HomeViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "270"
-            endingLineNumber = "270"
+            startingLineNumber = "276"
+            endingLineNumber = "276"
             landmarkName = "generateTimelineVC(type:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -1596,8 +1596,8 @@
             filePath = "MissCat/View/HomeViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "272"
-            endingLineNumber = "272"
+            startingLineNumber = "278"
+            endingLineNumber = "278"
             landmarkName = "HomeViewController"
             landmarkType = "3">
          </BreakpointContent>
@@ -2012,8 +2012,8 @@
             filePath = "MissCat/View/HomeViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "164"
-            endingLineNumber = "164"
+            startingLineNumber = "174"
+            endingLineNumber = "174"
             landmarkName = "showNotificationsView()"
             landmarkType = "7">
          </BreakpointContent>
@@ -2300,8 +2300,8 @@
             filePath = "MissCat/View/HomeViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "344"
-            endingLineNumber = "344"
+            startingLineNumber = "350"
+            endingLineNumber = "350"
             landmarkName = "tappedRightNavButton()"
             landmarkType = "7">
          </BreakpointContent>
@@ -2773,22 +2773,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "3F0DD841-A364-4A80-A71E-D082FE1283E6"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/View/TimelineViewController.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "188"
-            endingLineNumber = "188"
-            landmarkName = "tableView(_:estimatedHeightForRowAt:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "652B94B4-35EB-4309-A389-A5B7D0A16D5D"
             shouldBeEnabled = "No"
             ignoreCount = "0"
@@ -2796,8 +2780,8 @@
             filePath = "MissCat/View/HomeViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "360"
-            endingLineNumber = "360"
+            startingLineNumber = "366"
+            endingLineNumber = "366"
             landmarkName = "HomeViewController"
             landmarkType = "3">
          </BreakpointContent>
@@ -2812,8 +2796,8 @@
             filePath = "MissCat/View/HomeViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "359"
-            endingLineNumber = "359"
+            startingLineNumber = "365"
+            endingLineNumber = "365"
             landmarkName = "HomeViewController"
             landmarkType = "3">
          </BreakpointContent>
@@ -2940,8 +2924,8 @@
             filePath = "MissCat/View/HomeViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "268"
-            endingLineNumber = "268"
+            startingLineNumber = "274"
+            endingLineNumber = "274"
             landmarkName = "generateTimelineVC(type:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -3020,8 +3004,8 @@
             filePath = "MissCat/View/TimelineViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "282"
-            endingLineNumber = "282"
+            startingLineNumber = "298"
+            endingLineNumber = "298"
             landmarkName = "TimelineViewController"
             landmarkType = "3">
          </BreakpointContent>
@@ -3420,8 +3404,8 @@
             filePath = "MissCat/View/TimelineViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "225"
-            endingLineNumber = "225"
+            startingLineNumber = "241"
+            endingLineNumber = "241"
             landmarkName = "tableView(_:willDisplay:forRowAt:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4046,8 +4030,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "29"
             endingLineNumber = "29"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            landmarkName = "touchesBegan(_:with:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4060,10 +4044,10 @@
             filePath = "MissCat/Others/Utilities/NavBarPageViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "53"
-            endingLineNumber = "53"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "55"
+            endingLineNumber = "55"
+            landmarkName = "touchesMoved(_:with:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4094,8 +4078,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "31"
             endingLineNumber = "31"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            landmarkName = "NavBarPageViewController"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4110,8 +4094,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "39"
             endingLineNumber = "39"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            landmarkName = "touchesMoved(_:with:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4124,10 +4108,10 @@
             filePath = "MissCat/Others/Utilities/NavBarPageViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "72"
-            endingLineNumber = "72"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "75"
+            endingLineNumber = "75"
+            landmarkName = "NavBarPageViewController"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4140,10 +4124,10 @@
             filePath = "MissCat/Others/Utilities/NavBarPageViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "70"
-            endingLineNumber = "70"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "73"
+            endingLineNumber = "73"
+            landmarkName = "NavBarPageViewController"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4156,10 +4140,10 @@
             filePath = "MissCat/Others/Utilities/NavBarPageViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "60"
-            endingLineNumber = "60"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "63"
+            endingLineNumber = "63"
+            landmarkName = "touchesEnded(_:with:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4174,8 +4158,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "38"
             endingLineNumber = "38"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            landmarkName = "touchesMoved(_:with:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4190,8 +4174,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "32"
             endingLineNumber = "32"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            landmarkName = "touchesMoved(_:with:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4206,8 +4190,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "19"
             endingLineNumber = "19"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            landmarkName = "NavBarPageViewController"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4220,10 +4204,10 @@
             filePath = "MissCat/Others/Utilities/NavBarPageViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "83"
-            endingLineNumber = "83"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "86"
+            endingLineNumber = "86"
+            landmarkName = "generateAnimator()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4236,10 +4220,10 @@
             filePath = "MissCat/Others/Utilities/NavBarPageViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "89"
-            endingLineNumber = "89"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "92"
+            endingLineNumber = "92"
+            landmarkName = "touchesBegan(_:with:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4252,10 +4236,10 @@
             filePath = "MissCat/Others/Utilities/NavBarPageViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "94"
-            endingLineNumber = "94"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "97"
+            endingLineNumber = "97"
+            landmarkName = "touchesMoved(_:with:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4268,17 +4252,17 @@
             filePath = "MissCat/Others/Utilities/NavBarPageViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "90"
-            endingLineNumber = "90"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "93"
+            endingLineNumber = "93"
+            landmarkName = "touchesBegan(_:with:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "4EB1D4C5-200B-449F-BFF9-DD873AA05052"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "MissCat/ViewModel/TimelineViewModel.swift"
@@ -4364,8 +4348,8 @@
             filePath = "MissCat/View/HomeViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "289"
-            endingLineNumber = "289"
+            startingLineNumber = "295"
+            endingLineNumber = "295"
             landmarkName = "tappedHome()"
             landmarkType = "7">
          </BreakpointContent>
@@ -4412,9 +4396,137 @@
             filePath = "MissCat/View/HomeViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "194"
-            endingLineNumber = "194"
+            startingLineNumber = "205"
+            endingLineNumber = "205"
             landmarkName = "showProfileView(userId:isMe:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "D31B87A0-55FB-41F0-9C49-19700662CEA1"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/NavBarPageViewController.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "59"
+            endingLineNumber = "59"
+            landmarkName = "touchesEnded(_:with:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "93C7D9E3-C5CF-4476-B17F-85B9177BFC1D"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/NavBarPageViewController.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "102"
+            endingLineNumber = "102"
+            landmarkName = "touchesEnded(_:with:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "90B985ED-26F3-439D-A64E-0820D99EC2E0"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/NavBarPageViewController.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "91"
+            endingLineNumber = "91"
+            landmarkName = "touchesBegan(_:with:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "A79DD82E-3771-4DA3-8371-9FD69D34066A"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/View/HomeViewController.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "214"
+            endingLineNumber = "214"
+            landmarkName = "showProfileView(userId:isMe:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "83386A43-9B35-47FC-921B-DF50CA1B7014"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/View/HomeViewController.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "223"
+            endingLineNumber = "223"
+            landmarkName = "showProfileView(userId:isMe:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "83E09657-C288-4DF8-8DBD-D2EA71710FA7"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/View/HomeViewController.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "218"
+            endingLineNumber = "218"
+            landmarkName = "showProfileView(userId:isMe:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "667627D4-8863-44DE-A534-D6640F07FD6C"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/View/TimelineViewController.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "200"
+            endingLineNumber = "200"
+            landmarkName = "tableView(_:heightForRowAt:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "BC7946FE-9D24-486E-A805-835C92C2F051"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/View/TimelineViewController.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "226"
+            endingLineNumber = "226"
+            landmarkName = "tableView(_:willDisplay:forRowAt:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

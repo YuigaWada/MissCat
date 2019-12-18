@@ -14,7 +14,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     
     private let disposeBag = DisposeBag()
     private var blurAnimator: UIViewPropertyAnimator?
-
+    
     @IBOutlet weak var pagerTab: ButtonBarView!
     
     @IBOutlet weak var containerScrollView: UIScrollView!
@@ -27,6 +27,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     @IBOutlet weak var iconImageView: UIImageView!
     @IBOutlet weak var introTextView: UITextView!
     
+    @IBOutlet weak var backButton: UIButton!
     @IBOutlet weak var containerHeightContraint: NSLayoutConstraint!
     
     private var userId: String?
@@ -47,7 +48,8 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         
         super.viewDidLoad()
         
-         self.setupSkeltonMode()
+        self.setupComponent()
+        self.setupSkeltonMode()
         self.binding()
         self.setBannerBlur()
         
@@ -66,12 +68,19 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         }
         
         //Fix: ここにおくとanimatorの関係でたまに失敗する？ animatorが不当なタイミングで破棄される問題
-//        self.setBlurAnimator()
+        //        self.setBlurAnimator()
     }
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         if blurAnimator == nil { self.setBlurAnimator() }
+    }
+    
+    
+    private func setupComponent() {
+        self.backButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
+        self.backButton.alpha = 0.5
+        self.backButton.setTitleColor(.lightGray, for: .normal)
     }
     
     

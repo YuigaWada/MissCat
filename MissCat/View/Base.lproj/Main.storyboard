@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="1xz-U6-Gb6">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="702-tm-J9B">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
@@ -159,6 +159,7 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <viewLayoutGuide key="safeArea" id="7iY-ez-tzb"/>
                     </view>
+                    <navigationItem key="navigationItem" id="O7v-cf-rnZ"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="n3z-N7-9rg" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
@@ -462,6 +463,10 @@
                                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                             </textView>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="8NI-ap-XjW">
+                                                <rect key="frame" x="8" y="25" width="85" height="30"/>
+                                                <state key="normal" title="chevron-left"/>
+                                            </button>
                                         </subviews>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                         <constraints>
@@ -479,9 +484,11 @@
                                             <constraint firstItem="MTL-6d-wBR" firstAttribute="leading" secondItem="rGP-dP-dhq" secondAttribute="trailing" id="hyJ-zK-YP4"/>
                                             <constraint firstAttribute="trailing" secondItem="DKm-jx-5xf" secondAttribute="trailing" id="jX3-1a-CFl"/>
                                             <constraint firstItem="BPw-nG-rsB" firstAttribute="top" secondItem="fb3-8M-JPG" secondAttribute="top" id="oPd-ak-nfJ"/>
+                                            <constraint firstItem="8NI-ap-XjW" firstAttribute="top" secondItem="fb3-8M-JPG" secondAttribute="top" constant="25" id="pZx-jh-lZa"/>
                                             <constraint firstItem="Ck2-Ts-76E" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" id="pzD-KH-h3u"/>
                                             <constraint firstItem="DKm-jx-5xf" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" id="qZN-R0-ROF"/>
                                             <constraint firstItem="Cmd-dt-Rnt" firstAttribute="top" secondItem="rGP-dP-dhq" secondAttribute="bottom" constant="8" id="raV-ez-hed"/>
+                                            <constraint firstItem="8NI-ap-XjW" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" constant="8" id="rcs-4y-F1r"/>
                                             <constraint firstAttribute="trailing" secondItem="Cmd-dt-Rnt" secondAttribute="trailing" constant="20" id="sIT-Hc-Jys"/>
                                             <constraint firstItem="Cmd-dt-Rnt" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" constant="20" id="wX6-NP-zIJ"/>
                                         </constraints>
@@ -511,6 +518,7 @@
                         <viewLayoutGuide key="safeArea" id="RHs-Dg-Akd"/>
                     </view>
                     <connections>
+                        <outlet property="backButton" destination="8NI-ap-XjW" id="luq-C2-QCz"/>
                         <outlet property="bannerImageView" destination="BPw-nG-rsB" id="MnN-6W-mln"/>
                         <outlet property="buttonBarView" destination="DKm-jx-5xf" id="G5L-7g-Dqe"/>
                         <outlet property="containerHeightContraint" destination="gXt-6X-TgP" id="S3I-FH-uqJ"/>
@@ -541,6 +549,22 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="7Uu-7Y-CC9" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-1739" y="126"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="Ld8-2Y-1am">
+            <objects>
+                <navigationController id="702-tm-J9B" sceneMemberID="viewController">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="BQp-g9-tgv">
+                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="1xz-U6-Gb6" kind="relationship" relationship="rootViewController" id="QEg-pp-XBF"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dtp-an-TdV" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-810" y="-629"/>
         </scene>
     </scenes>
 </document>

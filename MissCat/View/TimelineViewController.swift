@@ -29,7 +29,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     private var viewModel: TimelineViewModel?
     
     private lazy var refreshControl = UIRefreshControl()
-
+    
     private var loadCompleted: Bool = true
     private var cellHeightCache: [String: CGFloat] = [:] //String → identifier
     private var withNavBar: Bool = true
@@ -118,7 +118,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         guard let viewModel = viewModel, let dataSource = dataSource else { return }
         
         let output = viewModel.output
-         output.notes.drive(self.mainTableView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
+        output.notes.drive(self.mainTableView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
         
         output.forceUpdateIndex.drive(onNext: updateForcibly).disposed(by: disposeBag)
     }
@@ -189,9 +189,25 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         let index = indexPath.row
         let id = viewModel.cellsModel[index].identity
         
-        guard let height = self.cellHeightCache[id] else { return UITableView.automaticDimension }
+        guard let height = self.cellHeightCache[id] else {
+            return viewModel.cellsModel[index].isRenoteeCell ? 25 : UITableView.automaticDimension
+        }
         return height
     }
+    
+    // estimatedHeightForRowAtとheightForRowAtてどっちもいるのか？
+    //TODO:  リアクションがつくと、高さが更新されずtextViewが潰れるs
+//    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+//        guard let viewModel = viewModel else { return UITableView.automaticDimension }
+//
+//        let index = indexPath.row
+//        let id = viewModel.cellsModel[index].identity
+//
+//        guard let height = self.cellHeightCache[id] else {
+//            return viewModel.cellsModel[index].isRenoteeCell ? 25 : UITableView.automaticDimension
+//        }
+//        return height
+//    }
     
     //セル選択後すぐに選択をキャンセルする & ReactionGenCellを消す
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -211,11 +227,12 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         guard let viewModel = viewModel else { return }
         
         let index = indexPath.row
-        let id = viewModel.cellsModel[index].identity
+        let cellModel = viewModel.cellsModel[index]
+        let id = cellModel.identity
         
         //再計算しないでいいようにセルの高さをキャッシュ
         if self.cellHeightCache.keys.contains(id) != true {
-            self.cellHeightCache[id] = cell.frame.height
+            self.cellHeightCache[id] = cellModel.isRenoteeCell ? 25 : cell.frame.height
         }
         
         

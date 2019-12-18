@@ -11,7 +11,7 @@ import MisskeyKit
 import RxSwift
 import RxDataSources
 
-class PostDetailViewController: NavBarPageViewController, UITableViewDelegate, FooterTabBarDelegate {
+class PostDetailViewController: UIViewController, UITableViewDelegate, FooterTabBarDelegate {
     @IBOutlet weak var mainTableView: UITableView!
 
     private var viewModel: PostDetailViewModel?
@@ -144,6 +144,4 @@ class PostDetailViewController: NavBarPageViewController, UITableViewDelegate, F
     
     
 }
-
-
 
