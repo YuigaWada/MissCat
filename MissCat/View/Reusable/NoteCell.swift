@@ -200,9 +200,13 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         //        changeSkeltonState(on: true)
     }
     
-    public func setupFileImage(_ image: UIImage, originalImageUrl: String) {
+    public func setupFileImage(_ image: UIImage, originalImageUrl: String, index: Int = -1) {
         //self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
+        
+        let isCached = index == -1
         DispatchQueue.main.async {
+            guard isCached || index < self.fileImageView.arrangedSubviews.count else { return }
+            
             let imageView = UIImageView(image: image)
             imageView.contentMode = .center
             imageView.clipsToBounds = true
@@ -211,8 +215,13 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             //tap gestureを付加する
             imageView.setTapGesture(self.disposeBag, closure: { self.showImage(url: originalImageUrl) })
             
-            
-            self.fileImageView.addArrangedSubview(imageView)
+            if isCached {
+                self.fileImageView.addArrangedSubview(imageView)
+            }
+            else {
+                self.fileImageView.removeArrangedSubview(self.fileImageView.arrangedSubviews[index]) // LoadingViewを消す
+                self.fileImageView.insertArrangedSubview(imageView, at: index)
+            }
             self.mainStackView.setNeedsLayout()
         }
     }
@@ -254,13 +263,25 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             files.forEach{ self.setupFileImage($0.thumbnail, originalImageUrl: $0.originalUrl) }
         }
         else {
-            item.files.filter{ $0 != nil }.forEach { file in
-                guard let thumbnailUrl = file!.thumbnailUrl, let original = file!.url else { return }
+            let files = item.files.filter{ $0 != nil }
+            let fileCount = files.count
+            
+            for i in 0 ..< fileCount {
+                let file = files[i]
+                let fakeLoadingView = UIView()
+                
+                fakeLoadingView.backgroundColor = .lightGray
+                
+                self.fileImageView.addArrangedSubview(fakeLoadingView)
+                self.mainStackView.setNeedsLayout()
+                
+                guard let thumbnailUrl = file!.thumbnailUrl, let original = file!.url else { break }
                 
                 thumbnailUrl.toUIImage { image in
                     guard let image = image else { return }
+                    
                     Cache.shared.saveFiles(noteId: noteId, image: image, originalUrl: original)
-                    self.setupFileImage(image, originalImageUrl: original)
+                    self.setupFileImage(image, originalImageUrl: original, index: i)
                 }
             }
         }
