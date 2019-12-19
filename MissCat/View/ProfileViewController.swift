@@ -150,6 +150,8 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     }
     
     private func setBlurAnimator() {
+//        let frame = self.introTextView.frame
+        
         let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
         blurView.frame = CGRect(x: 0,
                                 y: 0,
@@ -241,11 +243,16 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
             scrollView.contentOffset.y = self.scrollBegining
         }
         else {
-            let blurProportion = containerScrollView.contentOffset.y / maxScroll
+            // スクロールがmaxScrollの半分を超えたあたりから、fractionComplete: 0→1と動かしてanimateさせる
+            let blurProportion = containerScrollView.contentOffset.y * 2 / maxScroll - 1
             self.scrollBegining = scrollView.contentOffset.y
             
+             //ブラーアニメーションをかける
             if 0 < blurProportion, blurProportion < 1 {
-                blurAnimator.fractionComplete = blurProportion //ブラーアニメーションをかける
+                blurAnimator.fractionComplete = blurProportion
+            }
+            else {
+                blurAnimator.fractionComplete = blurProportion <= 0 ? 0 : 1
             }
         }
     }
