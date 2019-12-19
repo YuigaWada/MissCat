@@ -208,10 +208,14 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             guard isCached || index < self.fileImageView.arrangedSubviews.count else { return }
             
             let imageView = UIImageView(image: image)
-            imageView.contentMode = .center
+            imageView.contentMode = .scaleAspectFill
             imageView.clipsToBounds = true
             imageView.layer.cornerRadius = 10
             imageView.isUserInteractionEnabled = true
+            imageView.layer.borderColor = UIColor.lightGray.cgColor
+            imageView.layer.borderWidth = 1
+            imageView.layer.masksToBounds = true
+            
             //tap gestureを付加する
             imageView.setTapGesture(self.disposeBag, closure: { self.showImage(url: originalImageUrl) })
             
