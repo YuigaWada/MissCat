@@ -78,16 +78,16 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     
     
     private func setupComponent() {
-        self.backButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
+        self.backButton.titleLabel?.font = .awesomeSolid(fontSize: 18.0)
         self.backButton.alpha = 0.5
         self.backButton.setTitleColor(.lightGray, for: .normal)
     }
     
     
     //MARK: Public Methods
-    public func setUserId(_ userId: String) {
+    public func setUserId(_ userId: String, isMe: Bool) {
         self.userId = userId
-        viewModel.setUserId(userId)
+        viewModel.setUserId(userId, isMe: isMe)
     }
     
     //MARK: Setup
@@ -122,6 +122,8 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         output.bannerImage.drive(self.bannerImageView.rx.image).disposed(by: disposeBag)
         output.displayName.drive(self.displayName.rx.text).disposed(by: disposeBag)
         output.username.drive(self.usernameLabel.rx.text).disposed(by: disposeBag)
+        
+        self.backButton.isHidden = output.isMe
     }
     
     private func setBannerBlur() {

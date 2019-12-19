@@ -180,6 +180,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     private func showPostDetailView(item: NoteCell.Model) {
         guard let storyboard = self.storyboard else { return }
         guard let detailViewController = storyboard.instantiateViewController(withIdentifier: "post-detail") as? PostDetailViewController else { return }
+    
         
         detailViewController.view.frame = self.getDisplayRect()
         detailViewController.item = item
@@ -189,9 +190,9 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         self.navigationController?.pushViewController(detailViewController, animated: true)
         
         self.nowPage = .PostDetails
-        self.navBar.isHidden = false
-        self.navBar.barTitle = ""
-        self.navBar.setButton(style: .Left, leftText: "chevron-left", leftFont: .awesomeSolid(fontSize: 16.0))
+//        self.navBar.isHidden = false
+//        self.navBar.barTitle = ""
+//        self.navBar.setButton(style: .Left, leftText: "chevron-left", leftFont: .awesomeSolid(fontSize: 16.0))
         
         self.view.bringSubviewToFront(self.navBar)
         self.view.bringSubviewToFront(self.footerTab)
@@ -211,7 +212,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         guard let storyboard = self.storyboard,
             let profileViewController = storyboard.instantiateViewController(withIdentifier: "profile") as? ProfileViewController else { return }
         
-        profileViewController.setUserId(userId)
+        profileViewController.setUserId(userId, isMe: isMe)
         profileViewController.view.frame = self.getDisplayRect(needNavBar: false)
         
         if isMe {

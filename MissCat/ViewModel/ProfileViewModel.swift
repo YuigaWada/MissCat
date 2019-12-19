@@ -24,7 +24,7 @@ class ProfileViewModel: ViewModelType {
         let iconImage: Driver<UIImage>
         let intro: Driver<NSAttributedString>
         
-        let isMe: Driver<Bool>
+        let isMe: Bool
     }
     
     struct State {
@@ -35,7 +35,8 @@ class ProfileViewModel: ViewModelType {
                                            displayName: self.displayName.asDriver(onErrorJustReturn: ""),
                                            username: self.username.asDriver(onErrorJustReturn: ""),
                                            iconImage: self.iconImage.asDriver(onErrorJustReturn: UIImage()),
-                                           intro: self.intro.asDriver(onErrorJustReturn: NSAttributedString()))
+                                           intro: self.intro.asDriver(onErrorJustReturn: NSAttributedString()),
+                                           isMe: isMe)
     
     private var bannerImage: PublishRelay<UIImage> = .init()
     
@@ -44,11 +45,14 @@ class ProfileViewModel: ViewModelType {
     
     private var iconImage: PublishRelay<UIImage> = .init()
     private var intro: PublishRelay<NSAttributedString> = .init()
+    private var isMe: Bool = false
     
     private lazy var model = ProfileModel()
     
-    public func setUserId(_ userId: String) {
+    public func setUserId(_ userId: String, isMe: Bool) {
         model.getUser(userId: userId, completion: handleUserInfo)
+        
+        self.isMe = isMe
     }
     
     private func handleUserInfo(_ user: UserModel?) {

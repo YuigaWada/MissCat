@@ -464,7 +464,7 @@
                                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                             </textView>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="8NI-ap-XjW">
-                                                <rect key="frame" x="8" y="25" width="85" height="30"/>
+                                                <rect key="frame" x="20" y="44" width="85" height="30"/>
                                                 <state key="normal" title="chevron-left"/>
                                             </button>
                                         </subviews>
@@ -484,11 +484,10 @@
                                             <constraint firstItem="MTL-6d-wBR" firstAttribute="leading" secondItem="rGP-dP-dhq" secondAttribute="trailing" id="hyJ-zK-YP4"/>
                                             <constraint firstAttribute="trailing" secondItem="DKm-jx-5xf" secondAttribute="trailing" id="jX3-1a-CFl"/>
                                             <constraint firstItem="BPw-nG-rsB" firstAttribute="top" secondItem="fb3-8M-JPG" secondAttribute="top" id="oPd-ak-nfJ"/>
-                                            <constraint firstItem="8NI-ap-XjW" firstAttribute="top" secondItem="fb3-8M-JPG" secondAttribute="top" constant="25" id="pZx-jh-lZa"/>
                                             <constraint firstItem="Ck2-Ts-76E" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" id="pzD-KH-h3u"/>
                                             <constraint firstItem="DKm-jx-5xf" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" id="qZN-R0-ROF"/>
                                             <constraint firstItem="Cmd-dt-Rnt" firstAttribute="top" secondItem="rGP-dP-dhq" secondAttribute="bottom" constant="8" id="raV-ez-hed"/>
-                                            <constraint firstItem="8NI-ap-XjW" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" constant="8" id="rcs-4y-F1r"/>
+                                            <constraint firstItem="8NI-ap-XjW" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" constant="20" id="rcs-4y-F1r"/>
                                             <constraint firstAttribute="trailing" secondItem="Cmd-dt-Rnt" secondAttribute="trailing" constant="20" id="sIT-Hc-Jys"/>
                                             <constraint firstItem="Cmd-dt-Rnt" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" constant="20" id="wX6-NP-zIJ"/>
                                         </constraints>
@@ -507,6 +506,7 @@
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
+                            <constraint firstItem="BPw-nG-rsB" firstAttribute="top" secondItem="8NI-ap-XjW" secondAttribute="top" constant="-44" id="AcN-er-Rvb"/>
                             <constraint firstItem="8jE-Ja-YCD" firstAttribute="leading" secondItem="RHs-Dg-Akd" secondAttribute="leading" id="Br0-bo-UU1"/>
                             <constraint firstItem="Ck2-Ts-76E" firstAttribute="height" secondItem="Cqx-A3-0fq" secondAttribute="height" id="Ebe-nu-tTk"/>
                             <constraint firstAttribute="bottom" secondItem="8jE-Ja-YCD" secondAttribute="bottom" id="OjM-dj-B4N"/>

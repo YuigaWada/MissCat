@@ -196,7 +196,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     }
     
     // estimatedHeightForRowAtとheightForRowAtてどっちもいるのか？
-    //TODO:  リアクションがつくと、高さが更新されずtextViewが潰れるs
+    //TODO:  リアクションがつくと、高さが更新されずtextViewが潰れる
 //    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
 //        guard let viewModel = viewModel else { return UITableView.automaticDimension }
 //

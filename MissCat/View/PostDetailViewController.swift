@@ -13,7 +13,7 @@ import RxDataSources
 
 class PostDetailViewController: UIViewController, UITableViewDelegate, FooterTabBarDelegate {
     @IBOutlet weak var mainTableView: UITableView!
-
+    
     private var viewModel: PostDetailViewModel?
     private let disposeBag = DisposeBag()
     private var loadCompleted: Bool = false
@@ -37,6 +37,11 @@ class PostDetailViewController: UIViewController, UITableViewDelegate, FooterTab
         guard let viewModel = viewModel else { return }
         viewModel.dataSource = self.setupDataSource()
         self.binding(dataSource: viewModel.dataSource)
+    }
+    
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
     //MARK: Setup TableView
