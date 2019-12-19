@@ -57,18 +57,25 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         self.containerScrollView.contentInsetAdjustmentBehavior = .never
     }
     
+//    public override func viewWillLayoutSubviews() {
+//        super.viewWillLayoutSubviews()
+//
+//        //Fix: ここにおくとanimatorの関係でたまに失敗する？ animatorが不当なタイミングで破棄される問題
+//        //        self.setBlurAnimator()
+//    }
+    
     public override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         
+        self.layoutIfNeeded(to: [iconImageView])
+        self.layoutIfNeeded(to: childVCs.map{$0.view})
         self.iconImageView.layer.cornerRadius = self.iconImageView.frame.width / 2
+        
         self.containerHeightContraint.constant = 2 * self.view.frame.height - (self.view.frame.height - self.containerScrollView.frame.origin.y)
         
         self.childVCs.forEach { // VCの表示がずれるのを防ぐ(XLPagerTabStripの不具合？？)
             $0.view.frame = CGRect(x:0, y: 0, width: self.view.frame.width, height: $0.view.frame.height)
         }
-        
-        //Fix: ここにおくとanimatorの関係でたまに失敗する？ animatorが不当なタイミングで破棄される問題
-        //        self.setBlurAnimator()
     }
     
     public override func viewWillAppear(_ animated: Bool) {

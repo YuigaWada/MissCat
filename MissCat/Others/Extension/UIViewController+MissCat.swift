@@ -13,12 +13,19 @@ import SafariServices
 
 extension UIViewController {
     
+    //MARK: Privates
     private func getViewController(name: String)-> UIViewController {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let viewController = storyboard.instantiateViewController(withIdentifier: name)
         
         return viewController
     }
+    
+    //MARk:
+    func layoutIfNeeded(to views: [UIView]) {
+        views.forEach { $0.layoutIfNeeded() }
+    }
+    
     
     //MARK: Present
     func presentOnFullScreen(_ viewControllerToPresent: UIViewController, animated: Bool, completion: (()->Void)?) {
@@ -35,6 +42,22 @@ extension UIViewController {
         self.presentOnFullScreen(target, animated: true, completion: nil)
     }
     
+    
+    func presentReactionGen(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
+        guard let reactionGen = self.getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+        
+        self.presentWithSemiModal(reactionGen, animated: true, completion: nil)
+        
+        reactionGen.setTargetNote(noteId: noteId,
+                                  iconUrl: iconUrl,
+                                  displayName: displayName,
+                                  username: username,
+                                  note: note,
+                                  hasFile: hasFile,
+                                  hasMarked: hasMarked)
+    }
+    
+    //MARK: Get Size
     func getSafeAreaSize()-> (width: CGFloat, height: CGFloat) {
         var bottomPadding: CGFloat = 0
         var leftPadding: CGFloat = 0
@@ -59,20 +82,8 @@ extension UIViewController {
                       height:  height)
     }
     
-    func presentReactionGen(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
-        guard let reactionGen = self.getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
-        
-        self.presentWithSemiModal(reactionGen, animated: true, completion: nil)
-        
-        reactionGen.setTargetNote(noteId: noteId,
-                                  iconUrl: iconUrl,
-                                  displayName: displayName,
-                                  username: username,
-                                  note: note,
-                                  hasFile: hasFile,
-                                  hasMarked: hasMarked)
-    }
     
+    //MARK: Utilities
     func openLink(url: String) {
         guard let url = URL(string: url), let rootVC = UIApplication.shared.windows[0].rootViewController else { return }
         let safari = SFSafariViewController(url: url)
@@ -84,6 +95,7 @@ extension UIViewController {
     
 }
 
+//MARK: FloatingPanel
 extension UIViewController: FloatingPanelControllerDelegate {
     func presentWithSemiModal(_ viewControllerToPresent: UIViewController, animated: Bool, completion: (()->Void)?) {
         let reactionGenPanel = ReactionGenPanel()

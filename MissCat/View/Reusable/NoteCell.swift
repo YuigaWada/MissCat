@@ -106,6 +106,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     private func setupComponents() {
         //["FontAwesome5Free-Solid", "FontAwesome5Free-Regular"], ["FontAwesome5Brands-Regular"]
         
+        self.iconView.layoutIfNeeded()
+        
         self.iconView.layer.cornerRadius = self.iconView.frame.height / 2
         self.replyButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
         self.renoteButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
