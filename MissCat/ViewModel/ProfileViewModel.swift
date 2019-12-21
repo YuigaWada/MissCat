@@ -59,7 +59,10 @@ class ProfileViewModel: ViewModelType {
         guard let user = user else { return }
         
         // Icon Image
-        if let iconImageUrl = user.avatarUrl {
+        if let username = user.username, let cachediconImage = Cache.shared.getIcon(username: username) {
+            self.iconImage.accept(cachediconImage)
+        }
+        else if let iconImageUrl = user.avatarUrl {
             iconImageUrl.toUIImage { image in
                 guard let image = image else { return }
                 self.iconImage.accept(image)
