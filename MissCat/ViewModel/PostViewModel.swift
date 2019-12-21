@@ -8,22 +8,52 @@
 
 import MisskeyKit
 import RxSwift
+import RxCocoa
 
-public class PostViewModel {
+class PostViewModel: ViewModelType {
+    
+    struct Input {
+        
+    }
+    
+    
+    struct Output {
+        let iconImage: Driver<UIImage>
+        let isSuccess: Driver<Bool>
+        
+        let attachments: PublishSubject<[PostViewController.AttachmentsSection]>
+    }
+    
+    struct State {
+        
+    }
+    
+    public lazy var output: Output = .init(iconImage: self.iconImage.asDriver(onErrorJustReturn: UIImage()),
+                                           isSuccess: self.isSuccess.asDriver(onErrorJustReturn: false),
+                                           attachments: self.attachments)
+    
+    
     
     private struct AttachmentImage {
         fileprivate let id: String = UUID().uuidString
         fileprivate var order: Int = 0
+        
+        fileprivate var originalImage: UIImage
         fileprivate var image: UIImage?
         
-        init(image: UIImage, order: Int) {
+        init(originalImage: UIImage, image: UIImage, order: Int) {
             self.image = image
+            self.originalImage = originalImage
+            
             self.order = order
         }
     }
     
-    public var iconImage: PublishSubject<UIImage> = .init()
-    public var isSuccess: PublishSubject<Bool> = .init()
+    private var iconImage: PublishSubject<UIImage> = .init()
+    private var isSuccess: PublishSubject<Bool> = .init()
+    
+    private var attachmentsLists: [PostViewController.Attachments] = []
+    private let attachments: PublishSubject<[PostViewController.AttachmentsSection]> = .init()
     
     private let model = PostModel()
     private var disposeBag: DisposeBag
@@ -72,10 +102,19 @@ public class PostViewModel {
     }
     
     //画像をスタックさせておいて、アップロードは直前に
-    public func stackFile(_ image: UIImage) {
-        let targetImage = AttachmentImage(image: image, order: self.attachmentImages.count + 1)
+    public func stackFile(original: UIImage, edited: UIImage) {
+        let targetImage = AttachmentImage(originalImage: original,
+                                          image: edited, order: self.attachmentImages.count + 1)
         
         self.attachmentImages.append(targetImage)
+        
+        self.addAttachmentView(targetImage)
+    }
+    
+    private func addAttachmentView(_ attachment: AttachmentImage) {
+        let item = PostViewController.Attachments(image: attachment.originalImage, type: .Image)
+        
+        self.attachments.onNext([PostViewController.AttachmentsSection(items: [item])])
     }
     
 }

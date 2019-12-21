@@ -87,7 +87,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     private func setupComponent() {
         self.backButton.titleLabel?.font = .awesomeSolid(fontSize: 18.0)
         self.backButton.alpha = 0.5
-        self.backButton.setTitleColor(.lightGray, for: .normal)
+        self.backButton.setTitleColor(.black, for: .normal)
     }
     
     
@@ -129,6 +129,10 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         output.bannerImage.drive(self.bannerImageView.rx.image).disposed(by: disposeBag)
         output.displayName.drive(self.displayName.rx.text).disposed(by: disposeBag)
         output.username.drive(self.usernameLabel.rx.text).disposed(by: disposeBag)
+        
+        self.backButton.rx.tap.subscribe(onNext: {
+            let _ = self.navigationController?.popViewController(animated: true)
+        }).disposed(by: disposeBag)
         
         self.backButton.isHidden = output.isMe
     }

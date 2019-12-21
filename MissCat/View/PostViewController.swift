@@ -9,8 +9,10 @@
 import UIKit
 import iOSPhotoEditor
 import RxSwift
+import RxDataSources
 
-public class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+public typealias AttachmentsDataSource = RxCollectionViewSectionedReloadDataSource<PostViewController.AttachmentsSection>
+public class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UICollectionViewDelegate {
     
     @IBOutlet weak var attachmentCollectionView: UICollectionView!
     
@@ -20,9 +22,12 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     @IBOutlet weak var mainTextView: UITextView!
     @IBOutlet weak var mainTextViewBottomConstraint: NSLayoutConstraint!
     
+    @IBOutlet weak var bottomStackView: UIStackView!
+    
     private lazy var viewModel = PostViewModel(disposeBag: disposeBag)
+    private lazy var toolBar = UIToolbar()
     private let disposeBag = DisposeBag()
-
+    
     
     private lazy var counter = UIBarButtonItem(title: "1500", style: .done, target: self, action:nil)
     
@@ -30,9 +35,17 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.binding()
+        let dataSource = self.setupDataSource()
+        self.binding(dataSource)
+        
+        self.setupCollectionView()
         self.setupTextView()
         self.setupNavItem()
+        
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(keyboardWillShow(_:)),
+                                               name: UIResponder.keyboardWillShowNotification,
+                                               object: nil)
     }
     
     public override func viewWillAppear(_ animated: Bool) {
@@ -43,18 +56,31 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         super.viewDidAppear(animated)
         self.mainTextView.becomeFirstResponder()
     }
-
+    
     public override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         self.iconImageView.layer.cornerRadius = self.iconImageView.frame.width / 2
     }
     
     //MARK: Setup
-    private func binding() {
-        viewModel.iconImage.bind(to: self.iconImageView.rx.image).disposed(by: disposeBag)
-        viewModel.isSuccess.subscribe { _ in
-            
-        }.disposed(by: disposeBag)
+    
+    private func setupDataSource()-> AttachmentsDataSource {
+        let dataSource = AttachmentsDataSource(
+            configureCell: { dataSource, tableView, indexPath, item in
+                return self.setupCell(dataSource, self.attachmentCollectionView, indexPath)
+        })
+        
+        return dataSource
+    }
+    
+    
+    private func binding(_ dataSource: AttachmentsDataSource) {
+        let output = viewModel.output
+        
+        output.iconImage.drive(self.iconImageView.rx.image).disposed(by: disposeBag)
+        //        output.isSuccess.subscribe { _ in
+        //
+        //        }.disposed(by: disposeBag)
         
         
         self.cancelButton.rx.tap.asObservable().subscribe{ _ in
@@ -71,9 +97,23 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
             guard let text = $0 else { return $0 ?? "" }
             return String(1500 - text.count)
         }.bind(to: self.counter.rx.title).disposed(by: disposeBag)
-
+        
+        output.attachments.bind(to: self.attachmentCollectionView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
     }
     
+    
+    private func setupCollectionView() {
+        self.attachmentCollectionView.register(UINib(nibName: "AttachmentCell", bundle: nil), forCellWithReuseIdentifier: "AttachmentCell")
+        self.attachmentCollectionView.rx.setDelegate(self).disposed(by: disposeBag)
+        
+        let flowLayout = UICollectionViewFlowLayout()
+        let size = self.view.frame.width / 3
+        
+        flowLayout.itemSize = CGSize(width: size, height: self.attachmentCollectionView.frame.height)
+        flowLayout.minimumInteritemSpacing = 0
+        flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        self.attachmentCollectionView.collectionViewLayout = flowLayout
+    }
     
     private func setupTextView() {
         //miscs
@@ -82,7 +122,6 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         
         
         //above toolbar
-        let toolBar = UIToolbar()
         let flexibleItem = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         
         let cameraButton = UIBarButtonItem(title: "camera", style: .plain, target: self, action: nil)
@@ -99,13 +138,13 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         pollButton.rx.tap.subscribe{ _ in  }.disposed(by: disposeBag)
         locationButton.rx.tap.subscribe{ _ in self.viewModel.getLocation() }.disposed(by: disposeBag)
         
-        toolBar.setItems([cameraButton, imageButton, pollButton, locationButton,
-                          flexibleItem, flexibleItem,
-                          counter], animated: true)
-        toolBar.sizeToFit()
+        self.toolBar.setItems([cameraButton, imageButton, pollButton, locationButton,
+                               flexibleItem, flexibleItem,
+                               counter], animated: true)
+        self.toolBar.sizeToFit()
         
         self.change2AwesomeFont(buttons: [cameraButton, imageButton, pollButton, locationButton])
-        self.mainTextView.inputAccessoryView = toolBar
+        self.mainTextView.inputAccessoryView = self.toolBar
     }
     
     private func setupNavItem() {
@@ -115,6 +154,40 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         self.submitButton.titleLabel?.font = .awesomeSolid(fontSize: fontSize)
     }
     
+    private func setupCell(_ dataSource: CollectionViewSectionedDataSource<PostViewController.AttachmentsSection>, _ collectionView: UICollectionView, _ indexPath: IndexPath)-> UICollectionViewCell {
+        let index = indexPath.row
+        let item = dataSource.sectionModels[0].items[index]
+        
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "AttachmentCell", for: indexPath) as? AttachmentCell else {fatalError("Internal Error.")}
+        
+        
+        cell.tappedImage.subscribe{ id in
+            guard item.id == id.element else { return }
+            
+            self.showPhotoEditor(with: item.image).subscribe(onNext: { editedImage in // 画像エディタを表示
+                guard let editedImage = editedImage else { return }
+                self.viewModel.stackFile(original: item.image, edited: editedImage)
+                
+            }).disposed(by: self.disposeBag)
+            
+        }.disposed(by: disposeBag)
+        
+        cell.tappedDiscardButton.subscribe{ id in
+            
+        }.disposed(by: disposeBag)
+        
+        return cell.setupCell(item)
+    }
+    
+    
+    //キーボードの高さに合わせてcomponentの高さを調整する
+    private func fitToKeyboard(keyboardHeight: CGFloat) {
+        self.layoutIfNeeded(to: [self.bottomStackView, self.toolBar])
+        
+        
+        self.mainTextViewBottomConstraint.constant = self.bottomStackView.frame.height + keyboardHeight
+        
+    }
     
     
     
@@ -131,8 +204,8 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
             let picker = UIImagePickerController()
             picker.sourceType = type
             picker.delegate = self
-        
-            self.present(picker, animated: true, completion: nil)
+            
+            self.presentOnFullScreen(picker, animated: true, completion: nil)
         }
     }
     
@@ -154,12 +227,52 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         
         picker.dismiss(animated: true, completion: nil)
-        guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else { return }
+        guard let originalImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else { return }
         
-        self.showPhotoEditor(with: image).subscribe(onNext: { editedImage in // 画像エディタを表示
+        self.showPhotoEditor(with: originalImage).subscribe(onNext: { editedImage in // 画像エディタを表示
             guard let editedImage = editedImage else { return }
-            self.viewModel.stackFile(editedImage)
+            self.viewModel.stackFile(original: originalImage, edited: editedImage)
         }).disposed(by: disposeBag)
         
+    }
+    
+    //MARK: NotificationCenter
+    @objc private func keyboardWillShow(_ notification: Notification) {
+        guard let userInfo = notification.userInfo as? [String: Any],
+            let keyboardInfo = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+        
+        let keyboardSize = keyboardInfo.cgRectValue.size
+        self.fitToKeyboard(keyboardHeight: keyboardSize.height)
+    }
+    
+}
+
+
+
+public extension PostViewController {
+    struct AttachmentsSection {
+        public var items: [Item]
+    }
+    
+    struct Attachments {
+        public var id: String = UUID().uuidString
+        
+        public var image: UIImage
+        public var type: Type
+    }
+    
+    enum `Type` {
+        case Image
+        case Video
+    }
+}
+
+
+extension PostViewController.AttachmentsSection: SectionModelType {
+    public typealias Item = PostViewController.Attachments
+    
+    public init(original: PostViewController.AttachmentsSection, items: [Item]) {
+        self = original
+        self.items = items
     }
 }

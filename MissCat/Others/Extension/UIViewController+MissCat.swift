@@ -89,7 +89,7 @@ extension UIViewController {
         let safari = SFSafariViewController(url: url)
         
         // i dont know why but it seems that we must launch a safari VC from the root VC.
-        rootVC.present(safari, animated: true, completion: nil)
+        rootVC.presentOnFullScreen(safari, animated: true, completion: nil)
     }
     
     

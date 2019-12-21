@@ -34,7 +34,7 @@ extension UIViewController {
             photoEditor.hiddenControls = [.share]
             photoEditor.colors = [.red,.blue,.green]
             
-            viewController.present(photoEditor, animated: true, completion: nil)
+            viewController.presentOnFullScreen(photoEditor, animated: true, completion: nil)
             
             return Observable.create() { observer in
                 self.observer = observer

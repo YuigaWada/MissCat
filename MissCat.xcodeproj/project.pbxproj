@@ -66,6 +66,8 @@
 		8DA06A14238A86B80093A718 /* NotificationCellViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA06A13238A86B80093A718 /* NotificationCellViewModel.swift */; };
 		8DA06A16238A86DC0093A718 /* NotificationCellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA06A15238A86DC0093A718 /* NotificationCellModel.swift */; };
 		8DA36F862394B9D000512459 /* UIFont+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA36F852394B9D000512459 /* UIFont+MissCat.swift */; };
+		8DA536AC23AC8B70005EB1B5 /* AttachmentCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */; };
+		8DA536AE23AC8C47005EB1B5 /* AttachmentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */; };
 		8DAEA1322382E19A0083AA69 /* ReactionGenViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEA1312382E19A0083AA69 /* ReactionGenViewModel.swift */; };
 		8DAEA1352382E4F00083AA69 /* EmojiView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DAEA1342382E4F00083AA69 /* EmojiView.xib */; };
 		8DAEA1372382E59A0083AA69 /* EmojiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEA1362382E59A0083AA69 /* EmojiView.swift */; };
@@ -155,6 +157,8 @@
 		8DA06A13238A86B80093A718 /* NotificationCellViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCellViewModel.swift; sourceTree = "<group>"; };
 		8DA06A15238A86DC0093A718 /* NotificationCellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCellModel.swift; sourceTree = "<group>"; };
 		8DA36F852394B9D000512459 /* UIFont+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIFont+MissCat.swift"; sourceTree = "<group>"; };
+		8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AttachmentCell.xib; sourceTree = "<group>"; };
+		8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentCell.swift; sourceTree = "<group>"; };
 		8DAEA1312382E19A0083AA69 /* ReactionGenViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenViewModel.swift; sourceTree = "<group>"; };
 		8DAEA1342382E4F00083AA69 /* EmojiView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = EmojiView.xib; sourceTree = "<group>"; };
 		8DAEA1362382E59A0083AA69 /* EmojiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiView.swift; sourceTree = "<group>"; };
@@ -250,6 +254,7 @@
 				8D613550238A978700AB50C2 /* EmojiViewCell.swift */,
 				8D613554238B6D8B00AB50C2 /* NavBar.swift */,
 				8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */,
+				8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */,
 			);
 			path = Reusable;
 			sourceTree = "<group>";
@@ -372,6 +377,7 @@
 				8DA06A082389E9820093A718 /* NotificationCell.xib */,
 				8D61354E238A974400AB50C2 /* EmojiViewCell.xib */,
 				8D613552238B6D4F00AB50C2 /* NavBar.xib */,
+				8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */,
 			);
 			path = nib;
 			sourceTree = "<group>";
@@ -490,6 +496,7 @@
 				8D613553238B6D4F00AB50C2 /* NavBar.xib in Resources */,
 				8D4A2A1D237437BE00503685 /* Main.storyboard in Resources */,
 				8D502D54237D8BEC00525A96 /* ReactionCell.xib in Resources */,
+				8DA536AC23AC8B70005EB1B5 /* AttachmentCell.xib in Resources */,
 				8D065B19237AC826003DFB7C /* NoteCell.xib in Resources */,
 				8D8863B4238493FA00A7A5A8 /* RenoteeCell.xib in Resources */,
 				8DAEA1352382E4F00083AA69 /* EmojiView.xib in Resources */,
@@ -600,6 +607,7 @@
 				8D065B17237AC3D0003DFB7C /* TimelineViewModel.swift in Sources */,
 				8D42C3A623804B6200337DD2 /* UIViewController+MissCat.swift in Sources */,
 				8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */,
+				8DA536AE23AC8C47005EB1B5 /* AttachmentCell.swift in Sources */,
 				8D0D47AC23A7738F0095361D /* NavBarPageViewController.swift in Sources */,
 				8D502D5A2380270A00525A96 /* TabBar.swift in Sources */,
 				8DD8898B23935CC400D22910 /* PostDetailViewModel.swift in Sources */,
