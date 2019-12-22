@@ -121,7 +121,18 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
             self.introTextView.attributedText = attributedText
         }).disposed(by: disposeBag)
         
-        output.bannerImage.drive(self.bannerImageView.rx.image).disposed(by: disposeBag)
+        
+        output.bannerImage.drive(onNext: { image in
+            self.bannerImageView.image = image
+            
+            let opticaTextColor = image.opticalTextColor
+
+            UIView.animate(withDuration: 1.5, animations: {
+                self.backButton.titleLabel?.textColor = opticaTextColor
+            })
+        }).disposed(by: disposeBag)
+        
+
         output.displayName.drive(self.displayName.rx.text).disposed(by: disposeBag)
         output.username.drive(self.usernameLabel.rx.text).disposed(by: disposeBag)
         
