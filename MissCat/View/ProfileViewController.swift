@@ -38,7 +38,8 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     private var childVCs: [TimelineViewController] = []
     
     private var maxScroll: CGFloat {
-        return pagerTab.frame.origin.y - self.getSafeAreaSize().height - 10 // 10 = 微調整
+        self.pagerTab.layoutIfNeeded()
+        return self.pagerTab.frame.origin.y - self.getSafeAreaSize().height - 10 // 10 = 微調整
     }
     
     
@@ -57,12 +58,6 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         self.containerScrollView.contentInsetAdjustmentBehavior = .never
     }
     
-//    public override func viewWillLayoutSubviews() {
-//        super.viewWillLayoutSubviews()
-//
-//        //Fix: ここにおくとanimatorの関係でたまに失敗する？ animatorが不当なタイミングで破棄される問題
-//        //        self.setBlurAnimator()
-//    }
     
     public override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
@@ -78,8 +73,8 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         }
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         if blurAnimator == nil { self.setBlurAnimator() }
     }
     

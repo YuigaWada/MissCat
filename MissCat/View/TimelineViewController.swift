@@ -16,6 +16,9 @@ import XLPagerTabStrip
 public protocol TimelineDelegate { // For HomeViewController
     func tappedCell(item: NoteCell.Model)
     func move2Profile(userId: String)
+    
+    func successInitialLoading(_ success: Bool)
+    func changedStreamState(success: Bool)
 }
 
 typealias NotesDataSource = RxTableViewSectionedAnimatedDataSource<NoteCell.Section>
@@ -121,6 +124,19 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         output.notes.drive(self.mainTableView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
         
         output.forceUpdateIndex.drive(onNext: updateForcibly).disposed(by: disposeBag)
+        
+        output.finishedLoading.drive(onNext: { success in
+            guard let homeViewController = self.homeViewController else { return }
+            
+            homeViewController.successInitialLoading(success)
+        }).disposed(by: disposeBag)
+        
+        output.connectedStream.drive(onNext: { success in
+            guard let homeViewController = self.homeViewController else { return }
+            
+            homeViewController.changedStreamState(success: success)
+        }).disposed(by: disposeBag)
+        
     }
     
     //MARK: Gesture

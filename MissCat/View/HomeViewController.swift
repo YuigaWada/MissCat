@@ -28,7 +28,7 @@ import MisskeyKit
 public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate, TimelineDelegate, NavBarDelegate, UIGestureRecognizerDelegate {
     private var isXSeries = UIScreen.main.bounds.size.height > 811
     private let footerTabHeight: CGFloat = 55
-    
+    private var initialized: Bool = false
     
     // ViewController
     private var notificationsViewController: UIViewController?
@@ -91,10 +91,16 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     
     override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        self.setupFooterTab()
+        
         
         self.navigationController?.interactivePopGestureRecognizer?.delegate = self
         self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        
+        guard !initialized else { return }
+        
+        self.setupFooterTab()
+        self.showNotificationBanner(icon: .Loading, notification: "ロード中...")
+        self.initialized = true
     }
     
     override public func viewDidLayoutSubviews() {
@@ -290,6 +296,20 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
+    private func showNotificationBanner(icon: NotificationBanner.IconType, notification: String) {
+        let bannerWidth = self.view.frame.width / 3
+        
+        let frame = CGRect(x: self.view.frame.width - bannerWidth - 20,
+                           y: self.footerTab.frame.origin.y - 30,
+                           width: bannerWidth,
+                           height: 30)
+        
+        
+        let notificationBanner = NotificationBanner(frame: frame, icon: icon, notification: notification)
+        self.view.addSubview(notificationBanner)
+        self.view.bringSubviewToFront(notificationBanner)
+    }
+    
     
     //MARK: FooterTabBar Delegate
     public func tappedHome() {
@@ -361,6 +381,16 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         self.showProfileView(userId: userId)
     }
     
+    public func successInitialLoading(_ success: Bool) {
+        guard !success else { return }
+
+        self.showNotificationBanner(icon: .Failed, notification: "投稿の取得に失敗しました")
+    }
+    
+    public func changedStreamState(success: Bool) {
+        guard !success else { return }
+        self.showNotificationBanner(icon: .Failed, notification: "Streamingが切断されました")
+    }
     
     
     
