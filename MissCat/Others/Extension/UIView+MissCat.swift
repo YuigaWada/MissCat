@@ -49,7 +49,7 @@ extension UIView {
         label.numberOfLines = 0
         label.lineBreakMode = NSLineBreakMode.byWordWrapping
         label.font = font
-        label.text = text + "AA" //微調整
+        label.text = text
         
         label.sizeToFit()
         return label.frame.width

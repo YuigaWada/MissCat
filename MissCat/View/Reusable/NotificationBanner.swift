@@ -53,6 +53,7 @@ class NotificationBanner: UIView {
         super.layoutSubviews()
         self.setupComponents()
         
+        self.adjustFrame()
         self.setupCornerRadius()
         self.appear()
     }
@@ -69,6 +70,16 @@ class NotificationBanner: UIView {
         self.backgroundColor = .black
         self.alpha = 0
         
+        // Message
+        self.mainContentLabel.text = notification
+        
+        // Icon
+        guard icon != .Loading else {
+            self.addIndicator()
+            return
+        }
+        
+        
         guard icon != .Reaction else {
             guard let reaction = reaction else { return }
             
@@ -77,8 +88,20 @@ class NotificationBanner: UIView {
             return
         }
         
-        self.mainContentLabel.text = notification
+        
         self.iconLabel.text = icon.convertAwesome()
+    }
+    
+    private func adjustFrame() {
+        let contentLabelWidth = self.getLabelWidth(text: notification ?? "", font: UIFont.systemFont(ofSize: 12.0))
+        let width = iconLabel.frame.width + contentLabelWidth + 20
+        
+        let dWidth = width - self.frame.width
+        
+        self.frame = CGRect(x: self.frame.origin.x - dWidth,
+                            y: self.frame.origin.y,
+                            width: width,
+                            height: self.frame.height)
     }
     
     private func setupTimer() {
@@ -95,6 +118,23 @@ class NotificationBanner: UIView {
         self.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         self.layer.masksToBounds = true
     }
+    
+    private func addIndicator() {
+        let indicatorCenter = CGPoint(x: (self.mainContentLabel.frame.origin.x - 30) / 2,
+                                      y: self.frame.height / 2)
+        
+        let activityIndicator = UIActivityIndicatorView()
+        activityIndicator.center = indicatorCenter
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.style = UIActivityIndicatorView.Style.white
+        
+        self.addSubview(activityIndicator)
+        activityIndicator.startAnimating()
+        
+        self.iconLabel.text = nil
+    }
+    
+    
     
     //MARK: Appear / Disappear
     private func appear() {
