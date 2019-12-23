@@ -381,6 +381,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.noteView.isSkeletonable = true
         
         self.reactionsStackView.isSkeletonable = true
+        self.fileImageContainer.isSkeletonable = true
         self.fileImageView.isSkeletonable = true
     }
     
@@ -395,6 +396,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             self.iconView.showAnimatedGradientSkeleton()
             
             self.reactionsStackView.isHidden = true
+            
+            self.fileImageContainer.showAnimatedGradientSkeleton()
             self.fileImageView.showAnimatedGradientSkeleton()
         }
         else {
@@ -402,6 +405,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             self.iconView.hideSkeleton()
             
             self.reactionsStackView.isHidden = false
+            
+            self.fileImageContainer.hideSkeleton()
             self.fileImageView.hideSkeleton()
         }
     }
