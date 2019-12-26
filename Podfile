@@ -13,8 +13,11 @@ pod 'Agrume', :binary => true
 pod 'SVGKit', :git => 'https://github.com/SVGKit/SVGKit.git', :branch => '3.x', :binary => true
 pod "SkeletonView", :binary => true
 pod 'FloatingPanel', :binary => true
-pod 'iOSPhotoEditor' 
+pod 'Gifu', :binary => true
 
+pod 'iOSPhotoEditor', :binary => true
+
+pod 'YanagiText'
 pod 'XLPagerTabStrip'
 pod 'Down'
 end 

@@ -1,0 +1,11 @@
+framework module Gifu {
+  umbrella header "Gifu-umbrella.h"
+
+  export *
+  module * { export * }
+}
+
+module Gifu.Swift {
+    header "Gifu-Swift.h"
+    requires objc
+}

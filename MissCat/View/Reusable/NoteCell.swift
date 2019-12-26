@@ -35,7 +35,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     @IBOutlet weak var usernameLabel: UILabel!
     @IBOutlet weak var agoLabel: UILabel!
     
-    @IBOutlet weak var noteView: UITextView!
+    
+    @IBOutlet weak var noteView: MisskeyTextView!
     
     
     @IBOutlet weak var fileImageView: UIStackView!
@@ -79,7 +80,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     private func getViewModel(item: NoteCell.Model, isDetailMode: Bool)-> ViewModel {
         let input: ViewModel.Input = .init(cellModel: item,
-                                           isDetailMode: isDetailMode)
+                                           isDetailMode: isDetailMode,
+                                           yanagi: self.noteView)
         
         
         let viewModel = NoteCellViewModel(with: input, and: self.disposeBag)
@@ -115,7 +117,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.othersButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
         
         self.noteView.delegate = self
-        
+        self.noteView.xMargin = 0
+        self.noteView.yMargin = 0
         
         
         if self.fileImageView.arrangedSubviews.count > 0 {
@@ -199,6 +202,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.renoteButton.setTitle("", for: .normal)
         self.reactionButton.setTitle("", for: .normal)
         
+        self.noteView.resetViewString()
+        
         //        changeSkeltonState(on: true)
     }
     
@@ -263,6 +268,10 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.userId = item.userId
         
         self.iconImageUrl = viewModel!.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
+        
+        //detail mode
+        self.noteView.font = UIFont.init(name: "Helvetica",
+                                         size: isDetailMode ? 16.0 : 14.0)
         
         //file
         if let files = Cache.shared.getFiles(noteId: noteId) {

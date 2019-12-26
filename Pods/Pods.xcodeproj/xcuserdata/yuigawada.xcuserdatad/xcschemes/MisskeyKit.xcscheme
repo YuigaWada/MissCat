@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "F931D34E9809B6E1525A68BCA633B505"
-               BuildableName = "MisskeyKit"
+               BuildableName = "MisskeyKit.framework"
                BlueprintName = "MisskeyKit"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

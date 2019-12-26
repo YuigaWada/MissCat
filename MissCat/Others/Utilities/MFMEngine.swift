@@ -8,18 +8,111 @@
 
 import UIKit
 import MisskeyKit
+import YanagiText
+import Gifu
 
 // ** MFM実装のためのクラス **
-// NSAttributedStringをplane sentencesとasync itemsにわけて、同期処理/非同期処理を両方行う
 
 public class MFMEngine {
     
-    private var syncItems: [NSAttributedString] = []
-    private var asyncItems: [NSAttributedString] = []
+    private let original: String
+    private let mfmTargets: [String]
     
-    public init(_ attributedString: NSAttributedString) {
-        
+    public var textColor: UIColor = .black
+    
+    init(_ original: String) {
+        self.mfmTargets = original.regexMatches(pattern: "(:[^(\\s|:)]+:)").map{ return $0[0] }
+        self.original = original
     }
+    
+    
+    
+    public func transform(yanagi: YanagiText, externalEmojis: [EmojiModel?]?)-> NSAttributedString? {
+        
+        var rest = original
+        let shaped = NSMutableAttributedString()
+        
+        mfmTargets.forEach { target in
+            guard let converted = EmojiHandler.handler.convertEmoji(raw: target, external: externalEmojis),
+                let range = rest.range(of: target) else { return }
+            
+            //plane
+            let plane = String(rest[rest.startIndex ..< range.lowerBound])
+            shaped.append(self.generatePlaneString(string: plane, font: yanagi.font))
+            
+            
+            
+            switch converted.type {
+            case "default":
+                shaped.append(NSAttributedString(string: converted.emoji))
+                
+            case "custom":
+                
+                let targetView = self.generateAsyncImageView(converted.emoji)
+                if let targetViewString = yanagi.getViewString(with: targetView, size: targetView.frame.size) {
+                    shaped.append(targetViewString)
+                }
+                
+            default:
+                return
+            }
+            
+            
+            rest = String(rest[range.upperBound...])
+        }
+        
+        //末端
+        shaped.append(self.generatePlaneString(string: rest, font: yanagi.font))
+        return shaped
+    }
+    
+    private func generatePlaneString(string: String, font: UIFont?)->NSAttributedString {
+        
+        let fontName = font?.familyName ?? "Helvetica"
+        let fontSize = font?.pointSize ?? 15.0
+        
+        var preTransed = string.hyperLink() //MUST BE DONE BEFORE ANYTHING !
+        preTransed = preTransed.hyperUser()
+        preTransed = preTransed.hyperHashtag()
+        preTransed = preTransed.dehyperMagic()
+        
+        return preTransed.toAttributedString(family: fontName, size: fontSize) ?? .init()
+    }
+    
+    
+    private func generateAsyncImageView(_ imageUrl: String)-> UIImageView {
+        let imageSize = 30
+        
+        let imageView = GIFImageView(frame: CGRect(x: 0, y: 0, width: 200, height: 100))
+        
+        imageView.backgroundColor = .lightGray
+        
+        
+        if imageUrl.ext == "gif", let url = URL(string: imageUrl) {
+            imageView.animate(withGIFURL: url) { // GIFはGIFアニメとして表示する
+                DispatchQueue.main.async {
+                    imageView.backgroundColor = .clear
+                    imageView.startAnimatingGIF()
+                }
+            }
+            
+        }
+        else {
+            imageUrl.toUIImage{ image in
+                DispatchQueue.main.async {
+                    imageView.backgroundColor = .clear
+                    imageView.image = image
+                }
+            }
+        }
+        
+        
+        imageView.frame = CGRect(x: 0, y: 0, width: imageSize, height: imageSize)
+        imageView.sizeThatFits(.init(width: imageSize, height: imageSize))
+        
+        return imageView
+    }
+    
 }
 
 
@@ -36,8 +129,8 @@ extension String {
     // @ → [at-mark.misscat.header] / # → [hash-tag.misscat.header] に変換しておく
     func hyperLink()-> String {
         
-//        let basedPattern = "https?://[\\w/:%#\\$&\\?\\(\\)~\\.=\\+\\-@]+"
-//        let pattern = "([^\\(href=\"\\)]+\(basedPattern)|^\(basedPattern))" //Markdownの[hoge](~~)を考慮して(にくるまれてるものは非適応に)
+        //        let basedPattern = "https?://[\\w/:%#\\$&\\?\\(\\)~\\.=\\+\\-@]+"
+        //        let pattern = "([^\\(href=\"\\)]+\(basedPattern)|^\(basedPattern))" //Markdownの[hoge](~~)を考慮して(にくるまれてるものは非適応に)
         
         let pattern = "(https?://[\\w/:%#\\$&\\?\\(\\)~\\.=\\+\\-@]+)"
         let targets = self.regexMatches(pattern: pattern)
@@ -83,14 +176,8 @@ extension String {
             .replacingOccurrences(of: "[hash-tag.misscat.header]", with:"#")
     }
     
-    func shapeForMFM(externalEmojis: [EmojiModel?]? = nil)-> String {
-//        var shaped = (try? Down(markdownString: self).toHTML(.unsafe)) ?? self
-        var shaped = self.hyperLink() //MUST BE DONE BEFORE ANYTHING !
-        shaped = shaped.emojiEncoder(externalEmojis: externalEmojis)
-        shaped = shaped.hyperUser()
-        shaped = shaped.hyperHashtag()
-        shaped = shaped.dehyperMagic()
-        
-        return shaped
+    func shapeForMFM(yanagi: YanagiText, externalEmojis: [EmojiModel?]? = nil)-> NSAttributedString? {
+        let mfm = MFMEngine(self)
+        return mfm.transform(yanagi: yanagi, externalEmojis: externalEmojis)
     }
 }

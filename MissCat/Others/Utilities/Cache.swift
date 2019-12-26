@@ -9,7 +9,9 @@
 import UIKit
 import MisskeyKit
 import Foundation
+import YanagiText
 
+public typealias Attachments = Dictionary<NSTextAttachment,YanagiText.Attachment>
 public class Cache {
     
     //MARK: Singleton
@@ -24,8 +26,8 @@ public class Cache {
     
     
     //MARK: Save
-    public func saveNote(noteId: String, note: NSAttributedString) {
-        notes.append(Note(noteId: noteId, treatedNote: note))
+    public func saveNote(noteId: String, note: NSAttributedString, attachments: Attachments) {
+        notes.append(Note(noteId: noteId, treatedNote: note, attachments: attachments))
     }
     
     public func saveIcon(username: String, image: UIImage) {
@@ -56,13 +58,13 @@ public class Cache {
     
     
     //MARK: Get
-    public func getNote(noteId: String)-> NSAttributedString? {
+    public func getNote(noteId: String)-> Cache.Note? {
         let options = notes.filter {
             $0.noteId == noteId
         }
         
         guard options.count > 0 else { return nil }
-        return options[0].treatedNote
+        return options[0]
     }
     
     public func getIcon(username: String)-> UIImage? {
@@ -123,6 +125,7 @@ public extension Cache {
     struct Note {
         public var noteId: String
         public var treatedNote: NSAttributedString
+        public var attachments: Dictionary<NSTextAttachment,YanagiText.Attachment>
     }
     
     struct Icon {

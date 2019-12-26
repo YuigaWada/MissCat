@@ -10,6 +10,7 @@ import UIKit
 import MisskeyKit
 import RxSwift
 import RxCocoa
+import YanagiText
 
 class NoteCellViewModel: ViewModelType {
     
@@ -17,6 +18,8 @@ class NoteCellViewModel: ViewModelType {
     struct Input {
         let cellModel: NoteCell.Model
         let isDetailMode: Bool
+        
+        let yanagi: YanagiText //Modelに渡さなければならないので看過
     }
     
 
@@ -104,15 +107,16 @@ class NoteCellViewModel: ViewModelType {
             let cachedNote = Cache.shared.getNote(noteId: noteId) // セルが再利用されるのでキャッシュは中央集権的に
             let hasCachedNote: Bool = cachedNote != nil
              
-            let treatedNote = self.model.shapeNote(cache: cachedNote,
+        let treatedNote = self.model.shapeNote(cache: cachedNote,
                                               identifier: identifier,
                                               note: note,
                                               isReply: isReply,
                                               externalEmojis: externalEmojis,
-                                              isDetailMode: isDetailMode)
+                                              isDetailMode: isDetailMode,
+                                              yanagi: input.yanagi)
             
             if !hasCachedNote, let treatedNote = treatedNote {
-                Cache.shared.saveNote(noteId: noteId, note: treatedNote) // CHACHE!
+                Cache.shared.saveNote(noteId: noteId, note: treatedNote, attachments: input.yanagi.getAttachments()) // CHACHE!
             }
             
             self.shapedNote.accept(treatedNote)
