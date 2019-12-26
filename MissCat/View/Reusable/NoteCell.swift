@@ -117,7 +117,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.othersButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
         
         self.noteView.delegate = self
-        
+        self.noteView.xMargin = 0
+        self.noteView.yMargin = 0
         
         
         if self.fileImageView.arrangedSubviews.count > 0 {

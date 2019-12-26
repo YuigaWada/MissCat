@@ -7,6 +7,7 @@ PODS:
   - Differentiator (4.0.1)
   - FloatingPanel (1.7.1)
   - Gifu (3.2.0)
+  - iOSPhotoEditor (1.0.0)
   - PolioPager (2.2)
   - RxCocoa (5.0.1):
     - RxRelay (~> 5)
@@ -27,6 +28,7 @@ DEPENDENCIES:
   - Agrume
   - FloatingPanel
   - Gifu
+  - iOSPhotoEditor
   - PolioPager
   - RxCocoa (~> 5)
   - RxDataSources
@@ -41,6 +43,7 @@ SPEC REPOS:
     - Differentiator
     - FloatingPanel
     - Gifu
+    - iOSPhotoEditor
     - PolioPager
     - RxCocoa
     - RxDataSources
@@ -65,6 +68,7 @@ SPEC CHECKSUMS:
   Differentiator: 886080237d9f87f322641dedbc5be257061b0602
   FloatingPanel: 2f87246071476cf05d77ba3f50a373ca4b04549e
   Gifu: 7bcb6427457d85e0b4dff5a84ec5947ac19a93ea
+  iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
   PolioPager: 324dc97f5bb029eb0e892b59265be4abce1c6290
   RxCocoa: e741b9749968e8a143e2b787f1dfbff2b63d0a5c
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
@@ -74,6 +78,6 @@ SPEC CHECKSUMS:
   SVGKit: 8a2fc74258bdb2abb54d3b65f3dd68b0277a9c4d
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
 
-PODFILE CHECKSUM: a66814dfea2422448e2a72701e2b984777fd8f18
+PODFILE CHECKSUM: 7194ad074ad21ef3061d9bdb14e2d703f259140e
 
 COCOAPODS: 1.7.1

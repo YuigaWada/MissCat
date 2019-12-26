@@ -15,8 +15,9 @@ pod "SkeletonView", :binary => true
 pod 'FloatingPanel', :binary => true
 pod 'Gifu', :binary => true
 
-pod 'iOSPhotoEditor' 
+pod 'iOSPhotoEditor', :binary => true
 
+pod 'YanagiText'
 pod 'XLPagerTabStrip'
 pod 'Down'
 end 

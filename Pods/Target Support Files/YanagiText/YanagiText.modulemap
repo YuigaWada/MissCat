@@ -1,0 +1,6 @@
+framework module YanagiText {
+  umbrella header "YanagiText-umbrella.h"
+
+  export *
+  module * { export * }
+}

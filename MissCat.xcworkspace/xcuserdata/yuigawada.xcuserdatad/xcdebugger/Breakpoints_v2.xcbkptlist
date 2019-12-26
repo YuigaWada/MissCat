@@ -3308,8 +3308,8 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "159"
-            endingLineNumber = "159"
+            startingLineNumber = "160"
+            endingLineNumber = "160"
             landmarkName = "setupProfileGesture()"
             landmarkType = "7">
          </BreakpointContent>
@@ -4348,8 +4348,8 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "163"
-            endingLineNumber = "163"
+            startingLineNumber = "164"
+            endingLineNumber = "164"
             landmarkName = "setupProfileGesture()"
             landmarkType = "7">
          </BreakpointContent>
@@ -4588,8 +4588,8 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "150"
-            endingLineNumber = "150"
+            startingLineNumber = "151"
+            endingLineNumber = "151"
             landmarkName = "binding(viewModel:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4604,8 +4604,8 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "121"
-            endingLineNumber = "121"
+            startingLineNumber = "122"
+            endingLineNumber = "122"
             landmarkName = "setupComponents()"
             landmarkType = "7">
          </BreakpointContent>
@@ -4716,8 +4716,8 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "272"
-            endingLineNumber = "272"
+            startingLineNumber = "273"
+            endingLineNumber = "273"
             landmarkName = "shapeCell(item:isDetailMode:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4732,8 +4732,8 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "276"
-            endingLineNumber = "276"
+            startingLineNumber = "277"
+            endingLineNumber = "277"
             landmarkName = "shapeCell(item:isDetailMode:)"
             landmarkType = "7">
          </BreakpointContent>

@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "707750498984B8376E2CCAB25DD030AC"
-               BuildableName = "iOSPhotoEditor.framework"
+               BuildableName = "iOSPhotoEditor"
                BlueprintName = "iOSPhotoEditor"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

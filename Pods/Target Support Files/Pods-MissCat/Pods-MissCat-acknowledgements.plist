@@ -490,7 +490,7 @@ SOFTWARE.
 			<key>FooterText</key>
 			<string>MIT License
 
-Copyright (c) 2017 Mohamed Hamed
+Copyright (c) 2019 YuigaWada
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -513,7 +513,7 @@ SOFTWARE.
 			<key>License</key>
 			<string>MIT</string>
 			<key>Title</key>
-			<string>iOSPhotoEditor</string>
+			<string>YanagiText</string>
 			<key>Type</key>
 			<string>PSGroupSpecifier</string>
 		</dict>
