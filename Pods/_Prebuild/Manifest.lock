@@ -6,8 +6,7 @@ PODS:
   - CocoaLumberjack/Core (3.6.0)
   - Differentiator (4.0.1)
   - FloatingPanel (1.7.1)
-  - MisskeyKit (1.1):
-    - Starscream
+  - Gifu (3.2.0)
   - PolioPager (2.2)
   - RxCocoa (5.0.1):
     - RxRelay (~> 5)
@@ -20,7 +19,6 @@ PODS:
     - RxSwift (~> 5)
   - RxSwift (5.0.1)
   - SkeletonView (1.8.2)
-  - Starscream (3.1.1)
   - SVGKit (2.1.0):
     - CocoaLumberjack (~> 3.0)
   - SwiftyGif (5.2.0)
@@ -28,13 +26,12 @@ PODS:
 DEPENDENCIES:
   - Agrume
   - FloatingPanel
-  - MisskeyKit
+  - Gifu
   - PolioPager
   - RxCocoa (~> 5)
   - RxDataSources
   - RxSwift (~> 5)
   - SkeletonView
-  - Starscream
   - SVGKit (from `https://github.com/SVGKit/SVGKit.git`, branch `3.x`)
 
 SPEC REPOS:
@@ -43,14 +40,13 @@ SPEC REPOS:
     - CocoaLumberjack
     - Differentiator
     - FloatingPanel
-    - MisskeyKit
+    - Gifu
     - PolioPager
     - RxCocoa
     - RxDataSources
     - RxRelay
     - RxSwift
     - SkeletonView
-    - Starscream
     - SwiftyGif
 
 EXTERNAL SOURCES:
@@ -68,17 +64,16 @@ SPEC CHECKSUMS:
   CocoaLumberjack: 78b0c238666f4f58db069738ec176f4519557516
   Differentiator: 886080237d9f87f322641dedbc5be257061b0602
   FloatingPanel: 2f87246071476cf05d77ba3f50a373ca4b04549e
-  MisskeyKit: 765086bda350af5a17023e78595bdd1e96bf4b1e
+  Gifu: 7bcb6427457d85e0b4dff5a84ec5947ac19a93ea
   PolioPager: 324dc97f5bb029eb0e892b59265be4abce1c6290
   RxCocoa: e741b9749968e8a143e2b787f1dfbff2b63d0a5c
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
   RxRelay: 89d54507f4fd4d969e6ec1d4bd7f3673640b4640
   RxSwift: e2dc62b366a3adf6a0be44ba9f405efd4c94e0c4
   SkeletonView: bb27c39857e5492136f02ee8a3aa78de55d12ecd
-  Starscream: 4bb2f9942274833f7b4d296a55504dcfc7edb7b0
   SVGKit: 8a2fc74258bdb2abb54d3b65f3dd68b0277a9c4d
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
 
-PODFILE CHECKSUM: b0774612fb6b43c94e97fa97844e1765681d47f1
+PODFILE CHECKSUM: a66814dfea2422448e2a72701e2b984777fd8f18
 
 COCOAPODS: 1.7.1

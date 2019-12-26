@@ -9,9 +9,9 @@
 import UIKit
 import MisskeyKit
 import YanagiText
+import Gifu
 
 // ** MFM実装のためのクラス **
-// NSAttributedStringをplane sentencesとasync itemsにわけて、同期処理/非同期処理を両方行う
 
 public class MFMEngine {
     
@@ -83,13 +83,26 @@ public class MFMEngine {
     private func generateAsyncImageView(_ imageUrl: String)-> UIImageView {
         let imageSize = 30
         
-        let imageView = UIImageView()
+        let imageView = GIFImageView(frame: CGRect(x: 0, y: 0, width: 200, height: 100))
         
         imageView.backgroundColor = .lightGray
-        imageUrl.toUIImage{ image in
-            DispatchQueue.main.async {
-                imageView.backgroundColor = .clear
-                imageView.image = image
+        
+        
+        if imageUrl.ext == "gif", let url = URL(string: imageUrl) {
+            imageView.animate(withGIFURL: url) { // GIFはGIFアニメとして表示する
+                DispatchQueue.main.async {
+                    imageView.backgroundColor = .clear
+                    imageView.startAnimatingGIF()
+                }
+            }
+            
+        }
+        else {
+            imageUrl.toUIImage{ image in
+                DispatchQueue.main.async {
+                    imageView.backgroundColor = .clear
+                    imageView.image = image
+                }
             }
         }
         

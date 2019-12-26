@@ -119,3 +119,11 @@ extension String {
     }
     
 }
+
+extension String {
+    var ext: String? {
+        let url = NSURL(string: self)
+        return url?.pathExtension
+    }
+}
+

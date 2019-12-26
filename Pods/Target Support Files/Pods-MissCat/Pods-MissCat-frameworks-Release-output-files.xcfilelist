@@ -7,8 +7,9 @@ ${DWARF_DSYM_FOLDER_PATH}/Differentiator.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Down.framework
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FloatingPanel.framework
 ${DWARF_DSYM_FOLDER_PATH}/FloatingPanel.framework.dSYM
+${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Gifu.framework
+${DWARF_DSYM_FOLDER_PATH}/Gifu.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MisskeyKit.framework
-${DWARF_DSYM_FOLDER_PATH}/MisskeyKit.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PolioPager.framework
 ${DWARF_DSYM_FOLDER_PATH}/PolioPager.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxCocoa.framework
@@ -24,7 +25,6 @@ ${DWARF_DSYM_FOLDER_PATH}/SVGKit.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SkeletonView.framework
 ${DWARF_DSYM_FOLDER_PATH}/SkeletonView.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Starscream.framework
-${DWARF_DSYM_FOLDER_PATH}/Starscream.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyGif.framework
 ${DWARF_DSYM_FOLDER_PATH}/SwiftyGif.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/XLPagerTabStrip.framework
