@@ -8,6 +8,7 @@
 
 import Foundation
 import MisskeyKit
+import YanagiText
 
 public class NoteCellModel {
     
@@ -27,15 +28,20 @@ public class NoteCellModel {
     
     
     // ノートにHyperLink/css修飾を加え整形する
-    public func shapeNote(cache: NSAttributedString?, identifier: String, note: String, isReply: Bool, externalEmojis: [EmojiModel?]?, isDetailMode: Bool)-> NSAttributedString? {
+    public func shapeNote(cache: Cache.Note?, identifier: String, note: String, isReply: Bool, externalEmojis: [EmojiModel?]?, isDetailMode: Bool, yanagi: YanagiText)-> NSAttributedString? {
         if !isDetailMode, let cache = cache { //詳細モードの場合はキャッシュを利用しない
-            return cache
+            
+            cache.attachments.forEach { nsAttachment, yanagiAttachment in
+                yanagi.addAttachment(ns: nsAttachment, yanagi: yanagiAttachment)
+            }
+            
+            return cache.treatedNote
         }
         let replyHeader: NSMutableAttributedString = isReply ? .getReplyMark() : .init() //リプライの場合は先頭にreplyマークつける
         let attributedText: NSMutableAttributedString = .init(attributedString: replyHeader)
         
-        let newNote = note.shapeForMFM(externalEmojis: externalEmojis)
-        attributedText.append(newNote.toAttributedString(family: "Helvetica", size: isDetailMode ? 14.0 : 11.0) ?? .init())
+        let newNote = note.shapeForMFM(yanagi: yanagi, externalEmojis: externalEmojis) ?? .init()
+        attributedText.append(newNote)
         
         return attributedText
     }

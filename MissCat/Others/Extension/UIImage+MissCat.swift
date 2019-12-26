@@ -67,8 +67,8 @@ extension UIImage {
             return .black
         }
     }
-
-
+    
+    
     
     private var averageColor: UIColor {
         

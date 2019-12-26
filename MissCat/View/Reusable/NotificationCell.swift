@@ -96,12 +96,16 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
             let hasCachedNote: Bool = cachedNote != nil
             
             //キャッシュを活用する
-            self.noteView.attributedText = hasCachedNote ? cachedNote : viewModel.shapeNote(identifier: item.identity,
+            self.noteView.attributedText = hasCachedNote ? cachedNote?.treatedNote : viewModel.shapeNote(identifier: item.identity,
                                                                                             note: myNote.note,
                                                                                             isReply: myNote.isReply,
                                                                                             externalEmojis: myNote.emojis)
             //キャッシュが存在しなければキャッシュしておく
-            if !hasCachedNote { Cache.shared.saveNote(noteId: noteId, note: self.noteView.attributedText) }
+            if !hasCachedNote {
+                Cache.shared.saveNote(noteId: noteId,
+                                      note: self.noteView.attributedText,
+                                      attachments: self.noteView.getAttachments())
+            }
             
             
             // file

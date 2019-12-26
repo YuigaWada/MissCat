@@ -7,6 +7,7 @@ PODS:
   - Differentiator (4.0.1)
   - Down (0.9.0)
   - FloatingPanel (1.7.1)
+  - Gifu (3.2.0)
   - iOSPhotoEditor (1.0.0)
   - MisskeyKit (1.1):
     - Starscream
@@ -27,11 +28,13 @@ PODS:
     - CocoaLumberjack (~> 3.0)
   - SwiftyGif (5.2.0)
   - XLPagerTabStrip (9.0.0)
+  - YanagiText (1.0)
 
 DEPENDENCIES:
   - Agrume
   - Down
   - FloatingPanel
+  - Gifu
   - iOSPhotoEditor
   - MisskeyKit
   - PolioPager
@@ -42,6 +45,7 @@ DEPENDENCIES:
   - Starscream
   - SVGKit (from `https://github.com/SVGKit/SVGKit.git`, branch `3.x`)
   - XLPagerTabStrip
+  - YanagiText
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
@@ -50,6 +54,7 @@ SPEC REPOS:
     - Differentiator
     - Down
     - FloatingPanel
+    - Gifu
     - iOSPhotoEditor
     - MisskeyKit
     - PolioPager
@@ -61,6 +66,7 @@ SPEC REPOS:
     - Starscream
     - SwiftyGif
     - XLPagerTabStrip
+    - YanagiText
 
 EXTERNAL SOURCES:
   SVGKit:
@@ -78,6 +84,7 @@ SPEC CHECKSUMS:
   Differentiator: 886080237d9f87f322641dedbc5be257061b0602
   Down: 1cdbca4963b542d0ef34ebb3e10ff48382bdf761
   FloatingPanel: 2f87246071476cf05d77ba3f50a373ca4b04549e
+  Gifu: 7bcb6427457d85e0b4dff5a84ec5947ac19a93ea
   iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
   MisskeyKit: 765086bda350af5a17023e78595bdd1e96bf4b1e
   PolioPager: 324dc97f5bb029eb0e892b59265be4abce1c6290
@@ -90,7 +97,8 @@ SPEC CHECKSUMS:
   SVGKit: 8a2fc74258bdb2abb54d3b65f3dd68b0277a9c4d
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
+  YanagiText: 0771fa68142335a34a1f967334ee0e12f36b428b
 
-PODFILE CHECKSUM: 7a757becfc694e84aab1fca8e7f8c389ec78710f
+PODFILE CHECKSUM: 737e0b8e4cd77a395711c32a92b374253748f800
 
 COCOAPODS: 1.7.1

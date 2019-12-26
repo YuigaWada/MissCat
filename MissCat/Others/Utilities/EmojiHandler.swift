@@ -26,7 +26,7 @@ public class EmojiHandler {
     public func emojiEncoder(note: String, externalEmojis: [EmojiModel?]?)-> String {
         
         var newNote = note
-        let targets = note.regexMatches(pattern: "(:[^\\s]+:)")
+        let targets = note.regexMatches(pattern: "(:[^(\\s|:)]+:)")
         
         guard targets.count > 0 else { return note }
         targets.forEach{ target in

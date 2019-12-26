@@ -29,6 +29,11 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
+		<key>Gifu.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
 		<key>MisskeyKit.xcscheme</key>
 		<dict>
 			<key>isShown</key>
@@ -90,6 +95,11 @@
 			<false/>
 		</dict>
 		<key>XLPagerTabStrip.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
+		<key>YanagiText.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
