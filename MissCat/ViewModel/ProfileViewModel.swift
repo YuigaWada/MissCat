@@ -71,9 +71,9 @@ class ProfileViewModel: ViewModelType {
         
         // Description
         if let description = user.description {
-            let shaped = model.shape(description: description)
+//            let shaped = model.shape(description: description)
             
-            intro.accept(shaped.toAttributedString(family: "Helvetica", size: 11.0) ?? .init())
+//            intro.accept(shaped.toAttributedString(family: "Helvetica", size: 11.0) ?? .init())
         }
         else {
             intro.accept("自己紹介はありません".toAttributedString(family: "Helvetica", size: 11.0) ?? .init())

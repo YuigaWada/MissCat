@@ -7,9 +7,10 @@
 //
 
 import UIKit
+import YanagiText
 
 // リンクタップのみできるTextView
-class MisskeyTextView: UITextView {
+class MisskeyTextView: YanagiText {
 
     override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
         guard let position = closestPosition(to: point),

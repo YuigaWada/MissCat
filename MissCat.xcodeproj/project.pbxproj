@@ -73,6 +73,8 @@
 		8DAEA1372382E59A0083AA69 /* EmojiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEA1362382E59A0083AA69 /* EmojiView.swift */; };
 		8DAEA1392382E6D00083AA69 /* ReactionGenModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEA1382382E6D00083AA69 /* ReactionGenModel.swift */; };
 		8DC16154238BBD0C007793B7 /* NoteModel+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC16153238BBD0C007793B7 /* NoteModel+MissCat.swift */; };
+		8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */; };
+		8DC95AF923B0BD450013CABC /* NotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC95AF823B0BD450013CABC /* NotificationBanner.swift */; };
 		8DD8898B23935CC400D22910 /* PostDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */; };
 		8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEFF31B239BD45700142802 /* ProfileViewModel.swift */; };
 		8DEFF31E239BD4F200142802 /* ProfileModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEFF31D239BD4F200142802 /* ProfileModel.swift */; };
@@ -88,6 +90,19 @@
 			remoteInfo = MissCat;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8DD0D80A23B45507003F02ED /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		59938C2378478B836C3F339B /* Pods-MissCat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCat.release.xcconfig"; path = "Target Support Files/Pods-MissCat/Pods-MissCat.release.xcconfig"; sourceTree = "<group>"; };
@@ -164,6 +179,8 @@
 		8DAEA1362382E59A0083AA69 /* EmojiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiView.swift; sourceTree = "<group>"; };
 		8DAEA1382382E6D00083AA69 /* ReactionGenModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenModel.swift; sourceTree = "<group>"; };
 		8DC16153238BBD0C007793B7 /* NoteModel+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NoteModel+MissCat.swift"; sourceTree = "<group>"; };
+		8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = NotificationBanner.xib; sourceTree = "<group>"; };
+		8DC95AF823B0BD450013CABC /* NotificationBanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationBanner.swift; sourceTree = "<group>"; };
 		8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailViewModel.swift; sourceTree = "<group>"; };
 		8DEFF31B239BD45700142802 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		8DEFF31D239BD4F200142802 /* ProfileModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileModel.swift; sourceTree = "<group>"; };
@@ -255,6 +272,7 @@
 				8D613554238B6D8B00AB50C2 /* NavBar.swift */,
 				8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */,
 				8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */,
+				8DC95AF823B0BD450013CABC /* NotificationBanner.swift */,
 			);
 			path = Reusable;
 			sourceTree = "<group>";
@@ -378,6 +396,7 @@
 				8D61354E238A974400AB50C2 /* EmojiViewCell.xib */,
 				8D613552238B6D4F00AB50C2 /* NavBar.xib */,
 				8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */,
+				8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */,
 			);
 			path = nib;
 			sourceTree = "<group>";
@@ -413,6 +432,7 @@
 				8D4A2A0F237437BE00503685 /* Frameworks */,
 				8D4A2A10237437BE00503685 /* Resources */,
 				4EC098CA0903849950263D36 /* [CP] Embed Pods Frameworks */,
+				8DD0D80A23B45507003F02ED /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -500,6 +520,7 @@
 				8D065B19237AC826003DFB7C /* NoteCell.xib in Resources */,
 				8D8863B4238493FA00A7A5A8 /* RenoteeCell.xib in Resources */,
 				8DAEA1352382E4F00083AA69 /* EmojiView.xib in Resources */,
+				8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -586,6 +607,7 @@
 				8DA06A0B2389E98D0093A718 /* NotificationCell.swift in Sources */,
 				8DA36F862394B9D000512459 /* UIFont+MissCat.swift in Sources */,
 				8D4A2A16237437BE00503685 /* AppDelegate.swift in Sources */,
+				8DC95AF923B0BD450013CABC /* NotificationBanner.swift in Sources */,
 				8D613555238B6D8B00AB50C2 /* NavBar.swift in Sources */,
 				8D8863B223848C0400A7A5A8 /* UIView+MissCat.swift in Sources */,
 				8D3EC23C237B43F000808727 /* String+MissCat.swift in Sources */,

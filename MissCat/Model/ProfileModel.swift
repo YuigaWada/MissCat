@@ -12,9 +12,9 @@ import Down
 
 class ProfileModel {
 
-    public func shape(description: String)-> String {
-        return description.shapeForMFM()
-    }
+//    public func shape(description: String)-> NSAttributedString {
+//        return description.shapeForMFM()
+//    }
 
     
     public func getUser(userId: String, completion: @escaping (UserModel?)->()) {

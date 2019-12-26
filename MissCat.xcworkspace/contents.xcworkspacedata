@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:../../../../Documents/GitHub/YanagiText/YanagiText.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:MissCat.xcodeproj">
    </FileRef>
    <FileRef
