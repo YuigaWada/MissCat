@@ -255,6 +255,11 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             return self
         }
         
+        //detail mode
+        self.noteView.font = UIFont.init(name: "Helvetica",
+                                         size: isDetailMode ? 15.0 : 11.0)
+        
+        
         self.changeSkeltonState(on: false)
         
         guard let noteId = item.noteId else { return NoteCell() }
@@ -268,10 +273,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.userId = item.userId
         
         self.iconImageUrl = viewModel!.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
-        
-        //detail mode
-        self.noteView.font = UIFont.init(name: "Helvetica",
-                                         size: isDetailMode ? 16.0 : 14.0)
         
         //file
         if let files = Cache.shared.getFiles(noteId: noteId) {
@@ -390,7 +391,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.noteView.isSkeletonable = true
         
         self.reactionsStackView.isSkeletonable = true
-        self.fileImageContainer.isSkeletonable = true
+        
         self.fileImageView.isSkeletonable = true
     }
     
@@ -406,7 +407,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             
             self.reactionsStackView.isHidden = true
             
-            self.fileImageContainer.showAnimatedGradientSkeleton()
             self.fileImageView.showAnimatedGradientSkeleton()
         }
         else {
@@ -415,7 +415,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             
             self.reactionsStackView.isHidden = false
             
-            self.fileImageContainer.hideSkeleton()
+            
             self.fileImageView.hideSkeleton()
         }
     }

@@ -10,6 +10,7 @@ import UIKit
 import XLPagerTabStrip
 import RxSwift
 
+fileprivate typealias ViewModel = ProfileViewModel
 public class ProfileViewController: ButtonBarPagerTabStripViewController {
     
     private let disposeBag = DisposeBag()
@@ -25,7 +26,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     @IBOutlet weak var usernameLabel: UILabel!
     
     @IBOutlet weak var iconImageView: UIImageView!
-    @IBOutlet weak var introTextView: UITextView!
+    @IBOutlet weak var introTextView: MisskeyTextView!
     
     @IBOutlet weak var backButton: UIButton!
     @IBOutlet weak var containerHeightContraint: NSLayoutConstraint!
@@ -33,8 +34,10 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     private var userId: String?
     private var scrollBegining: CGFloat = 0
     private var tlScrollView: UIScrollView?
+    private var isMe: Bool = false
     
-    private lazy var viewModel: ProfileViewModel = .init()
+    private lazy var viewModel: ProfileViewModel = self.getViewModel()
+    
     private var childVCs: [TimelineViewController] = []
     
     private var maxScroll: CGFloat {
@@ -45,12 +48,14 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     
     //MARK: Life Cycle
     override public func viewDidLoad() {
-        self.setupTabStyle()
+        self.viewModel.setUserId(self.userId ?? "", isMe: self.isMe)
         
+        self.setupTabStyle()
         super.viewDidLoad()
         
         self.setupComponent()
         self.setupSkeltonMode()
+        
         self.binding()
         self.setBannerBlur()
         
@@ -78,18 +83,26 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         if blurAnimator == nil { self.setBlurAnimator() }
     }
     
+    private func getViewModel()-> ViewModel {
+        let input = ViewModel.Input(yanagi: self.introTextView)
+        return .init(with: input, and: disposeBag)
+    }
+    
     
     private func setupComponent() {
         self.backButton.titleLabel?.font = .awesomeSolid(fontSize: 18.0)
         self.backButton.alpha = 0.5
         self.backButton.setTitleColor(.black, for: .normal)
+    
+        self.introTextView.font = UIFont.init(name: "Helvetica",
+                                              size: 11.0)
     }
     
     
     //MARK: Public Methods
     public func setUserId(_ userId: String, isMe: Bool) {
         self.userId = userId
-        viewModel.setUserId(userId, isMe: isMe)
+        self.isMe = isMe
     }
     
     //MARK: Setup
@@ -126,13 +139,13 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
             self.bannerImageView.image = image
             
             let opticaTextColor = image.opticalTextColor
-
+            
             UIView.animate(withDuration: 1.5, animations: {
                 self.backButton.titleLabel?.textColor = opticaTextColor
             })
         }).disposed(by: disposeBag)
         
-
+        
         output.displayName.drive(self.displayName.rx.text).disposed(by: disposeBag)
         output.username.drive(self.usernameLabel.rx.text).disposed(by: disposeBag)
         
@@ -160,8 +173,6 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     }
     
     private func setBlurAnimator() {
-//        let frame = self.introTextView.frame
-        
         let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
         blurView.frame = CGRect(x: 0,
                                 y: 0,
@@ -257,7 +268,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
             let blurProportion = containerScrollView.contentOffset.y * 2 / maxScroll - 1
             self.scrollBegining = scrollView.contentOffset.y
             
-             //ブラーアニメーションをかける
+            //ブラーアニメーションをかける
             if 0 < blurProportion, blurProportion < 1 {
                 blurAnimator.fractionComplete = blurProportion
             }

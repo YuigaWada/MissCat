@@ -26,7 +26,7 @@ public class MFMEngine {
     }
     
     
-    
+    // Must Be Used From Main Thread !
     public func transform(yanagi: YanagiText, externalEmojis: [EmojiModel?]?)-> NSAttributedString? {
         
         var rest = original
@@ -47,7 +47,6 @@ public class MFMEngine {
                 shaped.append(NSAttributedString(string: converted.emoji))
                 
             case "custom":
-                
                 let targetView = self.generateAsyncImageView(converted.emoji)
                 if let targetViewString = yanagi.getViewString(with: targetView, size: targetView.frame.size) {
                     shaped.append(targetViewString)
@@ -56,7 +55,6 @@ public class MFMEngine {
             default:
                 return
             }
-            
             
             rest = String(rest[range.upperBound...])
         }
@@ -92,7 +90,6 @@ public class MFMEngine {
             imageView.animate(withGIFURL: url) { // GIFはGIFアニメとして表示する
                 DispatchQueue.main.async {
                     imageView.backgroundColor = .clear
-                    imageView.startAnimatingGIF()
                 }
             }
             
@@ -176,7 +173,8 @@ extension String {
             .replacingOccurrences(of: "[hash-tag.misscat.header]", with:"#")
     }
     
-    func shapeForMFM(yanagi: YanagiText, externalEmojis: [EmojiModel?]? = nil)-> NSAttributedString? {
+    // Must Be Used From Main Thread !
+    func mfmTransform(yanagi: YanagiText, externalEmojis: [EmojiModel?]? = nil)-> NSAttributedString? {
         let mfm = MFMEngine(self)
         return mfm.transform(yanagi: yanagi, externalEmojis: externalEmojis)
     }

@@ -12,11 +12,6 @@ import Down
 
 class ProfileModel {
 
-//    public func shape(description: String)-> NSAttributedString {
-//        return description.shapeForMFM()
-//    }
-
-    
     public func getUser(userId: String, completion: @escaping (UserModel?)->()) {
         MisskeyKit.users.showUser(userId: userId) { user, error in
             guard error == nil else { completion(nil); return }

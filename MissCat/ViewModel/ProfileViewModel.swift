@@ -10,11 +10,12 @@ import UIKit
 import RxSwift
 import RxCocoa
 import MisskeyKit
+import YanagiText
 
 class ProfileViewModel: ViewModelType {
     
     struct Input {
-        
+        let yanagi: YanagiText
     }
     
     struct Output {
@@ -28,9 +29,10 @@ class ProfileViewModel: ViewModelType {
     }
     
     struct State {
-    
+        
     }
     
+    private var input: Input
     public lazy var output: Output = .init(bannerImage: self.bannerImage.asDriver(onErrorJustReturn: UIImage()),
                                            displayName: self.displayName.asDriver(onErrorJustReturn: ""),
                                            username: self.username.asDriver(onErrorJustReturn: ""),
@@ -48,6 +50,11 @@ class ProfileViewModel: ViewModelType {
     private var isMe: Bool = false
     
     private lazy var model = ProfileModel()
+    
+    public init(with input: Input, and disposeBag: DisposeBag) {
+        self.input = input
+    }
+    
     
     public func setUserId(_ userId: String, isMe: Bool) {
         model.getUser(userId: userId, completion: handleUserInfo)
@@ -71,9 +78,10 @@ class ProfileViewModel: ViewModelType {
         
         // Description
         if let description = user.description {
-//            let shaped = model.shape(description: description)
-            
-//            intro.accept(shaped.toAttributedString(family: "Helvetica", size: 11.0) ?? .init())
+            DispatchQueue.main.async {
+                let shaped = description.mfmTransform(yanagi: self.input.yanagi)
+                self.intro.accept(shaped ?? .init())
+            }
         }
         else {
             intro.accept("自己紹介はありません".toAttributedString(family: "Helvetica", size: 11.0) ?? .init())

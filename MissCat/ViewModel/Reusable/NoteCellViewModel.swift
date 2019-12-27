@@ -22,7 +22,7 @@ class NoteCellViewModel: ViewModelType {
         let yanagi: YanagiText //Modelに渡さなければならないので看過
     }
     
-
+    
     struct Output {
         let ago: Driver<String>
         let displayName: Driver<String>
@@ -103,24 +103,24 @@ class NoteCellViewModel: ViewModelType {
     public func shapeNote(identifier: String, note: String, noteId: String? ,isReply: Bool, externalEmojis: [EmojiModel?]?, isDetailMode: Bool) {
         guard let noteId = noteId else { return }
         
-//        DispatchQueue.global(qos: .background).async {
-            let cachedNote = Cache.shared.getNote(noteId: noteId) // セルが再利用されるのでキャッシュは中央集権的に
-            let hasCachedNote: Bool = cachedNote != nil
-             
+        //        DispatchQueue.global(qos: .background).async {
+        let cachedNote = Cache.shared.getNote(noteId: noteId) // セルが再利用されるのでキャッシュは中央集権的に
+        let hasCachedNote: Bool = cachedNote != nil
+        
         let treatedNote = self.model.shapeNote(cache: cachedNote,
-                                              identifier: identifier,
-                                              note: note,
-                                              isReply: isReply,
-                                              externalEmojis: externalEmojis,
-                                              isDetailMode: isDetailMode,
-                                              yanagi: input.yanagi)
-            
-            if !hasCachedNote, let treatedNote = treatedNote {
-                Cache.shared.saveNote(noteId: noteId, note: treatedNote, attachments: input.yanagi.getAttachments()) // CHACHE!
-            }
-            
-            self.shapedNote.accept(treatedNote)
-//        }
+                                               identifier: identifier,
+                                               note: note,
+                                               isReply: isReply,
+                                               externalEmojis: externalEmojis,
+                                               isDetailMode: isDetailMode,
+                                               yanagi: input.yanagi)
+        
+        if !hasCachedNote, let treatedNote = treatedNote {
+            Cache.shared.saveNote(noteId: noteId, note: treatedNote, attachments: input.yanagi.getAttachments()) // CHACHE!
+        }
+        
+        self.shapedNote.accept(treatedNote)
+        //        }
     }
     
     

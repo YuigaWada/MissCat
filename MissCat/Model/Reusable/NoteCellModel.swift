@@ -38,12 +38,9 @@ public class NoteCellModel {
             return cache.treatedNote
         }
         let replyHeader: NSMutableAttributedString = isReply ? .getReplyMark() : .init() //リプライの場合は先頭にreplyマークつける
-        let attributedText: NSMutableAttributedString = .init(attributedString: replyHeader)
+        let body = note.mfmTransform(yanagi: yanagi, externalEmojis: externalEmojis) ?? .init()
         
-        let newNote = note.shapeForMFM(yanagi: yanagi, externalEmojis: externalEmojis) ?? .init()
-        attributedText.append(newNote)
-        
-        return attributedText
+        return replyHeader + body
     }
 }
 
