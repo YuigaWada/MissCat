@@ -17,22 +17,29 @@ public class MFMEngine {
     
     private var lineHeight: CGFloat = 30
     
+    private let yanagi: YanagiText
+    
+    private var font: UIFont?
     private let original: String
     private let emojiTargets: [String]
     
     public var textColor: UIColor = .black
     
-    init(with original: String, lineHeight: CGFloat? = nil) {
+    init(with original: String, lineHeight: CGFloat? = nil, yanagi: YanagiText) {
         self.emojiTargets = original.regexMatches(pattern: "(:[^(\\s|:)]+:)").map{ return $0[0] }
         self.original = original
+        self.yanagi = yanagi
+        
+        DispatchQueue.main.async {
+            self.font = yanagi.font
+        }
         
         guard let lineHeight = lineHeight else { return }
         self.lineHeight = lineHeight
     }
     
     
-    // Must Be Used From Main Thread !
-    public func transform(yanagi: YanagiText, externalEmojis: [EmojiModel?]?)-> NSAttributedString? {
+    public func transform(externalEmojis: [EmojiModel?]?)-> NSAttributedString? {
         
         var rest = original
         let shaped = NSMutableAttributedString()
@@ -43,7 +50,7 @@ public class MFMEngine {
             
             //plane
             let plane = String(rest[rest.startIndex ..< range.lowerBound])
-            shaped.append(self.generatePlaneString(string: plane, font: yanagi.font))
+            shaped.append(self.generatePlaneString(string: plane, font: self.font))
             
             
             
@@ -212,7 +219,7 @@ extension String {
     
     // Must Be Used From Main Thread !
     func mfmTransform(yanagi: YanagiText, externalEmojis: [EmojiModel?]? = nil, lineHeight: CGFloat? = nil)-> NSAttributedString? {
-        let mfm = MFMEngine(with: self, lineHeight: lineHeight)
-        return mfm.transform(yanagi: yanagi, externalEmojis: externalEmojis)
+        let mfm = MFMEngine(with: self, lineHeight: lineHeight, yanagi: yanagi)
+        return mfm.transform(externalEmojis: externalEmojis)
     }
 }
