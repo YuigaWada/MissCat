@@ -35,6 +35,13 @@ extension String {
     }
     
     
+    func getAttributedString(font: UIFont, color: UIColor)->NSAttributedString {
+        let attribute: [NSAttributedString.Key : Any] = [.font: font,
+                                                         .foregroundColor: color]
+        return NSMutableAttributedString(string: self, attributes: attribute)
+    }
+    
+    
     
     func toUIImage(_ completion: @escaping (UIImage?)->()){
         guard let url = URL(string: self) else { completion(nil); return }

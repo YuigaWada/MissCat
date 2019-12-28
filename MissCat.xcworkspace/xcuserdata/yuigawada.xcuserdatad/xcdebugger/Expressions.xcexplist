@@ -650,6 +650,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "String.hyperLink():MFMEngine.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "hypered">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ReactionGenViewController.EmojiModel.init(coder:):ReactionGenViewController.swift">
          <PersistentStrings>
             <PersistentString
@@ -684,6 +692,14 @@
             </PersistentString>
             <PersistentString
                value = " self.getSafeAreaSize().height">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #2 in String.hyperLink():MFMEngine.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "String($0.suffix(1))">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

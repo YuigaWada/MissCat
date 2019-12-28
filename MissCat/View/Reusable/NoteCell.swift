@@ -29,10 +29,11 @@ fileprivate typealias ViewModel = NoteCellViewModel
 public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate {
     
     //MARK: IBOutlet (UIView)
-    @IBOutlet weak var displayNameLabel: UILabel!
+
+    @IBOutlet weak var nameTextView: MisskeyTextView!
     
     @IBOutlet weak var iconView: UIImageView!
-    @IBOutlet weak var usernameLabel: UILabel!
+
     @IBOutlet weak var agoLabel: UILabel!
     
     
@@ -81,7 +82,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     private func getViewModel(item: NoteCell.Model, isDetailMode: Bool)-> ViewModel {
         let input: ViewModel.Input = .init(cellModel: item,
                                            isDetailMode: isDetailMode,
-                                           yanagi: self.noteView)
+                                           noteYanagi: self.noteView,
+                                           nameYanagi: self.nameTextView)
         
         
         let viewModel = NoteCellViewModel(with: input, and: self.disposeBag)
@@ -134,8 +136,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         let output = viewModel.output
         
         output.ago.drive(self.agoLabel.rx.text).disposed(by: disposeBag)
-        output.displayName.drive(self.displayNameLabel.rx.text).disposed(by: disposeBag)
-        output.username.drive(self.usernameLabel.rx.text).disposed(by: disposeBag)
+        output.name.drive(self.nameTextView.rx.attributedText).disposed(by: disposeBag)
         
         output.shapedNote.drive(self.noteView.rx.attributedText).disposed(by: disposeBag)
         output.iconImage.drive(self.iconView.rx.image).disposed(by: disposeBag)
@@ -152,7 +153,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }
     
     private func setupProfileGesture() {
-        let gestureTargets = [iconView, usernameLabel, displayNameLabel]
+        let gestureTargets = [iconView, nameTextView]
         
         gestureTargets.forEach {
             guard let view = $0 else { return }
@@ -179,8 +180,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.separatorBorder.isHidden = false
         self.replyIndicator.isHidden = true
         
-        self.displayNameLabel.text = nil
-        self.usernameLabel.text = nil
+        self.nameTextView.attributedText = nil
         self.iconView.image = nil
         self.agoLabel.text = nil
         self.noteView.attributedText = nil
@@ -202,6 +202,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.renoteButton.setTitle("", for: .normal)
         self.reactionButton.setTitle("", for: .normal)
         
+        self.nameTextView.resetViewString()
         self.noteView.resetViewString()
         
         //        changeSkeltonState(on: true)
@@ -255,9 +256,15 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             return self
         }
         
-        //detail mode
+        //Font
         self.noteView.font = UIFont.init(name: "Helvetica",
                                          size: isDetailMode ? 15.0 : 11.0)
+        self.nameTextView.font = UIFont.init(name: "Helvetica",
+                                             size: 10.0)
+        
+        //余白消す
+        self.nameTextView.textContainerInset = .zero
+        self.nameTextView.textContainer.lineFragmentPadding = 0
         
         
         self.changeSkeltonState(on: false)
@@ -384,8 +391,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.separatorBorder.isSkeletonable = true
         self.replyIndicator.isSkeletonable = true
         
-        self.displayNameLabel.isSkeletonable = true
-        self.usernameLabel.isSkeletonable = true
+        self.nameTextView.isSkeletonable = true
         self.iconView.isSkeletonable = true
         self.agoLabel.isSkeletonable = true
         self.noteView.isSkeletonable = true
@@ -398,11 +404,11 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     private func changeSkeltonState(on: Bool) {
         if on {
-            self.usernameLabel.text = nil
+            self.nameTextView.text = nil
             self.agoLabel.text = nil
             self.noteView.text = nil
             
-            self.displayNameLabel.showAnimatedGradientSkeleton()
+            self.nameTextView.showAnimatedGradientSkeleton()
             self.iconView.showAnimatedGradientSkeleton()
             
             self.reactionsStackView.isHidden = true
@@ -410,7 +416,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             self.fileImageView.showAnimatedGradientSkeleton()
         }
         else {
-            self.displayNameLabel.hideSkeleton()
+            self.nameTextView.hideSkeleton()
             self.iconView.hideSkeleton()
             
             self.reactionsStackView.isHidden = false
@@ -456,12 +462,12 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }
     
     @IBAction func tappedReaction(_ sender: Any) {
-        guard let delegate = delegate, let noteId = self.noteId, let username = self.usernameLabel.text, username.count > 1 else { return }
+        guard let delegate = delegate, let noteId = self.noteId, let viewModel = viewModel else { return }
         
         delegate.tappedReaction(noteId: noteId,
                                 iconUrl: self.iconImageUrl,
-                                displayName: self.displayNameLabel.text ?? "",
-                                username: String(username.suffix(username.count-1)),
+                                displayName: viewModel.output.displayName,
+                                username: viewModel.output.username,
                                 note: self.noteView.attributedText,
                                 hasFile: false,
                                 hasMarked: false)

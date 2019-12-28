@@ -27,6 +27,10 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
     private let viewModel = NotificationCellViewModel()
     private lazy var emojiView = self.generateEmojiView()
 
+//    private let defaultIconColor =
+    private lazy var reactionIconColor = UIColor(red: 231 / 255, green: 76 / 255, blue: 60 / 255, alpha: 1)
+    private lazy var renoteIconColor = UIColor(red: 46 / 255, green: 204 / 255, blue: 113 / 255, alpha: 1)
+    
     private var emojiViewOnView: Bool = false
     
     override public func layoutSubviews() {
@@ -118,6 +122,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         // renote
         if item.type == .renote {
             self.typeIconView.text = "retweet"
+            self.typeIconView.textColor = self.renoteIconColor
             self.typeLabel.text = "Renote"
             self.emojiView.isHidden = true
         }
@@ -125,6 +130,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         // reaction
         else if let reaction = item.reaction {
             self.typeIconView.text = "fire-alt"
+            self.typeIconView.textColor = self.reactionIconColor
             self.typeLabel.text = "Reaction"
             self.emojiView.emoji = reaction
         }

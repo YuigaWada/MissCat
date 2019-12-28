@@ -15,14 +15,19 @@ import Gifu
 
 public class MFMEngine {
     
+    private var lineHeight: CGFloat = 30
+    
     private let original: String
-    private let mfmTargets: [String]
+    private let emojiTargets: [String]
     
     public var textColor: UIColor = .black
     
-    init(_ original: String) {
-        self.mfmTargets = original.regexMatches(pattern: "(:[^(\\s|:)]+:)").map{ return $0[0] }
+    init(with original: String, lineHeight: CGFloat? = nil) {
+        self.emojiTargets = original.regexMatches(pattern: "(:[^(\\s|:)]+:)").map{ return $0[0] }
         self.original = original
+        
+        guard let lineHeight = lineHeight else { return }
+        self.lineHeight = lineHeight
     }
     
     
@@ -32,7 +37,7 @@ public class MFMEngine {
         var rest = original
         let shaped = NSMutableAttributedString()
         
-        mfmTargets.forEach { target in
+        self.emojiTargets.forEach { target in
             guard let converted = EmojiHandler.handler.convertEmoji(raw: target, external: externalEmojis),
                 let range = rest.range(of: target) else { return }
             
@@ -72,6 +77,7 @@ public class MFMEngine {
         var preTransed = string.hyperLink() //MUST BE DONE BEFORE ANYTHING !
         preTransed = preTransed.hyperUser()
         preTransed = preTransed.hyperHashtag()
+        preTransed = preTransed.markdown()
         preTransed = preTransed.dehyperMagic()
         
         return preTransed.toAttributedString(family: fontName, size: fontSize) ?? .init()
@@ -79,8 +85,7 @@ public class MFMEngine {
     
     
     private func generateAsyncImageView(_ imageUrl: String)-> UIImageView {
-        let imageSize = 30
-        
+        let imageSize = lineHeight
         let imageView = GIFImageView(frame: CGRect(x: 0, y: 0, width: 200, height: 100))
         
         imageView.backgroundColor = .lightGray
@@ -126,31 +131,63 @@ extension String {
     // @ → [at-mark.misscat.header] / # → [hash-tag.misscat.header] に変換しておく
     func hyperLink()-> String {
         
-        //        let basedPattern = "https?://[\\w/:%#\\$&\\?\\(\\)~\\.=\\+\\-@]+"
-        //        let pattern = "([^\\(href=\"\\)]+\(basedPattern)|^\(basedPattern))" //Markdownの[hoge](~~)を考慮して(にくるまれてるものは非適応に)
+        // markdown link
+        var result = self.replacingOccurrences(of: "\\[([^\\]]+)\\]\\(([^\\)]+)\\)",
+                                           with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"$2\">$1</a>",
+                                           options: .regularExpression)
         
-        let pattern = "(https?://[\\w/:%#\\$&\\?\\(\\)~\\.=\\+\\-@]+)"
-        let targets = self.regexMatches(pattern: pattern)
         
-        guard targets.count > 0 else { return self }
+        // normal Link
+        let normalLink = "(https?://[\\w/:%#\\$&\\?\\(~\\.=\\+\\-@\"]+)"
+        let targets = result.regexMatches(pattern: normalLink).map{ return $0[0] }.filter {
+            return $0.suffix(1) != "\""
+        }
         
         //先ににaタグに変換しておくと都合が良い
-        var result: String = self.replacingOccurrences(of: pattern,
-                                                       with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"$0\">$0</a>",
-                                                       options: .regularExpression)
+
         targets.forEach{ target in
-            guard target.count > 0 else { return }
-            
-            let from = target[0]
-            var to = from.replacingOccurrences(of: "@", with: "[at-mark.misscat.header]")
+            var to = target.replacingOccurrences(of: "@", with: "[at-mark.misscat.header]")
             to = to.replacingOccurrences(of: "#", with: "[hash-tag.misscat.header]")
             
-            result = result.replacingOccurrences(of: from, with: to)
+            result = result.replacingOccurrences(of: target,
+                                                 with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"\(to)\">\(to)</a>")
         }
         
         return result
     }
     
+    func markdown()-> String {
+        let bold = self.replacingOccurrences(of: "\\*\\*([^\\*]+)\\*\\*",
+                                               with: "<b>$1</b>",
+                                               options: .regularExpression)
+        
+        let strikeThrough = bold.replacingOccurrences(of: "~~([^\\~]+)~~",
+                                               with: "<s>$1</s>",
+                                               options: .regularExpression)
+        
+        
+        return strikeThrough.disablingTags()
+    }
+    
+    func disablingTags()-> String {
+        
+        var result = self
+        let targetTags = ["motion", "flip", "spin", "jump", "small"]
+        let otherTargets: Dictionary<String, String> = ["***": "***", "(((": ")))"]
+        
+        targetTags.forEach { tag in
+            let open = "<\(tag)>"
+            let close = "</\(tag)>"
+            
+            result = result.replacingOccurrences(of: open, with: "").replacingOccurrences(of: close, with: "")
+        }
+        
+        otherTargets.forEach { open, close in
+            result = result.replacingOccurrences(of: open, with: "").replacingOccurrences(of: close, with: "")
+        }
+        
+        return result
+    }
     
     // usernameをリンク化
     func hyperUser()-> String {
@@ -161,7 +198,7 @@ extension String {
     
     
     func hyperHashtag()-> String {
-        return self.replacingOccurrences(of: "(#[^\\s]+)",
+        return self.replacingOccurrences(of: "(#[^(\\s|,)]+)",
                                          with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"http://hashtags.misscat/$0\">$0</a>",
                                          options: .regularExpression)
         
@@ -174,8 +211,8 @@ extension String {
     }
     
     // Must Be Used From Main Thread !
-    func mfmTransform(yanagi: YanagiText, externalEmojis: [EmojiModel?]? = nil)-> NSAttributedString? {
-        let mfm = MFMEngine(self)
+    func mfmTransform(yanagi: YanagiText, externalEmojis: [EmojiModel?]? = nil, lineHeight: CGFloat? = nil)-> NSAttributedString? {
+        let mfm = MFMEngine(with: self, lineHeight: lineHeight)
         return mfm.transform(yanagi: yanagi, externalEmojis: externalEmojis)
     }
 }

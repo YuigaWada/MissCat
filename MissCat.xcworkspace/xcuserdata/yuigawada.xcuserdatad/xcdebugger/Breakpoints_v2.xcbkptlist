@@ -1036,10 +1036,10 @@
             filePath = "MissCat/View/Reusable/NotificationCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "151"
-            endingLineNumber = "151"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "157"
+            endingLineNumber = "157"
+            landmarkName = "generateEmojiView()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -2140,10 +2140,10 @@
             filePath = "MissCat/View/Reusable/NotificationCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "122"
-            endingLineNumber = "122"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "127"
+            endingLineNumber = "127"
+            landmarkName = "shapeCell(item:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -2156,10 +2156,10 @@
             filePath = "MissCat/View/Reusable/NotificationCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "125"
-            endingLineNumber = "125"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "130"
+            endingLineNumber = "130"
+            landmarkName = "shapeCell(item:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -2204,10 +2204,10 @@
             filePath = "MissCat/View/Reusable/NotificationCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "60"
-            endingLineNumber = "60"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "64"
+            endingLineNumber = "64"
+            landmarkName = "initialize()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -2220,10 +2220,10 @@
             filePath = "MissCat/View/Reusable/NotificationCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "152"
-            endingLineNumber = "152"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "158"
+            endingLineNumber = "158"
+            landmarkName = "generateEmojiView()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -3292,8 +3292,8 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "160"
-            endingLineNumber = "160"
+            startingLineNumber = "161"
+            endingLineNumber = "161"
             landmarkName = "setupProfileGesture()"
             landmarkType = "7">
          </BreakpointContent>
@@ -3340,8 +3340,8 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "53"
-            endingLineNumber = "53"
+            startingLineNumber = "58"
+            endingLineNumber = "58"
             landmarkName = "NoteCellViewModel"
             landmarkType = "3">
          </BreakpointContent>
@@ -4332,8 +4332,8 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "164"
-            endingLineNumber = "164"
+            startingLineNumber = "165"
+            endingLineNumber = "165"
             landmarkName = "setupProfileGesture()"
             landmarkType = "7">
          </BreakpointContent>
@@ -4572,8 +4572,8 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "151"
-            endingLineNumber = "151"
+            startingLineNumber = "152"
+            endingLineNumber = "152"
             landmarkName = "binding(viewModel:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4588,8 +4588,8 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "122"
-            endingLineNumber = "122"
+            startingLineNumber = "124"
+            endingLineNumber = "124"
             landmarkName = "setupComponents()"
             landmarkType = "7">
          </BreakpointContent>
@@ -4700,8 +4700,8 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "278"
-            endingLineNumber = "278"
+            startingLineNumber = "285"
+            endingLineNumber = "285"
             landmarkName = "shapeCell(item:isDetailMode:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4732,8 +4732,8 @@
             filePath = "MissCat/Others/Utilities/MFMEngine.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "90"
-            endingLineNumber = "90"
+            startingLineNumber = "95"
+            endingLineNumber = "95"
             landmarkName = "generateAsyncImageView(_:)"
             landmarkType = "7">
             <Locations>
@@ -4780,8 +4780,8 @@
             filePath = "MissCat/Others/Utilities/MFMEngine.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "89"
-            endingLineNumber = "89"
+            startingLineNumber = "94"
+            endingLineNumber = "94"
             landmarkName = "generateAsyncImageView(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4831,6 +4831,102 @@
             startingLineNumber = "273"
             endingLineNumber = "273"
             landmarkName = "scrollViewDidScroll(_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "DED9C190-F36E-4321-A4B9-B00D9813E548"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/MFMEngine.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "143"
+            endingLineNumber = "143"
+            landmarkName = "hyperLink()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "594D328D-1FC2-44FF-995D-F0AED9DD42D9"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/MFMEngine.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "144"
+            endingLineNumber = "144"
+            landmarkName = "hyperLink()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "EF3CB9D6-E074-419A-A2ED-8B24689A445D"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/MFMEngine.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "148"
+            endingLineNumber = "148"
+            landmarkName = "hyperLink()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "EF3CB9D6-E074-419A-A2ED-8B24689A445D - 852d9185678d0511"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(extension in MissCat):Swift.String.hyperLink() -&gt; Swift.String"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/Others/Utilities/MFMEngine.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "149"
+                  endingLineNumber = "149"
+                  offsetFromSymbolStart = "1248">
+               </Location>
+               <Location
+                  uuid = "EF3CB9D6-E074-419A-A2ED-8B24689A445D - 2443dfb3428d4b9e"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #3 (Swift.String) -&gt; () in (extension in MissCat):Swift.String.hyperLink() -&gt; Swift.String"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/Others/Utilities/MFMEngine.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "150"
+                  endingLineNumber = "150"
+                  offsetFromSymbolStart = "44">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "83A6A38F-67F9-4AC9-A71D-20EC30636263"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/MFMEngine.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "156"
+            endingLineNumber = "156"
+            landmarkName = "hyperLink()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
