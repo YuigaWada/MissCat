@@ -161,6 +161,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "AttachmentCell", for: indexPath) as? AttachmentCell else {fatalError("Internal Error.")}
         
         
+        
         cell.tappedImage.subscribe{ id in
             guard item.id == id.element else { return }
             
@@ -172,8 +173,8 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
             
         }.disposed(by: disposeBag)
         
-        cell.tappedDiscardButton.subscribe{ id in
-            
+        cell.discardButton.rx.tap.subscribe{ id in
+            print("aaaaa")
         }.disposed(by: disposeBag)
         
         return cell.setupCell(item)

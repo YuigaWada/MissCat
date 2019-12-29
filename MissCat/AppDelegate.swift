@@ -18,7 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         let _ = EmojiHandler.handler
         
-        return true
+        return true 
     }
 
     // MARK: UISceneSession Lifecycle

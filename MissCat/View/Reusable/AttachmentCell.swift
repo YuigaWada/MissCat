@@ -14,11 +14,16 @@ class AttachmentCell: UICollectionViewCell {
     @IBOutlet weak var imageView: UIImageView!
     @IBOutlet weak var discardButton: UIButton!
     
-    public lazy var tappedImage: PublishRelay<String> = {
-        let relay: PublishRelay<String> = .init()
-        imageView.setTapGesture(self.disposeBag) { relay.accept(self.id) }
-        
-        return relay
+    let tapGesture = UITapGestureRecognizer()
+    public lazy var tappedImage: Observable<String> = {
+        return Observable.create { observer in
+            
+            self.imageView.setTapGesture(self.disposeBag) {
+                observer.onNext(self.id)
+            }
+            
+            return Disposables.create()
+        }
     }()
     
     public lazy var tappedDiscardButton: PublishRelay<String> = {
@@ -39,6 +44,8 @@ class AttachmentCell: UICollectionViewCell {
     
     public func setupComponent() {
         
+        self.contentView.isUserInteractionEnabled = false // imageView / discardButtonの上にcontentViewが掛かっているのでUserInteractionをfalseにする
+        
         //self.layer
         self.layer.cornerRadius = 5
         self.imageView.layer.cornerRadius = 5
@@ -58,6 +65,7 @@ class AttachmentCell: UICollectionViewCell {
         else {
             self.imageView.contentMode = .center
         }
+            
     }
     
     public func setupCell(_ attachment: PostViewController.Attachments)-> AttachmentCell {
