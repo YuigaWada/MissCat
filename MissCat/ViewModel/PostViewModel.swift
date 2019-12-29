@@ -114,7 +114,21 @@ class PostViewModel: ViewModelType {
     private func addAttachmentView(_ attachment: AttachmentImage) {
         let item = PostViewController.Attachments(image: attachment.originalImage, type: .Image)
         
-        self.attachments.onNext([PostViewController.AttachmentsSection(items: [item])])
+        attachmentsLists.append(item)
+        self.attachments.onNext([PostViewController.AttachmentsSection(items: self.attachmentsLists)])
     }
     
+    public func removeAttachmentView(_ id: String) {
+        
+        for index in 0 ..< attachmentsLists.count {
+            let attachment = self.attachmentsLists[index]
+            
+            if attachment.id == id {
+                self.attachmentsLists.remove(at: index)
+                break
+            }
+        }
+        
+        self.attachments.onNext([PostViewController.AttachmentsSection(items: self.attachmentsLists)])
+    }
 }

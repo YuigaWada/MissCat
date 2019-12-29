@@ -26,11 +26,15 @@ class AttachmentCell: UICollectionViewCell {
         }
     }()
     
-    public lazy var tappedDiscardButton: PublishRelay<String> = {
-        let relay: PublishRelay<String> = .init()
-        discardButton.setTapGesture(self.disposeBag) { relay.accept(self.id) }
-        
-        return relay
+    public lazy var tappedDiscardButton: Observable<String> = {
+        return Observable.create { observer in
+            
+            self.discardButton.rx.tap.subscribe { _ in
+                observer.onNext(self.id)
+            }.disposed(by: self.disposeBag)
+            
+            return Disposables.create()
+        }
     }()
     
     private var disposeBag: DisposeBag = .init()
@@ -44,7 +48,10 @@ class AttachmentCell: UICollectionViewCell {
     
     public func setupComponent() {
         
-        self.contentView.isUserInteractionEnabled = false // imageView / discardButtonの上にcontentViewが掛かっているのでUserInteractionをfalseにする
+        self.contentMode = .left
+        
+         // imageView / discardButtonの上にcontentViewが掛かっているのでUserInteractionをfalseにする
+        self.contentView.isUserInteractionEnabled = false
         
         //self.layer
         self.layer.cornerRadius = 5

@@ -110,6 +110,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         let size = self.view.frame.width / 3
         
         flowLayout.itemSize = CGSize(width: size, height: self.attachmentCollectionView.frame.height)
+        flowLayout.scrollDirection = .horizontal
         flowLayout.minimumInteritemSpacing = 0
         flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         self.attachmentCollectionView.collectionViewLayout = flowLayout
@@ -173,9 +174,9 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
             
         }.disposed(by: disposeBag)
         
-        cell.discardButton.rx.tap.subscribe{ id in
-            print("aaaaa")
-        }.disposed(by: disposeBag)
+        cell.tappedDiscardButton.subscribe(onNext: { id in
+            self.viewModel.removeAttachmentView(id)
+        }).disposed(by: disposeBag)
         
         return cell.setupCell(item)
     }

@@ -396,8 +396,8 @@
             filePath = "MissCat/View/PostViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "193"
-            endingLineNumber = "193"
+            startingLineNumber = "194"
+            endingLineNumber = "194"
             landmarkName = "PostViewController"
             landmarkType = "3">
          </BreakpointContent>
@@ -412,8 +412,8 @@
             filePath = "MissCat/View/PostViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "195"
-            endingLineNumber = "195"
+            startingLineNumber = "196"
+            endingLineNumber = "196"
             landmarkName = "PostViewController"
             landmarkType = "3">
             <Locations>
@@ -4540,8 +4540,8 @@
             filePath = "MissCat/View/PostViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "180"
-            endingLineNumber = "180"
+            startingLineNumber = "181"
+            endingLineNumber = "181"
             landmarkName = "setupCell(_:_:_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4556,8 +4556,8 @@
             filePath = "MissCat/View/PostViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "166"
-            endingLineNumber = "166"
+            startingLineNumber = "167"
+            endingLineNumber = "167"
             landmarkName = "setupCell(_:_:_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4950,16 +4950,48 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "D8AB162E-815E-4896-8C26-11D68F34BBAE"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "MissCat/View/PostViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "177"
-            endingLineNumber = "177"
+            startingLineNumber = "178"
+            endingLineNumber = "178"
             landmarkName = "setupCell(_:_:_:)"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "D8AB162E-815E-4896-8C26-11D68F34BBAE - aef2642263fb79a8"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "MissCat.PostViewController.(setupCell in _D0CA48EBC2819059F57DBB38754806F8)(RxDataSources.CollectionViewSectionedDataSource&lt;MissCat.PostViewController.AttachmentsSection&gt;, __C.UICollectionView, Foundation.IndexPath) -&gt; __C.UICollectionViewCell"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/View/PostViewController.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "178"
+                  endingLineNumber = "178"
+                  offsetFromSymbolStart = "2023">
+               </Location>
+               <Location
+                  uuid = "D8AB162E-815E-4896-8C26-11D68F34BBAE - 2b817b44ac8f07b2"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #2 (RxSwift.Event&lt;()&gt;) -&gt; () in MissCat.PostViewController.(setupCell in _D0CA48EBC2819059F57DBB38754806F8)(RxDataSources.CollectionViewSectionedDataSource&lt;MissCat.PostViewController.AttachmentsSection&gt;, __C.UICollectionView, Foundation.IndexPath) -&gt; __C.UICollectionViewCell"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/View/PostViewController.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "178"
+                  endingLineNumber = "178"
+                  offsetFromSymbolStart = "26">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
