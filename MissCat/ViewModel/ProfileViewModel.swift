@@ -79,7 +79,7 @@ class ProfileViewModel: ViewModelType {
         // Description
         if let description = user.description {
             DispatchQueue.main.async {
-                let shaped = description.mfmTransform(yanagi: self.input.yanagi)
+                let shaped = description.mfmPreTransform().mfmTransform(yanagi: self.input.yanagi)
                 self.intro.accept(shaped ?? .init())
             }
         }

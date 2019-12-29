@@ -84,7 +84,7 @@ class TimelineModel {
             let handleResult = { (posts: [NoteModel]?, error: MisskeyKitError?) in
                 guard let posts = posts, error == nil else { /* Error */ print(error ?? "error is nil"); return }
                 
-                posts.forEach{ post in
+                posts.map{ $0.mfmPreTransform() }.forEach{ post in
                     print("post!\(posts.count)")
                     dump(post)
                     
@@ -195,7 +195,7 @@ class TimelineModel {
             
         }
         
-        guard let post = response as? NoteModel else { return }
+        guard let post = (response as? NoteModel)?.mfmPreTransform() else { return }
         
         if let renoteId = post.renoteId, let user = post.user, let renote = post.renote {
             guard let cellModel = renote.getNoteCellModel() else { return }

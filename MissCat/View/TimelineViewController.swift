@@ -102,6 +102,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         self.mainTableView.register(UINib(nibName: "RenoteeCell", bundle: nil), forCellReuseIdentifier: "RenoteeCell")
         
         self.mainTableView.rx.setDelegate(self).disposed(by: disposeBag)
+        self.mainTableView.decelerationRate = .fast
     }
     
     

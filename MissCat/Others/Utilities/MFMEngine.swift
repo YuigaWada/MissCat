@@ -22,6 +22,19 @@ public class MFMEngine {
     
     public var textColor: UIColor = .black
     
+    //MARK: Static
+    public static func preTransform(string: String)-> String {
+        var preTransed = string.hyperLink() //MUST BE DONE BEFORE ANYTHING !
+        preTransed = preTransed.hyperUser()
+        preTransed = preTransed.hyperHashtag()
+        preTransed = preTransed.markdown()
+        preTransed = preTransed.dehyperMagic()
+        
+        return preTransed
+    }
+    
+    
+    //MARK: Init
     init(with original: String, lineHeight: CGFloat? = nil) {
         self.emojiTargets = original.regexMatches(pattern: "(:[^(\\s|:)]+:)").map{ return $0[0] }
         self.original = original
@@ -31,6 +44,7 @@ public class MFMEngine {
     }
     
     
+    //MARK: Publics
     // Must Be Used From Main Thread !
     public func transform(yanagi: YanagiText, externalEmojis: [EmojiModel?]?)-> NSAttributedString? {
         
@@ -69,18 +83,13 @@ public class MFMEngine {
         return shaped
     }
     
+    
+    //MARK: Privates
     private func generatePlaneString(string: String, font: UIFont?)->NSAttributedString {
-        
         let fontName = font?.familyName ?? "Helvetica"
         let fontSize = font?.pointSize ?? 15.0
         
-        var preTransed = string.hyperLink() //MUST BE DONE BEFORE ANYTHING !
-        preTransed = preTransed.hyperUser()
-        preTransed = preTransed.hyperHashtag()
-        preTransed = preTransed.markdown()
-        preTransed = preTransed.dehyperMagic()
-        
-        return preTransed.toAttributedString(family: fontName, size: fontSize) ?? .init()
+        return string.toAttributedString(family: fontName, size: fontSize) ?? .init()
     }
     
     
@@ -117,7 +126,7 @@ public class MFMEngine {
     
 }
 
-
+//MARK: String Extension
 // 装飾関係
 extension String {
     //Emoji形式":hogehoge:"をデフォルト絵文字 / カスタム絵文字のurl/imgに変更
@@ -133,8 +142,8 @@ extension String {
         
         // markdown link
         var result = self.replacingOccurrences(of: "\\[([^\\]]+)\\]\\(([^\\)]+)\\)",
-                                           with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"$2\">$1</a>",
-                                           options: .regularExpression)
+                                               with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"$2\">$1</a>",
+                                               options: .regularExpression)
         
         
         // normal Link
@@ -144,7 +153,7 @@ extension String {
         }
         
         //先ににaタグに変換しておくと都合が良い
-
+        
         targets.forEach{ target in
             var to = target.replacingOccurrences(of: "@", with: "[at-mark.misscat.header]")
             to = to.replacingOccurrences(of: "#", with: "[hash-tag.misscat.header]")
@@ -158,12 +167,12 @@ extension String {
     
     func markdown()-> String {
         let bold = self.replacingOccurrences(of: "\\*\\*([^\\*]+)\\*\\*",
-                                               with: "<b>$1</b>",
-                                               options: .regularExpression)
+                                             with: "<b>$1</b>",
+                                             options: .regularExpression)
         
         let strikeThrough = bold.replacingOccurrences(of: "~~([^\\~]+)~~",
-                                               with: "<s>$1</s>",
-                                               options: .regularExpression)
+                                                      with: "<s>$1</s>",
+                                                      options: .regularExpression)
         
         
         return strikeThrough.disablingTags()
@@ -210,9 +219,20 @@ extension String {
             .replacingOccurrences(of: "[hash-tag.misscat.header]", with:"#")
     }
     
+    func mfmPreTransform()-> String {
+        return MFMEngine.preTransform(string: self)
+    }
+    
     // Must Be Used From Main Thread !
     func mfmTransform(yanagi: YanagiText, externalEmojis: [EmojiModel?]? = nil, lineHeight: CGFloat? = nil)-> NSAttributedString? {
         let mfm = MFMEngine(with: self, lineHeight: lineHeight)
         return mfm.transform(yanagi: yanagi, externalEmojis: externalEmojis)
+    }
+}
+
+extension NoteModel {
+    func mfmPreTransform()-> NoteModel {
+        self.text = MFMEngine.preTransform(string: self.text ?? "")
+        return self
     }
 }
