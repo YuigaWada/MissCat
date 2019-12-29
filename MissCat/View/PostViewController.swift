@@ -185,7 +185,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         self.layoutIfNeeded(to: [self.bottomStackView, self.toolBar])
         
         
-        self.mainTextViewBottomConstraint.constant = self.bottomStackView.frame.height + keyboardHeight
+        self.mainTextViewBottomConstraint.constant = self.bottomStackView.frame.height + keyboardHeight - self.getSafeAreaSize().height
         
     }
     
