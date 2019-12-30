@@ -29,11 +29,11 @@ fileprivate typealias ViewModel = NoteCellViewModel
 public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate {
     
     //MARK: IBOutlet (UIView)
-
+    
     @IBOutlet weak var nameTextView: MisskeyTextView!
     
     @IBOutlet weak var iconView: UIImageView!
-
+    
     @IBOutlet weak var agoLabel: UILabel!
     
     
@@ -104,7 +104,9 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     override public func layoutSubviews() {
         super.layoutSubviews()
+        
         self.setupComponents()
+        self.setupFileView()
     }
     
     private func setupComponents() {
@@ -141,8 +143,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         output.shapedNote.drive(self.noteView.rx.attributedText).disposed(by: disposeBag)
         output.iconImage.drive(self.iconView.rx.image).disposed(by: disposeBag)
         
-        //        displayName2MainStackConstraint.isActive = false
-        //        icon2MainStackConstraint.isActive = false
         output.defaultConstraintActive.drive(self.displayName2MainStackConstraint.rx.active).disposed(by: disposeBag)
         output.defaultConstraintActive.drive(self.icon2MainStackConstraint.rx.active).disposed(by: disposeBag)
         
@@ -189,8 +189,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.reactionsStackView.arrangedSubviews.forEach{ $0.removeFromSuperview() }
         self.reactionsStackView.subviews.forEach({ $0.removeFromSuperview() })
         
-        self.fileImageView.arrangedSubviews.forEach{ $0.removeFromSuperview() }
-        self.fileImageView.subviews.forEach({ $0.removeFromSuperview() })
+        self.fileImageView.arrangedSubviews.forEach{ $0.isHidden = true }
         
         //TODO: reactionを隠す時これつかう → UIView.animate(withDuration: 0.25, animations: { () -> Void in
         
@@ -204,38 +203,47 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         self.nameTextView.resetViewString()
         self.noteView.resetViewString()
-        
-        //        changeSkeltonState(on: true)
     }
     
-    public func setupFileImage(_ image: UIImage, originalImageUrl: String, index: Int = -1) {
-        //self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
-        
-        let isCached = index == -1
-        DispatchQueue.main.async {
-            guard isCached || index < self.fileImageView.arrangedSubviews.count else { return }
+    // ファイルは同時に4つしか載せることができないので、先に4つViewを追加しておく
+    private func setupFileView() {
+        for _ in 0 ..< 4 {
+            let imageView = UIImageView()
             
-            let imageView = UIImageView(image: image)
             imageView.contentMode = .scaleAspectFill
             imageView.clipsToBounds = true
+            imageView.isHidden = true
             imageView.layer.cornerRadius = 10
             imageView.isUserInteractionEnabled = true
             imageView.layer.borderColor = UIColor.lightGray.cgColor
             imageView.layer.borderWidth = 1
             imageView.layer.masksToBounds = true
             
+            self.fileImageView.addArrangedSubview(imageView)
+        }
+    }
+    
+    public func setupFileImage(_ image: UIImage, originalImageUrl: String, index: Int) {
+        //self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
+        
+        DispatchQueue.main.async {
+            guard let imageView = self.getFileView(index) else { return }
+            
             //tap gestureを付加する
             imageView.setTapGesture(self.disposeBag, closure: { self.showImage(url: originalImageUrl) })
             
-            if isCached {
-                self.fileImageView.addArrangedSubview(imageView)
-            }
-            else {
-                self.fileImageView.removeArrangedSubview(self.fileImageView.arrangedSubviews[index]) // LoadingViewを消す
-                self.fileImageView.insertArrangedSubview(imageView, at: index)
-            }
+            imageView.image = image
+            imageView.isHidden = false
+            
             self.mainStackView.setNeedsLayout()
         }
+    }
+    
+    private func getFileView(_ index: Int)-> UIImageView? {
+        guard index < self.fileImageView.arrangedSubviews.count,
+                       let imageView = self.fileImageView.arrangedSubviews[index] as? UIImageView else { return nil }
+        
+        return imageView
     }
     
     private func showImage(url: String) {
@@ -283,28 +291,29 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         //file
         if let files = Cache.shared.getFiles(noteId: noteId) {
-            files.forEach{ self.setupFileImage($0.thumbnail, originalImageUrl: $0.originalUrl) }
+            for index in 0 ..< files.count {
+                let file = files[index]
+                self.setupFileImage(file.thumbnail, originalImageUrl: file.originalUrl, index: index)
+            }
         }
         else {
             let files = item.files.filter{ $0 != nil }
             let fileCount = files.count
             
-            for i in 0 ..< fileCount {
-                let file = files[i]
-                let fakeLoadingView = UIView()
+            for index in 0 ..< fileCount {
+                let file = files[index]
                 
-                fakeLoadingView.backgroundColor = .lightGray
+                guard let thumbnailUrl = file!.thumbnailUrl,
+                    let original = file!.url,
+                    let imageView = self.getFileView(index) else { break }
                 
-                self.fileImageView.addArrangedSubview(fakeLoadingView)
-                self.mainStackView.setNeedsLayout()
-                
-                guard let thumbnailUrl = file!.thumbnailUrl, let original = file!.url else { break }
+                imageView.isHidden = false
                 
                 thumbnailUrl.toUIImage { image in
                     guard let image = image else { return }
                     
                     Cache.shared.saveFiles(noteId: noteId, image: image, originalUrl: original)
-                    self.setupFileImage(image, originalImageUrl: original, index: i)
+                    self.setupFileImage(image, originalImageUrl: original, index: index)
                 }
             }
         }
@@ -380,9 +389,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             self.reactionsStackView.isHidden = true
         }
         
-        
-        
-        //        changeSkeltonState(on: false)
         return self
     }
     

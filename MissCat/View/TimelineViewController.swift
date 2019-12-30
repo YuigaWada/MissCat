@@ -102,7 +102,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         self.mainTableView.register(UINib(nibName: "RenoteeCell", bundle: nil), forCellReuseIdentifier: "RenoteeCell")
         
         self.mainTableView.rx.setDelegate(self).disposed(by: disposeBag)
-        self.mainTableView.decelerationRate = .fast
+//        self.mainTableView.decelerationRate = .fast
     }
     
     
@@ -258,10 +258,10 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         
         
         print("loadUntilNotes...")
-        self.loadCompleted = false
-        viewModel.loadUntilNotes() {
-            self.loadCompleted = true //セル更新最中に多重更新されないように
-        }
+//        self.loadCompleted = false
+//        viewModel.loadUntilNotes() {
+//            self.loadCompleted = true //セル更新最中に多重更新されないように
+//        }
     }
     
     
