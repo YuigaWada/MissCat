@@ -102,12 +102,20 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }
     
     
+    
     override public func layoutSubviews() {
         super.layoutSubviews()
-        
         self.setupComponents()
-        self.setupFileView()
+        self.setupView()
     }
+    
+    private lazy var setupView: (()->()) = { //必ず一回しか読み込まれない
+        self.setupSkeltonMode()
+        self.setupProfileGesture() // プロフィールに飛ぶtapgestureを設定する
+        self.setupFileView()
+        return {}
+    }()
+    
     
     private func setupComponents() {
         //["FontAwesome5Free-Solid", "FontAwesome5Free-Regular"], ["FontAwesome5Brands-Regular"]
@@ -128,9 +136,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         if self.fileImageView.arrangedSubviews.count > 0 {
             self.fileImageContainer.translatesAutoresizingMaskIntoConstraints = false
         }
-        
-        setupSkeltonMode()
-        setupProfileGesture() // プロフィールに飛ぶtapgestureを設定する
     }
     
     
@@ -201,8 +206,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.renoteButton.setTitle("", for: .normal)
         self.reactionButton.setTitle("", for: .normal)
         
-//        self.nameTextView.resetViewString()
-//        self.noteView.resetViewString()
+        //        self.nameTextView.resetViewString()
+        //        self.noteView.resetViewString()
     }
     
     // ファイルは同時に4つしか載せることができないので、先に4つViewを追加しておく
@@ -243,7 +248,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     private func getFileView(_ index: Int)-> UIImageView? {
         guard index < self.fileImageView.arrangedSubviews.count,
-                       let imageView = self.fileImageView.arrangedSubviews[index] as? UIImageView else { return nil }
+            let imageView = self.fileImageView.arrangedSubviews[index] as? UIImageView else { return nil }
         
         return imageView
     }
@@ -293,7 +298,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         let viewModel = getViewModel(item: item, isDetailMode: isDetailMode)
         viewModel.setCell()
         self.viewModel = viewModel
-    
+        
         self.iconImageUrl = viewModel.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
         
         //file

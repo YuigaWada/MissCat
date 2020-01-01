@@ -87,20 +87,21 @@ class NoteCellViewModel: ViewModelType {
     
     public func setCell() {
         let item = input.cellModel
-        
-        self.defaultConstraintActive.accept(!input.isDetailMode)
-        self.isReplyTarget.accept(item.isReplyTarget)
-        self.backgroundColor.accept(properBackgroundColor)
-        
-        self.ago.accept(item.ago.calculateAgo())
+        DispatchQueue.global(qos: .default).async {
+            self.defaultConstraintActive.accept(!self.input.isDetailMode)
+            self.isReplyTarget.accept(item.isReplyTarget)
+            self.backgroundColor.accept(self.properBackgroundColor)
+            
+            self.ago.accept(item.ago.calculateAgo())
+        }
         self.name.accept(self.getDisplayName(item))
-        
         self.shapeNote(identifier: item.identity,
                        note: item.note,
                        noteId: item.noteId,
                        isReply: item.isReply,
                        externalEmojis: item.emojis,
-                       isDetailMode: input.isDetailMode)
+                       isDetailMode: self.input.isDetailMode)
+        
         
     }
     
