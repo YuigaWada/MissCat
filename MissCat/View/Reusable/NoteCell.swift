@@ -201,8 +201,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.renoteButton.setTitle("", for: .normal)
         self.reactionButton.setTitle("", for: .normal)
         
-        self.nameTextView.resetViewString()
-        self.noteView.resetViewString()
+//        self.nameTextView.resetViewString()
+//        self.noteView.resetViewString()
     }
     
     // ファイルは同時に4つしか載せることができないので、先に4つViewを追加しておく
@@ -235,7 +235,9 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             imageView.image = image
             imageView.isHidden = false
             
+            self.imageView?.layoutIfNeeded()
             self.mainStackView.setNeedsLayout()
+            
         }
     }
     
@@ -280,14 +282,19 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         guard let noteId = item.noteId else { return NoteCell() }
         
         self.initializeComponent(hasFile: item.files.count > 0) // Initialize because NoteCell is reused by TableView.
-        self.viewModel = getViewModel(item: item, isDetailMode: isDetailMode)
-        viewModel!.setCell()
         
         //main
         self.noteId = item.noteId
         self.userId = item.userId
         
-        self.iconImageUrl = viewModel!.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
+        self.noteView.setId(noteId: item.noteId)
+        self.nameTextView.setId(userId: item.userId)
+        
+        let viewModel = getViewModel(item: item, isDetailMode: isDetailMode)
+        viewModel.setCell()
+        self.viewModel = viewModel
+    
+        self.iconImageUrl = viewModel.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
         
         //file
         if let files = Cache.shared.getFiles(noteId: noteId) {

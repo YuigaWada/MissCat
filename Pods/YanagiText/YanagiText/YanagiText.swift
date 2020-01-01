@@ -13,7 +13,7 @@ open class YanagiText: UITextView {
     public var xMargin: CGFloat = 10
     public var yMargin: CGFloat = 0
     
-    private var attachmentList: Dictionary<NSTextAttachment,YanagiText.Attachment> = [:]
+    open var attachmentList: Dictionary<NSTextAttachment,YanagiText.Attachment> = [:]
     
     //MARK: Override
     override open var attributedText: NSAttributedString! {
@@ -25,7 +25,7 @@ open class YanagiText: UITextView {
     }
     
     //MARK: Publics
-    public func getViewString(with view: UIView, size: CGSize)-> NSAttributedString? {
+    open func getViewString(with view: UIView, size: CGSize)-> NSAttributedString? {
         let yanagiAttachment = YanagiText.Attachment(view: view, size: size)
         
         let nsAttachment = NSTextAttachment()
@@ -118,7 +118,7 @@ open class YanagiText: UITextView {
         })
     }
     
-    private func register(_ nsAttachment: NSTextAttachment, and yanagiAttachment: YanagiText.Attachment) {
+    open func register(_ nsAttachment: NSTextAttachment, and yanagiAttachment: YanagiText.Attachment) {
         self.attachmentList[nsAttachment] = yanagiAttachment
     }
     
@@ -232,8 +232,8 @@ open class YanagiText: UITextView {
 
 public extension YanagiText {
     struct Attachment {
-        var view: UIView
-        var size: CGSize
+        public var view: UIView
+        public var size: CGSize
     }
 }
 

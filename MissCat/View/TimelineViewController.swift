@@ -258,10 +258,10 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         
         
         print("loadUntilNotes...")
-//        self.loadCompleted = false
-//        viewModel.loadUntilNotes() {
-//            self.loadCompleted = true //セル更新最中に多重更新されないように
-//        }
+        self.loadCompleted = false
+        viewModel.loadUntilNotes() {
+            self.loadCompleted = true //セル更新最中に多重更新されないように
+        }
     }
     
     
