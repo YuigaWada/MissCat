@@ -130,6 +130,32 @@ class NoteCellViewModel: ViewModelType {
     }
     
     private func getDisplayName(_ item: NoteCell.Model)-> NSAttributedString? {
+        
+//        let cache = Cache.shared.getDisplayName(username: item.username)
+//        let isCached = cache.displayName != nil
+//
+//        if !isCached {
+//            let name = item.displayName
+//            let username = " @" + item.username
+//
+//            let shapedName = name.mfmTransform(yanagi: self.input.nameYanagi, lineHeight: self.input.nameYanagi.frame.height * 0.9) ?? .init()
+//
+//            let displayName = shapedName + username.getAttributedString(font: self.usernameFont,
+//                                                                        color: .darkGray)
+//
+//            Cache.shared.saveDisplayName(username: item.username,
+//                                         displayName: displayName,
+//                                         attachments: self.input.nameYanagi.getAttachments()) // CACHE!
+//
+//            return displayName
+//        }
+//
+//        cache.attachments?.forEach { nsAttachment, yanagiAttachment in
+//            self.input.nameYanagi.addAttachment(ns: nsAttachment, yanagi: yanagiAttachment)
+//        }
+//
+//        return cache.displayName
+
         let name = item.displayName
         let username = " @" + item.username
         

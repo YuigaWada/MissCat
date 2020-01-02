@@ -78,7 +78,6 @@ class TimelineModel {
     public func loadNotes(with option: LoadOption, completion: (()->())? = nil)-> Observable<NoteCell.Model> {
         let dispose = Disposables.create()
         
-        
         return Observable.create { [unowned self] observer in
             
             let handleResult = { (posts: [NoteModel]?, error: MisskeyKitError?) in

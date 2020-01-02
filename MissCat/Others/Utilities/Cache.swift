@@ -18,8 +18,8 @@ public class Cache {
     public static var shared: Cache = .init()
     
     //MARK: Var
-    public var notes: [Cache.Note] = []
-    public var icon: [Cache.Icon] = []
+    public var notes: [String: Cache.Note] = [:] // key: noteId
+    public var users: [String: Cache.User] = [:] // key: username
     public var files: [Cache.File] = []
     
     private var me: UserModel?
@@ -27,11 +27,27 @@ public class Cache {
     
     //MARK: Save
     public func saveNote(noteId: String, note: NSAttributedString, attachments: Attachments) {
-        notes.append(Note(noteId: noteId, treatedNote: note, attachments: attachments))
+        guard notes[noteId] == nil else { return }
+        
+        notes[noteId] = Note(treatedNote: note, attachments: attachments)
+    }
+    
+    public func saveDisplayName(username: String, displayName: NSAttributedString, attachments: Attachments) {
+        if let _ = users[username] {
+            users[username]!.displayName = displayName
+        }
+        else {
+            users[username] = User(iconImage: nil, displayName: displayName, attachments: attachments)
+        }
     }
     
     public func saveIcon(username: String, image: UIImage) {
-        icon.append(Icon(username: username, image: image))
+        if let _ = users[username] {
+            users[username]!.iconImage = image
+        }
+        else {
+            users[username] = User(iconImage: image, displayName: nil, attachments: [:])
+        }
     }
     
     public func saveFiles(noteId: String, image: UIImage, originalUrl: String) {
@@ -59,21 +75,15 @@ public class Cache {
     
     //MARK: Get
     public func getNote(noteId: String)-> Cache.Note? {
-        let options = notes.filter {
-            $0.noteId == noteId
-        }
-        
-        guard options.count > 0 else { return nil }
-        return options[0]
+        return notes[noteId]
+    }
+    
+    public func getDisplayName(username: String)-> (displayName: NSAttributedString?, attachments: Attachments?){
+        return  (displayName: users[username]?.displayName, attachments: users[username]?.attachments)
     }
     
     public func getIcon(username: String)-> UIImage? {
-        let options = icon.filter {
-            $0.username == username
-        }
-        
-        guard options.count > 0 else { return nil }
-        return options[0].image
+        return users[username]?.iconImage
     }
     
     public func getFiles(noteId: String)-> [(thumbnail: UIImage, originalUrl: String)]? {
@@ -123,15 +133,16 @@ public extension Cache{
 
 public extension Cache {
     struct Note {
-        public var noteId: String
         public var treatedNote: NSAttributedString
-        public var attachments: Dictionary<NSTextAttachment,YanagiText.Attachment>
+        public var attachments: Dictionary<NSTextAttachment,YanagiText.Attachment> = [:]
     }
     
-    struct Icon {
-        public var username: String
-        public var image: UIImage
+    struct User {
+        public var iconImage: UIImage?
+        public var displayName: NSAttributedString?
+        public var attachments: Dictionary<NSTextAttachment,YanagiText.Attachment> = [:]
     }
+
     
     struct File {
         public var noteId: String

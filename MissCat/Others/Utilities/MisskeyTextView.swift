@@ -34,6 +34,20 @@ class MisskeyTextView: YanagiText {
     private var noteAttachmentList: Dictionary<String, AttachmentDic> = [:]
     private var userAttachmentList: Dictionary<String, AttachmentDic> = [:]
     
+    public var isCached: Bool {  // setされたcurrent〇〇Idについて、Cacheが存在するかどうか
+        var count = 0
+        
+        if let currentNoteId = currentNoteId {
+            count = noteAttachmentList[currentNoteId]?.count ?? 0
+        }
+        if let currentUserId = currentUserId {
+            count = userAttachmentList[currentUserId]?.count ?? 0
+        }
+        
+        return count != 0
+    }
+    
+    
     //MARK: Ocverride
     //リンクタップのみ許可
     override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
