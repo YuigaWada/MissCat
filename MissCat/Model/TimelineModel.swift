@@ -88,6 +88,7 @@ class TimelineModel {
                     print("post!\(posts.count)")
                     dump(post)
                     
+                    // Renote
                     if let renoteId = post.renoteId, let user = post.user, let renote = post.renote {
                         let renoteeCellModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "", baseNoteId: renoteId)
                         observer.onNext(renoteeCellModel)
@@ -95,7 +96,7 @@ class TimelineModel {
                         guard let cellModel = renote.getNoteCellModel() else { return }
                         observer.onNext(cellModel)
                     }
-                    else {
+                    else { // default note
                         guard let newCellsModel = self.getCellsModel(post) else { return }
                         newCellsModel.forEach{ observer.onNext($0) }
                     }
@@ -249,7 +250,7 @@ class TimelineModel {
     
     
     
-    
+    // MisskeyKitのNoteModelをNoteCell.Modelに変換する
     public func getCellsModel(_ post: NoteModel)-> [NoteCell.Model]? {
         var cellsModel: [NoteCell.Model] = []
         
