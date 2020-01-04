@@ -26,7 +26,9 @@ public protocol NoteCellDelegate {
 }
 
 fileprivate typealias ViewModel = NoteCellViewModel
-public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate {
+typealias ReactionsDataSource = RxCollectionViewSectionedReloadDataSource<NoteCell.Reaction.Section>
+
+public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICollectionViewDelegate {
     
     //MARK: IBOutlet (UIView)
     
@@ -43,7 +45,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     @IBOutlet weak var fileImageView: UIStackView!
     @IBOutlet weak var fileImageContainer: UIView!
     
-    @IBOutlet weak var reactionsStackView: UIStackView!
+    @IBOutlet weak var reactionsCollectionView: UICollectionView!
     
     @IBOutlet weak var replyButton: UIButton!
     @IBOutlet weak var renoteButton: UIButton!
@@ -75,7 +77,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     //MARK: Private Var
     private let disposeBag = DisposeBag()
-    
+    private lazy var reactionsDataSource = self.setupDataSource()
     private var viewModel: ViewModel?
     
     
@@ -113,8 +115,35 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.setupSkeltonMode()
         self.setupProfileGesture() // プロフィールに飛ぶtapgestureを設定する
         self.setupFileView()
+        self.setupCollectionView()
         return {}
     }()
+    
+    private func setupCollectionView() {
+        self.reactionsCollectionView.register(UINib(nibName: "ReactionCell", bundle: nil), forCellWithReuseIdentifier: "ReactionCell")
+        self.reactionsCollectionView.rx.setDelegate(self).disposed(by: disposeBag)
+        self.reactionsCollectionView.backgroundColor = .clear
+        
+        let flowLayout = UICollectionViewFlowLayout()
+        let width = self.mainStackView.frame.width / 6
+        
+        flowLayout.itemSize = CGSize(width: width, height: 30)
+        flowLayout.scrollDirection = .horizontal
+        flowLayout.minimumInteritemSpacing = 5
+        flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        self.reactionsCollectionView.collectionViewLayout = flowLayout
+    }
+    
+    
+    private func setupDataSource()-> ReactionsDataSource {
+        let dataSource = ReactionsDataSource(
+            configureCell: { dataSource, collectionView, indexPath, item in
+                return self.setupReactionCell(dataSource, collectionView, indexPath)
+        })
+        
+        return dataSource
+    }
+    
     
     
     private func setupComponents() {
@@ -141,6 +170,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     private func binding(viewModel: ViewModel) {
         let output = viewModel.output
+        
+        output.reactions.drive(self.reactionsCollectionView.rx.items(dataSource: reactionsDataSource)).disposed(by: disposeBag)
         
         output.ago.drive(self.agoLabel.rx.text).disposed(by: disposeBag)
         output.name.drive(self.nameTextView.rx.attributedText).disposed(by: disposeBag)
@@ -190,9 +221,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.agoLabel.text = nil
         self.noteView.attributedText = nil
         
-        self.reactionsStackView.isHidden = false
-        self.reactionsStackView.arrangedSubviews.forEach{ $0.removeFromSuperview() }
-        self.reactionsStackView.subviews.forEach({ $0.removeFromSuperview() })
+        self.reactionsCollectionView.isHidden = false
         
         self.fileImageView.arrangedSubviews.forEach{ $0.isHidden = true }
         
@@ -264,6 +293,28 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         }
     }
     
+    private func setupReactionCell(_ dataSource: CollectionViewSectionedDataSource<NoteCell.Reaction.Section>, _ collectionView: UICollectionView, _ indexPath: IndexPath)-> UICollectionViewCell {
+        guard let viewModel = viewModel else { fatalError("Internal Error.") }
+        
+        let index = indexPath.row
+        let reactionsModel = viewModel.reactionsModel
+        
+        guard let cell = reactionsCollectionView.dequeueReusableCell(withReuseIdentifier: "ReactionCell", for: indexPath) as? ReactionCell else { fatalError("Internal Error.") }
+        
+        if index < reactionsModel.count {
+            let item = reactionsModel[index]
+            
+            let shapedCell = viewModel.setReactionCell(with: item, to: cell)
+            shapedCell.delegate = self
+            
+            return shapedCell
+        }
+        
+        return cell
+    }
+    
+    
+    
     
     public func shapeCell(item: NoteCell.Model, isDetailMode: Bool = false)-> NoteCell {
         guard !item.isSkelton else { //SkeltonViewを表示する
@@ -296,8 +347,9 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.nameTextView.setId(userId: item.userId)
         
         let viewModel = getViewModel(item: item, isDetailMode: isDetailMode)
-        viewModel.setCell()
         self.viewModel = viewModel
+        viewModel.setCell()
+        
         
         self.iconImageUrl = viewModel.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
         
@@ -346,60 +398,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         
         //reaction
-        guard self.reactionsStackView.arrangedSubviews.count < 10 else {
-            return self
-        }
         
-        var marginCount = 5 - item.reactions.count
-        
-        item.reactions.forEach { reaction in
-            guard let reaction = reaction, let count = reaction.count, let rawEmoji = reaction.name, !count.isZero() else {
-                marginCount += 1
-                return
-            }
-            
-            let isMyReaction = item.myReaction == rawEmoji
-            
-            guard let convertedEmojiData = EmojiHandler.handler.convertEmoji(raw: rawEmoji) else
-            {
-                //If being not converted
-                let reactionCell = ReactionCell()
-                reactionCell.delegate = self
-                
-                reactionCell.setup(noteId: item.noteId, count: count, rawDefaultEmoji: rawEmoji, isMyReaction: isMyReaction, rawReaction: rawEmoji)
-                self.reactionsStackView.addArrangedSubview(reactionCell)
-                
-                return
-            }
-            
-            let reactionCell = ReactionCell()
-            reactionCell.delegate = self
-            
-            switch convertedEmojiData.type {
-            case "default":
-                reactionCell.setup(noteId: item.noteId, count: count, defaultEmoji: convertedEmojiData.emoji, isMyReaction: isMyReaction, rawReaction: rawEmoji)
-            case "custom":
-                reactionCell.setup(noteId: item.noteId, count: count, customEmoji: convertedEmojiData.emoji, isMyReaction: isMyReaction, rawReaction: rawEmoji)
-            default:
-                return
-            }
-            self.reactionsStackView.addArrangedSubview(reactionCell)
-        }
-        
-        
-        if marginCount > 0 {
-            for _ in 1...marginCount {
-                let reactionCell = ReactionCell()
-                reactionCell.alpha =  0
-                
-                self.reactionsStackView.addArrangedSubview(reactionCell)
-            }
-        }
-        
-        let isEmptyReaction = marginCount == 5
-        if isEmptyReaction {
-            self.reactionsStackView.isHidden = true
-        }
         
         return self
     }
@@ -414,7 +413,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.agoLabel.isSkeletonable = true
         self.noteView.isSkeletonable = true
         
-        self.reactionsStackView.isSkeletonable = true
+        self.reactionsCollectionView.isSkeletonable = true
         
         self.fileImageView.isSkeletonable = true
     }
@@ -429,7 +428,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             self.nameTextView.showAnimatedGradientSkeleton()
             self.iconView.showAnimatedGradientSkeleton()
             
-            self.reactionsStackView.isHidden = true
+            self.reactionsCollectionView.isHidden = true
             
             self.fileImageView.showAnimatedGradientSkeleton()
         }
@@ -437,7 +436,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             self.nameTextView.hideSkeleton()
             self.iconView.hideSkeleton()
             
-            self.reactionsStackView.isHidden = false
+            self.reactionsCollectionView.isHidden = false
             
             
             self.fileImageView.hideSkeleton()
@@ -594,6 +593,23 @@ extension NoteCell {
         var items: [Model]
     }
     
+    struct Reaction: IdentifiableType, Equatable {
+        typealias Identity = String
+        var identity: String
+        var noteId: String
+        
+        
+        var url: String?
+        var rawEmoji: String?
+        
+        var isMyReaction: Bool
+        
+        var count: String
+        
+        struct Section {
+            var items: [Reaction]
+        }
+    }
 }
 
 extension NoteCell.Section: AnimatableSectionModelType {
@@ -607,6 +623,23 @@ extension NoteCell.Section: AnimatableSectionModelType {
     }
     
     init(original: NoteCell.Section, items: [NoteCell.Model]) {
+        self = original
+        self.items = items
+    }
+}
+
+
+extension NoteCell.Reaction.Section: AnimatableSectionModelType {
+    
+    typealias Item = NoteCell.Reaction
+    typealias Identity = String
+    
+    
+    public var identity: String {
+        return ""
+    }
+    
+    init(original: Item.Section, items: [Item]) {
         self = original
         self.items = items
     }

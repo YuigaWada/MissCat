@@ -13,9 +13,8 @@ public protocol ReactionCellDelegate {
     func tappedReaction(noteId: String, reaction: String, isRegister: Bool) // isRegister: リアクションを「登録」するのか「取り消す」のか
 }
 
-public class ReactionCell: UIView {
+public class ReactionCell: UICollectionViewCell {
     
-    @IBOutlet var mainView: UIView!
     @IBOutlet weak var reactionCounterLabel: UILabel!
     @IBOutlet weak var defaultEmojiLabel: UILabel!
     @IBOutlet weak var customEmojiView: UIImageView!
@@ -31,26 +30,6 @@ public class ReactionCell: UIView {
     public var delegate: ReactionCellDelegate?
     
     //MARK: Life Cycle
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        loadNib()
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)!
-        loadNib()
-    }
-    
-    public func loadNib() {
-        if let view = UINib(nibName: "ReactionCell", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
-            view.frame = self.bounds
-            
-            self.addTapGesture(to: view)
-            self.addSubview(view)
-        }
-    }
-    
-    
     public override func layoutSubviews() {
         super.layoutSubviews()
         self.changeColor(isMyReaction: self.isMyReaction)
@@ -69,13 +48,12 @@ public class ReactionCell: UIView {
                            animations: {
                             self.changeColor(isMyReaction: self.isMyReaction)
                             self.incrementCounter()
-            },
-                           completion: { _ in
-                            guard let delegate = self.delegate,
-                                let noteId = self.noteId,
-                                let rawReaction = self.rawReaction else { return }
-                            
-                            delegate.tappedReaction(noteId: noteId, reaction: rawReaction, isRegister: self.isMyReaction ) })
+            },completion: { _ in
+                guard let delegate = self.delegate,
+                    let noteId = self.noteId,
+                    let rawReaction = self.rawReaction else { return }
+                
+                delegate.tappedReaction(noteId: noteId, reaction: rawReaction, isRegister: self.isMyReaction ) })
         }.disposed(by: disposeBag)
         
         view.addGestureRecognizer(tapGesture)
@@ -91,11 +69,15 @@ public class ReactionCell: UIView {
         self.reactionCounterLabel.text = count
         
         if let defaultEmoji = defaultEmoji {
-            self.defaultEmojiLabel.text = defaultEmoji
+            self.defaultEmojiLabel.isHidden = false
             self.customEmojiView.isHidden = true
+            
+            self.defaultEmojiLabel.text = defaultEmoji
         }
         else if let customEmoji = customEmoji {
             self.defaultEmojiLabel.isHidden = true
+            self.customEmojiView.isHidden = false
+            
             customEmoji.toUIImage { image in
                 DispatchQueue.main.async {
                     self.customEmojiView.image = image
@@ -103,8 +85,10 @@ public class ReactionCell: UIView {
             }
         }
         else if let rawDefaultEmoji = rawDefaultEmoji {
-            self.defaultEmojiLabel.text = rawDefaultEmoji
+            self.defaultEmojiLabel.isHidden = false
             self.customEmojiView.isHidden = true
+            
+            self.defaultEmojiLabel.text = rawDefaultEmoji
         }
     }
     
@@ -119,7 +103,7 @@ public class ReactionCell: UIView {
     }
     
     private func changeColor(isMyReaction: Bool) {
-        self.mainView.backgroundColor = isMyReaction ? UIColor(hex: "EE7258") : self.defaultBGColor
+        self.backgroundColor = isMyReaction ? UIColor(hex: "EE7258") : self.defaultBGColor
         self.reactionCounterLabel.textColor = isMyReaction ? .white : self.defaultTextColor
     }
     

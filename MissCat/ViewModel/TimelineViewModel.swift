@@ -180,10 +180,10 @@ class TimelineViewModel: ViewModelType
     public func loadUntilNotes(completion: (()->())? = nil) {
         guard let untilId = self.cellsModel[self.cellsModel.count - 1].noteId else { return }
         
-        self.loadNotes(untilId: untilId) {
-            self.updateNotes(new: self.cellsModel)
-            if let completion = completion { completion() }
-        }
+//        self.loadNotes(untilId: untilId) {
+//            self.updateNotes(new: self.cellsModel)
+//            if let completion = completion { completion() }
+//        }
     }
     
     //投稿をfetchしてくる

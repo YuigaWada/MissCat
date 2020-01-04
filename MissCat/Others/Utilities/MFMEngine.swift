@@ -101,6 +101,8 @@ public class MFMEngine {
         
         
         if imageUrl.ext == "gif", let url = URL(string: imageUrl) {
+            
+            //https://github.com/kaishin/Gifu/blob/d9b13cb2aaa2f0ac1fde4039aa4a4f87efdef29e/Sources/Gifu/Classes/GIFAnimatable.swift#L87
             imageView.animate(withGIFURL: url) { // GIFはGIFアニメとして表示する
                 DispatchQueue.main.async {
                     imageView.backgroundColor = .clear

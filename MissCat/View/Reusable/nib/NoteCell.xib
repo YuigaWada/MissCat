@@ -43,13 +43,13 @@
                     <rect key="frame" x="80" y="38" width="314" height="402"/>
                     <subviews>
                         <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" editable="NO" text="Note" translatesAutoresizingMaskIntoConstraints="NO" id="yT1-N6-SIZ" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
-                            <rect key="frame" x="0.0" y="0.0" width="314" height="187"/>
+                            <rect key="frame" x="0.0" y="0.0" width="314" height="157"/>
                             <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
                             <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                         </textView>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="v72-g7-6Ca">
-                            <rect key="frame" x="0.0" y="192" width="314" height="130"/>
+                            <rect key="frame" x="0.0" y="162" width="314" height="130"/>
                             <subviews>
                                 <stackView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="249" verticalCompressionResistancePriority="749" distribution="fillEqually" spacing="2" translatesAutoresizingMaskIntoConstraints="NO" id="xbq-eM-CO3">
                                     <rect key="frame" x="0.0" y="0.0" width="314" height="130"/>
@@ -64,12 +64,18 @@
                                 <constraint firstAttribute="height" priority="999" constant="130" id="cKX-Vb-WMJ"/>
                             </constraints>
                         </view>
-                        <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="5" translatesAutoresizingMaskIntoConstraints="NO" id="dRQ-p7-OsR">
-                            <rect key="frame" x="0.0" y="327" width="314" height="30"/>
+                        <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="KkD-L3-5tQ">
+                            <rect key="frame" x="0.0" y="297" width="314" height="60"/>
                             <constraints>
-                                <constraint firstAttribute="height" constant="30" id="pNZ-vh-2Za"/>
+                                <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="30" id="306-g6-Rcb"/>
                             </constraints>
-                        </stackView>
+                            <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="oUe-bJ-jGb">
+                                <size key="itemSize" width="50" height="50"/>
+                                <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                                <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                                <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                            </collectionViewFlowLayout>
+                        </collectionView>
                         <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" spacing="11" translatesAutoresizingMaskIntoConstraints="NO" id="BIZ-13-U4a">
                             <rect key="frame" x="0.0" y="362" width="314" height="40"/>
                             <subviews>
@@ -185,7 +191,7 @@
                 <outlet property="noteView" destination="yT1-N6-SIZ" id="8BC-Nn-b5w"/>
                 <outlet property="othersButton" destination="m58-si-Q2a" id="olW-Ai-vBQ"/>
                 <outlet property="reactionButton" destination="rhr-nd-rOM" id="LBV-mI-9vL"/>
-                <outlet property="reactionsStackView" destination="dRQ-p7-OsR" id="sC8-r6-Gfe"/>
+                <outlet property="reactionsCollectionView" destination="KkD-L3-5tQ" id="421-3R-OTJ"/>
                 <outlet property="renoteButton" destination="cJA-vi-Lkf" id="A77-Qd-lPA"/>
                 <outlet property="replyButton" destination="RmY-Dj-6tO" id="wY2-3H-TAf"/>
                 <outlet property="replyIndicator" destination="hNW-sZ-76E" id="Xs0-D1-DPj"/>
