@@ -96,32 +96,53 @@ public class MFMEngine {
     private func generateAsyncImageView(_ imageUrl: String)-> UIImageView {
         let imageSize = lineHeight
         let imageView = GIFImageView(frame: CGRect(x: 0, y: 0, width: 200, height: 100))
+        let isGif = imageUrl.ext == "gif"
         
         imageView.backgroundColor = .lightGray
-        
-        
-        if imageUrl.ext == "gif", let url = URL(string: imageUrl) {
-            
-            //https://github.com/kaishin/Gifu/blob/d9b13cb2aaa2f0ac1fde4039aa4a4f87efdef29e/Sources/Gifu/Classes/GIFAnimatable.swift#L87
-            imageView.animate(withGIFURL: url) { // GIFはGIFアニメとして表示する
-                DispatchQueue.main.async {
-                    imageView.backgroundColor = .clear
-                }
-            }
-            
-        }
-        else {
-            imageUrl.toUIImage{ image in
-                DispatchQueue.main.async {
-                    imageView.backgroundColor = .clear
-                    imageView.image = image
-                }
-            }
-        }
-        
-        
         imageView.frame = CGRect(x: 0, y: 0, width: imageSize, height: imageSize)
         imageView.sizeThatFits(.init(width: imageSize, height: imageSize))
+        
+        
+        //https://github.com/kaishin/Gifu/blob/d9b13cb2aaa2f0ac1fde4039aa4a4f87efdef29e/Sources/Gifu/Classes/GIFAnimatable.swift#L87
+        let setGifuImage = { (data: Data) in // GifアニメはGifuが捌く
+            DispatchQueue.main.async {
+                imageView.animate(withGIFData: data) {
+                    DispatchQueue.main.async {
+                        imageView.backgroundColor = .clear
+                    }
+                }
+            }
+        }
+        
+        let setUIImage = { (data: Data) in // Gif以外はUIImageが捌く
+            guard let image = UIImage(data: data) else { return }
+            DispatchQueue.main.async {
+                imageView.backgroundColor = .clear
+                imageView.image = image
+            }
+        }
+        
+        if let cachedData = Cache.shared.getUrlData(on: imageUrl) { //キャッシュが存在する時
+            if isGif {
+                setGifuImage(cachedData)
+            }
+            else {
+                setUIImage(cachedData)
+            }
+        }
+        else { // キャッシュが存在しない場合
+            imageUrl.getData { data in
+                guard let data = data else { return }
+                Cache.shared.saveUrlData(data, on: imageUrl)
+                
+                if isGif {
+                    setGifuImage(data)
+                }
+                else {
+                    setUIImage(data)
+                }
+            }
+        }
         
         return imageView
     }

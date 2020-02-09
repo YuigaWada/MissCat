@@ -93,8 +93,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         }
     }
     
-    
-    
+
     
     //MARK: Setup TableView
     private func setupTableView() {

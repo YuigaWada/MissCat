@@ -19,8 +19,11 @@ public class Cache {
     
     //MARK: Var
     public var notes: [String: Cache.Note] = [:] // key: noteId
+    
+    //MEMO: YanagiTextと一対一にキャッシュする
     public var users: [String: Cache.User] = [:] // key: username
     public var files: [Cache.File] = []
+    public var dataOnUrl: [String: Data] = [:] // key: url
     
     private var me: UserModel?
     
@@ -32,12 +35,13 @@ public class Cache {
         notes[noteId] = Note(treatedNote: note, attachments: attachments)
     }
     
-    public func saveDisplayName(username: String, displayName: NSAttributedString, attachments: Attachments) {
+    public func saveDisplayName(username: String, displayName: NSAttributedString, attachments: Attachments, on yanagiText: YanagiText) {
         if let _ = users[username] {
             users[username]!.displayName = displayName
+            users[username]!.yanagiTexts.append(yanagiText)
         }
         else {
-            users[username] = User(iconImage: nil, displayName: displayName, attachments: attachments)
+            users[username] = User(iconImage: nil, displayName: displayName, yanagiTexts: [yanagiText], attachments: attachments)
         }
     }
     
@@ -46,7 +50,7 @@ public class Cache {
             users[username]!.iconImage = image
         }
         else {
-            users[username] = User(iconImage: image, displayName: nil, attachments: [:])
+            users[username] = User(iconImage: image, displayName: nil, yanagiTexts: [], attachments: [:])
         }
     }
     
@@ -71,6 +75,10 @@ public class Cache {
         files.append(file)
     }
     
+    public func saveUrlData(_ data: Data, on rawUrl: String) {
+        self.dataOnUrl[rawUrl] = data
+    }
+    
     
     
     //MARK: Get
@@ -78,8 +86,13 @@ public class Cache {
         return notes[noteId]
     }
     
-    public func getDisplayName(username: String)-> (displayName: NSAttributedString?, attachments: Attachments?){
-        return  (displayName: users[username]?.displayName, attachments: users[username]?.attachments)
+    public func getDisplayName(username: String, on yanagiText: YanagiText)-> (displayName: NSAttributedString?, attachments: Attachments?){
+        if let user = users[username], user.yanagiTexts.filter({ $0 === yanagiText }).count > 0 {
+            return (displayName: users[username]?.displayName, attachments: users[username]?.attachments)
+        }
+        else {
+            return (displayName: nil, attachments: nil)
+        }
     }
     
     public func getIcon(username: String)-> UIImage? {
@@ -108,6 +121,9 @@ public class Cache {
             callback(self.me)
         }
     }
+    public func getUrlData(on rawUrl: String)-> Data? {
+        return self.dataOnUrl[rawUrl]
+    }
     
 }
 
@@ -125,7 +141,7 @@ public extension Cache{
         public func setLatestNotificationId(_ id: String) {
             Foundation.UserDefaults.standard.set(id, forKey: latestNotificationKey)
         }
-
+        
     }
 }
 
@@ -140,9 +156,10 @@ public extension Cache {
     struct User {
         public var iconImage: UIImage?
         public var displayName: NSAttributedString?
+        
+        public var yanagiTexts: [YanagiText]
         public var attachments: Dictionary<NSTextAttachment,YanagiText.Attachment> = [:]
     }
-
     
     struct File {
         public var noteId: String

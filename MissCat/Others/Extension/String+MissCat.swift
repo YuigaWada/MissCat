@@ -49,6 +49,11 @@ extension String {
         url.toUIImage(completion)
     }
     
+    func getData (_ completion: @escaping (Data?)->()){
+        guard let url = URL(string: self) else { completion(nil); return }
+        
+        url.getData(completion)
+    }
     
     func regexMatches(pattern: String) -> [[String]] {
         

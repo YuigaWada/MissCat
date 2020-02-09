@@ -28,4 +28,16 @@ extension URL {
         
         task.resume()
     }
+    
+    func getData(_ completion: @escaping (Data?)->()){
+        var request = URLRequest(url: self)
+        request.timeoutInterval = 10
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let data = data else { return completion(nil) }
+            completion(data)
+        }
+        
+        task.resume()
+    }
 }

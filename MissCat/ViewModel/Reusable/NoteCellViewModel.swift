@@ -138,38 +138,42 @@ class NoteCellViewModel: ViewModelType {
     
     private func getDisplayName(_ item: NoteCell.Model)-> NSAttributedString? {
         
-        //        let cache = Cache.shared.getDisplayName(username: item.username)
-        //        let isCached = cache.displayName != nil
-        //
-        //        if !isCached {
-        //            let name = item.displayName
-        //            let username = " @" + item.username
-        //
-        //            let shapedName = name.mfmTransform(yanagi: self.input.nameYanagi, lineHeight: self.input.nameYanagi.frame.height * 0.9) ?? .init()
-        //
-        //            let displayName = shapedName + username.getAttributedString(font: self.usernameFont,
-        //                                                                        color: .darkGray)
-        //
-        //            Cache.shared.saveDisplayName(username: item.username,
-        //                                         displayName: displayName,
-        //                                         attachments: self.input.nameYanagi.getAttachments()) // CACHE!
-        //
-        //            return displayName
-        //        }
-        //
-        //        cache.attachments?.forEach { nsAttachment, yanagiAttachment in
-        //            self.input.nameYanagi.addAttachment(ns: nsAttachment, yanagi: yanagiAttachment)
-        //        }
-        //
-        //        return cache.displayName
+        let cache = Cache.shared.getDisplayName(username: item.username, on: self.input.nameYanagi)
+        let isCached = cache.displayName != nil
+//        let hasCachedAttachments = self.hasAttachments(on: self.input.nameYanagi, with: cache.attachments)
+
+        //キャッシュされていない場合 & Attachmentsがセルに残っていない場合、MFMにかけてあげる
+        //(セルは再利用されるので、attachmensのキャッシュの有無も考える)
         
-        let name = item.displayName
-        let username = " @" + item.username
+        if !isCached {
+            let name = item.displayName
+            let username = " @" + item.username
+
+            let shapedName = name.mfmTransform(yanagi: self.input.nameYanagi, lineHeight: self.input.nameYanagi.frame.height * 0.9) ?? .init()
+
+            let displayName = shapedName + username.getAttributedString(font: self.usernameFont,
+                                                                        color: .darkGray)
+            //キャッシュする
+            Cache.shared.saveDisplayName(username: item.username,
+                                         displayName: displayName,
+                                         attachments: self.input.nameYanagi.getAttachments(),
+                                         on: self.input.nameYanagi) // CACHE!
+
+            
+
+            return displayName
+        }
         
-        let shapedName = name.mfmTransform(yanagi: self.input.nameYanagi, lineHeight: self.input.nameYanagi.frame.height * 0.9) ?? .init()
-        
-        return shapedName + username.getAttributedString(font: self.usernameFont,
-                                                         color: .darkGray)
+
+        return cache.displayName
+//
+//        let name = item.displayName
+//        let username = " @" + item.username
+//
+//        let shapedName = name.mfmTransform(yanagi: self.input.nameYanagi, lineHeight: self.input.nameYanagi.frame.height * 0.9) ?? .init()
+//
+//        return shapedName + username.getAttributedString(font: self.usernameFont,
+//                                                         color: .darkGray)
     }
     
     public func setReactionCell(with item: NoteCell.Reaction, to reactionCell: ReactionCell)-> ReactionCell {
@@ -256,6 +260,22 @@ class NoteCellViewModel: ViewModelType {
         }
         
         self.updateReactions(new: self.reactionsModel)
+    }
+    
+    
+    private func hasAttachments(on yanagi: YanagiText, with attachments: Dictionary<NSTextAttachment, YanagiText.Attachment>?)-> Bool {
+        guard let attachments = attachments else { return true }
+        
+        let yanagiAttachments = yanagi.getAttachments()
+        var attachmentCount = 0
+        
+        attachments.forEach { key, value in
+            if let value_ = yanagiAttachments[key], value_.view === value.view {
+                attachmentCount += 1
+            }
+        }
+        
+        return attachmentCount == attachments.count // 一致しない＝キャッシュされたattachmentsに欠損あり
     }
     
     
