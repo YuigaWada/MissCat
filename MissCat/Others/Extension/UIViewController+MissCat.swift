@@ -6,47 +6,47 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import UIKit
-import RxSwift
 import FloatingPanel
+import RxSwift
 import SafariServices
+import UIKit
 
 extension UIViewController {
+    // MARK: Privates
     
-    //MARK: Privates
-    private func getViewController(name: String)-> UIViewController {
+    private func getViewController(name: String) -> UIViewController {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let viewController = storyboard.instantiateViewController(withIdentifier: name)
         
         return viewController
     }
     
-    //MARk:
+    // MARK:
+    
     func layoutIfNeeded(to views: [UIView]) {
         views.forEach { $0.layoutIfNeeded() }
     }
     
+    // MARK: Present
     
-    //MARK: Present
-    func presentOnFullScreen(_ viewControllerToPresent: UIViewController, animated: Bool, completion: (()->Void)?) {
+    func presentOnFullScreen(_ viewControllerToPresent: UIViewController, animated: Bool, completion: (() -> Void)?) {
         let vc = viewControllerToPresent
         vc.modalPresentationStyle = .fullScreen
         
-        self.present(vc, animated: animated, completion: completion)
+        present(vc, animated: animated, completion: completion)
     }
     
     func move2ViewController(identifier: String) {
         guard let storyboard = self.storyboard else { return }
         
         let target = storyboard.instantiateViewController(withIdentifier: identifier)
-        self.presentOnFullScreen(target, animated: true, completion: nil)
+        presentOnFullScreen(target, animated: true, completion: nil)
     }
-    
     
     func presentReactionGen(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
         guard let reactionGen = self.getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
         
-        self.presentWithSemiModal(reactionGen, animated: true, completion: nil)
+        presentWithSemiModal(reactionGen, animated: true, completion: nil)
         
         reactionGen.setTargetNote(noteId: noteId,
                                   iconUrl: iconUrl,
@@ -57,8 +57,9 @@ extension UIViewController {
                                   hasMarked: hasMarked)
     }
     
-    //MARK: Get Size
-    func getSafeAreaSize()-> (width: CGFloat, height: CGFloat) {
+    // MARK: Get Size
+    
+    func getSafeAreaSize() -> (width: CGFloat, height: CGFloat) {
         var bottomPadding: CGFloat = 0
         var leftPadding: CGFloat = 0
         var rightPadding: CGFloat = 0
@@ -73,17 +74,17 @@ extension UIViewController {
         return (width: leftPadding + rightPadding, height: bottomPadding) // portrait
     }
     
-    func getFooterTabSize(height: CGFloat)-> CGRect {
-        let (width: notSafeWidth, height: notSafeHeight) = self.getSafeAreaSize()
+    func getFooterTabSize(height: CGFloat) -> CGRect {
+        let (width: notSafeWidth, height: notSafeHeight) = getSafeAreaSize()
         
         return CGRect(x: 0,
-                      y: self.view.frame.height - height - notSafeHeight,
-                      width: self.view.frame.width - notSafeWidth,
-                      height:  height)
+                      y: view.frame.height - height - notSafeHeight,
+                      width: view.frame.width - notSafeWidth,
+                      height: height)
     }
     
+    // MARK: Utilities
     
-    //MARK: Utilities
     func openLink(url: String) {
         guard let url = URL(string: url), let rootVC = UIApplication.shared.windows[0].rootViewController else { return }
         let safari = SFSafariViewController(url: url)
@@ -91,18 +92,17 @@ extension UIViewController {
         // i dont know why but it seems that we must launch a safari VC from the root VC.
         rootVC.presentOnFullScreen(safari, animated: true, completion: nil)
     }
-    
-    
 }
 
-//MARK: FloatingPanel
+// MARK: FloatingPanel
+
 extension UIViewController: FloatingPanelControllerDelegate {
-    func presentWithSemiModal(_ viewControllerToPresent: UIViewController, animated: Bool, completion: (()->Void)?) {
+    func presentWithSemiModal(_ viewControllerToPresent: UIViewController, animated: Bool, completion: (() -> Void)?) {
         let reactionGenPanel = ReactionGenPanel()
         
         reactionGenPanel.delegate = self
         reactionGenPanel.set(contentViewController: viewControllerToPresent)
-        self.present(reactionGenPanel, animated: true, completion: nil)
+        present(reactionGenPanel, animated: true, completion: nil)
         
         guard let contentVC = viewControllerToPresent as? ReactionGenViewController else { return }
         contentVC.delegate = reactionGenPanel
@@ -120,7 +120,7 @@ extension UIViewController: FloatingPanelControllerDelegate {
         vc.view.endEditing(true)
     }
     
-    //　半モーダルを下へスワイプした時FloatingPanelControllerを消す
+    // 　半モーダルを下へスワイプした時FloatingPanelControllerを消す
     public func floatingPanelDidEndDragging(_ fpc: FloatingPanelController, withVelocity velocity: CGPoint, targetPosition: FloatingPanelPosition) {
         guard targetPosition == .tip else { return }
         

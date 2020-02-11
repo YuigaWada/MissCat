@@ -6,24 +6,20 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import RxSwift
 import MisskeyKit
+import RxSwift
 
 class ReactionGenViewModel: ViewModelType {
+    // MARK: I/O
     
-    //MARK: I/O
-    struct Input {
-        
-    }
+    struct Input {}
     
     struct Output {
         let favorites: [ReactionGenViewController.EmojisSection] // 同期
         let otherEmojis: PublishSubject<[ReactionGenViewController.EmojisSection]> // 非同期
     }
     
-    struct State {
-        
-    }
+    struct State {}
     
     //    private let input: Input
     public lazy var output: Output = {
@@ -37,14 +33,11 @@ class ReactionGenViewModel: ViewModelType {
     private var otherEmojisList: [ReactionGenViewController.EmojiModel] = []
     private let otherEmojis: PublishSubject<[ReactionGenViewController.EmojisSection]> = .init()
     
-    
-    
     public var dataSource: EmojisDataSource?
     public var targetNoteId: String?
-    public var hasMarked: Bool { //リアクションが登録されているか?
-        return self.myReaction != nil
+    public var hasMarked: Bool { // リアクションが登録されているか?
+        return myReaction != nil
     }
-    
     
     private var myReaction: String?
     private let model = ReactionGenModel()
@@ -52,15 +45,15 @@ class ReactionGenViewModel: ViewModelType {
     
     private var isLoading: Bool = false
     
-    init(and disposeBag: DisposeBag) { //init(with input: Input, and disposeBag: DisposeBag) {
+    init(and disposeBag: DisposeBag) { // init(with input: Input, and disposeBag: DisposeBag) {
         //        self.input = input
         self.disposeBag = disposeBag
     }
     
     public func getNextEmojis() {
-        guard !self.isLoading else { return }
+        guard !isLoading else { return }
         
-        self.model.getNextDefaultEmojis().subscribe(onNext: { emojis in
+        model.getNextDefaultEmojis().subscribe(onNext: { emojis in
             self.isLoading = true
             
 //            self.otherEmojisList.append(emojis)
@@ -79,7 +72,6 @@ class ReactionGenViewModel: ViewModelType {
 //        }).disposed(by: disposeBag)
     }
     
-    
     public func registerReaction(noteId: String, reaction: String) {
         model.registerReaction(noteId: noteId, reaction: reaction) { success in
             guard success else { return }
@@ -88,15 +80,11 @@ class ReactionGenViewModel: ViewModelType {
         }
     }
     
-    
-    public func cancelReaction(noteId: String){
+    public func cancelReaction(noteId: String) {
         model.cancelReaction(noteId: noteId) { success in
             guard success else { return }
             
             self.myReaction = nil
         }
     }
-    
-    
-    
 }

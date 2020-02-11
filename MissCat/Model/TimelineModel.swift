@@ -7,10 +7,11 @@
 //
 
 import MisskeyKit
-import RxSwift
 import RxCocoa
+import RxSwift
 
-//MARK: ENUM
+// MARK: ENUM
+
 public enum TimelineType {
     case Home
     case Local
@@ -23,7 +24,7 @@ public enum TimelineType {
         return self != .UserList && self != .OneUser
     }
     
-    func convert2Channel()-> SentStreamModel.Channel? { //TimelineTypeをMisskeyKit.SentStreamModel.Channelに変換する
+    func convert2Channel() -> SentStreamModel.Channel? { // TimelineTypeをMisskeyKit.SentStreamModel.Channelに変換する
         switch self {
         case .Home: return .homeTimeline
         case .Local: return .localTimeline
@@ -33,10 +34,11 @@ public enum TimelineType {
     }
 }
 
-//MARK: CLASS
+// MARK: CLASS
+
 class TimelineModel {
+    // MARK: I/O
     
-    //MARK: I/O
     struct LoadOption {
         let type: TimelineType
         let userId: String?
@@ -53,29 +55,25 @@ class TimelineModel {
     }
     
     struct Trigger {
-        let removeTargetTrigger: PublishSubject<String>  // arg: noteId
+        let removeTargetTrigger: PublishSubject<String> // arg: noteId
         let updateReactionTrigger: PublishSubject<UpdateReaction>
     }
     
     public lazy var trigger: Trigger = .init(removeTargetTrigger: self.removeTargetTrigger,
                                              updateReactionTrigger: self.updateReactionTrigger)
     
-    
     public let removeTargetTrigger: PublishSubject<String> = .init() // arg: noteId
     public let updateReactionTrigger: PublishSubject<UpdateReaction> = .init()
     
     public var initialNoteIds: [String] = []
     
-    
     private var type: TimelineType = .Home
     private let handleTargetType: [String] = ["note", "CapturedNoteUpdated"]
     private lazy var streaming = MisskeyKit.Streaming()
     
+    // MARK: REST API
     
-    
-    
-    //MARK: REST API
-    public func loadNotes(with option: LoadOption, completion: (()->())? = nil)-> Observable<NoteCell.Model> {
+    public func loadNotes(with option: LoadOption, completion: (() -> Void)? = nil) -> Observable<NoteCell.Model> {
         let dispose = Disposables.create()
         
         return Observable.create { [unowned self] observer in
@@ -83,7 +81,7 @@ class TimelineModel {
             let handleResult = { (posts: [NoteModel]?, error: MisskeyKitError?) in
                 guard let posts = posts, error == nil else { /* Error */ print(error ?? "error is nil"); return }
                 
-                posts.map{ $0.mfmPreTransform() }.forEach{ post in
+                posts.map { $0.mfmPreTransform() }.forEach { post in
                     print("post!\(posts.count)")
                     dump(post)
                     
@@ -96,18 +94,17 @@ class TimelineModel {
                         
                         guard let cellModel = renote.getNoteCellModel() else { return }
                         observer.onNext(cellModel)
-                    }
-                    else { // default note
+                    } else { // default note
                         guard let newCellsModel = self.getCellsModel(post) else { return }
-                        newCellsModel.forEach{ observer.onNext($0) }
+                        newCellsModel.forEach { observer.onNext($0) }
                     }
                     
                     if let noteId = post.id {
-                        //ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
+                        // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
                         self.initialNoteIds.append(noteId)
                     }
                     
-                    //MEMO: セルの描画は必ずメインスレッドで行われるのでさすがにここでやると重い　→ なんかそうでもなさそう
+                    // MEMO: セルの描画は必ずメインスレッドで行われるのでさすがにここでやると重い　→ なんかそうでもなさそう
                     //                self.updateNotes(new: self.cellsModel)
                 }
                 
@@ -139,16 +136,16 @@ class TimelineModel {
         }
     }
     
+    // MARK: Streaming API
     
-    //MARK: Streaming API
-    public func connectStream(type: TimelineType)-> Observable<NoteCell.Model> { //streamingのresponseを捌くのはhandleStreamで行う
+    public func connectStream(type: TimelineType) -> Observable<NoteCell.Model> { // streamingのresponseを捌くのはhandleStreamで行う
         let dipose = Disposables.create()
         self.type = type
         
         return Observable.create { [unowned self] observer in
             guard let apiKey = MisskeyKit.auth.getAPIKey(), let channel = type.convert2Channel() else { return dipose }
             
-            let _ = self.streaming.connect(apiKey: apiKey, channels: [channel]){ (response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) in
+            _ = self.streaming.connect(apiKey: apiKey, channels: [channel]) { (response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) in
                 self.handleStream(response: response, channel: channel, typeString: type, error: error, observer: observer)
             }
             
@@ -157,13 +154,11 @@ class TimelineModel {
     }
     
     private func handleStream(response: Any?, channel: SentStreamModel.Channel?, typeString: String?, error: MisskeyKitError?, observer: AnyObserver<NoteCell.Model>) {
-        
-        let isInitialConnection = self.initialNoteIds.count > 0 //初期接続かどうか
+        let isInitialConnection = self.initialNoteIds.count > 0 // 初期接続かどうか
         if isInitialConnection {
-            self.captureNotes(self.initialNoteIds) //websocket接続が確定してからcapture
+            self.captureNotes(self.initialNoteIds) // websocket接続が確定してからcapture
             self.initialNoteIds = []
         }
-        
         
         if let error = error {
             print(error)
@@ -174,19 +169,19 @@ class TimelineModel {
         }
         
         guard let _ = channel, let typeString = typeString, self.handleTargetType.contains(typeString) else {
-            return }
+            return
+        }
         
         if typeString == "CapturedNoteUpdated" {
             guard let updateContents = response as? NoteUpdatedModel, let updateType = updateContents.type, let userId = updateContents.userId else { return }
             
             switch updateType {
             case .reacted:
-                userId.isMe { isMyReaction in //自分のリアクションかどうかチェックする
+                userId.isMe { isMyReaction in // 自分のリアクションかどうかチェックする
                     self.updateReaction(targetNoteId: updateContents.targetNoteId,
                                         reaction: updateContents.reaction,
-                                        isMyReaction: isMyReaction) }
-                
-                break
+                                        isMyReaction: isMyReaction)
+                }
                 
             case .pollVoted:
                 break
@@ -194,7 +189,6 @@ class TimelineModel {
                 guard let targetNoteId = updateContents.targetNoteId else { return }
                 self.removeNoteCell(noteId: targetNoteId)
             }
-            
         }
         
         guard let post = (response as? NoteModel)?.mfmPreTransform() else { return }
@@ -207,38 +201,37 @@ class TimelineModel {
             
             let renoteeCellModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "", baseNoteId: renoteId)
             observer.onNext(renoteeCellModel)
-        }
-        else {
+        } else {
             var newCellsModel = self.getCellsModel(post)
             guard newCellsModel != nil else { return }
             
-            newCellsModel!.reverse()//reverseしてからinsert
-            newCellsModel!.forEach{ observer.onNext($0) }
+            newCellsModel!.reverse() // reverseしてからinsert
+            newCellsModel!.forEach { observer.onNext($0) }
         }
         
         //            self.updateNotes(new: self.cellsModel)
         self.captureNote(noteId: post.id)
     }
     
+    // MARK: Capture
     
-    //MARK: Capture
     private func captureNote(noteId: String?) {
         guard let noteId = noteId else { return }
-        self.captureNotes([noteId])
+        captureNotes([noteId])
     }
     
     private func captureNotes(_ noteIds: [String]) {
         noteIds.forEach { id in
             do {
                 try streaming.captureNote(noteId: id)
-            }
-            catch {
+            } catch {
                 /* Ignore :P */
             }
         }
     }
     
-    //MARK: Remove / Update Cell
+    // MARK: Remove / Update Cell
+    
     private func removeNoteCell(noteId: String) {
         removeTargetTrigger.onNext(noteId)
     }
@@ -251,10 +244,8 @@ class TimelineModel {
         updateReactionTrigger.onNext(updateReaction)
     }
     
-    
-    
     // MisskeyKitのNoteModelをNoteCell.Modelに変換する
-    public func getCellsModel(_ post: NoteModel)-> [NoteCell.Model]? {
+    public func getCellsModel(_ post: NoteModel) -> [NoteCell.Model]? {
         var cellsModel: [NoteCell.Model] = []
         
         if let reply = post.reply { // リプライ対象も表示する
@@ -272,5 +263,4 @@ class TimelineModel {
         
         return cellsModel.count > 0 ? cellsModel : nil
     }
-    
 }

@@ -6,13 +6,12 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import UIKit
+import MisskeyKit
 import RxDataSources
 import RxSwift
-import MisskeyKit
+import UIKit
 
 public class NotificationCell: UITableViewCell, UITextViewDelegate {
-    
     @IBOutlet weak var iconImageView: UIImageView!
     
     @IBOutlet weak var nameLabel: UILabel!
@@ -26,57 +25,57 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
     
     private let viewModel = NotificationCellViewModel()
     private lazy var emojiView = self.generateEmojiView()
-
-//    private let defaultIconColor =
+    
+    //    private let defaultIconColor =
     private lazy var reactionIconColor = UIColor(red: 231 / 255, green: 76 / 255, blue: 60 / 255, alpha: 1)
     private lazy var renoteIconColor = UIColor(red: 46 / 255, green: 204 / 255, blue: 113 / 255, alpha: 1)
     
     private var emojiViewOnView: Bool = false
     
-    override public func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
-        self.setupComponents()
+        setupComponents()
     }
     
     private func setupComponents() {
-        self.iconImageView.layer.cornerRadius = self.iconImageView.frame.height / 2
-        self.noteView.delegate = self
-        self.noteView.textColor = .lightGray
+        iconImageView.layer.cornerRadius = iconImageView.frame.height / 2
+        noteView.delegate = self
+        noteView.textColor = .lightGray
         
-        self.typeIconView.font = .awesomeSolid(fontSize: 14.0)
+        typeIconView.font = .awesomeSolid(fontSize: 14.0)
         
         guard !emojiViewOnView else { return }
-        self.addSubview(emojiView)
-        self.emojiViewOnView = true
+        addSubview(emojiView)
+        emojiViewOnView = true
     }
-    
     
     public func initialize() {
-        self.iconImageView.image = nil
-        self.nameLabel.text = nil
-        self.usernameLabel.text = nil
-        self.agoLabel.text = nil
-        self.noteView.attributedText = nil
-        self.typeIconView.text = nil
-        self.typeLabel.text = nil
+        iconImageView.image = nil
+        nameLabel.text = nil
+        usernameLabel.text = nil
+        agoLabel.text = nil
+        noteView.attributedText = nil
+        typeIconView.text = nil
+        typeLabel.text = nil
         
-        self.emojiView.isHidden = false
-        self.emojiView.initialize()
+        emojiView.isHidden = false
+        emojiView.initialize()
     }
     
-    
-    
-    public func shapeCell(item: NotificationCell.Model)-> NotificationCell {
+    public func shapeCell(item: NotificationCell.Model) -> NotificationCell {
         guard let username = item.fromUser.username else { return self }
         
-        self.initialize() // セルの再利用のために各パーツを初期化しておく
+        initialize() // セルの再利用のために各パーツを初期化しておく
         
-        //アイコン画像をset
+        // font
+        noteView.font = UIFont(name: "Helvetica",
+                               size: 11.0)
+        
+        // アイコン画像をset
         if let image = Cache.shared.getIcon(username: username) {
-            self.iconImageView.image = image
-        }
-        else if let iconImageUrl = item.fromUser.avatarUrl, let iconUrl = URL(string: iconImageUrl) {
-            iconUrl.toUIImage{ [weak self] image in
+            iconImageView.image = image
+        } else if let iconImageUrl = item.fromUser.avatarUrl, let iconUrl = URL(string: iconImageUrl) {
+            iconUrl.toUIImage { [weak self] image in
                 guard let self = self, let image = image else { return }
                 
                 DispatchQueue.main.async {
@@ -86,73 +85,60 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
             }
         }
         
-        //general
+        // general
         let displayName = (item.fromUser.name ?? "") == "" ? item.fromUser.username : item.fromUser.name // user.nameがnilか""ならusernameで代替
         
-        self.nameLabel.text = displayName
-        self.usernameLabel.text = "@" + (item.fromUser.username ?? "")
-        self.agoLabel.text = item.ago.calculateAgo()
+        nameLabel.text = displayName
+        usernameLabel.text = "@" + (item.fromUser.username ?? "")
+        agoLabel.text = item.ago.calculateAgo()
         
         if let myNote = item.myNote, let noteId = myNote.noteId {
-            
             // note
-            let cachedNote = Cache.shared.getNote(noteId: noteId)
-            let hasCachedNote: Bool = cachedNote != nil
-            
-            //キャッシュを活用する
-            self.noteView.attributedText = hasCachedNote ? cachedNote?.treatedNote : viewModel.shapeNote(identifier: item.identity,
-                                                                                            note: myNote.note,
-                                                                                            isReply: myNote.isReply,
-                                                                                            externalEmojis: myNote.emojis)
-            //キャッシュが存在しなければキャッシュしておく
-            if !hasCachedNote {
-                Cache.shared.saveNote(noteId: noteId,
-                                      note: self.noteView.attributedText,
-                                      attachments: self.noteView.getAttachments())
-            }
-            
-            
+            // キャッシュを活用する
+            noteView.attributedText = viewModel.shapeNote(identifier: item.identity,
+                                                          note: myNote.note,
+                                                          noteId: noteId,
+                                                          isReply: myNote.isReply,
+                                                          yanagi: noteView,
+                                                          externalEmojis: myNote.emojis)
             // file
-             let fileCount =  myNote.files.count
+            let fileCount = myNote.files.count
             if fileCount > 0 {
-                self.noteView.attributedText = self.noteView.attributedText + NSAttributedString(string: "\n> \(fileCount)個の画像 ")
+                noteView.attributedText = noteView.attributedText + NSAttributedString(string: "\n> \(fileCount)個の画像 ")
             }
         }
         
         // renote
         if item.type == .renote {
-            self.typeIconView.text = "retweet"
-            self.typeIconView.textColor = self.renoteIconColor
-            self.typeLabel.text = "Renote"
-            self.emojiView.isHidden = true
-        }
-    
-        // reaction
-        else if let reaction = item.reaction {
-            self.typeIconView.text = "fire-alt"
-            self.typeIconView.textColor = self.reactionIconColor
-            self.typeLabel.text = "Reaction"
-            self.emojiView.emoji = reaction
+            typeIconView.text = "retweet"
+            typeIconView.textColor = renoteIconColor
+            typeLabel.text = "Renote"
+            emojiView.isHidden = true
         }
         
-    
+        // reaction
+        else if let reaction = item.reaction {
+            typeIconView.text = "fire-alt"
+            typeIconView.textColor = reactionIconColor
+            typeLabel.text = "Reaction"
+            emojiView.emoji = reaction
+        }
+        
         return self
     }
     
-    private func generateEmojiView()-> EmojiView {
+    private func generateEmojiView() -> EmojiView {
         let emojiView = EmojiView()
         
         let sqrt2 = 1.41421356237
         let cos45 = CGFloat(sqrt2 / 2)
         
-        let r = self.iconImageView.frame.width / 2
-        let emojiViewRadius = 2/3 * r
+        let r = iconImageView.frame.width / 2
+        let emojiViewRadius = 2 / 3 * r
         
-        let basePosition = self.iconImageView.frame.origin
+        let basePosition = iconImageView.frame.origin
         let position = CGPoint(x: basePosition.x + cos45 * r,
                                y: basePosition.y + cos45 * r)
-        
-        
         
         emojiView.frame = CGRect(x: position.x,
                                  y: position.y,
@@ -164,12 +150,10 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         
         return emojiView
     }
-    
 }
 
+// MARK: NotificationCell.Model
 
-
-//MARK: NotificationCell.Model
 extension NotificationCell {
     public struct Model: IdentifiableType, Equatable {
         public typealias Identity = String
@@ -187,24 +171,19 @@ extension NotificationCell {
         
         let ago: String
         
-        
         public static func == (lhs: NotificationCell.Model, rhs: NotificationCell.Model) -> Bool {
             return lhs.identity == rhs.identity
         }
-        
     }
     
     public struct Section {
         public var items: [Model]
     }
-    
 }
 
 extension NotificationCell.Section: AnimatableSectionModelType {
-    
     public typealias Item = NotificationCell.Model
     public typealias Identity = String
-    
     
     public var identity: String {
         return ""

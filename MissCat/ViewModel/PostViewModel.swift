@@ -7,15 +7,11 @@
 //
 
 import MisskeyKit
-import RxSwift
 import RxCocoa
+import RxSwift
 
 class PostViewModel: ViewModelType {
-    
-    struct Input {
-        
-    }
-    
+    struct Input {}
     
     struct Output {
         let iconImage: Driver<UIImage>
@@ -24,15 +20,11 @@ class PostViewModel: ViewModelType {
         let attachments: PublishSubject<[PostViewController.AttachmentsSection]>
     }
     
-    struct State {
-        
-    }
+    struct State {}
     
     public lazy var output: Output = .init(iconImage: self.iconImage.asDriver(onErrorJustReturn: UIImage()),
                                            isSuccess: self.isSuccess.asDriver(onErrorJustReturn: false),
                                            attachments: self.attachments)
-    
-    
     
     private struct AttachmentImage {
         fileprivate let id: String = UUID().uuidString
@@ -69,26 +61,22 @@ class PostViewModel: ViewModelType {
     }
     
     public func submitNote(_ note: String) {
-        guard self.attachmentImages.count > 0 else {
-            self.model.submitNote(note, fileIds: nil){ self.isSuccess.onNext($0) }
+        guard attachmentImages.count > 0 else {
+            model.submitNote(note, fileIds: nil) { self.isSuccess.onNext($0) }
             return
         }
         
-        self.uploadFiles { fileIds in
-            self.model.submitNote(note, fileIds: fileIds){ self.isSuccess.onNext($0) }
+        uploadFiles { fileIds in
+            self.model.submitNote(note, fileIds: fileIds) { self.isSuccess.onNext($0) }
         }
     }
     
-    public func getLocation() {
-        
-    }
+    public func getLocation() {}
     
-    
-    
-    public func uploadFiles(completion: @escaping ([String])->()) {
+    public func uploadFiles(completion: @escaping ([String]) -> Void) {
         var fileIds: [String] = []
         
-        attachmentImages.forEach{ image in
+        attachmentImages.forEach { image in
             guard let image = image.image else { return }
             
             self.model.uploadFile(image) { fileId in
@@ -98,37 +86,35 @@ class PostViewModel: ViewModelType {
                 if fileIds.count == self.attachmentImages.count { completion(fileIds) }
             }
         }
-        
     }
     
-    //画像をスタックさせておいて、アップロードは直前に
+    // 画像をスタックさせておいて、アップロードは直前に
     public func stackFile(original: UIImage, edited: UIImage) {
         let targetImage = AttachmentImage(originalImage: original,
-                                          image: edited, order: self.attachmentImages.count + 1)
+                                          image: edited, order: attachmentImages.count + 1)
         
-        self.attachmentImages.append(targetImage)
+        attachmentImages.append(targetImage)
         
-        self.addAttachmentView(targetImage)
+        addAttachmentView(targetImage)
     }
     
     private func addAttachmentView(_ attachment: AttachmentImage) {
         let item = PostViewController.Attachments(image: attachment.originalImage, type: .Image)
         
         attachmentsLists.append(item)
-        self.attachments.onNext([PostViewController.AttachmentsSection(items: self.attachmentsLists)])
+        attachments.onNext([PostViewController.AttachmentsSection(items: self.attachmentsLists)])
     }
     
     public func removeAttachmentView(_ id: String) {
-        
         for index in 0 ..< attachmentsLists.count {
-            let attachment = self.attachmentsLists[index]
+            let attachment = attachmentsLists[index]
             
             if attachment.id == id {
-                self.attachmentsLists.remove(at: index)
+                attachmentsLists.remove(at: index)
                 break
             }
         }
         
-        self.attachments.onNext([PostViewController.AttachmentsSection(items: self.attachmentsLists)])
+        attachments.onNext([PostViewController.AttachmentsSection(items: self.attachmentsLists)])
     }
 }

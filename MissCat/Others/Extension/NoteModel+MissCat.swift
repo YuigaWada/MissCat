@@ -9,7 +9,7 @@
 import MisskeyKit
 
 extension NoteModel {
-    public func getNoteCellModel()-> NoteCell.Model? {
+    public func getNoteCellModel() -> NoteCell.Model? {
         let post = self
         
         guard let user = post.user else { return nil }
@@ -17,7 +17,7 @@ extension NoteModel {
         var reactions: [Any?] = []
         let displayName = (user.name ?? "") == "" ? user.username : user.name // user.nameがnilか""ならusernameで代替
         
-        (post.reactions ?? []).forEach{ reaction in
+        (post.reactions ?? []).forEach { reaction in
             guard let reaction = reaction else { return }
             
             let emoji = EmojiHandler.handler.encodeEmoji(raw: reaction.name!)
@@ -36,8 +36,7 @@ extension NoteModel {
                                        reactions: post.reactions ?? [],
                                        myReaction: post.myReaction,
                                        files: post.files ?? [],
-                                       emojis: (post.emojis ?? []).filter({$0 != nil}))
-        
+                                       emojis: (post.emojis ?? []).filter { $0 != nil })
         
         cellModel.isReply = post.reply != nil
         

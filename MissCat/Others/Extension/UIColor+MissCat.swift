@@ -9,7 +9,6 @@
 import UIKit
 
 extension UIColor {
-    
     convenience init(hex: String, alpha: CGFloat) {
         let v = hex.map { String($0) } + Array(repeating: "0", count: max(6 - hex.count, 0))
         let r = CGFloat(Int(v[0] + v[1], radix: 16) ?? 0) / 255.0
@@ -27,8 +26,7 @@ extension UIColor {
         // read colors to CGFloats and convert and position to proper bit positions in UInt32
         var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
         if color.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
-            
-            var colorAsUInt : UInt32 = 0
+            var colorAsUInt: UInt32 = 0
             
             colorAsUInt += UInt32(red * 255.0) << 16 +
                 UInt32(green * 255.0) << 8 +
@@ -39,4 +37,3 @@ extension UIColor {
         return 0
     }
 }
-

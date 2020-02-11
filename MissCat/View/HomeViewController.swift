@@ -6,22 +6,19 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import UIKit
-import PolioPager
 import MisskeyKit
+import PolioPager
+import UIKit
 
 // **    方針    **
 // 基本的にはMVVMパターンを採用し、View / UIViewControllerの管理はこのHomeViewControllerが行う。
 // 上タブ管理はBGで動いている親クラスのPolioPagerが行い、下タブ管理はHomeViewControllerが自前で行う。
-
 
 // 各Timeline: それぞれのtimelineの情報をそれぞれのview上で行う / Streamingは"hogehoge timeline"チャンネルを通す。
 //  | ← 上タブ管理
 // HomeViewController: 上下のタブを管理し、すべてのViewはこのvc上で動かす ＝ 画面遷移はすべてこのVCに委譲する
 //  | ← 通知のバインディング
 // NotificationsViewController: 通知を管理 / Streamingは"main"チャンネルを通す / UserDefaultsで最新通知のidを永続化
-
-
 
 // (OOPの対極的存在である)一時的なキャッシュ管理についてはsingletonのCacheクラスを使用。
 
@@ -52,74 +49,71 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     // Status
     private var nowPage: Page = .Main {
         willSet(page) {
-            self.previousPage = nowPage
+            previousPage = nowPage
         }
     }
+    
     private var previousPage: Page = .Main
     
+    // MARK: Life Cycle
     
-    
-    
-    //MARK: Life Cycle
-    override public func viewDidLoad() {
+    public override func viewDidLoad() {
         MisskeyKit.auth.setAPIKey("27929d28b8549999fe11dca576f92c6898561a651a8fd9f979f83c9b49b05703")
         
-        self.needBorder = true
-        self.selectedBarHeight = 2
-        self.selectedBar.layer.cornerRadius = 2
-        self.selectedBar.backgroundColor = .darkGray
-        self.selectedBarMargins.lower += 1
-        self.sectionInset = .init(top: 0, left: 20, bottom: 0, right: 5)
-        self.tabBackgroundColor = UIColor(hex: "ECECEC")
-        self.view.backgroundColor = UIColor(hex: "ECECEC")
+        needBorder = true
+        selectedBarHeight = 2
+        selectedBar.layer.cornerRadius = 2
+        selectedBar.backgroundColor = .darkGray
+        selectedBarMargins.lower += 1
+        sectionInset = .init(top: 0, left: 20, bottom: 0, right: 5)
+        tabBackgroundColor = UIColor(hex: "ECECEC")
+        view.backgroundColor = UIColor(hex: "ECECEC")
         
-        self.navBar.isHidden = true
+        navBar.isHidden = true
         
         if !isXSeries {
-            self.selectedBarMargins.upper += 3
-            self.selectedBarMargins.lower += 1
-            self.sectionInset = .init(top: 2, left: 10, bottom: 0, right: 5)
+            selectedBarMargins.upper += 3
+            selectedBarMargins.lower += 1
+            sectionInset = .init(top: 2, left: 10, bottom: 0, right: 5)
         }
         
         super.viewDidLoad()
     }
     
-    override public func viewWillAppear(_ animated: Bool) {
+    public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.navigationController?.setNavigationBarHidden(true, animated: animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
-    override public func viewDidAppear(_ animated: Bool) {
+    public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        
-        self.navigationController?.interactivePopGestureRecognizer?.delegate = self
-        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        navigationController?.interactivePopGestureRecognizer?.delegate = self
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         
         guard !initialized else { return }
         
-        self.setupFooterTab()
-        self.showNotificationBanner(icon: .Loading, notification: "ロード中...")
-        self.initialized = true
+        setupFooterTab()
+        showNotificationBanner(icon: .Loading, notification: "ロード中...")
+        initialized = true
     }
     
-    override public func viewDidLayoutSubviews() {
+    public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        self.setupNotificationsVC() // 先にNotificationsVCをロードしておく → 通知のロードを裏で行う
-        self.setupNavTab()
+        setupNotificationsVC() // 先にNotificationsVCをロードしておく → 通知のロードを裏で行う
+        setupNavTab()
     }
     
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
     }
     
+    // MARK: Setup Tab
     
-    //MARK: Setup Tab
     private func setupFooterTab() {
-        
-        footerTab.frame = self.getFooterTabSize(height: self.footerTabHeight)
-        self.view.addSubview(footerTab)
+        footerTab.frame = getFooterTabSize(height: footerTabHeight)
+        view.addSubview(footerTab)
         
         footerTab.delegate = self
         footerTab.selected = .home
@@ -127,88 +121,79 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     
     private func setupNavTab() {
         if !hasPreparedViews {
-            self.view.addSubview(self.navBar)
+            view.addSubview(navBar)
             hasPreparedViews = true
         }
         
-        self.navBar.delegate = self
-        self.navBar.frame = CGRect(x: 0,
-                                   y: 0,
-                                   width: self.view.frame.width,
-                                   height: self.pageView.frame.origin.y)
-        
-        
+        navBar.delegate = self
+        navBar.frame = CGRect(x: 0,
+                              y: 0,
+                              width: view.frame.width,
+                              height: pageView.frame.origin.y)
     }
     
+    // MARK: Setup Initial View
     
-    //MARK: Setup Initial View
     private func setupNotificationsVC() {
-        if self.notificationsViewController == nil {
+        if notificationsViewController == nil {
             guard let storyboard = self.storyboard, let notificationsViewController = storyboard.instantiateViewController(withIdentifier: "notifications") as? NotificationsViewController else { return }
             notificationsViewController.view.isHidden = true
             notificationsViewController.homeViewController = self
             self.notificationsViewController = notificationsViewController
             
+            navBar.barTitle = "Notifications"
+            navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
             
-            self.navBar.barTitle = "Notifications"
-            self.navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
-            
-            self.addChild(self.notificationsViewController!)
-            self.view.addSubview(self.notificationsViewController!.view)
-            self.view.bringSubviewToFront(self.navBar)
-            self.view.bringSubviewToFront(self.footerTab)
+            addChild(self.notificationsViewController!)
+            view.addSubview(self.notificationsViewController!.view)
+            view.bringSubviewToFront(navBar)
+            view.bringSubviewToFront(footerTab)
         }
         
-        self.notificationsViewController!.view.frame = self.getDisplayRect()
+        notificationsViewController!.view.frame = getDisplayRect()
     }
     
+    // MARK: FooterTab's Pages
     
-    
-    
-    
-    //MARK: FooterTab's Pages
-    //下タブに対応するViewControllerを操作するメソッド群
+    // 下タブに対応するViewControllerを操作するメソッド群
     
     private func showNotificationsView() {
         guard let notificationsViewController = notificationsViewController else { return }
         
-        self.navBar.isHidden = false
-        self.navBar.barTitle = "Notifications"
-        self.navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
+        navBar.isHidden = false
+        navBar.barTitle = "Notifications"
+        navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
         
-        self.nowPage = .Notifications
+        nowPage = .Notifications
         notificationsViewController.view.isHidden = false
     }
     
+    // MARK: Other Pages
     
-    
-    //MARK: Other Pages
     private func showPostDetailView(item: NoteCell.Model) {
         guard let storyboard = self.storyboard else { return }
         guard let detailViewController = storyboard.instantiateViewController(withIdentifier: "post-detail") as? PostDetailViewController else { return }
-    
         
-        detailViewController.view.frame = self.getDisplayRect()
+        detailViewController.view.frame = getDisplayRect()
         detailViewController.item = item
         
         //        self.addChild(detailViewController)
         //        self.view.addSubview(detailViewController.view)
-        self.navigationController?.pushViewController(detailViewController, animated: true)
+        navigationController?.pushViewController(detailViewController, animated: true)
         
-        self.nowPage = .PostDetails
+        nowPage = .PostDetails
 //        self.navBar.isHidden = false
 //        self.navBar.barTitle = ""
 //        self.navBar.setButton(style: .Left, leftText: "chevron-left", leftFont: .awesomeSolid(fontSize: 16.0))
         
-        self.view.bringSubviewToFront(self.navBar)
-        self.view.bringSubviewToFront(self.footerTab)
+        view.bringSubviewToFront(navBar)
+        view.bringSubviewToFront(footerTab)
         
         self.detailViewController = detailViewController
     }
     
     private func showProfileView(userId: String, isMe: Bool = false) {
-        
-        self.nowPage = .Profile
+        nowPage = .Profile
         if isMe, let myProfileViewController = myProfileViewController {
             myProfileViewController.view.isHidden = false
             return
@@ -219,21 +204,20 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
             let profileViewController = storyboard.instantiateViewController(withIdentifier: "profile") as? ProfileViewController else { return }
         
         profileViewController.setUserId(userId, isMe: isMe)
-        profileViewController.view.frame = self.getDisplayRect(needNavBar: false)
+        profileViewController.view.frame = getDisplayRect(needNavBar: false)
         
         if isMe {
-            self.addChild(profileViewController)
-            self.view.addSubview(profileViewController.view)
-            self.myProfileViewController = profileViewController
-        }
-        else {
-            self.navigationController?.pushViewController(profileViewController, animated: true)
+            addChild(profileViewController)
+            view.addSubview(profileViewController.view)
+            myProfileViewController = profileViewController
+        } else {
+            navigationController?.pushViewController(profileViewController, animated: true)
         }
     }
     
+    // MARK: Utilities
     
-    //MARK: Utilities
-    private func getViewController(name: String)-> UIViewController {
+    private func getViewController(name: String) -> UIViewController {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let viewController = storyboard.instantiateViewController(withIdentifier: name)
         
@@ -243,25 +227,20 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         return timelineViewController
     }
     
-    
-    
-    private func getDisplayRect(needNavBar: Bool = true)-> CGRect {
-        let pageHeight = self.pageView.frame.height - (self.view.frame.height - self.footerTab.frame.origin.y)
-        let navBarHeight = self.pageView.frame.origin.y
+    private func getDisplayRect(needNavBar: Bool = true) -> CGRect {
+        let pageHeight = pageView.frame.height - (view.frame.height - footerTab.frame.origin.y)
+        let navBarHeight = pageView.frame.origin.y
         
-        let y = needNavBar ? self.pageView.frame.origin.y : 0
+        let y = needNavBar ? pageView.frame.origin.y : 0
         let height = pageHeight + (needNavBar ? 0 : navBarHeight)
-        
         
         return CGRect(x: 0,
                       y: y,
-                      width: self.view.frame.width,
+                      width: view.frame.width,
                       height: height)
     }
     
-    
     private func backNavBarStatus() {
-        
         switch previousPage {
         case .Main:
             tappedHome()
@@ -272,12 +251,11 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         default:
             return
         }
-        
     }
     
-    private func generateTimelineVC(type: TimelineType)-> TimelineViewController {
+    private func generateTimelineVC(type: TimelineType) -> TimelineViewController {
         guard let viewController = self.getViewController(name: "timeline") as? TimelineViewController
-            else { fatalError("Internal Error.") }
+        else { fatalError("Internal Error.") }
         
         viewController.setup(type: type)
         return viewController
@@ -297,28 +275,26 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     }
     
     private func showNotificationBanner(icon: NotificationBanner.IconType, notification: String) {
-        let bannerWidth = self.view.frame.width / 3
+        let bannerWidth = view.frame.width / 3
         
-        let frame = CGRect(x: self.view.frame.width - bannerWidth - 10,
-                           y: self.footerTab.frame.origin.y - 30,
+        let frame = CGRect(x: view.frame.width - bannerWidth - 10,
+                           y: footerTab.frame.origin.y - 30,
                            width: bannerWidth,
                            height: 30)
         
-        
         let notificationBanner = NotificationBanner(frame: frame, icon: icon, notification: notification)
-        self.view.addSubview(notificationBanner)
-        self.view.bringSubviewToFront(notificationBanner)
+        view.addSubview(notificationBanner)
+        view.bringSubviewToFront(notificationBanner)
     }
     
+    // MARK: FooterTabBar Delegate
     
-    //MARK: FooterTabBar Delegate
     public func tappedHome() {
-        if self.nowPage != .Main {
-            self.nowPage = .Main
-            self.navBar.isHidden = true
+        if nowPage != .Main {
+            nowPage = .Main
+            navBar.isHidden = true
             DispatchQueue.main.async { self.hideView(without: .Main) }
-        }
-        else {
+        } else {
             guard let home = home as? FooterTabBarDelegate else { return }
             home.tappedHome()
         }
@@ -327,19 +303,18 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     public func tappedNotifications() {
         guard let notificationsViewController = notificationsViewController else { return }
         
-        if self.nowPage == .Notifications {
+        if nowPage == .Notifications {
             guard let notificationsView = notificationsViewController as? FooterTabBarDelegate else { return }
             notificationsView.tappedNotifications()
-        }
-        else {
+        } else {
             DispatchQueue.main.async { self.hideView(without: .Notifications) }
-            self.showNotificationsView()
+            showNotificationsView()
         }
     }
     
     public func tappedPost() {
-        self.nowPage = .Post
-        self.move2ViewController(identifier: "post")
+        nowPage = .Post
+        move2ViewController(identifier: "post")
     }
     
     public func tappedFav() {
@@ -348,7 +323,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     }
     
     public func tappedProfile() {
-        guard self.nowPage != .Profile else { return }
+        guard nowPage != .Profile else { return }
         
         Cache.shared.getMe { me in
             guard let me = me else { return }
@@ -356,62 +331,52 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
+    // MARK: NavBar Delegate
     
-    //MARK: NavBar Delegate
     public func tappedLeftNavButton() {
         if nowPage == .PostDetails {
             guard let detailViewController = detailViewController else { return }
             detailViewController.view.removeFromSuperview()
             
-            self.backNavBarStatus() //NavBarの表示を元に戻す
+            backNavBarStatus() // NavBarの表示を元に戻す
         }
     }
     
-    public func tappedRightNavButton() {
-        
-    }
+    public func tappedRightNavButton() {}
     
+    // MARK: Timeline Delegate
     
-    //MARK: Timeline Delegate
     public func tappedCell(item: NoteCell.Model) {
-        self.showPostDetailView(item: item)
+        showPostDetailView(item: item)
     }
     
     public func move2Profile(userId: String) {
-        self.showProfileView(userId: userId)
+        showProfileView(userId: userId)
     }
     
     public func successInitialLoading(_ success: Bool) {
         guard !success else { return }
-
-        self.showNotificationBanner(icon: .Failed, notification: "投稿の取得に失敗しました")
+        
+        showNotificationBanner(icon: .Failed, notification: "投稿の取得に失敗しました")
     }
     
     public func changedStreamState(success: Bool) {
         guard !success else { return }
-        self.showNotificationBanner(icon: .Failed, notification: "Streamingが切断されました")
+        showNotificationBanner(icon: .Failed, notification: "Streamingが切断されました")
     }
     
+    // MARK: PolioPager Delegate
     
-    
-    
-    //MARK: PolioPager Delegate
-    override public func tabItems()-> [TabItem] {
+    public override func tabItems() -> [TabItem] {
         return [TabItem(title: "Home", backgroundColor: UIColor(hex: "ECECEC")),
                 TabItem(title: "Local", backgroundColor: UIColor(hex: "ECECEC")),
                 TabItem(title: "Global", backgroundColor: UIColor(hex: "ECECEC"))]
     }
     
-    override public func viewControllers()-> [UIViewController]
-    {
+    public override func viewControllers() -> [UIViewController] {
         return [search, home, local, global]
     }
-    
-    
-    
-    
 }
-
 
 extension HomeViewController {
     public enum Page {

@@ -8,24 +8,23 @@
 
 import FloatingPanel
 
-
 public class ReactionGenPanel: FloatingPanelController, ReactionGenViewControllerDelegate {
-    override public func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.surfaceView.cornerRadius = 12
-        self.isRemovalInteractionEnabled = true // Optional: Let it removable by a swipe-down
+        surfaceView.cornerRadius = 12
+        isRemovalInteractionEnabled = true // Optional: Let it removable by a swipe-down
     }
     
-    //MARK: ReactionGenViewControllerDelegate
+    // MARK: ReactionGenViewControllerDelegate
+    
     public func scrollUp() {
-        self.move(to: .full, animated: true)
+        move(to: .full, animated: true)
     }
-
 }
 
+// MARK: Layout
 
-//MARK: Layout
 public class MissCatFloatingPanelLayout: FloatingPanelLayout {
     public var initialPosition: FloatingPanelPosition {
         return .half
@@ -50,4 +49,3 @@ public class MissCatFloatingPanelStocksBehavior: FloatingPanelBehavior {
         return true
     }
 }
-

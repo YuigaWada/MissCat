@@ -6,14 +6,13 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import UIKit
-import RxSwift
-import RxCocoa
 import MisskeyKit
+import RxCocoa
+import RxSwift
+import UIKit
 import YanagiText
 
 class ProfileViewModel: ViewModelType {
-    
     struct Input {
         let yanagi: YanagiText
     }
@@ -28,9 +27,7 @@ class ProfileViewModel: ViewModelType {
         let isMe: Bool
     }
     
-    struct State {
-        
-    }
+    struct State {}
     
     private var input: Input
     public lazy var output: Output = .init(bannerImage: self.bannerImage.asDriver(onErrorJustReturn: UIImage()),
@@ -55,7 +52,6 @@ class ProfileViewModel: ViewModelType {
         self.input = input
     }
     
-    
     public func setUserId(_ userId: String, isMe: Bool) {
         model.getUser(userId: userId, completion: handleUserInfo)
         
@@ -67,9 +63,8 @@ class ProfileViewModel: ViewModelType {
         
         // Icon Image
         if let username = user.username, let cachediconImage = Cache.shared.getIcon(username: username) {
-            self.iconImage.accept(cachediconImage)
-        }
-        else if let iconImageUrl = user.avatarUrl {
+            iconImage.accept(cachediconImage)
+        } else if let iconImageUrl = user.avatarUrl {
             iconImageUrl.toUIImage { image in
                 guard let image = image else { return }
                 self.iconImage.accept(image)
@@ -82,8 +77,7 @@ class ProfileViewModel: ViewModelType {
                 let shaped = description.mfmPreTransform().mfmTransform(yanagi: self.input.yanagi)
                 self.intro.accept(shaped ?? .init())
             }
-        }
-        else {
+        } else {
             intro.accept("自己紹介はありません".toAttributedString(family: "Helvetica", size: 11.0) ?? .init())
         }
         
@@ -98,9 +92,7 @@ class ProfileViewModel: ViewModelType {
         // username / displayName
         if let username = user.username {
             self.username.accept("@" + username)
-            self.displayName.accept(user.name ?? username)
+            displayName.accept(user.name ?? username)
         }
-        
     }
-    
 }

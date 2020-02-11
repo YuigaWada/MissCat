@@ -11,9 +11,8 @@ import UIKit
 // cf. https://stackoverflow.com/a/46181337
 // Thanks for Tung Fam
 extension UIImage {
-    
-    func resized(widthUnder: CGFloat)-> UIImage? {
-        return self.resized(withPercentage: widthUnder / self.size.width)
+    func resized(widthUnder: CGFloat) -> UIImage? {
+        return resized(withPercentage: widthUnder / size.width)
     }
     
     func resized(withPercentage percentage: CGFloat) -> UIImage? {
@@ -33,7 +32,7 @@ extension UIImage {
         while imageSizeKB > 5000 { // ! Or use 1024 if you need KB but not kB
             guard let resizedImage = resizingImage.resized(withPercentage: 0.9),
                 let imageData = resizedImage.pngData()
-                else { return nil }
+            else { return nil }
             
             resizingImage = resizedImage
             imageSizeKB = Double(imageData.count) / 1000.0 // ! Or devide for 1024 if you need KB but not kB
@@ -43,12 +42,10 @@ extension UIImage {
     }
 }
 
-
 extension UIImage {
-    
-    //UIImageに対して適切な文字色を返す
+    // UIImageに対して適切な文字色を返す
     var opticalTextColor: UIColor {
-        let ciColor = CIColor(color: self.averageColor)
+        let ciColor = CIColor(color: averageColor)
         
         let red = ciColor.red * 255
         let green = ciColor.green * 255
@@ -59,45 +56,38 @@ extension UIImage {
         
         if target < threshold / 2 {
             return .white
-        }
-        else if target < threshold {
+        } else if target < threshold {
             return .lightGray
-        }
-        else {
+        } else {
             return .black
         }
     }
     
-    
-    
     private var averageColor: UIColor {
-        
-        let rawImageRef : CGImage = self.cgImage!
-        let data : CFData = rawImageRef.dataProvider!.data!
-        let rawPixelData  =  CFDataGetBytePtr(data);
+        let rawImageRef: CGImage = cgImage!
+        let data: CFData = rawImageRef.dataProvider!.data!
+        let rawPixelData = CFDataGetBytePtr(data)
         
         let imageHeight = rawImageRef.height
-        let imageWidth  = rawImageRef.width
+        let imageWidth = rawImageRef.width
         let bytesPerRow = rawImageRef.bytesPerRow
         let stride = rawImageRef.bitsPerPixel / 6
         
         var red = 0
         var green = 0
-        var blue  = 0
+        var blue = 0
         
-        for row in 0...imageHeight {
+        for row in 0 ... imageHeight {
             var rowPtr = rawPixelData! + bytesPerRow * row
-            for _ in 0...imageWidth {
-                red    += Int(rowPtr[0])
-                green  += Int(rowPtr[1])
-                blue   += Int(rowPtr[2])
+            for _ in 0 ... imageWidth {
+                red += Int(rowPtr[0])
+                green += Int(rowPtr[1])
+                blue += Int(rowPtr[2])
                 rowPtr += Int(stride)
             }
         }
         
-        let  f : CGFloat = 1.0 / (255.0 * CGFloat(imageWidth) * CGFloat(imageHeight))
-        return UIColor(red: f * CGFloat(red), green: f * CGFloat(green), blue: f * CGFloat(blue) , alpha: 1.0)
+        let f: CGFloat = 1.0 / (255.0 * CGFloat(imageWidth) * CGFloat(imageHeight))
+        return UIColor(red: f * CGFloat(red), green: f * CGFloat(green), blue: f * CGFloat(blue), alpha: 1.0)
     }
 }
-
-

@@ -6,13 +6,12 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import RxSwift
 import UIKit
 import XLPagerTabStrip
-import RxSwift
 
-fileprivate typealias ViewModel = ProfileViewModel
+private typealias ViewModel = ProfileViewModel
 public class ProfileViewController: ButtonBarPagerTabStripViewController {
-    
     private let disposeBag = DisposeBag()
     private var blurAnimator: UIViewPropertyAnimator?
     
@@ -41,84 +40,83 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     private var childVCs: [TimelineViewController] = []
     
     private var maxScroll: CGFloat {
-        self.pagerTab.layoutIfNeeded()
-        return self.pagerTab.frame.origin.y - self.getSafeAreaSize().height - 10 // 10 = 微調整
+        pagerTab.layoutIfNeeded()
+        return pagerTab.frame.origin.y - getSafeAreaSize().height - 10 // 10 = 微調整
     }
     
+    // MARK: Life Cycle
     
-    //MARK: Life Cycle
-    override public func viewDidLoad() {
-        self.viewModel.setUserId(self.userId ?? "", isMe: self.isMe)
+    public override func viewDidLoad() {
+        viewModel.setUserId(userId ?? "", isMe: isMe)
         
-        self.setupTabStyle()
+        setupTabStyle()
         super.viewDidLoad()
         
-        self.setupComponent()
-        self.setupSkeltonMode()
+        setupComponent()
+        setupSkeltonMode()
         
-        self.binding()
-        self.setBannerBlur()
+        binding()
+        setBannerBlur()
         
-        self.containerScrollView.delegate = self
-        self.containerScrollView.contentInsetAdjustmentBehavior = .never
+        containerScrollView.delegate = self
+        containerScrollView.contentInsetAdjustmentBehavior = .never
     }
-    
     
     public override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         
-        self.layoutIfNeeded(to: [iconImageView])
-        self.layoutIfNeeded(to: childVCs.map{$0.view})
-        self.iconImageView.layer.cornerRadius = self.iconImageView.frame.width / 2
+        layoutIfNeeded(to: [iconImageView])
+        layoutIfNeeded(to: childVCs.map { $0.view })
+        iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
         
-        self.containerHeightContraint.constant = 2 * self.view.frame.height - (self.view.frame.height - self.containerScrollView.frame.origin.y)
+        containerHeightContraint.constant = 2 * view.frame.height - (view.frame.height - containerScrollView.frame.origin.y)
         
-        self.childVCs.forEach { // VCの表示がずれるのを防ぐ(XLPagerTabStripの不具合？？)
-            $0.view.frame = CGRect(x:0, y: 0, width: self.view.frame.width, height: $0.view.frame.height)
+        childVCs.forEach { // VCの表示がずれるのを防ぐ(XLPagerTabStripの不具合？？)
+            $0.view.frame = CGRect(x: 0, y: 0, width: self.view.frame.width, height: $0.view.frame.height)
         }
     }
     
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        if blurAnimator == nil { self.setBlurAnimator() }
+        if blurAnimator == nil { setBlurAnimator() }
     }
     
-    private func getViewModel()-> ViewModel {
-        let input = ViewModel.Input(yanagi: self.introTextView)
+    private func getViewModel() -> ViewModel {
+        let input = ViewModel.Input(yanagi: introTextView)
         return .init(with: input, and: disposeBag)
     }
     
-    
     private func setupComponent() {
-        self.backButton.titleLabel?.font = .awesomeSolid(fontSize: 18.0)
-        self.backButton.alpha = 0.5
-        self.backButton.setTitleColor(.black, for: .normal)
-    
-        self.introTextView.font = UIFont.init(name: "Helvetica",
-                                              size: 11.0)
+        backButton.titleLabel?.font = .awesomeSolid(fontSize: 18.0)
+        backButton.alpha = 0.5
+        backButton.setTitleColor(.black, for: .normal)
+        
+        introTextView.font = UIFont(name: "Helvetica",
+                                    size: 11.0)
     }
     
+    // MARK: Public Methods
     
-    //MARK: Public Methods
     public func setUserId(_ userId: String, isMe: Bool) {
         self.userId = userId
         self.isMe = isMe
     }
     
-    //MARK: Setup
+    // MARK: Setup
+    
     private func setupTabStyle() {
-        self.settings.style.buttonBarBackgroundColor = .white
-        self.settings.style.buttonBarItemBackgroundColor = .white
-        self.settings.style.buttonBarItemTitleColor = .black
-        self.settings.style.selectedBarBackgroundColor = .systemBlue
+        settings.style.buttonBarBackgroundColor = .white
+        settings.style.buttonBarItemBackgroundColor = .white
+        settings.style.buttonBarItemTitleColor = .black
+        settings.style.selectedBarBackgroundColor = .systemBlue
         
-        self.settings.style.buttonBarItemFont = UIFont.systemFont(ofSize: 15)
+        settings.style.buttonBarItemFont = UIFont.systemFont(ofSize: 15)
         
-        self.settings.style.buttonBarHeight = 6
-        self.settings.style.selectedBarHeight = 2
-        self.settings.style.buttonBarMinimumLineSpacing = 15
-        self.settings.style.buttonBarLeftContentInset = 0
-        self.settings.style.buttonBarRightContentInset = 0
+        settings.style.buttonBarHeight = 6
+        settings.style.selectedBarHeight = 2
+        settings.style.buttonBarMinimumLineSpacing = 15
+        settings.style.buttonBarLeftContentInset = 0
+        settings.style.buttonBarRightContentInset = 0
     }
     
     private func binding() {
@@ -134,7 +132,6 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
             self.introTextView.attributedText = attributedText
         }).disposed(by: disposeBag)
         
-        
         output.bannerImage.drive(onNext: { image in
             self.bannerImageView.image = image
             
@@ -145,69 +142,68 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
             })
         }).disposed(by: disposeBag)
         
+        output.displayName.drive(displayName.rx.text).disposed(by: disposeBag)
+        output.username.drive(usernameLabel.rx.text).disposed(by: disposeBag)
         
-        output.displayName.drive(self.displayName.rx.text).disposed(by: disposeBag)
-        output.username.drive(self.usernameLabel.rx.text).disposed(by: disposeBag)
-        
-        self.backButton.rx.tap.subscribe(onNext: {
-            let _ = self.navigationController?.popViewController(animated: true)
+        backButton.rx.tap.subscribe(onNext: {
+            _ = self.navigationController?.popViewController(animated: true)
         }).disposed(by: disposeBag)
         
-        self.backButton.isHidden = output.isMe
+        backButton.isHidden = output.isMe
     }
     
     private func setBannerBlur() {
-        let quaterHeight = self.bannerImageView.frame.height / 4
+        let quaterHeight = bannerImageView.frame.height / 4
         
-        let topColor = UIColor(red:0, green:0, blue:0, alpha:0)
-        let bottomColor = UIColor(red:0, green:0, blue:0, alpha:0.7)
+        let topColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0)
+        let bottomColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.7)
         let gradientLayer: CAGradientLayer = CAGradientLayer()
         
         gradientLayer.colors = [topColor.cgColor, bottomColor.cgColor]
-        gradientLayer.frame =  CGRect(x: 0,
-                                      y: quaterHeight * 2,
-                                      width: self.view.frame.width,
-                                      height: quaterHeight * 2)
+        gradientLayer.frame = CGRect(x: 0,
+                                     y: quaterHeight * 2,
+                                     width: view.frame.width,
+                                     height: quaterHeight * 2)
         
-        self.bannerImageView.layer.addSublayer(gradientLayer)
+        bannerImageView.layer.addSublayer(gradientLayer)
     }
     
     private func setBlurAnimator() {
         let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
         blurView.frame = CGRect(x: 0,
                                 y: 0,
-                                width: self.containerScrollView.frame.width,
-                                height: self.maxScroll + self.getSafeAreaSize().height)
+                                width: containerScrollView.frame.width,
+                                height: maxScroll + getSafeAreaSize().height)
         
         blurView.alpha = 0
-        self.containerScrollView.addSubview(blurView)
+        containerScrollView.addSubview(blurView)
         
-        self.blurAnimator = UIViewPropertyAnimator(duration: 1.0, curve: .easeInOut) {
+        blurAnimator = UIViewPropertyAnimator(duration: 1.0, curve: .easeInOut) {
             blurView.alpha = 1
         }
     }
     
+    // MARK: XLPagerTabStrip
     
-    //MARk: XLPagerTabStrip
     public override func viewControllers(for pagerTabStripController: PagerTabStripViewController) -> [UIViewController] {
-        return self.getChildVC()
+        return getChildVC()
     }
     
+    // MARK: Utilities
     
-    //MARK: Utilities
-    private func getChildVC()-> [UIViewController] {
+    private func getChildVC() -> [UIViewController] {
         guard let userId = userId else { fatalError("Internal Error") }
         
         let userNoteOnly = generateTimelineVC(xlTitle: "Notes", userId: userId, includeReplies: false, onlyFiles: false, scrollable: false)
         let allUserNote = generateTimelineVC(xlTitle: "Notes & Replies", userId: userId, includeReplies: true, onlyFiles: false, scrollable: false)
         let userMedia = generateTimelineVC(xlTitle: "Media", userId: userId, includeReplies: false, onlyFiles: true, scrollable: false)
         
-        self.childVCs = [userNoteOnly, allUserNote, userMedia]
+        childVCs = [userNoteOnly, allUserNote, userMedia]
         
-        return self.childVCs
+        return childVCs
     }
     
-    private func generateTimelineVC(xlTitle: IndicatorInfo, userId: String, includeReplies: Bool, onlyFiles: Bool, scrollable: Bool)-> TimelineViewController {
+    private func generateTimelineVC(xlTitle: IndicatorInfo, userId: String, includeReplies: Bool, onlyFiles: Bool, scrollable: Bool) -> TimelineViewController {
         guard let viewController = self.getViewController(name: "timeline") as? TimelineViewController else { fatalError("Internal Error.") }
         
         viewController.setup(type: .OneUser,
@@ -221,7 +217,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         return viewController
     }
     
-    private func getViewController(name: String)-> UIViewController {
+    private func getViewController(name: String) -> UIViewController {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let viewController = storyboard.instantiateViewController(withIdentifier: name)
         
@@ -229,19 +225,18 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     }
     
     public override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        super.scrollViewWillBeginDragging(scrollView) //XLPagerTabStripの処理
+        super.scrollViewWillBeginDragging(scrollView) // XLPagerTabStripの処理
         
-        self.scrollBegining = scrollView.contentOffset.y
+        scrollBegining = scrollView.contentOffset.y
     }
     
     public override func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        super.scrollViewDidScroll(scrollView) //XLPagerTabStripの処理
+        super.scrollViewDidScroll(scrollView) // XLPagerTabStripの処理
         
-        let scroll = scrollView.contentOffset.y - self.scrollBegining
-        guard childVCs.count > self.currentIndex,
+        let scroll = scrollView.contentOffset.y - scrollBegining
+        guard childVCs.count > currentIndex,
             let blurAnimator = blurAnimator,
             let tlScrollView = childVCs[self.currentIndex].mainTableView else { return }
-        
         
         var needContainerScroll: Bool = true
         // tlScrollViewをスクロール
@@ -250,8 +245,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
                 tlScrollView.contentOffset.y += scroll
                 needContainerScroll = false
             }
-        }
-        else { // scroll < 0 ...
+        } else { // scroll < 0 ...
             let positiveScroll = (-1) * scroll
             if tlScrollView.contentOffset.y >= positiveScroll {
                 tlScrollView.contentOffset.y -= positiveScroll
@@ -259,46 +253,41 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
             }
         }
         
-        //containerScrollViewをスクロール
+        // containerScrollViewをスクロール
         if !needContainerScroll {
-            scrollView.contentOffset.y = self.scrollBegining
-        }
-        else {
+            scrollView.contentOffset.y = scrollBegining
+        } else {
             // スクロールがmaxScrollの半分を超えたあたりから、fractionComplete: 0→1と動かしてanimateさせる
             let blurProportion = containerScrollView.contentOffset.y * 2 / maxScroll - 1
-            self.scrollBegining = scrollView.contentOffset.y
+            scrollBegining = scrollView.contentOffset.y
             
-            //ブラーアニメーションをかける
-            if 0 < blurProportion, blurProportion < 1 {
+            // ブラーアニメーションをかける
+            if blurProportion > 0, blurProportion < 1 {
                 blurAnimator.fractionComplete = blurProportion
-            }
-            else {
+            } else {
                 blurAnimator.fractionComplete = blurProportion <= 0 ? 0 : 1
             }
         }
     }
     
+    // MARK: SkeltonView Utilities
     
-    //MARK: SkeltonView Utilities
     private func setupSkeltonMode() {
-        self.iconImageView.isSkeletonable = true
-        self.introTextView.isSkeletonable = true
-        self.displayName.text = nil
-        self.usernameLabel.text = nil
+        iconImageView.isSkeletonable = true
+        introTextView.isSkeletonable = true
+        displayName.text = nil
+        usernameLabel.text = nil
         
-        self.changeSkeltonState(on: true)
+        changeSkeltonState(on: true)
     }
-    
     
     private func changeSkeltonState(on: Bool) {
         if on {
-            self.iconImageView.showAnimatedGradientSkeleton()
-            self.introTextView.showAnimatedGradientSkeleton()
-        }
-        else {
-            self.iconImageView.hideSkeleton()
-            self.introTextView.hideSkeleton()
+            iconImageView.showAnimatedGradientSkeleton()
+            introTextView.showAnimatedGradientSkeleton()
+        } else {
+            iconImageView.hideSkeleton()
+            introTextView.hideSkeleton()
         }
     }
 }
-

@@ -6,37 +6,34 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import UIKit
 import iOSPhotoEditor
 import RxSwift
+import UIKit
 
 extension UIViewController {
-    
-    func showPhotoEditor(with image: UIImage)-> Observable<UIImage?> {
+    func showPhotoEditor(with image: UIImage) -> Observable<UIImage?> {
         let rxPhotoEditor = RxPhotoEditor()
         
         return rxPhotoEditor.show(on: self, with: image)
     }
     
-    
     fileprivate class RxPhotoEditor: UIViewController, PhotoEditorDelegate {
-        
         private var observer: AnyObserver<UIImage?>?
         private var originalImage: UIImage?
         
-        fileprivate func show(on viewController: UIViewController, with image: UIImage)-> Observable<UIImage?> {
-            self.originalImage = image
+        fileprivate func show(on viewController: UIViewController, with image: UIImage) -> Observable<UIImage?> {
+            originalImage = image
             
-            let photoEditor = PhotoEditorViewController(nibName:"PhotoEditorViewController",bundle: Bundle(for: PhotoEditorViewController.self))
+            let photoEditor = PhotoEditorViewController(nibName: "PhotoEditorViewController", bundle: Bundle(for: PhotoEditorViewController.self))
             
             photoEditor.photoEditorDelegate = self
             photoEditor.image = image
             photoEditor.hiddenControls = [.share]
-            photoEditor.colors = [.red,.blue,.green]
+            photoEditor.colors = [.red, .blue, .green]
             
             viewController.presentOnFullScreen(photoEditor, animated: true, completion: nil)
             
-            return Observable.create() { observer in
+            return Observable.create { observer in
                 self.observer = observer
                 return Disposables.create()
             }
@@ -54,5 +51,4 @@ extension UIViewController {
             observer.onCompleted()
         }
     }
-    
 }

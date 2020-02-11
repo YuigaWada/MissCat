@@ -6,20 +6,19 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import UIKit
 import RxSwift
+import UIKit
 
 extension UIView {
-    
-    func setTapGesture(_ disposeBag: DisposeBag, closure: @escaping ()->()) {
+    func setTapGesture(_ disposeBag: DisposeBag, closure: @escaping () -> Void) {
         let tapGesture = UITapGestureRecognizer()
         
-        tapGesture.rx.event.bind{ _ in
+        tapGesture.rx.event.bind { _ in
             closure()
         }.disposed(by: disposeBag)
         
-        self.isUserInteractionEnabled = true
-        self.addGestureRecognizer(tapGesture)
+        isUserInteractionEnabled = true
+        addGestureRecognizer(tapGesture)
     }
     
     func toImage(with view: UIView) -> UIImage? {
@@ -45,7 +44,7 @@ extension UIView {
     }
     
     func getLabelWidth(text: String, font: UIFont) -> CGFloat {
-        let label:UILabel = UILabel(frame: CGRect(x: 0, y: 0, width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude))
+        let label: UILabel = UILabel(frame: CGRect(x: 0, y: 0, width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude))
         label.numberOfLines = 0
         label.lineBreakMode = NSLineBreakMode.byWordWrapping
         label.font = font

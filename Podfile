@@ -20,4 +20,5 @@ pod 'iOSPhotoEditor', :binary => true
 pod 'YanagiText'
 pod 'XLPagerTabStrip'
 pod 'Down'
+pod 'SwiftFormat/CLI'
 end 

@@ -9,11 +9,10 @@
 import UIKit
 import YanagiText
 
-fileprivate typealias AttachmentDic = Dictionary<NSTextAttachment,YanagiText.Attachment>
+private typealias AttachmentDic = [NSTextAttachment: YanagiText.Attachment]
 // リンクタップのみできるTextView
 class MisskeyTextView: YanagiText {
-    
-    override var attachmentList: Dictionary<NSTextAttachment,YanagiText.Attachment> {
+    override var attachmentList: [NSTextAttachment: YanagiText.Attachment] {
         didSet {
             guard !isRefreshing else { return }
             
@@ -31,10 +30,10 @@ class MisskeyTextView: YanagiText {
     private var currentNoteId: String?
     private var currentUserId: String?
     
-    private var noteAttachmentList: Dictionary<String, AttachmentDic> = [:]
-    private var userAttachmentList: Dictionary<String, AttachmentDic> = [:]
+    private var noteAttachmentList: [String: AttachmentDic] = [:]
+    private var userAttachmentList: [String: AttachmentDic] = [:]
     
-    public var isCached: Bool {  // setされたcurrent〇〇Idについて、Cacheが存在するかどうか
+    public var isCached: Bool { // setされたcurrent〇〇Idについて、Cacheが存在するかどうか
         var count = 0
         
         if let currentNoteId = currentNoteId {
@@ -47,13 +46,13 @@ class MisskeyTextView: YanagiText {
         return count != 0
     }
     
+    // MARK: Ocverride
     
-    //MARK: Ocverride
-    //リンクタップのみ許可
+    // リンクタップのみ許可
     override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
         guard let position = closestPosition(to: point),
             let range = tokenizer.rangeEnclosingPosition(position, with: .character, inDirection: UITextDirection(rawValue: UITextLayoutDirection.left.rawValue)) else {
-                return false
+            return false
         }
         let startIndex = offset(from: beginningOfDocument, to: range.start)
         return attributedText.attribute(.link, at: startIndex, effectiveRange: nil) != nil
@@ -63,45 +62,44 @@ class MisskeyTextView: YanagiText {
         return false
     }
     
-    //MARK: YanagiText Override
+    // MARK: YanagiText Override
+    
 //    override func register(_ nsAttachment: NSTextAttachment, and yanagiAttachment: YanagiText.Attachment) {
 //        super.register(nsAttachment, and: yanagiAttachment)
 //    }
     
-    //MARK: Publics
+    // MARK: Publics
+    
     public func setId(noteId: String? = nil, userId: String? = nil) {
-        self.currentNoteId = noteId
-        self.currentUserId = userId
-
-        self.showMFM()
+        currentNoteId = noteId
+        currentUserId = userId
+        
+        showMFM()
     }
     
     public func showMFM() {
-        self.isRefreshing = true
+        isRefreshing = true
         defer {
-             self.isRefreshing = false
+            self.isRefreshing = false
         }
         
-        self.refreshAttachmentState(isHidden: true)
+        refreshAttachmentState(isHidden: true)
         
-        self.attachmentList = [:]
+        attachmentList = [:]
         if let currentNoteId = currentNoteId, let nextAttachmentList = noteAttachmentList[currentNoteId] {
-            self.attachmentList = nextAttachmentList
-        }
-        else if let currentUserId = currentUserId,  let nextAttachmentList = userAttachmentList[currentUserId] {
-            self.attachmentList = nextAttachmentList
-        }
-        else {
+            attachmentList = nextAttachmentList
+        } else if let currentUserId = currentUserId, let nextAttachmentList = userAttachmentList[currentUserId] {
+            attachmentList = nextAttachmentList
+        } else {
             return
         }
         
-        self.refreshAttachmentState(isHidden: false)
+        refreshAttachmentState(isHidden: false)
     }
     
     private func refreshAttachmentState(isHidden: Bool) {
-        self.attachmentList.forEach { _, attachment in
+        attachmentList.forEach { _, attachment in
             attachment.view.isHidden = isHidden
         }
     }
-    
 }

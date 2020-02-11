@@ -26,6 +26,7 @@ PODS:
   - Starscream (3.1.1)
   - SVGKit (2.1.0):
     - CocoaLumberjack (~> 3.0)
+  - SwiftFormat/CLI (0.43.1)
   - SwiftyGif (5.2.0)
   - XLPagerTabStrip (9.0.0)
   - YanagiText (1.0)
@@ -44,6 +45,7 @@ DEPENDENCIES:
   - SkeletonView
   - Starscream
   - SVGKit (from `https://github.com/SVGKit/SVGKit.git`, branch `3.x`)
+  - SwiftFormat/CLI
   - XLPagerTabStrip
   - YanagiText
 
@@ -64,6 +66,7 @@ SPEC REPOS:
     - RxSwift
     - SkeletonView
     - Starscream
+    - SwiftFormat
     - SwiftyGif
     - XLPagerTabStrip
     - YanagiText
@@ -95,10 +98,11 @@ SPEC CHECKSUMS:
   SkeletonView: bb27c39857e5492136f02ee8a3aa78de55d12ecd
   Starscream: 4bb2f9942274833f7b4d296a55504dcfc7edb7b0
   SVGKit: 8a2fc74258bdb2abb54d3b65f3dd68b0277a9c4d
+  SwiftFormat: e73bae96d000ae07ffb9e3636929ca5e9d5c1efd
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
   YanagiText: 0771fa68142335a34a1f967334ee0e12f36b428b
 
-PODFILE CHECKSUM: 737e0b8e4cd77a395711c32a92b374253748f800
+PODFILE CHECKSUM: c43f65013a8e5fa89182717b1f3f248984bdc642
 
 COCOAPODS: 1.7.1

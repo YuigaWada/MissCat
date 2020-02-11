@@ -6,9 +6,9 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import UIKit
 import RxCocoa
 import RxSwift
+import UIKit
 
 class AttachmentCell: UICollectionViewCell {
     @IBOutlet weak var imageView: UIImageView!
@@ -16,7 +16,7 @@ class AttachmentCell: UICollectionViewCell {
     
     let tapGesture = UITapGestureRecognizer()
     public lazy var tappedImage: Observable<String> = {
-        return Observable.create { observer in
+        Observable.create { observer in
             
             self.imageView.setTapGesture(self.disposeBag) {
                 observer.onNext(self.id)
@@ -27,7 +27,7 @@ class AttachmentCell: UICollectionViewCell {
     }()
     
     public lazy var tappedDiscardButton: Observable<String> = {
-        return Observable.create { observer in
+        Observable.create { observer in
             
             self.discardButton.rx.tap.subscribe { _ in
                 observer.onNext(self.id)
@@ -43,44 +43,38 @@ class AttachmentCell: UICollectionViewCell {
     public override func layoutSubviews() {
         super.layoutSubviews()
         
-        self.setupComponent()
+        setupComponent()
     }
     
     public func setupComponent() {
+        contentMode = .left
         
-        self.contentMode = .left
+        // imageView / discardButtonの上にcontentViewが掛かっているのでUserInteractionをfalseにする
+        contentView.isUserInteractionEnabled = false
         
-         // imageView / discardButtonの上にcontentViewが掛かっているのでUserInteractionをfalseにする
-        self.contentView.isUserInteractionEnabled = false
+        // self.layer
+        layer.cornerRadius = 5
+        imageView.layer.cornerRadius = 5
         
-        //self.layer
-        self.layer.cornerRadius = 5
-        self.imageView.layer.cornerRadius = 5
-        
-        
-        //discardButton
-        self.discardButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
+        // discardButton
+        discardButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
         
         discardButton.layoutIfNeeded()
         discardButton.layer.cornerRadius = discardButton.frame.width / 2
         
-        //imageView
+        // imageView
         guard let image = imageView.image else { return }
-        if self.frame.size.width > image.size.width || self.frame.size.height > image.size.height {
-            self.imageView.contentMode = .scaleAspectFill
+        if frame.size.width > image.size.width || frame.size.height > image.size.height {
+            imageView.contentMode = .scaleAspectFill
+        } else {
+            imageView.contentMode = .center
         }
-        else {
-            self.imageView.contentMode = .center
-        }
-            
     }
     
-    public func setupCell(_ attachment: PostViewController.Attachments)-> AttachmentCell {
-        self.imageView.image = attachment.image
-        self.id = attachment.id
+    public func setupCell(_ attachment: PostViewController.Attachments) -> AttachmentCell {
+        imageView.image = attachment.image
+        id = attachment.id
         
         return self
     }
-    
 }
-

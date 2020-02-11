@@ -6,39 +6,35 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import UIKit
-import RxSwift
 import RxCocoa
+import RxSwift
+import UIKit
 
 class NavBarPageViewController: UIViewController {
-    
     private var animator: UIViewPropertyAnimator?
     private var previousPositionX: CGFloat = 0
     
     private let disposeBag = DisposeBag()
     
-    
-    
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if animator == nil {
-            animator = self.generateAnimator()
+            animator = generateAnimator()
         }
         
         guard let parent = self.parent, let touch = touches.first else { return }
         
-        self.previousPositionX = touch.previousLocation(in: parent.view).x
+        previousPositionX = touch.previousLocation(in: parent.view).x
     }
     
     public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
         
         guard let parent = self.parent, let touch = touches.first, let animator = animator else { return }
-        let dx = touch.location(in: parent.view).x - self.previousPositionX
-        let dxProportion: CGFloat = dx / self.view.frame.width
-        
+        let dx = touch.location(in: parent.view).x - previousPositionX
+        let dxProportion: CGFloat = dx / view.frame.width
         
         let fractionComplete = animator.fractionComplete + dxProportion
-        let frame = self.view.frame
+        let frame = view.frame
         //        if 0 <= fractionComplete, fractionComplete <= 1 {
         //            animator.fractionComplete = fractionComplete
         DispatchQueue.main.async {
@@ -71,10 +67,8 @@ class NavBarPageViewController: UIViewController {
         animator.startAnimation()
     }
     
-    
-    
-    private func generateAnimator()-> UIViewPropertyAnimator {
-        return .init(duration: 1.0, curve: .easeInOut){
+    private func generateAnimator() -> UIViewPropertyAnimator {
+        return .init(duration: 1.0, curve: .easeInOut) {
             let frame = self.view.frame
             
             self.view.frame = CGRect(x: frame.width,
@@ -82,24 +76,22 @@ class NavBarPageViewController: UIViewController {
                                      width: frame.width,
                                      height: frame.height)
         }
-        
     }
 }
 
 extension UIScrollView {
-    override open func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.superview?.touchesBegan(touches, with: event)
+    open override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        superview?.touchesBegan(touches, with: event)
         
         super.touchesBegan(touches, with: event)
     }
     
-    override open func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.superview?.touchesMoved(touches, with: event)
+    open override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        superview?.touchesMoved(touches, with: event)
         super.touchesMoved(touches, with: event)
     }
     
-    override open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.superview?.touchesEnded(touches, with: event)
-        
+    open override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        superview?.touchesEnded(touches, with: event)
     }
 }

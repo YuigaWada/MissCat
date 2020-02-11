@@ -16,8 +16,8 @@ class NotificationBanner: UIView {
     private var reaction: String?
     private var notification: String?
     
+    // MARK: Life Cycle
     
-    //MARK: Life Cycle
     init(frame: CGRect, icon: IconType, reaction: String? = nil, notification: String) {
         super.init(frame: frame)
         
@@ -28,7 +28,6 @@ class NotificationBanner: UIView {
         loadNib()
         setupTimer()
     }
-    
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -44,99 +43,94 @@ class NotificationBanner: UIView {
     
     public func loadNib() {
         if let view = UINib(nibName: "NotificationBanner", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
-            view.frame = self.bounds
-            self.addSubview(view)
+            view.frame = bounds
+            addSubview(view)
         }
     }
     
     public override func layoutSubviews() {
         super.layoutSubviews()
-        self.setupComponents()
+        setupComponents()
         
-        self.adjustFrame()
-        self.setupCornerRadius()
-        self.appear()
+        adjustFrame()
+        setupCornerRadius()
+        appear()
     }
     
+    // MARK: Setup
     
-    
-    //MARK: Setup
     private func setupComponents() {
-        self.iconLabel.font = .awesomeSolid(fontSize: 15.0)
-        self.iconLabel.textColor = .white
+        iconLabel.font = .awesomeSolid(fontSize: 15.0)
+        iconLabel.textColor = .white
         
-        self.mainContentLabel.textColor = .white
+        mainContentLabel.textColor = .white
         
-        self.backgroundColor = .black
-        self.alpha = 0
+        backgroundColor = .black
+        alpha = 0
         
         // Message
-        self.mainContentLabel.text = notification
+        mainContentLabel.text = notification
         
         // Icon
         guard icon != .Loading else {
-            self.addIndicator()
+            addIndicator()
             return
         }
-        
         
         guard icon != .Reaction else {
             guard let reaction = reaction else { return }
             
             let encodedReaction = EmojiHandler.handler.emojiEncoder(note: reaction, externalEmojis: nil)
-            self.iconLabel.attributedText = encodedReaction.toAttributedString(family: "Helvetica", size: 15.0)
+            iconLabel.attributedText = encodedReaction.toAttributedString(family: "Helvetica", size: 15.0)
             return
         }
         
-        
-        self.iconLabel.text = icon.convertAwesome()
+        iconLabel.text = icon.convertAwesome()
     }
     
     private func adjustFrame() {
-        let contentLabelWidth = self.getLabelWidth(text: notification ?? "", font: UIFont.systemFont(ofSize: 12.0))
+        let contentLabelWidth = getLabelWidth(text: notification ?? "", font: UIFont.systemFont(ofSize: 12.0))
         let width = iconLabel.frame.width + contentLabelWidth + 20
         
-        let dWidth = width - self.frame.width
+        let dWidth = width - frame.width
         
-        self.frame = CGRect(x: self.frame.origin.x - dWidth,
-                            y: self.frame.origin.y,
-                            width: width,
-                            height: self.frame.height)
+        frame = CGRect(x: frame.origin.x - dWidth,
+                       y: frame.origin.y,
+                       width: width,
+                       height: frame.height)
     }
     
     private func setupTimer() {
-        let _ = Timer.scheduledTimer(timeInterval: 2,
-                                     target: self,
-                                     selector: #selector(self.disappear),
-                                     userInfo: nil,
-                                     repeats: false)
+        _ = Timer.scheduledTimer(timeInterval: 2,
+                                 target: self,
+                                 selector: #selector(disappear),
+                                 userInfo: nil,
+                                 repeats: false)
     }
     
-    
     private func setupCornerRadius() {
-        self.layer.cornerRadius = 5
-        self.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        self.layer.masksToBounds = true
+        layer.cornerRadius = 5
+        layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        layer.masksToBounds = true
     }
     
     private func addIndicator() {
-        let indicatorCenter = CGPoint(x: (self.mainContentLabel.frame.origin.x - 30) / 2,
-                                      y: self.frame.height / 2)
+        let indicatorCenter = CGPoint(x: (mainContentLabel.frame.origin.x - 30) / 2,
+                                      y: frame.height / 2)
         
         let activityIndicator = UIActivityIndicatorView()
         activityIndicator.center = indicatorCenter
         activityIndicator.hidesWhenStopped = true
         activityIndicator.style = UIActivityIndicatorView.Style.white
         
-        self.addSubview(activityIndicator)
+        addSubview(activityIndicator)
         activityIndicator.startAnimating()
         
-        self.iconLabel.text = nil
+        iconLabel.text = nil
     }
     
+    // MARK: Appear / Disappear
     
-    
-    //MARK: Appear / Disappear
     private func appear() {
         UIView.animate(withDuration: 1.3, animations: {
             self.alpha = 0.8
@@ -146,13 +140,11 @@ class NotificationBanner: UIView {
     @objc private func disappear() {
         UIView.animate(withDuration: 1.3, animations: {
             self.alpha = 0
-        },completion: { _ in
+        }, completion: { _ in
             self.removeFromSuperview()
         })
     }
-    
 }
-
 
 extension NotificationBanner {
     enum IconType {
@@ -166,7 +158,7 @@ extension NotificationBanner {
         case Failed
         case Warning
         
-        func convertAwesome()-> String {
+        func convertAwesome() -> String {
             switch self {
             case .Loading:
                 return ""

@@ -7,18 +7,18 @@
 //
 
 import MisskeyKit
-import RxSwift
 import RxDataSources
+import RxSwift
 
-fileprivate typealias EmojiModel = ReactionGenViewController.EmojiModel
+private typealias EmojiModel = ReactionGenViewController.EmojiModel
 public class ReactionGenModel {
+    // MARK: EMOJIS
     
-    //MARK: EMOJIS
     fileprivate static let fileShared: ReactionGenModel = .init(isFileShared: true) // 事前に詠み込んだ絵文字データを半永続化
     fileprivate class Emojis {
         var currentIndex: Int = 0
         var isLoading: Bool = false
-        var preloaded: [ReactionGenViewController.EmojiModel] = [] //非同期で事前に詠み込んでおく
+        var preloaded: [ReactionGenViewController.EmojiModel] = [] // 非同期で事前に詠み込んでおく
     }
     
     fileprivate class DefaultEmojis: Emojis {
@@ -30,25 +30,28 @@ public class ReactionGenModel {
     }
     
     fileprivate lazy var presetEmojiModels = EmojiModel.getModelArray()
-   
-    //MARK: Private Vars
+    
+    // MARK: Private Vars
+    
     private var defaultEmojis = DefaultEmojis()
     private var customEmojis = CustomEmojis()
     private var maxOnceLoad: Int = 50
-    private var defaultPreset = ["👍","❤️","😆","🤔","😮","🎉","💢","😥","😇","🍮","⭐"]
+    private var defaultPreset = ["👍", "❤️", "😆", "🤔", "😮", "🎉", "💢", "😥", "😇", "🍮", "⭐"]
     
-    //MARK: Life Cycle
+    // MARK: Life Cycle
+    
     init(isFileShared: Bool = false) {
         guard !isFileShared, ReactionGenModel.fileShared.defaultEmojis.currentIndex == 0 else { return }
-        ReactionGenModel.fileShared.setNextDefaultEmojis() //事前に詠み込んでおく
+        ReactionGenModel.fileShared.setNextDefaultEmojis() // 事前に詠み込んでおく
     }
     
-    //MARK: Public Methods
-    //プリセットｎ絵文字を取得
-    public func getPresets()-> [ReactionGenViewController.EmojiModel] {
-        guard EmojiModel.checkSavedArray() else { //UserDefaultsが存在しないならUserDefaultsセットしておく
+    // MARK: Public Methods
+    
+    // プリセットｎ絵文字を取得
+    public func getPresets() -> [ReactionGenViewController.EmojiModel] {
+        guard EmojiModel.checkSavedArray() else { // UserDefaultsが存在しないならUserDefaultsセットしておく
             var emojiModels: [EmojiModel] = []
-            self.defaultPreset.forEach { char in
+            defaultPreset.forEach { char in
                 emojiModels.append(EmojiModel(isDefault: true,
                                               defaultEmoji: char,
                                               customEmojiUrl: nil))
@@ -57,14 +60,14 @@ public class ReactionGenModel {
             return emojiModels
         }
         
-        //UserDefaultsが存在したら...
+        // UserDefaultsが存在したら...
         guard let emojiModels = ReactionGenModel.fileShared.presetEmojiModels else { fatalError("Internal Error.") }
         return emojiModels
     }
     
-    public func getNextDefaultEmojis()-> Observable<[ReactionGenViewController.EmojiModel]> {
+    public func getNextDefaultEmojis() -> Observable<[ReactionGenViewController.EmojiModel]> {
         let dispose = Disposables.create()
-       
+        
         return Observable.create { [unowned self] observer in
             observer.onNext(ReactionGenModel.fileShared.defaultEmojis.preloaded)
             observer.onCompleted()
@@ -73,11 +76,11 @@ public class ReactionGenModel {
             return dispose
         }
     }
-
-    public func getCustomEmojis()-> Observable<ReactionGenViewController.EmojiModel> {
+    
+    public func getCustomEmojis() -> Observable<ReactionGenViewController.EmojiModel> {
         let dispose = Disposables.create()
         
-        return Observable.create { [unowned self] observer in
+        return Observable.create { [unowned self] _ in
             DispatchQueue.global(qos: .default).async {
 //                guard let customEmojis = self.customEmojis else { return dispose }
 //
@@ -93,22 +96,20 @@ public class ReactionGenModel {
         }
     }
     
-    
-    
-    public func registerReaction(noteId: String, reaction: String, completion: @escaping (Bool)->()) {
+    public func registerReaction(noteId: String, reaction: String, completion: @escaping (Bool) -> Void) {
         MisskeyKit.notes.createReaction(noteId: noteId, reaction: reaction) { result, _ in
             completion(result)
         }
     }
     
-    
-    public func cancelReaction(noteId: String, completion: @escaping (Bool)->()) {
+    public func cancelReaction(noteId: String, completion: @escaping (Bool) -> Void) {
         MisskeyKit.notes.deleteReaction(noteId: noteId) { result, _ in
             completion(result)
         }
     }
     
-    //MARK: Private Methods
+    // MARK: Private Methods
+    
     private func setNextDefaultEmojis() {
         guard let emojis = ReactionGenModel.fileShared.defaultEmojis.emojis else { return }
         
@@ -121,27 +122,21 @@ public class ReactionGenModel {
                 guard let char = emoji.char else { return }
                 
                 ReactionGenModel.fileShared.defaultEmojis.preloaded.append(ReactionGenViewController.EmojiModel(isDefault: true,
-                                                                       defaultEmoji: char,
-                                                                       customEmojiUrl: nil))
+                                                                                                                defaultEmoji: char,
+                                                                                                                customEmojiUrl: nil))
             }
-
         }
-        
     }
-    
-    
 }
 
-
-
-//MARK: ReactionGenCell.Model
+// MARK: ReactionGenCell.Model
 
 public extension ReactionGenViewController {
     struct EmojisSection {
         public var items: [Item]
     }
     
-    @objc(EmojiModel)class EmojiModel: NSObject, NSCoding {
+    @objc(EmojiModel) class EmojiModel: NSObject, NSCoding {
         public let isDefault: Bool
         public let defaultEmoji: String?
         public let customEmojiUrl: String?
@@ -152,11 +147,12 @@ public extension ReactionGenViewController {
             self.customEmojiUrl = customEmojiUrl
         }
         
-        //MARK: UserDefaults Init
-        required public init?(coder aDecoder: NSCoder) {
-            self.isDefault = (aDecoder.decodeObject(forKey: "isDefault") ?? true) as! Bool
-            self.defaultEmoji = aDecoder.decodeObject(forKey: "defaultEmoji") as? String
-            self.customEmojiUrl = aDecoder.decodeObject(forKey: "customEmojiUrl") as? String
+        // MARK: UserDefaults Init
+        
+        public required init?(coder aDecoder: NSCoder) {
+            isDefault = (aDecoder.decodeObject(forKey: "isDefault") ?? true) as! Bool
+            defaultEmoji = aDecoder.decodeObject(forKey: "defaultEmoji") as? String
+            customEmojiUrl = aDecoder.decodeObject(forKey: "customEmojiUrl") as? String
         }
         
         public func encode(with aCoder: NSCoder) {
@@ -165,11 +161,11 @@ public extension ReactionGenViewController {
             aCoder.encode(customEmojiUrl, forKey: "customEmojiUrl")
         }
         
+        // MARK: GET/SET
         
-        //MARK: GET/SET
-        public static func getModelArray()-> [EmojiModel]? {
+        public static func getModelArray() -> [EmojiModel]? {
             guard let array = UserDefaults.standard.data(forKey: "[EmojiModel]") else { return nil }
-            return NSKeyedUnarchiver.unarchiveObject(with: array) as? Array<EmojiModel> // nil許容なのでOK
+            return NSKeyedUnarchiver.unarchiveObject(with: array) as? [EmojiModel] // nil許容なのでOK
         }
         
         public static func saveModelArray(with target: [EmojiModel]) {
@@ -178,12 +174,11 @@ public extension ReactionGenViewController {
             UserDefaults.standard.synchronize()
         }
         
-        public static func checkSavedArray()-> Bool { // UserDefaultsに保存されてるかcheck
+        public static func checkSavedArray() -> Bool { // UserDefaultsに保存されてるかcheck
             return UserDefaults.standard.object(forKey: "[EmojiModel]") != nil
         }
     }
 }
-
 
 extension ReactionGenViewController.EmojisSection: SectionModelType {
     public typealias Item = ReactionGenViewController.EmojiModel

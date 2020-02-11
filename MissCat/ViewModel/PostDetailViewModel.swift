@@ -15,30 +15,28 @@ class PostDetailViewModel {
     public var cellCount: Int { return cellsModel.count }
     
     private var hasReactionGenCell: Bool = false
-    public var cellsModel: [NoteCell.Model] = [] //TODO: エラー再発しないか意識しておく
+    public var cellsModel: [NoteCell.Model] = [] // TODO: エラー再発しないか意識しておく
     
     //    private lazy var model = PostDetailModel()
     
+    // MARK: Life Cycle
     
-    //MARK: Life Cycle
-    init(disposeBag: DisposeBag) {
-    }
+    init(disposeBag: DisposeBag) {}
     
     public func setItem(_ item: NoteCell.Model) {
         cellsModel.append(item)
-        self.updateNotes(new: self.cellsModel)
+        updateNotes(new: cellsModel)
     }
     
+    // MARK: Setup
     
-    //MARK: Setup
-
+    // MARK: Utilities
     
-    //MARK: Utilities
     private func updateNotes(new: [NoteCell.Model]) {
-        self.updateNotes(new: [NoteCell.Section(items: new)])
+        updateNotes(new: [NoteCell.Section(items: new)])
     }
     
     private func updateNotes(new: [NoteCell.Section]) {
-        self.notes.onNext(new)
+        notes.onNext(new)
     }
 }

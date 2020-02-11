@@ -8,15 +8,12 @@
 
 import UIKit
 
-
 extension UIFont {
-    
-    static func awesomeSolid(fontSize: CGFloat)-> UIFont? {
-        return UIFont(name: "FontAwesome5Free-Solid",size: fontSize)
+    static func awesomeSolid(fontSize: CGFloat) -> UIFont? {
+        return UIFont(name: "FontAwesome5Free-Solid", size: fontSize)
     }
     
-    static func awesomeRegular(fontSize: CGFloat)-> UIFont? {
-        return UIFont(name: "FontAwesome5Free-Regular",size: fontSize)
+    static func awesomeRegular(fontSize: CGFloat) -> UIFont? {
+        return UIFont(name: "FontAwesome5Free-Regular", size: fontSize)
     }
-    
 }

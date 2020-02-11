@@ -9,10 +9,9 @@
 import MisskeyKit
 
 public class PostModel {
-    
     private var iconImage: UIImage?
     
-    public func getIconImage(completion: @escaping (UIImage?)->()) {
+    public func getIconImage(completion: @escaping (UIImage?) -> Void) {
         if let iconImage = iconImage {
             completion(iconImage)
             return
@@ -21,15 +20,14 @@ public class PostModel {
         Cache.shared.getMe { me in
             guard let me = me, let iconUrl = me.avatarUrl else { completion(nil); return }
             
-            iconUrl.toUIImage{ image in
+            iconUrl.toUIImage { image in
                 self.iconImage = image
                 completion(image)
             }
         }
     }
     
-    
-    public func submitNote(_ note: String?, fileIds: [String]? = nil, completion: @escaping (Bool)->()) {
+    public func submitNote(_ note: String?, fileIds: [String]? = nil, completion: @escaping (Bool) -> Void) {
         guard let note = note else { return }
         
         MisskeyKit.notes.createNote(text: note, fileIds: fileIds ?? []) { post, error in
@@ -38,7 +36,7 @@ public class PostModel {
         }
     }
     
-    public func uploadFile(_ image: UIImage, completion: @escaping (String?)->()) {
+    public func uploadFile(_ image: UIImage, completion: @escaping (String?) -> Void) {
         guard let resizedImage = image.resized(widthUnder: 1024), let targetImage = resizedImage.jpegData(compressionQuality: 0.5) else { return }
         
         MisskeyKit.drive.createFile(fileData: targetImage, fileType: "image/jpeg", name: UUID().uuidString + ".jpeg", isSensitive: false, force: false) { result, error in
@@ -46,7 +44,5 @@ public class PostModel {
             
             completion(result.id)
         }
-        
     }
-    
 }

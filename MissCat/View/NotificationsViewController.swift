@@ -6,10 +6,10 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import UIKit
 import MisskeyKit
-import RxSwift
 import RxDataSources
+import RxSwift
+import UIKit
 
 public typealias NotificationDataSource = RxTableViewSectionedAnimatedDataSource<NotificationCell.Section>
 public class NotificationsViewController: UIViewController, UITableViewDelegate, FooterTabBarDelegate, NoteCellDelegate {
@@ -18,42 +18,39 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
     private var viewModel: NotificationsViewModel?
     private let disposeBag = DisposeBag()
     private var loadCompleted: Bool = true
-    private var cellHeightCache: [String: CGFloat] = [:] //String → identifier
+    private var cellHeightCache: [String: CGFloat] = [:] // String → identifier
     
     public var homeViewController: TimelineDelegate?
     
-    //MARK: Life Cycle
+    // MARK: Life Cycle
+    
     public override func loadView() {
         super.loadView()
-        self.setupTableView()
+        setupTableView()
         
         self.viewModel = .init(disposeBag: disposeBag)
         
         guard let viewModel = viewModel else { return }
-        viewModel.dataSource = self.setupDataSource()
-        self.binding(dataSource: viewModel.dataSource)
+        viewModel.dataSource = setupDataSource()
+        binding(dataSource: viewModel.dataSource)
     }
     
+    // MARK: Setup TableView
     
-    
-    
-    
-    
-    //MARK: Setup TableView
     private func setupTableView() {
-        self.mainTableView.register(UINib(nibName: "NotificationCell", bundle: nil), forCellReuseIdentifier: "NotificationCell")
-        self.mainTableView.register(UINib(nibName: "NoteCell", bundle: nil), forCellReuseIdentifier: "NoteCell")
+        mainTableView.register(UINib(nibName: "NotificationCell", bundle: nil), forCellReuseIdentifier: "NotificationCell")
+        mainTableView.register(UINib(nibName: "NoteCell", bundle: nil), forCellReuseIdentifier: "NoteCell")
         
-        self.mainTableView.rx.setDelegate(self).disposed(by: disposeBag)
+        mainTableView.rx.setDelegate(self).disposed(by: disposeBag)
     }
     
-    
-    private func setupDataSource()-> NotificationDataSource {
+    private func setupDataSource() -> NotificationDataSource {
         let dataSource = NotificationDataSource(
             animationConfiguration: AnimationConfiguration(insertAnimation: .fade, reloadAnimation: .none, deleteAnimation: .fade),
-            configureCell: { dataSource, tableView, indexPath, item in
-                return self.setupCell(dataSource,self.mainTableView,indexPath)
-        })
+            configureCell: { dataSource, _, indexPath, _ in
+                self.setupCell(dataSource, self.mainTableView, indexPath)
+            }
+        )
         
         return dataSource
     }
@@ -62,13 +59,13 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         guard let dataSource = dataSource, let viewModel = viewModel else { return }
         
         viewModel.notes
-            .bind(to: self.mainTableView.rx.items(dataSource: dataSource))
+            .bind(to: mainTableView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)
     }
     
+    // MARK: Setup Cell
     
-    //MARK: Setup Cell
-    private func setupCell(_ dataSource: TableViewSectionedDataSource<NotificationCell.Section>, _ tableView: UITableView, _ indexPath: IndexPath)-> UITableViewCell {
+    private func setupCell(_ dataSource: TableViewSectionedDataSource<NotificationCell.Section>, _ tableView: UITableView, _ indexPath: IndexPath) -> UITableViewCell {
         guard let viewModel = viewModel else { return UITableViewCell() }
         
         let index = indexPath.row
@@ -76,16 +73,15 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         
         if item.type == .reply || item.type == .mention {
             guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell, let replyNote = item.replyNote
-                else { return NoteCell() }
+            else { return NoteCell() }
             
             let shapedCell = noteCell.shapeCell(item: replyNote)
             shapedCell.delegate = self
             
             return shapedCell
-        }
-        else if item.type == .reaction || item.type == .renote {
+        } else if item.type == .reaction || item.type == .renote {
             guard let notificationCell = tableView.dequeueReusableCell(withIdentifier: "NotificationCell", for: indexPath) as? NotificationCell
-                else { return NotificationCell() }
+            else { return NotificationCell() }
             
             //            notificationCell.delegate = self
             return notificationCell.shapeCell(item: item)
@@ -93,9 +89,6 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         
         return UITableViewCell()
     }
-    
-    
-    
     
     //tableViewの負担を軽減するようキャッシュを活用
     public func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -107,7 +100,8 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         guard let height = self.cellHeightCache[id] else { return UITableView.automaticDimension }
         return height
     }
-    //セル選択後すぐに選択をキャンセルする
+    
+    // セル選択後すぐに選択をキャンセルする
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath as IndexPath, animated: true)
     }
@@ -118,62 +112,46 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         let index = indexPath.row
         let id = viewModel.cellsModel[index].identity
         
-        //再計算しないでいいようにセルの高さをキャッシュ
-        if self.cellHeightCache.keys.contains(id) != true {
-            self.cellHeightCache[id] = cell.frame.height
+        // 再計算しないでいいようにセルの高さをキャッシュ
+        if cellHeightCache.keys.contains(id) != true {
+            cellHeightCache[id] = cell.frame.height
         }
         
-        
-        //下位20cellsでセル更新
-        guard self.loadCompleted, viewModel.cellCount - indexPath.row < 10 else { return }
-        
+        // 下位20cellsでセル更新
+        guard loadCompleted, viewModel.cellCount - indexPath.row < 10 else { return }
         
         print("loadUntilNotes...")
-        self.loadCompleted = false
-        viewModel.loadUntilNotification() {
-            self.loadCompleted = true //セル更新最中に多重更新されないように
+        loadCompleted = false
+        viewModel.loadUntilNotification {
+            self.loadCompleted = true // セル更新最中に多重更新されないように
         }
     }
     
-    
-    //MARK: Delegate
+    // MARK: Delegate
     
     public func tappedNotifications() {
-        self.mainTableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+        mainTableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
     }
     
-    public func tappedHome() {
-        
-    }
-    public func tappedPost() {
-        
-    }
+    public func tappedHome() {}
     
-    public func tappedFav() {
-        
-    }
+    public func tappedPost() {}
     
-    public func tappedProfile() {
-        
-    }
+    public func tappedFav() {}
     
+    public func tappedProfile() {}
     
-    //MARK: NoteCellDelegate
-    public func tappedReply() {
-        
-    }
+    // MARK: NoteCellDelegate
     
-    public func tappedRenote() {
-        
-    }
+    public func tappedReply() {}
+    
+    public func tappedRenote() {}
     
     public func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
-        self.presentReactionGen(noteId: noteId, iconUrl: iconUrl, displayName: displayName, username: username, note: note, hasFile: hasFile, hasMarked: hasMarked)
+        presentReactionGen(noteId: noteId, iconUrl: iconUrl, displayName: displayName, username: username, note: note, hasFile: hasFile, hasMarked: hasMarked)
     }
     
-    public func tappedOthers() {
-        
-    }
+    public func tappedOthers() {}
     
     public func tappedLink(text: String) {
         guard let viewModel = viewModel else { return }
@@ -182,22 +160,16 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         
         switch linkType {
         case "URL":
-            self.openLink(url: value)
+            openLink(url: value)
         case "User":
             break
         default:
             break
         }
-        
     }
     
     public func move2Profile(userId: String) {
         guard let homeViewController = self.homeViewController else { return }
         homeViewController.move2Profile(userId: userId)
     }
-    
-    
 }
-
-
-

@@ -6,14 +6,14 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import UIKit
-import WebKit
-import RxSwift
+import Agrume
+import MisskeyKit
 import RxCocoa
 import RxDataSources
-import MisskeyKit
-import Agrume
+import RxSwift
 import SkeletonView
+import UIKit
+import WebKit
 
 public protocol NoteCellDelegate {
     func tappedReply()
@@ -25,12 +25,11 @@ public protocol NoteCellDelegate {
     func move2Profile(userId: String)
 }
 
-fileprivate typealias ViewModel = NoteCellViewModel
+private typealias ViewModel = NoteCellViewModel
 typealias ReactionsDataSource = RxCollectionViewSectionedReloadDataSource<NoteCell.Reaction.Section>
 
 public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICollectionViewDelegate {
-    
-    //MARK: IBOutlet (UIView)
+    // MARK: IBOutlet (UIView)
     
     @IBOutlet weak var nameTextView: MisskeyTextView!
     
@@ -38,9 +37,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     @IBOutlet weak var agoLabel: UILabel!
     
-    
     @IBOutlet weak var noteView: MisskeyTextView!
-    
     
     @IBOutlet weak var fileImageView: UIStackView!
     @IBOutlet weak var fileImageContainer: UIView!
@@ -57,45 +54,39 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     @IBOutlet weak var mainStackView: UIStackView!
     
+    // MARK: IBOutlet (Constraint)
     
-    //MARK: IBOutlet (Constraint)
     @IBOutlet weak var displayName2MainStackConstraint: NSLayoutConstraint!
     @IBOutlet weak var icon2MainStackConstraint: NSLayoutConstraint!
     
+    // MARK: Public Var
     
-    
-    
-    
-    
-    //MARK: Public Var
     public var delegate: NoteCellDelegate?
     public var noteId: String?
     public var userId: String?
     public var iconImageUrl: String?
     
+    // MARK: Private Var
     
-    
-    //MARK: Private Var
     private let disposeBag = DisposeBag()
     private lazy var reactionsDataSource = self.setupDataSource()
     private var viewModel: ViewModel?
     
-    
-    private func getViewModel(item: NoteCell.Model, isDetailMode: Bool)-> ViewModel {
+    private func getViewModel(item: NoteCell.Model, isDetailMode: Bool) -> ViewModel {
         let input: ViewModel.Input = .init(cellModel: item,
                                            isDetailMode: isDetailMode,
-                                           noteYanagi: self.noteView,
-                                           nameYanagi: self.nameTextView)
+                                           noteYanagi: noteView,
+                                           nameYanagi: nameTextView)
         
+        let viewModel = NoteCellViewModel(with: input, and: disposeBag)
         
-        let viewModel = NoteCellViewModel(with: input, and: self.disposeBag)
-        
-        self.binding(viewModel: viewModel)
+        binding(viewModel: viewModel)
         return viewModel
     }
     
-    //MARK: Life Cycle
-    override public func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {
+    // MARK: Life Cycle
+    
+    public override func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {
         contentView.bounds.size = targetSize
         contentView.layoutIfNeeded()
         return super.systemLayoutSizeFitting(targetSize,
@@ -103,15 +94,13 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
                                              verticalFittingPriority: verticalFittingPriority)
     }
     
-    
-    
-    override public func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
-        self.setupComponents()
-        self.setupView()
+        setupComponents()
+        setupView()
     }
     
-    private lazy var setupView: (()->()) = { //必ず一回しか読み込まれない
+    private lazy var setupView: (() -> Void) = { // 必ず一回しか読み込まれない
         self.setupSkeltonMode()
         self.setupProfileGesture() // プロフィールに飛ぶtapgestureを設定する
         self.setupFileView()
@@ -120,72 +109,72 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }()
     
     private func setupCollectionView() {
-        self.reactionsCollectionView.register(UINib(nibName: "ReactionCell", bundle: nil), forCellWithReuseIdentifier: "ReactionCell")
-        self.reactionsCollectionView.rx.setDelegate(self).disposed(by: disposeBag)
-        self.reactionsCollectionView.backgroundColor = .clear
+        reactionsCollectionView.register(UINib(nibName: "ReactionCell", bundle: nil), forCellWithReuseIdentifier: "ReactionCell")
+        reactionsCollectionView.rx.setDelegate(self).disposed(by: disposeBag)
+        reactionsCollectionView.backgroundColor = .clear
         
         let flowLayout = UICollectionViewFlowLayout()
-        let width = self.mainStackView.frame.width / 6
+        let width = mainStackView.frame.width / 6
         
         flowLayout.itemSize = CGSize(width: width, height: 30)
         flowLayout.scrollDirection = .horizontal
         flowLayout.minimumInteritemSpacing = 5
         flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-        self.reactionsCollectionView.collectionViewLayout = flowLayout
+        reactionsCollectionView.collectionViewLayout = flowLayout
     }
     
-    
-    private func setupDataSource()-> ReactionsDataSource {
+    private func setupDataSource() -> ReactionsDataSource {
         let dataSource = ReactionsDataSource(
-            configureCell: { dataSource, collectionView, indexPath, item in
-                return self.setupReactionCell(dataSource, collectionView, indexPath)
-        })
+            configureCell: { dataSource, collectionView, indexPath, _ in
+                self.setupReactionCell(dataSource, collectionView, indexPath)
+            }
+        )
         
         return dataSource
     }
     
-    
-    
     private func setupComponents() {
-        //["FontAwesome5Free-Solid", "FontAwesome5Free-Regular"], ["FontAwesome5Brands-Regular"]
+        // ["FontAwesome5Free-Solid", "FontAwesome5Free-Regular"], ["FontAwesome5Brands-Regular"]
         
-        self.iconView.layoutIfNeeded()
+        iconView.layoutIfNeeded()
         
-        self.iconView.layer.cornerRadius = self.iconView.frame.height / 2
-        self.replyButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
-        self.renoteButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
-        self.reactionButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
-        self.othersButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
+        iconView.layer.cornerRadius = iconView.frame.height / 2
+        replyButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
+        renoteButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
+        reactionButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
+        othersButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
         
-        self.noteView.delegate = self
-        self.noteView.xMargin = 0
-        self.noteView.yMargin = 0
+        noteView.delegate = self
         
+        nameTextView.xMargin = 0
+        nameTextView.yMargin = 0
         
-        if self.fileImageView.arrangedSubviews.count > 0 {
-            self.fileImageContainer.translatesAutoresizingMaskIntoConstraints = false
+        noteView.xMargin = 0
+        noteView.yMargin = 0
+        
+        if fileImageView.arrangedSubviews.count > 0 {
+            fileImageContainer.translatesAutoresizingMaskIntoConstraints = false
         }
     }
-    
     
     private func binding(viewModel: ViewModel) {
         let output = viewModel.output
         
-        output.reactions.drive(self.reactionsCollectionView.rx.items(dataSource: reactionsDataSource)).disposed(by: disposeBag)
+        output.reactions.drive(reactionsCollectionView.rx.items(dataSource: reactionsDataSource)).disposed(by: disposeBag)
         
-        output.ago.drive(self.agoLabel.rx.text).disposed(by: disposeBag)
-        output.name.drive(self.nameTextView.rx.attributedText).disposed(by: disposeBag)
+        output.ago.drive(agoLabel.rx.text).disposed(by: disposeBag)
+        output.name.drive(nameTextView.rx.attributedText).disposed(by: disposeBag)
         
-        output.shapedNote.drive(self.noteView.rx.attributedText).disposed(by: disposeBag)
-        output.iconImage.drive(self.iconView.rx.image).disposed(by: disposeBag)
+        output.shapedNote.drive(noteView.rx.attributedText).disposed(by: disposeBag)
+        output.iconImage.drive(iconView.rx.image).disposed(by: disposeBag)
         
-        output.defaultConstraintActive.drive(self.displayName2MainStackConstraint.rx.active).disposed(by: disposeBag)
-        output.defaultConstraintActive.drive(self.icon2MainStackConstraint.rx.active).disposed(by: disposeBag)
+        output.defaultConstraintActive.drive(displayName2MainStackConstraint.rx.active).disposed(by: disposeBag)
+        output.defaultConstraintActive.drive(icon2MainStackConstraint.rx.active).disposed(by: disposeBag)
         
-        output.backgroundColor.drive(self.rx.backgroundColor).disposed(by: disposeBag)
+        output.backgroundColor.drive(rx.backgroundColor).disposed(by: disposeBag)
         
-        output.isReplyTarget.drive(self.separatorBorder.rx.isHidden).disposed(by: disposeBag)
-        output.isReplyTarget.map{!$0}.drive(self.replyIndicator.rx.isHidden).disposed(by: disposeBag)
+        output.isReplyTarget.drive(separatorBorder.rx.isHidden).disposed(by: disposeBag)
+        output.isReplyTarget.map { !$0 }.drive(replyIndicator.rx.isHidden).disposed(by: disposeBag)
     }
     
     private func setupProfileGesture() {
@@ -201,39 +190,37 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }
     
     private func changeStateFileImage(isHidden: Bool) {
-        self.fileImageView.isHidden = isHidden
-        self.fileImageContainer.isHidden = isHidden
+        fileImageView.isHidden = isHidden
+        fileImageContainer.isHidden = isHidden
     }
     
-    //MARK: Public Methods
+    // MARK: Public Methods
+    
     public func initializeComponent(hasFile: Bool) {
+        delegate = nil
+        noteId = nil
+        userId = nil
         
-        self.delegate = nil
-        self.noteId = nil
-        self.userId = nil
+        backgroundColor = .white
+        separatorBorder.isHidden = false
+        replyIndicator.isHidden = true
         
-        self.backgroundColor = .white
-        self.separatorBorder.isHidden = false
-        self.replyIndicator.isHidden = true
+        nameTextView.attributedText = nil
+        iconView.image = nil
+        agoLabel.text = nil
+        noteView.attributedText = nil
         
-        self.nameTextView.attributedText = nil
-        self.iconView.image = nil
-        self.agoLabel.text = nil
-        self.noteView.attributedText = nil
+        reactionsCollectionView.isHidden = false
         
-        self.reactionsCollectionView.isHidden = false
+        fileImageView.arrangedSubviews.forEach { $0.isHidden = true }
         
-        self.fileImageView.arrangedSubviews.forEach{ $0.isHidden = true }
+        // TODO: reactionを隠す時これつかう → UIView.animate(withDuration: 0.25, animations: { () -> Void in
         
-        //TODO: reactionを隠す時これつかう → UIView.animate(withDuration: 0.25, animations: { () -> Void in
+        changeStateFileImage(isHidden: !hasFile)
         
-        
-        self.changeStateFileImage(isHidden: !hasFile)
-        
-        
-        self.replyButton.setTitle("", for: .normal)
-        self.renoteButton.setTitle("", for: .normal)
-        self.reactionButton.setTitle("", for: .normal)
+        replyButton.setTitle("", for: .normal)
+        renoteButton.setTitle("", for: .normal)
+        reactionButton.setTitle("", for: .normal)
         
         //        self.nameTextView.resetViewString()
         //        self.noteView.resetViewString()
@@ -253,12 +240,12 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             imageView.layer.borderWidth = 1
             imageView.layer.masksToBounds = true
             
-            self.fileImageView.addArrangedSubview(imageView)
+            fileImageView.addArrangedSubview(imageView)
         }
     }
     
     public func setupFileImage(_ image: UIImage, originalImageUrl: String, index: Int) {
-        //self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
+        // self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
         
         DispatchQueue.main.async {
             guard let imageView = self.getFileView(index) else { return }
@@ -271,19 +258,18 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             
             self.imageView?.layoutIfNeeded()
             self.mainStackView.setNeedsLayout()
-            
         }
     }
     
-    private func getFileView(_ index: Int)-> UIImageView? {
-        guard index < self.fileImageView.arrangedSubviews.count,
+    private func getFileView(_ index: Int) -> UIImageView? {
+        guard index < fileImageView.arrangedSubviews.count,
             let imageView = self.fileImageView.arrangedSubviews[index] as? UIImageView else { return nil }
         
         return imageView
     }
     
     private func showImage(url: String) {
-        url.toUIImage{ image in
+        url.toUIImage { image in
             guard let image = image, let delegate = self.delegate as? UIViewController else { return }
             
             DispatchQueue.main.async {
@@ -293,7 +279,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         }
     }
     
-    private func setupReactionCell(_ dataSource: CollectionViewSectionedDataSource<NoteCell.Reaction.Section>, _ collectionView: UICollectionView, _ indexPath: IndexPath)-> UICollectionViewCell {
+    private func setupReactionCell(_ dataSource: CollectionViewSectionedDataSource<NoteCell.Reaction.Section>, _ collectionView: UICollectionView, _ indexPath: IndexPath) -> UICollectionViewCell {
         guard let viewModel = viewModel else { fatalError("Internal Error.") }
         
         let index = indexPath.row
@@ -313,55 +299,49 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         return cell
     }
     
-    
-    
-    
-    public func shapeCell(item: NoteCell.Model, isDetailMode: Bool = false)-> NoteCell {
-        guard !item.isSkelton else { //SkeltonViewを表示する
-            self.changeSkeltonState(on: true)
+    public func shapeCell(item: NoteCell.Model, isDetailMode: Bool = false) -> NoteCell {
+        guard !item.isSkelton else { // SkeltonViewを表示する
+            changeSkeltonState(on: true)
             return self
         }
         
-        //Font
-        self.noteView.font = UIFont.init(name: "Helvetica",
-                                         size: isDetailMode ? 15.0 : 11.0)
-        self.nameTextView.font = UIFont.init(name: "Helvetica",
-                                             size: 10.0)
+        // Font
+        noteView.font = UIFont(name: "Helvetica",
+                               size: isDetailMode ? 15.0 : 11.0)
+        nameTextView.font = UIFont(name: "Helvetica",
+                                   size: 10.0)
         
-        //余白消す
-        self.nameTextView.textContainerInset = .zero
-        self.nameTextView.textContainer.lineFragmentPadding = 0
+        // 余白消す
+        nameTextView.textContainerInset = .zero
+        nameTextView.textContainer.lineFragmentPadding = 0
         
-        
-        self.changeSkeltonState(on: false)
+        changeSkeltonState(on: false)
         
         guard let noteId = item.noteId else { return NoteCell() }
         
-        self.initializeComponent(hasFile: item.files.count > 0) // Initialize because NoteCell is reused by TableView.
+        initializeComponent(hasFile: item.files.count > 0) // Initialize because NoteCell is reused by TableView.
         
-        //main
+        // main
         self.noteId = item.noteId
-        self.userId = item.userId
+        userId = item.userId
         
-        self.noteView.setId(noteId: item.noteId)
-        self.nameTextView.setId(userId: item.userId)
+        noteView.setId(noteId: item.noteId)
+        nameTextView.setId(userId: item.userId)
         
         let viewModel = getViewModel(item: item, isDetailMode: isDetailMode)
         self.viewModel = viewModel
         viewModel.setCell()
         
+        iconImageUrl = viewModel.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
         
-        self.iconImageUrl = viewModel.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
-        
-        //file
+        // file
         if let files = Cache.shared.getFiles(noteId: noteId) {
             for index in 0 ..< files.count {
                 let file = files[index]
-                self.setupFileImage(file.thumbnail, originalImageUrl: file.originalUrl, index: index)
+                setupFileImage(file.thumbnail, originalImageUrl: file.originalUrl, index: index)
             }
-        }
-        else {
-            let files = item.files.filter{ $0 != nil }
+        } else {
+            let files = item.files.filter { $0 != nil }
             let fileCount = files.count
             
             for index in 0 ..< fileCount {
@@ -382,72 +362,65 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             }
         }
         
-        
-        //footer
+        // footer
         let replyCount = item.replyCount != 0 ? String(item.replyCount) : ""
         let renoteCount = item.renoteCount != 0 ? String(item.renoteCount) : ""
         var reactionsCount: Int = 0
-        item.reactions.forEach{
+        item.reactions.forEach {
             guard let reaction = $0 else { return }
             reactionsCount += Int(reaction.count ?? "0") ?? 0
         }
         
-        self.replyButton.setTitle("reply\(replyCount)", for: .normal)
-        self.renoteButton.setTitle("retweet\(renoteCount)", for: .normal)
-        self.reactionButton.setTitle("plus\(reactionsCount == 0 ? "" : String(reactionsCount))", for: .normal)
+        replyButton.setTitle("reply\(replyCount)", for: .normal)
+        renoteButton.setTitle("retweet\(renoteCount)", for: .normal)
+        reactionButton.setTitle("plus\(reactionsCount == 0 ? "" : String(reactionsCount))", for: .normal)
         
-        
-        //reaction
-        
+        // reaction
         
         return self
     }
     
-    //MARK: Utilities
-    private func setupSkeltonMode() {
-        self.separatorBorder.isSkeletonable = true
-        self.replyIndicator.isSkeletonable = true
-        
-        self.nameTextView.isSkeletonable = true
-        self.iconView.isSkeletonable = true
-        self.agoLabel.isSkeletonable = true
-        self.noteView.isSkeletonable = true
-        
-        self.reactionsCollectionView.isSkeletonable = true
-        
-        self.fileImageView.isSkeletonable = true
-    }
+    // MARK: Utilities
     
+    private func setupSkeltonMode() {
+        separatorBorder.isSkeletonable = true
+        replyIndicator.isSkeletonable = true
+        
+        nameTextView.isSkeletonable = true
+        iconView.isSkeletonable = true
+        agoLabel.isSkeletonable = true
+        noteView.isSkeletonable = true
+        
+        reactionsCollectionView.isSkeletonable = true
+        
+        fileImageView.isSkeletonable = true
+    }
     
     private func changeSkeltonState(on: Bool) {
         if on {
-            self.nameTextView.text = nil
-            self.agoLabel.text = nil
-            self.noteView.text = nil
+            nameTextView.text = nil
+            agoLabel.text = nil
+            noteView.text = nil
             
-            self.nameTextView.showAnimatedGradientSkeleton()
-            self.iconView.showAnimatedGradientSkeleton()
+            nameTextView.showAnimatedGradientSkeleton()
+            iconView.showAnimatedGradientSkeleton()
             
-            self.reactionsCollectionView.isHidden = true
+            reactionsCollectionView.isHidden = true
             
-            self.fileImageView.showAnimatedGradientSkeleton()
-        }
-        else {
-            self.nameTextView.hideSkeleton()
-            self.iconView.hideSkeleton()
+            fileImageView.showAnimatedGradientSkeleton()
+        } else {
+            nameTextView.hideSkeleton()
+            iconView.hideSkeleton()
             
-            self.reactionsCollectionView.isHidden = false
+            reactionsCollectionView.isHidden = false
             
-            
-            self.fileImageView.hideSkeleton()
+            fileImageView.hideSkeleton()
         }
     }
     
+    // MARK: DELEGATE
     
-    
-    //MARK: DELEGATE
     public func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-        
         if let delegate = delegate {
             delegate.tappedLink(text: URL.absoluteString)
         }
@@ -460,14 +433,13 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         if isRegister {
             viewModel.registerReaction(noteId: noteId, reaction: reaction)
-        }
-        else {
+        } else {
             viewModel.cancelReaction(noteId: noteId)
         }
     }
     
+    // MARK: IBAction
     
-    //MARK: IBAction
     @IBAction func tappedReply(_ sender: Any) {
         guard let delegate = delegate else { return }
         delegate.tappedReply()
@@ -482,13 +454,12 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         guard let delegate = delegate, let noteId = self.noteId, let viewModel = viewModel else { return }
         
         delegate.tappedReaction(noteId: noteId,
-                                iconUrl: self.iconImageUrl,
+                                iconUrl: iconImageUrl,
                                 displayName: viewModel.output.displayName,
                                 username: viewModel.output.username,
-                                note: self.noteView.attributedText,
+                                note: noteView.attributedText,
                                 hasFile: false,
                                 hasMarked: false)
-        
     }
     
     @IBAction func tappedOthers(_ sender: Any) {
@@ -497,18 +468,15 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }
 }
 
+// MARK: NoteCell.Model
 
-
-
-//MARK: NoteCell.Model
 extension NoteCell {
     public struct Model: IdentifiableType, Equatable {
-        
         var isSkelton = false
         var isReactionGenCell = false
         var isRenoteeCell = false
-        var renotee: String? = nil
-        var baseNoteId: String? = nil // どのcellに対するReactionGenCellなのか
+        var renotee: String?
+        var baseNoteId: String? // どのcellに対するReactionGenCellなのか
         var isReply: Bool = false // リプライであるかどうか
         var isReplyTarget: Bool = false // リプライ先の投稿であるかどうか
         
@@ -536,9 +504,7 @@ extension NoteCell {
             return lhs.identity == rhs.identity
         }
         
-        
-        static func fakeRenoteecell(renotee: String, baseNoteId: String)-> NoteCell.Model {
-            
+        static func fakeRenoteecell(renotee: String, baseNoteId: String) -> NoteCell.Model {
             var renotee = renotee
             if renotee.count > 7 {
                 renotee = String(renotee.prefix(10)) + "..."
@@ -561,11 +527,9 @@ extension NoteCell {
                                   myReaction: nil,
                                   files: [],
                                   emojis: [])
-            
         }
         
-        static func fakeSkeltonCell()-> NoteCell.Model {
-            
+        static func fakeSkeltonCell() -> NoteCell.Model {
             return NoteCell.Model(isSkelton: true,
                                   isRenoteeCell: false,
                                   renotee: "",
@@ -584,9 +548,7 @@ extension NoteCell {
                                   myReaction: nil,
                                   files: [],
                                   emojis: [])
-            
         }
-        
     }
     
     struct Section {
@@ -597,7 +559,6 @@ extension NoteCell {
         typealias Identity = String
         var identity: String
         var noteId: String
-        
         
         var url: String?
         var rawEmoji: String?
@@ -613,10 +574,8 @@ extension NoteCell {
 }
 
 extension NoteCell.Section: AnimatableSectionModelType {
-    
     typealias Item = NoteCell.Model
     typealias Identity = String
-    
     
     public var identity: String {
         return ""
@@ -628,12 +587,9 @@ extension NoteCell.Section: AnimatableSectionModelType {
     }
 }
 
-
 extension NoteCell.Reaction.Section: AnimatableSectionModelType {
-    
     typealias Item = NoteCell.Reaction
     typealias Identity = String
-    
     
     public var identity: String {
         return ""

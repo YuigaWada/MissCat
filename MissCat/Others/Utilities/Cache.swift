@@ -6,29 +6,30 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import UIKit
-import MisskeyKit
 import Foundation
+import MisskeyKit
+import UIKit
 import YanagiText
 
-public typealias Attachments = Dictionary<NSTextAttachment,YanagiText.Attachment>
+public typealias Attachments = [NSTextAttachment: YanagiText.Attachment]
 public class Cache {
+    // MARK: Singleton
     
-    //MARK: Singleton
     public static var shared: Cache = .init()
     
-    //MARK: Var
+    // MARK: Var
+    
     public var notes: [String: Cache.Note] = [:] // key: noteId
     
-    //MEMO: YanagiTextと一対一にキャッシュする
+    // MEMO: YanagiTextと一対一にキャッシュする
     public var users: [String: Cache.User] = [:] // key: username
     public var files: [Cache.File] = []
     public var dataOnUrl: [String: Data] = [:] // key: url
     
     private var me: UserModel?
     
+    // MARK: Save
     
-    //MARK: Save
     public func saveNote(noteId: String, note: NSAttributedString, attachments: Attachments) {
         guard notes[noteId] == nil else { return }
         
@@ -39,8 +40,7 @@ public class Cache {
         if let _ = users[username] {
             users[username]!.displayName = displayName
             users[username]!.yanagiTexts.append(yanagiText)
-        }
-        else {
+        } else {
             users[username] = User(iconImage: nil, displayName: displayName, yanagiTexts: [yanagiText], attachments: attachments)
         }
     }
@@ -48,14 +48,12 @@ public class Cache {
     public func saveIcon(username: String, image: UIImage) {
         if let _ = users[username] {
             users[username]!.iconImage = image
-        }
-        else {
+        } else {
             users[username] = User(iconImage: image, displayName: nil, yanagiTexts: [], attachments: [:])
         }
     }
     
     public func saveFiles(noteId: String, image: UIImage, originalUrl: String) {
-        
         let imageTuple = (thumbnail: image, originalUrl: originalUrl)
         var hasFile: Bool = false
         
@@ -68,7 +66,7 @@ public class Cache {
             return file
         }
         
-        //Cache.Fileが存在しない場合はつくる
+        // Cache.Fileが存在しない場合はつくる
         guard !hasFile else { return }
         let file = File(noteId: noteId, images: [imageTuple])
         
@@ -76,30 +74,28 @@ public class Cache {
     }
     
     public func saveUrlData(_ data: Data, on rawUrl: String) {
-        self.dataOnUrl[rawUrl] = data
+        dataOnUrl[rawUrl] = data
     }
     
+    // MARK: Get
     
-    
-    //MARK: Get
-    public func getNote(noteId: String)-> Cache.Note? {
+    public func getNote(noteId: String) -> Cache.Note? {
         return notes[noteId]
     }
     
-    public func getDisplayName(username: String, on yanagiText: YanagiText)-> (displayName: NSAttributedString?, attachments: Attachments?){
+    public func getDisplayName(username: String, on yanagiText: YanagiText) -> (displayName: NSAttributedString?, attachments: Attachments?) {
         if let user = users[username], user.yanagiTexts.filter({ $0 === yanagiText }).count > 0 {
             return (displayName: users[username]?.displayName, attachments: users[username]?.attachments)
-        }
-        else {
+        } else {
             return (displayName: nil, attachments: nil)
         }
     }
     
-    public func getIcon(username: String)-> UIImage? {
+    public func getIcon(username: String) -> UIImage? {
         return users[username]?.iconImage
     }
     
-    public func getFiles(noteId: String)-> [(thumbnail: UIImage, originalUrl: String)]? {
+    public func getFiles(noteId: String) -> [(thumbnail: UIImage, originalUrl: String)]? {
         let options = files.filter {
             $0.noteId == noteId
         }
@@ -108,7 +104,7 @@ public class Cache {
         return options[0].images
     }
     
-    public func getMe(result callback: @escaping (UserModel?)->()) {
+    public func getMe(result callback: @escaping (UserModel?) -> Void) {
         if let me = me {
             callback(me)
             return
@@ -121,15 +117,13 @@ public class Cache {
             callback(self.me)
         }
     }
-    public func getUrlData(on rawUrl: String)-> Data? {
-        return self.dataOnUrl[rawUrl]
-    }
     
+    public func getUrlData(on rawUrl: String) -> Data? {
+        return dataOnUrl[rawUrl]
+    }
 }
 
-
-
-public extension Cache{
+public extension Cache {
     class UserDefaults {
         public static var shared: Cache.UserDefaults = .init()
         private let latestNotificationKey = "latest-notification"
@@ -141,16 +135,13 @@ public extension Cache{
         public func setLatestNotificationId(_ id: String) {
             Foundation.UserDefaults.standard.set(id, forKey: latestNotificationKey)
         }
-        
     }
 }
-
-
 
 public extension Cache {
     struct Note {
         public var treatedNote: NSAttributedString
-        public var attachments: Dictionary<NSTextAttachment,YanagiText.Attachment> = [:]
+        public var attachments: [NSTextAttachment: YanagiText.Attachment] = [:]
     }
     
     struct User {
@@ -158,7 +149,7 @@ public extension Cache {
         public var displayName: NSAttributedString?
         
         public var yanagiTexts: [YanagiText]
-        public var attachments: Dictionary<NSTextAttachment,YanagiText.Attachment> = [:]
+        public var attachments: [NSTextAttachment: YanagiText.Attachment] = [:]
     }
     
     struct File {

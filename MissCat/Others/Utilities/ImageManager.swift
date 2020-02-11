@@ -6,19 +6,17 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import UIKit
-import RxSwift
-import Photos
 import CloudKit
-
+import Photos
+import RxSwift
+import UIKit
 
 // cf. https://qiita.com/KosukeOhmura/items/b5986bfe9a8b6778ffc8
 // Thanks for @KosukeOhmura.
 public class ImageManager {
-    
     // 権限確認 -> 選択された画像のストリーム
     func pick(on viewController: UIViewController, sourceType: UIImagePickerController.SourceType) -> Observable<Result<UIImage, Error>> {
-        return self.authorizedSourceType(sourceType)
+        return authorizedSourceType(sourceType)
             // 画像選択画面作成
             .map { sourceType -> (picker: UIImagePickerController, delegate: ImagePickerControllerDelegate) in
                 // UIImagePickerControllerとそれにわたすdelegateを生成
@@ -28,21 +26,20 @@ public class ImageManager {
                 picker.allowsEditing = false
                 picker.sourceType = sourceType
                 return (picker, delegate)
-        }
-        .subscribeOn(MainScheduler.instance)
+            }
+            .subscribeOn(MainScheduler.instance)
             // 表示
-            .do(onNext: { [weak viewController] (picker, _) in
+            .do(onNext: { [weak viewController] picker, _ in
                 DispatchQueue.main.async { viewController?.present(picker, animated: true) }
             })
             // 選択された画像のストリームをResultで
             .flatMap { (picker, delegate) -> Observable<Result<UIImage, Error>> in
-                return delegate.pickedResultSubject
+                delegate.pickedResultSubject
                     .do(onNext: { _ in picker.dismiss(animated: true) })
                     .map { result -> Result<UIImage, Error> in
-                        return .success(result)
-                }
-        }
-        
+                        .success(result)
+                    }
+            }
     }
     
     // 承認された画像ソースタイプのストリーム
@@ -64,7 +61,7 @@ public class ImageManager {
                 case .notDetermined:
                     // 未承認 許可を求める
                     PHPhotoLibrary.requestAuthorization { status in
-                        if .authorized == status {
+                        if status == .authorized {
                             observer.onNext(.photoLibrary)
                             observer.onCompleted()
                         }
@@ -116,19 +113,17 @@ public class ImageManager {
 }
 
 // UIImagePickerControllerに渡すデリゲート
-fileprivate final class ImagePickerControllerDelegate: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    
+private final class ImagePickerControllerDelegate: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     // 選択された画像のストリーム
     let pickedResultSubject = PublishSubject<UIImage>()
     
     // MARK: - UIImagePickerControllerDelegate
     
     // 画像が選択された
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
         // 自身のsubjectにイベントを流す
         if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
-            self.pickedResultSubject.onNext(image)
+            pickedResultSubject.onNext(image)
         }
     }
-    
 }

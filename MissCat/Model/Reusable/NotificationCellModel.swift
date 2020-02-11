@@ -7,17 +7,21 @@
 //
 
 import MisskeyKit
+import YanagiText
 
 public class NotificationCellModel {
-    
-    public func shapeNote(identifier: String, note: String, isReply: Bool, externalEmojis: [EmojiModel?]?)-> NSAttributedString? {
-        let replyHeader: NSMutableAttributedString = isReply ? .getReplyMark() : .init() //リプライの場合は先頭にreplyマークつける
-        let attributedText: NSMutableAttributedString = .init(attributedString: replyHeader)
-        let newNote = EmojiHandler.handler.emojiEncoder(note: note, externalEmojis: externalEmojis)
+    public func shapeNote(identifier: String, note: String, cache: Cache.Note?, isReply: Bool, yanagi: YanagiText, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
+        if let cache = cache {
+            // YanagiText内部ではattributedTextがsetされた瞬間attachmentの表示が始まるので先にaddしておく
+            cache.attachments.forEach { nsAttachment, yanagiAttachment in
+                yanagi.addAttachment(ns: nsAttachment, yanagi: yanagiAttachment)
+            }
+            
+            return cache.treatedNote
+        }
+        let replyHeader: NSMutableAttributedString = isReply ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
+        let body = note.mfmTransform(yanagi: yanagi, externalEmojis: externalEmojis) ?? .init()
         
-        attributedText.append(newNote.toAttributedString(family: "Helvetica", size: 11.0) ?? .init())
-        
-        return attributedText
+        return replyHeader + body
     }
-    
 }
