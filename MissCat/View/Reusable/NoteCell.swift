@@ -146,11 +146,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         noteView.delegate = self
         
-        nameTextView.xMargin = 0
-        nameTextView.yMargin = 0
-        
-        noteView.xMargin = 0
-        noteView.yMargin = 0
+        noteView.isUserInteractionEnabled = true
         
         if fileImageView.arrangedSubviews.count > 0 {
             fileImageContainer.translatesAutoresizingMaskIntoConstraints = false
@@ -310,6 +306,12 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
                                size: isDetailMode ? 15.0 : 11.0)
         nameTextView.font = UIFont(name: "Helvetica",
                                    size: 10.0)
+        
+        nameTextView.xMargin = 0
+        nameTextView.yMargin = 0
+        
+        noteView.xMargin = 0
+        noteView.yMargin = 0
         
         // 余白消す
         nameTextView.textContainerInset = .zero

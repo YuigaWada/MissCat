@@ -23,6 +23,7 @@ public class MFMEngine {
     
     // MARK: Static
     
+    // リンク化・md→htmlの変換等、カスタム絵文字以外の処理を行う
     public static func preTransform(string: String) -> String {
         var preTransed = string.hyperLink() // MUST BE DONE BEFORE ANYTHING !
         preTransed = preTransed.hyperUser()

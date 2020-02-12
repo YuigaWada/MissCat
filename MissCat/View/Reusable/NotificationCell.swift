@@ -96,7 +96,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
             // note
             // キャッシュを活用する
             noteView.attributedText = viewModel.shapeNote(identifier: item.identity,
-                                                          note: myNote.note,
+                                                          note: myNote.note.mfmPreTransform(),
                                                           noteId: noteId,
                                                           isReply: myNote.isReply,
                                                           yanagi: noteView,

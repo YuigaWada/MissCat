@@ -95,7 +95,10 @@ class NoteCellViewModel: ViewModelType {
             
             self.ago.accept(item.ago.calculateAgo())
         }
-        name.accept(getDisplayName(item))
+        
+        name.accept(getDisplayName(with: item,
+                                   externalEmojis: item.emojis))
+        
         shapeNote(identifier: item.identity,
                   note: item.note,
                   noteId: item.noteId,
@@ -109,7 +112,6 @@ class NoteCellViewModel: ViewModelType {
     private func shapeNote(identifier: String, note: String, noteId: String?, isReply: Bool, externalEmojis: [EmojiModel?]?, isDetailMode: Bool) {
         guard let noteId = noteId else { return }
         
-        //        DispatchQueue.global(qos: .background).async {
         let cachedNote = Cache.shared.getNote(noteId: noteId) // セルが再利用されるのでキャッシュは中央集権的に
         let hasCachedNote: Bool = cachedNote != nil
         
@@ -126,10 +128,9 @@ class NoteCellViewModel: ViewModelType {
         }
         
         shapedNote.accept(treatedNote)
-        //        }
     }
     
-    private func getDisplayName(_ item: NoteCell.Model) -> NSAttributedString? {
+    private func getDisplayName(with item: NoteCell.Model, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
         let cache = Cache.shared.getDisplayName(username: item.username, on: input.nameYanagi)
         let isCached = cache.displayName != nil
         //        let hasCachedAttachments = self.hasAttachments(on: self.input.nameYanagi, with: cache.attachments)
@@ -141,7 +142,9 @@ class NoteCellViewModel: ViewModelType {
             let name = item.displayName
             let username = " @" + item.username
             
-            let shapedName = name.mfmTransform(yanagi: input.nameYanagi, lineHeight: input.nameYanagi.frame.height * 0.9) ?? .init()
+            let shapedName = name.mfmTransform(yanagi: input.nameYanagi,
+                                               externalEmojis: externalEmojis,
+                                               lineHeight: input.nameYanagi.frame.height * 0.9) ?? .init()
             
             let displayName = shapedName + username.getAttributedString(font: usernameFont,
                                                                         color: .darkGray)

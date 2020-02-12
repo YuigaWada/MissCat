@@ -80,8 +80,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "218"
             endingLineNumber = "218"
-            landmarkName = "TimelineViewModel"
-            landmarkType = "3">
+            landmarkName = "setSkeltonCell()"
+            landmarkType = "7">
             <Locations>
                <Location
                   uuid = "9101FC9F-3ECB-4E6F-94B1-F3EE6DA0BB21 - 143d4712c71a1806"
@@ -158,8 +158,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "219"
             endingLineNumber = "219"
-            landmarkName = "TimelineViewModel"
-            landmarkType = "3">
+            landmarkName = "setSkeltonCell()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -174,7 +174,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "211"
             endingLineNumber = "211"
-            landmarkName = "loadNotes(untilId:completion:)"
+            landmarkName = "tappedReaction(noteId:hasMarked:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -1022,8 +1022,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "163"
             endingLineNumber = "163"
-            landmarkName = "generateEmojiView()"
-            landmarkType = "7">
+            landmarkName = "Model"
+            landmarkType = "14">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -2126,7 +2126,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "133"
             endingLineNumber = "133"
-            landmarkName = "shapeCell(item:)"
+            landmarkName = "generateEmojiView()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -2142,7 +2142,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "136"
             endingLineNumber = "136"
-            landmarkName = "shapeCell(item:)"
+            landmarkName = "generateEmojiView()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -2174,8 +2174,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "64"
             endingLineNumber = "64"
-            landmarkName = "initialize()"
-            landmarkType = "7">
+            landmarkName = "NotificationCell"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -2190,8 +2190,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "164"
             endingLineNumber = "164"
-            landmarkName = "NotificationCell"
-            landmarkType = "3">
+            landmarkName = "Model"
+            landmarkType = "14">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -2446,7 +2446,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "124"
             endingLineNumber = "124"
-            landmarkName = "connectStream()"
+            landmarkName = "removeNoteCell(noteId:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -2926,7 +2926,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "300"
             endingLineNumber = "300"
-            landmarkName = "tappedProfile()"
+            landmarkName = "tappedLink(text:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3038,8 +3038,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "167"
             endingLineNumber = "167"
-            landmarkName = "updateReaction(targetNoteId:reaction:isMyReaction:)"
-            landmarkType = "7">
+            landmarkName = "TimelineViewModel"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -3054,7 +3054,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "173"
             endingLineNumber = "173"
-            landmarkName = "updateReaction(targetNoteId:reaction:isMyReaction:)"
+            landmarkName = "loadUntilNotes(completion:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3070,7 +3070,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "168"
             endingLineNumber = "168"
-            landmarkName = "updateReaction(targetNoteId:reaction:isMyReaction:)"
+            landmarkName = "loadUntilNotes(completion:)"
             landmarkType = "7">
             <Locations>
                <Location
@@ -3260,9 +3260,9 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "201"
-            endingLineNumber = "201"
-            landmarkName = "setupProfileGesture()"
+            startingLineNumber = "197"
+            endingLineNumber = "197"
+            landmarkName = "initializeComponent(hasFile:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3518,7 +3518,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "92"
             endingLineNumber = "92"
-            landmarkName = "setupInitialCell()"
+            landmarkName = "connectStream()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -3534,7 +3534,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "187"
             endingLineNumber = "187"
-            landmarkName = "loadUntilNotes(completion:)"
+            landmarkName = "loadNotes(untilId:completion:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -4174,8 +4174,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "98"
             endingLineNumber = "98"
-            landmarkName = "TimelineViewModel"
-            landmarkType = "3">
+            landmarkName = "connectStream()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4284,9 +4284,9 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "205"
-            endingLineNumber = "205"
-            landmarkName = "setupProfileGesture()"
+            startingLineNumber = "201"
+            endingLineNumber = "201"
+            landmarkName = "initializeComponent(hasFile:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -4414,8 +4414,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "201"
             endingLineNumber = "201"
-            landmarkName = "TimelineViewController"
-            landmarkType = "3">
+            landmarkName = "tableView(_:estimatedHeightForRowAt:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4430,8 +4430,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "228"
             endingLineNumber = "228"
-            landmarkName = "TimelineViewController"
-            landmarkType = "3">
+            landmarkName = "tableView(_:didSelectRowAt:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4524,9 +4524,9 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "192"
-            endingLineNumber = "192"
-            landmarkName = "binding(viewModel:)"
+            startingLineNumber = "188"
+            endingLineNumber = "188"
+            landmarkName = "changeStateFileImage(isHidden:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -4540,9 +4540,9 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "167"
-            endingLineNumber = "167"
-            landmarkName = "setupComponents()"
+            startingLineNumber = "163"
+            endingLineNumber = "163"
+            landmarkName = "binding(viewModel:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -4652,8 +4652,8 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "361"
-            endingLineNumber = "361"
+            startingLineNumber = "363"
+            endingLineNumber = "363"
             landmarkName = "shapeCell(item:isDetailMode:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4734,8 +4734,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "87"
             endingLineNumber = "87"
-            landmarkName = "MFMEngine"
-            landmarkType = "3">
+            landmarkName = "generatePlaneString(string:font:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4798,7 +4798,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "158"
             endingLineNumber = "158"
-            landmarkName = "emojiEncoder(externalEmojis:)"
+            landmarkName = "hyperLink()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -4814,8 +4814,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "159"
             endingLineNumber = "159"
-            landmarkName = "String"
-            landmarkType = "21">
+            landmarkName = "hyperLink()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -4830,8 +4830,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "163"
             endingLineNumber = "163"
-            landmarkName = "String"
-            landmarkType = "21">
+            landmarkName = "hyperLink()"
+            landmarkType = "7">
             <Locations>
                <Location
                   uuid = "EF3CB9D6-E074-419A-A2ED-8B24689A445D - 852d9185678d0511"
@@ -4956,8 +4956,8 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "122"
-            endingLineNumber = "122"
+            startingLineNumber = "121"
+            endingLineNumber = "121"
             landmarkName = "shapeNote(identifier:note:noteId:isReply:externalEmojis:isDetailMode:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -4974,7 +4974,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "93"
             endingLineNumber = "93"
-            landmarkName = "generatePlaneString(string:font:)"
+            landmarkName = "generateAsyncImageView(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5214,8 +5214,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "253"
             endingLineNumber = "253"
-            landmarkName = "tableView(_:willDisplay:forRowAt:)"
-            landmarkType = "7">
+            landmarkName = "TimelineViewController"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -5230,8 +5230,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "254"
             endingLineNumber = "254"
-            landmarkName = "tableView(_:willDisplay:forRowAt:)"
-            landmarkType = "7">
+            landmarkName = "TimelineViewController"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -5262,8 +5262,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "207"
             endingLineNumber = "207"
-            landmarkName = "tableView(_:estimatedHeightForRowAt:)"
-            landmarkType = "7">
+            landmarkName = "TimelineViewController"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -5310,7 +5310,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "181"
             endingLineNumber = "181"
-            landmarkName = "loadUntilNotes(completion:)"
+            landmarkName = "loadNotes(untilId:completion:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5324,8 +5324,10 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "278"
-            endingLineNumber = "278">
+            startingLineNumber = "276"
+            endingLineNumber = "276"
+            landmarkName = "NoteCellViewModel"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -5338,9 +5340,9 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "311"
-            endingLineNumber = "311"
-            landmarkName = "setupReactionCell(_:_:_:)"
+            startingLineNumber = "307"
+            endingLineNumber = "307"
+            landmarkName = "shapeCell(item:isDetailMode:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5354,9 +5356,9 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "304"
-            endingLineNumber = "304"
-            landmarkName = "setupReactionCell(_:_:_:)"
+            startingLineNumber = "300"
+            endingLineNumber = "300"
+            landmarkName = "shapeCell(item:isDetailMode:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5386,9 +5388,9 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "309"
-            endingLineNumber = "309"
-            landmarkName = "setupReactionCell(_:_:_:)"
+            startingLineNumber = "305"
+            endingLineNumber = "305"
+            landmarkName = "shapeCell(item:isDetailMode:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5402,9 +5404,9 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "182"
-            endingLineNumber = "182"
-            landmarkName = "setImage(username:imageRawUrl:)"
+            startingLineNumber = "180"
+            endingLineNumber = "180"
+            landmarkName = "setReactionCell(with:to:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5418,8 +5420,8 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "186"
-            endingLineNumber = "186"
+            startingLineNumber = "184"
+            endingLineNumber = "184"
             landmarkName = "setImage(username:imageRawUrl:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -5434,8 +5436,8 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "189"
-            endingLineNumber = "189"
+            startingLineNumber = "187"
+            endingLineNumber = "187"
             landmarkName = "setImage(username:imageRawUrl:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -5450,9 +5452,9 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "183"
-            endingLineNumber = "183"
-            landmarkName = "setImage(username:imageRawUrl:)"
+            startingLineNumber = "181"
+            endingLineNumber = "181"
+            landmarkName = "setReactionCell(with:to:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5466,9 +5468,9 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "181"
-            endingLineNumber = "181"
-            landmarkName = "setImage(username:imageRawUrl:)"
+            startingLineNumber = "179"
+            endingLineNumber = "179"
+            landmarkName = "setReactionCell(with:to:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5482,9 +5484,9 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "247"
-            endingLineNumber = "247"
-            landmarkName = "hasAttachments(on:with:)"
+            startingLineNumber = "245"
+            endingLineNumber = "245"
+            landmarkName = "getReactions(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5530,9 +5532,9 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "306"
-            endingLineNumber = "306"
-            landmarkName = "setupReactionCell(_:_:_:)"
+            startingLineNumber = "302"
+            endingLineNumber = "302"
+            landmarkName = "shapeCell(item:isDetailMode:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5546,9 +5548,9 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "303"
-            endingLineNumber = "303"
-            landmarkName = "setupReactionCell(_:_:_:)"
+            startingLineNumber = "299"
+            endingLineNumber = "299"
+            landmarkName = "shapeCell(item:isDetailMode:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5562,9 +5564,9 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "317"
-            endingLineNumber = "317"
-            landmarkName = "setupReactionCell(_:_:_:)"
+            startingLineNumber = "319"
+            endingLineNumber = "319"
+            landmarkName = "shapeCell(item:isDetailMode:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5578,9 +5580,9 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "316"
-            endingLineNumber = "316"
-            landmarkName = "setupReactionCell(_:_:_:)"
+            startingLineNumber = "318"
+            endingLineNumber = "318"
+            landmarkName = "shapeCell(item:isDetailMode:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5594,10 +5596,10 @@
             filePath = "MissCat/View/Reusable/NoteCell.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "602"
-            endingLineNumber = "602"
-            landmarkName = "Reaction"
-            landmarkType = "14">
+            startingLineNumber = "604"
+            endingLineNumber = "604"
+            landmarkName = "NoteCell.Reaction.Section"
+            landmarkType = "21">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -5610,8 +5612,10 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "278"
-            endingLineNumber = "278">
+            startingLineNumber = "276"
+            endingLineNumber = "276"
+            landmarkName = "NoteCellViewModel"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -5624,9 +5628,9 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "142"
-            endingLineNumber = "142"
-            landmarkName = "getDisplayName(_:)"
+            startingLineNumber = "140"
+            endingLineNumber = "140"
+            landmarkName = "getDisplayName(with:externalEmojis:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5656,9 +5660,9 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "143"
-            endingLineNumber = "143"
-            landmarkName = "getDisplayName(_:)"
+            startingLineNumber = "141"
+            endingLineNumber = "141"
+            landmarkName = "getDisplayName(with:externalEmojis:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5672,9 +5676,9 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "148"
-            endingLineNumber = "148"
-            landmarkName = "getDisplayName(_:)"
+            startingLineNumber = "146"
+            endingLineNumber = "146"
+            landmarkName = "getDisplayName(with:externalEmojis:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5688,9 +5692,9 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "267"
-            endingLineNumber = "267"
-            landmarkName = "cancelReaction(noteId:)"
+            startingLineNumber = "265"
+            endingLineNumber = "265"
+            landmarkName = "registerReaction(noteId:reaction:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5704,9 +5708,9 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "272"
-            endingLineNumber = "272"
-            landmarkName = "updateReactions(new:)"
+            startingLineNumber = "270"
+            endingLineNumber = "270"
+            landmarkName = "cancelReaction(noteId:)"
             landmarkType = "7">
             <Locations>
                <Location
@@ -5752,9 +5756,9 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "149"
-            endingLineNumber = "149"
-            landmarkName = "getDisplayName(_:)"
+            startingLineNumber = "147"
+            endingLineNumber = "147"
+            landmarkName = "getDisplayName(with:externalEmojis:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5768,9 +5772,9 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "168"
-            endingLineNumber = "168"
-            landmarkName = "setReactionCell(with:to:)"
+            startingLineNumber = "166"
+            endingLineNumber = "166"
+            landmarkName = "getDisplayName(with:externalEmojis:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5784,9 +5788,9 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "141"
-            endingLineNumber = "141"
-            landmarkName = "getDisplayName(_:)"
+            startingLineNumber = "139"
+            endingLineNumber = "139"
+            landmarkName = "getDisplayName(with:externalEmojis:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5800,10 +5804,10 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "273"
-            endingLineNumber = "273"
-            landmarkName = "NoteCellViewModel"
-            landmarkType = "3">
+            startingLineNumber = "271"
+            endingLineNumber = "271"
+            landmarkName = "cancelReaction(noteId:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -5816,10 +5820,10 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "274"
-            endingLineNumber = "274"
-            landmarkName = "updateReactions(new:)"
-            landmarkType = "7">
+            startingLineNumber = "272"
+            endingLineNumber = "272"
+            landmarkName = "NoteCellViewModel"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -5832,8 +5836,8 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "275"
-            endingLineNumber = "275"
+            startingLineNumber = "273"
+            endingLineNumber = "273"
             landmarkName = "updateReactions(new:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -5912,10 +5916,10 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "131"
-            endingLineNumber = "131"
-            landmarkName = "NoteCellViewModel"
-            landmarkType = "3">
+            startingLineNumber = "129"
+            endingLineNumber = "129"
+            landmarkName = "shapeNote(identifier:note:noteId:isReply:externalEmojis:isDetailMode:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -5944,8 +5948,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "16"
             endingLineNumber = "16"
-            landmarkName = "shapeNote(identifier:note:cache:isReply:yanagi:externalEmojis:)"
-            landmarkType = "7">
+            landmarkName = "unknown"
+            landmarkType = "0">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -5958,9 +5962,233 @@
             filePath = "MissCat/ViewModel/Reusable/NoteCellViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "123"
-            endingLineNumber = "123"
+            startingLineNumber = "122"
+            endingLineNumber = "122"
             landmarkName = "shapeNote(identifier:note:noteId:isReply:externalEmojis:isDetailMode:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "740348BB-33AD-4641-AD99-C4D13D550877"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/MFMEngine.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "34"
+            endingLineNumber = "34"
+            landmarkName = "preTransform(string:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "E51A87A1-3D8C-4B3E-B967-EE4A565D85C2"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/MFMEngine.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "54"
+            endingLineNumber = "54"
+            landmarkName = "transform(yanagi:externalEmojis:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "E51A87A1-3D8C-4B3E-B967-EE4A565D85C2 - ab9f28a814aac242"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "MissCat.MFMEngine.transform(yanagi: YanagiText.YanagiText, externalEmojis: Swift.Optional&lt;Swift.Array&lt;Swift.Optional&lt;MisskeyKit.EmojiModel&gt;&gt;&gt;) -&gt; Swift.Optional&lt;__C.NSAttributedString&gt;"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/Others/Utilities/MFMEngine.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "54"
+                  endingLineNumber = "54"
+                  offsetFromSymbolStart = "156">
+               </Location>
+               <Location
+                  uuid = "E51A87A1-3D8C-4B3E-B967-EE4A565D85C2 - f69de07b48fb0e0c"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.String) -&gt; () in MissCat.MFMEngine.transform(yanagi: YanagiText.YanagiText, externalEmojis: Swift.Optional&lt;Swift.Array&lt;Swift.Optional&lt;MisskeyKit.EmojiModel&gt;&gt;&gt;) -&gt; Swift.Optional&lt;__C.NSAttributedString&gt;"
+                  moduleName = "MissCat"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/Others/Utilities/MFMEngine.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "55"
+                  endingLineNumber = "55"
+                  offsetFromSymbolStart = "248">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "CDD4E7CD-DE1F-468D-A864-DAEFBCE102E4"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/TimelineModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "89"
+            endingLineNumber = "89"
+            landmarkName = "loadNotes(with:completion:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "0617C1E4-BA4F-4130-8F9A-C35C462F2B47"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/MFMEngine.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "90"
+            endingLineNumber = "90"
+            landmarkName = "generatePlaneString(string:font:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "BB123F23-46E0-418C-89B3-35D460FC3904"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/MFMEngine.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "59"
+            endingLineNumber = "59"
+            landmarkName = "transform(yanagi:externalEmojis:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "D9198E6D-2D0F-48C4-AA17-4E2A17B11E77"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/MFMEngine.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "60"
+            endingLineNumber = "60"
+            landmarkName = "transform(yanagi:externalEmojis:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "BEB57AA9-AAFC-4D09-B688-32E7816E6730"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/MFMEngine.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "80"
+            endingLineNumber = "80"
+            landmarkName = "transform(yanagi:externalEmojis:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "39072A1E-5A97-46E4-B472-A65603DCE379"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/MFMEngine.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "51"
+            endingLineNumber = "51"
+            landmarkName = "transform(yanagi:externalEmojis:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "179A2052-44EB-4700-B6E9-CE364699F1C0"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Others/Utilities/MFMEngine.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "52"
+            endingLineNumber = "52"
+            landmarkName = "transform(yanagi:externalEmojis:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "6EAF9AA3-BCC9-4C48-A976-DA35FA170188"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/Reusable/NoteCellModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "36"
+            endingLineNumber = "36"
+            landmarkName = "shapeNote(cache:identifier:note:isReply:externalEmojis:isDetailMode:yanagi:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F78BFF11-4251-48F8-8F71-C1AF7A82CD72"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/Model/Reusable/NoteCellModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "28"
+            endingLineNumber = "28"
+            landmarkName = "shapeNote(cache:identifier:note:isReply:externalEmojis:isDetailMode:yanagi:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "6F496793-8A16-4BC5-AE5E-7525D3600E34"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MissCat/View/Reusable/NoteCell.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "426"
+            endingLineNumber = "426"
+            landmarkName = "textView(_:shouldInteractWith:in:interaction:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
