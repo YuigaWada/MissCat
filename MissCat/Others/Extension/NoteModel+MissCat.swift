@@ -9,9 +9,9 @@
 import MisskeyKit
 
 extension NoteModel {
+    fileprivate var post: NoteModel { return self }
+    
     public func getNoteCellModel() -> NoteCell.Model? {
-        let post = self
-        
         guard let user = post.user else { return nil }
         
         var reactions: [Any?] = []
@@ -24,6 +24,7 @@ extension NoteModel {
             reactions.append(emoji)
         }
         
+        let emojis = (post.emojis ?? []) + (user.emojis ?? []) // 絵文字情報を統合する
         var cellModel = NoteCell.Model(noteId: post.id,
                                        iconImageUrl: user.avatarUrl,
                                        userId: user.id,
@@ -36,10 +37,9 @@ extension NoteModel {
                                        reactions: post.reactions ?? [],
                                        myReaction: post.myReaction,
                                        files: post.files ?? [],
-                                       emojis: (post.emojis ?? []).filter { $0 != nil })
+                                       emojis: emojis.filter { $0 != nil })
         
         cellModel.isReply = post.reply != nil
-        
         return cellModel
     }
 }
