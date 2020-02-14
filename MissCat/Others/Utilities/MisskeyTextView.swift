@@ -49,18 +49,22 @@ class MisskeyTextView: YanagiText {
     // MARK: Ocverride
     
     // リンクタップのみ許可
-    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
-        guard let position = closestPosition(to: point),
-            let range = tokenizer.rangeEnclosingPosition(position, with: .character, inDirection: UITextDirection(rawValue: UITextLayoutDirection.left.rawValue)) else {
-            return false
-        }
-        let startIndex = offset(from: beginningOfDocument, to: range.start)
-        return attributedText.attribute(.link, at: startIndex, effectiveRange: nil) != nil
-    }
     
-    override func becomeFirstResponder() -> Bool {
-        return false
-    }
+    // FIX: 下の部分をコメントアウトしないと、XLPagerTabStripでスワイプできなくなる
+    
+//    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+//        guard let position = closestPosition(to: point),
+//            let range = tokenizer.rangeEnclosingPosition(position, with: .character, inDirection: UITextDirection(rawValue: UITextLayoutDirection.left.rawValue)) else {
+//            return false
+//        }
+//        let startIndex = offset(from: beginningOfDocument, to: range.start)
+//        return attributedText.attribute(.link, at: startIndex, effectiveRange: nil) != nil
+//    }
+//
+//    override func becomeFirstResponder() -> Bool {
+//        return false
+//    }
+//
     
     // MARK: YanagiText Override
     
