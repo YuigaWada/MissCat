@@ -119,6 +119,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         flowLayout.minimumInteritemSpacing = 5
         flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         reactionsCollectionView.collectionViewLayout = flowLayout
+        reactionsCollectionView.isHidden = true // リアクションが存在しない場合はHideする
     }
     
     private func setupDataSource() -> ReactionsDataSource {
@@ -158,6 +159,10 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         let output = viewModel.output
         
         output.reactions.drive(reactionsCollectionView.rx.items(dataSource: reactionsDataSource)).disposed(by: disposeBag)
+        output.reactions.map { // リアクションの数が0のときはreactionsCollectionViewを非表示に
+            guard $0.count == 1 else { return true }
+            return $0[0].items.count == 0
+        }.drive(reactionsCollectionView.rx.isHidden).disposed(by: disposeBag)
         
         output.ago.drive(agoLabel.rx.text).disposed(by: disposeBag)
         output.name.drive(nameTextView.rx.attributedText).disposed(by: disposeBag)
