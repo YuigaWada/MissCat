@@ -83,9 +83,7 @@ class TimelineModel {
                 
                 posts.forEach { post in
                     // Renote
-                    if let renoteId = post.renoteId, let user = post.user, let _renote = post.renote {
-                        let renote = _renote.mfmPreTransform()
-                        
+                    if let renoteId = post.renoteId, let user = post.user, let renote = post.renote {
                         let renoteeCellModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "", baseNoteId: renoteId)
                         observer.onNext(renoteeCellModel)
                         
@@ -188,11 +186,9 @@ class TimelineModel {
             }
         }
         
-        guard let post = (response as? NoteModel)?.mfmPreTransform() else { return }
+        guard let post = response as? NoteModel else { return }
         
-        if let renoteId = post.renoteId, let user = post.user, let _renote = post.renote {
-            let renote = _renote.mfmPreTransform()
-            
+        if let renoteId = post.renoteId, let user = post.user, let renote = post.renote {
             guard let cellModel = renote.getNoteCellModel() else { return }
             observer.onNext(cellModel)
             
