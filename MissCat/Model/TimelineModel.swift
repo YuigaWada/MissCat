@@ -73,7 +73,7 @@ class TimelineModel {
     
     // MARK: REST API
     
-    public func loadNotes(with option: LoadOption, completion: (() -> Void)? = nil) -> Observable<NoteCell.Model> {
+    public func loadNotes(with option: LoadOption) -> Observable<NoteCell.Model> {
         let dispose = Disposables.create()
         
         return Observable.create { [unowned self] observer in
@@ -82,9 +82,6 @@ class TimelineModel {
                 guard let posts = posts, error == nil else { /* Error */ print(error ?? "error is nil"); return }
                 
                 posts.map { $0.mfmPreTransform() }.forEach { post in
-                    print("post!\(posts.count)")
-                    dump(post)
-                    
                     // Renote
                     if let renoteId = post.renoteId, let user = post.user, let _renote = post.renote {
                         let renote = _renote.mfmPreTransform()
@@ -108,7 +105,7 @@ class TimelineModel {
                     //                self.updateNotes(new: self.cellsModel)
                 }
                 
-                if let completion = completion { completion() }
+                observer.onCompleted()
             }
             
             switch option.type {

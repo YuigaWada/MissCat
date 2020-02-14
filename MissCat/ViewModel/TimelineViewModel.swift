@@ -168,10 +168,10 @@ class TimelineViewModel: ViewModelType {
     public func loadUntilNotes(completion: (() -> Void)? = nil) {
         guard let untilId = self.cellsModel[self.cellsModel.count - 1].noteId else { return }
         
-//        self.loadNotes(untilId: untilId) {
-//            self.updateNotes(new: self.cellsModel)
-//            if let completion = completion { completion() }
-//        }
+        loadNotes(untilId: untilId) {
+            self.updateNotes(new: self.cellsModel)
+            if let completion = completion { completion() }
+        }
     }
     
     // 投稿をfetchしてくる
@@ -183,17 +183,13 @@ class TimelineViewModel: ViewModelType {
                                       onlyFiles: input.onlyFiles,
                                       listId: input.listId)
         
-        model.loadNotes(with: option) {
+        model.loadNotes(with: option).subscribe(onNext: { cellModel in
+            self.cellsModel.append(cellModel)
+        }, onCompleted: {
             self.initialNoteIds = self.model.initialNoteIds
             if let completion = completion { completion() }
-        }
-        .subscribe(onNext: { cellModel in
-            
-            self.cellsModel.append(cellModel)
-//            self.updateNotes(new: self.cellsModel)
-            
-        }, onCompleted: nil, onDisposed: nil)
-        .disposed(by: disposeBag)
+        }, onDisposed: nil)
+            .disposed(by: disposeBag)
     }
     
     func getCell(cell itemCell: NoteCell, item: NoteCell.Model) -> NoteCell {
