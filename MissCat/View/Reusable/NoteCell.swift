@@ -96,8 +96,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     public override func layoutSubviews() {
         super.layoutSubviews()
-        setupComponents()
         setupView()
+        setupComponents()
     }
     
     private lazy var setupView: (() -> Void) = { // 必ず一回しか読み込まれない
@@ -109,8 +109,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }()
     
     private func setupCollectionView() {
-        reactionsCollectionView.register(UINib(nibName: "ReactionCell", bundle: nil), forCellWithReuseIdentifier: "ReactionCell")
-        reactionsCollectionView.rx.setDelegate(self).disposed(by: disposeBag)
         reactionsCollectionView.backgroundColor = .clear
         
         let flowLayout = UICollectionViewFlowLayout()
@@ -124,6 +122,9 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }
     
     private func setupDataSource() -> ReactionsDataSource {
+        reactionsCollectionView.register(UINib(nibName: "ReactionCell", bundle: nil), forCellWithReuseIdentifier: "ReactionCell")
+        reactionsCollectionView.rx.setDelegate(self).disposed(by: disposeBag)
+        
         let dataSource = ReactionsDataSource(
             configureCell: { dataSource, collectionView, indexPath, _ in
                 self.setupReactionCell(dataSource, collectionView, indexPath)
