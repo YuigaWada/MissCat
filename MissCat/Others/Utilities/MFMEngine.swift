@@ -8,6 +8,7 @@
 
 import Gifu
 import MisskeyKit
+import SVGKit
 import UIKit
 import YanagiText
 
@@ -93,6 +94,7 @@ public class MFMEngine {
     private func generateAsyncImageView(_ imageUrl: String) -> UIImageView {
         let imageSize = lineHeight
         let imageView = GIFImageView(frame: CGRect(x: 0, y: 0, width: 200, height: 100))
+        
         let isGif = imageUrl.ext == "gif"
         
         imageView.backgroundColor = .lightGray
@@ -111,10 +113,17 @@ public class MFMEngine {
         }
         
         let setUIImage = { (data: Data) in // Gif以外はUIImageが捌く
-            guard let image = UIImage(data: data) else { return }
-            DispatchQueue.main.async {
-                imageView.backgroundColor = .clear
-                imageView.image = image
+            if let image = UIImage(data: data) {
+                DispatchQueue.main.async {
+                    imageView.backgroundColor = .clear
+                    imageView.image = image
+                }
+            } else { // Type: SVG
+                guard let svgImage = SVGKImage(data: data) else { return }
+                DispatchQueue.main.async {
+                    imageView.backgroundColor = .clear
+                    imageView.image = svgImage.uiImage
+                }
             }
         }
         
