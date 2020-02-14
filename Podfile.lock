@@ -1,5 +1,5 @@
 PODS:
-  - Agrume (5.3.6):
+  - Agrume (5.6.4):
     - SwiftyGif
   - CocoaLumberjack (3.6.0):
     - CocoaLumberjack/Core (= 3.6.0)
@@ -82,7 +82,7 @@ CHECKOUT OPTIONS:
     :git: https://github.com/SVGKit/SVGKit.git
 
 SPEC CHECKSUMS:
-  Agrume: 32400f14de8864d666aeb70a20192a0c48695c22
+  Agrume: bee63cb2ece28830c5664f8abbc8903414bd7f72
   CocoaLumberjack: 78b0c238666f4f58db069738ec176f4519557516
   Differentiator: 886080237d9f87f322641dedbc5be257061b0602
   Down: 1cdbca4963b542d0ef34ebb3e10ff48382bdf761

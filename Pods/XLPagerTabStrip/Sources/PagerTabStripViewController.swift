@@ -109,6 +109,11 @@ open class PagerTabStripViewController: UIViewController, UIScrollViewDelegate {
         childController.view.autoresizingMask = [.flexibleHeight, .flexibleWidth]
         containerView.addSubview(childController.view)
         childController.didMove(toParent: self)
+        
+        viewControllers.forEach {
+            addChild($0)
+            containerView.addSubview($0.view)
+        }
     }
 
     open override func viewWillAppear(_ animated: Bool) {
