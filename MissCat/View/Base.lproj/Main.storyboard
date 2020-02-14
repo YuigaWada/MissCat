@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="702-tm-J9B">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15705" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="702-tm-J9B">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="collection view cell content view" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -394,7 +394,7 @@
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fb3-8M-JPG" userLabel="ScrolledTargetView">
                                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                                         <subviews>
-                                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="BPw-nG-rsB">
+                                            <imageView clipsSubviews="YES" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="BPw-nG-rsB">
                                                 <rect key="frame" x="0.0" y="0.0" width="414" height="147.5"/>
                                             </imageView>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MTL-6d-wBR" userLabel="NameTag">
@@ -462,7 +462,7 @@
                                                     </collectionViewCell>
                                                 </cells>
                                             </collectionView>
-                                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="rGP-dP-dhq">
+                                            <imageView clipsSubviews="YES" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="rGP-dP-dhq">
                                                 <rect key="frame" x="20" y="95" width="78" height="78"/>
                                                 <constraints>
                                                     <constraint firstAttribute="width" secondItem="rGP-dP-dhq" secondAttribute="height" multiplier="1:1" id="kgB-c8-ez8"/>
@@ -522,6 +522,7 @@
                             <constraint firstItem="BPw-nG-rsB" firstAttribute="top" secondItem="8NI-ap-XjW" secondAttribute="top" constant="-44" id="AcN-er-Rvb"/>
                             <constraint firstItem="8jE-Ja-YCD" firstAttribute="leading" secondItem="RHs-Dg-Akd" secondAttribute="leading" id="Br0-bo-UU1"/>
                             <constraint firstItem="Ck2-Ts-76E" firstAttribute="height" secondItem="Cqx-A3-0fq" secondAttribute="height" id="Ebe-nu-tTk"/>
+                            <constraint firstItem="Ck2-Ts-76E" firstAttribute="width" secondItem="Cqx-A3-0fq" secondAttribute="width" id="I3n-Ng-O4m"/>
                             <constraint firstAttribute="bottom" secondItem="8jE-Ja-YCD" secondAttribute="bottom" id="OjM-dj-B4N"/>
                             <constraint firstItem="rGP-dP-dhq" firstAttribute="height" secondItem="Cqx-A3-0fq" secondAttribute="height" multiplier="0.0870536" id="bA3-JG-3Zm"/>
                             <constraint firstItem="fb3-8M-JPG" firstAttribute="height" secondItem="Cqx-A3-0fq" secondAttribute="height" id="gXt-6X-TgP"/>

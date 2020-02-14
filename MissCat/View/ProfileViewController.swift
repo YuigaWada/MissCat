@@ -70,10 +70,6 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
         
         containerHeightContraint.constant = 2 * view.frame.height - (view.frame.height - containerScrollView.frame.origin.y)
-        
-        childVCs.forEach { // VCの表示がずれるのを防ぐ(XLPagerTabStripの不具合？？)
-            $0.view.frame = CGRect(x: 0, y: 0, width: self.view.frame.width, height: $0.view.frame.height)
-        }
     }
     
     public override func viewDidAppear(_ animated: Bool) {
@@ -176,6 +172,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
                                 height: maxScroll + getSafeAreaSize().height)
         
         blurView.alpha = 0
+        blurView.isUserInteractionEnabled = true
         containerScrollView.addSubview(blurView)
         
         blurAnimator = UIViewPropertyAnimator(duration: 1.0, curve: .easeInOut) {
@@ -194,11 +191,29 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     private func getChildVC() -> [UIViewController] {
         guard let userId = userId else { fatalError("Internal Error") }
         
-        let userNoteOnly = generateTimelineVC(xlTitle: "Notes", userId: userId, includeReplies: false, onlyFiles: false, scrollable: false)
-        let allUserNote = generateTimelineVC(xlTitle: "Notes & Replies", userId: userId, includeReplies: true, onlyFiles: false, scrollable: false)
-        let userMedia = generateTimelineVC(xlTitle: "Media", userId: userId, includeReplies: false, onlyFiles: true, scrollable: false)
+        let userNoteOnly = generateTimelineVC(xlTitle: "Notes",
+                                              userId: userId,
+                                              includeReplies: false,
+                                              onlyFiles: false,
+                                              scrollable: false)
+        
+        let allUserNote = generateTimelineVC(xlTitle: "Notes & Replies",
+                                             userId: userId,
+                                             includeReplies: true,
+                                             onlyFiles: false,
+                                             scrollable: false)
+        
+        let userMedia = generateTimelineVC(xlTitle: "Media",
+                                           userId: userId,
+                                           includeReplies: false,
+                                           onlyFiles: true,
+                                           scrollable: false)
         
         childVCs = [userNoteOnly, allUserNote, userMedia]
+        
+        childVCs.forEach { // VCの表示がずれるのを防ぐ(XLPagerTabStripの不具合？？)
+            $0.view.frame = CGRect(x: 0, y: 0, width: self.view.frame.width, height: $0.view.frame.height)
+        }
         
         return childVCs
     }
@@ -262,11 +277,11 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
             scrollBegining = scrollView.contentOffset.y
             
             // ブラーアニメーションをかける
-            if blurProportion > 0, blurProportion < 1 {
-                blurAnimator.fractionComplete = blurProportion
-            } else {
-                blurAnimator.fractionComplete = blurProportion <= 0 ? 0 : 1
-            }
+//            if blurProportion > 0, blurProportion < 1 {
+//                blurAnimator.fractionComplete = blurProportion
+//            } else {
+//                blurAnimator.fractionComplete = blurProportion <= 0 ? 0 : 1
+//            }
         }
     }
     
