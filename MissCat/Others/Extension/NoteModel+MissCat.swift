@@ -30,7 +30,7 @@ extension NoteModel {
                                        userId: user.id,
                                        displayName: displayName ?? "",
                                        username: user.username ?? "",
-                                       note: post.text ?? "",
+                                       note: post.text?.mfmPreTransform() ?? "", // MFMEngineを通して加工の前処理をしておく
                                        ago: post.createdAt!,
                                        replyCount: post.repliesCount ?? 0,
                                        renoteCount: post.renoteCount ?? 0,
