@@ -46,6 +46,7 @@ class TimelineModel {
         let includeReplies: Bool?
         let onlyFiles: Bool?
         let listId: String?
+        let loadLimit: Int
     }
     
     struct UpdateReaction {
@@ -107,24 +108,36 @@ class TimelineModel {
             }
             
             switch option.type {
-            case .Home: MisskeyKit.notes.getTimeline(limit: 40, untilId: option.untilId ?? "", completion: handleResult)
+            case .Home:
+                MisskeyKit.notes.getTimeline(limit: option.loadLimit,
+                                             untilId: option.untilId ?? "",
+                                             completion: handleResult)
                 
-            case .Local: MisskeyKit.notes.getLocalTimeline(limit: 40, untilId: option.untilId ?? "", completion: handleResult)
+            case .Local:
+                MisskeyKit.notes.getLocalTimeline(limit: option.loadLimit,
+                                                  untilId: option.untilId ?? "",
+                                                  completion: handleResult)
                 
-            case .Global: MisskeyKit.notes.getGlobalTimeline(limit: 40, untilId: option.untilId ?? "", completion: handleResult)
+            case .Global:
+                MisskeyKit.notes.getGlobalTimeline(limit: option.loadLimit,
+                                                   untilId: option.untilId ?? "",
+                                                   completion: handleResult)
                 
             case .OneUser:
                 guard let userId = option.userId else { return dispose }
                 MisskeyKit.notes.getUserNotes(includeReplies: option.includeReplies ?? true,
                                               userId: userId,
                                               withFiles: option.onlyFiles ?? false,
-                                              limit: 40,
+                                              limit: option.loadLimit,
                                               untilId: option.untilId ?? "",
                                               completion: handleResult)
                 
             case .UserList:
                 guard let listId = option.listId else { return dispose }
-                MisskeyKit.notes.getUserListTimeline(listId: listId, limit: 40, untilId: option.untilId ?? "", completion: handleResult)
+                MisskeyKit.notes.getUserListTimeline(listId: listId,
+                                                     limit: option.loadLimit,
+                                                     untilId: option.untilId ?? "",
+                                                     completion: handleResult)
             }
             
             return dispose

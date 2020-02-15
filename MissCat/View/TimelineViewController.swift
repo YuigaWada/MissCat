@@ -53,13 +53,15 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
                       listId: String? = nil,
                       withNavBar: Bool = true,
                       scrollable: Bool = true,
+                      loadLimit: Int = 40,
                       xlTitle: IndicatorInfo? = nil) {
         let input = ViewModel.Input(dataSource: dataSource,
                                     type: type,
                                     includeReplies: includeReplies,
                                     onlyFiles: onlyFiles,
                                     userId: userId,
-                                    listId: listId)
+                                    listId: listId,
+                                    loadLimit: loadLimit)
         
         viewModel = ViewModel(with: input, and: disposeBag)
         streamConnecting = type.needsStreaming

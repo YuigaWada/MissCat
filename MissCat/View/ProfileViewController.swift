@@ -195,19 +195,22 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
                                               userId: userId,
                                               includeReplies: false,
                                               onlyFiles: false,
-                                              scrollable: false)
+                                              scrollable: false,
+                                              loadLimit: 10)
         
         let allUserNote = generateTimelineVC(xlTitle: "Notes & Replies",
                                              userId: userId,
                                              includeReplies: true,
                                              onlyFiles: false,
-                                             scrollable: false)
+                                             scrollable: false,
+                                             loadLimit: 10)
         
         let userMedia = generateTimelineVC(xlTitle: "Media",
                                            userId: userId,
                                            includeReplies: false,
                                            onlyFiles: true,
-                                           scrollable: false)
+                                           scrollable: false,
+                                           loadLimit: 10)
         
         childVCs = [userNoteOnly, allUserNote, userMedia]
         
@@ -218,7 +221,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         return childVCs
     }
     
-    private func generateTimelineVC(xlTitle: IndicatorInfo, userId: String, includeReplies: Bool, onlyFiles: Bool, scrollable: Bool) -> TimelineViewController {
+    private func generateTimelineVC(xlTitle: IndicatorInfo, userId: String, includeReplies: Bool, onlyFiles: Bool, scrollable: Bool, loadLimit: Int) -> TimelineViewController {
         guard let viewController = self.getViewController(name: "timeline") as? TimelineViewController else { fatalError("Internal Error.") }
         
         viewController.setup(type: .OneUser,
@@ -227,6 +230,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
                              userId: userId,
                              withNavBar: false,
                              scrollable: scrollable,
+                             loadLimit: loadLimit,
                              xlTitle: xlTitle)
         
         return viewController

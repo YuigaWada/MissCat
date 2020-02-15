@@ -23,6 +23,7 @@ class TimelineViewModel: ViewModelType {
         let onlyFiles: Bool?
         let userId: String?
         let listId: String?
+        let loadLimit: Int
     }
     
     struct Output {
@@ -181,7 +182,8 @@ class TimelineViewModel: ViewModelType {
                                       untilId: untilId,
                                       includeReplies: input.includeReplies,
                                       onlyFiles: input.onlyFiles,
-                                      listId: input.listId)
+                                      listId: input.listId,
+                                      loadLimit: input.loadLimit)
         
         model.loadNotes(with: option).subscribe(onNext: { cellModel in
             self.cellsModel.append(cellModel)
