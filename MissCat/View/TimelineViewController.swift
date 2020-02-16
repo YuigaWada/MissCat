@@ -47,6 +47,17 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     
     // MARK: Life Cycle
     
+    /// 外部からTimelineViewContollerのインスタンスを生成する場合、このメソッドを通じて適切なパラメータをセットしていく
+    /// - Parameters:
+    ///   - type: TimelineType
+    ///   - includeReplies: リプライ含めるか
+    ///   - onlyFiles: ファイルのみのタイムラインか
+    ///   - userId: 注目するユーザーのuserId
+    ///   - listId: 注目するリストのlistId
+    ///   - withNavBar: NavBarが必要か
+    ///   - scrollable: スクロール可能か
+    ///   - loadLimit: 一度に読み込むnoteの量
+    ///   - xlTitle: タブに表示する名前
     public func setup(type: TimelineType,
                       includeReplies: Bool? = nil,
                       onlyFiles: Bool? = nil,

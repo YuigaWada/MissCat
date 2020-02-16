@@ -355,6 +355,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     }
     
     public func openUserPage(username: String) {
+        // usernameから真のusernameとhostを切り離す
         let decomp = username.components(separatedBy: "@").filter { $0 != "" }
         
         var _username = ""
