@@ -27,11 +27,11 @@ class TimelineViewModel: ViewModelType {
     }
     
     struct Output {
-        let notes: Driver<[NoteCell.Section]>
-        let forceUpdateIndex: Driver<Int>
+        let notes: PublishSubject<[NoteCell.Section]> = .init()
+        let forceUpdateIndex: PublishSubject<Int> = .init()
         
-        let finishedLoading: Driver<Bool>
-        let connectedStream: Driver<Bool>
+        let finishedLoading: PublishRelay<Bool> = .init()
+        let connectedStream: PublishRelay<Bool> = .init()
     }
     
     class State {
@@ -42,21 +42,12 @@ class TimelineViewModel: ViewModelType {
     }
     
     private let input: Input
-    public lazy var output: Output = .init(notes: self.notes.asDriver(onErrorJustReturn: []),
-                                           forceUpdateIndex: self.forceUpdateIndex.asDriver(onErrorJustReturn: 0),
-                                           finishedLoading: self.finishedLoading.asDriver(onErrorJustReturn: false),
-                                           connectedStream: self.connectedStream.asDriver(onErrorJustReturn: false))
+    public lazy var output: Output = .init()
     public var state: State {
         return .init(cellCount: { cellsModel.count }())
     }
     
     // MARK: PublishSubject
-    
-    private let notes: PublishSubject<[NoteCell.Section]> = .init()
-    private let forceUpdateIndex: PublishSubject<Int> = .init()
-    
-    private let finishedLoading: PublishRelay<Bool> = .init()
-    private let connectedStream: PublishRelay<Bool> = .init()
     
     private var hasReactionGenCell: Bool = false
     public var cellsModel: [NoteCell.Model] = [] // TODO: エラー再発しないか意識しておく
@@ -77,7 +68,7 @@ class TimelineViewModel: ViewModelType {
         setSkeltonCell()
         loadNotes {
             DispatchQueue.main.async {
-                self.finishedLoading.accept(true)
+                self.output.finishedLoading.accept(true)
                 
                 self.updateNotes(new: self.cellsModel)
                 self.removeSkeltonCell()
@@ -93,13 +84,13 @@ class TimelineViewModel: ViewModelType {
     private func connectStream() {
         model.connectStream(type: input.type)
             .subscribe(onNext: { cellModel in
-                self.connectedStream.accept(true)
+                self.output.connectedStream.accept(true)
                 
                 self.cellsModel.insert(cellModel, at: 0)
                 self.updateNotes(new: self.cellsModel)
                 
             }, onError: { _ in
-                self.connectedStream.accept(false)
+                self.output.connectedStream.accept(false)
                 self.connectStream()
             })
             .disposed(by: disposeBag)
@@ -235,10 +226,10 @@ class TimelineViewModel: ViewModelType {
     }
     
     private func updateNotes(new: [NoteCell.Section]) {
-        notes.onNext(new)
+        output.notes.onNext(new)
     }
     
     private func updateNotesForcibly(index: Int) {
-        forceUpdateIndex.onNext(index)
+        output.forceUpdateIndex.onNext(index)
     }
 }

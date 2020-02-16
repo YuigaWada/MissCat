@@ -119,17 +119,17 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         guard let viewModel = viewModel, let dataSource = dataSource else { return }
         
         let output = viewModel.output
-        output.notes.drive(mainTableView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
+        output.notes.bind(to: mainTableView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
         
-        output.forceUpdateIndex.drive(onNext: updateForcibly).disposed(by: disposeBag)
+        output.forceUpdateIndex.subscribe(onNext: updateForcibly).disposed(by: disposeBag)
         
-        output.finishedLoading.drive(onNext: { success in
+        output.finishedLoading.subscribe(onNext: { success in
             guard let homeViewController = self.homeViewController else { return }
             
             homeViewController.successInitialLoading(success)
         }).disposed(by: disposeBag)
         
-        output.connectedStream.drive(onNext: { success in
+        output.connectedStream.subscribe(onNext: { success in
             guard let homeViewController = self.homeViewController else { return }
             
             homeViewController.changedStreamState(success: success)
