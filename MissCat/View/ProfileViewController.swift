@@ -6,6 +6,7 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import RxCocoa
 import RxSwift
 import UIKit
 import XLPagerTabStrip
@@ -48,13 +49,11 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     
     public override func viewDidLoad() {
         viewModel.setUserId(userId ?? "", isMe: isMe)
-        
         setupTabStyle()
-        super.viewDidLoad()
         
+        super.viewDidLoad()
         setupComponent()
         setupSkeltonMode()
-        
         binding()
         setBannerBlur()
         
@@ -118,17 +117,18 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     private func binding() {
         let output = viewModel.output
         
-        output.iconImage.drive(onNext: { image in
+        // メインスレッドで動作させたいのでDriverに変更しておく
+        output.iconImage.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { image in
             self.iconImageView.hideSkeleton()
             self.self.iconImageView.image = image
         }).disposed(by: disposeBag)
         
-        output.intro.drive(onNext: { attributedText in
+        output.intro.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { attributedText in
             self.introTextView.hideSkeleton()
             self.introTextView.attributedText = attributedText
         }).disposed(by: disposeBag)
         
-        output.bannerImage.drive(onNext: { image in
+        output.bannerImage.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { image in
             self.bannerImageView.image = image
             
             let opticaTextColor = image.opticalTextColor
@@ -138,8 +138,8 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
             })
         }).disposed(by: disposeBag)
         
-        output.displayName.drive(displayName.rx.text).disposed(by: disposeBag)
-        output.username.drive(usernameLabel.rx.text).disposed(by: disposeBag)
+        output.displayName.asDriver(onErrorDriveWith: Driver.empty()).drive(displayName.rx.text).disposed(by: disposeBag)
+        output.username.asDriver(onErrorDriveWith: Driver.empty()).drive(usernameLabel.rx.text).disposed(by: disposeBag)
         
         backButton.rx.tap.subscribe(onNext: {
             _ = self.navigationController?.popViewController(animated: true)
@@ -243,12 +243,15 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         return viewController
     }
     
+    // MARK: Scrolling...
+    
     public override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         super.scrollViewWillBeginDragging(scrollView) // XLPagerTabStripの処理
         
         scrollBegining = scrollView.contentOffset.y
     }
     
+    // 二重構造になっているユーザー画面のScrollViewのスクロールを制御する
     public override func scrollViewDidScroll(_ scrollView: UIScrollView) {
         super.scrollViewDidScroll(scrollView) // XLPagerTabStripの処理
         
@@ -281,11 +284,11 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
             scrollBegining = scrollView.contentOffset.y
             
             // ブラーアニメーションをかける
-//            if blurProportion > 0, blurProportion < 1 {
-//                blurAnimator.fractionComplete = blurProportion
-//            } else {
-//                blurAnimator.fractionComplete = blurProportion <= 0 ? 0 : 1
-//            }
+            if blurProportion > 0, blurProportion < 1 {
+                blurAnimator.fractionComplete = blurProportion
+            } else {
+                blurAnimator.fractionComplete = blurProportion <= 0 ? 0 : 1
+            }
         }
     }
     

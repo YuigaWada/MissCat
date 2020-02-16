@@ -42,7 +42,7 @@ class TimelineViewModel: ViewModelType {
     }
     
     private let input: Input
-    public lazy var output: Output = .init()
+    public let output: Output = .init()
     public var state: State {
         return .init(cellCount: { cellsModel.count }())
     }

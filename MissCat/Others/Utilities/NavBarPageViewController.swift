@@ -33,7 +33,7 @@ class NavBarPageViewController: UIViewController {
         let dx = touch.location(in: parent.view).x - previousPositionX
         let dxProportion: CGFloat = dx / view.frame.width
         
-        let fractionComplete = animator.fractionComplete + dxProportion
+//        let fractionComplete = animator.fractionComplete + dxProportion
         let frame = view.frame
         //        if 0 <= fractionComplete, fractionComplete <= 1 {
         //            animator.fractionComplete = fractionComplete

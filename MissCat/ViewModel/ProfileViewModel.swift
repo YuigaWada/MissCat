@@ -18,33 +18,19 @@ class ProfileViewModel: ViewModelType {
     }
     
     struct Output {
-        let bannerImage: Driver<UIImage>
-        let displayName: Driver<String>
-        let username: Driver<String>
-        let iconImage: Driver<UIImage>
-        let intro: Driver<NSAttributedString>
+        let bannerImage: PublishRelay<UIImage> = .init()
+        let displayName: PublishRelay<String> = .init()
+        let username: PublishRelay<String> = .init()
+        let iconImage: PublishRelay<UIImage> = .init()
+        let intro: PublishRelay<NSAttributedString> = .init()
         
-        let isMe: Bool
+        var isMe: Bool = false
     }
     
     struct State {}
     
     private var input: Input
-    public lazy var output: Output = .init(bannerImage: self.bannerImage.asDriver(onErrorJustReturn: UIImage()),
-                                           displayName: self.displayName.asDriver(onErrorJustReturn: ""),
-                                           username: self.username.asDriver(onErrorJustReturn: ""),
-                                           iconImage: self.iconImage.asDriver(onErrorJustReturn: UIImage()),
-                                           intro: self.intro.asDriver(onErrorJustReturn: NSAttributedString()),
-                                           isMe: isMe)
-    
-    private var bannerImage: PublishRelay<UIImage> = .init()
-    
-    private var displayName: PublishRelay<String> = .init()
-    private var username: PublishRelay<String> = .init()
-    
-    private var iconImage: PublishRelay<UIImage> = .init()
-    private var intro: PublishRelay<NSAttributedString> = .init()
-    private var isMe: Bool = false
+    public lazy var output: Output = .init()
     
     private lazy var model = ProfileModel()
     
@@ -55,7 +41,7 @@ class ProfileViewModel: ViewModelType {
     public func setUserId(_ userId: String, isMe: Bool) {
         model.getUser(userId: userId, completion: handleUserInfo)
         
-        self.isMe = isMe
+        output.isMe = isMe
     }
     
     private func handleUserInfo(_ user: UserModel?) {
@@ -63,11 +49,11 @@ class ProfileViewModel: ViewModelType {
         
         // Icon Image
         if let username = user.username, let cachediconImage = Cache.shared.getIcon(username: username) {
-            iconImage.accept(cachediconImage)
+            output.iconImage.accept(cachediconImage)
         } else if let iconImageUrl = user.avatarUrl {
             iconImageUrl.toUIImage { image in
                 guard let image = image else { return }
-                self.iconImage.accept(image)
+                self.output.iconImage.accept(image)
             }
         }
         
@@ -75,24 +61,24 @@ class ProfileViewModel: ViewModelType {
         if let description = user.description {
             DispatchQueue.main.async {
                 let shaped = description.mfmPreTransform().mfmTransform(yanagi: self.input.yanagi)
-                self.intro.accept(shaped ?? .init())
+                self.output.intro.accept(shaped ?? .init())
             }
         } else {
-            intro.accept("自己紹介はありません".toAttributedString(family: "Helvetica", size: 11.0) ?? .init())
+            output.intro.accept("自己紹介はありません".toAttributedString(family: "Helvetica", size: 11.0) ?? .init())
         }
         
         // Banner Image
         if let bannerUrl = user.bannerUrl {
             bannerUrl.toUIImage { image in
                 guard let image = image else { return }
-                self.bannerImage.accept(image)
+                self.output.bannerImage.accept(image)
             }
         }
         
         // username / displayName
         if let username = user.username {
-            self.username.accept("@" + username)
-            displayName.accept(user.name ?? username)
+            output.username.accept("@" + username)
+            output.displayName.accept(user.name ?? username)
         }
     }
 }

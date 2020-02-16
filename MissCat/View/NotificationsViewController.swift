@@ -154,8 +154,6 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
     public func tappedOthers() {}
     
     public func tappedLink(text: String) {
-        guard let viewModel = viewModel else { return }
-        
         let (linkType, value) = text.analyzeHyperLink()
         
         switch linkType {

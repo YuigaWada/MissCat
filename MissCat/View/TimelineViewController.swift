@@ -136,13 +136,11 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         
         output.finishedLoading.subscribe(onNext: { success in
             guard let homeViewController = self.homeViewController else { return }
-            
             homeViewController.successInitialLoading(success)
         }).disposed(by: disposeBag)
         
         output.connectedStream.subscribe(onNext: { success in
             guard let homeViewController = self.homeViewController else { return }
-            
             homeViewController.changedStreamState(success: success)
         }).disposed(by: disposeBag)
     }
@@ -305,8 +303,6 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     func tappedOthers() {}
     
     func tappedLink(text: String) {
-        guard let viewModel = viewModel else { return }
-        
         let (linkType, value) = text.analyzeHyperLink()
         
         switch linkType {
