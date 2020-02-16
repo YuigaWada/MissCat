@@ -24,7 +24,8 @@ public class MFMEngine {
     
     // MARK: Static
     
-    // リンク化・md→htmlの変換等、カスタム絵文字以外の処理を行う
+    /// リンク化・md→htmlの変換等、カスタム絵文字以外の処理を行う
+    /// - Parameter string: 加工対象のstring
     public static func preTransform(string: String) -> String {
         var preTransed = string.hyperLink() // MUST BE DONE BEFORE ANYTHING !
         preTransed = preTransed.hyperUser()
@@ -47,7 +48,11 @@ public class MFMEngine {
     
     // MARK: Publics
     
-    // Must Be Used From Main Thread !
+    /// カスタム絵文字を検知し、対象の画像データに変換してYanagiTextに貼り付ける
+    /// (Must Be Used From Main Thread !)
+    /// - Parameters:
+    ///   - yanagi: どのTextViewか(YanagiText)
+    ///   - externalEmojis: 他インスタンスの絵文字配列
     public func transform(yanagi: YanagiText, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
         var rest = original
         let shaped = NSMutableAttributedString()
@@ -84,6 +89,10 @@ public class MFMEngine {
     
     // MARK: Privates
     
+    /// Stringを適切なフォントを指定してNSAttributedStringに変換する
+    /// - Parameters:
+    ///   - string: 対象のstring
+    ///   - font: フォント
     private func generatePlaneString(string: String, font: UIFont?) -> NSAttributedString {
         let fontName = font?.familyName ?? "Helvetica"
         let fontSize = font?.pointSize ?? 15.0
@@ -91,6 +100,8 @@ public class MFMEngine {
         return string.toAttributedString(family: fontName, size: fontSize) ?? .init()
     }
     
+    /// カスタム絵文字のURLから画像データを取得し、非同期でsetされるようなUIImageViewを返す
+    /// - Parameter imageUrl: 画像データのurl (アニメGIF / SVGも可)
     private func generateAsyncImageView(_ imageUrl: String) -> UIImageView {
         let imageSize = lineHeight
         let imageView = GIFImageView(frame: CGRect(x: 0, y: 0, width: 200, height: 100))
@@ -102,36 +113,11 @@ public class MFMEngine {
         imageView.sizeThatFits(.init(width: imageSize, height: imageSize))
         
         // https://github.com/kaishin/Gifu/blob/d9b13cb2aaa2f0ac1fde4039aa4a4f87efdef29e/Sources/Gifu/Classes/GIFAnimatable.swift#L87
-        let setGifuImage = { (data: Data) in // GifアニメはGifuが捌く
-            DispatchQueue.main.async {
-                imageView.animate(withGIFData: data) {
-                    DispatchQueue.main.async {
-                        imageView.backgroundColor = .clear
-                    }
-                }
-            }
-        }
-        
-        let setUIImage = { (data: Data) in // Gif以外はUIImageが捌く
-            if let image = UIImage(data: data) {
-                DispatchQueue.main.async {
-                    imageView.backgroundColor = .clear
-                    imageView.image = image
-                }
-            } else { // Type: SVG
-                guard let svgImage = SVGKImage(data: data) else { return }
-                DispatchQueue.main.async {
-                    imageView.backgroundColor = .clear
-                    imageView.image = svgImage.uiImage
-                }
-            }
-        }
-        
         if let cachedData = Cache.shared.getUrlData(on: imageUrl) { // キャッシュが存在する時
             if isGif {
-                setGifuImage(cachedData)
+                setGifuImage(with: cachedData, to: imageView)
             } else {
-                setUIImage(cachedData)
+                setUIImage(with: cachedData, to: imageView)
             }
         } else { // キャッシュが存在しない場合
             imageUrl.getData { data in
@@ -139,14 +125,47 @@ public class MFMEngine {
                 Cache.shared.saveUrlData(data, on: imageUrl)
                 
                 if isGif {
-                    setGifuImage(data)
+                    self.setGifuImage(with: data, to: imageView)
                 } else {
-                    setUIImage(data)
+                    self.setUIImage(with: data, to: imageView)
                 }
             }
         }
         
         return imageView
+    }
+    
+    /// アニメーションGifに対応するため、非同期にGifuへ画像をsetする
+    /// - Parameters:
+    ///   - data: 画像データ
+    ///   - imageView: set対象のGIFImageView
+    private func setGifuImage(with data: Data, to imageView: GIFImageView) {
+        DispatchQueue.main.async {
+            imageView.animate(withGIFData: data) {
+                DispatchQueue.main.async {
+                    imageView.backgroundColor = .clear
+                }
+            }
+        }
+    }
+    
+    /// 非同期で画像をimageViewにsetする
+    /// - Parameters:
+    ///   - data: 画像データ
+    ///   - imageView: set対象のGIFImageView
+    private func setUIImage(with data: Data, to imageView: GIFImageView) {
+        if let image = UIImage(data: data) {
+            DispatchQueue.main.async {
+                imageView.backgroundColor = .clear
+                imageView.image = image
+            }
+        } else { // Type: SVG
+            guard let svgImage = SVGKImage(data: data) else { return }
+            DispatchQueue.main.async {
+                imageView.backgroundColor = .clear
+                imageView.image = svgImage.uiImage
+            }
+        }
     }
 }
 
