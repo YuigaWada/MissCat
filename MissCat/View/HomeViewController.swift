@@ -354,6 +354,27 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         showProfileView(userId: userId)
     }
     
+    public func openUserPage(username: String) {
+        let decomp = username.components(separatedBy: "@").filter { $0 != "" }
+        
+        var _username = ""
+        var host = ""
+        if decomp.count == 1 {
+            host = ""
+            _username = decomp[0]
+        } else if decomp.count == 2 {
+            host = decomp[1]
+            _username = decomp[0]
+        } else { return }
+        
+        MisskeyKit.users.showUser(username: _username, host: host) { user, error in
+            guard error == nil, let user = user else { return }
+            DispatchQueue.main.async {
+                self.showProfileView(userId: user.id)
+            }
+        }
+    }
+    
     public func successInitialLoading(_ success: Bool) {
         guard !success else { return }
         

@@ -16,6 +16,7 @@ import XLPagerTabStrip
 public protocol TimelineDelegate { // For HomeViewController
     func tappedCell(item: NoteCell.Model)
     func move2Profile(userId: String)
+    func openUserPage(username: String)
     
     func successInitialLoading(_ success: Bool)
     func changedStreamState(success: Bool)
@@ -99,7 +100,6 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         mainTableView.register(UINib(nibName: "RenoteeCell", bundle: nil), forCellReuseIdentifier: "RenoteeCell")
         
         mainTableView.rx.setDelegate(self).disposed(by: disposeBag)
-//        self.mainTableView.decelerationRate = .fast
     }
     
     private func setupDataSource() -> NotesDataSource {
@@ -302,10 +302,15 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         case "URL":
             openLink(url: value)
         case "User":
-            break
+            openUser(username: value)
         default:
             break
         }
+    }
+    
+    func openUser(username: String) {
+        guard let homeViewController = self.homeViewController else { return }
+        homeViewController.openUserPage(username: username)
     }
     
     func move2Profile(userId: String) {
