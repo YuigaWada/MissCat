@@ -24,7 +24,7 @@ public class NoteCellModel {
     }
     
     // ノートにHyperLink/css修飾を加え整形する
-    public func shapeNote(cache: Cache.Note?, identifier: String, note: String, isReply: Bool, externalEmojis: [EmojiModel?]?, isDetailMode: Bool, yanagi: YanagiText) -> NSAttributedString? {
+    public func shapeNote(cache: Cache.NoteOnYanagi?, identifier: String, note: String, isReply: Bool, externalEmojis: [EmojiModel?]?, isDetailMode: Bool, yanagi: YanagiText) -> NSAttributedString? {
         if !isDetailMode, let cache = cache { // 詳細モードの場合はキャッシュを利用しない
             // YanagiText内部ではattributedTextがsetされた瞬間attachmentの表示が始まるので先にaddしておく
             cache.attachments.forEach { nsAttachment, yanagiAttachment in

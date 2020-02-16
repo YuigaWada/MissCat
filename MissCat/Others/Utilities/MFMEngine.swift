@@ -39,7 +39,7 @@ public class MFMEngine {
     // MARK: Init
     
     init(with original: String, lineHeight: CGFloat? = nil) {
-        emojiTargets = original.regexMatches(pattern: "(:[^(\\s|:)]+:)").map { $0[0] }
+        emojiTargets = original.regexMatches(pattern: "(:[^(\\s|:)]+:)").map { $0[0] } // カスタム絵文字の候補を先にリストアップしておく
         self.original = original
         
         guard let lineHeight = lineHeight else { return }
@@ -57,14 +57,16 @@ public class MFMEngine {
         var rest = original
         let shaped = NSMutableAttributedString()
         
+        // カスタム絵文字の候補をそれぞれ確認していく
         emojiTargets.forEach { target in
             guard let converted = EmojiHandler.handler.convertEmoji(raw: target, external: externalEmojis),
                 let range = rest.range(of: target) else { return }
             
-            // plane
+            // カスタム絵文字を支点に文章を分割していく
             let plane = String(rest[rest.startIndex ..< range.lowerBound])
             shaped.append(self.generatePlaneString(string: plane, font: yanagi.font))
             
+            // カスタム絵文字を適切な形に変換していく
             switch converted.type {
             case "default":
                 shaped.append(NSAttributedString(string: converted.emoji))

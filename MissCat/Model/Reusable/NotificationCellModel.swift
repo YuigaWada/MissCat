@@ -10,7 +10,7 @@ import MisskeyKit
 import YanagiText
 
 public class NotificationCellModel {
-    public func shapeNote(identifier: String, note: String, cache: Cache.Note?, isReply: Bool, yanagi: YanagiText, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
+    public func shapeNote(identifier: String, note: String, cache: Cache.NoteOnYanagi?, isReply: Bool, yanagi: YanagiText, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
         if let cache = cache {
             // YanagiText内部ではattributedTextがsetされた瞬間attachmentの表示が始まるので先にaddしておく
             cache.attachments.forEach { nsAttachment, yanagiAttachment in

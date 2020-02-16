@@ -1310,8 +1310,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "97"
             endingLineNumber = "97"
-            landmarkName = "Cache"
-            landmarkType = "3">
+            landmarkName = "getIcon(username:)"
+            landmarkType = "7">
             <Locations>
                <Location
                   uuid = "0993F031-1E67-4233-862A-6067E98ED59D - 5e8f1d69b7e6fd2d"
@@ -1358,8 +1358,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "98"
             endingLineNumber = "98"
-            landmarkName = "getFiles(noteId:)"
-            landmarkType = "7">
+            landmarkName = "Cache"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -5164,7 +5164,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "155"
             endingLineNumber = "155"
-            landmarkName = "File"
+            landmarkName = "UserOnYanagi"
             landmarkType = "14">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5180,7 +5180,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "153"
             endingLineNumber = "153"
-            landmarkName = "User"
+            landmarkName = "UserOnYanagi"
             landmarkType = "14">
          </BreakpointContent>
       </BreakpointProxy>
@@ -5523,22 +5523,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "D4D73EEB-AF0A-4E9F-BE2D-78BCAE8F1847"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/Others/Utilities/Cache.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "37"
-            endingLineNumber = "37"
-            landmarkName = "saveNote(noteId:note:attachments:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "4A08954F-03CC-4F4B-837C-C9673E3BD6FD"
             shouldBeEnabled = "No"
             ignoreCount = "0"
@@ -5725,70 +5709,6 @@
             startingLineNumber = "277"
             endingLineNumber = "277"
             landmarkName = "updateReactions(new:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "F88D8426-7951-4C92-80EE-C8B9EBA2D192"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/Others/Utilities/Cache.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "88"
-            endingLineNumber = "88"
-            landmarkName = "getDisplayName(username:on:)"
-            landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "F88D8426-7951-4C92-80EE-C8B9EBA2D192 - 35ce56b1aa8ae48f"
-                  shouldBeEnabled = "No"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "MissCat.Cache.getDisplayName(username: Swift.String, on: YanagiText.YanagiText) -&gt; (displayName: Swift.Optional&lt;__C.NSAttributedString&gt;, attachments: Swift.Optional&lt;Swift.Dictionary&lt;__C.NSTextAttachment, YanagiText.YanagiText.Attachment&gt;&gt;)"
-                  moduleName = "MissCat"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/Others/Utilities/Cache.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "87"
-                  endingLineNumber = "87"
-                  offsetFromSymbolStart = "76">
-               </Location>
-               <Location
-                  uuid = "F88D8426-7951-4C92-80EE-C8B9EBA2D192 - dd01444ad35fd2de"
-                  shouldBeEnabled = "No"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 (YanagiText.YanagiText) -&gt; Swift.Bool in MissCat.Cache.getDisplayName(username: Swift.String, on: YanagiText.YanagiText) -&gt; (displayName: Swift.Optional&lt;__C.NSAttributedString&gt;, attachments: Swift.Optional&lt;Swift.Dictionary&lt;__C.NSTextAttachment, YanagiText.YanagiText.Attachment&gt;&gt;)"
-                  moduleName = "MissCat"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/Others/Utilities/Cache.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "87"
-                  endingLineNumber = "87"
-                  offsetFromSymbolStart = "40">
-               </Location>
-            </Locations>
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "7E6B9C04-581E-46FB-A921-6EECA310634D"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MissCat/Others/Utilities/Cache.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "89"
-            endingLineNumber = "89"
-            landmarkName = "getDisplayName(username:on:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

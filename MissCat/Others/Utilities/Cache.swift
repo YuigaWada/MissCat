@@ -19,12 +19,13 @@ public class Cache {
     
     // MARK: Var
     
-    public var notes: [String: Cache.Note] = [:] // key: noteId
+    // 下２つのcacheはYanagiTextと一対一に対応してキャッシュしてあげる
     
-    // MEMO: YanagiTextと一対一にキャッシュする
-    public var users: [String: Cache.User] = [:] // key: username
-    public var files: [Cache.File] = []
-    public var dataOnUrl: [String: Data] = [:] // key: url
+    private var notes: [String: Cache.NoteOnYanagi] = [:] // key: noteId
+    private var users: [String: Cache.UserOnYanagi] = [:] // key: username
+    
+    private var files: [Cache.File] = []
+    private var dataOnUrl: [String: Data] = [:] // key: url
     
     private var me: UserModel?
     
@@ -33,7 +34,7 @@ public class Cache {
     public func saveNote(noteId: String, note: NSAttributedString, attachments: Attachments) {
         guard notes[noteId] == nil else { return }
         
-        notes[noteId] = Note(treatedNote: note, attachments: attachments)
+        notes[noteId] = NoteOnYanagi(treatedNote: note, yanagiTexts: [], attachments: attachments)
     }
     
     public func saveDisplayName(username: String, displayName: NSAttributedString, attachments: Attachments, on yanagiText: YanagiText) {
@@ -41,7 +42,7 @@ public class Cache {
             users[username]!.displayName = displayName
             users[username]!.yanagiTexts.append(yanagiText)
         } else {
-            users[username] = User(iconImage: nil, displayName: displayName, yanagiTexts: [yanagiText], attachments: attachments)
+            users[username] = UserOnYanagi(iconImage: nil, displayName: displayName, yanagiTexts: [yanagiText], attachments: attachments)
         }
     }
     
@@ -49,7 +50,7 @@ public class Cache {
         if let _ = users[username] {
             users[username]!.iconImage = image
         } else {
-            users[username] = User(iconImage: image, displayName: nil, yanagiTexts: [], attachments: [:])
+            users[username] = UserOnYanagi(iconImage: image, displayName: nil, yanagiTexts: [], attachments: [:])
         }
     }
     
@@ -79,7 +80,7 @@ public class Cache {
     
     // MARK: Get
     
-    public func getNote(noteId: String) -> Cache.Note? {
+    public func getNote(noteId: String) -> Cache.NoteOnYanagi? {
         return notes[noteId]
     }
     
@@ -139,12 +140,14 @@ public extension Cache {
 }
 
 public extension Cache {
-    struct Note {
+    struct NoteOnYanagi {
         public var treatedNote: NSAttributedString
+        
+        public var yanagiTexts: [YanagiText]
         public var attachments: [NSTextAttachment: YanagiText.Attachment] = [:]
     }
     
-    struct User {
+    struct UserOnYanagi {
         public var iconImage: UIImage?
         public var displayName: NSAttributedString?
         
