@@ -303,10 +303,10 @@
                                 </constraints>
                             </view>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="top" translatesAutoresizingMaskIntoConstraints="NO" id="9mr-89-6J3">
-                                <rect key="frame" x="20" y="209" width="374" height="653"/>
+                                <rect key="frame" x="5" y="209" width="409" height="653"/>
                                 <subviews>
                                     <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="OgS-1x-Vgm">
-                                        <rect key="frame" x="0.0" y="0.0" width="374" height="653"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="409" height="653"/>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                         <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="5" minimumInteritemSpacing="5" id="GW2-WJ-6G9">
                                             <size key="itemSize" width="50" height="30"/>
@@ -315,11 +315,11 @@
                                             <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                         </collectionViewFlowLayout>
                                         <collectionReusableView key="sectionHeaderView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="usd-I4-8Ge">
-                                            <rect key="frame" x="0.0" y="0.0" width="374" height="50"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="409" height="50"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="お気に入り" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5Tf-mf-fbt">
-                                                    <rect key="frame" x="8" y="16" width="358" height="18"/>
+                                                    <rect key="frame" x="8" y="16" width="393" height="18"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                                     <color key="textColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     <nil key="highlightedColor"/>
@@ -362,8 +362,8 @@
                             <constraint firstItem="hLc-bQ-WPg" firstAttribute="leading" secondItem="Ygx-y9-eAf" secondAttribute="leading" id="iaR-8x-nqC"/>
                             <constraint firstItem="ld0-RN-wpl" firstAttribute="top" secondItem="Ygx-y9-eAf" secondAttribute="top" constant="15" id="nRz-sG-Rc6"/>
                             <constraint firstItem="REl-1x-M7t" firstAttribute="top" secondItem="iYJ-X2-ucL" secondAttribute="top" constant="20" id="ndw-sb-7Dv"/>
-                            <constraint firstItem="9mr-89-6J3" firstAttribute="leading" secondItem="Ygx-y9-eAf" secondAttribute="leading" constant="20" id="pL5-8Z-IF0"/>
-                            <constraint firstItem="Ygx-y9-eAf" firstAttribute="trailing" secondItem="9mr-89-6J3" secondAttribute="trailing" constant="20" id="x47-bp-RjU"/>
+                            <constraint firstItem="9mr-89-6J3" firstAttribute="leading" secondItem="Ygx-y9-eAf" secondAttribute="leading" constant="5" id="pL5-8Z-IF0"/>
+                            <constraint firstItem="Ygx-y9-eAf" firstAttribute="trailing" secondItem="9mr-89-6J3" secondAttribute="trailing" id="x47-bp-RjU"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="Ygx-y9-eAf"/>
                     </view>
