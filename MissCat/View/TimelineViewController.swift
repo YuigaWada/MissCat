@@ -232,8 +232,8 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         
         let index = indexPath.row
         
-        showDetailView(item: viewModel.cellsModel[index])
         tableView.deselectRow(at: indexPath as IndexPath, animated: true)
+        showDetailView(item: viewModel.cellsModel[index])
         
         // TODO: renoteeCellをタップしたらrenote先までタップしたことにする
         //tableView.selectRow(at: <#T##IndexPath?#>, animated: true, scrollPosition: .none)
