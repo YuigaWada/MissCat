@@ -31,6 +31,8 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     private let disposeBag = DisposeBag()
     
     private var viewDidAppeared: Bool = false
+    private var cellLoading: Bool = false
+    private var previousCellCount = -1
     
     // MARK: Life Cycle
     
@@ -105,11 +107,11 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     
     private func setupCollectionViewLayout() {
         let flowLayout = UICollectionViewFlowLayout()
-        let size = view.frame.width / 7
+        let size = view.frame.width / 8
         
         flowLayout.itemSize = CGSize(width: size, height: size)
         flowLayout.minimumInteritemSpacing = 0
-        flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         emojiCollectionView.collectionViewLayout = flowLayout
     }
     
@@ -140,12 +142,8 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
         
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as? EmojiViewCell else { fatalError("Internal Error.") }
         
-        cell.mainView.emoji = item.defaultEmoji ?? "👍"
-        //        cell.frame = CGRect(x: cell.frame.origin.x,
-        //                            y: cell.frame.origin.y,
-        //                            width: self.view.frame.width / 7,
-        //                            height: self.view.frame.width / 7)
-        setupTapGesture(to: cell, emoji: item.defaultEmoji ?? "👍")
+        cell.mainView.emoji = item.defaultEmoji ?? item.customEmojiUrl ?? "👍"
+        setupTapGesture(to: cell, emoji: cell.mainView.emoji)
         
         return cell
     }
@@ -164,15 +162,21 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     // MARK: CollectionView Delegate
     
     public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-//        guard let viewModel = viewModel else { return }
+        guard let viewModel = viewModel else { return }
         let index = indexPath.row
         
         // 下位10cellsでセル更新
         guard viewDidAppeared,
+            !cellLoading,
+            !(previousCellCount == collectionView.visibleCells.count),
             collectionView.visibleCells.count > 0,
-            collectionView.visibleCells.count / 6 - index < 10 else { return }
+            collectionView.visibleCells.count - index >= 0 else { return }
         
-//        viewModel.getNextEmojis()
+//        cellLoading = true
+//        previousCellCount = collectionView.visibleCells.count
+//        viewModel.getNextEmojis {
+//            self.cellLoading = false
+//        }
     }
     
     // MARK: Public Methods
