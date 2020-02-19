@@ -63,11 +63,11 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         needBorder = true
         selectedBarHeight = 2
         selectedBar.layer.cornerRadius = 2
-        selectedBar.backgroundColor = .darkGray
+        selectedBar.backgroundColor = .systemBlue
         selectedBarMargins.lower += 1
         sectionInset = .init(top: 0, left: 20, bottom: 0, right: 5)
-        tabBackgroundColor = UIColor(hex: "ECECEC")
-        view.backgroundColor = UIColor(hex: "ECECEC")
+        tabBackgroundColor = .white
+        view.backgroundColor = .white
         
         navBar.isHidden = true
         
