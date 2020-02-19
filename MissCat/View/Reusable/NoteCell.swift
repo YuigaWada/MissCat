@@ -212,7 +212,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         agoLabel.text = nil
         noteView.attributedText = nil
         
-        reactionsCollectionView.isHidden = false
+//        reactionsCollectionView.isHidden = false
         
         fileImageView.arrangedSubviews.forEach { $0.isHidden = true }
         
@@ -413,14 +413,14 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             nameTextView.showAnimatedGradientSkeleton()
             iconView.showAnimatedGradientSkeleton()
             
-            reactionsCollectionView.isHidden = true
+//            reactionsCollectionView.isHidden = true
             
             fileImageView.showAnimatedGradientSkeleton()
         } else {
             nameTextView.hideSkeleton()
             iconView.hideSkeleton()
             
-            reactionsCollectionView.isHidden = false
+//            reactionsCollectionView.isHidden = false
             
             fileImageView.hideSkeleton()
         }
