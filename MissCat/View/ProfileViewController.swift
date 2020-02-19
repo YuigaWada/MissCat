@@ -65,7 +65,6 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         super.viewWillLayoutSubviews()
         
         layoutIfNeeded(to: [iconImageView])
-        layoutIfNeeded(to: childVCs.map { $0.view })
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
         
         containerHeightContraint.constant = 2 * view.frame.height - (view.frame.height - containerScrollView.frame.origin.y)
@@ -214,9 +213,9 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         
         childVCs = [userNoteOnly, allUserNote, userMedia]
         
-        childVCs.forEach { // VCの表示がずれるのを防ぐ(XLPagerTabStripの不具合？？)
-            $0.view.frame = CGRect(x: 0, y: 0, width: self.view.frame.width, height: $0.view.frame.height)
-        }
+//        childVCs.forEach { // VCの表示がずれるのを防ぐ(XLPagerTabStripの不具合？？)
+//            $0.view.frame = CGRect(x: 0, y: 0, width: self.view.frame.width, height: $0.view.frame.height)
+//        }
         
         return childVCs
     }
