@@ -24,6 +24,13 @@ open class YanagiText: UITextView {
         }
     }
     
+    override open func layoutSubviews() {
+        super.layoutSubviews()
+        DispatchQueue.main.async {
+            self.transformText()
+        }
+    }
+    
     //MARK: Publics
     open func getViewString(with view: UIView, size: CGSize)-> NSAttributedString? {
         let yanagiAttachment = YanagiText.Attachment(view: view, size: size)
@@ -86,6 +93,7 @@ open class YanagiText: UITextView {
     }
     
     private func transformText() {
+        self.layoutIfNeeded()
         self.attributedText.enumerateAttribute(.attachment, in: NSMakeRange(0, self.attributedText.length), options: .longestEffectiveRangeNotRequired, using: { [weak self] value, range, _ in
             guard let self = self else { return }
             
@@ -102,6 +110,8 @@ open class YanagiText: UITextView {
             let targetView = yanagiAttachment.view
             
             var estimatedRect = self.firstRect(for: selectedTextRange).insetBy(dx: xMargin, dy: yMargin)
+            print(estimatedRect)
+            
             let lineHeight = estimatedRect.height
             
             

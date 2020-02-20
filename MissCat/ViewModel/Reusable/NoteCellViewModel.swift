@@ -133,7 +133,7 @@ class NoteCellViewModel: ViewModelType {
     private func getDisplayName(with item: NoteCell.Model, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
         let cache = Cache.shared.getDisplayName(username: item.username, on: input.nameYanagi)
         let isCached = cache.displayName != nil
-        //        let hasCachedAttachments = self.hasAttachments(on: self.input.nameYanagi, with: cache.attachments)
+//        let hasCachedAttachments = hasAttachments(on: input.nameYanagi, with: cache.attachments)
         
         // キャッシュされていない場合 & Attachmentsがセルに残っていない場合、MFMにかけてあげる
         // (セルは再利用されるので、attachmensのキャッシュの有無も考える)
@@ -157,15 +157,13 @@ class NoteCellViewModel: ViewModelType {
             return displayName
         }
         
+//        if !hasCachedAttachments {
+//            cache.attachments?.forEach { nsAttachment, yanagiAttachment in
+//                self.input.nameYanagi.addAttachment(ns: nsAttachment, yanagi: yanagiAttachment)
+//            }
+//        }
+        
         return cache.displayName
-        //
-        //        let name = item.displayName
-        //        let username = " @" + item.username
-        //
-        //        let shapedName = name.mfmTransform(yanagi: self.input.nameYanagi, lineHeight: self.input.nameYanagi.frame.height * 0.9) ?? .init()
-        //
-        //        return shapedName + username.getAttributedString(font: self.usernameFont,
-        //                                                         color: .darkGray)
     }
     
     public func setReactionCell(with item: NoteCell.Reaction, to reactionCell: ReactionCell) -> ReactionCell {
