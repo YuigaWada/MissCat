@@ -10,7 +10,9 @@ import UIKit
 import YanagiText
 
 private typealias AttachmentDic = [NSTextAttachment: YanagiText.Attachment]
+
 // リンクタップのみできるTextView
+// idに対してattachmentを保存できるようなYanagiText
 class MisskeyTextView: YanagiText {
     override var attachmentList: [NSTextAttachment: YanagiText.Attachment] {
         didSet {

@@ -333,6 +333,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.noteId = item.noteId
         userId = item.userId
         
+        // YanagiTextと一対一にキャッシュを保存できるように、idをYanagiTextに渡す
         noteView.setId(noteId: item.noteId)
         nameTextView.setId(userId: item.userId)
         
