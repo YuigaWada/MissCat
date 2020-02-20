@@ -34,8 +34,9 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     
     private lazy var refreshControl = UIRefreshControl()
     
-    private var loadCompleted: Bool = true
     private var cellHeightCache: [String: CGFloat] = [:] // String → identifier
+    private var loadLimit: Int = 40
+    
     private var withNavBar: Bool = true
     private var scrollable: Bool = true
     private var streamConnecting: Bool = false
@@ -77,9 +78,11 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         
         viewModel = ViewModel(with: input, and: disposeBag)
         streamConnecting = type.needsStreaming
+        
         self.xlTitle = xlTitle
         self.withNavBar = withNavBar
         self.scrollable = scrollable
+        self.loadLimit = loadLimit
     }
     
     override func viewDidLoad() {
@@ -251,14 +254,12 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
             cellHeightCache[id] = cellModel.isRenoteeCell ? 25 : cell.frame.height
         }
         
-        // 下位20cellsでセル更新
-        guard loadCompleted, viewModel.state.cellCount - indexPath.row < 10 else { return }
+        // 下位4分の1のcellでセル更新
+        let state = viewModel.state
+        guard !state.isLoading, state.cellCount - indexPath.row < loadLimit / 4 else { return } //  state.cellCompleted,
         
         print("loadUntilNotes...")
-        loadCompleted = false
-        viewModel.loadUntilNotes {
-            self.loadCompleted = true // セル更新最中に多重更新されないように
-        }
+        viewModel.loadUntilNotes()
     }
     
     // MARK: Utilities

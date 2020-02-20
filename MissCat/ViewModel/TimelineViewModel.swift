@@ -35,16 +35,32 @@ class TimelineViewModel: ViewModelType {
     }
     
     class State {
+        private let loadLimit: Int
         var cellCount: Int
-        init(cellCount: Int) {
+        var renoteeCellCount: Int
+        var isLoading: Bool
+        
+        var cellCompleted: Bool { // 準備した分のセルがすべて表示されたかどうか
+            return (cellCount - renoteeCellCount) % loadLimit == 0
+        }
+        
+        init(cellCount: Int, renoteeCellCount: Int, isLoading: Bool, loadLimit: Int) {
             self.cellCount = cellCount
+            self.renoteeCellCount = renoteeCellCount
+            self.isLoading = isLoading
+            self.loadLimit = loadLimit
         }
     }
     
     private let input: Input
     public let output: Output = .init()
+    
+    private var _isLoading: Bool = false
     public var state: State {
-        return .init(cellCount: { cellsModel.count }())
+        return .init(cellCount: { cellsModel.count }(),
+                     renoteeCellCount: { cellsModel.filter { $0.isRenoteeCell }.count }(),
+                     isLoading: _isLoading,
+                     loadLimit: input.loadLimit)
     }
     
     // MARK: PublishSubject
@@ -175,11 +191,14 @@ class TimelineViewModel: ViewModelType {
                                       onlyFiles: input.onlyFiles,
                                       listId: input.listId,
                                       loadLimit: input.loadLimit)
-        
+        _isLoading = true
+        print("isLoading: true")
         model.loadNotes(with: option).subscribe(onNext: { cellModel in
             self.cellsModel.append(cellModel)
         }, onCompleted: {
             self.initialNoteIds = self.model.initialNoteIds
+            self._isLoading = false
+            print("isLoading: false")
             if let completion = completion { completion() }
         }, onDisposed: nil)
             .disposed(by: disposeBag)
@@ -204,7 +223,7 @@ class TimelineViewModel: ViewModelType {
     }
     
     private func setSkeltonCell() {
-        for _ in 0 ..< 10 {
+        for _ in 0 ..< 5 {
             let skeltonCellModel = NoteCell.Model.fakeSkeltonCell()
             cellsModel.append(skeltonCellModel)
         }
@@ -213,7 +232,7 @@ class TimelineViewModel: ViewModelType {
     }
     
     private func removeSkeltonCell() {
-        let removed = cellsModel.suffix(cellsModel.count - 10)
+        let removed = cellsModel.suffix(cellsModel.count - 5)
         cellsModel = Array(removed)
         
         updateNotes(new: cellsModel)
