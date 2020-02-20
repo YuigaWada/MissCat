@@ -264,6 +264,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     private func hideView(without type: Page) {
         if type != .Notifications, let notificationsViewController = notificationsViewController {
             notificationsViewController.view.isHidden = true
+            navBar.isHidden = true
         }
         
         if type != .Profile, let myProfileViewController = self.myProfileViewController {
@@ -292,10 +293,8 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     public func tappedHome() {
         if nowPage != .Main {
             nowPage = .Main
-            navBar.isHidden = true
             DispatchQueue.main.async { self.hideView(without: .Main) }
         } else {
-            guard let home = home as? FooterTabBarDelegate else { return }
             home.tappedHome()
         }
     }
