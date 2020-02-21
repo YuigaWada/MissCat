@@ -58,6 +58,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     @IBOutlet weak var displayName2MainStackConstraint: NSLayoutConstraint!
     @IBOutlet weak var icon2MainStackConstraint: NSLayoutConstraint!
+    @IBOutlet weak var reactionCollectionHeightConstraint: NSLayoutConstraint!
     
     // MARK: Public Var
     
@@ -115,7 +116,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         let width = mainStackView.frame.width / 6
         
         flowLayout.itemSize = CGSize(width: width, height: 30)
-        flowLayout.scrollDirection = .horizontal
+//        flowLayout.scrollDirection = .horizontal
         flowLayout.minimumInteritemSpacing = 5
         flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         reactionsCollectionView.collectionViewLayout = flowLayout
@@ -162,6 +163,14 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             guard $0.count == 1 else { return true }
             return $0[0].items.count == 0
         }.drive(reactionsCollectionView.rx.isHidden).disposed(by: disposeBag)
+        
+        output.reactions.map { // リアクションの数によってreactionsCollectionViewの高さを調節
+            guard $0.count == 1 else { return 30 }
+            let count = $0[0].items.count
+            let step = ceil(Double(count) / 5)
+            
+            return CGFloat(step * 40)
+        }.drive(reactionCollectionHeightConstraint.rx.constant).disposed(by: disposeBag)
         
         output.ago.drive(agoLabel.rx.text).disposed(by: disposeBag)
         output.name.drive(nameTextView.rx.attributedText).disposed(by: disposeBag)

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15705" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -43,13 +43,13 @@
                     <rect key="frame" x="80" y="38" width="314" height="402"/>
                     <subviews>
                         <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" editable="NO" text="Note" translatesAutoresizingMaskIntoConstraints="NO" id="yT1-N6-SIZ" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
-                            <rect key="frame" x="0.0" y="0.0" width="314" height="157"/>
+                            <rect key="frame" x="0.0" y="0.0" width="314" height="167"/>
                             <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
                             <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                         </textView>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="v72-g7-6Ca">
-                            <rect key="frame" x="0.0" y="162" width="314" height="130"/>
+                            <rect key="frame" x="0.0" y="172" width="314" height="130"/>
                             <subviews>
                                 <stackView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="249" verticalCompressionResistancePriority="749" distribution="fillEqually" spacing="2" translatesAutoresizingMaskIntoConstraints="NO" id="xbq-eM-CO3">
                                     <rect key="frame" x="0.0" y="0.0" width="314" height="130"/>
@@ -64,12 +64,12 @@
                                 <constraint firstAttribute="height" priority="999" constant="130" id="cKX-Vb-WMJ"/>
                             </constraints>
                         </view>
-                        <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="KkD-L3-5tQ">
-                            <rect key="frame" x="0.0" y="297" width="314" height="60"/>
+                        <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="KkD-L3-5tQ">
+                            <rect key="frame" x="0.0" y="307" width="314" height="50"/>
                             <constraints>
                                 <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="30" id="306-g6-Rcb"/>
                             </constraints>
-                            <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="oUe-bJ-jGb">
+                            <collectionViewFlowLayout key="collectionViewLayout" scrollDirection="horizontal" minimumLineSpacing="10" minimumInteritemSpacing="10" id="oUe-bJ-jGb">
                                 <size key="itemSize" width="50" height="50"/>
                                 <size key="headerReferenceSize" width="0.0" height="0.0"/>
                                 <size key="footerReferenceSize" width="0.0" height="0.0"/>
@@ -191,6 +191,7 @@
                 <outlet property="noteView" destination="yT1-N6-SIZ" id="8BC-Nn-b5w"/>
                 <outlet property="othersButton" destination="m58-si-Q2a" id="olW-Ai-vBQ"/>
                 <outlet property="reactionButton" destination="rhr-nd-rOM" id="LBV-mI-9vL"/>
+                <outlet property="reactionCollectionHeightConstraint" destination="306-g6-Rcb" id="gnQ-dS-3PP"/>
                 <outlet property="reactionsCollectionView" destination="KkD-L3-5tQ" id="421-3R-OTJ"/>
                 <outlet property="renoteButton" destination="cJA-vi-Lkf" id="A77-Qd-lPA"/>
                 <outlet property="replyButton" destination="RmY-Dj-6tO" id="wY2-3H-TAf"/>
