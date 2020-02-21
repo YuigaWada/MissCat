@@ -491,6 +491,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #2 in NoteCell.binding(viewModel:):NoteCell.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.reactionsCollectionView.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TimelineModel.getCellModel(_:):TimelineModel.swift">
          <PersistentStrings>
             <PersistentString
@@ -797,7 +805,7 @@
          contextName = "NoteCell.binding(viewModel:):NoteCell.swift">
          <PersistentStrings>
             <PersistentString
-               value = "$0">
+               value = "height">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

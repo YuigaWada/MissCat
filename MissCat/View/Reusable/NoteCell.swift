@@ -116,7 +116,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         let width = mainStackView.frame.width / 6
         
         flowLayout.itemSize = CGSize(width: width, height: 30)
-//        flowLayout.scrollDirection = .horizontal
+        //        flowLayout.scrollDirection = .horizontal
         flowLayout.minimumInteritemSpacing = 5
         flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         reactionsCollectionView.collectionViewLayout = flowLayout
@@ -220,7 +220,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         agoLabel.text = nil
         noteView.attributedText = nil
         
-//        reactionsCollectionView.isHidden = false
+        //        reactionsCollectionView.isHidden = false
         
         fileImageView.arrangedSubviews.forEach { $0.isHidden = true }
         
@@ -431,7 +431,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             nameTextView.hideSkeleton()
             iconView.hideSkeleton()
             
-//            reactionsCollectionView.isHidden = false
+            //            reactionsCollectionView.isHidden = false
             
             fileImageView.hideSkeleton()
         }
@@ -617,5 +617,48 @@ extension NoteCell.Reaction.Section: AnimatableSectionModelType {
     init(original: Item.Section, items: [Item]) {
         self = original
         self.items = items
+    }
+}
+
+extension NoteCell.Model {
+    func getReactions() -> [NoteCell.Reaction] {
+        return reactions.map { reaction in
+            
+            let rawEmoji = reaction?.name ?? ""
+            let isMyReaction = rawEmoji == self.myReaction
+            
+            guard rawEmoji != "", let convertedEmojiData = EmojiHandler.handler.convertEmoji(raw: rawEmoji) else {
+                // If being not converted
+                let reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
+                                                      noteId: self.noteId ?? "",
+                                                      url: nil,
+                                                      rawEmoji: rawEmoji,
+                                                      isMyReaction: isMyReaction,
+                                                      count: reaction?.count ?? "0")
+                return reactionModel
+            }
+            
+            var reactionModel: NoteCell.Reaction
+            switch convertedEmojiData.type {
+            case "default":
+                reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
+                                                  noteId: self.noteId ?? "",
+                                                  url: nil,
+                                                  rawEmoji: convertedEmojiData.emoji,
+                                                  isMyReaction: isMyReaction,
+                                                  count: reaction?.count ?? "0")
+            case "custom":
+                reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
+                                                  noteId: self.noteId ?? "",
+                                                  url: convertedEmojiData.emoji,
+                                                  rawEmoji: convertedEmojiData.emoji,
+                                                  isMyReaction: isMyReaction,
+                                                  count: reaction?.count ?? "0")
+            default:
+                return nil
+            }
+            
+            return reactionModel
+        }.compactMap { $0 } // nil除去
     }
 }

@@ -170,9 +170,17 @@ class NoteCellViewModel: ViewModelType {
         guard let rawEmoji = item.rawEmoji else { return reactionCell }
         
         if let customEmojiUrl = item.url {
-            reactionCell.setup(noteId: item.noteId, count: item.count, customEmoji: customEmojiUrl, isMyReaction: item.isMyReaction, rawReaction: rawEmoji)
+            reactionCell.setup(noteId: item.noteId,
+                               count: item.count,
+                               customEmoji: customEmojiUrl,
+                               isMyReaction: item.isMyReaction,
+                               rawReaction: rawEmoji)
         } else {
-            reactionCell.setup(noteId: item.noteId, count: item.count, rawDefaultEmoji: rawEmoji, isMyReaction: item.isMyReaction, rawReaction: rawEmoji)
+            reactionCell.setup(noteId: item.noteId,
+                               count: item.count,
+                               rawDefaultEmoji: rawEmoji,
+                               isMyReaction: item.isMyReaction,
+                               rawReaction: rawEmoji)
         }
         
         return reactionCell
@@ -196,52 +204,8 @@ class NoteCellViewModel: ViewModelType {
     
     private func getReactions(_ item: NoteCell.Model) {
         reactionsModel = []
-//        updateReactions(new: reactionsModel)
         
-        item.reactions.forEach { reaction in
-            
-            let rawEmoji = reaction?.name ?? ""
-            let isMyReaction = rawEmoji == item.myReaction
-            
-            guard rawEmoji != "", let convertedEmojiData = EmojiHandler.handler.convertEmoji(raw: rawEmoji) else {
-                // If being not converted
-                let reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
-                                                      noteId: item.noteId ?? "",
-                                                      url: nil,
-                                                      rawEmoji: rawEmoji,
-                                                      isMyReaction: isMyReaction,
-                                                      count: reaction?.count ?? "0")
-                
-                self.reactionsModel.append(reactionModel)
-                //                self.updateReactions(new: self.reactionsModel)
-                return
-            }
-            
-            var reactionModel: NoteCell.Reaction
-            switch convertedEmojiData.type {
-            case "default":
-                reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
-                                                  noteId: item.noteId ?? "",
-                                                  url: nil,
-                                                  rawEmoji: convertedEmojiData.emoji,
-                                                  isMyReaction: isMyReaction,
-                                                  count: reaction?.count ?? "0")
-            case "custom":
-                reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
-                                                  noteId: item.noteId ?? "",
-                                                  url: convertedEmojiData.emoji,
-                                                  rawEmoji: convertedEmojiData.emoji,
-                                                  isMyReaction: isMyReaction,
-                                                  count: reaction?.count ?? "0")
-            default:
-                return
-            }
-            
-            self.reactionsModel.append(reactionModel)
-            //            self.updateReactions(new: self.reactionsModel)
-            return
-        }
-        
+        reactionsModel = item.getReactions()
         updateReactions(new: reactionsModel)
     }
     

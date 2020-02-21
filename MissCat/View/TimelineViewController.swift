@@ -231,11 +231,10 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     
     // セル選択後すぐに選択をキャンセルする & ReactionGenCellを消す
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard let viewModel = viewModel else { return }
-        
         let index = indexPath.row
-        
         tableView.deselectRow(at: indexPath as IndexPath, animated: true)
+        
+        guard let viewModel = viewModel else { return }
         showDetailView(item: viewModel.cellsModel[index])
         
         // TODO: renoteeCellをタップしたらrenote先までタップしたことにする
