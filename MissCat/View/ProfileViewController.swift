@@ -265,6 +265,10 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
             if containerScrollView.contentOffset.y >= maxScroll {
                 tlScrollView.contentOffset.y += scroll
                 needContainerScroll = false
+                
+                if tlScrollView.contentOffset.y >= tlScrollView.contentSize.height - containerView.frame.height { //スクロールの上限
+                    tlScrollView.contentOffset.y -= scroll
+                }
             }
         } else { // scroll < 0 ...
             let positiveScroll = (-1) * scroll
