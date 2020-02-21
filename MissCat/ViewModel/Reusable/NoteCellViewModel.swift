@@ -196,7 +196,7 @@ class NoteCellViewModel: ViewModelType {
     
     private func getReactions(_ item: NoteCell.Model) {
         reactionsModel = []
-        updateReactions(new: reactionsModel)
+//        updateReactions(new: reactionsModel)
         
         item.reactions.forEach { reaction in
             

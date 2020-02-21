@@ -119,7 +119,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         flowLayout.minimumInteritemSpacing = 5
         flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         reactionsCollectionView.collectionViewLayout = flowLayout
-        reactionsCollectionView.isHidden = true // リアクションが存在しない場合はHideする
     }
     
     private func setupDataSource() -> ReactionsDataSource {
@@ -319,6 +318,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         noteView.xMargin = 0
         noteView.yMargin = 0
         
+        reactionsCollectionView.isHidden = true // リアクションが存在しない場合はHideする
+        
         // 余白消す
         nameTextView.textContainerInset = .zero
         nameTextView.textContainer.lineFragmentPadding = 0
@@ -414,7 +415,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             nameTextView.showAnimatedGradientSkeleton()
             iconView.showAnimatedGradientSkeleton()
             
-//            reactionsCollectionView.isHidden = true
+            reactionsCollectionView.isHidden = true
             
             fileImageView.showAnimatedGradientSkeleton()
         } else {
