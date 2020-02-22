@@ -195,21 +195,21 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
                                               includeReplies: false,
                                               onlyFiles: false,
                                               scrollable: false,
-                                              loadLimit: 10)
+                                              loadLimit: 30)
         
         let allUserNote = generateTimelineVC(xlTitle: "Notes & Replies",
                                              userId: userId,
                                              includeReplies: true,
                                              onlyFiles: false,
                                              scrollable: false,
-                                             loadLimit: 10)
+                                             loadLimit: 30)
         
         let userMedia = generateTimelineVC(xlTitle: "Media",
                                            userId: userId,
                                            includeReplies: false,
                                            onlyFiles: true,
                                            scrollable: false,
-                                           loadLimit: 10)
+                                           loadLimit: 30)
         
         childVCs = [userNoteOnly, allUserNote, userMedia]
         
