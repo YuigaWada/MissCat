@@ -168,7 +168,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         blurView.frame = CGRect(x: 0,
                                 y: 0,
                                 width: containerScrollView.frame.width,
-                                height: maxScroll + getSafeAreaSize().height)
+                                height: pagerTab.frame.origin.y + getSafeAreaSize().height)
         
         blurView.alpha = 0
         blurView.isUserInteractionEnabled = true
