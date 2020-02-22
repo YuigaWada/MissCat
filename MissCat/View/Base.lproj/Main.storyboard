@@ -60,14 +60,14 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" text="What's happening?" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="EU5-Xs-Hwc">
-                                <rect key="frame" x="78.5" y="98" width="315.5" height="413"/>
+                                <rect key="frame" x="60.5" y="98" width="333.5" height="413"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                 <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textView>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Csp-qU-w8d">
-                                <rect key="frame" x="20" y="98" width="50.5" height="50.5"/>
+                                <rect key="frame" x="20" y="98" width="32.5" height="32.5"/>
                                 <color key="backgroundColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="Csp-qU-w8d" secondAttribute="height" multiplier="1:1" id="q9p-Sa-w1r"/>
@@ -134,7 +134,7 @@
                             <constraint firstItem="jE1-Xj-0I9" firstAttribute="trailing" secondItem="xxL-hS-Ifh" secondAttribute="trailing" id="14S-KG-Jn3"/>
                             <constraint firstItem="EU5-Xs-Hwc" firstAttribute="top" secondItem="jE1-Xj-0I9" secondAttribute="bottom" constant="15" id="471-Pa-BV5"/>
                             <constraint firstItem="EU5-Xs-Hwc" firstAttribute="leading" secondItem="Csp-qU-w8d" secondAttribute="trailing" constant="8" id="AHp-GZ-KK8"/>
-                            <constraint firstItem="Csp-qU-w8d" firstAttribute="height" secondItem="fFf-eE-SeL" secondAttribute="height" multiplier="0.0563616" id="JA6-AR-08y"/>
+                            <constraint firstItem="Csp-qU-w8d" firstAttribute="height" secondItem="fFf-eE-SeL" secondAttribute="height" multiplier="0.0363616" id="JA6-AR-08y"/>
                             <constraint firstItem="Csp-qU-w8d" firstAttribute="top" secondItem="jE1-Xj-0I9" secondAttribute="bottom" constant="15" id="JaJ-YJ-9Jd"/>
                             <constraint firstItem="jE1-Xj-0I9" firstAttribute="top" secondItem="fFf-eE-SeL" secondAttribute="top" id="NKX-3M-UkZ"/>
                             <constraint firstItem="tzh-uX-1vt" firstAttribute="leading" secondItem="xxL-hS-Ifh" secondAttribute="leading" constant="20" id="Qo5-b5-48K"/>
