@@ -8,20 +8,12 @@
 
 import UIKit
 
-class EmojiView: UIView {
+public class EmojiView: UIView {
     @IBOutlet weak var emojiLabel: UILabel!
     @IBOutlet weak var emojiImageView: UIImageView!
     @IBOutlet var view: UIView!
     
-    private var isDefaultEmoji: Bool = true
-    private var encodedEmoji: String?
-    
-    public var emoji: String = "👍" {
-        didSet {
-            self.encodedEmoji = self.encodeEmoji(emoji: self.emoji)
-            self.setEmoji()
-        }
-    }
+    public var emoji: EmojiView.EmojiModel?
     
     // MARK: Life Cycle
     
@@ -42,18 +34,15 @@ class EmojiView: UIView {
         }
     }
     
-    override func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
         setEmoji()
         adjustFontSize()
     }
     
     public func initialize() {
-        isDefaultEmoji = true
-        
         emojiLabel.text = nil
         emojiImageView.image = nil
-        encodedEmoji = nil
         
         emojiLabel.isHidden = false
         emojiImageView.isHidden = false
@@ -61,22 +50,15 @@ class EmojiView: UIView {
     
     // MARK: Emojis
     
-    private func encodeEmoji(emoji rawEmoji: String) -> String {
-        guard let convertedEmojiData = EmojiHandler.handler.convertEmoji(raw: rawEmoji) else { return rawEmoji }
-        isDefaultEmoji = convertedEmojiData.type == "default"
-        
-        return convertedEmojiData.emoji
-    }
-    
     private func setEmoji() {
-        guard let encodedEmoji = encodedEmoji else { return }
+        guard let emoji = emoji else { return }
         
-        if isDefaultEmoji {
-            emojiLabel.text = encodedEmoji
+        if emoji.isDefault {
+            emojiLabel.text = emoji.defaultEmoji
             emojiImageView.isHidden = true
         } else {
             emojiLabel.isHidden = true
-            encodedEmoji.toUIImage { image in
+            emoji.customEmojiUrl?.toUIImage { image in
                 DispatchQueue.main.async {
                     self.emojiImageView.image = image
                 }
@@ -87,16 +69,65 @@ class EmojiView: UIView {
     // MARK: Others
     
     private func adjustFontSize() {
-        guard isDefaultEmoji, let encodedEmoji = encodedEmoji else { return }
+        guard let emoji = emoji, emoji.isDefault, let defaultEmoji = emoji.defaultEmoji else { return }
         
         var labelWidth: CGFloat = 0
         var font: UIFont = emojiLabel.font ?? UIFont.systemFont(ofSize: 15.0)
         
         while frame.width - labelWidth >= 2 { // 最適なwidthとなるフォントサイズを探索する
             font = font.withSize(font.pointSize + 1)
-            labelWidth = getLabelWidth(text: encodedEmoji, font: font)
+            labelWidth = getLabelWidth(text: defaultEmoji, font: font)
         }
         
         emojiLabel.font = font
+    }
+}
+
+extension EmojiView {
+    @objc(EmojiModel) public class EmojiModel: NSObject, NSCoding {
+        public let rawEmoji: String
+        public let isDefault: Bool
+        public let defaultEmoji: String?
+        public let customEmojiUrl: String?
+        
+        init(rawEmoji: String, isDefault: Bool, defaultEmoji: String?, customEmojiUrl: String?) {
+            self.rawEmoji = rawEmoji
+            self.isDefault = isDefault
+            self.defaultEmoji = defaultEmoji
+            self.customEmojiUrl = customEmojiUrl
+        }
+        
+        // MARK: UserDefaults Init
+        
+        public required init?(coder aDecoder: NSCoder) {
+            rawEmoji = (aDecoder.decodeObject(forKey: "rawEmoji") ?? true) as? String ?? ""
+            isDefault = (aDecoder.decodeObject(forKey: "isDefault") ?? true) as? Bool ?? true
+            defaultEmoji = aDecoder.decodeObject(forKey: "defaultEmoji") as? String
+            customEmojiUrl = aDecoder.decodeObject(forKey: "customEmojiUrl") as? String
+        }
+        
+        public func encode(with aCoder: NSCoder) {
+            aCoder.encode(rawEmoji, forKey: "rawEmoji")
+            aCoder.encode(isDefault, forKey: "isDefault")
+            aCoder.encode(defaultEmoji, forKey: "defaultEmoji")
+            aCoder.encode(customEmojiUrl, forKey: "customEmojiUrl")
+        }
+        
+        // MARK: GET/SET
+        
+        public static func getModelArray() -> [EmojiModel]? {
+            guard let array = UserDefaults.standard.data(forKey: "[EmojiModel]") else { return nil }
+            return NSKeyedUnarchiver.unarchiveObject(with: array) as? [EmojiModel] // nil許容なのでOK
+        }
+        
+        public static func saveModelArray(with target: [EmojiModel]) {
+            let targetRawData = NSKeyedArchiver.archivedData(withRootObject: target)
+            UserDefaults.standard.set(targetRawData, forKey: "[EmojiModel]")
+            UserDefaults.standard.synchronize()
+        }
+        
+        public static func checkSavedArray() -> Bool { // UserDefaultsに保存されてるかcheck
+            return UserDefaults.standard.object(forKey: "[EmojiModel]") != nil
+        }
     }
 }

@@ -66,6 +66,24 @@ public class EmojiHandler {
         guard let name = name else { return false }
         return raw == ":" + name + ":" || raw == name || raw.replacingOccurrences(of: ":", with: "") == name
     }
+    
+    static func convert2EmojiModel(raw: String) -> EmojiView.EmojiModel {
+        guard let convertedEmojiData = EmojiHandler.handler.convertEmoji(raw: raw)
+        else {
+            return .init(rawEmoji: raw,
+                         isDefault: true,
+                         defaultEmoji: raw,
+                         customEmojiUrl: nil)
+        }
+        
+        let isDefault = convertedEmojiData.type == "default"
+        
+        return EmojiView.EmojiModel(rawEmoji: raw,
+                                    isDefault: isDefault,
+                                    defaultEmoji: isDefault ? raw : nil,
+                                    customEmojiUrl: isDefault ? nil : convertedEmojiData.emoji)
+    }
+    
     // Emoji形式":hogehoge:"をデフォルト絵文字 / カスタム絵文字のurl/imgに変更
     // TODO: このメソッドはレガシーで今は使わないはず？？
     public func emojiEncoder(note: String, externalEmojis: [EmojiModel?]?) -> String {

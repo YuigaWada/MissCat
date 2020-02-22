@@ -142,8 +142,8 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
         
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as? EmojiViewCell else { fatalError("Internal Error.") }
         
-        cell.mainView.emoji = item.defaultEmoji ?? item.customEmojiUrl ?? "👍"
-        setupTapGesture(to: cell, emoji: cell.mainView.emoji)
+        cell.mainView.emoji = item
+        setupTapGesture(to: cell, emoji: item.rawEmoji)
         
         return cell
     }

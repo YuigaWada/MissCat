@@ -121,7 +121,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
             typeIconView.text = "fire-alt"
             typeIconView.textColor = reactionIconColor
             typeLabel.text = "Reaction"
-            emojiView.emoji = reaction
+            emojiView.emoji = EmojiHandler.convert2EmojiModel(raw: reaction)
         }
         
         return self

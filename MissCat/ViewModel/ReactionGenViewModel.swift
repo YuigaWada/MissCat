@@ -30,7 +30,7 @@ class ReactionGenViewModel: ViewModelType {
                      otherEmojis: self.otherEmojis)
     }()
     
-    private var otherEmojisList: [ReactionGenViewController.EmojiModel] = []
+    private var otherEmojisList: [EmojiView.EmojiModel] = []
     private let otherEmojis: PublishSubject<[ReactionGenViewController.EmojisSection]> = .init()
     
     public var dataSource: EmojisDataSource?
@@ -50,18 +50,19 @@ class ReactionGenViewModel: ViewModelType {
         self.disposeBag = disposeBag
     }
     
-    public func getNextEmojis() {
+    public func getNextEmojis(completion: (() -> Void)? = nil) {
         guard !isLoading else { return }
         
-        model.getNextDefaultEmojis().subscribe(onNext: { emojis in
+        model.getCustomEmojis().subscribe(onNext: { emojis in
             self.isLoading = true
             
 //            self.otherEmojisList.append(emojis)
             
-            let section = ReactionGenViewController.EmojisSection(items: emojis)
+            let section = ReactionGenViewController.EmojisSection(items: [emojis])
             self.otherEmojis.onNext([section])
             
             self.isLoading = false
+            completion?()
         }).disposed(by: disposeBag)
         
 //        self.model.getCustomEmojis().subscribe(onNext: { emojis in
