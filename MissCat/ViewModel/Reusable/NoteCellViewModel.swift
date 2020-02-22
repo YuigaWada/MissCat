@@ -205,8 +205,8 @@ class NoteCellViewModel: ViewModelType {
     private func getReactions(_ item: NoteCell.Model) {
         reactionsModel = []
         
-        reactionsModel = item.getReactions()
-        updateReactions(new: reactionsModel)
+        reactionsModel = item.shapedReactions
+        updateReactions(new: item.shapedReactions)
     }
     
     private func hasAttachments(on yanagi: YanagiText, with attachments: [NSTextAttachment: YanagiText.Attachment]?) -> Bool {

@@ -515,6 +515,7 @@ extension NoteCell {
         let replyCount: Int
         let renoteCount: Int
         var reactions: [ReactionCount?]
+        var shapedReactions: [NoteCell.Reaction]
         var myReaction: String?
         let files: [File?]
         let emojis: [EmojiModel?]?
@@ -543,6 +544,7 @@ extension NoteCell {
                                   replyCount: 0,
                                   renoteCount: 0,
                                   reactions: [],
+                                  shapedReactions: [],
                                   myReaction: nil,
                                   files: [],
                                   emojis: [])
@@ -564,6 +566,7 @@ extension NoteCell {
                                   replyCount: 0,
                                   renoteCount: 0,
                                   reactions: [],
+                                  shapedReactions: [],
                                   myReaction: nil,
                                   files: [],
                                   emojis: [])
@@ -621,6 +624,7 @@ extension NoteCell.Reaction.Section: AnimatableSectionModelType {
 }
 
 extension NoteCell.Model {
+    /// ReactionCountをNoteCell.Reactionに変換する
     func getReactions() -> [NoteCell.Reaction] {
         return reactions.map { reaction in
             

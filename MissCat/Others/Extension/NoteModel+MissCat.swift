@@ -35,10 +35,12 @@ extension NoteModel {
                                        replyCount: post.repliesCount ?? 0,
                                        renoteCount: post.renoteCount ?? 0,
                                        reactions: post.reactions ?? [],
+                                       shapedReactions: [],
                                        myReaction: post.myReaction,
                                        files: post.files ?? [],
                                        emojis: emojis.filter { $0 != nil })
         
+        cellModel.shapedReactions = cellModel.getReactions()
         cellModel.isReply = post.reply != nil
         return cellModel
     }
