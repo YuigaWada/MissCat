@@ -19,7 +19,7 @@ extension Double {
             if month >= 6 {
                 return nil
             } else if month != 0 {
-                return "\(month)m"
+                return "\(month)mo"
             }
             if weekday != 0 {
                 return "\(weekday)w"
