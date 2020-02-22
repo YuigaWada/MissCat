@@ -22,7 +22,7 @@ import UIKit
 
 // (OOPの対極的存在である)一時的なキャッシュ管理についてはsingletonのCacheクラスを使用。
 
-public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate, TimelineDelegate, NavBarDelegate, UIGestureRecognizerDelegate {
+public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate, TimelineDelegate, NavBarDelegate, UIGestureRecognizerDelegate, UINavigationControllerDelegate {
     private var isXSeries = UIScreen.main.bounds.size.height > 811
     private let footerTabHeight: CGFloat = 55
     private var initialized: Bool = false
@@ -88,6 +88,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
+        navigationController?.delegate = self
         navigationController?.interactivePopGestureRecognizer?.delegate = self
         navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         
@@ -384,6 +385,16 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     public func changedStreamState(success: Bool) {
         guard !success else { return }
         showNotificationBanner(icon: .Failed, notification: "Streamingが切断されました")
+    }
+    
+    // MARK: NavigationController Delegate
+    
+    public func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
+        if viewController is HomeViewController {
+            nowPage = .Main
+        } else if viewController is ProfileViewController {
+            nowPage = .Profile
+        }
     }
     
     // MARK: PolioPager Delegate
