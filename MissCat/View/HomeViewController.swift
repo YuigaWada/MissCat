@@ -318,7 +318,6 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     }
     
     public func tappedFav() {
-        guard let home = home as? FooterTabBarDelegate else { return }
         home.tappedFav()
     }
     
@@ -327,7 +326,10 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         
         Cache.shared.getMe { me in
             guard let me = me else { return }
-            DispatchQueue.main.async { self.showProfileView(userId: me.id, isMe: true) }
+            DispatchQueue.main.async {
+                self.hideView(without: .Profile)
+                self.showProfileView(userId: me.id, isMe: true)
+            }
         }
     }
     
