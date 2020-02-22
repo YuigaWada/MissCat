@@ -279,14 +279,10 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }
     
     private func showImage(url: String) {
-        url.toUIImage { image in
-            guard let image = image, let delegate = self.delegate as? UIViewController else { return }
-            
-            DispatchQueue.main.async {
-                let agrume = Agrume(image: image)
-                agrume.show(from: delegate) // 画像を表示
-            }
-        }
+        guard let url = URL(string: url), let delegate = self.delegate as? UIViewController else { return }
+        
+        let agrume = Agrume(url: url)
+        agrume.show(from: delegate) // 画像を表示
     }
     
     private func setupReactionCell(_ dataSource: CollectionViewSectionedDataSource<NoteCell.Reaction.Section>, _ collectionView: UICollectionView, _ indexPath: IndexPath) -> UICollectionViewCell {
