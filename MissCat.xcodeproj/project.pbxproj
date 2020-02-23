@@ -55,6 +55,7 @@
 		8D8863B223848C0400A7A5A8 /* UIView+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8863B123848C0400A7A5A8 /* UIView+MissCat.swift */; };
 		8D8863B4238493FA00A7A5A8 /* RenoteeCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D8863B3238493FA00A7A5A8 /* RenoteeCell.xib */; };
 		8D8863B62384951300A7A5A8 /* RenoteeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8863B52384951200A7A5A8 /* RenoteeCell.swift */; };
+		8D9DA9CD2402A067000EE840 /* GIFImageView+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9DA9CC2402A067000EE840 /* GIFImageView+MissCat.swift */; };
 		8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */; };
 		8D9EF4C8238187A4005449EC /* ReactionGenCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */; };
 		8DA06A072389E89A0093A718 /* NotificationsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA06A062389E89A0093A718 /* NotificationsViewController.swift */; };
@@ -149,6 +150,7 @@
 		8D8863B123848C0400A7A5A8 /* UIView+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+MissCat.swift"; sourceTree = "<group>"; };
 		8D8863B3238493FA00A7A5A8 /* RenoteeCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RenoteeCell.xib; sourceTree = "<group>"; };
 		8D8863B52384951200A7A5A8 /* RenoteeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenoteeCell.swift; sourceTree = "<group>"; };
+		8D9DA9CC2402A067000EE840 /* GIFImageView+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GIFImageView+MissCat.swift"; sourceTree = "<group>"; };
 		8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenViewController.swift; sourceTree = "<group>"; };
 		8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReactionGenCell.xib; sourceTree = "<group>"; };
 		8DA06A062389E89A0093A718 /* NotificationsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsViewController.swift; sourceTree = "<group>"; };
@@ -290,6 +292,7 @@
 				8D84061C238FFC5C00EED595 /* UIImage+MissCat.swift */,
 				8DA36F852394B9D000512459 /* UIFont+MissCat.swift */,
 				8D0D47A923A74EC80095361D /* UIViewController+PhotoEditor.swift */,
+				8D9DA9CC2402A067000EE840 /* GIFImageView+MissCat.swift */,
 			);
 			path = Extension;
 			sourceTree = "<group>";
@@ -635,6 +638,7 @@
 				8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */,
 				8DA06A12238A58A20093A718 /* NSMutableAttributedString+MissCat.swift in Sources */,
 				8D502D58238024B700525A96 /* HomeViewController.swift in Sources */,
+				8D9DA9CD2402A067000EE840 /* GIFImageView+MissCat.swift in Sources */,
 				8D065B17237AC3D0003DFB7C /* TimelineViewModel.swift in Sources */,
 				8D42C3A623804B6200337DD2 /* UIViewController+MissCat.swift in Sources */,
 				8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */,

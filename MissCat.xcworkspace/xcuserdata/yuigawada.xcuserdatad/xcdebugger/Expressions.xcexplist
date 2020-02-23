@@ -158,7 +158,10 @@
          contextName = "EmojiView.setEmoji():EmojiView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "isDefaultEmoji">
+               value = "emoji.customEmojiUrl">
+            </PersistentString>
+            <PersistentString
+               value = "emojiImageView.isHidden">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -236,10 +239,10 @@
          contextName = "NoteCell.shapeCell(item:isDetailMode:):NoteCell.swift">
          <PersistentStrings>
             <PersistentString
-               value = " self.nameTextView.font?.fontName">
+               value = "self.noteView.font?.fontSize">
             </PersistentString>
             <PersistentString
-               value = "self.noteView.font?.fontSize">
+               value = " self.nameTextView.font?.fontName">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -306,10 +309,10 @@
          contextName = "static Requestor.post(url:rawJson:data:completion:):Requestor.swift">
          <PersistentStrings>
             <PersistentString
-               value = "request.httpAdditionalHeaders">
+               value = "String(data: bodyData)">
             </PersistentString>
             <PersistentString
-               value = "String(data: bodyData)">
+               value = "request.httpAdditionalHeaders">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -393,10 +396,10 @@
          contextName = "ProfileViewController.timelineDidScroll(_:scroll:):ProfileViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "containerScrollView.contentOffset.y">
+               value = "pagerTab.frame.origin.y">
             </PersistentString>
             <PersistentString
-               value = "pagerTab.frame.origin.y">
+               value = "containerScrollView.contentOffset.y">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -532,10 +535,10 @@
                value = " MisskeyKit.auth.appSecret">
             </PersistentString>
             <PersistentString
-               value = "UIScreen.main.bounds.size.height">
+               value = "self.footerTab">
             </PersistentString>
             <PersistentString
-               value = "self.footerTab">
+               value = "UIScreen.main.bounds.size.height">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -567,13 +570,13 @@
          contextName = "ProfileViewController.scrollViewDidScroll(_:):ProfileViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "scrollView.contentOffset.x">
+               value = "scrollView as! UIScrollView">
             </PersistentString>
             <PersistentString
                value = "scrollView.contentOffset.y">
             </PersistentString>
             <PersistentString
-               value = "scrollView as! UIScrollView">
+               value = "scrollView.contentOffset.x">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -891,10 +894,10 @@
                value = "item.displayName">
             </PersistentString>
             <PersistentString
-               value = "item.note">
+               value = "item.reactions">
             </PersistentString>
             <PersistentString
-               value = "item.reactions">
+               value = "item.note">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
