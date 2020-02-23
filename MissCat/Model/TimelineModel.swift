@@ -80,7 +80,11 @@ class TimelineModel {
         return Observable.create { [unowned self] observer in
             
             let handleResult = { (posts: [NoteModel]?, error: MisskeyKitError?) in
-                guard let posts = posts, error == nil else { /* Error */ print(error ?? "error is nil"); return }
+                guard let posts = posts, error == nil else {
+                    if let error = error { observer.onError(error) }
+                    print(error ?? "error is nil")
+                    return
+                }
                 
                 posts.forEach { post in
                     // Renote

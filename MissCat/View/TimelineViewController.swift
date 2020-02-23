@@ -162,9 +162,9 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     @objc func refreshTableView(_ sender: Any) {
         guard let viewModel = viewModel else { return }
         
-        viewModel.loadUntilNotes {
-            DispatchQueue.main.async { self.refreshControl.endRefreshing() }
-        }
+//        viewModel.loadUntilNotes {
+//            DispatchQueue.main.async { self.refreshControl.endRefreshing() }
+//        }
     }
     
     // MARK: Setup Cell
@@ -258,7 +258,9 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         guard !state.isLoading, state.cellCount - indexPath.row < loadLimit / 4 else { return } //  state.cellCompleted,
         
         print("loadUntilNotes...")
-        viewModel.loadUntilNotes()
+        viewModel.loadUntilNotes().subscribe(onError: { error in
+            print(error)
+        }).disposed(by: disposeBag)
     }
     
     // MARK: Utilities

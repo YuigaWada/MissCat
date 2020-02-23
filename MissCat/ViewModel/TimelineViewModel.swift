@@ -82,7 +82,11 @@ class TimelineViewModel: ViewModelType {
     
     public func setupInitialCell() {
         setSkeltonCell()
-        loadNotes {
+        
+        // タイムラインをロードする
+        loadNotes().subscribe(onError: { error in
+            print(error)
+        }, onCompleted: {
             DispatchQueue.main.async {
                 self.output.finishedLoading.accept(true)
                 
@@ -92,7 +96,7 @@ class TimelineViewModel: ViewModelType {
                 guard self.input.type.needsStreaming else { return }
                 self.connectStream()
             }
-        }
+        }, onDisposed: nil).disposed(by: disposeBag)
     }
     
     // MARK: Streaming
@@ -173,17 +177,20 @@ class TimelineViewModel: ViewModelType {
     // MARK: REST
     
     // 古い投稿から順にfetchしてくる
-    public func loadUntilNotes(completion: (() -> Void)? = nil) {
-        guard let untilId = self.cellsModel[self.cellsModel.count - 1].noteId else { return }
-        
-        loadNotes(untilId: untilId) {
-            self.updateNotes(new: self.cellsModel)
-            if let completion = completion { completion() }
+    public func loadUntilNotes() -> Observable<NoteCell.Model> {
+        guard let untilId = self.cellsModel[self.cellsModel.count - 1].noteId else {
+            return Observable.create { _ in
+                Disposables.create()
+            }
         }
+        
+        return loadNotes(untilId: untilId).do(onCompleted: {
+            self.updateNotes(new: self.cellsModel)
+        })
     }
     
     // 投稿をfetchしてくる
-    public func loadNotes(untilId: String? = nil, completion: (() -> Void)? = nil) {
+    public func loadNotes(untilId: String? = nil) -> Observable<NoteCell.Model> {
         let option = Model.LoadOption(type: input.type,
                                       userId: input.userId,
                                       untilId: untilId,
@@ -192,16 +199,13 @@ class TimelineViewModel: ViewModelType {
                                       listId: input.listId,
                                       loadLimit: input.loadLimit)
         _isLoading = true
-        print("isLoading: true")
-        model.loadNotes(with: option).subscribe(onNext: { cellModel in
+        
+        return model.loadNotes(with: option).do(onNext: { cellModel in
             self.cellsModel.append(cellModel)
         }, onCompleted: {
             self.initialNoteIds = self.model.initialNoteIds
             self._isLoading = false
-            print("isLoading: false")
-            if let completion = completion { completion() }
-        }, onDisposed: nil)
-            .disposed(by: disposeBag)
+        })
     }
     
     func getCell(cell itemCell: NoteCell, item: NoteCell.Model) -> NoteCell {
