@@ -125,7 +125,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
             if self.viewModel!.hasMarked {
                 self.viewModel!.cancelReaction(noteId: targetNoteId)
             } else {
-                self.viewModel!.registerReaction(noteId: targetNoteId, reaction: emoji)
+                self.viewModel!.registerReaction(noteId: targetNoteId, reaction: ":" + emoji + ":")
             }
             
             self.dismiss(animated: true, completion: nil) // 半モーダルを消す
