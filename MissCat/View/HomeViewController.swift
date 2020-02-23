@@ -276,7 +276,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
-    private func showNotificationBanner(icon: NotificationBanner.IconType, notification: String) {
+    public func showNotificationBanner(icon: NotificationBanner.IconType, notification: String) {
         let bannerWidth = view.frame.width / 3
         
         let frame = CGRect(x: view.frame.width - bannerWidth - 10,

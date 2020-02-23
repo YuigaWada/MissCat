@@ -8,7 +8,7 @@
 
 import UIKit
 
-class NotificationBanner: UIView {
+public class NotificationBanner: UIView {
     @IBOutlet weak var iconLabel: UILabel!
     @IBOutlet weak var mainContentLabel: UILabel!
     
@@ -147,7 +147,7 @@ class NotificationBanner: UIView {
 }
 
 extension NotificationBanner {
-    enum IconType {
+    public enum IconType {
         case Loading
         case Success
         
