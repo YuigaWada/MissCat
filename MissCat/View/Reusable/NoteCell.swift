@@ -631,6 +631,7 @@ extension NoteCell.Model {
     /// ReactionCountをNoteCell.Reactionに変換する
     func getReactions() -> [NoteCell.Reaction] {
         return reactions.map { reaction in
+            guard let count = reaction?.count, count != "0" else { return nil }
             
             let rawEmoji = reaction?.name ?? ""
             let isMyReaction = rawEmoji == self.myReaction
@@ -642,7 +643,7 @@ extension NoteCell.Model {
                                                       url: nil,
                                                       rawEmoji: rawEmoji,
                                                       isMyReaction: isMyReaction,
-                                                      count: reaction?.count ?? "0")
+                                                      count: count)
                 return reactionModel
             }
             
@@ -654,14 +655,14 @@ extension NoteCell.Model {
                                                   url: nil,
                                                   rawEmoji: convertedEmojiData.emoji,
                                                   isMyReaction: isMyReaction,
-                                                  count: reaction?.count ?? "0")
+                                                  count: count)
             case "custom":
                 reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
                                                   noteId: self.noteId ?? "",
                                                   url: convertedEmojiData.emoji,
                                                   rawEmoji: convertedEmojiData.emoji,
                                                   isMyReaction: isMyReaction,
-                                                  count: reaction?.count ?? "0")
+                                                  count: count)
             default:
                 return nil
             }
