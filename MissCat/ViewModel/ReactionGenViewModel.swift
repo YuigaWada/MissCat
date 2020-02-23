@@ -56,10 +56,8 @@ class ReactionGenViewModel: ViewModelType {
         model.getCustomEmojis().subscribe(onNext: { emojis in
             self.isLoading = true
             
-//            self.otherEmojisList.append(emojis)
-            
-            let section = ReactionGenViewController.EmojisSection(items: [emojis])
-            self.otherEmojis.onNext([section])
+            self.otherEmojisList.append(emojis)
+            self.updateEmojis(self.otherEmojisList)
             
             self.isLoading = false
             completion?()
@@ -87,5 +85,14 @@ class ReactionGenViewModel: ViewModelType {
             
             self.myReaction = nil
         }
+    }
+    
+    private func updateEmojis(_ items: [EmojiView.EmojiModel]) {
+        let section = ReactionGenViewController.EmojisSection(items: items)
+        updateEmojis(section)
+    }
+    
+    private func updateEmojis(_ section: ReactionGenViewController.EmojisSection) {
+        otherEmojis.onNext([section])
     }
 }

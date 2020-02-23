@@ -6,14 +6,20 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import Gifu
+import SVGKit
 import UIKit
 
 public class EmojiView: UIView {
     @IBOutlet weak var emojiLabel: UILabel!
-    @IBOutlet weak var emojiImageView: UIImageView!
+    @IBOutlet weak var emojiImageView: GIFImageView!
     @IBOutlet var view: UIView!
     
-    public var emoji: EmojiView.EmojiModel?
+    public var emoji: EmojiView.EmojiModel? {
+        didSet {
+            self.setEmoji()
+        }
+    }
     
     // MARK: Life Cycle
     
@@ -53,16 +59,15 @@ public class EmojiView: UIView {
     private func setEmoji() {
         guard let emoji = emoji else { return }
         
+        initialize()
+        emojiLabel.isHidden = emoji.isDefault
+        emojiImageView.isHidden = !emoji.isDefault
+        
         if emoji.isDefault {
             emojiLabel.text = emoji.defaultEmoji
-            emojiImageView.isHidden = true
         } else {
-            emojiLabel.isHidden = true
-            emoji.customEmojiUrl?.toUIImage { image in
-                DispatchQueue.main.async {
-                    self.emojiImageView.image = image
-                }
-            }
+            guard let customEmojiUrl = emoji.customEmojiUrl else { return }
+            emojiImageView.setImage(url: customEmojiUrl) // イメージをset
         }
     }
     
