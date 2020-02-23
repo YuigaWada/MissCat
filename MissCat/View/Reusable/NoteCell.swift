@@ -104,7 +104,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     private lazy var setupView: (() -> Void) = { // 必ず一回しか読み込まれない
         self.setupSkeltonMode()
         self.setupProfileGesture() // プロフィールに飛ぶtapgestureを設定する
-        self.setupFileView()
         self.setupCollectionView()
         return {}
     }()
@@ -222,7 +221,12 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         //        reactionsCollectionView.isHidden = false
         
-        fileImageView.arrangedSubviews.forEach { $0.isHidden = true }
+        setupFileView()
+        fileImageView.arrangedSubviews.forEach {
+            guard let imageView = $0 as? UIImageView else { return }
+            imageView.isHidden = true
+            imageView.image = nil
+        }
         
         // TODO: reactionを隠す時これつかう → UIView.animate(withDuration: 0.25, animations: { () -> Void in
         
@@ -238,6 +242,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     // ファイルは同時に4つしか載せることができないので、先に4つViewを追加しておく
     private func setupFileView() {
+        guard fileImageView.arrangedSubviews.count == 0 else { return }
+        
         for _ in 0 ..< 4 {
             let imageView = UIImageView()
             
@@ -246,6 +252,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             imageView.isHidden = true
             imageView.layer.cornerRadius = 10
             imageView.isUserInteractionEnabled = true
+            imageView.backgroundColor = .lightGray
             imageView.layer.borderColor = UIColor.lightGray.cgColor
             imageView.layer.borderWidth = 1
             imageView.layer.masksToBounds = true
@@ -263,10 +270,11 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             //tap gestureを付加する
             imageView.setTapGesture(self.disposeBag, closure: { self.showImage(url: originalImageUrl) })
             
+            imageView.backgroundColor = .clear
             imageView.image = image
             imageView.isHidden = false
             
-            self.imageView?.layoutIfNeeded()
+            imageView.layoutIfNeeded()
             self.mainStackView.setNeedsLayout()
         }
     }
@@ -350,12 +358,12 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         iconImageUrl = viewModel.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
         
         // file
-        if let files = Cache.shared.getFiles(noteId: noteId) {
+        if let files = Cache.shared.getFiles(noteId: noteId) { // キャッシュが存在する場合
             for index in 0 ..< files.count {
                 let file = files[index]
                 setupFileImage(file.thumbnail, originalImageUrl: file.originalUrl, index: index)
             }
-        } else {
+        } else { // キャッシュが存在しない場合
             let files = item.files.filter { $0 != nil }
             let fileCount = files.count
             
