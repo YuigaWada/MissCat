@@ -60,8 +60,8 @@ public class EmojiView: UIView {
         guard let emoji = emoji else { return }
         
         initialize()
-        emojiLabel.isHidden = emoji.isDefault
-        emojiImageView.isHidden = !emoji.isDefault
+        emojiLabel.isHidden = !emoji.isDefault
+        emojiImageView.isHidden = emoji.isDefault
         
         if emoji.isDefault {
             emojiLabel.text = emoji.defaultEmoji
