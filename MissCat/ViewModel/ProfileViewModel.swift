@@ -24,6 +24,11 @@ class ProfileViewModel: ViewModelType {
         let iconImage: PublishRelay<UIImage> = .init()
         let intro: PublishRelay<NSAttributedString> = .init()
         
+        let notesCount: PublishRelay<String> = .init()
+        let followCount: PublishRelay<String> = .init()
+        let followerCount: PublishRelay<String> = .init()
+        let relation: PublishRelay<UserRelationship> = .init()
+        
         var isMe: Bool = false
     }
     
@@ -46,6 +51,13 @@ class ProfileViewModel: ViewModelType {
     
     private func handleUserInfo(_ user: UserModel?) {
         guard let user = user else { return }
+        
+        // Notes || FF
+        output.notesCount.accept(user.notesCount?.description ?? "0")
+        output.followCount.accept(user.followingCount?.description ?? "0")
+        output.followerCount.accept(user.followersCount?.description ?? "0")
+        
+        setRelation(targetUserId: user.id)
         
         // Icon Image
         if let username = user.username, let cachediconImage = Cache.shared.getIcon(username: username) {
@@ -79,6 +91,13 @@ class ProfileViewModel: ViewModelType {
         if let username = user.username {
             output.username.accept("@" + username)
             output.displayName.accept(user.name ?? username)
+        }
+    }
+    
+    private func setRelation(targetUserId: String) {
+        MisskeyKit.users.getUserRelationship(userId: targetUserId) { relation, error in
+            guard let relation = relation, error == nil else { return }
+            self.output.relation.accept(relation)
         }
     }
 }

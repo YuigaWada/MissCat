@@ -28,6 +28,11 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     @IBOutlet weak var iconImageView: UIImageView!
     @IBOutlet weak var introTextView: MisskeyTextView!
     
+    @IBOutlet weak var notesCountButton: UIButton!
+    @IBOutlet weak var followCountButton: UIButton!
+    @IBOutlet weak var followerCountButton: UIButton!
+    @IBOutlet weak var followButton: UIButton!
+    
     @IBOutlet weak var backButton: UIButton!
     @IBOutlet weak var containerHeightContraint: NSLayoutConstraint!
     
@@ -87,6 +92,13 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         
         introTextView.font = UIFont(name: "Helvetica",
                                     size: 11.0)
+        
+        notesCountButton.titleLabel?.text = nil
+        followCountButton.titleLabel?.text = nil
+        followerCountButton.titleLabel?.text = nil
+        followButton.titleLabel?.text = "..."
+        followButton.layer.borderColor = UIColor.systemBlue.cgColor
+        followButton.layer.borderWidth = 1
     }
     
     // MARK: Public Methods
@@ -140,6 +152,27 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         output.displayName.asDriver(onErrorDriveWith: Driver.empty()).drive(displayName.rx.text).disposed(by: disposeBag)
         output.username.asDriver(onErrorDriveWith: Driver.empty()).drive(usernameLabel.rx.text).disposed(by: disposeBag)
         
+        output.notesCount.asDriver(onErrorDriveWith: Driver.empty()).drive(notesCountButton.rx.title()).disposed(by: disposeBag)
+        output.followCount.asDriver(onErrorDriveWith: Driver.empty()).drive(followCountButton.rx.title()).disposed(by: disposeBag)
+        output.followerCount.asDriver(onErrorDriveWith: Driver.empty()).drive(followerCountButton.rx.title()).disposed(by: disposeBag)
+        
+        if !output.isMe {
+            output.relation.asDriver(onErrorDriveWith: Driver.empty()).map {
+                let isFollowing = $0.isFollowing ?? false
+                return isFollowing ? "フォロー解除" : "フォロー"
+            }.drive(followButton.rx.title()).disposed(by: disposeBag)
+            
+            output.relation.asDriver(onErrorDriveWith: Driver.empty()).map {
+                let isFollowing = $0.isFollowing ?? false
+                return !isFollowing ? UIColor.systemBlue : UIColor.white
+            }.drive(followButton.rx.backgroundColor).disposed(by: disposeBag)
+            
+            output.relation.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: {
+                let isFollowing = $0.isFollowing ?? false
+                self.followButton.setTitleColor(isFollowing ? UIColor.systemBlue : UIColor.white, for: .normal)
+            }).disposed(by: disposeBag)
+        }
+        
         backButton.rx.tap.subscribe(onNext: {
             _ = self.navigationController?.popViewController(animated: true)
         }).disposed(by: disposeBag)
@@ -168,7 +201,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         blurView.frame = CGRect(x: 0,
                                 y: 0,
                                 width: containerScrollView.frame.width,
-                                height: pagerTab.frame.origin.y + getSafeAreaSize().height)
+                                height: pagerTab.frame.origin.y + getSafeAreaSize().height - 10)
         
         blurView.alpha = 0
         blurView.isUserInteractionEnabled = true
@@ -300,6 +333,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     private func setupSkeltonMode() {
         iconImageView.isSkeletonable = true
         introTextView.isSkeletonable = true
+        
         displayName.text = nil
         usernameLabel.text = nil
         
