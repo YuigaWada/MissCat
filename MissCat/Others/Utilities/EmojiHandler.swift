@@ -10,11 +10,17 @@ import MisskeyKit
 
 public class EmojiHandler {
     public var defaultEmojis: [DefaultEmojiModel]?
-    public var customEmojis: [EmojiModel]?
+    public var customEmojis: [EmojiModel]? {
+        didSet {
+            guard let customEmojis = customEmojis else { return }
+            categorizeEmojis(customEmojis)
+        }
+    }
     
+    public var categorizedEmojis: [String: [EmojiModel]] = .init() // 絵文字のカテゴリーによって分類分けする
     public static let handler = EmojiHandler() // Singleton
     
-    init() {
+    init() { // 先に絵文字情報をダウンロードしておく
         MisskeyKit.Emojis.getDefault { self.defaultEmojis = $0 }
         MisskeyKit.Emojis.getCustom { self.customEmojis = $0 }
     }
@@ -82,6 +88,21 @@ public class EmojiHandler {
                                     isDefault: isDefault,
                                     defaultEmoji: isDefault ? raw : nil,
                                     customEmojiUrl: isDefault ? nil : convertedEmojiData.emoji)
+    }
+    
+    /// カスタム絵文字をカテゴリーによって分類する
+    /// - Parameter emojis: カスタム絵文字のmodel
+    private func categorizeEmojis(_ emojis: [EmojiModel]) {
+        emojis.forEach { emoji in
+            var category = emoji.category ?? ""
+            category = category != "" ? category : "Others"
+            
+            if let _ = categorizedEmojis[category] { // key: categoryであるArrayが格納されているならば...
+                categorizedEmojis[category]?.append(emoji)
+            } else {
+                categorizedEmojis[category] = [emoji]
+            }
+        }
     }
     
     // Emoji形式":hogehoge:"をデフォルト絵文字 / カスタム絵文字のurl/imgに変更
