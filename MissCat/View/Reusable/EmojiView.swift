@@ -15,6 +15,14 @@ public class EmojiView: UIView {
     @IBOutlet weak var emojiImageView: GIFImageView!
     @IBOutlet var view: UIView!
     
+    public var isFake: Bool = false {
+        didSet {
+            guard isFake else { return }
+            emojiImageView.backgroundColor = .lightGray
+            emojiLabel.backgroundColor = .lightGray
+        }
+    }
+    
     public var emoji: EmojiView.EmojiModel? {
         didSet {
             self.setEmoji()
@@ -44,6 +52,12 @@ public class EmojiView: UIView {
         super.layoutSubviews()
         setEmoji()
         adjustFontSize()
+        setComponent()
+    }
+    
+    private func setComponent() {
+        emojiImageView.backgroundColor = isFake ? .clear : .lightGray
+        emojiLabel.backgroundColor = isFake ? .clear : .lightGray
     }
     
     public func initialize() {
@@ -52,6 +66,9 @@ public class EmojiView: UIView {
         
         emojiLabel.isHidden = false
         emojiImageView.isHidden = false
+        
+        emojiImageView.backgroundColor = isFake ? .clear : .lightGray
+        emojiLabel.backgroundColor = isFake ? .clear : .lightGray
     }
     
     // MARK: Emojis
@@ -65,6 +82,7 @@ public class EmojiView: UIView {
         
         if emoji.isDefault {
             emojiLabel.text = emoji.defaultEmoji
+            emojiLabel.backgroundColor = .clear
         } else {
             guard let customEmojiUrl = emoji.customEmojiUrl else { return }
             emojiImageView.setImage(url: customEmojiUrl) // イメージをset
@@ -90,16 +108,21 @@ public class EmojiView: UIView {
 
 extension EmojiView {
     @objc(EmojiModel) public class EmojiModel: NSObject, NSCoding {
+        // MARK: Emoji Info
+        
         public let rawEmoji: String
         public let isDefault: Bool
         public let defaultEmoji: String?
         public let customEmojiUrl: String?
         
-        init(rawEmoji: String, isDefault: Bool, defaultEmoji: String?, customEmojiUrl: String?) {
+        public var isFake: Bool = false
+        
+        init(rawEmoji: String, isDefault: Bool, defaultEmoji: String?, customEmojiUrl: String?, isFake: Bool = false) {
             self.rawEmoji = rawEmoji
             self.isDefault = isDefault
             self.defaultEmoji = defaultEmoji
             self.customEmojiUrl = customEmojiUrl
+            self.isFake = isFake
         }
         
         // MARK: UserDefaults Init
@@ -134,5 +157,22 @@ extension EmojiView {
         public static func checkSavedArray() -> Bool { // UserDefaultsに保存されてるかcheck
             return UserDefaults.standard.object(forKey: "[EmojiModel]") != nil
         }
+    }
+}
+
+// CollectionViewはセクションのヘッダを持たないので、自前で実装してあげる
+// したがって、modelの方にヘッダー情報をねじ込む
+class EmojiViewHeader: EmojiView.EmojiModel {
+    // MARK: Header
+    
+    public var title: String
+    
+    init(title: String) {
+        self.title = title
+        super.init(rawEmoji: "", isDefault: true, defaultEmoji: nil, customEmojiUrl: nil)
+    }
+    
+    public required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
