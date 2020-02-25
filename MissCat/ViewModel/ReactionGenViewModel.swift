@@ -30,7 +30,10 @@ class ReactionGenViewModel: ViewModelType {
                      otherEmojis: self.otherEmojis)
     }()
     
-    private var otherEmojisList: [EmojiView.EmojiModel] = []
+    private lazy var emojisList: [EmojiView.EmojiModel] = {
+        [EmojiViewHeader(title: "Favorites")] + model.getPresets() // ヘッダーを追加する
+    }()
+    
     private let otherEmojis: PublishSubject<[ReactionGenViewController.EmojisSection]> = .init()
     
     public var dataSource: EmojisDataSource?
@@ -56,8 +59,8 @@ class ReactionGenViewModel: ViewModelType {
         model.getCustomEmojis().subscribe(onNext: { emojis in
             self.isLoading = true
             
-            self.otherEmojisList.append(emojis)
-            self.updateEmojis(self.otherEmojisList)
+            self.emojisList.append(emojis)
+            self.updateEmojis(self.emojisList)
             
             self.isLoading = false
             completion?()
@@ -69,6 +72,10 @@ class ReactionGenViewModel: ViewModelType {
 //            let section = ReactionGenViewController.EmojisSection(items: self.otherEmojisList)
 //            self.otherEmojis.onNext([section])
 //        }).disposed(by: disposeBag)
+    }
+    
+    public func checkHeader(index: Int) -> Bool {
+        return emojisList[index] is EmojiViewHeader
     }
     
     public func registerReaction(noteId: String, reaction: String) {

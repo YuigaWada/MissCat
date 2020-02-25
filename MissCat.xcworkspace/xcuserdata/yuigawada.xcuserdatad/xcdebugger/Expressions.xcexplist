@@ -30,6 +30,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #1 in closure #1 in ReactionGenModel.getCustomEmojis():ReactionGenModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "7 - (emojis.count % 7)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "static MisskeyKit.Emojis.getCustom(completion:):Emoji.swift">
          <PersistentStrings>
             <PersistentString

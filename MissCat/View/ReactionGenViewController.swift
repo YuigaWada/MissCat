@@ -16,7 +16,7 @@ public protocol ReactionGenViewControllerDelegate {
 
 private typealias ViewModel = ReactionGenViewModel
 public typealias EmojisDataSource = RxCollectionViewSectionedReloadDataSource<ReactionGenViewController.EmojisSection>
-public class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScrollViewDelegate, UICollectionViewDelegate {
+public class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScrollViewDelegate, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var iconImageView: UIImageView!
     @IBOutlet weak var displayNameLabel: UILabel!
@@ -33,6 +33,8 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     private var viewDidAppeared: Bool = false
     private var cellLoading: Bool = false
     private var previousCellCount = -1
+    
+    private lazy var defaultCellsize = view.frame.width / 8
     
     // MARK: Life Cycle
     
@@ -95,6 +97,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     }
     
     private func setupComponents() {
+        emojiCollectionView.register(UINib(nibName: "ReactionCollectionHeader", bundle: nil), forCellWithReuseIdentifier: "ReactionCollectionHeader")
         emojiCollectionView.register(UINib(nibName: "EmojiViewCell", bundle: nil), forCellWithReuseIdentifier: "EmojiCell")
         emojiCollectionView.rx.setDelegate(self).disposed(by: disposeBag)
         searchBar.delegate = self
@@ -107,9 +110,8 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     
     private func setupCollectionViewLayout() {
         let flowLayout = UICollectionViewFlowLayout()
-        let size = view.frame.width / 8
         
-        flowLayout.itemSize = CGSize(width: size, height: size)
+        flowLayout.itemSize = CGSize(width: defaultCellsize, height: defaultCellsize)
         flowLayout.minimumInteritemSpacing = 0
         flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         emojiCollectionView.collectionViewLayout = flowLayout
@@ -140,12 +142,26 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
         let index = indexPath.row
         let item = dataSource.sectionModels[0].items[index]
         
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as? EmojiViewCell else { fatalError("Internal Error.") }
-        
-        cell.mainView.emoji = item
-        setupTapGesture(to: cell, emoji: item.rawEmoji)
-        
-        return cell
+        let isHeader = item is EmojiViewHeader
+        if isHeader {
+            guard let headerInfo = item as? EmojiViewHeader,
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ReactionCollectionHeader", for: indexPath) as? ReactionCollectionHeader else { fatalError("Internal Error.") }
+            
+            cell.contentMode = .left
+            cell.setTitle(headerInfo.title)
+            return cell
+        } else {
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as? EmojiViewCell else { fatalError("Internal Error.") }
+            
+            cell.mainView.initialize()
+            
+            cell.mainView.emoji = item
+            cell.mainView.isFake = item.isFake
+            cell.contentMode = .left
+            setupTapGesture(to: cell, emoji: item.rawEmoji)
+            
+            return cell
+        }
     }
     
     // MARK: Set Methods
@@ -172,11 +188,24 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
             collectionView.visibleCells.count > 0,
             collectionView.visibleCells.count - index >= 0 else { return }
         
-//        cellLoading = true
-//        previousCellCount = collectionView.visibleCells.count
-//        viewModel.getNextEmojis {
-//            self.cellLoading = false
-//        }
+        //        cellLoading = true
+        //        previousCellCount = collectionView.visibleCells.count
+        //        viewModel.getNextEmojis {
+        //            self.cellLoading = false
+        //        }
+    }
+    
+    // Headerセルの場合はの幅を設定
+    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let defaultSize = CGSize(width: defaultCellsize, height: defaultCellsize)
+        guard let viewModel = viewModel else { return defaultSize }
+        let isHeader = viewModel.checkHeader(index: indexPath.row)
+        
+        return isHeader ? CGSize(width: emojiCollectionView.frame.width, height: 30) : defaultSize
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 0
     }
     
     // MARK: Public Methods

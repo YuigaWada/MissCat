@@ -47,6 +47,8 @@
 		8D613551238A978700AB50C2 /* EmojiViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D613550238A978700AB50C2 /* EmojiViewCell.swift */; };
 		8D613553238B6D4F00AB50C2 /* NavBar.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D613552238B6D4F00AB50C2 /* NavBar.xib */; };
 		8D613555238B6D8B00AB50C2 /* NavBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D613554238B6D8B00AB50C2 /* NavBar.swift */; };
+		8D79687F2404BE59004F87FA /* ReactionCollectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */; };
+		8D7968812404BE68004F87FA /* ReactionCollectionHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D7968802404BE68004F87FA /* ReactionCollectionHeader.xib */; };
 		8D84061D238FFC5C00EED595 /* UIImage+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D84061C238FFC5C00EED595 /* UIImage+MissCat.swift */; };
 		8D84061F2393547800EED595 /* PostDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D84061E2393547800EED595 /* PostDetailViewController.swift */; };
 		8D8863A92383F8A900A7A5A8 /* NoteCellViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8863A82383F8A900A7A5A8 /* NoteCellViewModel.swift */; };
@@ -142,6 +144,8 @@
 		8D613550238A978700AB50C2 /* EmojiViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiViewCell.swift; sourceTree = "<group>"; };
 		8D613552238B6D4F00AB50C2 /* NavBar.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NavBar.xib; sourceTree = "<group>"; };
 		8D613554238B6D8B00AB50C2 /* NavBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavBar.swift; sourceTree = "<group>"; };
+		8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionCollectionHeader.swift; sourceTree = "<group>"; };
+		8D7968802404BE68004F87FA /* ReactionCollectionHeader.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReactionCollectionHeader.xib; sourceTree = "<group>"; };
 		8D84061C238FFC5C00EED595 /* UIImage+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+MissCat.swift"; sourceTree = "<group>"; };
 		8D84061E2393547800EED595 /* PostDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailViewController.swift; sourceTree = "<group>"; };
 		8D8863A82383F8A900A7A5A8 /* NoteCellViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCellViewModel.swift; sourceTree = "<group>"; };
@@ -255,6 +259,7 @@
 				8DAEA1332382E4C00083AA69 /* nib */,
 				8D065B1A237ACA68003DFB7C /* NoteCell.swift */,
 				8D502D51237D8BE300525A96 /* ReactionCell.swift */,
+				8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */,
 				8D502D592380270A00525A96 /* TabBar.swift */,
 				8DAEA1362382E59A0083AA69 /* EmojiView.swift */,
 				8D8863B52384951200A7A5A8 /* RenoteeCell.swift */,
@@ -382,6 +387,7 @@
 			children = (
 				8D065B18237AC825003DFB7C /* NoteCell.xib */,
 				8D502D53237D8BEC00525A96 /* ReactionCell.xib */,
+				8D7968802404BE68004F87FA /* ReactionCollectionHeader.xib */,
 				8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */,
 				8D502D552380236900525A96 /* TabBar.xib */,
 				8DAEA1342382E4F00083AA69 /* EmojiView.xib */,
@@ -503,6 +509,7 @@
 				8D9EF4C8238187A4005449EC /* ReactionGenCell.xib in Resources */,
 				8D0AC5B9237B5D0D00530508 /* Font Awesome 5 Free-Regular-400.otf in Resources */,
 				8D502D562380236900525A96 /* TabBar.xib in Resources */,
+				8D7968812404BE68004F87FA /* ReactionCollectionHeader.xib in Resources */,
 				8D0AC5BA237B5D0D00530508 /* Font Awesome 5 Free-Solid-900.otf in Resources */,
 				8D4A2A22237437C000503685 /* LaunchScreen.storyboard in Resources */,
 				8DA06A092389E9820093A718 /* NotificationCell.xib in Resources */,
@@ -600,6 +607,7 @@
 				8D065B1B237ACA68003DFB7C /* NoteCell.swift in Sources */,
 				8D8863AB2383F96C00A7A5A8 /* NoteCellModel.swift in Sources */,
 				8D3036FA2388733E00BA6D38 /* ImageManager.swift in Sources */,
+				8D79687F2404BE59004F87FA /* ReactionCollectionHeader.swift in Sources */,
 				8D0AC5C1237B865B00530508 /* TimelineModel.swift in Sources */,
 				8D3037022389018800BA6D38 /* Cache.swift in Sources */,
 				8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */,

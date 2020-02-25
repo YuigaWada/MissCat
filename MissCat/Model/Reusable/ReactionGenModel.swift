@@ -27,6 +27,7 @@ public class ReactionGenModel {
     
     fileprivate class CustomEmojis: Emojis {
         lazy var emojis = EmojiHandler.handler.customEmojis
+        lazy var categorized = EmojiHandler.handler.categorizedEmojis
     }
     
     fileprivate lazy var presetEmojiModels = EmojiModel.getModelArray()
@@ -86,15 +87,19 @@ public class ReactionGenModel {
         let dispose = Disposables.create()
         
         return Observable.create { [unowned self] observer in
-            guard let emojis = self.customEmojis.emojis else { return dispose }
-            
-            emojis.forEach { emoji in
-                guard let url = emoji.url, let raw = emoji.name else { return }
-                observer.onNext(EmojiView.EmojiModel(rawEmoji: raw,
-                                                     isDefault: false,
-                                                     defaultEmoji: nil,
-                                                     customEmojiUrl: url))
+            self.customEmojis.categorized.forEach { category, emojis in // カテゴリーによってセクションを切り分ける(擬似的にヘッダーを作る)
+                observer.onNext(EmojiViewHeader(title: category)) // 疑似ヘッダーのモデル
+                emojis.forEach { emoji in
+                    guard let url = emoji.url, let raw = emoji.name else { return }
+                    observer.onNext(EmojiView.EmojiModel(rawEmoji: raw, // 絵文字モデル
+                                                         isDefault: false,
+                                                         defaultEmoji: nil,
+                                                         customEmojiUrl: url))
+                }
+                
+                self.fakeCellPadding(observer: observer, count: emojis.count)
             }
+            
             return dispose
         }
     }
@@ -125,7 +130,33 @@ public class ReactionGenModel {
                                                                                             customEmojiUrl: nil))
         }
         
+        fakeCellPadding(array: &ReactionGenModel.fileShared.defaultEmojis.preloaded, count: emojis.count)
+        
         return true
+    }
+    
+    private func fakeCellPadding(observer: RxSwift.AnyObserver<EmojiView.EmojiModel>, count: Int) {
+        if count % 7 != 0 {
+            for _ in 0 ..< 7 - (count % 7) {
+                observer.onNext(EmojiView.EmojiModel(rawEmoji: "", // ** FAKE **
+                                                     isDefault: false,
+                                                     defaultEmoji: "",
+                                                     customEmojiUrl: nil,
+                                                     isFake: true))
+            }
+        }
+    }
+    
+    private func fakeCellPadding(array: inout [EmojiView.EmojiModel], count: Int) {
+        if count % 7 != 0 {
+            for _ in 0 ..< 7 - (count % 7) {
+                array.append(EmojiView.EmojiModel(rawEmoji: "", // ** FAKE **
+                                                  isDefault: false,
+                                                  defaultEmoji: "",
+                                                  customEmojiUrl: nil,
+                                                  isFake: true))
+            }
+        }
     }
 }
 

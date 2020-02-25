@@ -41,6 +41,8 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     private var tlScrollView: UIScrollView?
     private var isMe: Bool = false
     
+    private lazy var animateBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
+    
     private lazy var viewModel: ProfileViewModel = self.getViewModel()
     
     private var childVCs: [TimelineViewController] = []
@@ -73,6 +75,11 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
         
         containerHeightContraint.constant = 2 * view.frame.height - (view.frame.height - containerScrollView.frame.origin.y)
+    }
+    
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateAnimateBlurHeight() // 自己紹介文の高さが変更されるので、Blurの高さも変更する
     }
     
     public override func viewDidAppear(_ animated: Bool) {
@@ -131,7 +138,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         // メインスレッドで動作させたいのでDriverに変更しておく
         output.iconImage.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { image in
             self.iconImageView.hideSkeleton()
-            self.self.iconImageView.image = image
+            self.iconImageView.image = image
         }).disposed(by: disposeBag)
         
         output.intro.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { attributedText in
@@ -171,6 +178,8 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
                 let isFollowing = $0.isFollowing ?? false
                 self.followButton.setTitleColor(isFollowing ? UIColor.systemBlue : UIColor.white, for: .normal)
             }).disposed(by: disposeBag)
+        } else { // 自分のプロフィール画面の場合
+            followButton.isHidden = true
         }
         
         backButton.rx.tap.subscribe(onNext: {
@@ -197,19 +206,28 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     }
     
     private func setBlurAnimator() {
-        let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
-        blurView.frame = CGRect(x: 0,
-                                y: 0,
-                                width: containerScrollView.frame.width,
-                                height: pagerTab.frame.origin.y + getSafeAreaSize().height - 10)
+        animateBlurView.frame = CGRect(x: 0,
+                                       y: 0,
+                                       width: containerScrollView.frame.width,
+                                       height: pagerTab.frame.origin.y + getSafeAreaSize().height - 10)
         
-        blurView.alpha = 0
-        blurView.isUserInteractionEnabled = true
-        containerScrollView.addSubview(blurView)
+        animateBlurView.alpha = 0
+        animateBlurView.isUserInteractionEnabled = true
+        containerScrollView.addSubview(animateBlurView)
         
         blurAnimator = UIViewPropertyAnimator(duration: 1.0, curve: .easeInOut) {
-            blurView.alpha = 1
+            self.animateBlurView.alpha = 1
         }
+    }
+    
+    private func updateAnimateBlurHeight() {
+        let newHeight = pagerTab.frame.origin.y + getSafeAreaSize().height - 10
+        
+        guard animateBlurView.frame.height != newHeight else { return }
+        animateBlurView.frame = CGRect(x: 0,
+                                       y: 0,
+                                       width: containerScrollView.frame.width,
+                                       height: newHeight)
     }
     
     // MARK: XLPagerTabStrip
