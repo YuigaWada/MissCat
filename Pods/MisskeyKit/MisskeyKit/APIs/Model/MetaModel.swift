@@ -53,7 +53,7 @@ public struct EmojiModel: Codable{
     public let name: String?
     public let url: String?
     public let uri: String?
-    public let type: String?
+    public let category: String?
 }
 
 //public enum Category: String, Codable{
