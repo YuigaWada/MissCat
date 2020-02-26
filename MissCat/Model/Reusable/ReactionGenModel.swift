@@ -52,7 +52,7 @@ public class ReactionGenModel {
     
     // プリセットｎ絵文字を取得
     public func getPresets() -> [EmojiView.EmojiModel] {
-        guard EmojiModel.checkSavedArray() else { // UserDefaultsが存在しないならUserDefaultsセットしておく
+        guard EmojiModel.hasUserDefaultsEmojis else { // UserDefaultsが存在しないならUserDefaultsセットしておく
             var emojiModels: [EmojiModel] = []
             defaultPreset.forEach { char in
                 emojiModels.append(EmojiModel(rawEmoji: char,
@@ -135,6 +135,10 @@ public class ReactionGenModel {
         return true
     }
     
+    /// CollectionViewのセルが左詰めになるように、空いた部分を空のセルでパディングしていく
+    /// - Parameters:
+    ///   - observer: Observer
+    ///   - count: もともと表示させたいセルの数
     private func fakeCellPadding(observer: RxSwift.AnyObserver<EmojiView.EmojiModel>, count: Int) {
         if count % 7 != 0 {
             for _ in 0 ..< 7 - (count % 7) {
@@ -147,6 +151,10 @@ public class ReactionGenModel {
         }
     }
     
+    /// CollectionViewのセルが左詰めになるように、空いた部分を空のセルでパディングしていく
+    /// - Parameters:
+    ///   - array: Array
+    ///   - count: もともと表示させたいセルの数
     private func fakeCellPadding(array: inout [EmojiView.EmojiModel], count: Int) {
         if count % 7 != 0 {
             for _ in 0 ..< 7 - (count % 7) {

@@ -154,7 +154,7 @@ extension EmojiView {
             UserDefaults.standard.synchronize()
         }
         
-        public static func checkSavedArray() -> Bool { // UserDefaultsに保存されてるかcheck
+        public static var hasUserDefaultsEmojis: Bool { // UserDefaultsに保存されてるかcheck
             return UserDefaults.standard.object(forKey: "[EmojiModel]") != nil
         }
     }
