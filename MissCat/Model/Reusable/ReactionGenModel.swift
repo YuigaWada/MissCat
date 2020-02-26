@@ -60,12 +60,16 @@ public class ReactionGenModel {
                                               defaultEmoji: char,
                                               customEmojiUrl: nil))
             }
+            fakeCellPadding(array: &emojiModels, count: defaultPreset.count)
             EmojiModel.saveModelArray(with: emojiModels)
             return emojiModels
         }
         
         // UserDefaultsが存在したら...
-        guard let emojiModels = ReactionGenModel.fileShared.presetEmojiModels else { fatalError("Internal Error.") }
+        guard ReactionGenModel.fileShared.presetEmojiModels != nil else { fatalError("Internal Error.") }
+        
+        var emojiModels = ReactionGenModel.fileShared.presetEmojiModels!
+        fakeCellPadding(array: &emojiModels, count: emojiModels.count)
         return emojiModels
     }
     
@@ -129,8 +133,6 @@ public class ReactionGenModel {
                                                                                             defaultEmoji: char,
                                                                                             customEmojiUrl: nil))
         }
-        
-        fakeCellPadding(array: &ReactionGenModel.fileShared.defaultEmojis.preloaded, count: emojis.count)
         
         return true
     }
