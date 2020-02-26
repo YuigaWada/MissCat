@@ -10,7 +10,7 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="EmojiView" customModule="MissCat" customModuleProvider="target">
             <connections>
-                <outlet property="emojiImageView" destination="kVT-Cm-FaQ" id="d8T-St-qpc"/>
+                <outlet property="emojiImageView" destination="ghp-T9-5W5" id="gS5-NX-Z0h"/>
                 <outlet property="emojiLabel" destination="Ync-qB-ISH" id="mBJ-Xj-kNj"/>
                 <outlet property="view" destination="iN0-l3-epB" id="Kfb-nK-k4I"/>
             </connections>
@@ -26,21 +26,22 @@
                     <nil key="textColor"/>
                     <nil key="highlightedColor"/>
                 </label>
-                <imageView clipsSubviews="YES" userInteractionEnabled="NO" tag="1" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="kVT-Cm-FaQ" customClass="GIFImageView">
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ghp-T9-5W5" customClass="GIFImageView" customModule="Gifu">
                     <rect key="frame" x="6" y="5" width="46" height="41"/>
-                </imageView>
+                    <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                </view>
             </subviews>
             <constraints>
+                <constraint firstItem="ghp-T9-5W5" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="7B1-kS-SlB"/>
                 <constraint firstAttribute="trailing" secondItem="Ync-qB-ISH" secondAttribute="trailing" id="7UC-C1-G9C"/>
                 <constraint firstItem="Ync-qB-ISH" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="8FY-iH-fut"/>
                 <constraint firstItem="Ync-qB-ISH" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="8y0-MG-fWN"/>
                 <constraint firstItem="Ync-qB-ISH" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="9Ox-4j-FSy"/>
-                <constraint firstItem="kVT-Cm-FaQ" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="E1Q-Jl-PT5"/>
+                <constraint firstItem="ghp-T9-5W5" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="F13-0O-tJU"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="Ync-qB-ISH" secondAttribute="bottom" id="K3e-lf-Peg"/>
-                <constraint firstItem="kVT-Cm-FaQ" firstAttribute="height" secondItem="iN0-l3-epB" secondAttribute="height" multiplier="0.8" id="YJv-Wa-73f"/>
-                <constraint firstItem="kVT-Cm-FaQ" firstAttribute="width" secondItem="iN0-l3-epB" secondAttribute="width" multiplier="0.8" id="fTc-6b-OIu"/>
+                <constraint firstItem="ghp-T9-5W5" firstAttribute="height" secondItem="iN0-l3-epB" secondAttribute="height" multiplier="0.8" id="RGH-Bp-pFL"/>
                 <constraint firstItem="Ync-qB-ISH" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="gzm-iP-fuR"/>
-                <constraint firstItem="kVT-Cm-FaQ" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="hqx-YA-GKw"/>
+                <constraint firstItem="ghp-T9-5W5" firstAttribute="width" secondItem="iN0-l3-epB" secondAttribute="width" multiplier="0.8" id="xJa-cc-eTF"/>
             </constraints>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
@@ -49,7 +50,7 @@
                     <integer key="value" value="5"/>
                 </userDefinedRuntimeAttribute>
             </userDefinedRuntimeAttributes>
-            <point key="canvasLocation" x="-11.594202898550726" y="127.56696428571428"/>
+            <point key="canvasLocation" x="38" y="140"/>
         </view>
     </objects>
 </document>
