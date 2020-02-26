@@ -48,6 +48,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     private var childVCs: [TimelineViewController] = []
     
     private var maxScroll: CGFloat {
+        updateAnimateBlurHeight() // 自己紹介文の高さが変更されるので、Blurの高さも変更する
         pagerTab.layoutIfNeeded()
         return pagerTab.frame.origin.y - getSafeAreaSize().height - 10 // 10 = 微調整
     }
@@ -79,7 +80,6 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     
     public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        updateAnimateBlurHeight() // 自己紹介文の高さが変更されるので、Blurの高さも変更する
     }
     
     public override func viewDidAppear(_ animated: Bool) {
@@ -221,7 +221,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     }
     
     private func updateAnimateBlurHeight() {
-        let newHeight = pagerTab.frame.origin.y + getSafeAreaSize().height - 10
+        let newHeight = pagerTab.frame.origin.y // containerScrollView.frameの座標はsafe areaの下から始点が始まるのでsafe areaは考えなくてOK
         
         guard animateBlurView.frame.height != newHeight else { return }
         animateBlurView.frame = CGRect(x: 0,
