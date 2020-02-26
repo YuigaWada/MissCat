@@ -63,6 +63,7 @@ public class EmojiView: UIView {
     public func initialize() {
         emojiLabel.text = nil
         emojiImageView.image = nil
+        emojiImageView.prepareForReuse() // GIFImageView → prepareForReuseしないとセルの再利用時、再利用前の画像が残ってしまう
         
         emojiLabel.isHidden = false
         emojiImageView.isHidden = false
