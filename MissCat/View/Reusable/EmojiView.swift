@@ -18,8 +18,8 @@ public class EmojiView: UIView {
     public var isFake: Bool = false {
         didSet {
             guard isFake else { return }
-            emojiImageView.backgroundColor = .lightGray
-            emojiLabel.backgroundColor = .lightGray
+            emojiImageView.backgroundColor = .clear
+            emojiLabel.backgroundColor = .clear
         }
     }
     
