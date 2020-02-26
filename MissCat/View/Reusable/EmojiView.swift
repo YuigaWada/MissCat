@@ -52,12 +52,6 @@ public class EmojiView: UIView {
         super.layoutSubviews()
         setEmoji()
         adjustFontSize()
-        setComponent()
-    }
-    
-    private func setComponent() {
-        emojiImageView.backgroundColor = isFake ? .clear : .lightGray
-        emojiLabel.backgroundColor = isFake ? .clear : .lightGray
     }
     
     public func initialize() {
