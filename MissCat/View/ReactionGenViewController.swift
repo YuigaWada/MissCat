@@ -21,11 +21,14 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     @IBOutlet weak var iconImageView: UIImageView!
     @IBOutlet weak var displayNameLabel: UILabel!
     @IBOutlet weak var targetNoteTextView: UITextView!
+    @IBOutlet weak var targetNoteDisplayView: UIView!
     
     @IBOutlet weak var settingsButton: UIButton!
     @IBOutlet weak var emojiCollectionView: UICollectionView!
+    @IBOutlet weak var borderOriginXConstraint: NSLayoutConstraint!
     
     public var delegate: ReactionGenViewControllerDelegate?
+    public var onPostViewController: Bool = false
     
     private var viewModel: ReactionGenViewModel?
     private let disposeBag = DisposeBag()
@@ -50,6 +53,8 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        targetNoteDisplayView.isHidden = onPostViewController
+        borderOriginXConstraint.isActive = false
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
     }
     
@@ -178,7 +183,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     }
     
     // MARK: CollectionView Delegate
-
+    
     // Headerセルの場合はの幅を設定
     public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let defaultSize = CGSize(width: defaultCellsize, height: defaultCellsize)

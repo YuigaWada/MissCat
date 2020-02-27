@@ -18,7 +18,8 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     @IBOutlet weak var cancelButton: UIButton!
     @IBOutlet weak var submitButton: UIButton!
     @IBOutlet weak var iconImageView: UIImageView!
-    @IBOutlet weak var mainTextView: UITextView!
+    
+    @IBOutlet weak var mainTextView: MisskeyTextView!
     @IBOutlet weak var mainTextViewBottomConstraint: NSLayoutConstraint!
     
     @IBOutlet weak var bottomStackView: UIStackView!
@@ -125,6 +126,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         let imageButton = UIBarButtonItem(title: "images", style: .plain, target: self, action: nil)
         let pollButton = UIBarButtonItem(title: "poll", style: .plain, target: self, action: nil)
         let locationButton = UIBarButtonItem(title: "map-marker-alt", style: .plain, target: self, action: nil)
+        let emojiButton = UIBarButtonItem(title: "laugh-squint", style: .plain, target: self, action: nil)
         
         counter.setTitleTextAttributes([NSAttributedString.Key.font: UIFont(name: "Helvetica", size: 14.0)!], for: .normal)
         counter.setTitleTextAttributes([NSAttributedString.Key.font: UIFont(name: "Helvetica", size: 14.0)!], for: .selected)
@@ -133,13 +135,14 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         imageButton.rx.tap.subscribe { _ in self.pickImage(type: .photoLibrary) }.disposed(by: disposeBag)
         pollButton.rx.tap.subscribe { _ in }.disposed(by: disposeBag)
         locationButton.rx.tap.subscribe { _ in self.viewModel.getLocation() }.disposed(by: disposeBag)
+        emojiButton.rx.tap.subscribe { _ in self.showReactionGen() }.disposed(by: disposeBag)
         
         toolBar.setItems([cameraButton, imageButton, pollButton, locationButton,
                           flexibleItem, flexibleItem,
-                          counter], animated: true)
+                          emojiButton, counter], animated: true)
         toolBar.sizeToFit()
         
-        change2AwesomeFont(buttons: [cameraButton, imageButton, pollButton, locationButton])
+        change2AwesomeFont(buttons: [cameraButton, imageButton, pollButton, locationButton, emojiButton])
         mainTextView.inputAccessoryView = toolBar
     }
     
@@ -172,6 +175,20 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         }).disposed(by: disposeBag)
         
         return cell.setupCell(item)
+    }
+    
+    private func showReactionGen() {
+        guard let reactionGen = self.getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+        
+        reactionGen.onPostViewController = true
+        presentWithSemiModal(reactionGen, animated: true, completion: nil)
+    }
+    
+    private func getViewController(name: String) -> UIViewController {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let viewController = storyboard.instantiateViewController(withIdentifier: name)
+        
+        return viewController
     }
     
     // キーボードの高さに合わせてcomponentの高さを調整する
