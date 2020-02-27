@@ -86,15 +86,20 @@ public class EmojiView: UIView {
     
     // MARK: Others
     
+    // 最適なwidthとなるフォントサイズを探索する
     private func adjustFontSize() {
         guard let emoji = emoji, emoji.isDefault, let defaultEmoji = emoji.defaultEmoji else { return }
         
         var labelWidth: CGFloat = 0
         var font: UIFont = emojiLabel.font ?? UIFont.systemFont(ofSize: 15.0)
         
-        while frame.width - labelWidth >= 2 { // 最適なwidthとなるフォントサイズを探索する
+        var previousLabelWidth: CGFloat = 0
+        while font.pointSize < 25, frame.width - labelWidth >= 2 { // フォントサイズは高々25程度だろう
             font = font.withSize(font.pointSize + 1)
             labelWidth = getLabelWidth(text: defaultEmoji, font: font)
+            
+            if previousLabelWidth > 0, previousLabelWidth == labelWidth { break } // widthが更新されなくなったらbreak
+            previousLabelWidth = labelWidth
         }
         
         emojiLabel.font = font
