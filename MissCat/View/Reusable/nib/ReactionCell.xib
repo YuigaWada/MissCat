@@ -20,7 +20,7 @@
                         <constraint firstAttribute="width" secondItem="7CG-fO-wEF" secondAttribute="height" multiplier="1:1" id="8ym-6i-jy0"/>
                     </constraints>
                 </imageView>
-                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="1" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qpt-bl-cyr">
+                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="1" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="9" translatesAutoresizingMaskIntoConstraints="NO" id="qpt-bl-cyr">
                     <rect key="frame" x="69" y="0.0" width="35" height="61"/>
                     <constraints>
                         <constraint firstAttribute="width" secondItem="qpt-bl-cyr" secondAttribute="height" multiplier="35:61" id="VES-pb-Xyt"/>
