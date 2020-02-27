@@ -19,23 +19,16 @@ public class ReactionGenModel {
         var currentIndex: Int = 0
         var isLoading: Bool = false
         var preloaded: [EmojiView.EmojiModel] = [] // 非同期で事前に詠み込んでおく
-    }
-    
-    fileprivate class DefaultEmojis: Emojis {
-        lazy var emojis = EmojiHandler.handler.defaultEmojis
-    }
-    
-    fileprivate class CustomEmojis: Emojis {
-        lazy var emojis = EmojiHandler.handler.customEmojis
-        lazy var categorized = EmojiHandler.handler.categorizedEmojis
+        
+        lazy var categorizedDefault = EmojiHandler.handler.categorizedDefaultEmojis
+        lazy var categorizedCustom = EmojiHandler.handler.categorizedCustomEmojis
     }
     
     fileprivate lazy var presetEmojiModels = EmojiModel.getModelArray()
     
     // MARK: Private Vars
     
-    private var defaultEmojis = DefaultEmojis()
-    private var customEmojis = CustomEmojis()
+    private var emojis = Emojis()
     private var maxOnceLoad: Int = 50
     private var defaultPreset = ["👍"]
     
@@ -43,10 +36,7 @@ public class ReactionGenModel {
     
     // MARK: Life Cycle
     
-    init(isFileShared: Bool = false) {
-        guard !isFileShared, ReactionGenModel.fileShared.defaultEmojis.currentIndex == 0 else { return }
-        ReactionGenModel.fileShared.setNextDefaultEmojis() // 事前に詠み込んでおく
-    }
+    init(isFileShared: Bool = false) { }
     
     // MARK: Public Methods
     
@@ -73,37 +63,19 @@ public class ReactionGenModel {
         return emojiModels
     }
     
-    public func getNextDefaultEmojis() -> Observable<[EmojiView.EmojiModel]> {
+    public func getEmojiModel() -> Observable<EmojiView.EmojiModel> {
         let dispose = Disposables.create()
         
         return Observable.create { [unowned self] observer in
-            observer.onNext(ReactionGenModel.fileShared.defaultEmojis.preloaded)
-            observer.onCompleted()
-            
-            if !self.defaultLoaded {
-                self.defaultLoaded = !self.setNextDefaultEmojis()
-            }
-            return dispose
-        }
-    }
-    
-    public func getCustomEmojis() -> Observable<EmojiView.EmojiModel> {
-        let dispose = Disposables.create()
-        
-        return Observable.create { [unowned self] observer in
-            self.customEmojis.categorized.forEach { category, emojis in // カテゴリーによってセクションを切り分ける(擬似的にヘッダーを作る)
-                observer.onNext(EmojiViewHeader(title: category)) // 疑似ヘッダーのモデル
-                emojis.forEach { emoji in
-                    guard let url = emoji.url, let raw = emoji.name else { return }
-                    observer.onNext(EmojiView.EmojiModel(rawEmoji: raw, // 絵文字モデル
-                                                         isDefault: false,
-                                                         defaultEmoji: nil,
-                                                         customEmojiUrl: url))
+            // カスタム→デフォルトの順に表示したいので、この順に取り出していく
+            for categorized in [self.emojis.categorizedCustom, self.emojis.categorizedDefault] {
+                categorized.forEach { category, emojiModels in // カテゴリーによってセクションを切り分ける(擬似的にヘッダーを作る)
+                    observer.onNext(EmojiViewHeader(title: category)) // 疑似ヘッダーのモデル
+                    emojiModels.forEach { observer.onNext($0) }
+                    
+                    self.fakeCellPadding(observer: observer, count: emojiModels.count)
                 }
-                
-                self.fakeCellPadding(observer: observer, count: emojis.count)
             }
-            
             return dispose
         }
     }
@@ -121,21 +93,6 @@ public class ReactionGenModel {
     }
     
     // MARK: Private Methods
-    
-    private func setNextDefaultEmojis() -> Bool {
-        guard let emojis = ReactionGenModel.fileShared.defaultEmojis.emojis else { return false }
-        
-        emojis.forEach { emoji in
-            guard let char = emoji.char else { return }
-            
-            ReactionGenModel.fileShared.defaultEmojis.preloaded.append(EmojiView.EmojiModel(rawEmoji: char,
-                                                                                            isDefault: true,
-                                                                                            defaultEmoji: char,
-                                                                                            customEmojiUrl: nil))
-        }
-        
-        return true
-    }
     
     /// CollectionViewのセルが左詰めになるように、空いた部分を空のセルでパディングしていく
     /// - Parameters:

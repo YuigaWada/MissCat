@@ -9,15 +9,25 @@
 import MisskeyKit
 
 public class EmojiHandler {
-    public var defaultEmojis: [DefaultEmojiModel]?
-    public var customEmojis: [EmojiModel]? {
+    // setされた瞬間カテゴリー分けを行うが、カスタム絵文字を先にcategorizedEmojisへ格納する
+    public var defaultEmojis: [DefaultEmojiModel]? {
         didSet {
-            guard let customEmojis = customEmojis else { return }
-            categorizeEmojis(customEmojis)
+            guard let defaultEmojis = defaultEmojis else { return }
+            categorizeDefaultEmojis(defaultEmojis)
         }
     }
     
-    public var categorizedEmojis: [String: [EmojiModel]] = .init() // 絵文字のカテゴリーによって分類分けする
+    public var customEmojis: [EmojiModel]? {
+        didSet {
+            guard let customEmojis = customEmojis else { return }
+            categorizeCustomEmojis(customEmojis)
+        }
+    }
+    
+    // 絵文字のカテゴリーによって分類分けする(Dictionaryは順序を保証しないので、デフォルト・カスタムで分割する)
+    public var categorizedDefaultEmojis: [String: [EmojiView.EmojiModel]] = .init()
+    public var categorizedCustomEmojis: [String: [EmojiView.EmojiModel]] = .init()
+    
     public static let handler = EmojiHandler() // Singleton
     
     init() { // 先に絵文字情報をダウンロードしておく
@@ -90,17 +100,44 @@ public class EmojiHandler {
                                     customEmojiUrl: isDefault ? nil : convertedEmojiData.emoji)
     }
     
+    /// デフォルト絵文字をカテゴリーにとって分類する
+    /// - Parameter emojis: デフォルト絵文字のmodel
+    private func categorizeDefaultEmojis(_ emojis: [DefaultEmojiModel]) {
+        emojis.forEach { emoji in
+            guard let raw = emoji.name, let char = emoji.char else { return }
+            
+            let emojiModel = EmojiView.EmojiModel(rawEmoji: raw, // 絵文字モデル
+                                                  isDefault: true,
+                                                  defaultEmoji: char,
+                                                  customEmojiUrl: nil)
+            
+            var category = emoji.category?.rawValue ?? ""
+            category = category != "" ? category : "Others"
+            if let _ = categorizedDefaultEmojis[category] { // key: categoryであるArrayが格納されているならば...
+                categorizedDefaultEmojis[category]?.append(emojiModel)
+            } else {
+                categorizedDefaultEmojis[category] = [emojiModel]
+            }
+        }
+    }
+    
     /// カスタム絵文字をカテゴリーによって分類する
     /// - Parameter emojis: カスタム絵文字のmodel
-    private func categorizeEmojis(_ emojis: [EmojiModel]) {
+    private func categorizeCustomEmojis(_ emojis: [EmojiModel]) {
         emojis.forEach { emoji in
+            guard let raw = emoji.name, let url = emoji.url else { return }
+            
+            let emojiModel = EmojiView.EmojiModel(rawEmoji: raw, // 絵文字モデル
+                                                  isDefault: false,
+                                                  defaultEmoji: nil,
+                                                  customEmojiUrl: url)
+            
             var category = emoji.category ?? ""
             category = category != "" ? category : "Others"
-            
-            if let _ = categorizedEmojis[category] { // key: categoryであるArrayが格納されているならば...
-                categorizedEmojis[category]?.append(emoji)
+            if let _ = categorizedCustomEmojis[category] { // key: categoryであるArrayが格納されているならば...
+                categorizedCustomEmojis[category]?.append(emojiModel)
             } else {
-                categorizedEmojis[category] = [emoji]
+                categorizedCustomEmojis[category] = [emojiModel]
             }
         }
     }

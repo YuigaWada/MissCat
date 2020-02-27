@@ -43,7 +43,8 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
         setupComponents()
         setupCollectionViewLayout()
         
-        setupViewModel()
+        let viewModel = setupViewModel()
+        setEmojiModel(viewModel: viewModel)
     }
     
     public override func viewWillAppear(_ animated: Bool) {
@@ -53,7 +54,6 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     }
     
     public override func viewDidAppear(_ animated: Bool) {
-        setNextEmojis()
         super.viewDidAppear(animated)
         
         viewDidAppeared = true
@@ -67,11 +67,14 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     
     // MARK: Setup
     
-    private func setupViewModel() {
-        viewModel = .init(and: disposeBag)
-        
+    private func setupViewModel() -> ReactionGenViewModel {
+        let viewModel = ReactionGenViewModel(and: disposeBag)
         let dataSource = setupDataSource()
-        binding(dataSource: dataSource, viewModel: viewModel!)
+        
+        binding(dataSource: dataSource, viewModel: viewModel)
+        
+        self.viewModel = viewModel
+        return viewModel
     }
     
     private func setupDataSource() -> EmojisDataSource {
@@ -166,9 +169,8 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     
     // MARK: Set Methods
     
-    private func setNextEmojis() {
-        guard let viewModel = viewModel else { return }
-        viewModel.getNextEmojis()
+    private func setEmojiModel(viewModel: ReactionGenViewModel) {
+        viewModel.setEmojiModel()
     }
     
     private func setTargetNoteId(_ id: String?) {
@@ -176,25 +178,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     }
     
     // MARK: CollectionView Delegate
-    
-    public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        guard let viewModel = viewModel else { return }
-        let index = indexPath.row
-        
-        // 下位10cellsでセル更新
-        guard viewDidAppeared,
-            !cellLoading,
-            !(previousCellCount == collectionView.visibleCells.count),
-            collectionView.visibleCells.count > 0,
-            collectionView.visibleCells.count - index >= 0 else { return }
-        
-        //        cellLoading = true
-        //        previousCellCount = collectionView.visibleCells.count
-        //        viewModel.getNextEmojis {
-        //            self.cellLoading = false
-        //        }
-    }
-    
+
     // Headerセルの場合はの幅を設定
     public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let defaultSize = CGSize(width: defaultCellsize, height: defaultCellsize)

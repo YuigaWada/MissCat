@@ -48,15 +48,14 @@ class ReactionGenViewModel: ViewModelType {
     
     private var isLoading: Bool = false
     
-    init(and disposeBag: DisposeBag) { // init(with input: Input, and disposeBag: DisposeBag) {
-        //        self.input = input
+    init(and disposeBag: DisposeBag) {
         self.disposeBag = disposeBag
     }
     
-    public func getNextEmojis(completion: (() -> Void)? = nil) {
+    public func setEmojiModel(completion: (() -> Void)? = nil) {
         guard !isLoading else { return }
         
-        model.getCustomEmojis().subscribe(onNext: { emojis in
+        model.getEmojiModel().subscribe(onNext: { emojis in
             self.isLoading = true
             
             self.emojisList.append(emojis)
@@ -65,13 +64,6 @@ class ReactionGenViewModel: ViewModelType {
             self.isLoading = false
             completion?()
         }).disposed(by: disposeBag)
-        
-//        self.model.getCustomEmojis().subscribe(onNext: { emojis in
-//            self.otherEmojisList.append(emojis)
-//
-//            let section = ReactionGenViewController.EmojisSection(items: self.otherEmojisList)
-//            self.otherEmojis.onNext([section])
-//        }).disposed(by: disposeBag)
     }
     
     public func checkHeader(index: Int) -> Bool {
