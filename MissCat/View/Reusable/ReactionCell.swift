@@ -6,6 +6,7 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import Gifu
 import RxSwift
 import UIKit
 
@@ -16,7 +17,7 @@ public protocol ReactionCellDelegate {
 public class ReactionCell: UICollectionViewCell {
     @IBOutlet weak var reactionCounterLabel: UILabel!
     @IBOutlet weak var defaultEmojiLabel: UILabel!
-    @IBOutlet weak var customEmojiView: UIImageView!
+    @IBOutlet weak var customEmojiView: GIFImageView!
     
     private let disposeBag = DisposeBag()
     
@@ -76,11 +77,7 @@ public class ReactionCell: UICollectionViewCell {
             defaultEmojiLabel.isHidden = true
             customEmojiView.isHidden = false
             
-            customEmoji.toUIImage { image in
-                DispatchQueue.main.async {
-                    self.customEmojiView.image = image
-                }
-            }
+            customEmojiView.setImage(url: customEmoji)
         } else if let rawDefaultEmoji = rawDefaultEmoji {
             defaultEmojiLabel.isHidden = false
             customEmojiView.isHidden = true
