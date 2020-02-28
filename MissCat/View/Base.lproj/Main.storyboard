@@ -153,7 +153,7 @@
                         <outlet property="bottomStackView" destination="tzh-uX-1vt" id="cby-EG-WeT"/>
                         <outlet property="cancelButton" destination="2pz-eD-46J" id="PEe-Ee-Sfs"/>
                         <outlet property="iconImageView" destination="Csp-qU-w8d" id="MR7-xt-sqx"/>
-                        <outlet property="mainTextView" destination="EU5-Xs-Hwc" id="mPb-un-gD0"/>
+                        <outlet property="mainTextView" destination="EU5-Xs-Hwc" id="Da9-uM-miV"/>
                         <outlet property="mainTextViewBottomConstraint" destination="l9a-1F-Als" id="WSY-FH-EiL"/>
                         <outlet property="submitButton" destination="E5P-wX-4mM" id="kHB-mM-lhF"/>
                     </connections>
@@ -303,10 +303,10 @@
                                 </constraints>
                             </view>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="top" translatesAutoresizingMaskIntoConstraints="NO" id="9mr-89-6J3">
-                                <rect key="frame" x="5" y="209" width="409" height="653"/>
+                                <rect key="frame" x="5" y="153" width="409" height="709"/>
                                 <subviews>
                                     <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="left" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="OgS-1x-Vgm">
-                                        <rect key="frame" x="0.0" y="0.0" width="409" height="653"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="409" height="709"/>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                         <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="5" minimumInteritemSpacing="5" id="GW2-WJ-6G9" customClass="CollectionViewFlowLayoutLeftAlign" customModule="MissCat" customModuleProvider="target">
                                             <size key="itemSize" width="50" height="30"/>
@@ -339,11 +339,14 @@
                                 </constraints>
                             </stackView>
                             <searchBar contentMode="redraw" searchBarStyle="minimal" placeholder=" 絵文字を検索 / 直接入力" translatesAutoresizingMaskIntoConstraints="NO" id="hLc-bQ-WPg">
-                                <rect key="frame" x="0.0" y="143" width="414" height="56"/>
+                                <rect key="frame" x="0.0" y="143" width="414" height="0.0"/>
                                 <textInputTraits key="textInputTraits"/>
                             </searchBar>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="REl-1x-M7t">
                                 <rect key="frame" x="364" y="20" width="30" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="30" id="k1o-f7-74u"/>
+                                </constraints>
                                 <state key="normal" title="cog"/>
                             </button>
                         </subviews>
@@ -358,6 +361,7 @@
                             <constraint firstAttribute="trailing" secondItem="gRB-XI-7fn" secondAttribute="trailing" id="Vh5-Ak-3ZO"/>
                             <constraint firstItem="Ygx-y9-eAf" firstAttribute="trailing" secondItem="REl-1x-M7t" secondAttribute="trailing" constant="20" id="d4y-9r-XGe"/>
                             <constraint firstItem="Ygx-y9-eAf" firstAttribute="trailing" secondItem="ld0-RN-wpl" secondAttribute="trailing" constant="20" id="evd-0T-yWg"/>
+                            <constraint firstItem="gRB-XI-7fn" firstAttribute="top" secondItem="REl-1x-M7t" secondAttribute="bottom" priority="999" constant="5" id="gBz-01-bR8"/>
                             <constraint firstItem="9mr-89-6J3" firstAttribute="top" secondItem="hLc-bQ-WPg" secondAttribute="bottom" constant="10" id="h3W-bi-25S"/>
                             <constraint firstItem="hLc-bQ-WPg" firstAttribute="leading" secondItem="Ygx-y9-eAf" secondAttribute="leading" id="iaR-8x-nqC"/>
                             <constraint firstItem="ld0-RN-wpl" firstAttribute="top" secondItem="Ygx-y9-eAf" secondAttribute="top" constant="15" id="nRz-sG-Rc6"/>
@@ -368,11 +372,13 @@
                         <viewLayoutGuide key="safeArea" id="Ygx-y9-eAf"/>
                     </view>
                     <connections>
+                        <outlet property="borderOriginXConstraint" destination="2cF-Wq-vdb" id="0eU-q2-cto"/>
                         <outlet property="displayNameLabel" destination="Y77-CL-VDH" id="aCm-hg-mY7"/>
                         <outlet property="emojiCollectionView" destination="OgS-1x-Vgm" id="IxT-K8-B8P"/>
                         <outlet property="iconImageView" destination="7LQ-Y2-MF5" id="g1c-N9-5NX"/>
                         <outlet property="searchBar" destination="hLc-bQ-WPg" id="Erg-Rc-gHq"/>
                         <outlet property="settingsButton" destination="REl-1x-M7t" id="UPb-c8-5ld"/>
+                        <outlet property="targetNoteDisplayView" destination="ld0-RN-wpl" id="iUa-Tm-J6T"/>
                         <outlet property="targetNoteTextView" destination="6Lp-0O-FvA" id="hsj-eq-4rE"/>
                     </connections>
                 </viewController>

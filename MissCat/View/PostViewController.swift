@@ -19,7 +19,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     @IBOutlet weak var submitButton: UIButton!
     @IBOutlet weak var iconImageView: UIImageView!
     
-    @IBOutlet weak var mainTextView: MisskeyTextView!
+    @IBOutlet weak var mainTextView: UITextView!
     @IBOutlet weak var mainTextViewBottomConstraint: NSLayoutConstraint!
     
     @IBOutlet weak var bottomStackView: UIStackView!
@@ -181,6 +181,11 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         guard let reactionGen = self.getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
         
         reactionGen.onPostViewController = true
+        reactionGen.selectedEmoji.subscribe(onNext: { emojiModel in // ReactionGenで絵文字が選択されたらに送られてくる
+            self.insertCustomEmoji(with: emojiModel)
+            reactionGen.dismiss(animated: true, completion: nil)
+        }).disposed(by: disposeBag)
+        
         presentWithSemiModal(reactionGen, animated: true, completion: nil)
     }
     
@@ -189,6 +194,16 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         let viewController = storyboard.instantiateViewController(withIdentifier: name)
         
         return viewController
+    }
+    
+    private func insertCustomEmoji(with emojiModel: EmojiView.EmojiModel) {
+//        guard let imageUrl = emojiModel.customEmojiUrl else { return }
+//        let targetView = MFMEngine.generateAsyncImageView(imageUrl: imageUrl)
+//
+        if let selectedTextRange = mainTextView.selectedTextRange {
+            mainTextView.replace(selectedTextRange,
+                                 withText: emojiModel.isDefault ? emojiModel.rawEmoji : ":\(emojiModel.rawEmoji):")
+        }
     }
     
     // キーボードの高さに合わせてcomponentの高さを調整する

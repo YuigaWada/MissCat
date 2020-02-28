@@ -6,6 +6,7 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import RxCocoa
 import RxDataSources
 import RxSwift
 import UIKit
@@ -29,6 +30,8 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     
     public var delegate: ReactionGenViewControllerDelegate?
     public var onPostViewController: Bool = false
+    
+    public var selectedEmoji: PublishRelay<EmojiView.EmojiModel> = .init()
     
     private var viewModel: ReactionGenViewModel?
     private let disposeBag = DisposeBag()
@@ -125,23 +128,38 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
         emojiCollectionView.collectionViewLayout = flowLayout
     }
     
-    private func setupTapGesture(to view: EmojiViewCell, emoji: String) {
+    private func setupTapGesture(to view: EmojiViewCell, emojiModel: EmojiView.EmojiModel) {
+        let emoji = emojiModel.rawEmoji
         let tapGesture = UITapGestureRecognizer()
         
         // 各々のEmojiViewに対してtap gestureを付加する
         tapGesture.rx.event.bind { _ in
-            guard let targetNoteId = self.viewModel!.targetNoteId else { return }
-            
-            if self.viewModel!.hasMarked {
-                self.viewModel!.cancelReaction(noteId: targetNoteId)
-            } else {
-                self.viewModel!.registerReaction(noteId: targetNoteId, reaction: ":" + emoji + ":")
+            let raw = ":" + emoji + ":"
+            if self.onPostViewController { // Post画面のときは入力をPostViewControllerへと渡す
+                self.sendEmojiInput(emojiModel: emojiModel)
+            } else { // NoteCell上ではReactionGenが投稿に対してサーバーにリアクションを送信する
+                self.react2Note(raw: raw)
             }
             
-            self.dismiss(animated: true, completion: nil) // 半モーダルを消す
         }.disposed(by: disposeBag)
         
         view.addGestureRecognizer(tapGesture)
+    }
+    
+    private func sendEmojiInput(emojiModel: EmojiView.EmojiModel) {
+        selectedEmoji.accept(emojiModel)
+    }
+    
+    private func react2Note(raw: String) {
+        guard let targetNoteId = self.viewModel!.targetNoteId else { return }
+        
+        if viewModel!.hasMarked {
+            viewModel!.cancelReaction(noteId: targetNoteId)
+        } else {
+            viewModel!.registerReaction(noteId: targetNoteId, reaction: raw)
+        }
+        
+        dismiss(animated: true, completion: nil) // 半モーダルを消す
     }
     
     // MARK: Setup Cell
@@ -166,7 +184,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
             cell.mainView.emoji = item
             cell.mainView.isFake = item.isFake
             cell.contentMode = .left
-            setupTapGesture(to: cell, emoji: item.rawEmoji)
+            setupTapGesture(to: cell, emojiModel: item)
             
             return cell
         }
