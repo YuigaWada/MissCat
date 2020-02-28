@@ -64,7 +64,7 @@ public class MFMEngine {
             
             // カスタム絵文字を支点に文章を分割していく
             let plane = String(rest[rest.startIndex ..< range.lowerBound])
-            shaped.append(self.generatePlaneString(string: plane, font: yanagi.font))
+            shaped.append(MFMEngine.generatePlaneString(string: plane, font: yanagi.font))
             
             // カスタム絵文字を適切な形に変換していく
             switch converted.type {
@@ -72,7 +72,7 @@ public class MFMEngine {
                 shaped.append(NSAttributedString(string: converted.emoji))
                 
             case "custom":
-                let targetView = self.generateAsyncImageView(converted.emoji)
+                let targetView = MFMEngine.generateAsyncImageView(imageUrl: converted.emoji, lineHeight: lineHeight)
                 if let targetViewString = yanagi.getViewString(with: targetView, size: targetView.frame.size) {
                     shaped.append(targetViewString)
                 }
@@ -85,17 +85,17 @@ public class MFMEngine {
         }
         
         // 末端
-        shaped.append(generatePlaneString(string: rest, font: yanagi.font))
+        shaped.append(MFMEngine.generatePlaneString(string: rest, font: yanagi.font))
         return shaped
     }
     
-    // MARK: Privates
+    // MARK: Statics
     
     /// Stringを適切なフォントを指定してNSAttributedStringに変換する
     /// - Parameters:
     ///   - string: 対象のstring
     ///   - font: フォント
-    private func generatePlaneString(string: String, font: UIFont?) -> NSAttributedString {
+    public static func generatePlaneString(string: String, font: UIFont?) -> NSAttributedString {
         let fontName = font?.familyName ?? "Helvetica"
         let fontSize = font?.pointSize ?? 15.0
         
@@ -104,7 +104,7 @@ public class MFMEngine {
     
     /// カスタム絵文字のURLから画像データを取得し、非同期でsetされるようなUIImageViewを返す
     /// - Parameter imageUrl: 画像データのurl (アニメGIF / SVGも可)
-    private func generateAsyncImageView(_ imageUrl: String) -> UIImageView {
+    public static func generateAsyncImageView(imageUrl: String, lineHeight: CGFloat = 30) -> UIImageView {
         let imageSize = lineHeight
         let imageView = GIFImageView(frame: CGRect(x: 0, y: 0, width: 200, height: 100))
         
