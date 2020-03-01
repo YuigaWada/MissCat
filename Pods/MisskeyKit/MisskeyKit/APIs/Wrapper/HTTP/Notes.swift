@@ -276,7 +276,7 @@ extension MisskeyKit {
         
         //MARK:- Create/Delete Note
         
-        public func createNote(visibility:Visibility = Visibility.public, visibleUserIds: [String]=[], text: String, cw:String = "", viaMobile: Bool = true, localOnly: Bool = false, noExtractMentions: Bool = true, noExtractHashtags: Bool = true, noExtractEmojis: Bool = true, geo: Geo? = nil, fileIds: [String] = [ ], replyId: String = "", poll: Poll? = nil,  completion callback: @escaping OneNoteCallBack) {
+        public func createNote(visibility:Visibility = Visibility.public, visibleUserIds: [String]=[], text: String, cw:String = "", viaMobile: Bool = true, localOnly: Bool = false, noExtractMentions: Bool = false, noExtractHashtags: Bool = false, noExtractEmojis: Bool = false, geo: Geo? = nil, fileIds: [String] = [ ], replyId: String = "", poll: Poll? = nil,  completion callback: @escaping OneNoteCallBack) {
             
             var params = ["visibility": visibility.rawValue,
                           "visibleUserIds": visibleUserIds,
