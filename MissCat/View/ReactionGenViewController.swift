@@ -57,7 +57,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
         super.viewWillAppear(animated)
         
         targetNoteDisplayView.isHidden = onPostViewController
-        borderOriginXConstraint.isActive = false
+        borderOriginXConstraint.isActive = !onPostViewController
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
     }
     
