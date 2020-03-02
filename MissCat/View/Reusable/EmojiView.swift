@@ -91,10 +91,10 @@ public class EmojiView: UIView {
         guard let emoji = emoji, emoji.isDefault, let defaultEmoji = emoji.defaultEmoji else { return }
         
         var labelWidth: CGFloat = 0
-        var font: UIFont = emojiLabel.font ?? UIFont.systemFont(ofSize: 15.0)
+        var font: UIFont = emojiLabel.font ?? UIFont.systemFont(ofSize: 20.0)
         
         var previousLabelWidth: CGFloat = 0
-        while font.pointSize < 25, frame.width - labelWidth >= 2 { // フォントサイズは高々25程度だろう
+        while font.pointSize < 50, frame.width - labelWidth >= 2 { // フォントサイズは高々50程度だろう
             font = font.withSize(font.pointSize + 1)
             labelWidth = getLabelWidth(text: defaultEmoji, font: font)
             
