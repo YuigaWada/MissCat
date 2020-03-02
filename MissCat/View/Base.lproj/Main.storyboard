@@ -218,6 +218,82 @@
             </objects>
             <point key="canvasLocation" x="-810.14492753623199" y="920.75892857142856"/>
         </scene>
+        <!--Start View Controller-->
+        <scene sceneID="GYd-UC-yxA">
+            <objects>
+                <viewController id="U0x-WJ-4mu" customClass="StartViewController" customModule="MissCat" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="kI3-zJ-mUI">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Logo" translatesAutoresizingMaskIntoConstraints="NO" id="Nhd-ZS-86o">
+                                <rect key="frame" x="40" y="236" width="334" height="112"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="112" id="cyb-tj-zUw"/>
+                                </constraints>
+                            </imageView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fxD-xe-AX4">
+                                <rect key="frame" x="124.5" y="660" width="165" height="48"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <state key="normal" title="Misskeyを始める">
+                                    <color key="titleColor" red="0.16862745100000001" green="0.63921568630000003" blue="0.73725490199999999" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="10"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cer-we-Fzs">
+                                <rect key="frame" x="116" y="728" width="182" height="30"/>
+                                <state key="normal" title="&gt; インスタンスを変更する">
+                                    <color key="titleColor" red="0.92549019610000005" green="0.92549019610000005" blue="0.92549019610000005" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                </state>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="misskey.io" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="knL-cL-z9W">
+                                <rect key="frame" x="323.5" y="780" width="70.5" height="18"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="新しい世界を探検しよう" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tHv-Px-qk6">
+                                <rect key="frame" x="111.5" y="351" width="191" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" red="0.16862745100000001" green="0.63921568630000003" blue="0.73725490199999999" alpha="1" colorSpace="calibratedRGB"/>
+                        <constraints>
+                            <constraint firstItem="cer-we-Fzs" firstAttribute="centerX" secondItem="kI3-zJ-mUI" secondAttribute="centerX" id="7gL-Qo-hhs"/>
+                            <constraint firstAttribute="trailing" secondItem="knL-cL-z9W" secondAttribute="trailing" constant="20" id="HGu-V8-pZV"/>
+                            <constraint firstItem="Nhd-ZS-86o" firstAttribute="leading" secondItem="W7n-iH-I4U" secondAttribute="leading" constant="40" id="HHb-ok-KpB"/>
+                            <constraint firstItem="fxD-xe-AX4" firstAttribute="centerX" secondItem="kI3-zJ-mUI" secondAttribute="centerX" id="ISe-tZ-aQs"/>
+                            <constraint firstItem="knL-cL-z9W" firstAttribute="bottom" secondItem="W7n-iH-I4U" secondAttribute="bottom" constant="-10" id="Kvg-j7-hjG"/>
+                            <constraint firstItem="fxD-xe-AX4" firstAttribute="width" secondItem="kI3-zJ-mUI" secondAttribute="width" multiplier="0.398551" id="Q4h-Xj-8Hp"/>
+                            <constraint firstItem="fxD-xe-AX4" firstAttribute="height" secondItem="kI3-zJ-mUI" secondAttribute="height" multiplier="0.0569196" id="T5P-t2-Dkl"/>
+                            <constraint firstItem="Nhd-ZS-86o" firstAttribute="top" secondItem="W7n-iH-I4U" secondAttribute="top" constant="236" id="aet-UL-keK"/>
+                            <constraint firstItem="cer-we-Fzs" firstAttribute="top" secondItem="fxD-xe-AX4" secondAttribute="bottom" constant="20" id="i2G-sn-kGV"/>
+                            <constraint firstItem="W7n-iH-I4U" firstAttribute="bottom" secondItem="cer-we-Fzs" secondAttribute="bottom" constant="50" id="jym-jS-Cwc"/>
+                            <constraint firstItem="tHv-Px-qk6" firstAttribute="centerX" secondItem="kI3-zJ-mUI" secondAttribute="centerX" id="p9h-YL-Uqc"/>
+                            <constraint firstItem="W7n-iH-I4U" firstAttribute="trailing" secondItem="Nhd-ZS-86o" secondAttribute="trailing" constant="40" id="sx7-98-mt9"/>
+                            <constraint firstItem="tHv-Px-qk6" firstAttribute="top" secondItem="Nhd-ZS-86o" secondAttribute="bottom" constant="3" id="x3P-um-G2b"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="W7n-iH-I4U"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="vu4-O1-jNH"/>
+                    <connections>
+                        <outlet property="changeInstanceButton" destination="cer-we-Fzs" id="GF5-gS-Op7"/>
+                        <outlet property="instanceLabel" destination="knL-cL-z9W" id="57h-K8-H7m"/>
+                        <outlet property="logoImageView" destination="Nhd-ZS-86o" id="voh-GR-LcF"/>
+                        <outlet property="phraseLabel" destination="tHv-Px-qk6" id="VOG-iF-oHz"/>
+                        <outlet property="startingButton" destination="fxD-xe-AX4" id="Nca-yw-dbA"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="aBZ-9K-Bqj" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-804.34782608695662" y="1810.7142857142856"/>
+        </scene>
         <!--Post Detail View Controller-->
         <scene sceneID="opk-QX-ADc">
             <objects>
@@ -594,6 +670,9 @@
                                                         <integer key="value" value="5"/>
                                                     </userDefinedRuntimeAttribute>
                                                 </userDefinedRuntimeAttributes>
+                                                <connections>
+                                                    <segue destination="U0x-WJ-4mu" kind="show" id="Fti-Q1-BVQ"/>
+                                                </connections>
                                             </button>
                                         </subviews>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
@@ -705,4 +784,7 @@
             <point key="canvasLocation" x="-810" y="-629"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="Logo" width="581" height="150.5"/>
+    </resources>
 </document>
