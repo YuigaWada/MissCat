@@ -29,6 +29,8 @@ public class Cache {
     
     private var me: UserModel?
     
+    private lazy var applicationSupportDir = CreateApplicationSupportDir()
+    
     // MARK: Save
     
     public func saveNote(noteId: String, note: NSAttributedString, attachments: Attachments) {
@@ -74,8 +76,11 @@ public class Cache {
         files.append(file)
     }
     
-    public func saveUrlData(_ data: Data, on rawUrl: String) {
+    public func saveUrlData(_ data: Data, on rawUrl: String, toStorage: Bool = false) {
         dataOnUrl[rawUrl] = data
+        if toStorage {
+            saveToStorage(data: data, url: rawUrl)
+        }
     }
     
     // MARK: Get
@@ -120,7 +125,60 @@ public class Cache {
     }
     
     public func getUrlData(on rawUrl: String) -> Data? {
+        if !dataOnUrl.keys.contains(rawUrl), let savedOnStorage = getFromStorage(url: rawUrl) {
+            saveUrlData(savedOnStorage, on: rawUrl) // RAM上に載せる
+            return savedOnStorage
+        }
+        
         return dataOnUrl[rawUrl]
+    }
+    
+    /// データをハッシュを利用して保存する
+    /// - Parameters:
+    ///   - data: Data
+    ///   - url: Url
+    private func saveToStorage(data: Data, url: String) {
+        let filename = url.sha256() ?? url
+        
+        let path = applicationSupportDir.appendingPathComponent(filename)
+        do {
+            try data.write(to: path)
+        } catch {
+            /* Ignore */
+            print(error)
+        }
+    }
+    
+    /// データをハッシュを利用して保存する
+    /// - Parameter url: url
+    private func getFromStorage(url: String) -> Data? {
+        let filename = url.sha256() ?? url
+        
+        let path = applicationSupportDir.appendingPathComponent(filename)
+        do {
+            return try Data(contentsOf: path)
+        } catch {
+            return nil
+        }
+    }
+    
+    private func CreateApplicationSupportDir() -> URL {
+        let manager = FileManager.default
+        let applicationSupportDir = manager.urls(for: .applicationSupportDirectory,
+                                                 in: .userDomainMask)[0]
+        
+        // デフォルトではsandbox内にApplication Supportが存在しないので、ディレクトリを作る必要がある
+        if !manager.fileExists(atPath: applicationSupportDir.absoluteString) {
+            do {
+                try manager.createDirectory(at: applicationSupportDir,
+                                            withIntermediateDirectories: false,
+                                            attributes: nil)
+            } catch {
+                /* Ignore */
+            }
+        }
+        
+        return applicationSupportDir
     }
 }
 

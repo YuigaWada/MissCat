@@ -130,4 +130,14 @@ extension String {
         let url = NSURL(string: self)
         return url?.pathExtension
     }
+    
+    func sha256() -> String? {
+        guard let stringData = self.data(using: String.Encoding.utf8) else { return nil }
+        
+        var digest = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+        stringData.withUnsafeBytes { bytes in
+            _ = CC_SHA256(bytes.baseAddress, CC_LONG(self.count), &digest)
+        }
+        return digest.makeIterator().map { String(format: "%02x", $0) }.joined()
+    }
 }

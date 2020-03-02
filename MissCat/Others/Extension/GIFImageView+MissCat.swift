@@ -14,7 +14,7 @@ import UIKit
 extension GIFImageView {
     ///  キャッシュを考慮してURLから画像データを取得し、非同期でsetされるようなUIImageViewを返す。
     /// - Parameter imageUrl: 画像データのurl (アニメGIF / SVGも可)s
-    public func setImage(url imageUrl: String) {
+    public func setImage(url imageUrl: String, cachedToStorage: Bool = false) {
         let isGif = self.isGif(url: imageUrl)
         if let cachedData = Cache.shared.getUrlData(on: imageUrl) { // キャッシュが存在する時
             if isGif {
@@ -25,7 +25,7 @@ extension GIFImageView {
         } else { // キャッシュが存在しない場合
             imageUrl.getData { data in
                 guard let data = data else { return }
-                Cache.shared.saveUrlData(data, on: imageUrl) // キャッシュする
+                Cache.shared.saveUrlData(data, on: imageUrl, toStorage: cachedToStorage) // キャッシュする
                 
                 if isGif {
                     self.setGifuImage(with: data)

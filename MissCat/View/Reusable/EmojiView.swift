@@ -80,7 +80,7 @@ public class EmojiView: UIView {
             emojiLabel.backgroundColor = .clear
         } else {
             guard let customEmojiUrl = emoji.customEmojiUrl else { return }
-            emojiImageView.setImage(url: customEmojiUrl) // イメージをset
+            emojiImageView.setImage(url: customEmojiUrl, cachedToStorage: true) // イメージをset
         }
     }
     
