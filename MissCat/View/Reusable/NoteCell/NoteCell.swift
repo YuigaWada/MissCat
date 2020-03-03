@@ -44,6 +44,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     @IBOutlet weak var reactionsCollectionView: UICollectionView!
     
+    @IBOutlet weak var pollView: PollView!
+    
     @IBOutlet weak var replyButton: UIButton!
     @IBOutlet weak var renoteButton: UIButton!
     @IBOutlet weak var reactionButton: UIButton!
@@ -152,6 +154,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         if fileImageView.arrangedSubviews.count > 0 {
             fileImageContainer.translatesAutoresizingMaskIntoConstraints = false
         }
+        
+        pollView.isHidden = true
     }
     
     private func binding(viewModel: ViewModel) {
