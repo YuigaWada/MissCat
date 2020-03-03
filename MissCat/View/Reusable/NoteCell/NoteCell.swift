@@ -242,6 +242,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         //        self.nameTextView.resetViewString()
         //        self.noteView.resetViewString()
+        
+        pollView.isHidden = true
     }
     
     // ファイルは同時に4つしか載せることができないので、先に4つViewを追加しておく
@@ -432,6 +434,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             iconView.showAnimatedGradientSkeleton()
             
             reactionsCollectionView.isHidden = true
+            pollView.isHidden = true
             
             fileImageView.showAnimatedGradientSkeleton()
         } else {
