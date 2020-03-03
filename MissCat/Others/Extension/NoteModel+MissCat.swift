@@ -34,11 +34,11 @@ extension NoteModel {
                                        ago: post.createdAt!,
                                        replyCount: post.repliesCount ?? 0,
                                        renoteCount: post.renoteCount ?? 0,
-                                       reactions: post.reactions ?? [],
+                                       reactions: post.reactions?.compactMap { $0 } ?? [],
                                        shapedReactions: [],
                                        myReaction: post.myReaction,
-                                       files: post.files ?? [],
-                                       emojis: emojis.filter { $0 != nil },
+                                       files: post.files?.compactMap { $0 } ?? [],
+                                       emojis: emojis.compactMap { $0 },
                                        poll: post.poll)
         
         cellModel.shapedReactions = cellModel.getReactions()

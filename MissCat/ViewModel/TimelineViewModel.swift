@@ -142,16 +142,11 @@ class TimelineViewModel: ViewModelType {
         let targetCell = cellsModel.filter { $0.noteId == targetNoteId }
         if targetCell.count > 0, let targetIndex = self.cellsModel.firstIndex(of: targetCell[0]) {
             // Change Count Label
-            let existReactionCount = cellsModel[targetIndex].reactions.filter {
-                guard let reaction = $0 else { return false }
-                return reaction.name == rawReaction
-            }
+            let existReactionCount = cellsModel[targetIndex].reactions.filter { $0.name == rawReaction }
             
             let hasThisReaction = existReactionCount.count > 0
             if hasThisReaction {
                 cellsModel[targetIndex].reactions = cellsModel[targetIndex].reactions.map { counter in
-                    guard let counter = counter else { return nil }
-                    
                     var newReactionCounter = counter
                     if counter.name == rawReaction, let count = counter.count {
                         newReactionCounter.count = count.increment()

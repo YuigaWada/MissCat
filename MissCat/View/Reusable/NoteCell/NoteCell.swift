@@ -374,8 +374,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             for index in 0 ..< fileCount {
                 let file = files[index]
                 
-                guard let thumbnailUrl = file!.thumbnailUrl,
-                    let original = file!.url,
+                guard let thumbnailUrl = file.thumbnailUrl,
+                    let original = file.url,
                     let imageView = self.getFileView(index) else { break }
                 
                 imageView.isHidden = false
@@ -394,8 +394,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         let renoteCount = item.renoteCount != 0 ? String(item.renoteCount) : ""
         var reactionsCount: Int = 0
         item.reactions.forEach {
-            guard let reaction = $0 else { return }
-            reactionsCount += Int(reaction.count ?? "0") ?? 0
+            reactionsCount += Int($0.count ?? "0") ?? 0
         }
         
         replyButton.setTitle("reply\(replyCount)", for: .normal)
@@ -522,11 +521,11 @@ extension NoteCell {
         let ago: String
         let replyCount: Int
         let renoteCount: Int
-        var reactions: [ReactionCount?]
+        var reactions: [ReactionCount]
         var shapedReactions: [NoteCell.Reaction]
         var myReaction: String?
-        let files: [File?]
-        let emojis: [EmojiModel?]?
+        let files: [File]
+        let emojis: [EmojiModel]?
         
         let poll: Poll?
         
@@ -639,9 +638,9 @@ extension NoteCell.Model {
     /// ReactionCountをNoteCell.Reactionに変換する
     func getReactions() -> [NoteCell.Reaction] {
         return reactions.map { reaction in
-            guard let count = reaction?.count, count != "0" else { return nil }
+            guard let count = reaction.count, count != "0" else { return nil }
             
-            let rawEmoji = reaction?.name ?? ""
+            let rawEmoji = reaction.name ?? ""
             let isMyReaction = rawEmoji == self.myReaction
             
             guard rawEmoji != "", let convertedEmojiData = EmojiHandler.handler.convertEmoji(raw: rawEmoji) else {
