@@ -175,7 +175,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         }.drive(reactionCollectionHeightConstraint.rx.constant).disposed(by: disposeBag)
         
         output.poll.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { poll in
-            guard let poll = poll else { return }
             self.pollView.isHidden = false
             self.pollView.setPoll(with: poll)
             self.pollViewHeightConstraint.constant = self.pollView.height

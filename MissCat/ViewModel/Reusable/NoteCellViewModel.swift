@@ -30,7 +30,7 @@ class NoteCellViewModel: ViewModelType {
         
         let shapedNote: PublishRelay<NSAttributedString?> = .init()
         let reactions: PublishSubject<[NoteCell.Reaction.Section]> = .init()
-        let poll: PublishRelay<Poll?> = .init()
+        let poll: PublishRelay<Poll> = .init()
         
         let iconImage: PublishRelay<UIImage> = .init()
         
