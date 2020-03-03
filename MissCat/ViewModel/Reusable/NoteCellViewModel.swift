@@ -30,6 +30,8 @@ class NoteCellViewModel: ViewModelType {
         
         let shapedNote: Driver<NSAttributedString?>
         let reactions: Driver<[NoteCell.Reaction.Section]>
+        let poll: Driver<Poll?>
+        
         let iconImage: Driver<UIImage>
         
         let defaultConstraintActive: Driver<Bool>
@@ -47,6 +49,7 @@ class NoteCellViewModel: ViewModelType {
                                            name: name.asDriver(onErrorJustReturn: nil),
                                            shapedNote: self.shapedNote.asDriver(onErrorJustReturn: nil),
                                            reactions: self.reactions.asDriver(onErrorJustReturn: []),
+                                           poll: self.poll.asDriver(onErrorJustReturn: nil),
                                            iconImage: self.iconImage.asDriver(onErrorJustReturn: UIImage()),
                                            defaultConstraintActive: self.defaultConstraintActive.asDriver(onErrorJustReturn: false),
                                            isReplyTarget: self.isReplyTarget.asDriver(onErrorJustReturn: false),
@@ -74,6 +77,7 @@ class NoteCellViewModel: ViewModelType {
     public var reactionsModel: [NoteCell.Reaction] = []
     
     private let reactions: PublishSubject<[NoteCell.Reaction.Section]> = .init()
+    private let poll: PublishRelay<Poll?> = .init()
     
     private var properBackgroundColor: UIColor {
         return input.cellModel.isReplyTarget ? replyTargetColor : .white
@@ -107,6 +111,9 @@ class NoteCellViewModel: ViewModelType {
                   isDetailMode: input.isDetailMode)
         
         getReactions(item)
+        if let pollModel = item.poll {
+            poll.accept(pollModel)
+        }
     }
     
     private func shapeNote(identifier: String, note: String, noteId: String?, isReply: Bool, externalEmojis: [EmojiModel?]?, isDetailMode: Bool) {

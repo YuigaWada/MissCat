@@ -13,12 +13,16 @@ public class PollView: UIView {
     @IBOutlet weak var stackView: UIStackView!
     @IBOutlet weak var totalPollLabel: UILabel!
     
-    private var pollBarHeight = 20
-    private var pollBarCount = 0 {
-        didSet {
-            DispatchQueue.main.async { self.adjustViewHeight() }
-        }
+    public var height: CGFloat {
+        guard pollBarCount > 0 else { return 0 }
+        
+        let originalFrame = frame
+        let spaceCount = pollBarCount - 1
+        return CGFloat(spaceCount * 10 + pollBarCount * 20 + 20 + 100)
     }
+    
+    private var pollBarHeight = 20
+    private var pollBarCount = 0
     
     private var votesCountSum: Int = 0
     private var pollBars: [PollBar] = []
@@ -39,6 +43,12 @@ public class PollView: UIView {
         if let view = UINib(nibName: "PollView", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
             addSubview(view)
+            
+            let pollBar = getPollBarView(name: "a",
+                                         rate: 0.7,
+                                         isVoted: false)
+            
+            stackView.addArrangedSubview(pollBar.view)
         }
     }
     
@@ -55,7 +65,7 @@ public class PollView: UIView {
             guard let count = choice.votes else { return }
             
             let pollBar = getPollBarView(name: choice.text ?? "",
-                                         rate: votesCountSum == 0 ? 0 : count / votesCountSum,
+                                         rate: votesCountSum == 0 ? 0 : Double(count / votesCountSum),
                                          isVoted: choice.isVoted ?? false)
             
             pollBars.append(pollBar)
@@ -67,7 +77,7 @@ public class PollView: UIView {
     
     // MARK: Privates
     
-    private func getPollBarView(name: String, rate: Int, isVoted: Bool) -> PollBar {
+    private func getPollBarView(name: String, rate: Double, isVoted: Bool) -> PollBar {
         // プログレスバー
         let pollBarView = UIProgressView(frame: CGRect(x: 0,
                                                        y: 0,
@@ -105,17 +115,6 @@ public class PollView: UIView {
         return PollBar(view: pollBarView,
                        nameLabel: pollNameLabel,
                        rateLabel: pollRateLabel)
-    }
-    
-    private func adjustViewHeight() {
-        guard pollBarCount > 0 else { return }
-        
-        let originalFrame = frame
-        let spaceCount = pollBarCount - 1
-        frame = CGRect(x: originalFrame.origin.x,
-                       y: originalFrame.origin.y,
-                       width: originalFrame.width,
-                       height: CGFloat(spaceCount * 10 + pollBarCount * 20 + 20))
     }
 }
 

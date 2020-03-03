@@ -294,6 +294,34 @@
             </objects>
             <point key="canvasLocation" x="-804.34782608695662" y="1810.7142857142856"/>
         </scene>
+        <!--View Controller-->
+        <scene sceneID="QQC-XL-Epy">
+            <objects>
+                <viewController id="kU8-8v-wSd" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="h7s-Xd-S1R">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="t4D-YX-zjA" customClass="PollView" customModule="MissCat" customModuleProvider="target">
+                                <rect key="frame" x="87" y="302" width="240" height="138"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="bN4-Je-m7m" firstAttribute="bottom" secondItem="t4D-YX-zjA" secondAttribute="bottom" constant="422" id="Ag2-li-wth"/>
+                            <constraint firstItem="t4D-YX-zjA" firstAttribute="top" secondItem="bN4-Je-m7m" secondAttribute="top" constant="258" id="TnQ-CN-ebe"/>
+                            <constraint firstItem="bN4-Je-m7m" firstAttribute="trailing" secondItem="t4D-YX-zjA" secondAttribute="trailing" constant="87" id="XY0-bQ-rXP"/>
+                            <constraint firstItem="t4D-YX-zjA" firstAttribute="leading" secondItem="bN4-Je-m7m" secondAttribute="leading" constant="87" id="xEC-u1-BFc"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="bN4-Je-m7m"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="0ip-5S-BVb"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Rjg-3J-Kmp" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="263" y="1786"/>
+        </scene>
         <!--Post Detail View Controller-->
         <scene sceneID="opk-QX-ADc">
             <objects>
@@ -671,7 +699,7 @@
                                                     </userDefinedRuntimeAttribute>
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
-                                                    <segue destination="U0x-WJ-4mu" kind="show" id="Fti-Q1-BVQ"/>
+                                                    <segue destination="U0x-WJ-4mu" kind="show" id="QaD-nV-cGv"/>
                                                 </connections>
                                             </button>
                                         </subviews>

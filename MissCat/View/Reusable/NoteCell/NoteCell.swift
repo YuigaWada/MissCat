@@ -61,6 +61,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     @IBOutlet weak var displayName2MainStackConstraint: NSLayoutConstraint!
     @IBOutlet weak var icon2MainStackConstraint: NSLayoutConstraint!
     @IBOutlet weak var reactionCollectionHeightConstraint: NSLayoutConstraint!
+    @IBOutlet weak var pollViewHeightConstraint: NSLayoutConstraint!
     
     // MARK: Public Var
     
@@ -154,8 +155,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         if fileImageView.arrangedSubviews.count > 0 {
             fileImageContainer.translatesAutoresizingMaskIntoConstraints = false
         }
-        
-        pollView.isHidden = true
     }
     
     private func binding(viewModel: ViewModel) {
@@ -174,6 +173,13 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             
             return CGFloat(step * 40)
         }.drive(reactionCollectionHeightConstraint.rx.constant).disposed(by: disposeBag)
+        
+        output.poll.drive(onNext: { poll in
+            guard let poll = poll else { return }
+            self.pollView.isHidden = false
+            self.pollView.setPoll(with: poll)
+            self.pollViewHeightConstraint.constant = self.pollView.height
+        }).disposed(by: disposeBag)
         
         output.ago.drive(agoLabel.rx.text).disposed(by: disposeBag)
         output.name.drive(nameTextView.rx.attributedText).disposed(by: disposeBag)
@@ -242,7 +248,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         //        self.nameTextView.resetViewString()
         //        self.noteView.resetViewString()
-        
         pollView.isHidden = true
     }
     
@@ -363,12 +368,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         iconImageUrl = viewModel.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
         
-        // poll
-        if let poll = item.poll {
-            pollView.isHidden = false
-            pollView.setPoll(with: poll)
-        }
-        
         // file
         if let files = Cache.shared.getFiles(noteId: noteId) { // キャッシュが存在する場合
             for index in 0 ..< files.count {
@@ -376,7 +375,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
                 setupFileImage(file.thumbnail, originalImageUrl: file.originalUrl, index: index)
             }
         } else { // キャッシュが存在しない場合
-            let files = item.files.filter { $0 != nil }
+            let files = item.files
             let fileCount = files.count
             
             for index in 0 ..< fileCount {
@@ -446,8 +445,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         } else {
             nameTextView.hideSkeleton()
             iconView.hideSkeleton()
-            
-            //            reactionsCollectionView.isHidden = false
             
             fileImageView.hideSkeleton()
         }
