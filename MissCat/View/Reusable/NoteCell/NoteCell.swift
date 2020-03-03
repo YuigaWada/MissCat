@@ -160,13 +160,13 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     private func binding(viewModel: ViewModel) {
         let output = viewModel.output
         
-        output.reactions.drive(reactionsCollectionView.rx.items(dataSource: reactionsDataSource)).disposed(by: disposeBag)
-        output.reactions.map { // リアクションの数が0のときはreactionsCollectionViewを非表示に
+        output.reactions.asDriver(onErrorDriveWith: Driver.empty()).drive(reactionsCollectionView.rx.items(dataSource: reactionsDataSource)).disposed(by: disposeBag)
+        output.reactions.asDriver(onErrorDriveWith: Driver.empty()).map { // リアクションの数が0のときはreactionsCollectionViewを非表示に
             guard $0.count == 1 else { return true }
             return $0[0].items.count == 0
         }.drive(reactionsCollectionView.rx.isHidden).disposed(by: disposeBag)
         
-        output.reactions.map { // リアクションの数によってreactionsCollectionViewの高さを調節
+        output.reactions.asDriver(onErrorDriveWith: Driver.empty()).map { // リアクションの数によってreactionsCollectionViewの高さを調節
             guard $0.count == 1 else { return 30 }
             let count = $0[0].items.count
             let step = ceil(Double(count) / 5)
@@ -174,26 +174,26 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             return CGFloat(step * 40)
         }.drive(reactionCollectionHeightConstraint.rx.constant).disposed(by: disposeBag)
         
-        output.poll.drive(onNext: { poll in
+        output.poll.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { poll in
             guard let poll = poll else { return }
             self.pollView.isHidden = false
             self.pollView.setPoll(with: poll)
             self.pollViewHeightConstraint.constant = self.pollView.height
         }).disposed(by: disposeBag)
         
-        output.ago.drive(agoLabel.rx.text).disposed(by: disposeBag)
-        output.name.drive(nameTextView.rx.attributedText).disposed(by: disposeBag)
+        output.ago.asDriver(onErrorDriveWith: Driver.empty()).drive(agoLabel.rx.text).disposed(by: disposeBag)
+        output.name.asDriver(onErrorDriveWith: Driver.empty()).drive(nameTextView.rx.attributedText).disposed(by: disposeBag)
         
-        output.shapedNote.drive(noteView.rx.attributedText).disposed(by: disposeBag)
-        output.iconImage.drive(iconView.rx.image).disposed(by: disposeBag)
+        output.shapedNote.asDriver(onErrorDriveWith: Driver.empty()).drive(noteView.rx.attributedText).disposed(by: disposeBag)
+        output.iconImage.asDriver(onErrorDriveWith: Driver.empty()).drive(iconView.rx.image).disposed(by: disposeBag)
         
-        output.defaultConstraintActive.drive(displayName2MainStackConstraint.rx.active).disposed(by: disposeBag)
-        output.defaultConstraintActive.drive(icon2MainStackConstraint.rx.active).disposed(by: disposeBag)
+        output.defaultConstraintActive.asDriver(onErrorDriveWith: Driver.empty()).drive(displayName2MainStackConstraint.rx.active).disposed(by: disposeBag)
+        output.defaultConstraintActive.asDriver(onErrorDriveWith: Driver.empty()).drive(icon2MainStackConstraint.rx.active).disposed(by: disposeBag)
         
-        output.backgroundColor.drive(rx.backgroundColor).disposed(by: disposeBag)
+        output.backgroundColor.asDriver(onErrorDriveWith: Driver.empty()).drive(rx.backgroundColor).disposed(by: disposeBag)
         
-        output.isReplyTarget.drive(separatorBorder.rx.isHidden).disposed(by: disposeBag)
-        output.isReplyTarget.map { !$0 }.drive(replyIndicator.rx.isHidden).disposed(by: disposeBag)
+        output.isReplyTarget.asDriver(onErrorDriveWith: Driver.empty()).drive(separatorBorder.rx.isHidden).disposed(by: disposeBag)
+        output.isReplyTarget.map { !$0 }.asDriver(onErrorDriveWith: Driver.empty()).drive(replyIndicator.rx.isHidden).disposed(by: disposeBag)
     }
     
     private func setupProfileGesture() {

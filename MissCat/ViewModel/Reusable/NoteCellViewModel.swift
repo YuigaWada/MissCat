@@ -25,19 +25,19 @@ class NoteCellViewModel: ViewModelType {
     }
     
     struct Output {
-        let ago: Driver<String>
-        let name: Driver<NSAttributedString?>
+        let ago: PublishRelay<String> = .init()
+        let name: PublishRelay<NSAttributedString?> = .init()
         
-        let shapedNote: Driver<NSAttributedString?>
-        let reactions: Driver<[NoteCell.Reaction.Section]>
-        let poll: Driver<Poll?>
+        let shapedNote: PublishRelay<NSAttributedString?> = .init()
+        let reactions: PublishSubject<[NoteCell.Reaction.Section]> = .init()
+        let poll: PublishRelay<Poll?> = .init()
         
-        let iconImage: Driver<UIImage>
+        let iconImage: PublishRelay<UIImage> = .init()
         
-        let defaultConstraintActive: Driver<Bool>
-        let isReplyTarget: Driver<Bool>
+        let defaultConstraintActive: PublishRelay<Bool> = .init()
+        let isReplyTarget: PublishRelay<Bool> = .init()
         
-        let backgroundColor: Driver<UIColor>
+        let backgroundColor: PublishRelay<UIColor> = .init()
         
         let displayName: String
         let username: String
@@ -45,39 +45,18 @@ class NoteCellViewModel: ViewModelType {
     
     struct State {}
     
-    public lazy var output: Output = .init(ago: ago.asDriver(onErrorJustReturn: ""),
-                                           name: name.asDriver(onErrorJustReturn: nil),
-                                           shapedNote: self.shapedNote.asDriver(onErrorJustReturn: nil),
-                                           reactions: self.reactions.asDriver(onErrorJustReturn: []),
-                                           poll: self.poll.asDriver(onErrorJustReturn: nil),
-                                           iconImage: self.iconImage.asDriver(onErrorJustReturn: UIImage()),
-                                           defaultConstraintActive: self.defaultConstraintActive.asDriver(onErrorJustReturn: false),
-                                           isReplyTarget: self.isReplyTarget.asDriver(onErrorJustReturn: false),
-                                           backgroundColor: self.backgroundColor.asDriver(onErrorJustReturn: .white),
-                                           displayName: input.cellModel.displayName,
+    public lazy var output: Output = .init(displayName: input.cellModel.displayName,
                                            username: input.cellModel.username)
     
     private var input: Input
     private var model = NoteCellModel()
     private var disposeBag: DisposeBag
     
-    private var ago: PublishRelay<String> = .init()
-    private var name: PublishRelay<NSAttributedString?> = .init()
-    
-    private var shapedNote: PublishRelay<NSAttributedString?> = .init()
-    private var iconImage: PublishRelay<UIImage> = .init()
-    private var defaultConstraintActive: PublishRelay<Bool> = .init()
-    private var isReplyTarget: PublishRelay<Bool> = .init()
-    private var backgroundColor: PublishRelay<UIColor> = .init()
-    
     private let replyTargetColor = UIColor(hex: "f0f0f0")
     private let usernameFont = UIFont.systemFont(ofSize: 11.0)
     
     private var dataSource: ReactionsDataSource?
     public var reactionsModel: [NoteCell.Reaction] = []
-    
-    private let reactions: PublishSubject<[NoteCell.Reaction.Section]> = .init()
-    private let poll: PublishRelay<Poll?> = .init()
     
     private var properBackgroundColor: UIColor {
         return input.cellModel.isReplyTarget ? replyTargetColor : .white
@@ -93,15 +72,15 @@ class NoteCellViewModel: ViewModelType {
     public func setCell() {
         let item = input.cellModel
         DispatchQueue.global(qos: .default).async {
-            self.defaultConstraintActive.accept(!self.input.isDetailMode)
-            self.isReplyTarget.accept(item.isReplyTarget)
-            self.backgroundColor.accept(self.properBackgroundColor)
+            self.output.defaultConstraintActive.accept(!self.input.isDetailMode)
+            self.output.isReplyTarget.accept(item.isReplyTarget)
+            self.output.backgroundColor.accept(self.properBackgroundColor)
             
-            self.ago.accept(item.ago.calculateAgo())
+            self.output.ago.accept(item.ago.calculateAgo())
         }
         
-        name.accept(getDisplayName(with: item,
-                                   externalEmojis: item.emojis))
+        output.name.accept(getDisplayName(with: item,
+                                          externalEmojis: item.emojis))
         
         shapeNote(identifier: item.identity,
                   note: item.note,
@@ -112,7 +91,7 @@ class NoteCellViewModel: ViewModelType {
         
         getReactions(item)
         if let pollModel = item.poll {
-            poll.accept(pollModel)
+            output.poll.accept(pollModel)
         }
     }
     
@@ -134,7 +113,7 @@ class NoteCellViewModel: ViewModelType {
             Cache.shared.saveNote(noteId: noteId, note: treatedNote, attachments: input.noteYanagi.getAttachments()) // CHACHE!
         }
         
-        shapedNote.accept(treatedNote)
+        output.shapedNote.accept(treatedNote)
     }
     
     private func getDisplayName(with item: NoteCell.Model, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
@@ -195,12 +174,12 @@ class NoteCellViewModel: ViewModelType {
     
     public func setImage(username: String, imageRawUrl: String?) -> String? {
         if let image = Cache.shared.getIcon(username: username) {
-            iconImage.accept(image)
+            output.iconImage.accept(image)
         } else if let imageRawUrl = imageRawUrl, let imageUrl = URL(string: imageRawUrl) {
             imageUrl.toUIImage { [weak self] image in
                 guard let self = self, let image = image else { return }
                 Cache.shared.saveIcon(username: username, image: image) // CHACHE!
-                self.iconImage.accept(image)
+                self.output.iconImage.accept(image)
             }
             
             return imageRawUrl
@@ -244,6 +223,6 @@ class NoteCellViewModel: ViewModelType {
     }
     
     private func updateReactions(new: [NoteCell.Reaction.Section]) {
-        reactions.onNext(new)
+        output.reactions.onNext(new)
     }
 }
