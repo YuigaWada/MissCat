@@ -363,6 +363,12 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         iconImageUrl = viewModel.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
         
+        // poll
+        if let poll = item.poll {
+            pollView.isHidden = false
+            pollView.setPoll(with: poll)
+        }
+        
         // file
         if let files = Cache.shared.getFiles(noteId: noteId) { // キャッシュが存在する場合
             for index in 0 ..< files.count {

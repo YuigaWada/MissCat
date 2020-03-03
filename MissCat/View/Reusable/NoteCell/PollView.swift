@@ -16,8 +16,7 @@ public class PollView: UIView {
     private var pollBarHeight = 20
     private var pollBarCount = 0 {
         didSet {
-            guard pollBarCount > 0 else { return }
-            //            let spaceCount = pollBarCount - 1
+            DispatchQueue.main.async { self.adjustViewHeight() }
         }
     }
     
@@ -56,7 +55,7 @@ public class PollView: UIView {
             guard let count = choice.votes else { return }
             
             let pollBar = getPollBarView(name: choice.text ?? "",
-                                         rate: count / votesCountSum,
+                                         rate: votesCountSum == 0 ? 0 : count / votesCountSum,
                                          isVoted: choice.isVoted ?? false)
             
             pollBars.append(pollBar)
@@ -106,6 +105,17 @@ public class PollView: UIView {
         return PollBar(view: pollBarView,
                        nameLabel: pollNameLabel,
                        rateLabel: pollRateLabel)
+    }
+    
+    private func adjustViewHeight() {
+        guard pollBarCount > 0 else { return }
+        
+        let originalFrame = frame
+        let spaceCount = pollBarCount - 1
+        frame = CGRect(x: originalFrame.origin.x,
+                       y: originalFrame.origin.y,
+                       width: originalFrame.width,
+                       height: CGFloat(spaceCount * 10 + pollBarCount * 20 + 20))
     }
 }
 
