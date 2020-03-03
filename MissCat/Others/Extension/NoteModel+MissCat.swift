@@ -38,7 +38,8 @@ extension NoteModel {
                                        shapedReactions: [],
                                        myReaction: post.myReaction,
                                        files: post.files ?? [],
-                                       emojis: emojis.filter { $0 != nil })
+                                       emojis: emojis.filter { $0 != nil },
+                                       poll: post.poll)
         
         cellModel.shapedReactions = cellModel.getReactions()
         cellModel.isReply = post.reply != nil

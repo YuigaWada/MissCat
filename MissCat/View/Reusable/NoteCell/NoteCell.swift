@@ -528,6 +528,8 @@ extension NoteCell {
         let files: [File?]
         let emojis: [EmojiModel?]?
         
+        let poll: Poll?
+        
         public static func == (lhs: NoteCell.Model, rhs: NoteCell.Model) -> Bool {
             return lhs.identity == rhs.identity
         }
@@ -555,7 +557,8 @@ extension NoteCell {
                                   shapedReactions: [],
                                   myReaction: nil,
                                   files: [],
-                                  emojis: [])
+                                  emojis: [],
+                                  poll: nil)
         }
         
         static func fakeSkeltonCell() -> NoteCell.Model {
@@ -577,7 +580,8 @@ extension NoteCell {
                                   shapedReactions: [],
                                   myReaction: nil,
                                   files: [],
-                                  emojis: [])
+                                  emojis: [],
+                                  poll: nil)
         }
     }
     
