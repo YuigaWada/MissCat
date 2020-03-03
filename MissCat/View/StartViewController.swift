@@ -26,13 +26,14 @@ public class StartViewController: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        summon(after: false)
+        hideComponents()
     }
     
     public override func viewDidAppear(_ animated: Bool) {
+        summon(after: false)
         super.viewDidAppear(animated)
         
-        UIView.animate(withDuration: 0.5, delay: 0, options: .curveEaseInOut, animations: {
+        UIView.animate(withDuration: 0.7, delay: 0, options: .curveEaseInOut, animations: {
             self.summon(after: true)
         }, completion: nil)
     }
@@ -48,6 +49,10 @@ public class StartViewController: UIViewController {
         gradientLayer.endPoint = CGPoint(x: 1, y: 0)
         
         view.layer.insertSublayer(gradientLayer, at: 0)
+    }
+    
+    private func hideComponents() {
+        components.forEach { $0?.alpha = 0 }
     }
     
     /// Label, Buttton, Image等をすべて上からフェードインさせる処理
