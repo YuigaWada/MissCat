@@ -184,6 +184,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         output.name.asDriver(onErrorDriveWith: Driver.empty()).drive(nameTextView.rx.attributedText).disposed(by: disposeBag)
         
         output.shapedNote.asDriver(onErrorDriveWith: Driver.empty()).drive(noteView.rx.attributedText).disposed(by: disposeBag)
+        output.shapedNote.asDriver(onErrorDriveWith: Driver.empty()).map { $0 == nil }.drive(noteView.rx.isHidden).disposed(by: disposeBag) // 画像onlyや投票onlyの場合、noteが存在しない場合がある→ noteViewを非表示にする
+        
         output.iconImage.asDriver(onErrorDriveWith: Driver.empty()).drive(iconView.rx.image).disposed(by: disposeBag)
         
         output.defaultConstraintActive.asDriver(onErrorDriveWith: Driver.empty()).drive(displayName2MainStackConstraint.rx.active).disposed(by: disposeBag)
@@ -227,6 +229,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         iconView.image = nil
         agoLabel.text = nil
         noteView.attributedText = nil
+        noteView.isHidden = false
         
         //        reactionsCollectionView.isHidden = false
         

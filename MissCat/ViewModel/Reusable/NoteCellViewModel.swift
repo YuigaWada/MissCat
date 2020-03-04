@@ -112,8 +112,11 @@ class NoteCellViewModel: ViewModelType {
         if !hasCachedNote, let treatedNote = treatedNote {
             Cache.shared.saveNote(noteId: noteId, note: treatedNote, attachments: input.noteYanagi.getAttachments()) // CHACHE!
         }
-        
-        output.shapedNote.accept(treatedNote)
+        if note.isEmpty { // 画像onlyや投票onlyの場合、noteが存在しない→ noteViewを非表示にする(nilをaccept)
+            output.shapedNote.accept(nil)
+        } else {
+            output.shapedNote.accept(treatedNote)
+        }
     }
     
     private func getDisplayName(with item: NoteCell.Model, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
