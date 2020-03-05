@@ -258,7 +258,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         pollView.isHidden = true
         pollView.initialize()
     }
-
     
     public func setupFileImage(_ image: UIImage, originalImageUrl: String, index: Int) {
         // self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
@@ -277,7 +276,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             self.mainStackView.setNeedsLayout()
         }
     }
-    
     
     public func shapeCell(item: NoteCell.Model, isDetailMode: Bool = false) -> NoteCell {
         guard !item.isSkelton else { // SkeltonViewを表示する
@@ -368,7 +366,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         return self
     }
     
-    //MARK: Privates
+    // MARK: Privates
     
     // ファイルは同時に4つしか載せることができないので、先に4つViewを追加しておく
     private func setupFileView() {
@@ -425,7 +423,53 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         return cell
     }
     
-    // MARK: Utilities
+    // MARK: 引用RN
+    
+    private func setCommentRenoteCell(on parentView: UIView) { // 引用RN
+        guard let commentRenoteView = UINib(nibName: "NoteCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NoteCell else { return }
+        commentRenoteView.layer.borderWidth = 1
+        commentRenoteView.layer.borderColor = UIColor.systemBlue.cgColor
+        commentRenoteView.layer.cornerRadius = 5
+        
+        commentRenoteView.translatesAutoresizingMaskIntoConstraints = false
+        
+        parentView.addSubview(commentRenoteView)
+        commentRenoteView.addConstraints([
+            NSLayoutConstraint(item: parentView,
+                               attribute: .top,
+                               relatedBy: .equal,
+                               toItem: commentRenoteView,
+                               attribute: .top,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: parentView,
+                               attribute: .bottom,
+                               relatedBy: .equal,
+                               toItem: commentRenoteView,
+                               attribute: .bottom,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: parentView,
+                               attribute: .right,
+                               relatedBy: .equal,
+                               toItem: commentRenoteView,
+                               attribute: .right,
+                               multiplier: 1.0,
+                               constant: 13),
+            
+            NSLayoutConstraint(item: parentView,
+                               attribute: .left,
+                               relatedBy: .equal,
+                               toItem: commentRenoteView,
+                               attribute: .left,
+                               multiplier: 1.0,
+                               constant: 13)
+        ])
+    }
+    
+    // MARK: Skelton
     
     private func setupSkeltonMode() {
         separatorBorder.isSkeletonable = true
@@ -544,7 +588,7 @@ extension NoteCell {
         var myReaction: String?
         let files: [File]
         let emojis: [EmojiModel]?
-        
+        let commentRNTarget: NoteModel?
         var poll: Poll?
         
         public static func == (lhs: NoteCell.Model, rhs: NoteCell.Model) -> Bool {
@@ -575,6 +619,7 @@ extension NoteCell {
                                   myReaction: nil,
                                   files: [],
                                   emojis: [],
+                                  commentRNTarget: nil,
                                   poll: nil)
         }
         
@@ -598,6 +643,7 @@ extension NoteCell {
                                   myReaction: nil,
                                   files: [],
                                   emojis: [],
+                                  commentRNTarget: nil,
                                   poll: nil)
         }
     }

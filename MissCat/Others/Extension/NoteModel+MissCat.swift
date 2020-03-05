@@ -40,6 +40,7 @@ extension NoteModel {
                                        myReaction: post.myReaction,
                                        files: post.files?.compactMap { $0 } ?? [],
                                        emojis: emojis.compactMap { $0 },
+                                       commentRNTarget: withRN ? post.renote ?? nil : nil,
                                        poll: post.poll)
         
         cellModel.shapedReactions = cellModel.getReactions()
