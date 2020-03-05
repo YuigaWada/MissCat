@@ -211,13 +211,14 @@ class TimelineViewModel: ViewModelType {
         model.vote(choice: choice, to: noteId) // API叩く
         
         cellsModel = cellsModel.map { // セルのモデルを変更する
-            guard $0.identity == noteId,
+            guard $0.noteId == noteId,
                 let poll = $0.poll,
                 let choices = poll.choices,
                 let votes = choices[choice]?.votes else { return $0 }
             
             var cellModel = $0
             cellModel.poll?.choices?[choice]?.votes = votes + 1
+            cellModel.poll?.choices?[choice]?.isVoted = true
             return cellModel
         }
     }
