@@ -207,14 +207,16 @@ class TimelineModel {
         
         guard let post = response as? NoteModel else { return }
         
-        if let renoteId = post.renoteId, let user = post.user, let renote = post.renote {
-            guard let cellModel = renote.getNoteCellModel() else { return }
+        let noteType = self.checkNoteType(post)
+        if noteType == .Renote {
+            guard let renoteId = post.renoteId, let user = post.user, let renote = post.renote else { return }
+            guard let cellModel = renote.getNoteCellModel(withRN: self.checkNoteType(renote) == .CommentRenote) else { return }
             observer.onNext(cellModel)
             
             let renoteeCellModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "", baseNoteId: renoteId)
             observer.onNext(renoteeCellModel)
-        } else {
-            var newCellsModel = self.getCellsModel(post)
+        } else { // just a note or a note with commentRN
+            var newCellsModel = self.getCellsModel(post, withRN: noteType == .CommentRenote)
             guard newCellsModel != nil else { return }
             
             newCellsModel!.reverse() // reverseしてからinsert

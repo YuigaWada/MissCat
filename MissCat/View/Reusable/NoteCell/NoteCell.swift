@@ -47,6 +47,9 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     @IBOutlet weak var pollView: PollView!
     
+    @IBOutlet weak var commentRenoteView: UIView!
+    
+    @IBOutlet weak var actionStackView: UIStackView!
     @IBOutlet weak var replyButton: UIButton!
     @IBOutlet weak var renoteButton: UIButton!
     @IBOutlet weak var reactionButton: UIButton!
@@ -161,6 +164,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     private func binding(viewModel: ViewModel, noteId: String) {
         let output = viewModel.output
         
+        // reaction
         output.reactions.asDriver(onErrorDriveWith: Driver.empty()).drive(reactionsCollectionView.rx.items(dataSource: reactionsDataSource)).disposed(by: disposeBag)
         output.reactions.asDriver(onErrorDriveWith: Driver.empty()).map { // リアクションの数が0のときはreactionsCollectionViewを非表示に
             guard $0.count == 1 else { return true }
@@ -175,6 +179,18 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             return CGFloat(step * 40)
         }.drive(reactionCollectionHeightConstraint.rx.constant).disposed(by: disposeBag)
         
+        // Renote With Comment
+        
+        output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { renoteModel in
+            self.setCommentRenoteCell(on: self.commentRenoteView, with: renoteModel)
+        }).disposed(by: disposeBag)
+        
+        output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).map { _ in false }.drive(commentRenoteView.rx.isHidden).disposed(by: disposeBag)
+        
+        output.onOtherNote.asDriver(onErrorDriveWith: Driver.empty()).drive(actionStackView.rx.isHidden).disposed(by: disposeBag)
+        output.onOtherNote.asDriver(onErrorDriveWith: Driver.empty()).drive(reactionsCollectionView.rx.isHidden).disposed(by: disposeBag)
+        
+        // poll
         output.poll.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { poll in
             self.pollView.isHidden = false
             self.pollView.setPoll(with: poll)
@@ -185,6 +201,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             }).disposed(by: self.disposeBag)
         }).disposed(by: disposeBag)
         
+        // general
         output.ago.asDriver(onErrorDriveWith: Driver.empty()).drive(agoLabel.rx.text).disposed(by: disposeBag)
         output.name.asDriver(onErrorDriveWith: Driver.empty()).drive(nameTextView.rx.attributedText).disposed(by: disposeBag)
         
@@ -193,11 +210,14 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         output.iconImage.asDriver(onErrorDriveWith: Driver.empty()).drive(iconView.rx.image).disposed(by: disposeBag)
         
+        // constraint
         output.defaultConstraintActive.asDriver(onErrorDriveWith: Driver.empty()).drive(displayName2MainStackConstraint.rx.active).disposed(by: disposeBag)
         output.defaultConstraintActive.asDriver(onErrorDriveWith: Driver.empty()).drive(icon2MainStackConstraint.rx.active).disposed(by: disposeBag)
         
+        // color
         output.backgroundColor.asDriver(onErrorDriveWith: Driver.empty()).drive(rx.backgroundColor).disposed(by: disposeBag)
         
+        // hidden
         output.isReplyTarget.asDriver(onErrorDriveWith: Driver.empty()).drive(separatorBorder.rx.isHidden).disposed(by: disposeBag)
         output.isReplyTarget.map { !$0 }.asDriver(onErrorDriveWith: Driver.empty()).drive(replyIndicator.rx.isHidden).disposed(by: disposeBag)
     }
@@ -257,6 +277,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         //        self.noteView.resetViewString()
         pollView.isHidden = true
         pollView.initialize()
+        
+        commentRenoteView.isHidden = true
     }
     
     public func setupFileImage(_ image: UIImage, originalImageUrl: String, index: Int) {
@@ -425,16 +447,18 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     // MARK: 引用RN
     
-    private func setCommentRenoteCell(on parentView: UIView) { // 引用RN
+    private func setCommentRenoteCell(on parentView: UIView, with targetModel: NoteCell.Model) { // 引用RN
         guard let commentRenoteView = UINib(nibName: "NoteCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NoteCell else { return }
+        
+        // NibからNoteCellを生成し、parentViewに対してAutoLayoutを設定 + 枠線を設定
         commentRenoteView.layer.borderWidth = 1
         commentRenoteView.layer.borderColor = UIColor.systemBlue.cgColor
         commentRenoteView.layer.cornerRadius = 5
         
         commentRenoteView.translatesAutoresizingMaskIntoConstraints = false
         
-        parentView.addSubview(commentRenoteView)
-        commentRenoteView.addConstraints([
+        parentView.addSubview(commentRenoteView.shapeCell(item: targetModel)) // NoteCellにモデルを渡す
+        parentView.addConstraints([
             NSLayoutConstraint(item: parentView,
                                attribute: .top,
                                relatedBy: .equal,
@@ -457,7 +481,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
                                toItem: commentRenoteView,
                                attribute: .right,
                                multiplier: 1.0,
-                               constant: 13),
+                               constant: 0),
             
             NSLayoutConstraint(item: parentView,
                                attribute: .left,
@@ -465,7 +489,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
                                toItem: commentRenoteView,
                                attribute: .left,
                                multiplier: 1.0,
-                               constant: 13)
+                               constant: 0)
         ])
     }
     
@@ -496,6 +520,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             
             reactionsCollectionView.isHidden = true
             pollView.isHidden = true
+            commentRenoteView.isHidden = true
             
             fileImageView.showAnimatedGradientSkeleton()
         } else {
@@ -589,11 +614,15 @@ extension NoteCell {
         let files: [File]
         let emojis: [EmojiModel]?
         let commentRNTarget: NoteModel?
+        
+        var onOtherNote: Bool = false // 引用RNはNoteCellの上にNoteCellが乗るという二重構造になっているので、内部のNoteCellかどうかを判別する
         var poll: Poll?
         
         public static func == (lhs: NoteCell.Model, rhs: NoteCell.Model) -> Bool {
             return lhs.identity == rhs.identity
         }
+        
+        // MARK: Statics
         
         static func fakeRenoteecell(renotee: String, baseNoteId: String) -> NoteCell.Model {
             var renotee = renotee

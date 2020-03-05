@@ -43,16 +43,16 @@
                     <rect key="frame" x="80" y="38" width="314" height="402"/>
                     <subviews>
                         <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" editable="NO" text="Note" translatesAutoresizingMaskIntoConstraints="NO" id="yT1-N6-SIZ" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
-                            <rect key="frame" x="0.0" y="0.0" width="314" height="34"/>
+                            <rect key="frame" x="0.0" y="0.0" width="314" height="0.0"/>
                             <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
                             <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                         </textView>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="v72-g7-6Ca">
-                            <rect key="frame" x="0.0" y="39" width="314" height="130"/>
+                            <rect key="frame" x="0.0" y="5" width="314" height="79"/>
                             <subviews>
                                 <stackView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="249" verticalCompressionResistancePriority="749" distribution="fillEqually" spacing="2" translatesAutoresizingMaskIntoConstraints="NO" id="xbq-eM-CO3">
-                                    <rect key="frame" x="0.0" y="0.0" width="314" height="130"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="314" height="79"/>
                                 </stackView>
                             </subviews>
                             <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
@@ -65,14 +65,21 @@
                             </constraints>
                         </view>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="5Re-VE-aQE" customClass="PollView" customModule="MissCat" customModuleProvider="target">
-                            <rect key="frame" x="0.0" y="174" width="314" height="128"/>
+                            <rect key="frame" x="0.0" y="89" width="314" height="128"/>
                             <color key="backgroundColor" systemColor="systemBrownColor" red="0.63529411759999999" green="0.51764705879999995" blue="0.36862745099999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="128" id="fOI-Pu-5yW"/>
                             </constraints>
                         </view>
+                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bh7-Dx-jOD">
+                            <rect key="frame" x="0.0" y="222" width="314" height="100"/>
+                            <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                            <constraints>
+                                <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="100" id="V0X-th-80u"/>
+                            </constraints>
+                        </view>
                         <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="KkD-L3-5tQ">
-                            <rect key="frame" x="0.0" y="307" width="314" height="50"/>
+                            <rect key="frame" x="0.0" y="327" width="314" height="30"/>
                             <constraints>
                                 <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="30" id="306-g6-Rcb"/>
                             </constraints>
@@ -135,6 +142,8 @@
                         </stackView>
                     </subviews>
                     <constraints>
+                        <constraint firstAttribute="trailing" secondItem="bh7-Dx-jOD" secondAttribute="trailing" id="hjA-mk-aOs"/>
+                        <constraint firstItem="bh7-Dx-jOD" firstAttribute="leading" secondItem="Grd-xu-LJU" secondAttribute="leading" id="sW9-EF-hOZ"/>
                         <constraint firstItem="yT1-N6-SIZ" firstAttribute="top" secondItem="Grd-xu-LJU" secondAttribute="top" id="tHW-ex-5xZ"/>
                         <constraint firstItem="yT1-N6-SIZ" firstAttribute="leading" secondItem="Grd-xu-LJU" secondAttribute="leading" id="xvD-7M-ejB"/>
                     </constraints>
@@ -187,7 +196,9 @@
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
             <connections>
                 <outlet property="FileImageContainer" destination="v72-g7-6Ca" id="tT2-cg-M0s"/>
+                <outlet property="actionStackView" destination="BIZ-13-U4a" id="BfN-0z-Hx6"/>
                 <outlet property="agoLabel" destination="1yE-dE-XcT" id="NnA-P8-rZc"/>
+                <outlet property="commentRenoteView" destination="bh7-Dx-jOD" id="onP-83-m4W"/>
                 <outlet property="displayName2MainStackConstraint" destination="UrY-dd-Ckw" id="YkC-wp-n9Q"/>
                 <outlet property="fileImageContainer" destination="v72-g7-6Ca" id="LiQ-OA-WHb"/>
                 <outlet property="fileImageView" destination="xbq-eM-CO3" id="Bgd-OQ-FLL"/>

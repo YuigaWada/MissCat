@@ -31,6 +31,8 @@ class NoteCellViewModel: ViewModelType {
         let shapedNote: PublishRelay<NSAttributedString?> = .init()
         let reactions: PublishSubject<[NoteCell.Reaction.Section]> = .init()
         let poll: PublishRelay<Poll> = .init()
+        let commentRenoteTarget: PublishRelay<NoteCell.Model> = .init()
+        let onOtherNote: PublishRelay<Bool> = .init() // 引用RNはNoteCellの上にNoteCellが乗るという二重構造になっているので、内部のNoteCellかどうかを判別する
         
         let iconImage: PublishRelay<UIImage> = .init()
         
@@ -90,6 +92,9 @@ class NoteCellViewModel: ViewModelType {
                   isDetailMode: input.isDetailMode)
         
         getReactions(item)
+        prepareCommentRenote(item)
+        output.onOtherNote.accept(item.onOtherNote)
+        
         if let pollModel = item.poll {
             output.poll.accept(pollModel)
         }
@@ -211,6 +216,11 @@ class NoteCellViewModel: ViewModelType {
         }
         
         return attachmentCount == attachments.count // 一致しない＝キャッシュされたattachmentsに欠損あり
+    }
+    
+    private func prepareCommentRenote(_ item: NoteCell.Model) {
+        guard let renoteCellModel = item.commentRNTarget?.getNoteCellModel(onOtherNote: true) else { return }
+        output.commentRenoteTarget.accept(renoteCellModel)
     }
     
     public func registerReaction(noteId: String, reaction: String) {

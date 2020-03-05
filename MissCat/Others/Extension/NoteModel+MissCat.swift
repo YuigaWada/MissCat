@@ -11,7 +11,7 @@ import MisskeyKit
 extension NoteModel {
     fileprivate var post: NoteModel { return self }
     
-    public func getNoteCellModel(withRN: Bool = false) -> NoteCell.Model? {
+    public func getNoteCellModel(withRN: Bool = false, onOtherNote: Bool = false) -> NoteCell.Model? {
         guard let user = post.user else { return nil }
         
 //        var reactions: [Any?] = []
@@ -41,6 +41,7 @@ extension NoteModel {
                                        files: post.files?.compactMap { $0 } ?? [],
                                        emojis: emojis.compactMap { $0 },
                                        commentRNTarget: withRN ? post.renote ?? nil : nil,
+                                       onOtherNote: onOtherNote,
                                        poll: post.poll)
         
         cellModel.shapedReactions = cellModel.getReactions()
