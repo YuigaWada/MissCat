@@ -47,7 +47,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     @IBOutlet weak var pollView: PollView!
     
-    @IBOutlet weak var commentRenoteView: UIView!
+    @IBOutlet weak var innerRenoteDisplay: UIView!
     
     @IBOutlet weak var actionStackView: UIStackView!
     @IBOutlet weak var replyButton: UIButton!
@@ -79,6 +79,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     private let disposeBag = DisposeBag()
     private lazy var reactionsDataSource = self.setupDataSource()
     private var viewModel: ViewModel?
+    private var commentRenoteView: NoteCell?
+    private var onOtherNote: Bool = false
     
     private func getViewModel(item: NoteCell.Model, isDetailMode: Bool) -> ViewModel {
         let input: ViewModel.Input = .init(cellModel: item,
@@ -89,6 +91,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         let viewModel = NoteCellViewModel(with: input, and: disposeBag)
         
         binding(viewModel: viewModel, noteId: item.noteId ?? "")
+        setCommentRenoteCell()
         return viewModel
     }
     
@@ -182,10 +185,10 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         // Renote With Comment
         
         output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { renoteModel in
-            self.setCommentRenoteCell(on: self.commentRenoteView, with: renoteModel)
+            self.commentRenoteView = self.commentRenoteView?.shapeCell(item: renoteModel)
         }).disposed(by: disposeBag)
         
-        output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).map { _ in false }.drive(commentRenoteView.rx.isHidden).disposed(by: disposeBag)
+        output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).map { _ in false }.drive(innerRenoteDisplay.rx.isHidden).disposed(by: disposeBag)
         
         output.onOtherNote.asDriver(onErrorDriveWith: Driver.empty()).drive(actionStackView.rx.isHidden).disposed(by: disposeBag)
         output.onOtherNote.asDriver(onErrorDriveWith: Driver.empty()).drive(reactionsCollectionView.rx.isHidden).disposed(by: disposeBag)
@@ -278,7 +281,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         pollView.isHidden = true
         pollView.initialize()
         
-        commentRenoteView.isHidden = true
+        innerRenoteDisplay.isHidden = true
+//        commentRenoteView = nil
     }
     
     public func setupFileImage(_ image: UIImage, originalImageUrl: String, index: Int) {
@@ -447,50 +451,57 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     // MARK: 引用RN
     
-    private func setCommentRenoteCell(on parentView: UIView, with targetModel: NoteCell.Model) { // 引用RN
-        guard let commentRenoteView = UINib(nibName: "NoteCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NoteCell else { return }
+    private func setCommentRenoteCell() { // 引用RN
+        guard !onOtherNote,
+            commentRenoteView == nil,
+            let commentRenoteView = UINib(nibName: "NoteCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NoteCell else { return }
         
         // NibからNoteCellを生成し、parentViewに対してAutoLayoutを設定 + 枠線を設定
-        commentRenoteView.layer.borderWidth = 1
-        commentRenoteView.layer.borderColor = UIColor.systemBlue.cgColor
-        commentRenoteView.layer.cornerRadius = 5
+        innerRenoteDisplay.layer.borderWidth = 1
+        innerRenoteDisplay.layer.borderColor = UIColor.systemBlue.cgColor
+        innerRenoteDisplay.layer.cornerRadius = 5
         
+        commentRenoteView.onOtherNote = true
         commentRenoteView.translatesAutoresizingMaskIntoConstraints = false
+        innerRenoteDisplay.addSubview(commentRenoteView)
         
-        parentView.addSubview(commentRenoteView.shapeCell(item: targetModel)) // NoteCellにモデルを渡す
-        parentView.addConstraints([
-            NSLayoutConstraint(item: parentView,
-                               attribute: .top,
-                               relatedBy: .equal,
-                               toItem: commentRenoteView,
-                               attribute: .top,
-                               multiplier: 1.0,
-                               constant: 0),
-            
-            NSLayoutConstraint(item: parentView,
-                               attribute: .bottom,
-                               relatedBy: .equal,
-                               toItem: commentRenoteView,
-                               attribute: .bottom,
-                               multiplier: 1.0,
-                               constant: 0),
-            
-            NSLayoutConstraint(item: parentView,
-                               attribute: .right,
-                               relatedBy: .equal,
-                               toItem: commentRenoteView,
-                               attribute: .right,
-                               multiplier: 1.0,
-                               constant: 0),
-            
-            NSLayoutConstraint(item: parentView,
-                               attribute: .left,
-                               relatedBy: .equal,
-                               toItem: commentRenoteView,
-                               attribute: .left,
-                               multiplier: 1.0,
-                               constant: 0)
-        ])
+        if let innerRenoteDisplay = innerRenoteDisplay {
+            innerRenoteDisplay.addConstraints([
+                NSLayoutConstraint(item: innerRenoteDisplay,
+                                   attribute: .top,
+                                   relatedBy: .equal,
+                                   toItem: commentRenoteView,
+                                   attribute: .top,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: innerRenoteDisplay,
+                                   attribute: .bottom,
+                                   relatedBy: .equal,
+                                   toItem: commentRenoteView,
+                                   attribute: .bottom,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: innerRenoteDisplay,
+                                   attribute: .right,
+                                   relatedBy: .equal,
+                                   toItem: commentRenoteView,
+                                   attribute: .right,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: innerRenoteDisplay,
+                                   attribute: .left,
+                                   relatedBy: .equal,
+                                   toItem: commentRenoteView,
+                                   attribute: .left,
+                                   multiplier: 1.0,
+                                   constant: 0)
+            ])
+        }
+        
+        self.commentRenoteView = commentRenoteView
     }
     
     // MARK: Skelton
@@ -520,7 +531,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             
             reactionsCollectionView.isHidden = true
             pollView.isHidden = true
-            commentRenoteView.isHidden = true
+            innerRenoteDisplay.isHidden = true
             
             fileImageView.showAnimatedGradientSkeleton()
         } else {

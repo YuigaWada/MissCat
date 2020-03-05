@@ -196,14 +196,14 @@
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
             <connections>
                 <outlet property="FileImageContainer" destination="v72-g7-6Ca" id="tT2-cg-M0s"/>
-                <outlet property="actionStackView" destination="BIZ-13-U4a" id="BfN-0z-Hx6"/>
+                <outlet property="actionStackView" destination="BIZ-13-U4a" id="J3x-71-KSu"/>
                 <outlet property="agoLabel" destination="1yE-dE-XcT" id="NnA-P8-rZc"/>
-                <outlet property="commentRenoteView" destination="bh7-Dx-jOD" id="onP-83-m4W"/>
                 <outlet property="displayName2MainStackConstraint" destination="UrY-dd-Ckw" id="YkC-wp-n9Q"/>
                 <outlet property="fileImageContainer" destination="v72-g7-6Ca" id="LiQ-OA-WHb"/>
                 <outlet property="fileImageView" destination="xbq-eM-CO3" id="Bgd-OQ-FLL"/>
                 <outlet property="icon2MainStackConstraint" destination="Y7B-yr-k9d" id="7VJ-uh-TUq"/>
                 <outlet property="iconView" destination="RdM-y6-bNI" id="Zys-le-deV"/>
+                <outlet property="innerRenoteDisplay" destination="bh7-Dx-jOD" id="clK-es-fKR"/>
                 <outlet property="mainStackView" destination="Grd-xu-LJU" id="wyt-gG-XXj"/>
                 <outlet property="nameTextView" destination="eTu-WM-TmR" id="4Rc-La-4Uo"/>
                 <outlet property="noteView" destination="yT1-N6-SIZ" id="8BC-Nn-b5w"/>
