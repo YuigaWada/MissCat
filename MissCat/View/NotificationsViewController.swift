@@ -170,4 +170,6 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         guard let homeViewController = self.homeViewController else { return }
         homeViewController.move2Profile(userId: userId)
     }
+    
+    public func vote(choice: Int, to noteId: String) {}
 }

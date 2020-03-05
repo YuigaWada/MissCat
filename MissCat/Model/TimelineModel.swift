@@ -273,4 +273,10 @@ class TimelineModel {
         
         return cellsModel.count > 0 ? cellsModel : nil
     }
+    
+    public func vote(choice: Int, to noteId: String) {
+        MisskeyKit.notes.vote(noteId: noteId, choice: choice, result: { _, error in
+            print(error)
+        })
+    }
 }

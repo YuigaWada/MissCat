@@ -486,7 +486,7 @@ extension MisskeyKit {
         
         //MARK:- Voting
         
-        public func vote(noteId: String, choice: String, result callback: @escaping BooleanCallBack) {
+        public func vote(noteId: String, choice: Int, result callback: @escaping BooleanCallBack) {
             
             var params = ["noteId":noteId,
                           "choice":choice] as [String : Any]

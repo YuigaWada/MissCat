@@ -20,6 +20,7 @@ public protocol NoteCellDelegate {
     func tappedRenote()
     func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool)
     func tappedOthers()
+    func vote(choice: Int, to noteId: String)
     
     func tappedLink(text: String)
     func move2Profile(userId: String)
@@ -84,7 +85,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         let viewModel = NoteCellViewModel(with: input, and: disposeBag)
         
-        binding(viewModel: viewModel)
+        binding(viewModel: viewModel, noteId: item.noteId ?? "")
         return viewModel
     }
     
@@ -157,7 +158,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         }
     }
     
-    private func binding(viewModel: ViewModel) {
+    private func binding(viewModel: ViewModel, noteId: String) {
         let output = viewModel.output
         
         output.reactions.asDriver(onErrorDriveWith: Driver.empty()).drive(reactionsCollectionView.rx.items(dataSource: reactionsDataSource)).disposed(by: disposeBag)
@@ -178,6 +179,10 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             self.pollView.isHidden = false
             self.pollView.setPoll(with: poll)
             self.pollViewHeightConstraint.constant = self.pollView.height
+            
+            self.pollView.voteTriggar?.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { id in
+                self.delegate?.vote(choice: id, to: noteId)
+            }).disposed(by: self.disposeBag)
         }).disposed(by: disposeBag)
         
         output.ago.asDriver(onErrorDriveWith: Driver.empty()).drive(agoLabel.rx.text).disposed(by: disposeBag)
@@ -536,7 +541,7 @@ extension NoteCell {
         let files: [File]
         let emojis: [EmojiModel]?
         
-        let poll: Poll?
+        var poll: Poll?
         
         public static func == (lhs: NoteCell.Model, rhs: NoteCell.Model) -> Bool {
             return lhs.identity == rhs.identity

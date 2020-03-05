@@ -328,6 +328,11 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         homeViewController.move2Profile(userId: userId)
     }
     
+    func vote(choice: Int, to noteId: String) {
+        // TODO: modelの変更 / api処理
+        viewModel?.vote(choice: choice, to: noteId)
+    }
+    
     // MARK: XLPagerTabStrip delegate
     
     func indicatorInfo(for pagerTabStripController: PagerTabStripViewController) -> IndicatorInfo {

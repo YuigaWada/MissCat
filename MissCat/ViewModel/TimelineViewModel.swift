@@ -203,8 +203,23 @@ class TimelineViewModel: ViewModelType {
         })
     }
     
-    func getCell(cell itemCell: NoteCell, item: NoteCell.Model) -> NoteCell {
+    public func getCell(cell itemCell: NoteCell, item: NoteCell.Model) -> NoteCell {
         return itemCell.shapeCell(item: item)
+    }
+    
+    public func vote(choice: Int, to noteId: String) {
+        model.vote(choice: choice, to: noteId) // API叩く
+        
+        cellsModel = cellsModel.map { // セルのモデルを変更する
+            guard $0.identity == noteId,
+                let poll = $0.poll,
+                let choices = poll.choices,
+                let votes = choices[choice]?.votes else { return $0 }
+            
+            var cellModel = $0
+            cellModel.poll?.choices?[choice]?.votes = votes + 1
+            return cellModel
+        }
     }
     
     // MARK: Utilities

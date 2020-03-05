@@ -15,7 +15,7 @@ public class PollView: UIView {
     @IBOutlet weak var stackView: UIStackView!
     @IBOutlet weak var totalPollLabel: UILabel!
     
-    public var voteTriggar: Observable<Int>?
+    public var voteTriggar: Observable<Int>? // タップされるとvote対象のidを流す
     public var height: CGFloat {
         guard pollBarCount > 0 else { return 0 }
         
@@ -114,7 +114,7 @@ public class PollView: UIView {
 extension PollView {
     public class PollBar: UIView {
         public struct Style {
-            var backgroundColor: UIColor = .init(hex: "d3d3d3")
+            var backgroundColor: UIColor = .init(hex: "ebebeb")
             var textColor: UIColor = .black
             var progressColor: UIColor = .systemBlue
             
@@ -180,7 +180,7 @@ extension PollView {
         /// - Parameter voted: 投票済みならtrue
         public func changeState(voted: Bool, voteCount: Int, rate: Float) {
             self.voteCount = voteCount
-            
+            isUserInteractionEnabled = !voted // 投票されたらタップできないようにする
             if voted {
                 changePollRate(to: rate)
             }
@@ -261,7 +261,7 @@ extension PollView {
             let tapGesture = UITapGestureRecognizer()
             idOfTapped = tapGesture.rx.event.map { _ in self.id }
             
-            isUserInteractionEnabled = true
+            isUserInteractionEnabled = !canSeeRate
             addGestureRecognizer(tapGesture)
             setupVisualizePollTrigger(with: tapGesture.rx.event.asObservable())
         }
