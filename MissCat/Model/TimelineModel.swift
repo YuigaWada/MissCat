@@ -88,14 +88,16 @@ class TimelineModel {
                 
                 posts.forEach { post in
                     // Renote
-                    if let renoteId = post.renoteId, let user = post.user, let renote = post.renote {
+                    let noteType = self.checkNoteType(post)
+                    if noteType == .Renote {
+                        guard let renoteId = post.renoteId, let user = post.user, let renote = post.renote else { return }
                         let renoteeCellModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "", baseNoteId: renoteId)
                         observer.onNext(renoteeCellModel)
                         
                         guard let cellModel = renote.getNoteCellModel() else { return }
                         observer.onNext(cellModel)
-                    } else { // default note
-                        guard let newCellsModel = self.getCellsModel(post) else { return }
+                    } else { // just a note or a note with commentRN
+                        guard let newCellsModel = self.getCellsModel(post, withRN: noteType == .CommentRenote) else { return }
                         newCellsModel.forEach { observer.onNext($0) }
                     }
                     
@@ -255,11 +257,12 @@ class TimelineModel {
     }
     
     // MisskeyKitのNoteModelをNoteCell.Modelに変換する
-    public func getCellsModel(_ post: NoteModel) -> [NoteCell.Model]? {
+    public func getCellsModel(_ post: NoteModel, withRN: Bool = false) -> [NoteCell.Model]? {
         var cellsModel: [NoteCell.Model] = []
         
         if let reply = post.reply { // リプライ対象も表示する
-            var replyCellModel = reply.getNoteCellModel()
+            let replyWithRN = checkNoteType(reply) == .CommentRenote
+            var replyCellModel = reply.getNoteCellModel(withRN: replyWithRN)
             
             if replyCellModel != nil {
                 replyCellModel!.isReplyTarget = true
@@ -267,7 +270,7 @@ class TimelineModel {
             }
         }
         
-        if let cellModel = post.getNoteCellModel() {
+        if let cellModel = post.getNoteCellModel(withRN: withRN) {
             cellsModel.append(cellModel)
         }
         
@@ -275,8 +278,25 @@ class TimelineModel {
     }
     
     public func vote(choice: Int, to noteId: String) {
-        MisskeyKit.notes.vote(noteId: noteId, choice: choice, result: { _, error in
-            print(error)
+        MisskeyKit.notes.vote(noteId: noteId, choice: choice, result: { _, _ in
+//            print(error)
         })
+    }
+}
+
+// MARK; Utilities
+extension TimelineModel {
+    fileprivate enum NoteType {
+        case Renote
+        case CommentRenote
+        case Note
+    }
+    
+    /// NoteModelが RNなのか、引用RNなのか、ただの投稿なのか判別する
+    /// - Parameter post: NoteModel
+    private func checkNoteType(_ post: NoteModel) -> NoteType {
+        let isRenote = post.renoteId != nil && post.user != nil && post.renote != nil
+        let isCommentRenote = isRenote && post.text != nil && post.text != ""
+        return isRenote ? (isCommentRenote ? .CommentRenote : .Renote) : .Note
     }
 }
