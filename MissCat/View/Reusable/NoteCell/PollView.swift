@@ -95,8 +95,9 @@ public class PollView: UIView {
     
     private func setupPollBarTapGesture(with pollBar: PollBar) {
         guard let idOfTapped = pollBar.idOfTapped else { return }
-        voteTriggar = Observable.of(idOfTapped, idOfTapped).merge() // PollViewのイベントをすべてmerge
         
+        // PollViewのイベントをすべてmerge
+        voteTriggar = voteTriggar == nil ? idOfTapped : Observable.of(voteTriggar!, idOfTapped).merge()
         voteTriggar!.subscribe(onNext: { id in
             self.votesCountSum += 1
             self.pollBars.forEach { pollBar in // PollViewのタップイベントが発生したら、PollViewの状態をすべて変更する
