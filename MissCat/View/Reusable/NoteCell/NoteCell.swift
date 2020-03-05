@@ -258,27 +258,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         pollView.isHidden = true
         pollView.initialize()
     }
-    
-    // ファイルは同時に4つしか載せることができないので、先に4つViewを追加しておく
-    private func setupFileView() {
-        guard fileImageView.arrangedSubviews.count == 0 else { return }
-        
-        for _ in 0 ..< 4 {
-            let imageView = UIImageView()
-            
-            imageView.contentMode = .scaleAspectFill
-            imageView.clipsToBounds = true
-            imageView.isHidden = true
-            imageView.layer.cornerRadius = 10
-            imageView.isUserInteractionEnabled = true
-            imageView.backgroundColor = .lightGray
-            imageView.layer.borderColor = UIColor.lightGray.cgColor
-            imageView.layer.borderWidth = 1
-            imageView.layer.masksToBounds = true
-            
-            fileImageView.addArrangedSubview(imageView)
-        }
-    }
+
     
     public func setupFileImage(_ image: UIImage, originalImageUrl: String, index: Int) {
         // self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
@@ -298,39 +278,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         }
     }
     
-    private func getFileView(_ index: Int) -> UIImageView? {
-        guard index < fileImageView.arrangedSubviews.count,
-            let imageView = self.fileImageView.arrangedSubviews[index] as? UIImageView else { return nil }
-        
-        return imageView
-    }
-    
-    private func showImage(url: String) {
-        guard let url = URL(string: url), let delegate = self.delegate as? UIViewController else { return }
-        
-        let agrume = Agrume(url: url)
-        agrume.show(from: delegate) // 画像を表示
-    }
-    
-    private func setupReactionCell(_ dataSource: CollectionViewSectionedDataSource<NoteCell.Reaction.Section>, _ collectionView: UICollectionView, _ indexPath: IndexPath) -> UICollectionViewCell {
-        guard let viewModel = viewModel else { fatalError("Internal Error.") }
-        
-        let index = indexPath.row
-        let reactionsModel = viewModel.reactionsModel
-        
-        guard let cell = reactionsCollectionView.dequeueReusableCell(withReuseIdentifier: "ReactionCell", for: indexPath) as? ReactionCell else { fatalError("Internal Error.") }
-        
-        if index < reactionsModel.count {
-            let item = reactionsModel[index]
-            
-            let shapedCell = viewModel.setReactionCell(with: item, to: cell)
-            shapedCell.delegate = self
-            
-            return shapedCell
-        }
-        
-        return cell
-    }
     
     public func shapeCell(item: NoteCell.Model, isDetailMode: Bool = false) -> NoteCell {
         guard !item.isSkelton else { // SkeltonViewを表示する
@@ -419,6 +366,63 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         // reaction
         
         return self
+    }
+    
+    //MARK: Privates
+    
+    // ファイルは同時に4つしか載せることができないので、先に4つViewを追加しておく
+    private func setupFileView() {
+        guard fileImageView.arrangedSubviews.count == 0 else { return }
+        
+        for _ in 0 ..< 4 {
+            let imageView = UIImageView()
+            
+            imageView.contentMode = .scaleAspectFill
+            imageView.clipsToBounds = true
+            imageView.isHidden = true
+            imageView.layer.cornerRadius = 10
+            imageView.isUserInteractionEnabled = true
+            imageView.backgroundColor = .lightGray
+            imageView.layer.borderColor = UIColor.lightGray.cgColor
+            imageView.layer.borderWidth = 1
+            imageView.layer.masksToBounds = true
+            
+            fileImageView.addArrangedSubview(imageView)
+        }
+    }
+    
+    private func getFileView(_ index: Int) -> UIImageView? {
+        guard index < fileImageView.arrangedSubviews.count,
+            let imageView = self.fileImageView.arrangedSubviews[index] as? UIImageView else { return nil }
+        
+        return imageView
+    }
+    
+    private func showImage(url: String) {
+        guard let url = URL(string: url), let delegate = self.delegate as? UIViewController else { return }
+        
+        let agrume = Agrume(url: url)
+        agrume.show(from: delegate) // 画像を表示
+    }
+    
+    private func setupReactionCell(_ dataSource: CollectionViewSectionedDataSource<NoteCell.Reaction.Section>, _ collectionView: UICollectionView, _ indexPath: IndexPath) -> UICollectionViewCell {
+        guard let viewModel = viewModel else { fatalError("Internal Error.") }
+        
+        let index = indexPath.row
+        let reactionsModel = viewModel.reactionsModel
+        
+        guard let cell = reactionsCollectionView.dequeueReusableCell(withReuseIdentifier: "ReactionCell", for: indexPath) as? ReactionCell else { fatalError("Internal Error.") }
+        
+        if index < reactionsModel.count {
+            let item = reactionsModel[index]
+            
+            let shapedCell = viewModel.setReactionCell(with: item, to: cell)
+            shapedCell.delegate = self
+            
+            return shapedCell
+        }
+        
+        return cell
     }
     
     // MARK: Utilities
