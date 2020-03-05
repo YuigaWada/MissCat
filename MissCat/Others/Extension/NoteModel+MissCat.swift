@@ -11,20 +11,21 @@ import MisskeyKit
 extension NoteModel {
     fileprivate var post: NoteModel { return self }
     
-    public func getNoteCellModel() -> NoteCell.Model? {
+    public func getNoteCellModel(withRN: Bool = false) -> NoteCell.Model? {
         guard let user = post.user else { return nil }
         
-        var reactions: [Any?] = []
+//        var reactions: [Any?] = []
         let displayName = (user.name ?? "") == "" ? user.username : user.name // user.nameがnilか""ならusernameで代替
         
-        (post.reactions ?? []).forEach { reaction in
-            guard let reaction = reaction else { return }
-            
-            let emoji = EmojiHandler.handler.encodeEmoji(raw: reaction.name!)
-            reactions.append(emoji)
-        }
-        
+//        (post.reactions ?? []).forEach { reaction in
+//            guard let reaction = reaction else { return }
+//
+//            let emoji = EmojiHandler.handler.encodeEmoji(raw: reaction.name!)
+//            reactions.append(emoji)
+//        }
+//
         let emojis = (post.emojis ?? []) + (user.emojis ?? []) // 絵文字情報を統合する
+        
         var cellModel = NoteCell.Model(noteId: post.id,
                                        iconImageUrl: user.avatarUrl,
                                        userId: user.id,
