@@ -132,7 +132,7 @@ extension String {
     }
     
     func sha256() -> String? {
-        guard let stringData = self.data(using: String.Encoding.utf8) else { return nil }
+        guard let stringData = data(using: String.Encoding.utf8) else { return nil }
         
         var digest = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
         stringData.withUnsafeBytes { bytes in

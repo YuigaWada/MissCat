@@ -90,14 +90,14 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         return UITableViewCell()
     }
     
-    //tableViewの負担を軽減するようキャッシュを活用
+    // tableViewの負担を軽減するようキャッシュを活用
     public func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         guard let viewModel = viewModel else { return UITableView.automaticDimension }
         
         let index = indexPath.row
         let id = viewModel.cellsModel[index].identity
         
-        guard let height = self.cellHeightCache[id] else { return UITableView.automaticDimension }
+        guard let height = cellHeightCache[id] else { return UITableView.automaticDimension }
         return height
     }
     

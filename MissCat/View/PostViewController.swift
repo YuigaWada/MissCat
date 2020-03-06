@@ -178,7 +178,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     }
     
     private func showReactionGen() {
-        guard let reactionGen = self.getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
         
         reactionGen.onPostViewController = true
         reactionGen.selectedEmoji.subscribe(onNext: { emojiModel in // ReactionGenで絵文字が選択されたらに送られてくる
@@ -208,7 +208,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     
     // キーボードの高さに合わせてcomponentの高さを調整する
     private func fitToKeyboard(keyboardHeight: CGFloat) {
-        layoutIfNeeded(to: [self.bottomStackView, self.toolBar])
+        layoutIfNeeded(to: [bottomStackView, toolBar])
         
         mainTextViewBottomConstraint.constant = bottomStackView.frame.height + keyboardHeight - getSafeAreaSize().height
     }
@@ -226,6 +226,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         if UIImagePickerController.isSourceTypeAvailable(.savedPhotosAlbum) {
             let picker = UIImagePickerController()
             picker.sourceType = type
+            picker.mediaTypes = UIImagePickerController.availableMediaTypes(for: type) ?? []
             picker.delegate = self
             
             presentOnFullScreen(picker, animated: true, completion: nil)
@@ -250,6 +251,9 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     
     public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
         picker.dismiss(animated: true, completion: nil)
+        
+        let isImage = info[UIImagePickerController.InfoKey.originalImage] is UIImage
+        
         guard let originalImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else { return }
         
         showPhotoEditor(with: originalImage).subscribe(onNext: { editedImage in // 画像エディタを表示

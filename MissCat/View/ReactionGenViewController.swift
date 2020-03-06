@@ -151,7 +151,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     }
     
     private func react2Note(raw: String) {
-        guard let targetNoteId = self.viewModel!.targetNoteId else { return }
+        guard let targetNoteId = viewModel!.targetNoteId else { return }
         
         if viewModel!.hasMarked {
             viewModel!.cancelReaction(noteId: targetNoteId)

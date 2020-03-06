@@ -1,25 +1,25 @@
 PODS:
-  - Agrume (5.6.4):
+  - Agrume (5.6.5):
     - SwiftyGif
-  - CocoaLumberjack (3.6.0):
-    - CocoaLumberjack/Core (= 3.6.0)
-  - CocoaLumberjack/Core (3.6.0)
+  - CocoaLumberjack (3.6.1):
+    - CocoaLumberjack/Core (= 3.6.1)
+  - CocoaLumberjack/Core (3.6.1)
   - Differentiator (4.0.1)
-  - FloatingPanel (1.7.1)
+  - FloatingPanel (1.7.4)
   - Gifu (3.2.0)
   - iOSPhotoEditor (1.0.0)
   - PolioPager (2.2)
-  - RxCocoa (5.0.1):
+  - RxCocoa (5.1.0):
     - RxRelay (~> 5)
     - RxSwift (~> 5)
   - RxDataSources (4.0.1):
     - Differentiator (~> 4.0)
     - RxCocoa (~> 5.0)
     - RxSwift (~> 5.0)
-  - RxRelay (5.0.1):
+  - RxRelay (5.1.0):
     - RxSwift (~> 5)
-  - RxSwift (5.0.1)
-  - SkeletonView (1.8.2)
+  - RxSwift (5.1.0)
+  - SkeletonView (1.8.6)
   - SVGKit (2.1.0):
     - CocoaLumberjack (~> 3.0)
   - SwiftyGif (5.2.0)
@@ -63,21 +63,21 @@ CHECKOUT OPTIONS:
     :git: https://github.com/SVGKit/SVGKit.git
 
 SPEC CHECKSUMS:
-  Agrume: bee63cb2ece28830c5664f8abbc8903414bd7f72
-  CocoaLumberjack: 78b0c238666f4f58db069738ec176f4519557516
+  Agrume: ad8e6428b9e1cb305ff14ee6195cefe2f938d13d
+  CocoaLumberjack: b17ae15142558d08bbacf69775fa10c4abbebcc9
   Differentiator: 886080237d9f87f322641dedbc5be257061b0602
-  FloatingPanel: 2f87246071476cf05d77ba3f50a373ca4b04549e
+  FloatingPanel: 3c9d0e30fe350e1613157557769d2ec97f76b96b
   Gifu: 7bcb6427457d85e0b4dff5a84ec5947ac19a93ea
   iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
   PolioPager: 324dc97f5bb029eb0e892b59265be4abce1c6290
-  RxCocoa: e741b9749968e8a143e2b787f1dfbff2b63d0a5c
+  RxCocoa: 13d2a4d7546a34b8ececae8c281e4ea1dbb94f2b
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
-  RxRelay: 89d54507f4fd4d969e6ec1d4bd7f3673640b4640
-  RxSwift: e2dc62b366a3adf6a0be44ba9f405efd4c94e0c4
-  SkeletonView: bb27c39857e5492136f02ee8a3aa78de55d12ecd
+  RxRelay: a168bd6caf712d00c676ac344e9295afc93b418e
+  RxSwift: ad5874f24bb0dbffd1e9bb8443604e3578796c7a
+  SkeletonView: 0bf463145522c0c551b76a829b397e2a15a16d46
   SVGKit: 8a2fc74258bdb2abb54d3b65f3dd68b0277a9c4d
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
 
-PODFILE CHECKSUM: c43f65013a8e5fa89182717b1f3f248984bdc642
+PODFILE CHECKSUM: 7ef7017c3d83b02a0cbfe7370bf2f31f05cd0541
 
 COCOAPODS: 1.7.1

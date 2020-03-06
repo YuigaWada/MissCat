@@ -205,13 +205,13 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     
     // MARK: TableView Delegate
     
-    //tableViewの負担を軽減するようキャッシュを活用
+    // tableViewの負担を軽減するようキャッシュを活用
     func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         let index = indexPath.row
         guard let viewModel = viewModel, index < viewModel.cellsModel.count else { return UITableView.automaticDimension }
         
         let id = viewModel.cellsModel[index].identity
-        guard let height = self.cellHeightCache[id] else {
+        guard let height = cellHeightCache[id] else {
             return viewModel.cellsModel[index].isRenoteeCell ? 25 : UITableView.automaticDimension
         }
         return height
@@ -240,7 +240,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         showDetailView(item: viewModel.cellsModel[index])
         
         // TODO: renoteeCellをタップしたらrenote先までタップしたことにする
-        //tableView.selectRow(at: <#T##IndexPath?#>, animated: true, scrollPosition: .none)
+        // tableView.selectRow(at: <#T##IndexPath?#>, animated: true, scrollPosition: .none)
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {

@@ -292,7 +292,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         DispatchQueue.main.async {
             guard let imageView = self.getFileView(index) else { return }
             
-            //tap gestureを付加する
+            // tap gestureを付加する
             imageView.setTapGesture(self.disposeBag, closure: {
                 if isVideo {
                     self.delegate?.playVideo(url: originalUrl)
@@ -376,7 +376,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
                 guard fileType != .Unknown,
                     let thumbnailUrl = file.thumbnailUrl,
                     let original = file.url,
-                    let imageView = self.getFileView(index) else { break }
+                    let imageView = getFileView(index) else { break }
                 
                 imageView.isHidden = false
                 
@@ -437,7 +437,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     private func getFileView(_ index: Int) -> UIImageView? {
         guard index < fileImageView.arrangedSubviews.count,
-            let imageView = self.fileImageView.arrangedSubviews[index] as? UIImageView else { return nil }
+            let imageView = fileImageView.arrangedSubviews[index] as? UIImageView else { return nil }
         
         return imageView
     }

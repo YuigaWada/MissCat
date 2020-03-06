@@ -101,7 +101,7 @@ public class ReactionCell: UICollectionViewCell {
     }
     
     private func incrementCounter() {
-        guard let count = self.reactionCounterLabel.text else { return }
+        guard let count = reactionCounterLabel.text else { return }
         reactionCounterLabel.text = count.increment()
     }
 }

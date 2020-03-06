@@ -102,7 +102,7 @@ class PostViewModel: ViewModelType {
         let item = PostViewController.Attachments(image: attachment.originalImage, type: .Image)
         
         attachmentsLists.append(item)
-        attachments.onNext([PostViewController.AttachmentsSection(items: self.attachmentsLists)])
+        attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
     }
     
     public func removeAttachmentView(_ id: String) {
@@ -115,6 +115,6 @@ class PostViewModel: ViewModelType {
             }
         }
         
-        attachments.onNext([PostViewController.AttachmentsSection(items: self.attachmentsLists)])
+        attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
     }
 }

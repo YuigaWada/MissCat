@@ -36,7 +36,7 @@ public class ReactionGenModel {
     
     // MARK: Life Cycle
     
-    init(isFileShared: Bool = false) { }
+    init(isFileShared: Bool = false) {}
     
     // MARK: Public Methods
     

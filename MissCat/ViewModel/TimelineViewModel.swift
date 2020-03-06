@@ -130,7 +130,7 @@ class TimelineViewModel: ViewModelType {
     
     private func removeNoteCell(noteId: String) {
         let targetCell = cellsModel.filter { $0.noteId == noteId }
-        if targetCell.count > 0, let targetIndex = self.cellsModel.firstIndex(of: targetCell[0]) {
+        if targetCell.count > 0, let targetIndex = cellsModel.firstIndex(of: targetCell[0]) {
             cellsModel.remove(at: targetIndex)
             updateNotes(new: cellsModel)
         }
@@ -140,7 +140,7 @@ class TimelineViewModel: ViewModelType {
         guard let targetNoteId = targetNoteId, let rawReaction = rawReaction else { return }
         
         let targetCell = cellsModel.filter { $0.noteId == targetNoteId }
-        if targetCell.count > 0, let targetIndex = self.cellsModel.firstIndex(of: targetCell[0]) {
+        if targetCell.count > 0, let targetIndex = cellsModel.firstIndex(of: targetCell[0]) {
             // Change Count Label
             let existReactionCount = cellsModel[targetIndex].reactions.filter { $0.name == rawReaction }
             
@@ -175,7 +175,7 @@ class TimelineViewModel: ViewModelType {
     
     // 古い投稿から順にfetchしてくる
     public func loadUntilNotes() -> Observable<NoteCell.Model> {
-        guard let untilId = self.cellsModel[self.cellsModel.count - 1].noteId else {
+        guard let untilId = cellsModel[cellsModel.count - 1].noteId else {
             return Observable.create { _ in
                 Disposables.create()
             }

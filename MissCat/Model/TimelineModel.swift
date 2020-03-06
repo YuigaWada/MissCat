@@ -210,7 +210,7 @@ class TimelineModel {
         let noteType = self.checkNoteType(post)
         if noteType == .Renote {
             guard let renoteId = post.renoteId, let user = post.user, let renote = post.renote else { return }
-            guard let cellModel = renote.getNoteCellModel(withRN: self.checkNoteType(renote) == .CommentRenote) else { return }
+            guard let cellModel = renote.getNoteCellModel(withRN: checkNoteType(renote) == .CommentRenote) else { return }
             observer.onNext(cellModel)
             
             let renoteeCellModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "", baseNoteId: renoteId)

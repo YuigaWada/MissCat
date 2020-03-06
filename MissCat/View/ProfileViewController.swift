@@ -272,7 +272,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     }
     
     private func generateTimelineVC(xlTitle: IndicatorInfo, userId: String, includeReplies: Bool, onlyFiles: Bool, scrollable: Bool, loadLimit: Int) -> TimelineViewController {
-        guard let viewController = self.getViewController(name: "timeline") as? TimelineViewController else { fatalError("Internal Error.") }
+        guard let viewController = getViewController(name: "timeline") as? TimelineViewController else { fatalError("Internal Error.") }
         
         viewController.setup(type: .OneUser,
                              includeReplies: includeReplies,
@@ -308,7 +308,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         let scroll = scrollView.contentOffset.y - scrollBegining
         guard childVCs.count > currentIndex,
             let blurAnimator = blurAnimator,
-            let tlScrollView = childVCs[self.currentIndex].mainTableView else { return }
+            let tlScrollView = childVCs[currentIndex].mainTableView else { return }
         
         var needContainerScroll: Bool = true
         // tlScrollViewをスクロール

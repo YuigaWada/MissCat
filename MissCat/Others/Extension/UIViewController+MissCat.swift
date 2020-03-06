@@ -44,7 +44,7 @@ extension UIViewController {
     }
     
     func presentReactionGen(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
-        guard let reactionGen = self.getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
         
         presentWithSemiModal(reactionGen, animated: true, completion: nil)
         

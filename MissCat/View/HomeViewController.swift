@@ -255,7 +255,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     }
     
     private func generateTimelineVC(type: TimelineType) -> TimelineViewController {
-        guard let viewController = self.getViewController(name: "timeline") as? TimelineViewController
+        guard let viewController = getViewController(name: "timeline") as? TimelineViewController
         else { fatalError("Internal Error.") }
         
         viewController.setup(type: type)

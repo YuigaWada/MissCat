@@ -28,7 +28,7 @@ public class NotificationsViewModel {
     }
     
     public func loadUntilNotification(completion: (() -> Void)? = nil) {
-        let untilId = cellsModel[self.cellsModel.count - 1].notificationId
+        let untilId = cellsModel[cellsModel.count - 1].notificationId
         
         loadNotification(untilId: untilId) {
             self.update(new: self.cellsModel)
@@ -63,7 +63,7 @@ public class NotificationsViewModel {
             return
         }
         
-        guard let channel = channel, channel == .main, let cellModel = self.model.getModel(type: type, target: response) else { return }
+        guard let channel = channel, channel == .main, let cellModel = model.getModel(type: type, target: response) else { return }
         cellsModel.insert(cellModel, at: 0)
         
         update(new: cellsModel)
