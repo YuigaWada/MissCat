@@ -9,7 +9,6 @@
 import AVKit
 
 extension AVAsset {
-    
     ///  mov→mp4へと変換する
     /// - Parameters:
     ///   - videoUrl: 動画のurl
@@ -22,15 +21,14 @@ extension AVAsset {
         guard let tempUrl = (NSURL.fileURL(withPath: tempPath) as NSURL).absoluteURL else { return } // 一時的にデータを保存
         do {
             try FileManager.default.removeItem(at: tempUrl) // ファイルがすでに存在していれば削除
-        }
-        catch { }
+        } catch {}
         
-        guard let exportSession = AVAssetExportSession(asset: AVURLAsset(url: tempUrl, options: nil),
+        guard let exportSession = AVAssetExportSession(asset: AVURLAsset(url: videoUrl as URL, options: nil),
                                                        presetName: AVAssetExportPresetPassthrough) else { return }
         
         exportSession.outputURL = tempUrl
         exportSession.outputFileType = AVFileType.mp4
-        exportSession.exportAsynchronously(completionHandler: {() -> Void in
+        exportSession.exportAsynchronously(completionHandler: { () -> Void in
             completion(exportSession)
         })
     }
