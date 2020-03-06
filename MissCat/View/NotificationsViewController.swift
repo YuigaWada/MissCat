@@ -172,4 +172,6 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
     }
     
     public func vote(choice: Int, to noteId: String) {}
+    
+    public func playVideo(url: String) {}
 }

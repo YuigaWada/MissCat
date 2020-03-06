@@ -24,6 +24,8 @@ public protocol NoteCellDelegate {
     
     func tappedLink(text: String)
     func move2Profile(userId: String)
+    
+    func playVideo(url: String)
 }
 
 private typealias ViewModel = NoteCellViewModel
@@ -282,21 +284,28 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         pollView.initialize()
         
         innerRenoteDisplay.isHidden = true
-//        commentRenoteView = nil
     }
     
-    public func setupFileImage(_ image: UIImage, originalImageUrl: String, index: Int) {
+    public func setupFileImage(_ image: UIImage, originalUrl: String, index: Int, isVideo: Bool) {
         // self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
         
         DispatchQueue.main.async {
             guard let imageView = self.getFileView(index) else { return }
             
             //tap gestureを付加する
-            imageView.setTapGesture(self.disposeBag, closure: { self.showImage(url: originalImageUrl) })
+            imageView.setTapGesture(self.disposeBag, closure: {
+                if isVideo {
+                    self.delegate?.playVideo(url: originalUrl)
+                } else {
+                    self.showImage(url: originalUrl)
+                }
+            })
             
             imageView.backgroundColor = .clear
             imageView.image = image
             imageView.isHidden = false
+            
+            if isVideo { self.setPlayIconImage(on: imageView) } // 再生アイコンをaddする
             
             imageView.layoutIfNeeded()
             self.mainStackView.setNeedsLayout()
@@ -351,7 +360,10 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         if let files = Cache.shared.getFiles(noteId: noteId) { // キャッシュが存在する場合
             for index in 0 ..< files.count {
                 let file = files[index]
-                setupFileImage(file.thumbnail, originalImageUrl: file.originalUrl, index: index)
+                setupFileImage(file.thumbnail,
+                               originalUrl: file.originalUrl,
+                               index: index,
+                               isVideo: file.type == .Video)
             }
         } else { // キャッシュが存在しない場合
             let files = item.files
@@ -359,18 +371,26 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             
             for index in 0 ..< fileCount {
                 let file = files[index]
+                let fileType = viewModel.checkFileType(file.type)
                 
-                guard let thumbnailUrl = file.thumbnailUrl,
+                guard fileType != .Unknown,
+                    let thumbnailUrl = file.thumbnailUrl,
                     let original = file.url,
                     let imageView = self.getFileView(index) else { break }
                 
                 imageView.isHidden = false
                 
-                thumbnailUrl.toUIImage { image in
-                    guard let image = image else { return }
-                    
-                    Cache.shared.saveFiles(noteId: noteId, image: image, originalUrl: original)
-                    self.setupFileImage(image, originalImageUrl: original, index: index)
+                if fileType == .Audio {
+                } else {
+                    thumbnailUrl.toUIImage { image in
+                        guard let image = image else { return }
+                        
+                        Cache.shared.saveFiles(noteId: noteId, image: image, originalUrl: original, type: fileType)
+                        self.setupFileImage(image,
+                                            originalUrl: original,
+                                            index: index,
+                                            isVideo: fileType == .Video)
+                    }
                 }
             }
         }
@@ -447,6 +467,60 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         }
         
         return cell
+    }
+    
+    private func setPlayIconImage(on parentView: UIView) {
+        guard let playIconImage = UIImage(named: "play") else { return }
+        let playIconImageView = UIImageView(image: playIconImage)
+        
+        let edgeMultiplier: CGFloat = 0.4
+        
+        parentView.layoutIfNeeded()
+        let parentFrame = parentView.frame
+        let edge = min(parentFrame.width, parentFrame.height) * edgeMultiplier
+        
+        playIconImageView.center = parentView.center
+        playIconImageView.frame = CGRect(x: playIconImageView.frame.origin.x,
+                                         y: playIconImageView.frame.origin.y,
+                                         width: edge,
+                                         height: edge)
+        
+        playIconImageView.translatesAutoresizingMaskIntoConstraints = false
+        parentView.addSubview(playIconImageView)
+        
+        parentView.addConstraints([
+            NSLayoutConstraint(item: playIconImageView,
+                               attribute: .width,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .width,
+                               multiplier: 0,
+                               constant: edge),
+            
+            NSLayoutConstraint(item: playIconImageView,
+                               attribute: .height,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .height,
+                               multiplier: 0,
+                               constant: edge),
+            
+            NSLayoutConstraint(item: playIconImageView,
+                               attribute: .centerX,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .centerX,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: playIconImageView,
+                               attribute: .centerY,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .centerY,
+                               multiplier: 1.0,
+                               constant: 0)
+        ])
     }
     
     // MARK: 引用RN
@@ -595,7 +669,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
 // MARK: NoteCell.Model
 
 extension NoteCell {
-    public struct Model: IdentifiableType, Equatable {
     public class Model: IdentifiableType, Equatable {
         var isSkelton = false
         var isReactionGenCell = false
@@ -625,7 +698,6 @@ extension NoteCell {
         var myReaction: String?
         let files: [File]
         let emojis: [EmojiModel]?
-        let commentRNTarget: NoteModel?
         let commentRNTarget: NoteCell.Model?
         
         var onOtherNote: Bool = false // 引用RNはNoteCellの上にNoteCellが乗るという二重構造になっているので、内部のNoteCellかどうかを判別する
@@ -810,5 +882,15 @@ extension NoteCell.Model {
             
             return reactionModel
         }.compactMap { $0 } // nil除去
+    }
+}
+
+extension NoteCell {
+    public enum FileType {
+        case PlaneImage
+        case GIFImage
+        case Video
+        case Audio
+        case Unknown
     }
 }

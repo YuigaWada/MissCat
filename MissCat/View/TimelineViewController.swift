@@ -6,6 +6,7 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import AVKit
 import FloatingPanel
 import RxCocoa
 import RxDataSources
@@ -331,6 +332,17 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     func vote(choice: Int, to noteId: String) {
         // TODO: modelの変更 / api処理
         viewModel?.vote(choice: choice, to: noteId)
+    }
+    
+    func playVideo(url: String) {
+        guard let url = URL(string: url) else { return }
+        let videoPlayer = AVPlayer(url: url)
+        let playerController = AVPlayerViewController()
+        playerController.player = videoPlayer
+        
+        present(playerController, animated: true, completion: {
+            videoPlayer.play()
+        })
     }
     
     // MARK: XLPagerTabStrip delegate

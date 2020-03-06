@@ -186,7 +186,7 @@ class NoteCellViewModel: ViewModelType {
         } else if let imageRawUrl = imageRawUrl, let imageUrl = URL(string: imageRawUrl) {
             imageUrl.toUIImage { [weak self] image in
                 guard let self = self, let image = image else { return }
-                Cache.shared.saveIcon(username: username, image: image) // CHACHE!
+                Cache.shared.saveIcon(username: username, image: image) // CACHE!
                 self.output.iconImage.accept(image)
             }
             
@@ -194,6 +194,23 @@ class NoteCellViewModel: ViewModelType {
         }
         
         return nil
+    }
+    
+    /// ファイルの種類を識別する
+    /// - Parameter type: MIME Type
+    public func checkFileType(_ type: String?) -> NoteCell.FileType {
+        guard let type = type else { return .Unknown }
+        
+        if type.contains("video") {
+            return .Video
+        } else if type.contains("audio") {
+            return .Audio
+        }
+        
+        let isImage: Bool = type.contains("image")
+        let isGif: Bool = type.contains("gif")
+        
+        return isImage ? (isGif ? .GIFImage : .PlaneImage) : .Unknown
     }
     
     private func getReactions(_ item: NoteCell.Model) {
@@ -219,7 +236,6 @@ class NoteCellViewModel: ViewModelType {
     }
     
     private func prepareCommentRenote(_ item: NoteCell.Model) {
-        guard let renoteCellModel = item.commentRNTarget?.getNoteCellModel(onOtherNote: true) else { return }
         guard let renoteCellModel = item.commentRNTarget else { return }
         output.commentRenoteTarget.accept(renoteCellModel)
     }

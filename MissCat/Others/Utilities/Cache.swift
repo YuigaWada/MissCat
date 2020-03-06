@@ -56,8 +56,8 @@ public class Cache {
         }
     }
     
-    public func saveFiles(noteId: String, image: UIImage, originalUrl: String) {
-        let imageTuple = (thumbnail: image, originalUrl: originalUrl)
+    public func saveFiles(noteId: String, image: UIImage, originalUrl: String, type: NoteCell.FileType) {
+        let imageTuple = (thumbnail: image, originalUrl: originalUrl, type: type)
         var hasFile: Bool = false
         
         files = files.map {
@@ -101,7 +101,7 @@ public class Cache {
         return users[username]?.iconImage
     }
     
-    public func getFiles(noteId: String) -> [(thumbnail: UIImage, originalUrl: String)]? {
+    public func getFiles(noteId: String) -> [(thumbnail: UIImage, originalUrl: String, type: NoteCell.FileType)]? {
         let options = files.filter {
             $0.noteId == noteId
         }
@@ -215,6 +215,6 @@ public extension Cache {
     
     struct File {
         public var noteId: String
-        public var images: [(thumbnail: UIImage, originalUrl: String)]
+        public var images: [(thumbnail: UIImage, originalUrl: String, type: NoteCell.FileType)]
     }
 }
