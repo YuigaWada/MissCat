@@ -596,6 +596,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
 
 extension NoteCell {
     public struct Model: IdentifiableType, Equatable {
+    public class Model: IdentifiableType, Equatable {
         var isSkelton = false
         var isReactionGenCell = false
         var isRenoteeCell = false
@@ -625,9 +626,38 @@ extension NoteCell {
         let files: [File]
         let emojis: [EmojiModel]?
         let commentRNTarget: NoteModel?
+        let commentRNTarget: NoteCell.Model?
         
         var onOtherNote: Bool = false // 引用RNはNoteCellの上にNoteCellが乗るという二重構造になっているので、内部のNoteCellかどうかを判別する
         var poll: Poll?
+        
+        init(isSkelton: Bool = false, isReactionGenCell: Bool = false, isRenoteeCell: Bool = false, renotee: String? = nil, baseNoteId: String? = nil, isReply: Bool = false, isReplyTarget: Bool = false, noteId: String? = nil, iconImageUrl: String? = nil, iconImage: UIImage? = nil, userId: String, displayName: String, username: String, note: String, ago: String, replyCount: Int, renoteCount: Int, reactions: [ReactionCount], shapedReactions: [NoteCell.Reaction], myReaction: String? = nil, files: [File], emojis: [EmojiModel]? = nil, commentRNTarget: NoteCell.Model? = nil, onOtherNote: Bool = false, poll: Poll? = nil) {
+            self.isSkelton = isSkelton
+            self.isReactionGenCell = isReactionGenCell
+            self.isRenoteeCell = isRenoteeCell
+            self.renotee = renotee
+            self.baseNoteId = baseNoteId
+            self.isReply = isReply
+            self.isReplyTarget = isReplyTarget
+            self.noteId = noteId
+            self.iconImageUrl = iconImageUrl
+            self.iconImage = iconImage
+            self.userId = userId
+            self.displayName = displayName
+            self.username = username
+            self.note = note
+            self.ago = ago
+            self.replyCount = replyCount
+            self.renoteCount = renoteCount
+            self.reactions = reactions
+            self.shapedReactions = shapedReactions
+            self.myReaction = myReaction
+            self.files = files
+            self.emojis = emojis
+            self.commentRNTarget = commentRNTarget
+            self.onOtherNote = onOtherNote
+            self.poll = poll
+        }
         
         public static func == (lhs: NoteCell.Model, rhs: NoteCell.Model) -> Bool {
             return lhs.identity == rhs.identity
