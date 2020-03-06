@@ -60,6 +60,8 @@ class PostViewModel: ViewModelType {
         }
     }
     
+    //MARK: Publics
+    
     public func submitNote(_ note: String) {
         guard attachmentImages.count > 0 else {
             model.submitNote(note, fileIds: nil) { self.isSuccess.onNext($0) }
@@ -97,14 +99,6 @@ class PostViewModel: ViewModelType {
         
         addAttachmentView(targetImage)
     }
-    
-    private func addAttachmentView(_ attachment: AttachmentImage) {
-        let item = PostViewController.Attachments(image: attachment.originalImage, type: .Image)
-        
-        attachmentsLists.append(item)
-        attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
-    }
-    
     public func removeAttachmentView(_ id: String) {
         for index in 0 ..< attachmentsLists.count {
             let attachment = attachmentsLists[index]
@@ -117,4 +111,14 @@ class PostViewModel: ViewModelType {
         
         attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
     }
+    
+    //MARK: Privates
+    
+    private func addAttachmentView(_ attachment: AttachmentImage) {
+        let item = PostViewController.Attachments(image: attachment.originalImage, type: .Image)
+        
+        attachmentsLists.append(item)
+        attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
+    }
+
 }
