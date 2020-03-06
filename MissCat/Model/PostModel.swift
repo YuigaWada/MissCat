@@ -45,4 +45,12 @@ public class PostModel {
             completion(result.id)
         }
     }
+    
+    public func uploadFile(_ videoData: Data, completion: @escaping (String?) -> Void) {
+        MisskeyKit.drive.createFile(fileData: videoData, fileType: "video/mp4", name: UUID().uuidString + ".mp4", isSensitive: false, force: false) { result, error in
+            guard let result = result, error == nil else { return }
+            
+            completion(result.id)
+        }
+    }
 }

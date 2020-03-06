@@ -6,6 +6,7 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import AVKit
 import MisskeyKit
 import RxCocoa
 import RxSwift
@@ -26,18 +27,27 @@ class PostViewModel: ViewModelType {
                                            isSuccess: self.isSuccess.asDriver(onErrorJustReturn: false),
                                            attachments: self.attachments)
     
-    private struct AttachmentImage {
+    private struct AttachmentFile {
         fileprivate let id: String = UUID().uuidString
         fileprivate var order: Int = 0
         
-        fileprivate var originalImage: UIImage
-        fileprivate var image: UIImage?
+        fileprivate var originalImage: UIImage? // 加工前
+        fileprivate var image: UIImage? // 加工後
+        
+        fileprivate var videoPath: URL?
+        fileprivate var videoThumbnail: UIImage?
+        fileprivate var isVideo: Bool { return videoPath != nil }
         
         init(originalImage: UIImage, image: UIImage, order: Int) {
             self.image = image
             self.originalImage = originalImage
             
             self.order = order
+        }
+        
+        init(videoPath: URL) {
+            self.videoPath = videoPath
+            videoThumbnail = AVAsset.generateThumbnail(videoFrom: videoPath)
         }
     }
     
@@ -49,7 +59,8 @@ class PostViewModel: ViewModelType {
     
     private let model = PostModel()
     private var disposeBag: DisposeBag
-    private var attachmentImages: [AttachmentImage] = []
+    private var attachmentFiles: [AttachmentFile] = []
+    private var hasVideoAttachment: Bool = false // 写真と動画は共存させないようにする。尚、写真は4枚まで追加可能だが動画は一つのみとする。
     
     init(disposeBag: DisposeBag) {
         self.disposeBag = disposeBag
@@ -60,10 +71,10 @@ class PostViewModel: ViewModelType {
         }
     }
     
-    //MARK: Publics
+    // MARK: Publics
     
     public func submitNote(_ note: String) {
-        guard attachmentImages.count > 0 else {
+        guard attachmentFiles.count > 0 else {
             model.submitNote(note, fileIds: nil) { self.isSuccess.onNext($0) }
             return
         }
@@ -76,29 +87,32 @@ class PostViewModel: ViewModelType {
     public func getLocation() {}
     
     public func uploadFiles(completion: @escaping ([String]) -> Void) {
-        var fileIds: [String] = []
-        
-        attachmentImages.forEach { image in
-            guard let image = image.image else { return }
-            
-            self.model.uploadFile(image) { fileId in
-                guard let fileId = fileId else { return }
-                fileIds.append(fileId)
-                
-                if fileIds.count == self.attachmentImages.count { completion(fileIds) }
-            }
+        if hasVideoAttachment {
+            uploadVideo(completion: completion)
+        } else {
+            uploadImages(completion: completion)
         }
     }
     
     // 画像をスタックさせておいて、アップロードは直前に
     public func stackFile(original: UIImage, edited: UIImage) {
-        let targetImage = AttachmentImage(originalImage: original,
-                                          image: edited, order: attachmentImages.count + 1)
+        guard hasVideoAttachment else { return } // 写真と動画は共存させないように
+        let targetImage = AttachmentFile(originalImage: original, image: edited, order: attachmentFiles.count + 1)
         
-        attachmentImages.append(targetImage)
-        
+        attachmentFiles.append(targetImage)
         addAttachmentView(targetImage)
     }
+    
+    public func stackFile(videoUrl: URL) {
+        guard attachmentFiles.count == 0 else { return } // 動画は1つまで
+        let targetVideo = AttachmentFile(videoPath: videoUrl)
+        
+        attachmentFiles.append(targetVideo)
+        
+        addAttachmentView(targetVideo)
+        hasVideoAttachment = true
+    }
+    
     public func removeAttachmentView(_ id: String) {
         for index in 0 ..< attachmentsLists.count {
             let attachment = attachmentsLists[index]
@@ -112,13 +126,56 @@ class PostViewModel: ViewModelType {
         attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
     }
     
-    //MARK: Privates
+    // MARK: Privates
     
-    private func addAttachmentView(_ attachment: AttachmentImage) {
-        let item = PostViewController.Attachments(image: attachment.originalImage, type: .Image)
+    private func uploadImages(completion: @escaping ([String]) -> Void) {
+        var fileIds: [String] = []
+        attachmentFiles.forEach { image in
+            guard let image = image.image else { return }
+            
+            self.model.uploadFile(image) { fileId in
+                guard let fileId = fileId else { return }
+                fileIds.append(fileId)
+                
+                if fileIds.count == self.attachmentFiles.count { completion(fileIds) }
+            }
+        }
+    }
+    
+    private func uploadVideo(completion: @escaping ([String]) -> Void) {
+        guard attachmentFiles.count == 1 else { return }
+        
+        var fileIds: [String] = []
+        let videoAttachment = attachmentFiles[0]
+        guard let path = videoAttachment.videoPath, let video = getVideoData(from: path) else { return }
+        
+        model.uploadFile(video) { fileId in
+            guard let fileId = fileId else { return }
+            fileIds.append(fileId)
+            
+            if fileIds.count == self.attachmentFiles.count { completion(fileIds) }
+        }
+    }
+    
+    private func addAttachmentView(_ attachment: AttachmentFile) {
+        var item: PostViewController.Attachments
+        if attachment.isVideo {
+            guard let thumbnail = attachment.videoThumbnail else { return }
+            item = .init(image: thumbnail, type: .Video)
+        } else {
+            guard let originalImage = attachment.originalImage else { return }
+            item = .init(image: originalImage, type: .Image)
+        }
         
         attachmentsLists.append(item)
         attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
     }
-
+    
+    private func getVideoData(from path: URL) -> Data? {
+        do {
+            return try Data(contentsOf: path)
+        } catch {
+            return nil
+        }
+    }
 }

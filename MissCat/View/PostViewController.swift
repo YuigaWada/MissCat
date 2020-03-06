@@ -6,6 +6,7 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import AVKit
 import iOSPhotoEditor
 import RxDataSources
 import RxSwift
@@ -227,6 +228,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
             let picker = UIImagePickerController()
             picker.sourceType = type
             picker.mediaTypes = UIImagePickerController.availableMediaTypes(for: type) ?? []
+            picker.videoQuality = .typeHigh
             picker.delegate = self
             
             presentOnFullScreen(picker, animated: true, completion: nil)
@@ -254,12 +256,22 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         
         let isImage = info[UIImagePickerController.InfoKey.originalImage] is UIImage
         
-        guard let originalImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else { return }
-        
-        showPhotoEditor(with: originalImage).subscribe(onNext: { editedImage in // 画像エディタを表示
-            guard let editedImage = editedImage else { return }
-            self.viewModel.stackFile(original: originalImage, edited: editedImage)
-        }).disposed(by: disposeBag)
+        if isImage {
+            guard let originalImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else { return }
+            
+            showPhotoEditor(with: originalImage).subscribe(onNext: { editedImage in // 画像エディタを表示
+                guard let editedImage = editedImage else { return }
+                self.viewModel.stackFile(original: originalImage, edited: editedImage)
+            }).disposed(by: disposeBag)
+            
+            return
+        }
+        // is Video
+        guard let url = info[UIImagePickerController.InfoKey.mediaURL] as? NSURL else { return }
+        AVAsset.convert2Mp4(videoUrl: url) { session in // 動画のデフォルトがmovなのでmp4に変換する
+            guard session.status == .completed, let filePath = session.outputURL else { return }
+            self.viewModel.stackFile(videoUrl: filePath)
+        }
     }
     
     // MARK: NotificationCenter
