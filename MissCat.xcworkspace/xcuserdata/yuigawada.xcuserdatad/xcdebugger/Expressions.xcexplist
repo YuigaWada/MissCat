@@ -65,6 +65,17 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "Cache.saveToStorage(data:url:):Cache.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "error">
+            </PersistentString>
+            <PersistentString
+               value = "path.absoluteString">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ReactionCell.changeCornerRadius():ReactionCell.swift">
          <PersistentStrings>
             <PersistentString
@@ -193,10 +204,40 @@
          contextName = "closure #1 in TimelineModel.loadNotes(with:completion:):TimelineModel.swift">
       </ContextState>
       <ContextState
+         contextName = "StartViewController.summon(after:):StartViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "CGFloat(30 * sign)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #6 in PollView.setPoll(with:):PollView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "count / votesCountSum">
+            </PersistentString>
+            <PersistentString
+               value = "votesCountSum">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in YanagiText.transformText():YanagiText.swift">
          <PersistentStrings>
             <PersistentString
+               value = "estimatedRect.origin.x.isFinite">
+            </PersistentString>
+            <PersistentString
                value = "self.attachmentList">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TimelineViewModel.resetReactionGenCell(id:):TimelineViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.cellsModel">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -209,10 +250,21 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "TimelineViewModel.resetReactionGenCell(id:):TimelineViewModel.swift">
+         contextName = "ReactionCell.isMyReaction.didset:ReactionCell.swift">
          <PersistentStrings>
             <PersistentString
-               value = "self.cellsModel">
+               value = "isMyReaction">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "NoteCell.setPlayIconImage(on:):NoteCell.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "parentView.center">
+            </PersistentString>
+            <PersistentString
+               value = "playIconImageView.center">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -228,10 +280,10 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "ReactionCell.isMyReaction.didset:ReactionCell.swift">
+         contextName = "PostViewController.viewWillAppear(_:):PostViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "isMyReaction">
+               value = "self.iconImageView.frame.width">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -247,18 +299,10 @@
          contextName = "NoteCell.shapeCell(item:isDetailMode:):NoteCell.swift">
          <PersistentStrings>
             <PersistentString
-               value = " self.nameTextView.font?.fontName">
+               value = "pollViewHeightConstraint.constant">
             </PersistentString>
             <PersistentString
                value = "self.noteView.font?.fontSize">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "PostViewController.viewWillAppear(_:):PostViewController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "self.iconImageView.frame.width">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -303,6 +347,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "PollView.setPoll(with:):PollView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "votesCountSum">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in TimelineViewModel.init(type:includeReplies:onlyFiles:userId:listId:disposeBag:):TimelineViewModel.swift">
          <PersistentStrings>
             <PersistentString
@@ -317,10 +369,10 @@
          contextName = "static Requestor.post(url:rawJson:data:completion:):Requestor.swift">
          <PersistentStrings>
             <PersistentString
-               value = "request.httpAdditionalHeaders">
+               value = "String(data: bodyData)">
             </PersistentString>
             <PersistentString
-               value = "String(data: bodyData)">
+               value = "request.httpAdditionalHeaders">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -329,6 +381,14 @@
          <PersistentStrings>
             <PersistentString
                value = "self.input.noteYanagi.font?.fontName">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "PollView.adjustViewHeight():PollView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "frame">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -404,10 +464,10 @@
          contextName = "ProfileViewController.timelineDidScroll(_:scroll:):ProfileViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "containerScrollView.contentOffset.y">
+               value = "pagerTab.frame.origin.y">
             </PersistentString>
             <PersistentString
-               value = "pagerTab.frame.origin.y">
+               value = "containerScrollView.contentOffset.y">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -510,6 +570,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "Cache.getUrlData(on:):Cache.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "rawUrl.sha256()">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #2 in NoteCell.binding(viewModel:):NoteCell.swift">
          <PersistentStrings>
             <PersistentString
@@ -543,10 +611,10 @@
                value = " MisskeyKit.auth.appSecret">
             </PersistentString>
             <PersistentString
-               value = "UIScreen.main.bounds.size.height">
+               value = "self.footerTab">
             </PersistentString>
             <PersistentString
-               value = "self.footerTab">
+               value = "UIScreen.main.bounds.size.height">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -578,13 +646,13 @@
          contextName = "ProfileViewController.scrollViewDidScroll(_:):ProfileViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "scrollView.contentOffset.x">
+               value = "scrollView as! UIScrollView">
             </PersistentString>
             <PersistentString
                value = "scrollView.contentOffset.y">
             </PersistentString>
             <PersistentString
-               value = "scrollView as! UIScrollView">
+               value = "scrollView.contentOffset.x">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -612,6 +680,25 @@
          <PersistentStrings>
             <PersistentString
                value = "response.statusCode">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #3 in NoteCell.binding(viewModel:noteId:):NoteCell.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.commentRenoteView">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in StartViewController.summon(after:):StartViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "CGFloat(30 * sign)">
+            </PersistentString>
+            <PersistentString
+               value = "comp.frame.origin.y">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -696,6 +783,14 @@
          <PersistentStrings>
             <PersistentString
                value = "aDecoder.decodeObject(forKey: &quot;customEmojiUrl&quot;) as? String">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TimelineViewModel.updateReaction(targetNoteId:reaction:isMyReaction:):TimelineViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "cellsModel">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -919,10 +1014,10 @@
                value = "item.displayName">
             </PersistentString>
             <PersistentString
-               value = "item.note">
+               value = "item.reactions">
             </PersistentString>
             <PersistentString
-               value = "item.reactions">
+               value = "item.note">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -939,6 +1034,20 @@
          <PersistentStrings>
             <PersistentString
                value = "scrollView.contentOffset.x">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "PollView.getPollBarView(name:rate:isVoted:):PollView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "pollBarView.center">
+            </PersistentString>
+            <PersistentString
+               value = "pollNameLabel.frame">
+            </PersistentString>
+            <PersistentString
+               value = "pollBarView.frame">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

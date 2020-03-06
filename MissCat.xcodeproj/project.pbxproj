@@ -16,7 +16,6 @@
 		8D0AC5BE237B714900530508 /* EmojiHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0AC5BD237B714900530508 /* EmojiHandler.swift */; };
 		8D0AC5C1237B865B00530508 /* TimelineModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0AC5C0237B865B00530508 /* TimelineModel.swift */; };
 		8D0D47AA23A74EC80095361D /* UIViewController+PhotoEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0D47A923A74EC80095361D /* UIViewController+PhotoEditor.swift */; };
-		8D0D47AC23A7738F0095361D /* NavBarPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0D47AB23A7738F0095361D /* NavBarPageViewController.swift */; };
 		8D0F7D0F2398F21F009B45E1 /* ReactionGenPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */; };
 		8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */; };
 		8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D16656823A0DB3100C03764 /* MFMEngine.swift */; };
@@ -30,6 +29,8 @@
 		8D3EC23C237B43F000808727 /* String+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3EC23B237B43EF00808727 /* String+MissCat.swift */; };
 		8D42C3A623804B6200337DD2 /* UIViewController+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D42C3A523804B6200337DD2 /* UIViewController+MissCat.swift */; };
 		8D42C3A8238076B600337DD2 /* Double+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D42C3A7238076B600337DD2 /* Double+MissCat.swift */; };
+		8D4754F7240E21B900BAD410 /* PollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4754F6240E21B900BAD410 /* PollView.swift */; };
+		8D4754F9240E21F800BAD410 /* PollView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D4754F8240E21F800BAD410 /* PollView.xib */; };
 		8D4A2A16237437BE00503685 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4A2A15237437BE00503685 /* AppDelegate.swift */; };
 		8D4A2A18237437BE00503685 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4A2A17237437BE00503685 /* SceneDelegate.swift */; };
 		8D4A2A1A237437BE00503685 /* TimelineViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4A2A19237437BE00503685 /* TimelineViewController.swift */; };
@@ -71,6 +72,7 @@
 		8DA36F862394B9D000512459 /* UIFont+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA36F852394B9D000512459 /* UIFont+MissCat.swift */; };
 		8DA536AC23AC8B70005EB1B5 /* AttachmentCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */; };
 		8DA536AE23AC8C47005EB1B5 /* AttachmentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */; };
+		8DAD238A240CE76000AB1F36 /* StartViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAD2389240CE76000AB1F36 /* StartViewController.swift */; };
 		8DAEA1322382E19A0083AA69 /* ReactionGenViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEA1312382E19A0083AA69 /* ReactionGenViewModel.swift */; };
 		8DAEA1352382E4F00083AA69 /* EmojiView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DAEA1342382E4F00083AA69 /* EmojiView.xib */; };
 		8DAEA1372382E59A0083AA69 /* EmojiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEA1362382E59A0083AA69 /* EmojiView.swift */; };
@@ -108,7 +110,6 @@
 		8D0AC5BD237B714900530508 /* EmojiHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiHandler.swift; sourceTree = "<group>"; };
 		8D0AC5C0237B865B00530508 /* TimelineModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineModel.swift; sourceTree = "<group>"; };
 		8D0D47A923A74EC80095361D /* UIViewController+PhotoEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+PhotoEditor.swift"; sourceTree = "<group>"; };
-		8D0D47AB23A7738F0095361D /* NavBarPageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavBarPageViewController.swift; sourceTree = "<group>"; };
 		8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenPanel.swift; sourceTree = "<group>"; };
 		8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		8D16656823A0DB3100C03764 /* MFMEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MFMEngine.swift; sourceTree = "<group>"; };
@@ -122,6 +123,8 @@
 		8D3EC23B237B43EF00808727 /* String+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+MissCat.swift"; sourceTree = "<group>"; };
 		8D42C3A523804B6200337DD2 /* UIViewController+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+MissCat.swift"; sourceTree = "<group>"; };
 		8D42C3A7238076B600337DD2 /* Double+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double+MissCat.swift"; sourceTree = "<group>"; };
+		8D4754F6240E21B900BAD410 /* PollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollView.swift; sourceTree = "<group>"; };
+		8D4754F8240E21F800BAD410 /* PollView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PollView.xib; sourceTree = "<group>"; };
 		8D4A2A12237437BE00503685 /* MissCat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MissCat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D4A2A15237437BE00503685 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8D4A2A17237437BE00503685 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -168,6 +171,7 @@
 		8DA36F852394B9D000512459 /* UIFont+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIFont+MissCat.swift"; sourceTree = "<group>"; };
 		8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AttachmentCell.xib; sourceTree = "<group>"; };
 		8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentCell.swift; sourceTree = "<group>"; };
+		8DAD2389240CE76000AB1F36 /* StartViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartViewController.swift; sourceTree = "<group>"; };
 		8DAEA1312382E19A0083AA69 /* ReactionGenViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenViewModel.swift; sourceTree = "<group>"; };
 		8DAEA1342382E4F00083AA69 /* EmojiView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = EmojiView.xib; sourceTree = "<group>"; };
 		8DAEA1362382E59A0083AA69 /* EmojiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiView.swift; sourceTree = "<group>"; };
@@ -222,6 +226,7 @@
 				8D84061E2393547800EED595 /* PostDetailViewController.swift */,
 				8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */,
 				8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */,
+				8DAD2389240CE76000AB1F36 /* StartViewController.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -256,13 +261,11 @@
 		8D065B1F237ACD5D003DFB7C /* Reusable */ = {
 			isa = PBXGroup;
 			children = (
+				8D4754F3240E1E4B00BAD410 /* NoteCell */,
 				8DAEA1332382E4C00083AA69 /* nib */,
-				8D065B1A237ACA68003DFB7C /* NoteCell.swift */,
-				8D502D51237D8BE300525A96 /* ReactionCell.swift */,
 				8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */,
 				8D502D592380270A00525A96 /* TabBar.swift */,
 				8DAEA1362382E59A0083AA69 /* EmojiView.swift */,
-				8D8863B52384951200A7A5A8 /* RenoteeCell.swift */,
 				8DA06A0A2389E98D0093A718 /* NotificationCell.swift */,
 				8D613550238A978700AB50C2 /* EmojiViewCell.swift */,
 				8D613554238B6D8B00AB50C2 /* NavBar.swift */,
@@ -306,11 +309,7 @@
 			isa = PBXGroup;
 			children = (
 				8D3036F92388733E00BA6D38 /* ImageManager.swift */,
-				8D3036FF2388F71E00BA6D38 /* MisskeyTextView.swift */,
-				8D0AC5BD237B714900530508 /* EmojiHandler.swift */,
 				8D3037012389018800BA6D38 /* Cache.swift */,
-				8D16656823A0DB3100C03764 /* MFMEngine.swift */,
-				8D0D47AB23A7738F0095361D /* NavBarPageViewController.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -322,6 +321,38 @@
 				8D3037032389086800BA6D38 /* Extension */,
 			);
 			path = Others;
+			sourceTree = "<group>";
+		};
+		8D4754F3240E1E4B00BAD410 /* NoteCell */ = {
+			isa = PBXGroup;
+			children = (
+				8D4754F4240E1E8400BAD410 /* nib */,
+				8D065B1A237ACA68003DFB7C /* NoteCell.swift */,
+				8D502D51237D8BE300525A96 /* ReactionCell.swift */,
+				8D8863B52384951200A7A5A8 /* RenoteeCell.swift */,
+				8D4754F6240E21B900BAD410 /* PollView.swift */,
+			);
+			path = NoteCell;
+			sourceTree = "<group>";
+		};
+		8D4754F4240E1E8400BAD410 /* nib */ = {
+			isa = PBXGroup;
+			children = (
+				8D065B18237AC825003DFB7C /* NoteCell.xib */,
+				8D502D53237D8BEC00525A96 /* ReactionCell.xib */,
+				8D4754F8240E21F800BAD410 /* PollView.xib */,
+			);
+			path = nib;
+			sourceTree = "<group>";
+		};
+		8D4754F5240E1EA500BAD410 /* MFMEngine */ = {
+			isa = PBXGroup;
+			children = (
+				8D16656823A0DB3100C03764 /* MFMEngine.swift */,
+				8D0AC5BD237B714900530508 /* EmojiHandler.swift */,
+				8D3036FF2388F71E00BA6D38 /* MisskeyTextView.swift */,
+			);
+			path = MFMEngine;
 			sourceTree = "<group>";
 		};
 		8D4A2A09237437BE00503685 = {
@@ -347,6 +378,7 @@
 		8D4A2A14237437BE00503685 /* MissCat */ = {
 			isa = PBXGroup;
 			children = (
+				8D4754F5240E1EA500BAD410 /* MFMEngine */,
 				8D0AC5B4237B5AC700530508 /* Resources */,
 				8D3EC236237AE52800808727 /* Others */,
 				8D065B15237AC387003DFB7C /* Model */,
@@ -385,8 +417,6 @@
 		8DAEA1332382E4C00083AA69 /* nib */ = {
 			isa = PBXGroup;
 			children = (
-				8D065B18237AC825003DFB7C /* NoteCell.xib */,
-				8D502D53237D8BEC00525A96 /* ReactionCell.xib */,
 				8D7968802404BE68004F87FA /* ReactionCollectionHeader.xib */,
 				8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */,
 				8D502D552380236900525A96 /* TabBar.xib */,
@@ -512,6 +542,7 @@
 				8D7968812404BE68004F87FA /* ReactionCollectionHeader.xib in Resources */,
 				8D0AC5BA237B5D0D00530508 /* Font Awesome 5 Free-Solid-900.otf in Resources */,
 				8D4A2A22237437C000503685 /* LaunchScreen.storyboard in Resources */,
+				8D4754F9240E21F800BAD410 /* PollView.xib in Resources */,
 				8DA06A092389E9820093A718 /* NotificationCell.xib in Resources */,
 				8D4A2A1F237437C000503685 /* Assets.xcassets in Resources */,
 				8D613553238B6D4F00AB50C2 /* NavBar.xib in Resources */,
@@ -568,7 +599,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat\" . --exclude Carthage,Pods --trimwhitespace nonblank-lines --stripunusedargs closure-only --disable strongOutlets,trailingCommas\n";
+			shellScript = "\"${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat\" . --exclude Carthage,Pods --trimwhitespace nonblank-lines --stripunusedargs closure-only --disable strongOutlets,trailingCommas\n\n";
 		};
 		93DAFEA3DB772ED9D5C558DB /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -613,6 +644,7 @@
 				8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */,
 				8D84061F2393547800EED595 /* PostDetailViewController.swift in Sources */,
 				8D3036F82385DAED00BA6D38 /* PostModel.swift in Sources */,
+				8DAD238A240CE76000AB1F36 /* StartViewController.swift in Sources */,
 				8D53741B23A32D03004523FC /* ViewModelType.swift in Sources */,
 				8DA06A0F2389F04E0093A718 /* NotificationModel.swift in Sources */,
 				8DA06A0D2389EEC60093A718 /* NotificationsViewModel.swift in Sources */,
@@ -632,6 +664,7 @@
 				8D8863B223848C0400A7A5A8 /* UIView+MissCat.swift in Sources */,
 				8D3EC23C237B43F000808727 /* String+MissCat.swift in Sources */,
 				8D0AC5BE237B714900530508 /* EmojiHandler.swift in Sources */,
+				8D4754F7240E21B900BAD410 /* PollView.swift in Sources */,
 				8DA06A072389E89A0093A718 /* NotificationsViewController.swift in Sources */,
 				8D4A2A18237437BE00503685 /* SceneDelegate.swift in Sources */,
 				8DA06A16238A86DC0093A718 /* NotificationCellModel.swift in Sources */,
@@ -651,7 +684,6 @@
 				8D42C3A623804B6200337DD2 /* UIViewController+MissCat.swift in Sources */,
 				8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */,
 				8DA536AE23AC8C47005EB1B5 /* AttachmentCell.swift in Sources */,
-				8D0D47AC23A7738F0095361D /* NavBarPageViewController.swift in Sources */,
 				8D502D5A2380270A00525A96 /* TabBar.swift in Sources */,
 				8DD8898B23935CC400D22910 /* PostDetailViewModel.swift in Sources */,
 			);
