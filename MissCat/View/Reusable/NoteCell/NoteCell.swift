@@ -185,7 +185,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         // Renote With Comment
         
         output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { renoteModel in
-            self.commentRenoteView = self.commentRenoteView?.shapeCell(item: renoteModel)
+            self.commentRenoteView = self.commentRenoteView?.shapeCell(item: renoteModel) // MEMO: やっぱりここが重いっぽい
         }).disposed(by: disposeBag)
         
         output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).map { _ in false }.drive(innerRenoteDisplay.rx.isHidden).disposed(by: disposeBag)

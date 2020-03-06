@@ -26,7 +26,7 @@ extension NoteModel {
 //
         let emojis = (post.emojis ?? []) + (user.emojis ?? []) // 絵文字情報を統合する
         
-        var cellModel = NoteCell.Model(noteId: post.id,
+        let cellModel = NoteCell.Model(noteId: post.id,
                                        iconImageUrl: user.avatarUrl,
                                        userId: user.id,
                                        displayName: displayName ?? "",
@@ -40,7 +40,7 @@ extension NoteModel {
                                        myReaction: post.myReaction,
                                        files: post.files?.compactMap { $0 } ?? [],
                                        emojis: emojis.compactMap { $0 },
-                                       commentRNTarget: withRN ? post.renote ?? nil : nil,
+                                       commentRNTarget: withRN ? post.renote?.getNoteCellModel(onOtherNote: true) ?? nil : nil,
                                        onOtherNote: onOtherNote,
                                        poll: post.poll)
         

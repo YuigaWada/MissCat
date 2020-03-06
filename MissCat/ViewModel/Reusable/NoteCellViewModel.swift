@@ -220,6 +220,7 @@ class NoteCellViewModel: ViewModelType {
     
     private func prepareCommentRenote(_ item: NoteCell.Model) {
         guard let renoteCellModel = item.commentRNTarget?.getNoteCellModel(onOtherNote: true) else { return }
+        guard let renoteCellModel = item.commentRNTarget else { return }
         output.commentRenoteTarget.accept(renoteCellModel)
     }
     
