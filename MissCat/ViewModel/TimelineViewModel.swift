@@ -164,6 +164,8 @@ class TimelineViewModel: ViewModelType {
                 cellsModel[targetIndex].myReaction = rawReaction
             }
             
+            cellsModel[targetIndex].shapedReactions = cellsModel[targetIndex].getReactions()
+            
             updateNotes(new: cellsModel)
             updateNotesForcibly(index: targetIndex)
         }
