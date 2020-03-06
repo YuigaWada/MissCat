@@ -4,7 +4,7 @@ plugin 'cocoapods-binary'
 target 'MissCat' do
 
 pod 'MisskeyKit'
-pod 'Starscream'
+pod 'Starscream','3.1.1'
 pod 'RxSwift', '~> 5', :binary => true
 pod 'RxCocoa', '~> 5', :binary => true
 pod 'RxDataSources', :binary => true
