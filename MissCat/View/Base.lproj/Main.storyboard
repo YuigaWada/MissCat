@@ -171,31 +171,40 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="14x-13-bDJ">
-                                <rect key="frame" x="0.0" y="64" width="414" height="1"/>
+                                <rect key="frame" x="0.0" y="114" width="414" height="1"/>
                                 <color key="backgroundColor" red="0.92549019610000005" green="0.92549019610000005" blue="0.92549019610000005" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="1" id="s8m-5u-MgI"/>
                                 </constraints>
                             </view>
-                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" spacing="50" translatesAutoresizingMaskIntoConstraints="NO" id="EhL-Hf-yaQ">
-                                <rect key="frame" x="0.0" y="114" width="414" height="0.0"/>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" spacing="30" translatesAutoresizingMaskIntoConstraints="NO" id="EhL-Hf-yaQ">
+                                <rect key="frame" x="23" y="154" width="368" height="0.0"/>
                                 <constraints>
                                     <constraint firstAttribute="height" id="WB5-K3-2bI"/>
                                 </constraints>
                             </stackView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Panel Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="4Bp-1Y-Aqi">
+                                <rect key="frame" x="25" y="73" width="80" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
-                            <constraint firstItem="14x-13-bDJ" firstAttribute="top" secondItem="pkb-bg-ipF" secondAttribute="top" constant="20" id="JBH-ZI-SbG"/>
+                            <constraint firstItem="4Bp-1Y-Aqi" firstAttribute="leading" secondItem="pkb-bg-ipF" secondAttribute="leading" constant="25" id="Fou-gP-Qid"/>
+                            <constraint firstItem="14x-13-bDJ" firstAttribute="top" secondItem="pkb-bg-ipF" secondAttribute="top" constant="70" id="JBH-ZI-SbG"/>
                             <constraint firstItem="14x-13-bDJ" firstAttribute="leading" secondItem="GAG-8j-7Jj" secondAttribute="leading" id="Xxj-rm-HEb"/>
-                            <constraint firstItem="EhL-Hf-yaQ" firstAttribute="leading" secondItem="pkb-bg-ipF" secondAttribute="leading" id="gkm-JI-m1P"/>
+                            <constraint firstItem="EhL-Hf-yaQ" firstAttribute="leading" secondItem="pkb-bg-ipF" secondAttribute="leading" constant="23" id="gkm-JI-m1P"/>
                             <constraint firstAttribute="trailing" secondItem="14x-13-bDJ" secondAttribute="trailing" id="oWl-1I-VcQ"/>
-                            <constraint firstAttribute="trailing" secondItem="EhL-Hf-yaQ" secondAttribute="trailing" id="ulT-L7-j27"/>
-                            <constraint firstItem="EhL-Hf-yaQ" firstAttribute="top" secondItem="14x-13-bDJ" secondAttribute="top" constant="50" id="xzl-wy-e8w"/>
+                            <constraint firstItem="14x-13-bDJ" firstAttribute="top" secondItem="4Bp-1Y-Aqi" secondAttribute="bottom" constant="20" id="qun-n9-TII"/>
+                            <constraint firstAttribute="trailing" secondItem="EhL-Hf-yaQ" secondAttribute="trailing" constant="23" id="ulT-L7-j27"/>
+                            <constraint firstItem="EhL-Hf-yaQ" firstAttribute="top" secondItem="14x-13-bDJ" secondAttribute="top" constant="40" id="xzl-wy-e8w"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="pkb-bg-ipF"/>
                     </view>
                     <connections>
+                        <outlet property="panelTitleLabel" destination="4Bp-1Y-Aqi" id="S6n-UI-ojJ"/>
                         <outlet property="stackView" destination="EhL-Hf-yaQ" id="geV-0R-V0Q"/>
                         <outlet property="stackViewHeightContraint" destination="WB5-K3-2bI" id="RE8-R9-Ucy"/>
                     </connections>

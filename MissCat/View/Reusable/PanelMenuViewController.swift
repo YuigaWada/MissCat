@@ -10,13 +10,19 @@ import RxSwift
 import UIKit
 
 public class PanelMenuViewController: UIViewController {
+    @IBOutlet weak var panelTitleLabel: UILabel!
     @IBOutlet weak var stackView: UIStackView!
     @IBOutlet weak var stackViewHeightContraint: NSLayoutConstraint!
     
     private var items: [MenuItem] = []
+    private var panelTitle: String = ""
     private var disposeBag = DisposeBag()
     
     public var tapTrigger: Observable<Int> = Observable.of(-1) // タップされたらどの選択肢がおされたのか(=order)を流す
+    
+    public func setPanelTitle(_ title: String) {
+        panelTitle = title
+    }
     
     public func setupMenu(items: [MenuItem]) {
         self.items = items
@@ -24,14 +30,24 @@ public class PanelMenuViewController: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        panelTitleLabel.text = panelTitle
         
         guard stackView.arrangedSubviews.count == 0 else { return }
         
-        stackViewHeightContraint.constant = CGFloat((items.count - 1) * 50)
-        items.forEach { item in
-            let itemView = self.getMenuItemView(with: item)
+        stackViewHeightContraint.constant = CGFloat((itemViews.count - 1) * 30 + itemViews.count * 50)
+        itemViews.forEach { itemView in
+            
+            stackView.translatesAutoresizingMaskIntoConstraints = false
             stackView.addArrangedSubview(itemView)
-            stackViewHeightContraint.constant += itemView.frame.height
+            stackView.addConstraints([
+                NSLayoutConstraint(item: itemView,
+                                   attribute: .height,
+                                   relatedBy: .equal,
+                                   toItem: stackView,
+                                   attribute: .height,
+                                   multiplier: 0,
+                                   constant: 50)
+            ])
         }
     }
     
@@ -40,12 +56,18 @@ public class PanelMenuViewController: UIViewController {
     private func getMenuItemView(with item: MenuItem) -> UIView {
         let menuView = UIView()
         
+//        menuView.layer.borderColor = UIColor.lightGray.cgColor
+//        menuView.layer.cornerRadius = 10
+//        menuView.layer.borderWidth = 1
+        
         // label: アイコン
         let iconLabel = UILabel()
         iconLabel.text = item.awesomeIcon
         iconLabel.font = .awesomeSolid(fontSize: 25.0)
         iconLabel.textColor = .lightGray
         
+        iconLabel.sizeToFit()
+        iconLabel.isUserInteractionEnabled = true
         iconLabel.translatesAutoresizingMaskIntoConstraints = false
         menuView.addSubview(iconLabel)
         
@@ -55,6 +77,8 @@ public class PanelMenuViewController: UIViewController {
         titleLabel.font = .systemFont(ofSize: 20.0)
         titleLabel.textColor = .lightGray
         
+        titleLabel.sizeToFit()
+        titleLabel.isUserInteractionEnabled = true
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         menuView.addSubview(titleLabel)
         
@@ -74,7 +98,7 @@ public class PanelMenuViewController: UIViewController {
                                toItem: menuView,
                                attribute: .height,
                                multiplier: 0,
-                               constant: 25),
+                               constant: 35),
             
             NSLayoutConstraint(item: iconLabel,
                                attribute: .left,
@@ -110,8 +134,6 @@ public class PanelMenuViewController: UIViewController {
                                multiplier: 1.0,
                                constant: 0)
         ])
-        
-        
         
         setupTapGesture(to: menuView, tappedItem: item)
         return menuView

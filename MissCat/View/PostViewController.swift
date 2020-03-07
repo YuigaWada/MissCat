@@ -8,6 +8,7 @@
 
 import AVKit
 import iOSPhotoEditor
+import RxCocoa
 import RxDataSources
 import RxSwift
 import UIKit
@@ -197,8 +198,9 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "投稿を閲覧注意にする", awesomeIcon: "sticky-note", order: 0),
                                                              .init(title: "画像を閲覧注意にする", awesomeIcon: "image", order: 1)]
         
+        panelMenu.setPanelTitle("NSFWの設定")
         panelMenu.setupMenu(items: menuItems)
-        panelMenu.tapTrigger.subscribe(onNext: { order in // どのメニューがタップされたのか
+        panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
             guard order >= 0 else { return }
             panelMenu.dismiss(animated: true, completion: nil)
         }).disposed(by: disposeBag)
