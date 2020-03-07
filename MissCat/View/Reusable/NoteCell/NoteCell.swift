@@ -286,7 +286,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         innerRenoteDisplay.isHidden = true
     }
     
-    public func setupFileImage(_ image: UIImage, originalUrl: String, index: Int, isVideo: Bool) {
+    public func setupFileImage(_ image: UIImage, originalUrl: String, index: Int, isVideo: Bool, isSensitive: Bool) {
         // self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
         
         DispatchQueue.main.async {
@@ -304,8 +304,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             imageView.backgroundColor = .clear
             imageView.image = image
             imageView.isHidden = false
-            
-            if isVideo { self.setPlayIconImage(on: imageView) } // 再生アイコンをaddする
+            imageView.setPlayIconImage(hide: !isVideo)
+            imageView.setNSFW(hide: !isSensitive)
             
             imageView.layoutIfNeeded()
             self.mainStackView.setNeedsLayout()
@@ -363,7 +363,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
                 setupFileImage(file.thumbnail,
                                originalUrl: file.originalUrl,
                                index: index,
-                               isVideo: file.type == .Video)
+                               isVideo: file.type == .Video,
+                               isSensitive: file.isSensitive)
             }
         } else { // キャッシュが存在しない場合
             let files = item.files
@@ -385,11 +386,17 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
                     thumbnailUrl.toUIImage { image in
                         guard let image = image else { return }
                         
-                        Cache.shared.saveFiles(noteId: noteId, image: image, originalUrl: original, type: fileType)
+                        Cache.shared.saveFiles(noteId: noteId,
+                                               image: image,
+                                               originalUrl: original,
+                                               type: fileType,
+                                               isSensitive: file.isSensitive ?? false)
+                        
                         self.setupFileImage(image,
                                             originalUrl: original,
                                             index: index,
-                                            isVideo: fileType == .Video)
+                                            isVideo: fileType == .Video,
+                                            isSensitive: file.isSensitive ?? true)
                     }
                 }
             }
@@ -419,7 +426,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         guard fileImageView.arrangedSubviews.count == 0 else { return }
         
         for _ in 0 ..< 4 {
-            let imageView = UIImageView()
+            let imageView = FileView()
             
             imageView.contentMode = .scaleAspectFill
             imageView.clipsToBounds = true
@@ -435,9 +442,9 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         }
     }
     
-    private func getFileView(_ index: Int) -> UIImageView? {
+    private func getFileView(_ index: Int) -> FileView? {
         guard index < fileImageView.arrangedSubviews.count,
-            let imageView = fileImageView.arrangedSubviews[index] as? UIImageView else { return nil }
+            let imageView = fileImageView.arrangedSubviews[index] as? FileView else { return nil }
         
         return imageView
     }
@@ -467,60 +474,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         }
         
         return cell
-    }
-    
-    private func setPlayIconImage(on parentView: UIView) {
-        guard let playIconImage = UIImage(named: "play") else { return }
-        let playIconImageView = UIImageView(image: playIconImage)
-        
-        let edgeMultiplier: CGFloat = 0.4
-        
-        parentView.layoutIfNeeded()
-        let parentFrame = parentView.frame
-        let edge = min(parentFrame.width, parentFrame.height) * edgeMultiplier
-        
-        playIconImageView.center = parentView.center
-        playIconImageView.frame = CGRect(x: playIconImageView.frame.origin.x,
-                                         y: playIconImageView.frame.origin.y,
-                                         width: edge,
-                                         height: edge)
-        
-        playIconImageView.translatesAutoresizingMaskIntoConstraints = false
-        parentView.addSubview(playIconImageView)
-        
-        parentView.addConstraints([
-            NSLayoutConstraint(item: playIconImageView,
-                               attribute: .width,
-                               relatedBy: .equal,
-                               toItem: parentView,
-                               attribute: .width,
-                               multiplier: 0,
-                               constant: edge),
-            
-            NSLayoutConstraint(item: playIconImageView,
-                               attribute: .height,
-                               relatedBy: .equal,
-                               toItem: parentView,
-                               attribute: .height,
-                               multiplier: 0,
-                               constant: edge),
-            
-            NSLayoutConstraint(item: playIconImageView,
-                               attribute: .centerX,
-                               relatedBy: .equal,
-                               toItem: parentView,
-                               attribute: .centerX,
-                               multiplier: 1.0,
-                               constant: 0),
-            
-            NSLayoutConstraint(item: playIconImageView,
-                               attribute: .centerY,
-                               relatedBy: .equal,
-                               toItem: parentView,
-                               attribute: .centerY,
-                               multiplier: 1.0,
-                               constant: 0)
-        ])
     }
     
     // MARK: 引用RN
@@ -892,5 +845,154 @@ extension NoteCell {
         case Video
         case Audio
         case Unknown
+    }
+    
+    public class FileView: UIImageView {
+        private var playIconImageView: UIImageView?
+        private var nsfwCover: UIView?
+        
+        public func setPlayIconImage(hide: Bool = false) {
+            let parentView = self
+            guard playIconImageView == nil, !hide else {
+                playIconImageView?.isHidden = hide; return
+            }
+            
+            guard let playIconImage = UIImage(named: "play") else { return }
+            let playIconImageView = UIImageView(image: playIconImage)
+            
+            let edgeMultiplier: CGFloat = 0.4
+            
+            parentView.layoutIfNeeded()
+            let parentFrame = parentView.frame
+            let edge = min(parentFrame.width, parentFrame.height) * edgeMultiplier
+            
+            playIconImageView.center = parentView.center
+            playIconImageView.frame = CGRect(x: playIconImageView.frame.origin.x,
+                                             y: playIconImageView.frame.origin.y,
+                                             width: edge,
+                                             height: edge)
+            
+            playIconImageView.translatesAutoresizingMaskIntoConstraints = false
+            parentView.addSubview(playIconImageView)
+            
+            parentView.addConstraints([
+                NSLayoutConstraint(item: playIconImageView,
+                                   attribute: .width,
+                                   relatedBy: .equal,
+                                   toItem: parentView,
+                                   attribute: .width,
+                                   multiplier: 0,
+                                   constant: edge),
+                
+                NSLayoutConstraint(item: playIconImageView,
+                                   attribute: .height,
+                                   relatedBy: .equal,
+                                   toItem: parentView,
+                                   attribute: .height,
+                                   multiplier: 0,
+                                   constant: edge),
+                
+                NSLayoutConstraint(item: playIconImageView,
+                                   attribute: .centerX,
+                                   relatedBy: .equal,
+                                   toItem: parentView,
+                                   attribute: .centerX,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: playIconImageView,
+                                   attribute: .centerY,
+                                   relatedBy: .equal,
+                                   toItem: parentView,
+                                   attribute: .centerY,
+                                   multiplier: 1.0,
+                                   constant: 0)
+            ])
+            
+            self.playIconImageView = playIconImageView
+        }
+        
+        public func setNSFW(hide: Bool = false) {
+            guard nsfwCover == nil, !hide else {
+                nsfwCover?.isHidden = hide; return
+            }
+            
+            let parentView = self
+            parentView.layoutIfNeeded()
+            
+            // coverView
+            let coverView = UIView()
+            let parentFrame = parentView.frame
+            coverView.backgroundColor = .black
+            coverView.frame = parentFrame
+            coverView.translatesAutoresizingMaskIntoConstraints = false
+            parentView.addSubview(coverView)
+            
+            // label: 閲覧注意 タップで表示
+            let nsfwLabel = UILabel()
+            nsfwLabel.text = "⚠閲覧注意\nタップで表示"
+            nsfwLabel.center = parentView.center
+            nsfwLabel.textAlignment = .center
+            nsfwLabel.numberOfLines = 2
+            nsfwLabel.textColor = .init(hex: "FFFF8F")
+            
+            nsfwLabel.translatesAutoresizingMaskIntoConstraints = false
+            coverView.addSubview(nsfwLabel)
+            
+            // AutoLayout
+            parentView.addConstraints([
+                NSLayoutConstraint(item: coverView,
+                                   attribute: .width,
+                                   relatedBy: .equal,
+                                   toItem: parentView,
+                                   attribute: .width,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: coverView,
+                                   attribute: .height,
+                                   relatedBy: .equal,
+                                   toItem: parentView,
+                                   attribute: .height,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: coverView,
+                                   attribute: .centerX,
+                                   relatedBy: .equal,
+                                   toItem: parentView,
+                                   attribute: .centerX,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: coverView,
+                                   attribute: .centerY,
+                                   relatedBy: .equal,
+                                   toItem: parentView,
+                                   attribute: .centerY,
+                                   multiplier: 1.0,
+                                   constant: 0)
+            ])
+            
+            parentView.addConstraints([
+                NSLayoutConstraint(item: nsfwLabel,
+                                   attribute: .centerX,
+                                   relatedBy: .equal,
+                                   toItem: parentView,
+                                   attribute: .centerX,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: nsfwLabel,
+                                   attribute: .centerY,
+                                   relatedBy: .equal,
+                                   toItem: parentView,
+                                   attribute: .centerY,
+                                   multiplier: 1.0,
+                                   constant: 0)
+            ])
+            
+            nsfwCover = coverView
+        }
     }
 }
