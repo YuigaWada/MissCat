@@ -162,6 +162,48 @@
             </objects>
             <point key="canvasLocation" x="1030.4347826086957" y="128.57142857142856"/>
         </scene>
+        <!--Panel Menu View Controller-->
+        <scene sceneID="Oaw-eN-Pnl">
+            <objects>
+                <viewController storyboardIdentifier="panel-menu" id="jf3-Yp-MQh" customClass="PanelMenuViewController" customModule="MissCat" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="GAG-8j-7Jj">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="14x-13-bDJ">
+                                <rect key="frame" x="0.0" y="64" width="414" height="1"/>
+                                <color key="backgroundColor" red="0.92549019610000005" green="0.92549019610000005" blue="0.92549019610000005" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="1" id="s8m-5u-MgI"/>
+                                </constraints>
+                            </view>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" spacing="50" translatesAutoresizingMaskIntoConstraints="NO" id="EhL-Hf-yaQ">
+                                <rect key="frame" x="0.0" y="114" width="414" height="0.0"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" id="WB5-K3-2bI"/>
+                                </constraints>
+                            </stackView>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="14x-13-bDJ" firstAttribute="top" secondItem="pkb-bg-ipF" secondAttribute="top" constant="20" id="JBH-ZI-SbG"/>
+                            <constraint firstItem="14x-13-bDJ" firstAttribute="leading" secondItem="GAG-8j-7Jj" secondAttribute="leading" id="Xxj-rm-HEb"/>
+                            <constraint firstItem="EhL-Hf-yaQ" firstAttribute="leading" secondItem="pkb-bg-ipF" secondAttribute="leading" id="gkm-JI-m1P"/>
+                            <constraint firstAttribute="trailing" secondItem="14x-13-bDJ" secondAttribute="trailing" id="oWl-1I-VcQ"/>
+                            <constraint firstAttribute="trailing" secondItem="EhL-Hf-yaQ" secondAttribute="trailing" id="ulT-L7-j27"/>
+                            <constraint firstItem="EhL-Hf-yaQ" firstAttribute="top" secondItem="14x-13-bDJ" secondAttribute="top" constant="50" id="xzl-wy-e8w"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="pkb-bg-ipF"/>
+                    </view>
+                    <connections>
+                        <outlet property="stackView" destination="EhL-Hf-yaQ" id="geV-0R-V0Q"/>
+                        <outlet property="stackViewHeightContraint" destination="WB5-K3-2bI" id="RE8-R9-Ucy"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="1Wf-k6-HrO" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1928" y="127"/>
+        </scene>
         <!--Home View Controller-->
         <scene sceneID="zwd-qG-Y2W">
             <objects>
