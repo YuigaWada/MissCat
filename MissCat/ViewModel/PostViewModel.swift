@@ -96,7 +96,7 @@ class PostViewModel: ViewModelType {
     
     // 画像をスタックさせておいて、アップロードは直前に
     public func stackFile(original: UIImage, edited: UIImage) {
-        guard hasVideoAttachment else { return } // 写真と動画は共存させないように
+        guard !hasVideoAttachment else { return } // 写真と動画は共存させないように
         let targetImage = AttachmentFile(originalImage: original, image: edited, order: attachmentFiles.count + 1)
         
         attachmentFiles.append(targetImage)
