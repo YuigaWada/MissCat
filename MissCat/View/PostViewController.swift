@@ -141,7 +141,10 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         nsfwButton.rx.tap.subscribe { _ in self.showNSFWSettings() }.disposed(by: disposeBag)
         emojiButton.rx.tap.subscribe { _ in self.showReactionGen() }.disposed(by: disposeBag)
         
-        toolBar.setItems([cameraButton, imageButton, pollButton, locationButton, nsfwButton,
+        toolBar.setItems([cameraButton, imageButton,
+                          // 次アップデートで機能追加する
+                          // pollButton, locationButton,
+                          nsfwButton,
                           flexibleItem, flexibleItem,
                           emojiButton, counter], animated: true)
         toolBar.sizeToFit()
