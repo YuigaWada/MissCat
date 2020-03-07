@@ -923,10 +923,15 @@ extension NoteCell {
             // coverView
             let coverView = UIView()
             let parentFrame = parentView.frame
-            coverView.backgroundColor = .black
+            coverView.backgroundColor = .clear
             coverView.frame = parentFrame
             coverView.translatesAutoresizingMaskIntoConstraints = false
             parentView.addSubview(coverView)
+            
+            // すりガラス
+            let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
+            blurView.translatesAutoresizingMaskIntoConstraints = false
+            coverView.addSubview(blurView)
             
             // label: 閲覧注意 タップで表示
             let nsfwLabel = UILabel()
@@ -969,6 +974,40 @@ extension NoteCell {
                                    attribute: .centerY,
                                    relatedBy: .equal,
                                    toItem: parentView,
+                                   attribute: .centerY,
+                                   multiplier: 1.0,
+                                   constant: 0)
+            ])
+            
+            coverView.addConstraints([
+                NSLayoutConstraint(item: blurView,
+                                   attribute: .width,
+                                   relatedBy: .equal,
+                                   toItem: coverView,
+                                   attribute: .width,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: blurView,
+                                   attribute: .height,
+                                   relatedBy: .equal,
+                                   toItem: coverView,
+                                   attribute: .height,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: blurView,
+                                   attribute: .centerX,
+                                   relatedBy: .equal,
+                                   toItem: coverView,
+                                   attribute: .centerX,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: blurView,
+                                   attribute: .centerY,
+                                   relatedBy: .equal,
+                                   toItem: coverView,
                                    attribute: .centerY,
                                    multiplier: 1.0,
                                    constant: 0)
