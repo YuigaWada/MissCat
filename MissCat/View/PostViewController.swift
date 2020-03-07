@@ -127,6 +127,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         let imageButton = UIBarButtonItem(title: "images", style: .plain, target: self, action: nil)
         let pollButton = UIBarButtonItem(title: "poll", style: .plain, target: self, action: nil)
         let locationButton = UIBarButtonItem(title: "map-marker-alt", style: .plain, target: self, action: nil)
+        let nsfwButton = UIBarButtonItem(title: "eye", style: .plain, target: self, action: nil)
         let emojiButton = UIBarButtonItem(title: "laugh-squint", style: .plain, target: self, action: nil)
         
         counter.setTitleTextAttributes([NSAttributedString.Key.font: UIFont(name: "Helvetica", size: 14.0)!], for: .normal)
@@ -136,14 +137,15 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         imageButton.rx.tap.subscribe { _ in self.pickImage(type: .photoLibrary) }.disposed(by: disposeBag)
         pollButton.rx.tap.subscribe { _ in }.disposed(by: disposeBag)
         locationButton.rx.tap.subscribe { _ in self.viewModel.getLocation() }.disposed(by: disposeBag)
+        nsfwButton.rx.tap.subscribe { _ in self.showNSFWSettings() }.disposed(by: disposeBag)
         emojiButton.rx.tap.subscribe { _ in self.showReactionGen() }.disposed(by: disposeBag)
         
-        toolBar.setItems([cameraButton, imageButton, pollButton, locationButton,
+        toolBar.setItems([cameraButton, imageButton, pollButton, locationButton, nsfwButton,
                           flexibleItem, flexibleItem,
                           emojiButton, counter], animated: true)
         toolBar.sizeToFit()
         
-        change2AwesomeFont(buttons: [cameraButton, imageButton, pollButton, locationButton, emojiButton])
+        change2AwesomeFont(buttons: [cameraButton, imageButton, pollButton, locationButton, nsfwButton, emojiButton])
         mainTextView.inputAccessoryView = toolBar
     }
     
@@ -188,6 +190,20 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         }).disposed(by: disposeBag)
         
         presentWithSemiModal(reactionGen, animated: true, completion: nil)
+    }
+    
+    private func showNSFWSettings() {
+        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
+        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "投稿を閲覧注意にする", awesomeIcon: "sticky-note", order: 0),
+                                                             .init(title: "画像を閲覧注意にする", awesomeIcon: "image", order: 1)]
+        
+        panelMenu.setupMenu(items: menuItems)
+        panelMenu.tapTrigger.subscribe(onNext: { order in // どのメニューがタップされたのか
+            guard order >= 0 else { return }
+            panelMenu.dismiss(animated: true, completion: nil)
+        }).disposed(by: disposeBag)
+        
+        presentWithSemiModal(panelMenu, animated: true, completion: nil)
     }
     
     private func getViewController(name: String) -> UIViewController {
