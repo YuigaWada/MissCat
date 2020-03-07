@@ -14,8 +14,8 @@ public class PanelMenuViewController: UIViewController {
     @IBOutlet weak var stackView: UIStackView!
     @IBOutlet weak var stackViewHeightContraint: NSLayoutConstraint!
     
-    private var items: [MenuItem] = []
     private var panelTitle: String = ""
+    private var itemViews: [UIView] = []
     private var disposeBag = DisposeBag()
     
     public var tapTrigger: Observable<Int> = Observable.of(-1) // タップされたらどの選択肢がおされたのか(=order)を流す
@@ -25,7 +25,9 @@ public class PanelMenuViewController: UIViewController {
     }
     
     public func setupMenu(items: [MenuItem]) {
-        self.items = items
+        items.forEach { item in
+            itemViews.append(self.getMenuItemView(with: item))
+        }
     }
     
     public override func viewWillAppear(_ animated: Bool) {
