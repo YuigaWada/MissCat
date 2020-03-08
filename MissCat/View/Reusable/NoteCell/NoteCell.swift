@@ -111,6 +111,9 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         super.layoutSubviews()
         setupView()
         setupComponents()
+        
+        nameTextView.transformText() // TODO: せっかくisHiddenがどうこうやってたのが反映されていないような気がする
+        noteView.transformText()
     }
     
     private lazy var setupView: (() -> Void) = { // 必ず一回しか読み込まれない
@@ -209,6 +212,10 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         // general
         output.ago.asDriver(onErrorDriveWith: Driver.empty()).drive(agoLabel.rx.text).disposed(by: disposeBag)
         output.name.asDriver(onErrorDriveWith: Driver.empty()).drive(nameTextView.rx.attributedText).disposed(by: disposeBag)
+        
+//        output.name.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { _ in
+//            self.nameTextView.showMFM()
+//        }).disposed(by: disposeBag)
         
         output.shapedNote.asDriver(onErrorDriveWith: Driver.empty()).drive(noteView.rx.attributedText).disposed(by: disposeBag)
         output.shapedNote.asDriver(onErrorDriveWith: Driver.empty()).map { $0 == nil }.drive(noteView.rx.isHidden).disposed(by: disposeBag) // 画像onlyや投票onlyの場合、noteが存在しない場合がある→ noteViewを非表示にする
