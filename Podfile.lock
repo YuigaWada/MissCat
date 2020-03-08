@@ -29,7 +29,6 @@ PODS:
   - SwiftFormat/CLI (0.44.4)
   - SwiftyGif (5.2.0)
   - XLPagerTabStrip (9.0.0)
-  - YanagiText (1.0)
 
 DEPENDENCIES:
   - Agrume
@@ -47,7 +46,6 @@ DEPENDENCIES:
   - SVGKit (from `https://github.com/SVGKit/SVGKit.git`, branch `3.x`)
   - SwiftFormat/CLI
   - XLPagerTabStrip
-  - YanagiText
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
@@ -69,7 +67,6 @@ SPEC REPOS:
     - SwiftFormat
     - SwiftyGif
     - XLPagerTabStrip
-    - YanagiText
 
 EXTERNAL SOURCES:
   SVGKit:
@@ -101,8 +98,7 @@ SPEC CHECKSUMS:
   SwiftFormat: 8b3c6b69454305a61c221355095f62dacc0811bf
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
-  YanagiText: 0771fa68142335a34a1f967334ee0e12f36b428b
 
-PODFILE CHECKSUM: 7ef7017c3d83b02a0cbfe7370bf2f31f05cd0541
+PODFILE CHECKSUM: c01b1b9d92c8fcda00f95673d6face1a0978332f
 
 COCOAPODS: 1.7.1

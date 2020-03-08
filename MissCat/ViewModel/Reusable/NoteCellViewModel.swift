@@ -10,7 +10,6 @@ import MisskeyKit
 import RxCocoa
 import RxSwift
 import UIKit
-import YanagiText
 
 class NoteCellViewModel: ViewModelType {
     // MARK: I/O

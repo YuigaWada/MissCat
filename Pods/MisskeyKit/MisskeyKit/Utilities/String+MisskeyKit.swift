@@ -6,13 +6,13 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-#if canImport(CryptoKit)
-import CryptoKit
-#elseif canImport(CommonCrypto)
-import CommonCrypto
-#else
-#warning("No crypto import.")
-#endif
+//#if canImport(CryptoKit)
+//import CryptoKit
+//#elseif canImport(CommonCrypto)
+//import CommonCrypto
+//#else
+//#warning("No crypto import.")
+//#endif
 import Foundation
 
 internal extension String {
@@ -29,10 +29,11 @@ internal extension String {
     }
     
     func sha256()-> String? {
-        if #available(iOS 13.0, *) {
-            guard let stringData = self.data(using: String.Encoding.utf8) else { return nil }
-            return SHA256.hash(data: stringData).map { String(format: "%02hhx", $0) }.joined()
-        } else {
+//        if #available(iOS 13.0, *) {
+////            guard let stringData = self.data(using: String.Encoding.utf8) else { return nil }
+////            return SHA256.hash(data: stringData).map { String(format: "%02hhx", $0) }.joined()
+//
+//        } else {
             // Fallback on earlier versions
             guard let stringData = self.data(using: String.Encoding.utf8) else { return nil }
             var digest = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
@@ -40,7 +41,7 @@ internal extension String {
                 _ = CC_SHA256(bytes.baseAddress, CC_LONG(self.count), &digest)
             }
             return digest.makeIterator().map { String(format: "%02x", $0) }.joined()
-        }
+//        }
     }
     
     

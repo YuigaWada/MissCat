@@ -7,7 +7,6 @@
 //
 
 import MisskeyKit
-import YanagiText
 
 public class NotificationCellModel {
     public func shapeNote(identifier: String, note: String, cache: Cache.NoteOnYanagi?, isReply: Bool, yanagi: YanagiText, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {

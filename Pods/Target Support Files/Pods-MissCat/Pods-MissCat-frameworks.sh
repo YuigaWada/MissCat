@@ -206,7 +206,6 @@ if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${PODS_ROOT}/SwiftyGif/SwiftyGif.framework"
   install_dsym "${PODS_ROOT}/SwiftyGif/SwiftyGif.framework.dSYM"
   install_framework "${BUILT_PRODUCTS_DIR}/XLPagerTabStrip/XLPagerTabStrip.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/YanagiText/YanagiText.framework"
   install_framework "${PODS_ROOT}/iOSPhotoEditor/iOSPhotoEditor.framework"
   install_dsym "${PODS_ROOT}/iOSPhotoEditor/iOSPhotoEditor.framework.dSYM"
 fi
@@ -241,7 +240,6 @@ if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${PODS_ROOT}/SwiftyGif/SwiftyGif.framework"
   install_dsym "${PODS_ROOT}/SwiftyGif/SwiftyGif.framework.dSYM"
   install_framework "${BUILT_PRODUCTS_DIR}/XLPagerTabStrip/XLPagerTabStrip.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/YanagiText/YanagiText.framework"
   install_framework "${PODS_ROOT}/iOSPhotoEditor/iOSPhotoEditor.framework"
   install_dsym "${PODS_ROOT}/iOSPhotoEditor/iOSPhotoEditor.framework.dSYM"
 fi

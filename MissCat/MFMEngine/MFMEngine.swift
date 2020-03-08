@@ -10,7 +10,6 @@ import Gifu
 import MisskeyKit
 import SVGKit
 import UIKit
-import YanagiText
 
 // ** MFM実装のためのクラス **
 

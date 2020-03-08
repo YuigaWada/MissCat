@@ -9,7 +9,6 @@
 import Foundation
 import MisskeyKit
 import UIKit
-import YanagiText
 
 public typealias Attachments = [NSTextAttachment: YanagiText.Attachment]
 public class Cache {

@@ -8,7 +8,6 @@
 
 import MisskeyKit
 import UIKit
-import YanagiText
 
 public class NotificationCellViewModel {
     private var model = NotificationCellModel()

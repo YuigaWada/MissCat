@@ -8,7 +8,6 @@
 
 import Foundation
 import MisskeyKit
-import YanagiText
 
 public class NoteCellModel {
     public func registerReaction(noteId: String, reaction: String) {

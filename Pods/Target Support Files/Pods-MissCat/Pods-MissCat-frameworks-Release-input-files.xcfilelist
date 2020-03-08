@@ -29,6 +29,5 @@ ${BUILT_PRODUCTS_DIR}/Starscream/Starscream.framework
 ${PODS_ROOT}/SwiftyGif/SwiftyGif.framework
 ${PODS_ROOT}/SwiftyGif/SwiftyGif.framework.dSYM
 ${BUILT_PRODUCTS_DIR}/XLPagerTabStrip/XLPagerTabStrip.framework
-${BUILT_PRODUCTS_DIR}/YanagiText/YanagiText.framework
 ${PODS_ROOT}/iOSPhotoEditor/iOSPhotoEditor.framework
 ${PODS_ROOT}/iOSPhotoEditor/iOSPhotoEditor.framework.dSYM
