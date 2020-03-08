@@ -269,10 +269,64 @@
             </objects>
             <point key="canvasLocation" x="-810.14492753623199" y="920.75892857142856"/>
         </scene>
+        <!--Auth Web View Controller-->
+        <scene sceneID="Qpg-ie-gCN">
+            <objects>
+                <viewController storyboardIdentifier="auth" id="UBj-7p-fZ3" customClass="AuthWebViewController" customModule="MissCat" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Btl-eC-80C">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <wkWebView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="QeJ-DV-qYT">
+                                <rect key="frame" x="0.0" y="44" width="414" height="818"/>
+                                <color key="backgroundColor" red="0.36078431370000003" green="0.38823529410000002" blue="0.4039215686" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <wkWebViewConfiguration key="configuration">
+                                    <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
+                                    <wkPreferences key="preferences"/>
+                                </wkWebViewConfiguration>
+                            </wkWebView>
+                            <button opaque="NO" alpha="0.80000000000000004" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4Aa-vA-TSX">
+                                <rect key="frame" x="20" y="68" width="40" height="40"/>
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="40" id="QP9-Cp-yaw"/>
+                                    <constraint firstAttribute="height" constant="40" id="yi0-sU-ad8"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
+                                <state key="normal" title="&lt;">
+                                    <color key="titleColor" red="0.92549019610000005" green="0.92549019610000005" blue="0.92549019610000005" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                </state>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="5"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="QeJ-DV-qYT" firstAttribute="bottom" secondItem="Zu7-A8-1hS" secondAttribute="bottom" id="5D2-0z-uPX"/>
+                            <constraint firstItem="QeJ-DV-qYT" firstAttribute="trailing" secondItem="Zu7-A8-1hS" secondAttribute="trailing" id="Hy7-Lg-1mq"/>
+                            <constraint firstItem="4Aa-vA-TSX" firstAttribute="top" secondItem="Zu7-A8-1hS" secondAttribute="top" constant="24" id="J7U-4D-Efs"/>
+                            <constraint firstItem="QeJ-DV-qYT" firstAttribute="top" secondItem="Zu7-A8-1hS" secondAttribute="top" id="cIq-1B-2bK"/>
+                            <constraint firstItem="QeJ-DV-qYT" firstAttribute="leading" secondItem="Zu7-A8-1hS" secondAttribute="leading" id="mZZ-ra-Pxy"/>
+                            <constraint firstItem="4Aa-vA-TSX" firstAttribute="leading" secondItem="Zu7-A8-1hS" secondAttribute="leading" constant="20" id="sQv-s7-ONd"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="Zu7-A8-1hS"/>
+                    </view>
+                    <connections>
+                        <outlet property="returnButton" destination="4Aa-vA-TSX" id="hSN-fR-67o"/>
+                        <outlet property="webView" destination="QeJ-DV-qYT" id="R88-2j-ywl"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="kIV-wm-zt3" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-1781.1594202898552" y="1792.6339285714284"/>
+        </scene>
         <!--Start View Controller-->
         <scene sceneID="GYd-UC-yxA">
             <objects>
-                <viewController id="U0x-WJ-4mu" customClass="StartViewController" customModule="MissCat" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="start" id="U0x-WJ-4mu" customClass="StartViewController" customModule="MissCat" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="kI3-zJ-mUI">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -284,9 +338,9 @@
                                 </constraints>
                             </imageView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fxD-xe-AX4">
-                                <rect key="frame" x="124.5" y="660" width="165" height="48"/>
+                                <rect key="frame" x="20" y="660" width="165" height="48"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <state key="normal" title="Misskeyを始める">
+                                <state key="normal" title="新規登録">
                                     <color key="titleColor" red="0.16862745100000001" green="0.63921568630000003" blue="0.73725490199999999" alpha="1" colorSpace="calibratedRGB"/>
                                 </state>
                                 <userDefinedRuntimeAttributes>
@@ -313,18 +367,35 @@
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ddj-0E-9H1">
+                                <rect key="frame" x="229" y="660" width="165" height="48"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <state key="normal" title="ログイン">
+                                    <color key="titleColor" red="0.16862745100000001" green="0.63921568630000003" blue="0.73725490199999999" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="10"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="0.16862745100000001" green="0.63921568630000003" blue="0.73725490199999999" alpha="1" colorSpace="calibratedRGB"/>
                         <constraints>
                             <constraint firstItem="cer-we-Fzs" firstAttribute="centerX" secondItem="kI3-zJ-mUI" secondAttribute="centerX" id="7gL-Qo-hhs"/>
+                            <constraint firstItem="W7n-iH-I4U" firstAttribute="trailing" secondItem="ddj-0E-9H1" secondAttribute="trailing" constant="20" id="Cew-zx-CHB"/>
+                            <constraint firstItem="W7n-iH-I4U" firstAttribute="trailing" secondItem="ddj-0E-9H1" secondAttribute="trailing" constant="20" id="DL4-c0-T5O"/>
                             <constraint firstAttribute="trailing" secondItem="knL-cL-z9W" secondAttribute="trailing" constant="20" id="HGu-V8-pZV"/>
                             <constraint firstItem="Nhd-ZS-86o" firstAttribute="leading" secondItem="W7n-iH-I4U" secondAttribute="leading" constant="40" id="HHb-ok-KpB"/>
-                            <constraint firstItem="fxD-xe-AX4" firstAttribute="centerX" secondItem="kI3-zJ-mUI" secondAttribute="centerX" id="ISe-tZ-aQs"/>
                             <constraint firstItem="knL-cL-z9W" firstAttribute="bottom" secondItem="W7n-iH-I4U" secondAttribute="bottom" constant="-10" id="Kvg-j7-hjG"/>
                             <constraint firstItem="fxD-xe-AX4" firstAttribute="width" secondItem="kI3-zJ-mUI" secondAttribute="width" multiplier="0.398551" id="Q4h-Xj-8Hp"/>
                             <constraint firstItem="fxD-xe-AX4" firstAttribute="height" secondItem="kI3-zJ-mUI" secondAttribute="height" multiplier="0.0569196" id="T5P-t2-Dkl"/>
+                            <constraint firstItem="ddj-0E-9H1" firstAttribute="bottom" secondItem="fxD-xe-AX4" secondAttribute="bottom" id="UBV-cJ-5MZ"/>
                             <constraint firstItem="Nhd-ZS-86o" firstAttribute="top" secondItem="W7n-iH-I4U" secondAttribute="top" constant="236" id="aet-UL-keK"/>
+                            <constraint firstItem="ddj-0E-9H1" firstAttribute="width" secondItem="fxD-xe-AX4" secondAttribute="width" id="eGp-mL-HlR"/>
+                            <constraint firstItem="fxD-xe-AX4" firstAttribute="leading" secondItem="W7n-iH-I4U" secondAttribute="leading" constant="20" id="hZA-g1-xyy"/>
                             <constraint firstItem="cer-we-Fzs" firstAttribute="top" secondItem="fxD-xe-AX4" secondAttribute="bottom" constant="20" id="i2G-sn-kGV"/>
+                            <constraint firstItem="ddj-0E-9H1" firstAttribute="top" secondItem="fxD-xe-AX4" secondAttribute="top" id="ihg-qR-9e7"/>
                             <constraint firstItem="W7n-iH-I4U" firstAttribute="bottom" secondItem="cer-we-Fzs" secondAttribute="bottom" constant="50" id="jym-jS-Cwc"/>
                             <constraint firstItem="tHv-Px-qk6" firstAttribute="centerX" secondItem="kI3-zJ-mUI" secondAttribute="centerX" id="p9h-YL-Uqc"/>
                             <constraint firstItem="W7n-iH-I4U" firstAttribute="trailing" secondItem="Nhd-ZS-86o" secondAttribute="trailing" constant="40" id="sx7-98-mt9"/>
@@ -336,9 +407,10 @@
                     <connections>
                         <outlet property="changeInstanceButton" destination="cer-we-Fzs" id="GF5-gS-Op7"/>
                         <outlet property="instanceLabel" destination="knL-cL-z9W" id="57h-K8-H7m"/>
+                        <outlet property="loginButton" destination="ddj-0E-9H1" id="d1a-hi-ZXr"/>
                         <outlet property="logoImageView" destination="Nhd-ZS-86o" id="voh-GR-LcF"/>
                         <outlet property="phraseLabel" destination="tHv-Px-qk6" id="VOG-iF-oHz"/>
-                        <outlet property="startingButton" destination="fxD-xe-AX4" id="Nca-yw-dbA"/>
+                        <outlet property="signupButton" destination="fxD-xe-AX4" id="jVP-IO-Z6W"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="aBZ-9K-Bqj" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
