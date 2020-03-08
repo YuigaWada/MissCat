@@ -19,6 +19,7 @@ public class Cache {
     // MARK: Var
     
     // 下２つのcacheはYanagiTextと一対一に対応してキャッシュしてあげる
+    // (YanagiTextのロジック上、attributedStringとカスタム絵文字のViewは一対一で対応しているため)
     
     private var notes: [String: Cache.NoteOnYanagi] = [:] // key: noteId
     private var users: [String: Cache.UserOnYanagi] = [:] // key: username
