@@ -935,7 +935,7 @@ extension NoteCell {
             
             // label: 閲覧注意 タップで表示
             let nsfwLabel = UILabel()
-            nsfwLabel.text = "⚠閲覧注意\nタップで表示"
+            nsfwLabel.text = "閲覧注意\nタップで表示"
             nsfwLabel.center = parentView.center
             nsfwLabel.textAlignment = .center
             nsfwLabel.numberOfLines = 2
