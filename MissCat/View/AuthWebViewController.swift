@@ -125,7 +125,10 @@ public class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigation
         MisskeyKit.auth.getAccessToken { auth, _ in
             guard auth != nil, let apiKey = MisskeyKit.auth.getAPIKey() else { return }
             
-            self.completion.accept(apiKey)
+            DispatchQueue.main.async {
+                self.dismiss(animated: true, completion: nil)
+                self.completion.accept(apiKey)
+            }
         }
     }
     
@@ -140,7 +143,9 @@ public class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigation
             if self.currentType == .Signup {
                 self.setupLogin(misskeyInstance: misskeyInstance, appSecret: appSecret) // WebKit内でログインページへと遷移させる
             } else { // If currentType == .Login
-                self.getApiKey()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) { // TODO: コールバックに対応させる
+                    self.getApiKey()
+                }
             }
         }
     }

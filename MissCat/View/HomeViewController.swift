@@ -54,12 +54,12 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     }
     
     private var previousPage: Page = .Main
+    private var logined: Bool = false
     
     // MARK: Life Cycle
     
+    // 27929d28b8549999fe11dca576f92c6898561a651a8fd9f979f83c9b49b05703
     public override func viewDidLoad() {
-        MisskeyKit.auth.setAPIKey("27929d28b8549999fe11dca576f92c6898561a651a8fd9f979f83c9b49b05703")
-        
         needBorder = true
         selectedBarHeight = 2
         selectedBar.layer.cornerRadius = 2
@@ -83,6 +83,9 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        if !logined {
+            userAuth()
+        }
     }
     
     public override func viewDidAppear(_ animated: Bool) {
@@ -108,6 +111,23 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
+    }
+    
+    // MARK: Auth
+    
+    private func userAuth() {
+        guard let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey() else {
+            showStartingViewController() // ApiKeyが確認できない場合はStartViewControllerへ
+            return
+        }
+        
+        MisskeyKit.auth.setAPIKey(apiKey)
+        logined = true
+    }
+    
+    private func showStartingViewController() {
+        guard let startViewController = getViewController(name: "start") as? StartViewController else { return }
+        presentOnFullScreen(startViewController, animated: true, completion: nil)
     }
     
     // MARK: Setup Tab

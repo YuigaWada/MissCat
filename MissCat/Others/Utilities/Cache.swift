@@ -200,7 +200,7 @@ public extension Cache {
             return Foundation.UserDefaults.standard.string(forKey: currentLoginedApiKey)
         }
         
-        public func getCurrentLoginedApiKey(_ id: String) {
+        public func setCurrentLoginedApiKey(_ id: String) {
             Foundation.UserDefaults.standard.set(id, forKey: currentLoginedApiKey)
         }
     }

@@ -60,12 +60,13 @@ public class StartViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private lazy var components = [phraseLabel, instanceLabel, signupButton, loginButton, changeInstanceButton]
     
+    // MARK: LifeCycle
+    
     public override func viewDidLoad() {
-//        MisskeyKit.auth.appSecret = appSecret
-        
         super.viewDidLoad()
         setGradientLayer()
         binding()
+        
         MisskeyKit.changeInstance(instance: misskeyInstance) // インスタンスを変更
     }
     
@@ -125,8 +126,8 @@ public class StartViewController: UIViewController {
     
     private func getAuthViewController(type: AuthWebViewController.AuthType, appSecret: String) -> UIViewController? {
         guard let authViewController = getViewController(name: "auth") as? AuthWebViewController else { return nil }
-        authViewController.completion.subscribe(onNext: { apiKey in
-            print(apiKey)
+        authViewController.completion.subscribe(onNext: { apiKey in // ログイン処理が完了
+            self.loginCompleted(apiKey)
         }).disposed(by: disposeBag)
         
         if type == .Signup {
@@ -143,6 +144,13 @@ public class StartViewController: UIViewController {
         let viewController = storyboard.instantiateViewController(withIdentifier: name)
         
         return viewController
+    }
+    
+    private func loginCompleted(_ apiKey: String) {
+        Cache.UserDefaults.shared.setCurrentLoginedApiKey(apiKey)
+        DispatchQueue.main.async {
+            self.dismiss(animated: true, completion: nil)
+        }
     }
     
     // MARK: Design
