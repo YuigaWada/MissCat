@@ -186,13 +186,22 @@ public extension Cache {
     class UserDefaults {
         public static var shared: Cache.UserDefaults = .init()
         private let latestNotificationKey = "latest-notification"
+        private let currentLoginedApiKey = "current-logined-ApiKey"
         
-        public func getLatestNotificationId(_ id: String) {
-            Foundation.UserDefaults.standard.string(forKey: latestNotificationKey)
+        public func getLatestNotificationId() -> String? {
+            return Foundation.UserDefaults.standard.string(forKey: latestNotificationKey)
         }
         
         public func setLatestNotificationId(_ id: String) {
             Foundation.UserDefaults.standard.set(id, forKey: latestNotificationKey)
+        }
+        
+        public func getCurrentLoginedApiKey() -> String? {
+            return Foundation.UserDefaults.standard.string(forKey: currentLoginedApiKey)
+        }
+        
+        public func getCurrentLoginedApiKey(_ id: String) {
+            Foundation.UserDefaults.standard.set(id, forKey: currentLoginedApiKey)
         }
     }
 }
