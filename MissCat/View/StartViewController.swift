@@ -6,6 +6,9 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
+import MisskeyKit
+import RxCocoa
+import RxSwift
 import UIKit
 
 public class StartViewController: UIViewController {
@@ -14,14 +17,56 @@ public class StartViewController: UIViewController {
     
     @IBOutlet weak var instanceLabel: UILabel!
     
-    @IBOutlet weak var startingButton: UIButton!
+    @IBOutlet weak var signupButton: UIButton!
+    @IBOutlet weak var loginButton: UIButton!
+    
     @IBOutlet weak var changeInstanceButton: UIButton!
     
-    private lazy var components = [phraseLabel, instanceLabel, startingButton, changeInstanceButton]
+    private var appSecret: String?
+    private var ioAppSecret: String = "lXnA5ZviFTeaA35bvkxmFlTomlDVJ9GH" // misskey.ioの場合はappSecret固定
+    private var misskeyInstance: String = "misskey.io" {
+        didSet {
+            MisskeyKit.changeInstance(instance: misskeyInstance) // インスタンスを変更
+        }
+    }
+    
+    private let appPermissions = ["read:account",
+                                  "write:account",
+                                  "read:blocks",
+                                  "write:blocks",
+                                  "read:drive",
+                                  "write:drive",
+                                  "read:favorites",
+                                  "write:favorites",
+                                  "read:following",
+                                  "write:following",
+                                  "read:messaging",
+                                  "write:messaging",
+                                  "read:mutes",
+                                  "write:mutes",
+                                  "write:notes",
+                                  "read:notifications",
+                                  "write:notifications",
+                                  "read:reactions",
+                                  "write:reactions",
+                                  "write:votes",
+                                  "read:pages",
+                                  "write:pages",
+                                  "write:page-likes",
+                                  "read:page-likes",
+                                  "read:user-groups",
+                                  "write:user-groups"]
+    
+    private let disposeBag = DisposeBag()
+    private lazy var components = [phraseLabel, instanceLabel, signupButton, loginButton, changeInstanceButton]
     
     public override func viewDidLoad() {
+//        MisskeyKit.auth.appSecret = appSecret
+        
         super.viewDidLoad()
         setGradientLayer()
+        binding()
+        MisskeyKit.changeInstance(instance: misskeyInstance) // インスタンスを変更
     }
     
     public override func viewWillAppear(_ animated: Bool) {
@@ -37,6 +82,70 @@ public class StartViewController: UIViewController {
             self.summon(after: true)
         }, completion: nil)
     }
+    
+    // MARK: Privates
+    
+    // MARK: Binding
+    
+    private func binding() {
+        signupButton.rx.tap.subscribe(onNext: { _ in
+            self.generateAppSecret { appSecret in
+                guard let authViewController = self.getAuthViewController(type: .Signup, appSecret: appSecret) else { return }
+                self.presentOnFullScreen(authViewController, animated: true, completion: nil)
+            }
+        }).disposed(by: disposeBag)
+        
+        loginButton.rx.tap.subscribe(onNext: { _ in
+            self.generateAppSecret { appSecret in
+                guard let authViewController = self.getAuthViewController(type: .Login, appSecret: appSecret) else { return }
+                self.presentOnFullScreen(authViewController, animated: true, completion: nil)
+            }
+        }).disposed(by: disposeBag)
+    }
+    
+    // MARK: App
+    
+    /// Appを登録してappSecretを取得(misskey.ioの場合はappSecret固定)
+    /// - Parameter completion: completion
+    private func generateAppSecret(completion: @escaping (String) -> Void) {
+        guard misskeyInstance != "misskey.io" else { // misskey.ioの場合はappSecret固定
+            completion(ioAppSecret); return
+        }
+        
+        MisskeyKit.app.create(name: "MissCat", description: "MissCat is an flexible Misskey client for iOS!", permission: appPermissions) { data, error in
+            guard let data = data, error == nil, let secret = data.secret else { return }
+            self.appSecret = secret
+            DispatchQueue.main.async {
+                completion(secret)
+            }
+        }
+    }
+    
+    // MARK: Login
+    
+    private func getAuthViewController(type: AuthWebViewController.AuthType, appSecret: String) -> UIViewController? {
+        guard let authViewController = getViewController(name: "auth") as? AuthWebViewController else { return nil }
+        authViewController.completion.subscribe(onNext: { apiKey in
+            print(apiKey)
+        }).disposed(by: disposeBag)
+        
+        if type == .Signup {
+            authViewController.setupSignup(misskeyInstance: misskeyInstance, appSecret: appSecret)
+        } else {
+            authViewController.setupLogin(misskeyInstance: misskeyInstance, appSecret: appSecret)
+        }
+        
+        return authViewController
+    }
+    
+    private func getViewController(name: String) -> UIViewController {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let viewController = storyboard.instantiateViewController(withIdentifier: name)
+        
+        return viewController
+    }
+    
+    // MARK: Design
     
     private func setGradientLayer() {
         let gradientLayer: CAGradientLayer = CAGradientLayer()
