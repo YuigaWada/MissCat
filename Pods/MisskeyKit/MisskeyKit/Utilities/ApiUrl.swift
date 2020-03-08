@@ -12,8 +12,8 @@ import Foundation
 internal class Api {
     
     internal static var instance: String = "misskey.io" {
-        didSet(newInstance) {
-            self.instance = self.shapeUrl(newInstance)
+        didSet {
+            self.instance = self.shapeUrl(self.instance)
         }
     }
     

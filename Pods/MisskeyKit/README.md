@@ -1,4 +1,4 @@
-<img src="./resources/logo.png" width=100%>
+<img src="./MisskeyKit/Resources/logo.png" width=100%>
 
 [![License][license-image]][license-url]
 [![Swift Version][swift-image]][swift-url]

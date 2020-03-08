@@ -34,7 +34,7 @@ public struct UserModel: Codable {
     public var bannerUrl, bannerColor: String?
     public var isLocked, isModerator, isSilenced, isSuspended: Bool?
     public var userDescription, location, birthday: String?
-    public var fields: [String?]?
+    public var fields: [Field?]?
     public var followersCount, followingCount, notesCount: Int?
     public var pinnedNoteIds: [String?]?
     public var pinnedNotes: [NoteModel?]?
@@ -50,6 +50,10 @@ public struct UserModel: Codable {
     public var hasUnreadMessagingMessage, hasUnreadNotification: Bool?
     public var pendingReceivedFollowRequestsCount: Int?
     
+    public struct Field: Codable {
+        public let name: String?
+        public let value: String?
+    }
     
     public struct Twitter: Codable {
         public var id: String?

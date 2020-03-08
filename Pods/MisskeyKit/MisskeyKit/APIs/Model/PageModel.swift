@@ -13,7 +13,7 @@ public struct PageModel: Codable {
     public let id, createdAt, updatedAt, userId: String?
     public let user: _User? // isnt normal UserModel class.
     public let content: [Content]?
-    public let variables: [String?]?
+    public let variables: [Variable?]?
     public let title, name: String?
     public let summary: String?
     public let hideTitleWhenPinned, alignCenter: Bool?
@@ -40,6 +40,17 @@ public struct PageModel: Codable {
         public let isBot, isCat: Bool?
         public let emojis: [EmojiModel?]?
     }
-
+    
+    public struct Variable: Codable {
+        public let id: String?
+        public let args: [Arg?]?
+        public let name, type: String?
+        public let value: String?
+    }
+    
+    public struct Arg: Codable {
+        public let id, type, value: String?
+    }
+    
 }
 
