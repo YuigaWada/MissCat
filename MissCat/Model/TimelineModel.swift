@@ -47,6 +47,9 @@ class TimelineModel {
         let onlyFiles: Bool?
         let listId: String?
         let loadLimit: Int
+        
+        let isReload: Bool
+        let lastNoteId: String?
     }
     
     struct UpdateReaction {
@@ -102,6 +105,7 @@ class TimelineModel {
     
     public func loadNotes(with option: LoadOption) -> Observable<NoteCell.Model> {
         let dispose = Disposables.create()
+        let isReload = option.isReload && option.lastNoteId != nil
         
         return Observable.create { [unowned self] observer in
             
@@ -112,10 +116,13 @@ class TimelineModel {
                     return
                 }
                 
+                var stopLoad = false // true: これ以上noteをstreamに流さない
                 posts.forEach { post in
+                    guard !stopLoad else { return }
                     self.transformNote(with: observer, post: post, reverse: false)
-                    if let noteId = post.id { // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
-                        self.initialNoteIds.append(noteId)
+                    if let noteId = post.id {
+                        self.initialNoteIds.append(noteId) // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
+                        stopLoad = isReload && option.lastNoteId == post.id // timelineにすでに表示してある投稿を取得した場合、ロードを終了する
                     }
                 }
                 observer.onCompleted()

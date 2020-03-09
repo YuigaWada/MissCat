@@ -194,7 +194,9 @@ class TimelineViewModel: ViewModelType {
                                       includeReplies: input.includeReplies,
                                       onlyFiles: input.onlyFiles,
                                       listId: input.listId,
-                                      loadLimit: input.loadLimit)
+                                      loadLimit: input.loadLimit,
+                                      isReload: false,
+                                      lastNoteId: nil)
         _isLoading = true
         
         return model.loadNotes(with: option).do(onNext: { cellModel in
@@ -218,11 +220,29 @@ class TimelineViewModel: ViewModelType {
                 let choices = poll.choices,
                 let votes = choices[choice]?.votes else { return $0 }
             
-            var cellModel = $0
+            let cellModel = $0
             cellModel.poll?.choices?[choice]?.votes = votes + 1
             cellModel.poll?.choices?[choice]?.isVoted = true
             return cellModel
         }
+    }
+    
+    public func reloadNotes() {
+        guard let lastNoteId = cellsModel[0].noteId else { return }
+        
+        let option = Model.LoadOption(type: input.type,
+                                      userId: input.userId,
+                                      untilId: nil,
+                                      includeReplies: input.includeReplies,
+                                      onlyFiles: input.onlyFiles,
+                                      listId: input.listId,
+                                      loadLimit: 10,
+                                      isReload: true,
+                                      lastNoteId: lastNoteId)
+        
+        model.loadNotes(with: option).subscribe(onNext: { cellModel in
+            self.cellsModel.insert(cellModel, at: 0)
+        }).disposed(by: disposeBag)
     }
     
     // MARK: Utilities
