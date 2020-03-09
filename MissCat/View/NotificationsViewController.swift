@@ -83,7 +83,7 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
             guard let notificationCell = tableView.dequeueReusableCell(withIdentifier: "NotificationCell", for: indexPath) as? NotificationCell
             else { return NotificationCell() }
             
-            //            notificationCell.delegate = self
+            notificationCell.delegate = self
             return notificationCell.shapeCell(item: item)
         }
         
@@ -160,10 +160,15 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         case "URL":
             openLink(url: value)
         case "User":
-            break
+            openUser(username: value)
         default:
             break
         }
+    }
+    
+    func openUser(username: String) {
+        guard let homeViewController = self.homeViewController else { return }
+        homeViewController.openUserPage(username: username)
     }
     
     public func move2Profile(userId: String) {
@@ -175,5 +180,7 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
     
     public func playVideo(url: String) {}
     
-    public func tappedCommentRN(item: NoteCell.Model) {}
+    public func move2PostDetail(item: NoteCell.Model) {
+        homeViewController?.tappedCell(item: item)
+    }
 }

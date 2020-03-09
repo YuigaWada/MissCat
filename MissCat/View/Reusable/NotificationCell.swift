@@ -23,6 +23,8 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
     @IBOutlet weak var typeIconView: UILabel!
     @IBOutlet weak var typeLabel: UILabel!
     
+    public var delegate: NoteCellDelegate?
+    
     private let viewModel = NotificationCellViewModel()
     private lazy var emojiView = self.generateEmojiView()
     
@@ -31,6 +33,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
     private lazy var renoteIconColor = UIColor(red: 46 / 255, green: 204 / 255, blue: 113 / 255, alpha: 1)
     
     private var emojiViewOnView: Bool = false
+    private var disposeBag = DisposeBag()
     
     public override func layoutSubviews() {
         super.layoutSubviews()
@@ -124,7 +127,23 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
             emojiView.emoji = EmojiHandler.convert2EmojiModel(raw: reaction)
         }
         
+        setupGesture(item: item)
+        
         return self
+    }
+    
+    private func setupGesture(item: NotificationCell.Model) {
+        setTapGesture(disposeBag, closure: {
+            guard let noteModel = item.myNote else { return }
+            self.delegate?.move2PostDetail(item: noteModel)
+        })
+        
+        // リアクションした者のプロフィールを表示
+        for aboutReactee in [nameLabel, usernameLabel, iconImageView] {
+            aboutReactee?.setTapGesture(disposeBag, closure: {
+                self.delegate?.move2Profile(userId: item.fromUser.id)
+            })
+        }
     }
     
     private func generateEmojiView() -> EmojiView {
