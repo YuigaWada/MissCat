@@ -72,6 +72,32 @@ class TimelineModel {
     private let handleTargetType: [String] = ["note", "CapturedNoteUpdated"]
     private lazy var streaming = MisskeyKit.Streaming()
     
+    // MARK: Shape NoteModel
+    
+    private func transformNote(with observer: AnyObserver<NoteCell.Model>, post: NoteModel, reverse: Bool) {
+        let noteType = checkNoteType(post)
+        if noteType == .Renote {
+            guard let renoteId = post.renoteId,
+                let user = post.user,
+                let renote = post.renote,
+                let renoteModel = renote.getNoteCellModel(withRN: checkNoteType(renote) == .CommentRenote) else { return }
+            
+            let renoteeModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "", baseNoteId: renoteId)
+            
+            var cellModels = [renoteeModel, renoteModel]
+            if reverse { cellModels.reverse() }
+            
+            for cellModel in cellModels { observer.onNext(cellModel) }
+            
+        } else { // just a note or a note with commentRN
+            var newCellsModel = getCellsModel(post, withRN: noteType == .CommentRenote)
+            guard newCellsModel != nil else { return }
+            
+            if reverse { newCellsModel!.reverse() } // reverseしてからinsert (streamingの場合)
+            newCellsModel!.forEach { observer.onNext($0) }
+        }
+    }
+    
     // MARK: REST API
     
     public func loadNotes(with option: LoadOption) -> Observable<NoteCell.Model> {
@@ -87,29 +113,11 @@ class TimelineModel {
                 }
                 
                 posts.forEach { post in
-                    // Renote
-                    let noteType = self.checkNoteType(post)
-                    if noteType == .Renote {
-                        guard let renoteId = post.renoteId, let user = post.user, let renote = post.renote else { return }
-                        let renoteeCellModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "", baseNoteId: renoteId)
-                        observer.onNext(renoteeCellModel)
-                        
-                        guard let cellModel = renote.getNoteCellModel(withRN: self.checkNoteType(renote) == .CommentRenote) else { return }
-                        observer.onNext(cellModel)
-                    } else { // just a note or a note with commentRN
-                        guard let newCellsModel = self.getCellsModel(post, withRN: noteType == .CommentRenote) else { return }
-                        newCellsModel.forEach { observer.onNext($0) }
-                    }
-                    
-                    if let noteId = post.id {
-                        // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
+                    self.transformNote(with: observer, post: post, reverse: false)
+                    if let noteId = post.id { // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
                         self.initialNoteIds.append(noteId)
                     }
-                    
-                    // MEMO: セルの描画は必ずメインスレッドで行われるのでさすがにここでやると重い　→ なんかそうでもなさそう
-                    //                self.updateNotes(new: self.cellsModel)
                 }
-                
                 observer.onCompleted()
             }
             
@@ -207,23 +215,7 @@ class TimelineModel {
         
         guard let post = response as? NoteModel else { return }
         
-        let noteType = self.checkNoteType(post)
-        if noteType == .Renote {
-            guard let renoteId = post.renoteId, let user = post.user, let renote = post.renote else { return }
-            guard let cellModel = renote.getNoteCellModel(withRN: checkNoteType(renote) == .CommentRenote) else { return }
-            observer.onNext(cellModel)
-            
-            let renoteeCellModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "", baseNoteId: renoteId)
-            observer.onNext(renoteeCellModel)
-        } else { // just a note or a note with commentRN
-            var newCellsModel = self.getCellsModel(post, withRN: noteType == .CommentRenote)
-            guard newCellsModel != nil else { return }
-            
-            newCellsModel!.reverse() // reverseしてからinsert
-            newCellsModel!.forEach { observer.onNext($0) }
-        }
-        
-        //            self.updateNotes(new: self.cellsModel)
+        transformNote(with: observer, post: post, reverse: true)
         self.captureNote(noteId: post.id)
     }
     
@@ -281,7 +273,7 @@ class TimelineModel {
     
     public func vote(choice: Int, to noteId: String) {
         MisskeyKit.notes.vote(noteId: noteId, choice: choice, result: { _, _ in
-//            print(error)
+            //            print(error)
         })
     }
 }
