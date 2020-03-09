@@ -8,7 +8,7 @@ pod 'Starscream','3.1.1'
 pod 'RxSwift', '~> 5', :binary => true
 pod 'RxCocoa', '~> 5', :binary => true
 pod 'RxDataSources', :binary => true
-pod 'PolioPager',:binary => true
+pod 'PolioPager'
 pod 'Agrume', :binary => true
 pod 'SVGKit', :git => 'https://github.com/SVGKit/SVGKit.git', :branch => '3.x', :binary => true
 pod "SkeletonView", :binary => true

@@ -8,7 +8,6 @@ PODS:
   - FloatingPanel (1.7.4)
   - Gifu (3.2.0)
   - iOSPhotoEditor (1.0.0)
-  - PolioPager (2.2)
   - RxCocoa (5.1.0):
     - RxRelay (~> 5)
     - RxSwift (~> 5)
@@ -29,7 +28,6 @@ DEPENDENCIES:
   - FloatingPanel
   - Gifu
   - iOSPhotoEditor
-  - PolioPager
   - RxCocoa (~> 5)
   - RxDataSources
   - RxSwift (~> 5)
@@ -44,7 +42,6 @@ SPEC REPOS:
     - FloatingPanel
     - Gifu
     - iOSPhotoEditor
-    - PolioPager
     - RxCocoa
     - RxDataSources
     - RxRelay
@@ -69,7 +66,6 @@ SPEC CHECKSUMS:
   FloatingPanel: 3c9d0e30fe350e1613157557769d2ec97f76b96b
   Gifu: 7bcb6427457d85e0b4dff5a84ec5947ac19a93ea
   iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
-  PolioPager: 324dc97f5bb029eb0e892b59265be4abce1c6290
   RxCocoa: 13d2a4d7546a34b8ececae8c281e4ea1dbb94f2b
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
   RxRelay: a168bd6caf712d00c676ac344e9295afc93b418e
@@ -78,6 +74,6 @@ SPEC CHECKSUMS:
   SVGKit: 8a2fc74258bdb2abb54d3b65f3dd68b0277a9c4d
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
 
-PODFILE CHECKSUM: c01b1b9d92c8fcda00f95673d6face1a0978332f
+PODFILE CHECKSUM: 8c03e33b307a4e8873cad3059dc40cc1feefedfe
 
 COCOAPODS: 1.7.1

@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "1DDA0CB6117C31D7B3F50FD631F78505"
-               BuildableName = "PolioPager"
+               BuildableName = "PolioPager.framework"
                BlueprintName = "PolioPager"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

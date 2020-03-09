@@ -11,8 +11,7 @@ ${PODS_ROOT}/FloatingPanel/FloatingPanel.framework.dSYM
 ${PODS_ROOT}/Gifu/Gifu.framework
 ${PODS_ROOT}/Gifu/Gifu.framework.dSYM
 ${BUILT_PRODUCTS_DIR}/MisskeyKit/MisskeyKit.framework
-${PODS_ROOT}/PolioPager/PolioPager.framework
-${PODS_ROOT}/PolioPager/PolioPager.framework.dSYM
+${BUILT_PRODUCTS_DIR}/PolioPager/PolioPager.framework
 ${PODS_ROOT}/RxCocoa/RxCocoa.framework
 ${PODS_ROOT}/RxCocoa/RxCocoa.framework.dSYM
 ${PODS_ROOT}/RxDataSources/RxDataSources.framework

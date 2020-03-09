@@ -4,8 +4,3 @@ framework module PolioPager {
   export *
   module * { export * }
 }
-
-module PolioPager.Swift {
-    header "PolioPager-Swift.h"
-    requires objc
-}
