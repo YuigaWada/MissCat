@@ -95,15 +95,10 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         usernameLabel.text = "@" + (item.fromUser.username ?? "")
         agoLabel.text = item.ago.calculateAgo()
         
-        if let myNote = item.myNote, let noteId = myNote.noteId {
+        if let myNote = item.myNote {
             // note
-            // キャッシュを活用する
-            noteView.attributedText = viewModel.shapeNote(identifier: item.identity,
-                                                          note: myNote.note.mfmPreTransform(),
-                                                          noteId: noteId,
-                                                          isReply: myNote.isReply,
-                                                          yanagi: noteView,
-                                                          externalEmojis: myNote.emojis)
+            noteView.attributedText = viewModel.shapeNote(note: myNote.note.mfmPreTransform(),
+                                                          isReply: myNote.isReply)
             // file
             let fileCount = myNote.files.count
             if fileCount > 0 {

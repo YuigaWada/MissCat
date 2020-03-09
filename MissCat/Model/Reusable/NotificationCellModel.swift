@@ -9,17 +9,9 @@
 import MisskeyKit
 
 public class NotificationCellModel {
-    public func shapeNote(identifier: String, note: String, cache: Cache.NoteOnYanagi?, isReply: Bool, yanagi: YanagiText, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
-        if let cache = cache {
-            // YanagiText内部ではattributedTextがsetされた瞬間attachmentの表示が始まるので先にaddしておく
-            cache.attachments.forEach { nsAttachment, yanagiAttachment in
-                yanagi.addAttachment(ns: nsAttachment, yanagi: yanagiAttachment)
-            }
-            
-            return cache.treatedNote
-        }
+    public func shapeNote(note: String, isReply: Bool) -> NSAttributedString? {
         let replyHeader: NSMutableAttributedString = isReply ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
-        let body = note.mfmTransform(yanagi: yanagi, externalEmojis: externalEmojis) ?? .init()
+        let body = MFMEngine.generatePlaneString(string: note, font: UIFont(name: "Helvetica", size: 11.0))
         
         return replyHeader + body
     }

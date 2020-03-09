@@ -12,20 +12,8 @@ import UIKit
 public class NotificationCellViewModel {
     private var model = NotificationCellModel()
     
-    public func shapeNote(identifier: String, note: String, noteId: String, isReply: Bool, yanagi: YanagiText, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
-        let cachedNote = Cache.shared.getNote(noteId: noteId) // セルが再利用されるのでキャッシュは中央集権的に
-        let hasCachedNote: Bool = cachedNote != nil
-        
-        let treatedNote = model.shapeNote(identifier: identifier,
-                                          note: note,
-                                          cache: cachedNote,
-                                          isReply: isReply,
-                                          yanagi: yanagi,
-                                          externalEmojis: externalEmojis)
-        
-        if !hasCachedNote, let treatedNote = treatedNote {
-            Cache.shared.saveNote(noteId: noteId, note: treatedNote, attachments: yanagi.getAttachments()) // CACHE!
-        }
+    public func shapeNote(note: String, isReply: Bool) -> NSAttributedString? {
+        let treatedNote = model.shapeNote(note: note, isReply: isReply)
         
         return treatedNote
     }
