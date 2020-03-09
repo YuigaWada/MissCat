@@ -20,6 +20,9 @@ public protocol NoteCellDelegate {
     func tappedRenote()
     func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool)
     func tappedOthers()
+    
+    func tappedCommentRN(item: NoteCell.Model)
+    
     func vote(choice: Int, to noteId: String)
     
     func tappedLink(text: String)
@@ -71,7 +74,13 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     // MARK: Public Var
     
-    public var delegate: NoteCellDelegate?
+    public var delegate: NoteCellDelegate? {
+        didSet {
+            guard let commentRenoteView = commentRenoteView else { return }
+            commentRenoteView.delegate = delegate
+        }
+    }
+    
     public var noteId: String?
     public var userId: String?
     public var iconImageUrl: String?
@@ -191,6 +200,10 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { renoteModel in
             self.commentRenoteView = self.commentRenoteView?.shapeCell(item: renoteModel) // MEMO: やっぱりここが重いっぽい
+            self.commentRenoteView?.setTapGesture(self.disposeBag, closure: {
+                guard let noteId = renoteModel.noteId else { return }
+                self.delegate?.tappedCommentRN(item: renoteModel)
+            })
         }).disposed(by: disposeBag)
         
         output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).map { _ in false }.drive(innerRenoteDisplay.rx.isHidden).disposed(by: disposeBag)

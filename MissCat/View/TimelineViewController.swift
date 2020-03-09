@@ -306,6 +306,10 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     
     func tappedOthers() {}
     
+    public func tappedCommentRN(item: NoteCell.Model) {
+        homeViewController?.tappedCell(item: item)
+    }
+    
     func tappedLink(text: String) {
         let (linkType, value) = text.analyzeHyperLink()
         

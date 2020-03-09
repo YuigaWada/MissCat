@@ -36,6 +36,8 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
     @IBOutlet weak var backButton: UIButton!
     @IBOutlet weak var containerHeightContraint: NSLayoutConstraint!
     
+    public var homeViewController: TimelineDelegate?
+    
     private var userId: String?
     private var scrollBegining: CGFloat = 0
     private var tlScrollView: UIScrollView?
@@ -76,6 +78,13 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
         
         containerHeightContraint.constant = 2 * view.frame.height - (view.frame.height - containerScrollView.frame.origin.y)
+    }
+    
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+        childVCs.forEach { $0.homeViewController = homeViewController }
     }
     
     public override func viewDidLayoutSubviews() {

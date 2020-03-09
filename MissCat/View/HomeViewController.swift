@@ -226,6 +226,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         
         profileViewController.setUserId(userId, isMe: isMe)
         profileViewController.view.frame = getDisplayRect(needNavBar: false)
+        profileViewController.homeViewController = self
         
         if isMe {
             addChild(profileViewController)
