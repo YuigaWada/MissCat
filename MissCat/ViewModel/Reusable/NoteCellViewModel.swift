@@ -19,8 +19,8 @@ class NoteCellViewModel: ViewModelType {
         let isDetailMode: Bool
         
         // Modelに渡さなければならないので看過
-        let noteYanagi: YanagiText
-        let nameYanagi: YanagiText
+        let noteYanagi: MisskeyTextView
+        let nameYanagi: MisskeyTextView
     }
     
     struct Output {
@@ -126,7 +126,7 @@ class NoteCellViewModel: ViewModelType {
     private func getDisplayName(with item: NoteCell.Model, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
         let cache = Cache.shared.getDisplayName(username: item.username, on: input.nameYanagi)
         let isCached = cache.displayName != nil
-//        let hasCachedAttachments = hasAttachments(on: input.nameYanagi, with: cache.attachments)
+        let hasCachedAttachments = input.nameYanagi.isCached
         
         // キャッシュされていない場合 & Attachmentsがセルに残っていない場合、MFMにかけてあげる
         // (セルは再利用されるので、attachmensのキャッシュの有無も考える)

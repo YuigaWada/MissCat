@@ -96,7 +96,7 @@ open class YanagiText: UITextView {
             
             var estimatedRect = self.firstRect(for: selectedTextRange).insetBy(dx: xMargin, dy: yMargin)
             print(estimatedRect)
-//            guard estimatedRect.origin.x.isFinite else { return }
+            guard estimatedRect.origin.x.isFinite else { return }
             
             let lineHeight = estimatedRect.height
             
