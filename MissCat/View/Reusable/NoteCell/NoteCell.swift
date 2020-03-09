@@ -21,7 +21,7 @@ public protocol NoteCellDelegate {
     func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool)
     func tappedOthers()
     
-    func tappedCommentRN(item: NoteCell.Model)
+    func move2PostDetail(item: NoteCell.Model)
     
     func vote(choice: Int, to noteId: String)
     
@@ -202,7 +202,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             self.commentRenoteView = self.commentRenoteView?.shapeCell(item: renoteModel) // MEMO: やっぱりここが重いっぽい
             self.commentRenoteView?.setTapGesture(self.disposeBag, closure: {
                 guard let noteId = renoteModel.noteId else { return }
-                self.delegate?.tappedCommentRN(item: renoteModel)
+                self.delegate?.move2PostDetail(item: renoteModel)
             })
         }).disposed(by: disposeBag)
         

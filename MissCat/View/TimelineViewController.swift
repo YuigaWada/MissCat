@@ -306,7 +306,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     
     func tappedOthers() {}
     
-    public func tappedCommentRN(item: NoteCell.Model) {
+    public func move2PostDetail(item: NoteCell.Model) {
         homeViewController?.tappedCell(item: item)
     }
     
