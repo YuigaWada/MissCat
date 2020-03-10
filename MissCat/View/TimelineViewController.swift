@@ -98,12 +98,13 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         }
         
         binding(dataSource: dataSource)
-        viewModel!.setupInitialCell()
+        viewModel?.setupInitialCell()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        viewModel?.setSkeltonCell()
         mainTableView.isScrollEnabled = scrollable
         if let bottomConstraint = bottomConstraint {
             bottomConstraint.isActive = withNavBar

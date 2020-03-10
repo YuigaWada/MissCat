@@ -68,6 +68,7 @@ class TimelineViewModel: ViewModelType {
     private var hasReactionGenCell: Bool = false
     public var cellsModel: [NoteCell.Model] = [] // TODO: エラー再発しないか意識しておく
     private var initialNoteIds: [String] = [] // WebSocketの接続が確立してからcaptureするためのキャッシュ
+    private var hasSkeltonCell: Bool = false
     
     private lazy var model = TimelineModel()
     private var dataSource: NotesDataSource?
@@ -81,8 +82,6 @@ class TimelineViewModel: ViewModelType {
     }
     
     public func setupInitialCell() {
-        setSkeltonCell()
-        
         // タイムラインをロードする
         loadNotes().subscribe(onError: { error in
             print(error)
@@ -97,6 +96,26 @@ class TimelineViewModel: ViewModelType {
                 self.connectStream()
             }
         }, onDisposed: nil).disposed(by: disposeBag)
+    }
+    
+    public func setSkeltonCell() {
+        guard !hasSkeltonCell else { return }
+        
+        for _ in 0 ..< 5 {
+            let skeltonCellModel = NoteCell.Model.fakeSkeltonCell()
+            cellsModel.append(skeltonCellModel)
+        }
+        
+        updateNotes(new: cellsModel)
+        hasSkeltonCell = true
+    }
+    
+    private func removeSkeltonCell() {
+        guard hasSkeltonCell else { return }
+        let removed = cellsModel.suffix(cellsModel.count - 5)
+        cellsModel = Array(removed)
+        
+        updateNotes(new: cellsModel)
     }
     
     // MARK: Streaming
@@ -257,22 +276,6 @@ class TimelineViewModel: ViewModelType {
         if hasMarked {
             return
         }
-    }
-    
-    private func setSkeltonCell() {
-        for _ in 0 ..< 5 {
-            let skeltonCellModel = NoteCell.Model.fakeSkeltonCell()
-            cellsModel.append(skeltonCellModel)
-        }
-        
-        updateNotes(new: cellsModel)
-    }
-    
-    private func removeSkeltonCell() {
-        let removed = cellsModel.suffix(cellsModel.count - 5)
-        cellsModel = Array(removed)
-        
-        updateNotes(new: cellsModel)
     }
     
     // MARK: RxSwift
