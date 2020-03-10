@@ -113,6 +113,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         followCountButton.titleLabel?.text = nil
         followerCountButton.titleLabel?.text = nil
         followButton.titleLabel?.text = "..."
+        followButton.backgroundColor = .white
         followButton.layer.borderColor = UIColor.systemBlue.cgColor
         followButton.layer.borderWidth = 1
     }
