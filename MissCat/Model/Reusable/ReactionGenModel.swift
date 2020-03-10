@@ -30,7 +30,7 @@ public class ReactionGenModel {
     
     private var emojis = Emojis()
     private var maxOnceLoad: Int = 50
-    private var defaultPreset = ["👍"]
+    private var defaultPreset = ["👍", "❤️", "😆", "🤔", "😮", "🎉", "💢", "😥", "😇", "🍮", "🤯"]
     
     private var defaultLoaded = false
     
