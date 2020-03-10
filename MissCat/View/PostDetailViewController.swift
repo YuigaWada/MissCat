@@ -22,6 +22,8 @@ class PostDetailViewController: UIViewController, UITableViewDelegate, FooterTab
     public var item: NoteCell.Model? {
         didSet {
             guard let item = item else { return }
+            
+            item.onOtherNote = false
             viewModel!.setItem(item)
         }
     }
