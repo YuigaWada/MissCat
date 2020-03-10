@@ -12,7 +12,7 @@ import UIKit
 import XLPagerTabStrip
 
 private typealias ViewModel = ProfileViewModel
-public class ProfileViewController: ButtonBarPagerTabStripViewController {
+public class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDelegate {
     private let disposeBag = DisposeBag()
     private var blurAnimator: UIViewPropertyAnimator?
     
@@ -116,6 +116,8 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         followButton.backgroundColor = .white
         followButton.layer.borderColor = UIColor.systemBlue.cgColor
         followButton.layer.borderWidth = 1
+        
+        introTextView.delegate = self
     }
     
     // MARK: Public Methods
@@ -240,6 +242,36 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
                                        height: newHeight)
     }
     
+    // MARK: UITextViewDelegate
+    
+    public func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+        tappedLink(text: URL.absoluteString)
+        return false
+    }
+    
+    func tappedLink(text: String) {
+        let (linkType, value) = text.analyzeHyperLink()
+        
+        switch linkType {
+        case "URL":
+            openLink(url: value)
+        case "User":
+            openUser(username: value)
+        default:
+            break
+        }
+    }
+    
+    func openUser(username: String) {
+        guard let homeViewController = self.homeViewController else { return }
+        homeViewController.openUserPage(username: username)
+    }
+    
+    func move2Profile(userId: String) {
+        guard let homeViewController = self.homeViewController else { return }
+        homeViewController.move2Profile(userId: userId)
+    }
+    
     // MARK: XLPagerTabStrip
     
     public override func viewControllers(for pagerTabStripController: PagerTabStripViewController) -> [UIViewController] {
@@ -274,9 +306,9 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController {
         
         childVCs = [userNoteOnly, allUserNote, userMedia]
         
-//        childVCs.forEach { // VCの表示がずれるのを防ぐ(XLPagerTabStripの不具合？？)
-//            $0.view.frame = CGRect(x: 0, y: 0, width: self.view.frame.width, height: $0.view.frame.height)
-//        }
+        //        childVCs.forEach { // VCの表示がずれるのを防ぐ(XLPagerTabStripの不具合？？)
+        //            $0.view.frame = CGRect(x: 0, y: 0, width: self.view.frame.width, height: $0.view.frame.height)
+        //        }
         
         return childVCs
     }
