@@ -267,31 +267,25 @@ class MisskeyTextView: YanagiText {
         return count != 0
     }
     
-    // MARK: Ocverride
+    // MARK: Override
     
-    // リンクタップのみ許可
+    // https://stackoverflow.com/questions/36198299/uitextview-disable-selection-allow-links/44878203#comment99895928_44878203
     
-    // FIX: 下の部分をコメントアウトしないと、XLPagerTabStripでスワイプできなくなる
+    // リンクタップのみ許可する
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        guard super.point(inside: point, with: event),
+            let position = closestPosition(to: point),
+            let range = tokenizer.rangeEnclosingPosition(position, with: .character, inDirection: UITextDirection(rawValue: UITextLayoutDirection.left.rawValue)) else {
+            return false
+        }
+        let startIndex = offset(from: beginningOfDocument, to: range.start)
+        return attributedText.attribute(.link, at: startIndex, effectiveRange: nil) != nil
+    }
     
-    //    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
-    //        guard let position = closestPosition(to: point),
-    //            let range = tokenizer.rangeEnclosingPosition(position, with: .character, inDirection: UITextDirection(rawValue: UITextLayoutDirection.left.rawValue)) else {
-    //            return false
-    //        }
-    //        let startIndex = offset(from: beginningOfDocument, to: range.start)
-    //        return attributedText.attribute(.link, at: startIndex, effectiveRange: nil) != nil
-    //    }
-    //
-    //    override func becomeFirstResponder() -> Bool {
-    //        return false
-    //    }
-    //
-    
-    // MARK: YanagiText Override
-    
-    //    override func register(_ nsAttachment: NSTextAttachment, and yanagiAttachment: YanagiText.Attachment) {
-    //        super.register(nsAttachment, and: yanagiAttachment)
-    //    }
+    // 選択時のメニュー(コピー・ペースト等)が出ないようにする
+    override func becomeFirstResponder() -> Bool {
+        return false
+    }
     
     // MARK: Publics
     
