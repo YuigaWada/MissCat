@@ -16,4 +16,8 @@ extension UIFont {
     static func awesomeRegular(fontSize: CGFloat) -> UIFont? {
         return UIFont(name: "FontAwesome5Free-Regular", size: fontSize)
     }
+    
+    static func awesomeBrand(fontSize: CGFloat) -> UIFont? {
+        return UIFont(name: "FontAwesome5Brands-Regular", size: fontSize)
+    }
 }
