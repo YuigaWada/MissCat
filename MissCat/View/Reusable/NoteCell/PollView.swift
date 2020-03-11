@@ -132,6 +132,7 @@ extension PollView {
         private var nameLabel: UILabel = .init()
         private var rateLabel: UILabel = .init()
         private var progressView: UIView = .init()
+        private var progressConstraint: NSLayoutConstraint?
         
         private let disposeBag = DisposeBag()
         
@@ -161,17 +162,29 @@ extension PollView {
         /// 投票率を変更し、アニメートさせる
         /// - Parameter newRate: 新しい投票率
         public func changePollRate(to newRate: Float) {
-            let frame = self.frame
             rateLabel.text = "\(Int(100 * newRate))%"
+            
+            // AutoLayoutを再設定
+            guard let progressConstraint = progressConstraint else { return }
+            
+            removeConstraint(progressConstraint)
+            let newProgressConstraint = NSLayoutConstraint(item: progressView,
+                                                           attribute: .width,
+                                                           relatedBy: .equal,
+                                                           toItem: self,
+                                                           attribute: .width,
+                                                           multiplier: CGFloat(newRate),
+                                                           constant: 0)
+            addConstraint(newProgressConstraint)
+            self.progressConstraint = newProgressConstraint
+            
             UIView.animate(withDuration: 0.5, delay: 0, options: .curveEaseInOut, animations: {
                 if !self.canSeeRate {
                     self.progressView.alpha = 1
                     self.rateLabel.alpha = 1
                 }
-                self.progressView.frame = CGRect(x: self.progressView.frame.origin.x,
-                                                 y: self.progressView.frame.origin.y,
-                                                 width: frame.width * CGFloat(newRate),
-                                                 height: self.progressView.frame.height)
+                
+                self.layoutIfNeeded() // AutoLayout更新
             }, completion: { _ in
                 self.canSeeRate = true
             })
@@ -201,11 +214,49 @@ extension PollView {
                                         height: frame.height)
             
             progressView.layer.cornerRadius = style.cornerRadius
+            progressView.translatesAutoresizingMaskIntoConstraints = false
             addSubview(progressView)
             
-            setVoteGesture()
+            // AutoLayout
+            let progressConstraint = NSLayoutConstraint(item: progressView,
+                                                        attribute: .width,
+                                                        relatedBy: .equal,
+                                                        toItem: self,
+                                                        attribute: .width,
+                                                        multiplier: CGFloat(rate),
+                                                        constant: 0)
             
+            addConstraints([
+                progressConstraint,
+                NSLayoutConstraint(item: progressView,
+                                   attribute: .left,
+                                   relatedBy: .equal,
+                                   toItem: self,
+                                   attribute: .left,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: progressView,
+                                   attribute: .centerY,
+                                   relatedBy: .equal,
+                                   toItem: self,
+                                   attribute: .centerY,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: progressView,
+                                   attribute: .height,
+                                   relatedBy: .equal,
+                                   toItem: self,
+                                   attribute: .height,
+                                   multiplier: 1.0,
+                                   constant: 0)
+            ])
+            
+            setVoteGesture()
             progressView.alpha = canSeeRate ? 1 : 0 // 表示OKなら表示
+            self.progressConstraint = progressConstraint
+            
             return progressView
         }
         
