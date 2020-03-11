@@ -273,72 +273,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     // MARK: Public Methods
     
-    func initializeComponent(hasFile: Bool) {
-        delegate = nil
-        noteId = nil
-        userId = nil
-        
-        backgroundColor = .white
-        separatorBorder.isHidden = false
-        replyIndicator.isHidden = true
-        
-        nameTextView.attributedText = nil
-        iconView.image = nil
-        agoLabel.text = nil
-        noteView.attributedText = nil
-        noteView.isHidden = false
-        
-        //        reactionsCollectionView.isHidden = false
-        
-        setupFileView()
-        fileImageView.arrangedSubviews.forEach {
-            guard let imageView = $0 as? UIImageView else { return }
-            imageView.isHidden = true
-            imageView.image = nil
-        }
-        
-        // TODO: reactionを隠す時これつかう → UIView.animate(withDuration: 0.25, animations: { () -> Void in
-        
-        changeStateFileImage(isHidden: !hasFile)
-        
-        replyButton.setTitle("", for: .normal)
-        renoteButton.setTitle("", for: .normal)
-        reactionButton.setTitle("", for: .normal)
-        
-        //        self.nameTextView.resetViewString()
-        //        self.noteView.resetViewString()
-        pollView.isHidden = true
-        pollView.initialize()
-        
-        innerRenoteDisplay.isHidden = true
-    }
-    
-    private func setupFileImage(_ image: UIImage, originalUrl: String, index: Int, isVideo: Bool, isSensitive: Bool) {
-        // self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
-        
-        DispatchQueue.main.async {
-            guard let imageView = self.getFileView(index) else { return }
-            
-            // tap gestureを付加する
-            imageView.setTapGesture(self.disposeBag, closure: {
-                if isVideo {
-                    self.delegate?.playVideo(url: originalUrl)
-                } else {
-                    self.showImage(url: originalUrl)
-                }
-            })
-            
-            imageView.backgroundColor = .clear
-            imageView.image = image
-            imageView.isHidden = false
-            imageView.setPlayIconImage(hide: !isVideo)
-            imageView.setNSFW(hide: !isSensitive)
-            
-            imageView.layoutIfNeeded()
-            self.mainStackView.setNeedsLayout()
-        }
-    }
-    
     public func transform(with arg: Arg) -> NoteCell {
         let item = arg.item
         let isDetailMode = arg.isDetailMode
@@ -374,16 +308,15 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         // main
         self.noteId = item.noteId
         userId = item.userId
+        iconImageUrl = item.iconImageUrl
         
         // YanagiTextと一対一にキャッシュを保存できるように、idをYanagiTextに渡す
         noteView.setId(noteId: item.noteId)
         nameTextView.setId(userId: item.userId)
         
         let viewModel = getViewModel(item: item, isDetailMode: isDetailMode)
-        self.viewModel = viewModel
         viewModel.setCell()
-        
-        iconImageUrl = viewModel.setImage(username: item.username, imageRawUrl: item.iconImageUrl)
+        self.viewModel = viewModel
         
         // file
         if let files = Cache.shared.getFiles(noteId: noteId) { // キャッシュが存在する場合
@@ -448,7 +381,67 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         return self
     }
     
+    func initializeComponent(hasFile: Bool) {
+        delegate = nil
+        noteId = nil
+        userId = nil
+        
+        backgroundColor = .white
+        separatorBorder.isHidden = false
+        replyIndicator.isHidden = true
+        
+        nameTextView.attributedText = nil
+        iconView.image = nil
+        agoLabel.text = nil
+        noteView.attributedText = nil
+        noteView.isHidden = false
+        
+        setupFileView()
+        fileImageView.arrangedSubviews.forEach {
+            guard let imageView = $0 as? UIImageView else { return }
+            imageView.isHidden = true
+            imageView.image = nil
+        }
+        
+        changeStateFileImage(isHidden: !hasFile)
+        
+        replyButton.setTitle("", for: .normal)
+        renoteButton.setTitle("", for: .normal)
+        reactionButton.setTitle("", for: .normal)
+        
+        pollView.isHidden = true
+        pollView.initialize()
+        
+        innerRenoteDisplay.isHidden = true
+    }
+    
     // MARK: Privates
+    
+    private func setupFileImage(_ image: UIImage, originalUrl: String, index: Int, isVideo: Bool, isSensitive: Bool) {
+        // self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
+        
+        DispatchQueue.main.async {
+            guard let imageView = self.getFileView(index) else { return }
+            
+            // tap gestureを付加する
+            imageView.setTapGesture(self.disposeBag, closure: {
+                if isVideo {
+                    self.delegate?.playVideo(url: originalUrl)
+                } else {
+                    self.showImage(url: originalUrl)
+                }
+            })
+            
+            imageView.backgroundColor = .clear
+            imageView.image = image
+            imageView.isHidden = false
+            imageView.setPlayIconImage(hide: !isVideo)
+            imageView.setNSFW(hide: !isSensitive)
+            
+            imageView.layoutIfNeeded()
+            self.mainStackView.setNeedsLayout()
+        }
+    }
     
     // ファイルは同時に4つしか載せることができないので、先に4つViewを追加しておく
     private func setupFileView() {

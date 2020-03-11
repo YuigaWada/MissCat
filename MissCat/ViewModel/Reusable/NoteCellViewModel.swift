@@ -94,6 +94,8 @@ class NoteCellViewModel: ViewModelType {
         prepareCommentRenote(item)
         output.onOtherNote.accept(item.onOtherNote)
         
+        setImage(username: item.username, imageRawUrl: item.iconImageUrl)
+        
         if let pollModel = item.poll {
             output.poll.accept(pollModel)
         }
@@ -179,7 +181,7 @@ class NoteCellViewModel: ViewModelType {
         return reactionCell
     }
     
-    public func setImage(username: String, imageRawUrl: String?) -> String? {
+    public func setImage(username: String, imageRawUrl: String?) {
         if let image = Cache.shared.getIcon(username: username) {
             output.iconImage.accept(image)
         } else if let imageRawUrl = imageRawUrl, let imageUrl = URL(string: imageRawUrl) {
@@ -188,11 +190,7 @@ class NoteCellViewModel: ViewModelType {
                 Cache.shared.saveIcon(username: username, image: image) // CACHE!
                 self.output.iconImage.accept(image)
             }
-            
-            return imageRawUrl
         }
-        
-        return nil
     }
     
     /// ファイルの種類を識別する
