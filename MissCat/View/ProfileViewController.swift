@@ -34,6 +34,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
     @IBOutlet weak var followButton: UIButton!
     
     @IBOutlet weak var backButton: UIButton!
+    @IBOutlet weak var settingsButton: UIButton!
     @IBOutlet weak var containerHeightContraint: NSLayoutConstraint!
     
     public var homeViewController: TimelineDelegate?
@@ -105,6 +106,10 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
         backButton.titleLabel?.font = .awesomeSolid(fontSize: 18.0)
         backButton.alpha = 0.5
         backButton.setTitleColor(.black, for: .normal)
+        
+        settingsButton.titleLabel?.font = .awesomeSolid(fontSize: 18.0)
+        settingsButton.alpha = 0.5
+        settingsButton.setTitleColor(.black, for: .normal)
         
         introTextView.font = UIFont(name: "Helvetica",
                                     size: 11.0)
@@ -197,6 +202,10 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
         
         backButton.rx.tap.subscribe(onNext: {
             _ = self.navigationController?.popViewController(animated: true)
+        }).disposed(by: disposeBag)
+        
+        settingsButton.rx.tap.subscribe(onNext: {
+            self.homeViewController?.openSettings()
         }).disposed(by: disposeBag)
         
         backButton.isHidden = output.isMe

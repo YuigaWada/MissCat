@@ -399,6 +399,14 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
+    public func openSettings() {
+        guard let storyboard = self.storyboard,
+            let settingsViewController = storyboard.instantiateViewController(withIdentifier: "settings")
+            as? SettingsViewController else { return }
+        
+        navigationController?.pushViewController(settingsViewController, animated: true)
+    }
+    
     public func successInitialLoading(_ success: Bool) {
         guard !success else { return }
         

@@ -18,6 +18,7 @@ public protocol TimelineDelegate { // For HomeViewController
     func tappedCell(item: NoteCell.Model)
     func move2Profile(userId: String)
     func openUserPage(username: String)
+    func openSettings()
     
     func successInitialLoading(_ success: Bool)
     func changedStreamState(success: Bool)
