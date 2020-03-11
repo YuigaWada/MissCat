@@ -225,7 +225,28 @@ extension PollView {
                                         width: pollNameLabel.frame.width,
                                         height: pollNameLabel.frame.height)
             
+            pollNameLabel.translatesAutoresizingMaskIntoConstraints = false
             addSubview(pollNameLabel)
+            
+            // AutoLayout
+            addConstraints([
+                NSLayoutConstraint(item: pollNameLabel,
+                                   attribute: .left,
+                                   relatedBy: .equal,
+                                   toItem: self,
+                                   attribute: .left,
+                                   multiplier: 1.0,
+                                   constant: 10),
+                
+                NSLayoutConstraint(item: pollNameLabel,
+                                   attribute: .centerY,
+                                   relatedBy: .equal,
+                                   toItem: self,
+                                   attribute: .centerY,
+                                   multiplier: 1.0,
+                                   constant: 0)
+            ])
+            
             return pollNameLabel
         }
         
@@ -247,7 +268,27 @@ extension PollView {
                                         width: pollRateLabel.frame.width,
                                         height: pollRateLabel.frame.height)
             
+            pollRateLabel.translatesAutoresizingMaskIntoConstraints = false
             addSubview(pollRateLabel)
+            
+            // AutoLayout
+            addConstraints([
+                NSLayoutConstraint(item: pollRateLabel,
+                                   attribute: .right,
+                                   relatedBy: .equal,
+                                   toItem: self,
+                                   attribute: .right,
+                                   multiplier: 1.0,
+                                   constant: -10),
+                
+                NSLayoutConstraint(item: pollRateLabel,
+                                   attribute: .centerY,
+                                   relatedBy: .equal,
+                                   toItem: self,
+                                   attribute: .centerY,
+                                   multiplier: 1.0,
+                                   constant: 0)
+            ])
             return pollRateLabel
         }
         
