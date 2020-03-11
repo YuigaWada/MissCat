@@ -175,7 +175,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
         output.followCount.asDriver(onErrorDriveWith: Driver.empty()).drive(followCountButton.rx.title()).disposed(by: disposeBag)
         output.followerCount.asDriver(onErrorDriveWith: Driver.empty()).drive(followerCountButton.rx.title()).disposed(by: disposeBag)
         
-        if !output.isMe {
+        if !isMe {
             output.relation.asDriver(onErrorDriveWith: Driver.empty()).map {
                 let isFollowing = $0.isFollowing ?? false
                 return isFollowing ? "フォロー解除" : "フォロー"
@@ -191,7 +191,8 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
                 self.followButton.setTitleColor(isFollowing ? UIColor.systemBlue : UIColor.white, for: .normal)
             }).disposed(by: disposeBag)
         } else { // 自分のプロフィール画面の場合
-            followButton.isHidden = true
+            followButton.setTitle("編集", for: .normal)
+            followButton.setTitleColor(.systemBlue, for: .normal)
         }
         
         backButton.rx.tap.subscribe(onNext: {
