@@ -227,7 +227,7 @@ class TimelineViewModel: ViewModelType {
     }
     
     public func getCell(cell itemCell: NoteCell, item: NoteCell.Model) -> NoteCell {
-        return itemCell.shapeCell(item: item)
+        return itemCell.transform(with: .init(item: item))
     }
     
     public func vote(choice: Int, to noteId: String) {

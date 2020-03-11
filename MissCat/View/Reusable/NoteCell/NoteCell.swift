@@ -34,7 +34,14 @@ public protocol NoteCellDelegate {
 private typealias ViewModel = NoteCellViewModel
 typealias ReactionsDataSource = RxCollectionViewSectionedReloadDataSource<NoteCell.Reaction.Section>
 
-public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICollectionViewDelegate {
+public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICollectionViewDelegate, ComponentType {
+    public struct Arg {
+        var item: NoteCell.Model
+        var isDetailMode: Bool = false
+    }
+    
+    public typealias Transformed = NoteCell
+    
     // MARK: IBOutlet (UIView)
     
     @IBOutlet weak var nameTextView: MisskeyTextView!
@@ -199,7 +206,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         // Renote With Comment
         
         output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { renoteModel in
-            self.commentRenoteView = self.commentRenoteView?.shapeCell(item: renoteModel) // MEMO: やっぱりここが重いっぽい
+            self.commentRenoteView = self.commentRenoteView?.transform(with: .init(item: renoteModel)) // MEMO: やっぱりここが重いっぽい
             self.commentRenoteView?.setTapGesture(self.disposeBag, closure: {
                 guard let noteId = renoteModel.noteId else { return }
                 self.delegate?.move2PostDetail(item: renoteModel)
@@ -266,7 +273,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     // MARK: Public Methods
     
-    public func initializeComponent(hasFile: Bool) {
+    func initializeComponent(hasFile: Bool) {
         delegate = nil
         noteId = nil
         userId = nil
@@ -306,7 +313,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         innerRenoteDisplay.isHidden = true
     }
     
-    public func setupFileImage(_ image: UIImage, originalUrl: String, index: Int, isVideo: Bool, isSensitive: Bool) {
+    private func setupFileImage(_ image: UIImage, originalUrl: String, index: Int, isVideo: Bool, isSensitive: Bool) {
         // self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
         
         DispatchQueue.main.async {
@@ -332,7 +339,9 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         }
     }
     
-    public func shapeCell(item: NoteCell.Model, isDetailMode: Bool = false) -> NoteCell {
+    public func transform(with arg: Arg) -> NoteCell {
+        let item = arg.item
+        let isDetailMode = arg.isDetailMode
         guard !item.isSkelton else { // SkeltonViewを表示する
             changeSkeltonState(on: true)
             return self

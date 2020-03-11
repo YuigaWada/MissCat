@@ -75,7 +75,7 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
             guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell, let replyNote = item.replyNote
             else { return NoteCell() }
             
-            let shapedCell = noteCell.shapeCell(item: replyNote)
+            let shapedCell = noteCell.transform(with: .init(item: replyNote))
             shapedCell.delegate = self
             
             return shapedCell
