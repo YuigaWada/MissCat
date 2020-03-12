@@ -43,4 +43,11 @@ public class SettingsViewController: UITableViewController {
     public override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 60
     }
+    
+    public override func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
+        view.tintColor = .clear
+        
+        guard let header = view as? UITableViewHeaderFooterView else { return }
+        header.textLabel?.text = "MissCat"
+    }
 }
