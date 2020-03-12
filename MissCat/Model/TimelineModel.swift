@@ -105,7 +105,7 @@ class TimelineModel {
     
     public func loadNotes(with option: LoadOption) -> Observable<NoteCell.Model> {
         let dispose = Disposables.create()
-        let isReload = option.isReload && option.lastNoteId != nil
+        let isReload = option.isReload && (option.lastNoteId != nil)
         
         return Observable.create { [unowned self] observer in
             
@@ -116,15 +116,35 @@ class TimelineModel {
                     return
                 }
                 
-                var stopLoad = false // true: これ以上noteをstreamに流さない
+                if isReload {
+                    // timelineにすでに表示してある投稿を取得した場合、ロードを終了する
+                    var newPosts: [NoteModel] = []
+                    var stop: Bool = false
+                    posts.forEach { post in
+                        stop = option.lastNoteId == post.id
+                        
+                        guard !stop else { return }
+                        newPosts.append(post)
+                    }
+                    
+                    newPosts.reverse() // 逆順に読み込む
+                    newPosts.forEach { post in
+                        self.transformNote(with: observer, post: post, reverse: false)
+                    }
+                    
+                    observer.onCompleted()
+                    return
+                }
+                
+                // if !isReload...
+                
                 posts.forEach { post in
-                    guard !stopLoad else { return }
                     self.transformNote(with: observer, post: post, reverse: false)
                     if let noteId = post.id {
                         self.initialNoteIds.append(noteId) // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
-                        stopLoad = isReload && option.lastNoteId == post.id // timelineにすでに表示してある投稿を取得した場合、ロードを終了する
                     }
                 }
+                
                 observer.onCompleted()
             }
             

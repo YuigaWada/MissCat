@@ -261,6 +261,8 @@ class TimelineViewModel: ViewModelType {
         
         model.loadNotes(with: option).subscribe(onNext: { cellModel in
             self.cellsModel.insert(cellModel, at: 0)
+        }, onCompleted: {
+            self.updateNotes(new: self.cellsModel)
         }).disposed(by: disposeBag)
     }
     
