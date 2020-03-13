@@ -89,6 +89,11 @@ public class AboutMisskeyViewController: UIViewController {
     }
     
     private func openTwitterAccount() {
+        if let twitterScheme = URL(string: "twitter://user?screen_name=yuigawada"), UIApplication.shared.canOpenURL(twitterScheme) {
+            UIApplication.shared.open(twitterScheme, options: [:], completionHandler: nil)
+            return
+        }
+        
         guard let url = URL(string: "https://twitter.com/yuigawada"), UIApplication.shared.canOpenURL(url) else { return }
         DispatchQueue.main.async { self.openUrl(url) }
     }
