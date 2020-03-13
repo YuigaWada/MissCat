@@ -309,7 +309,29 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     
     func tappedReply() {}
     
-    func tappedRenote() {}
+    func tappedRenote(noteId: String) {
+        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
+        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "Renote", awesomeIcon: "retweet", order: 0),
+                                                             .init(title: "引用Renote", awesomeIcon: "quote-right", order: 1)]
+        
+        panelMenu.setPanelTitle("Renote")
+        panelMenu.setupMenu(items: menuItems)
+        panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
+            guard order >= 0 else { return }
+            panelMenu.dismiss(animated: true, completion: nil)
+            
+            switch order {
+            case 0: // RN
+                self.viewModel?.renote(noteId: noteId)
+            case 1: // 引用RN
+                break
+            default:
+                break
+            }
+        }).disposed(by: disposeBag)
+        
+        presentWithSemiModal(panelMenu, animated: true, completion: nil)
+    }
     
     func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
         presentReactionGen(noteId: noteId, iconUrl: iconUrl, displayName: displayName, username: username, note: note, hasFile: hasFile, hasMarked: hasMarked)

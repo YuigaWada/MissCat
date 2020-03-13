@@ -145,7 +145,7 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
     
     public func tappedReply() {}
     
-    public func tappedRenote() {}
+    public func tappedRenote(noteId: String) {}
     
     public func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
         presentReactionGen(noteId: noteId, iconUrl: iconUrl, displayName: displayName, username: username, note: note, hasFile: hasFile, hasMarked: hasMarked)

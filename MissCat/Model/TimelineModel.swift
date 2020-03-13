@@ -303,6 +303,12 @@ class TimelineModel {
             //            print(error)
         })
     }
+    
+    public func renote(noteId: String) {
+        MisskeyKit.notes.renote(renoteId: noteId) { _, _ in
+            //            print(error)
+        }
+    }
 }
 
 // MARK; Utilities

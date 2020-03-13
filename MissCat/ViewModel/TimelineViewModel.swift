@@ -246,6 +246,10 @@ class TimelineViewModel: ViewModelType {
         }
     }
     
+    public func renote(noteId: String) {
+        model.renote(noteId: noteId)
+    }
+    
     public func reloadNotes() {
         guard let lastNoteId = cellsModel[0].noteId else { return }
         
