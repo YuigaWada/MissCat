@@ -203,6 +203,9 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         let shapedCell = viewModel.getCell(cell: itemCell, item: item)
         shapedCell.delegate = self
         
+        shapedCell.nameTextView.renderViewStrings()
+        shapedCell.noteView.renderViewStrings()
+        
         return shapedCell
     }
     

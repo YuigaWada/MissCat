@@ -77,6 +77,13 @@ open class YanagiText: UITextView {
         return fakeImage
     }
     
+    public func renderViewStrings() {
+        attachmentList.values.forEach { target in
+            guard !self.subviews.contains(target.view) else { return }
+            self.addSubview(target.view)
+        }
+    }
+    
     public func transformText() {
         layoutIfNeeded()
         attributedText.enumerateAttribute(.attachment, in: NSMakeRange(0, attributedText.length), options: .longestEffectiveRangeNotRequired, using: { [weak self] value, range, _ in
@@ -106,10 +113,6 @@ open class YanagiText: UITextView {
             estimatedRect.size = yanagiAttachment.size
             
             targetView.frame = estimatedRect
-            
-            if !self.subviews.contains(targetView) {
-                self.addSubview(targetView)
-            }
         })
     }
     
