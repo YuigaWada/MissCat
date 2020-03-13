@@ -58,9 +58,9 @@ public class PanelMenuViewController: UIViewController {
     private func getMenuItemView(with item: MenuItem) -> UIView {
         let menuView = UIView()
         
-//        menuView.layer.borderColor = UIColor.lightGray.cgColor
-//        menuView.layer.cornerRadius = 10
-//        menuView.layer.borderWidth = 1
+        menuView.layer.borderColor = UIColor.lightGray.cgColor
+        menuView.layer.cornerRadius = 20
+        menuView.layer.borderWidth = 1
         
         // label: アイコン
         let iconLabel = UILabel()
@@ -73,10 +73,10 @@ public class PanelMenuViewController: UIViewController {
         iconLabel.translatesAutoresizingMaskIntoConstraints = false
         menuView.addSubview(iconLabel)
         
-        // label: アイコン
+        // label: 選択肢のlabel
         let titleLabel = UILabel()
         titleLabel.text = item.title
-        titleLabel.font = .systemFont(ofSize: 20.0)
+        titleLabel.font = .boldSystemFont(ofSize: 20.0)
         titleLabel.textColor = .lightGray
         
         titleLabel.sizeToFit()
@@ -100,7 +100,7 @@ public class PanelMenuViewController: UIViewController {
                                toItem: menuView,
                                attribute: .height,
                                multiplier: 0,
-                               constant: 35),
+                               constant: 25),
             
             NSLayoutConstraint(item: iconLabel,
                                attribute: .left,
