@@ -315,8 +315,9 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         nameTextView.setId(userId: item.userId)
         
         let viewModel = getViewModel(item: item, isDetailMode: isDetailMode)
-        viewModel.setCell()
         self.viewModel = viewModel
+        
+        viewModel.setCell()
         
         // file
         if let files = Cache.shared.getFiles(noteId: noteId) { // キャッシュが存在する場合
