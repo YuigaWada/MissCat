@@ -22,19 +22,19 @@ public class NoteCellModel {
         }
     }
     
-    // ノートにHyperLink/css修飾を加え整形する
-    public func shapeNote(cache: Cache.NoteOnYanagi?, identifier: String, note: String, isReply: Bool, externalEmojis: [EmojiModel?]?, isDetailMode: Bool, yanagi: YanagiText) -> NSAttributedString? {
-        if !isDetailMode, let cache = cache { // 詳細モードの場合はキャッシュを利用しない
-            // YanagiText内部ではattributedTextがsetされた瞬間attachmentの表示が始まるので先にaddしておく
-            cache.attachments.forEach { nsAttachment, yanagiAttachment in
-                yanagi.addAttachment(ns: nsAttachment, yanagi: yanagiAttachment)
-            }
-            
-            return cache.treatedNote
-        }
-        let replyHeader: NSMutableAttributedString = isReply ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
-        let body = note.mfmTransform(yanagi: yanagi, externalEmojis: externalEmojis) ?? .init()
-        
-        return replyHeader + body
-    }
+//    // ノートにHyperLink/css修飾を加え整形する
+//    public func shapeNote(cache: Cache.NoteOnYanagi?, identifier: String, note: String, isReply: Bool, externalEmojis: [EmojiModel?]?, isDetailMode: Bool, yanagi: YanagiText) -> MFMString {
+//        if !isDetailMode, let cache = cache { // 詳細モードの場合はキャッシュを利用しない
+//            // YanagiText内部ではattributedTextがsetされた瞬間attachmentの表示が始まるので先にaddしておく
+    ////            cache.attachments.forEach { nsAttachment, yanagiAttachment in
+    ////                yanagi.addAttachment(ns: nsAttachment, yanagi: yanagiAttachment)
+    ////            }
+//
+//            return cache.mfmString
+//        }
+//        let replyHeader: NSMutableAttributedString = isReply ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
+//        let mfmString = note.mfmTransform(yanagi: yanagi, externalEmojis: externalEmojis)
+//
+//        return MFMString(mfmEngine: mfmString.mfmEngine, attributed: replyHeader + (mfmString.attributed ?? .init()))
+//    }
 }

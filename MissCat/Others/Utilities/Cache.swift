@@ -33,18 +33,18 @@ public class Cache {
     
     // MARK: Save
     
-    public func saveNote(noteId: String, note: NSAttributedString, attachments: Attachments) {
+    public func saveNote(noteId: String, mfmString: MFMString, attachments: Attachments) {
         guard notes[noteId] == nil else { return }
         
-        notes[noteId] = NoteOnYanagi(treatedNote: note, yanagiTexts: [], attachments: attachments)
+        notes[noteId] = NoteOnYanagi(mfmString: mfmString, yanagiTexts: [], attachments: attachments)
     }
     
-    public func saveDisplayName(username: String, displayName: NSAttributedString, attachments: Attachments, on yanagiText: YanagiText) {
+    public func saveDisplayName(username: String, mfmString: MFMString, attachments: Attachments, on yanagiText: YanagiText) {
         if let _ = users[username] {
-            users[username]!.displayName = displayName
+            users[username]!.mfmString = mfmString
             users[username]!.yanagiTexts.append(yanagiText)
         } else {
-            users[username] = UserOnYanagi(iconImage: nil, displayName: displayName, yanagiTexts: [yanagiText], attachments: attachments)
+            users[username] = UserOnYanagi(iconImage: nil, mfmString: mfmString, yanagiTexts: [yanagiText], attachments: attachments)
         }
     }
     
@@ -52,7 +52,7 @@ public class Cache {
         if let _ = users[username] {
             users[username]!.iconImage = image
         } else {
-            users[username] = UserOnYanagi(iconImage: image, displayName: nil, yanagiTexts: [], attachments: [:])
+            users[username] = UserOnYanagi(iconImage: image, mfmString: nil, yanagiTexts: [], attachments: [:])
         }
     }
     
@@ -89,12 +89,16 @@ public class Cache {
         return notes[noteId]
     }
     
-    public func getDisplayName(username: String, on yanagiText: YanagiText) -> (displayName: NSAttributedString?, attachments: Attachments?) {
-        if let user = users[username], user.yanagiTexts.filter({ $0 === yanagiText }).count > 0 {
-            return (displayName: users[username]?.displayName, attachments: users[username]?.attachments)
-        } else {
-            return (displayName: nil, attachments: nil)
-        }
+    public func getDisplayName(username: String, on yanagiText: YanagiText) -> Cache.UserOnYanagi? {
+//        guard  if let user = users[username] else { return }
+//        let option = user.yanagiTexts.filter({ $0 === yanagiText })
+//        if option.count > 0 {
+//            return option[0]
+//        } else {
+//            return (displayName: nil, attachments: nil)
+//        }
+        
+        return users[username]
     }
     
     public func getIcon(username: String) -> UIImage? {
@@ -208,7 +212,7 @@ public extension Cache {
 
 public extension Cache {
     struct NoteOnYanagi {
-        public var treatedNote: NSAttributedString
+        public var mfmString: MFMString
         
         public var yanagiTexts: [YanagiText]
         public var attachments: [NSTextAttachment: YanagiText.Attachment] = [:]
@@ -216,7 +220,7 @@ public extension Cache {
     
     struct UserOnYanagi {
         public var iconImage: UIImage?
-        public var displayName: NSAttributedString?
+        public var mfmString: MFMString?
         
         public var yanagiTexts: [YanagiText]
         public var attachments: [NSTextAttachment: YanagiText.Attachment] = [:]

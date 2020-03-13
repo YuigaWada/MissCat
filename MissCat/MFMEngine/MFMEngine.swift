@@ -13,11 +13,20 @@ import UIKit
 
 // ** MFM実装のためのクラス **
 
+public struct MFMString {
+    let mfmEngine: MFMEngine
+    let attributed: NSAttributedString?
+}
+
 public class MFMEngine {
     private var lineHeight: CGFloat = 30
     
     private let original: String
     private let emojiTargets: [String]
+    
+    // 　この２つは順序が等しくなるよう気をつけて格納していく
+    private var customEmojis: [String] = []
+    private var attachments: [NSTextAttachment] = []
     
     public var textColor: UIColor = .black
     
@@ -52,7 +61,7 @@ public class MFMEngine {
     /// - Parameters:
     ///   - yanagi: どのTextViewか(YanagiText)
     ///   - externalEmojis: 他インスタンスの絵文字配列
-    public func transform(yanagi: YanagiText, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
+    public func transform(font: UIFont, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
         var rest = original
         let shaped = NSMutableAttributedString()
         
@@ -63,7 +72,7 @@ public class MFMEngine {
             
             // カスタム絵文字を支点に文章を分割していく
             let plane = String(rest[rest.startIndex ..< range.lowerBound])
-            shaped.append(MFMEngine.generatePlaneString(string: plane, font: yanagi.font))
+            shaped.append(MFMEngine.generatePlaneString(string: plane, font: font))
             
             // カスタム絵文字を適切な形に変換していく
             switch converted.type {
@@ -71,11 +80,13 @@ public class MFMEngine {
                 shaped.append(NSAttributedString(string: converted.emoji))
                 
             case "custom":
-                let targetView = MFMEngine.generateAsyncImageView(imageUrl: converted.emoji, lineHeight: lineHeight)
-                if let targetViewString = yanagi.getViewString(with: targetView, size: targetView.frame.size) {
-                    shaped.append(targetViewString)
+                let (attachmentString, attachment) = YanagiText.getAttachmentString(size: CGSize(width: lineHeight, height: lineHeight))
+                if let attachmentString = attachmentString {
+                    shaped.append(attachmentString)
+                    
+                    customEmojis.append(converted.emoji)
+                    attachments.append(attachment)
                 }
-                
             default:
                 return
             }
@@ -84,8 +95,22 @@ public class MFMEngine {
         }
         
         // 末端
-        shaped.append(MFMEngine.generatePlaneString(string: rest, font: yanagi.font))
+        shaped.append(MFMEngine.generatePlaneString(string: rest, font: font))
         return shaped
+    }
+    
+    public func renderCustomEmojis(on yanagi: YanagiText) {
+        guard customEmojis.count == attachments.count else { return }
+        
+        for index in 0 ..< customEmojis.count {
+            let customEmoji = customEmojis[index]
+            let attachment = attachments[index]
+            
+            let targetView = MFMEngine.generateAsyncImageView(imageUrl: customEmoji, lineHeight: lineHeight)
+            let yanagiAttachment = YanagiText.Attachment(view: targetView, size: targetView.frame.size)
+            
+            yanagi.addAttachment(ns: attachment, yanagi: yanagiAttachment)
+        }
     }
     
     // MARK: Statics
@@ -208,9 +233,11 @@ extension String {
     }
     
     // Must Be Used From Main Thread !
-    func mfmTransform(yanagi: YanagiText, externalEmojis: [EmojiModel?]? = nil, lineHeight: CGFloat? = nil) -> NSAttributedString? {
+    func mfmTransform(font: UIFont, externalEmojis: [EmojiModel?]? = nil, lineHeight: CGFloat? = nil) -> MFMString {
         let mfm = MFMEngine(with: self, lineHeight: lineHeight)
-        return mfm.transform(yanagi: yanagi, externalEmojis: externalEmojis)
+        let mfmString = MFMString(mfmEngine: mfm, attributed: mfm.transform(font: font, externalEmojis: externalEmojis))
+        
+        return mfmString
     }
 }
 

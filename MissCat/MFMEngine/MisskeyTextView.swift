@@ -24,11 +24,20 @@ open class YanagiText: UITextView {
         let nsAttachment = NSTextAttachment()
         
         let fakeImageSize = CGSize(width: size.width + xMargin * 2, height: size.height + yMargin * 2)
-        nsAttachment.image = generateFakeImage(size: fakeImageSize)
+        nsAttachment.image = YanagiText.generateFakeImage(size: fakeImageSize)
         
         register(nsAttachment, and: yanagiAttachment)
         
         return NSAttributedString(attachment: nsAttachment)
+    }
+    
+    public static func getAttachmentString(size: CGSize) -> (attributedString: NSAttributedString?, attachment: NSTextAttachment) {
+        let nsAttachment = NSTextAttachment()
+        let fakeImageSize = CGSize(width: size.width, height: size.height)
+        
+        nsAttachment.image = YanagiText.generateFakeImage(size: fakeImageSize)
+        
+        return (attributedString: NSAttributedString(attachment: nsAttachment), attachment: nsAttachment)
     }
     
     public func removeViewString(view: UIView, removeFromList: Bool = true) {
@@ -62,7 +71,7 @@ open class YanagiText: UITextView {
     
     // MARK: Privates
     
-    private func generateFakeImage(size: CGSize) -> UIImage? {
+    private static func generateFakeImage(size: CGSize) -> UIImage? {
         UIGraphicsBeginImageContext(size)
         
         let rect = CGRect(origin: .zero, size: size)
@@ -296,7 +305,7 @@ class MisskeyTextView: YanagiText {
         currentNoteId = noteId
         currentUserId = userId
         
-        showMFM()
+//        showMFM()
     }
     
     public func showMFM() {

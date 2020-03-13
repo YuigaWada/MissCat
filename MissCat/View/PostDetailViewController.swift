@@ -84,7 +84,13 @@ class PostDetailViewController: UIViewController, UITableViewDelegate, FooterTab
         guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell
         else { return NoteCell() }
         
-        return noteCell.transform(with: .init(item: item, isDetailMode: true))
+        let shapedCell = noteCell.transform(with: .init(item: item, isDetailMode: true))
+//        shapedCell.delegate = self
+        
+        shapedCell.nameTextView.renderViewStrings()
+        shapedCell.noteView.renderViewStrings()
+        
+        return shapedCell
     }
     
     // tableViewの負担を軽減するようキャッシュを活用

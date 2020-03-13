@@ -73,22 +73,27 @@ class NoteCellViewModel: ViewModelType {
     public func setCell() {
         let item = input.cellModel
         DispatchQueue.global(qos: .default).async {
-            self.output.defaultConstraintActive.accept(!self.input.isDetailMode)
             self.output.isReplyTarget.accept(item.isReplyTarget)
             self.output.backgroundColor.accept(self.properBackgroundColor)
-            
             self.output.ago.accept(item.ago.calculateAgo())
         }
         
-        output.name.accept(getDisplayName(with: item,
-                                          externalEmojis: item.emojis))
+//        output.name.accept(getDisplayName(with: item,
+//                                          externalEmojis: item.emojis))
         
-        shapeNote(identifier: item.identity,
-                  note: item.note,
-                  noteId: item.noteId,
-                  isReply: item.isReply,
-                  externalEmojis: item.emojis,
-                  isDetailMode: input.isDetailMode)
+//        shapeNote(identifier: item.identity,
+//                  note: item.note,
+//                  noteId: item.noteId,
+//                  isReply: item.isReply,
+//                  externalEmojis: item.emojis,
+//                  isDetailMode: input.isDetailMode)
+        
+        output.name.accept(input.cellModel.shapedDisplayName?.attributed)
+        output.shapedNote.accept(input.cellModel.shapedNote?.attributed)
+        output.defaultConstraintActive.accept(!input.isDetailMode)
+        
+        input.cellModel.shapedDisplayName?.mfmEngine.renderCustomEmojis(on: input.nameYanagi)
+        input.cellModel.shapedNote?.mfmEngine.renderCustomEmojis(on: input.noteYanagi)
         
         getReactions(item)
         prepareCommentRenote(item)
@@ -101,65 +106,67 @@ class NoteCellViewModel: ViewModelType {
         }
     }
     
-    private func shapeNote(identifier: String, note: String, noteId: String?, isReply: Bool, externalEmojis: [EmojiModel?]?, isDetailMode: Bool) {
-        guard let noteId = noteId else { return }
-        
-        let cachedNote = Cache.shared.getNote(noteId: noteId) // セルが再利用されるのでキャッシュは中央集権的に
-        let hasCachedNote: Bool = cachedNote != nil
-        
-        let treatedNote = model.shapeNote(cache: cachedNote,
-                                          identifier: identifier,
-                                          note: note,
-                                          isReply: isReply,
-                                          externalEmojis: externalEmojis,
-                                          isDetailMode: isDetailMode,
-                                          yanagi: input.noteYanagi)
-        
-        if !hasCachedNote, let treatedNote = treatedNote {
-            Cache.shared.saveNote(noteId: noteId, note: treatedNote, attachments: input.noteYanagi.getAttachments()) // CHACHE!
-        }
-        if note.isEmpty { // 画像onlyや投票onlyの場合、noteが存在しない→ noteViewを非表示にする(nilをaccept)
-            output.shapedNote.accept(nil)
-        } else {
-            output.shapedNote.accept(treatedNote)
-        }
-    }
-    
-    private func getDisplayName(with item: NoteCell.Model, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
-        let cache = Cache.shared.getDisplayName(username: item.username, on: input.nameYanagi)
-        let isCached = cache.displayName != nil
-        let hasCachedAttachments = input.nameYanagi.isCached
-        
-        // キャッシュされていない場合 & Attachmentsがセルに残っていない場合、MFMにかけてあげる
-        // (セルは再利用されるので、attachmensのキャッシュの有無も考える)
-        
-        if !isCached {
-            let name = item.displayName
-            let username = " @" + item.username
-            
-            let shapedName = name.mfmTransform(yanagi: input.nameYanagi,
-                                               externalEmojis: externalEmojis,
-                                               lineHeight: input.nameYanagi.frame.height * 0.9) ?? .init()
-            
-            let displayName = shapedName + username.getAttributedString(font: usernameFont,
-                                                                        color: .darkGray)
-            // キャッシュする
-            Cache.shared.saveDisplayName(username: item.username,
-                                         displayName: displayName,
-                                         attachments: input.nameYanagi.getAttachments(),
-                                         on: input.nameYanagi) // CACHE!
-            
-            return displayName
-        }
-        
-//        if !hasCachedAttachments {
-//            cache.attachments?.forEach { nsAttachment, yanagiAttachment in
-//                self.input.nameYanagi.addAttachment(ns: nsAttachment, yanagi: yanagiAttachment)
-//            }
+//    private func shapeNote(identifier: String, note: String, noteId: String?, isReply: Bool, externalEmojis: [EmojiModel?]?, isDetailMode: Bool) {
+//        guard let noteId = noteId else { return }
+//
+//        let cachedNote = Cache.shared.getNote(noteId: noteId) // セルが再利用されるのでキャッシュは中央集権的に
+//        let hasCachedNote: Bool = cachedNote != nil
+//
+//        let mfmString = model.shapeNote(cache: cachedNote,
+//                                        identifier: identifier,
+//                                        note: note,
+//                                        isReply: isReply,
+//                                        externalEmojis: externalEmojis,
+//                                        isDetailMode: isDetailMode,
+//                                        yanagi: input.noteYanagi)
+//
+//        mfmString.mfmEngine.renderCustomEmojis(on: input.noteYanagi) // カスタム絵文字を実際にaddしていく
+//        if !hasCachedNote {
+//            Cache.shared.saveNote(noteId: noteId, mfmString: mfmString, attachments: input.noteYanagi.getAttachments()) // CHACHE!
 //        }
-        
-        return cache.displayName
-    }
+//        if note.isEmpty { // 画像onlyや投票onlyの場合、noteが存在しない→ noteViewを非表示にする(nilをaccept)
+//            output.shapedNote.accept(nil)
+//        } else {
+//            output.shapedNote.accept(mfmString.attributed)
+//        }
+//    }
+//
+//    private func getDisplayName(with item: NoteCell.Model, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
+//        let cache = Cache.shared.getDisplayName(username: item.username, on: input.nameYanagi)
+//        let isCached = cache != nil
+    ////        let hasCachedAttachments = input.nameYanagi.isCached
+//
+//        // キャッシュされていない場合 & Attachmentsがセルに残っていない場合、MFMにかけてあげる
+//        // (セルは再利用されるので、attachmensのキャッシュの有無も考える)
+//
+//        if !isCached {
+//            let name = item.displayName
+//            let username = " @" + item.username
+//
+//            let mfmString = name.mfmTransform(yanagi: input.nameYanagi,
+//                                              externalEmojis: externalEmojis,
+//                                              lineHeight: input.nameYanagi.frame.height * 0.9)
+//
+//            let displayName = (mfmString.attributed ?? .init()) + username.getAttributedString(font: usernameFont,
+//                                                                                               color: .darkGray)
+//            // キャッシュする
+//            Cache.shared.saveDisplayName(username: item.username,
+//                                         mfmString: mfmString,
+//                                         attachments: input.nameYanagi.getAttachments(),
+//                                         on: input.nameYanagi) // CACHE!
+//
+//            return displayName
+//        }
+//
+    ////        if !hasCachedAttachments {
+    ////            cache.attachments?.forEach { nsAttachment, yanagiAttachment in
+    ////                self.input.nameYanagi.addAttachment(ns: nsAttachment, yanagi: yanagiAttachment)
+    ////            }
+    ////        }
+//
+//        cache?.mfmString?.mfmEngine.renderCustomEmojis(on: input.nameYanagi)
+//        return cache?.mfmString?.attributed
+//    }
     
     public func setReactionCell(with item: NoteCell.Reaction, to reactionCell: ReactionCell) -> ReactionCell {
         guard let rawEmoji = item.rawEmoji else { return reactionCell }

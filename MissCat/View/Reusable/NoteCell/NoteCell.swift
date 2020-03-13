@@ -392,10 +392,13 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         replyIndicator.isHidden = true
         
         nameTextView.attributedText = nil
+        nameTextView.resetViewString()
+        
         iconView.image = nil
         agoLabel.text = nil
         noteView.attributedText = nil
         noteView.isHidden = false
+        noteView.resetViewString()
         
         setupFileView()
         fileImageView.arrangedSubviews.forEach {
@@ -663,9 +666,15 @@ extension NoteCell {
         var iconImage: UIImage?
         
         let userId: String
+        
         let displayName: String
+        var shapedDisplayName: MFMString?
+        
         let username: String
+        
         let note: String
+        var shapedNote: MFMString?
+        
         let ago: String
         let replyCount: Int
         let renoteCount: Int
