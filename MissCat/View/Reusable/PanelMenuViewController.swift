@@ -67,6 +67,7 @@ public class PanelMenuViewController: UIViewController {
         iconLabel.text = item.awesomeIcon
         iconLabel.font = .awesomeSolid(fontSize: 25.0)
         iconLabel.textColor = .lightGray
+        iconLabel.minimumScaleFactor = 0.1
         
         iconLabel.sizeToFit()
         iconLabel.isUserInteractionEnabled = true
@@ -92,7 +93,7 @@ public class PanelMenuViewController: UIViewController {
                                toItem: menuView,
                                attribute: .width,
                                multiplier: 0,
-                               constant: 25),
+                               constant: 50),
             
             NSLayoutConstraint(item: iconLabel,
                                attribute: .height,
@@ -100,7 +101,7 @@ public class PanelMenuViewController: UIViewController {
                                toItem: menuView,
                                attribute: .height,
                                multiplier: 0,
-                               constant: 25),
+                               constant: 30),
             
             NSLayoutConstraint(item: iconLabel,
                                attribute: .left,
