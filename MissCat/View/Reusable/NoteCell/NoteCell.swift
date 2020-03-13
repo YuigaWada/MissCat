@@ -130,6 +130,11 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         nameTextView.transformText() // TODO: せっかくisHiddenがどうこうやってたのが反映されていないような気がする
         noteView.transformText()
+        
+        if onOtherNote {
+            nameTextView.renderViewStrings()
+            noteView.renderViewStrings()
+        }
     }
     
     private lazy var setupView: (() -> Void) = { // 必ず一回しか読み込まれない
