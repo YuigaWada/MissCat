@@ -126,8 +126,7 @@ class TimelineViewModel: ViewModelType {
             .subscribe(onNext: { cellModel in
                 self.output.connectedStream.accept(true)
                 
-                cellModel.shapedNote = self.shapeNote(cellModel)
-                cellModel.shapedDisplayName = self.shapeDisplayName(cellModel)
+                self.shapeModel(cellModel)
                 
                 self.cellsModel.insert(cellModel, at: 0)
                 self.updateNotes(new: self.cellsModel)
@@ -223,9 +222,7 @@ class TimelineViewModel: ViewModelType {
         _isLoading = true
         
         return model.loadNotes(with: option).do(onNext: { cellModel in
-            cellModel.shapedNote = self.shapeNote(cellModel)
-            cellModel.shapedDisplayName = self.shapeDisplayName(cellModel)
-            
+            self.shapeModel(cellModel)
             self.cellsModel.append(cellModel)
         }, onCompleted: {
             self.initialNoteIds = self.model.initialNoteIds
@@ -278,6 +275,16 @@ class TimelineViewModel: ViewModelType {
     }
     
     // MARK: Utilities
+    
+    private func shapeModel(_ cellModel: NoteCell.Model) {
+        cellModel.shapedNote = shapeNote(cellModel)
+        cellModel.shapedDisplayName = shapeDisplayName(cellModel)
+        
+        if let commentRNTarget = cellModel.commentRNTarget {
+            commentRNTarget.shapedNote = shapeNote(commentRNTarget)
+            commentRNTarget.shapedDisplayName = shapeDisplayName(commentRNTarget)
+        }
+    }
     
     private func shapeNote(_ cellModel: NoteCell.Model) -> MFMString {
         let replyHeader: NSMutableAttributedString = cellModel.isReply ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
