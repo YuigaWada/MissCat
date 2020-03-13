@@ -61,16 +61,18 @@ extension GIFImageView {
     ///   - data: 画像データ
     ///   - imageView: set対象のGIFImageView
     private func setUIImage(with data: Data) {
-        if let image = UIImage(data: data) {
-            DispatchQueue.main.async {
-                self.backgroundColor = .clear
-                self.image = image
-            }
-        } else { // Type: SVG
-            guard let svgImage = SVGKImage(data: data) else { return }
-            DispatchQueue.main.async {
-                self.backgroundColor = .clear
-                self.image = svgImage.uiImage
+        DispatchQueue.global().async {
+            if let image = UIImage(data: data) {
+                DispatchQueue.main.async {
+                    self.backgroundColor = .clear
+                    self.image = image
+                }
+            } else { // Type: SVG
+                guard let svgImage = SVGKImage(data: data) else { return }
+                DispatchQueue.main.async {
+                    self.backgroundColor = .clear
+                    self.image = svgImage.uiImage
+                }
             }
         }
     }
