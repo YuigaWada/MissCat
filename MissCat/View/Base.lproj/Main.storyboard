@@ -1087,6 +1087,9 @@
                                                 <constraint firstItem="gA2-Ny-ZdV" firstAttribute="centerY" secondItem="8VC-2a-tY4" secondAttribute="centerY" id="XSv-Zo-Ceh"/>
                                             </constraints>
                                         </tableViewCellContentView>
+                                        <connections>
+                                            <segue destination="MUu-np-V4k" kind="show" id="eFw-BU-Tgl"/>
+                                        </connections>
                                     </tableViewCell>
                                 </cells>
                             </tableViewSection>
@@ -1140,6 +1143,41 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dtp-an-TdV" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-810" y="-629"/>
+        </scene>
+        <!--License View Controller-->
+        <scene sceneID="UvE-FL-N55">
+            <objects>
+                <viewController id="MUu-np-V4k" customClass="LicenseViewController" customModule="MissCat" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="1d7-34-6bg">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="UUs-M6-lJo">
+                                <rect key="frame" x="0.0" y="0.0" width="414" height="808"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                                <string key="text">Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.</string>
+                                <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="PFY-D3-FGo" firstAttribute="trailing" secondItem="UUs-M6-lJo" secondAttribute="trailing" id="K9w-gv-Sv7"/>
+                            <constraint firstItem="UUs-M6-lJo" firstAttribute="leading" secondItem="PFY-D3-FGo" secondAttribute="leading" id="UKf-xk-EFL"/>
+                            <constraint firstItem="UUs-M6-lJo" firstAttribute="top" secondItem="PFY-D3-FGo" secondAttribute="top" id="VPg-Ik-893"/>
+                            <constraint firstItem="PFY-D3-FGo" firstAttribute="bottom" secondItem="UUs-M6-lJo" secondAttribute="bottom" id="qv6-3I-u3U"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="PFY-D3-FGo"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="EG6-iY-KOf"/>
+                    <connections>
+                        <outlet property="textView" destination="UUs-M6-lJo" id="wc3-Ay-COq"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Ccz-sa-g8Q" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="3818" y="257"/>
         </scene>
         <!--About Misskey View Controller-->
         <scene sceneID="4QZ-Cb-Lp2">
