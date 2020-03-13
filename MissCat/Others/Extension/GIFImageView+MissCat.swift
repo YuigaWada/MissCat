@@ -68,10 +68,10 @@ extension GIFImageView {
                     self.image = image
                 }
             } else { // Type: SVG
-                guard let svgImage = SVGKImage(data: data) else { return }
+                guard let svgKitImage = SVGKImage(data: data), let svgImage = svgKitImage.uiImage else { return }
                 DispatchQueue.main.async {
                     self.backgroundColor = .clear
-                    self.image = svgImage.uiImage
+                    self.image = svgImage
                 }
             }
         }
