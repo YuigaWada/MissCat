@@ -47,7 +47,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     
     private lazy var dataSource = self.setupDataSource()
     
-    public var homeViewController: TimelineDelegate?
+    public var homeViewController: HomeViewController?
     public var xlTitle: IndicatorInfo? // XLPagerTabStripで用いるtitle
     
     // MARK: Life Cycle
@@ -380,7 +380,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         let playerController = AVPlayerViewController()
         playerController.player = videoPlayer
         
-        present(playerController, animated: true, completion: {
+        homeViewController?.present(playerController, animated: true, completion: {
             videoPlayer.play()
         })
     }

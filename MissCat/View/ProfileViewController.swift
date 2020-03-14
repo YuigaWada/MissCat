@@ -37,7 +37,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
     @IBOutlet weak var settingsButton: UIButton!
     @IBOutlet weak var containerHeightContraint: NSLayoutConstraint!
     
-    public var homeViewController: TimelineDelegate?
+    public var homeViewController: HomeViewController?
     
     private var userId: String?
     private var scrollBegining: CGFloat = 0
