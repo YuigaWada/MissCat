@@ -121,6 +121,8 @@ class TimelineModel {
                     var newPosts: [NoteModel] = []
                     var stop: Bool = false
                     posts.forEach { post in
+                        guard post._featuredId_ == nil else { return } // ハイライトの投稿は無視する
+                        
                         stop = option.lastNoteId == post.id
                         
                         guard !stop else { return }
@@ -139,6 +141,8 @@ class TimelineModel {
                 // if !isReload...
                 
                 posts.forEach { post in
+                    guard post._featuredId_ == nil else { return } // ハイライトの投稿は無視する
+                    
                     self.transformNote(with: observer, post: post, reverse: false)
                     if let noteId = post.id {
                         self.initialNoteIds.append(noteId) // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
