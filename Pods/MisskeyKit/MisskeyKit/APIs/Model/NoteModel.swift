@@ -30,6 +30,7 @@
     public var app: App?
     public var poll: Poll?
     public var geo: Geo?
+    public var _featuredId_: String?
  }
  
  public class App: Codable {
