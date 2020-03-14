@@ -72,8 +72,9 @@ class ProfileViewModel: ViewModelType {
         if let description = user.description {
             DispatchQueue.main.async {
                 let shaped = description.mfmPreTransform().mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0))
-                shaped.mfmEngine.renderCustomEmojis(on: self.input.yanagi)
+                
                 self.output.intro.accept(shaped.attributed ?? .init())
+                shaped.mfmEngine.renderCustomEmojis(on: self.input.yanagi)
             }
         } else {
             output.intro.accept("自己紹介はありません".toAttributedString(family: "Helvetica", size: 11.0) ?? .init())

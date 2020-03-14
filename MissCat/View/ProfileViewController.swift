@@ -89,6 +89,9 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
     }
     
     public override func viewDidLayoutSubviews() {
+        introTextView.renderViewStrings()
+        introTextView.transformText()
+        
         super.viewDidLayoutSubviews()
     }
     
@@ -123,6 +126,8 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
         followButton.layer.borderWidth = 1
         
         introTextView.delegate = self
+        introTextView.xMargin = 0
+        introTextView.yMargin = 0
     }
     
     // MARK: Public Methods
