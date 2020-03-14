@@ -268,6 +268,7 @@ class TimelineViewModel: ViewModelType {
                                       lastNoteId: lastNoteId)
         
         model.loadNotes(with: option).subscribe(onNext: { cellModel in
+            self.shapeModel(cellModel)
             self.cellsModel.insert(cellModel, at: 0)
         }, onCompleted: {
             self.updateNotes(new: self.cellsModel)
