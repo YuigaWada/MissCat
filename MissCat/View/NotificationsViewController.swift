@@ -78,6 +78,9 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
             let shapedCell = noteCell.transform(with: .init(item: replyNote))
             shapedCell.delegate = self
             
+            shapedCell.noteView.renderViewStrings()
+            shapedCell.nameTextView.renderViewStrings()
+            
             return shapedCell
         } else if item.type == .reaction || item.type == .renote {
             guard let notificationCell = tableView.dequeueReusableCell(withIdentifier: "NotificationCell", for: indexPath) as? NotificationCell

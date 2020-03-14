@@ -99,6 +99,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
             // note
             noteView.attributedText = viewModel.shapeNote(note: myNote.note.mfmPreTransform(),
                                                           isReply: myNote.isReply)
+            
             // file
             let fileCount = myNote.files.count
             if fileCount > 0 {
