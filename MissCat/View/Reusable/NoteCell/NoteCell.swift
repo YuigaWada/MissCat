@@ -904,6 +904,7 @@ extension NoteCell {
             let parentFrame = parentView.frame
             let edge = min(parentFrame.width, parentFrame.height) * edgeMultiplier
             
+            playIconImageView.alpha = 0.7
             playIconImageView.center = parentView.center
             playIconImageView.frame = CGRect(x: playIconImageView.frame.origin.x,
                                              y: playIconImageView.frame.origin.y,
