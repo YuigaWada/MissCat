@@ -239,7 +239,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
                                        height: pagerTab.frame.origin.y + getSafeAreaSize().height - 10)
         
         animateBlurView.alpha = 0
-        animateBlurView.isUserInteractionEnabled = true
+        animateBlurView.isUserInteractionEnabled = false
         containerScrollView.addSubview(animateBlurView)
         
         blurAnimator = UIViewPropertyAnimator(duration: 1.0, curve: .easeInOut) {
