@@ -9,7 +9,7 @@
 import UIKit
 
 public class ThemeViewController: UITableViewController {
-    private var sections = ["一般", "投稿", "リプライ", "Renote", "通知欄"]
+    private var sections = ["一般", "投稿", "Renote", "リプライ", "通知欄"]
     
     private lazy var noteMock = generateMockNoteModel()
     private lazy var renoteeMock = generateMockRenoteeModel()
@@ -228,8 +228,8 @@ public class ThemeViewController: UITableViewController {
             cell.textLabel?.text = table.title
             return cell
         case .Mock:
-            let isRenotee = section == .Renote && indexPath.row == 0
-            let isCommentRenote = section == .Renote && indexPath.row == 2
+            let isRenotee = section == .Renote && indexPath.row == 2
+            let isCommentRenote = section == .Renote && indexPath.row == 4
             
             if isRenotee {
                 guard let mock = tableView.dequeueReusableCell(withIdentifier: "RenoteeMock", for: indexPath) as? RenoteeCell
