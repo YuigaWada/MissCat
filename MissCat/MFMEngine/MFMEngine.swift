@@ -29,6 +29,7 @@ public class MFMEngine {
     private var attachments: [NSTextAttachment] = []
     
     public var textColor: UIColor = .black
+    private static let usernameFont = UIFont.systemFont(ofSize: 11.0)
     
     // MARK: Static
     
@@ -114,6 +115,46 @@ public class MFMEngine {
     }
     
     // MARK: Statics
+    
+    public static func shapeModel(_ cellModel: NotificationCell.Model) {
+        guard let myNote = cellModel.myNote else { return }
+        cellModel.myNote?.shapedNote = shapeNote(myNote)
+        cellModel.myNote?.shapedDisplayName = shapeDisplayName(myNote)
+        
+        if let commentRNTarget = myNote.commentRNTarget {
+            commentRNTarget.shapedNote = shapeNote(commentRNTarget)
+            commentRNTarget.shapedDisplayName = shapeDisplayName(commentRNTarget)
+        }
+    }
+    
+    public static func shapeModel(_ cellModel: NoteCell.Model) {
+        cellModel.shapedNote = shapeNote(cellModel)
+        cellModel.shapedDisplayName = shapeDisplayName(cellModel)
+        
+        if let commentRNTarget = cellModel.commentRNTarget {
+            commentRNTarget.shapedNote = shapeNote(commentRNTarget)
+            commentRNTarget.shapedDisplayName = shapeDisplayName(commentRNTarget)
+        }
+    }
+    
+    private static func shapeNote(_ cellModel: NoteCell.Model) -> MFMString {
+        let replyHeader: NSMutableAttributedString = cellModel.isReply ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
+        let mfmString = cellModel.note.mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
+                                                    externalEmojis: cellModel.emojis,
+                                                    lineHeight: 30)
+        
+        return MFMString(mfmEngine: mfmString.mfmEngine, attributed: replyHeader + (mfmString.attributed ?? .init()))
+    }
+    
+    private static func shapeDisplayName(_ cellModel: NoteCell.Model) -> MFMString {
+        let mfmString = cellModel.displayName.mfmTransform(font: UIFont(name: "Helvetica", size: 10.0) ?? .systemFont(ofSize: 10.0),
+                                                           externalEmojis: cellModel.emojis,
+                                                           lineHeight: 25)
+        
+        return MFMString(mfmEngine: mfmString.mfmEngine,
+                         attributed: (mfmString.attributed ?? .init()) + " @\(cellModel.username)".getAttributedString(font: usernameFont,
+                                                                                                                       color: .darkGray))
+    }
     
     /// Stringを適切なフォントを指定してNSAttributedStringに変換する
     /// - Parameters:

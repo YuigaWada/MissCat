@@ -126,7 +126,7 @@ class TimelineViewModel: ViewModelType {
             .subscribe(onNext: { cellModel in
                 self.output.connectedStream.accept(true)
                 
-                self.shapeModel(cellModel)
+                MFMEngine.shapeModel(cellModel)
                 
                 self.cellsModel.insert(cellModel, at: 0)
                 self.updateNotes(new: self.cellsModel)
@@ -222,7 +222,7 @@ class TimelineViewModel: ViewModelType {
         _isLoading = true
         
         return model.loadNotes(with: option).do(onNext: { cellModel in
-            self.shapeModel(cellModel)
+            MFMEngine.shapeModel(cellModel)
             self.cellsModel.append(cellModel)
         }, onCompleted: {
             self.initialNoteIds = self.model.initialNoteIds
@@ -268,42 +268,11 @@ class TimelineViewModel: ViewModelType {
                                       lastNoteId: lastNoteId)
         
         model.loadNotes(with: option).subscribe(onNext: { cellModel in
-            self.shapeModel(cellModel)
+            MFMEngine.shapeModel(cellModel)
             self.cellsModel.insert(cellModel, at: 0)
         }, onCompleted: {
             self.updateNotes(new: self.cellsModel)
         }).disposed(by: disposeBag)
-    }
-    
-    // MARK: Utilities
-    
-    private func shapeModel(_ cellModel: NoteCell.Model) {
-        cellModel.shapedNote = shapeNote(cellModel)
-        cellModel.shapedDisplayName = shapeDisplayName(cellModel)
-        
-        if let commentRNTarget = cellModel.commentRNTarget {
-            commentRNTarget.shapedNote = shapeNote(commentRNTarget)
-            commentRNTarget.shapedDisplayName = shapeDisplayName(commentRNTarget)
-        }
-    }
-    
-    private func shapeNote(_ cellModel: NoteCell.Model) -> MFMString {
-        let replyHeader: NSMutableAttributedString = cellModel.isReply ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
-        let mfmString = cellModel.note.mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
-                                                    externalEmojis: cellModel.emojis,
-                                                    lineHeight: 30)
-        
-        return MFMString(mfmEngine: mfmString.mfmEngine, attributed: replyHeader + (mfmString.attributed ?? .init()))
-    }
-    
-    private func shapeDisplayName(_ cellModel: NoteCell.Model) -> MFMString {
-        let mfmString = cellModel.displayName.mfmTransform(font: UIFont(name: "Helvetica", size: 10.0) ?? .systemFont(ofSize: 10.0),
-                                                           externalEmojis: cellModel.emojis,
-                                                           lineHeight: 25)
-        
-        return MFMString(mfmEngine: mfmString.mfmEngine,
-                         attributed: (mfmString.attributed ?? .init()) + " @\(cellModel.username)".getAttributedString(font: usernameFont,
-                                                                                                                       color: .darkGray))
     }
     
     // dataSourceからnoteを探してtargetのindexの下にreactiongencell入れる

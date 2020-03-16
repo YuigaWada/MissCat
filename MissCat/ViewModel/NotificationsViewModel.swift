@@ -18,7 +18,6 @@ public class NotificationsViewModel {
     public var cellsModel: [NotificationCell.Model] = []
     
     private lazy var model = NotificationsModel()
-    private let usernameFont = UIFont.systemFont(ofSize: 11.0)
     
     init(disposeBag: DisposeBag) {
         loadNotification {
@@ -44,9 +43,9 @@ public class NotificationsViewModel {
             results.forEach { notification in
                 guard let cellModel = self.model.getModel(notification: notification) else { return }
                 if cellModel.type == .mention || cellModel.type == .reply, let replyNote = cellModel.replyNote {
-                    self.shapeModel(replyNote)
+                    MFMEngine.shapeModel(replyNote)
                 } else {
-                    self.shapeModel(cellModel)
+                    MFMEngine.shapeModel(cellModel)
                 }
                 
                 self.cellsModel.append(cellModel)
@@ -71,50 +70,10 @@ public class NotificationsViewModel {
         }
         
         guard let channel = channel, channel == .main, let cellModel = model.getModel(type: type, target: response) else { return }
-        shapeModel(cellModel)
+        MFMEngine.shapeModel(cellModel)
         cellsModel.insert(cellModel, at: 0)
         
         update(new: cellsModel)
-    }
-    
-    private func shapeModel(_ cellModel: NotificationCell.Model) {
-        guard let myNote = cellModel.myNote else { return }
-        cellModel.myNote?.shapedNote = shapeNote(myNote)
-        cellModel.myNote?.shapedDisplayName = shapeDisplayName(myNote)
-        
-        if let commentRNTarget = myNote.commentRNTarget {
-            commentRNTarget.shapedNote = shapeNote(commentRNTarget)
-            commentRNTarget.shapedDisplayName = shapeDisplayName(commentRNTarget)
-        }
-    }
-    
-    private func shapeModel(_ cellModel: NoteCell.Model) {
-        cellModel.shapedNote = shapeNote(cellModel)
-        cellModel.shapedDisplayName = shapeDisplayName(cellModel)
-        
-        if let commentRNTarget = cellModel.commentRNTarget {
-            commentRNTarget.shapedNote = shapeNote(commentRNTarget)
-            commentRNTarget.shapedDisplayName = shapeDisplayName(commentRNTarget)
-        }
-    }
-    
-    private func shapeNote(_ cellModel: NoteCell.Model) -> MFMString {
-        let replyHeader: NSMutableAttributedString = cellModel.isReply ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
-        let mfmString = cellModel.note.mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
-                                                    externalEmojis: cellModel.emojis,
-                                                    lineHeight: 30)
-        
-        return MFMString(mfmEngine: mfmString.mfmEngine, attributed: replyHeader + (mfmString.attributed ?? .init()))
-    }
-    
-    private func shapeDisplayName(_ cellModel: NoteCell.Model) -> MFMString {
-        let mfmString = cellModel.displayName.mfmTransform(font: UIFont(name: "Helvetica", size: 10.0) ?? .systemFont(ofSize: 10.0),
-                                                           externalEmojis: cellModel.emojis,
-                                                           lineHeight: 25)
-        
-        return MFMString(mfmEngine: mfmString.mfmEngine,
-                         attributed: (mfmString.attributed ?? .init()) + " @\(cellModel.username)".getAttributedString(font: usernameFont,
-                                                                                                                       color: .darkGray))
     }
     
     private func update(new: [NotificationCell.Model]) {
