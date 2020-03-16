@@ -4,6 +4,7 @@ FloatingPanel
 Gifu
 MisskeyKit
 PolioPager
+YanagiText
 photo-editor
 RxCocoa
 RxDataSources

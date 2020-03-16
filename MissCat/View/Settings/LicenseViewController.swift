@@ -19,7 +19,7 @@ public class LicenseViewController: UIViewController {
     }
     
     private var raw = """
-    <b>・Agrume</b> by JanGorman<br><b>・Down</b> by AssistoLab<br><b>・FloatingPanel</b> by SCENEE<br><b>・Gifu</b> by kaishin<br><b>・MisskeyKit</b> by YuigaWada<br><b>・PolioPager</b> by YuigaWada<br><b>・photo-editor</b> by eventtus<br><b>・RxCocoa</b> by RxSwiftCommunity<br><b>・RxDataSources</b> by RxSwiftCommunity<br><b>・RxSwift</b> by ReactiveX<br><b>・SVGKit</b> by gupuru<br><b>・SkeletonView</b> by Juanpe<br><b>・Starscream</b> by daltoniam<br><b>・XLPagerTabStrip</b> by xmartlabs<br><br><br><br><br><h1>Agrume</h1><br>The MIT License (MIT)
+    <b>・Agrume</b> by JanGorman<br><b>・Down</b> by AssistoLab<br><b>・FloatingPanel</b> by SCENEE<br><b>・Gifu</b> by kaishin<br><b>・MisskeyKit</b> by YuigaWada<br><b>・PolioPager</b> by YuigaWada<br><b>・YanagiText</b> by YuigaWada<br><b>・photo-editor</b> by eventtus<br><b>・RxCocoa</b> by RxSwiftCommunity<br><b>・RxDataSources</b> by RxSwiftCommunity<br><b>・RxSwift</b> by ReactiveX<br><b>・SVGKit</b> by gupuru<br><b>・SkeletonView</b> by Juanpe<br><b>・Starscream</b> by daltoniam<br><b>・XLPagerTabStrip</b> by xmartlabs<br><br><br><br><br><h1>Agrume</h1><br>The MIT License (MIT)
     
     Copyright (c) 2015 Jan Gorman
     
@@ -126,6 +126,27 @@ public class LicenseViewController: UIViewController {
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
     <br><br><br><br><h1>PolioPager</h1><br>MIT License
+    
+    Copyright (c) 2019 YuigaWada
+    
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+    
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+    
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+    <br><br><br><br><h1>YanagiText</h1><br>MIT License
     
     Copyright (c) 2019 YuigaWada
     
