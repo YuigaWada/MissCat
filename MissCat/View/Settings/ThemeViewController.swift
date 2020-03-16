@@ -14,7 +14,7 @@ public class ThemeViewController: UITableViewController {
     private lazy var noteMock = generateMockNoteModel()
     private lazy var renoteeMock = generateMockRenoteeModel()
     private lazy var renoteMock = generateMockNoteModel()
-    private lazy var commentRenoteMock = generateMockNoteModel()
+    private lazy var commentRenoteMock = generateMockNoteModel(isCommentRenoteTarget: true)
     private lazy var replyMock = generateMockNoteModel(isReply: true)
 //    private lazy var notificationsMock: NotificationCell? = getNotificationCell()
     
@@ -125,7 +125,8 @@ public class ThemeViewController: UITableViewController {
         ])
     }
     
-    private func generateMockNoteModel(isReply: Bool = false) -> NoteCell.Model {
+    private func generateMockNoteModel(isReply: Bool = false, isCommentRenoteTarget: Bool = false, onOtherNote: Bool = false) -> NoteCell.Model {
+        let commentRNModel = isCommentRenoteTarget ? generateMockNoteModel(isCommentRenoteTarget: false, onOtherNote: true) : nil
         let model = NoteCell.Model(isReply: isReply,
                                    noteId: "",
                                    iconImageUrl: "https://s3.arkjp.net/misskey/c9f616c8-edce-4bbd-84ef-98320a3d5cf5.png",
@@ -141,8 +142,8 @@ public class ThemeViewController: UITableViewController {
                                    myReaction: "",
                                    files: [],
                                    emojis: [],
-                                   commentRNTarget: nil,
-                                   onOtherNote: false,
+                                   commentRNTarget: commentRNModel,
+                                   onOtherNote: onOtherNote,
                                    poll: nil)
         
         MFMEngine.shapeModel(model)
@@ -226,6 +227,8 @@ public class ThemeViewController: UITableViewController {
             return cell
         case .Mock:
             let isRenotee = section == .Renote && indexPath.row == 0
+            let isCommentRenote = section == .Renote && indexPath.row == 2
+            
             if isRenotee {
                 guard let mock = tableView.dequeueReusableCell(withIdentifier: "RenoteeMock", for: indexPath) as? RenoteeCell
                 else { return UITableViewCell() }
@@ -237,7 +240,11 @@ public class ThemeViewController: UITableViewController {
             guard let mock = tableView.dequeueReusableCell(withIdentifier: "NoteMock", for: indexPath) as? NoteCell
             else { return UITableViewCell() }
             
-            _ = mock.transform(with: .init(item: noteMock))
+            var model: NoteCell.Model
+            if isCommentRenote { model = commentRenoteMock }
+            else { model = noteMock }
+            
+            _ = mock.transform(with: .init(item: model))
             
             return mock
         }
