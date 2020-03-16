@@ -7,11 +7,15 @@
 //
 
 import Foundation
+import RxCocoa
+import RxSwift
 
 public class Theme {
     public static var shared: Theme = .init()
+    public var theme: PublishRelay<ThemeModel> = .init()
+    private var _theme: ThemeModel?
     
-    public lazy var defaultTheme = """
+    private lazy var defaultTheme = """
         {
             "general": {
                 "main": "2F7CF6",
@@ -41,21 +45,34 @@ public class Theme {
         }
     """
     
-    private var model: ThemeModel?
+    // MARK: LifeCycle
+    
     init() {
-        guard let themeJson = Cache.UserDefaults.shared.getTheme(), let theme = ThemeModel.decode(themeJson) else {
+        guard let themeJson = Cache.UserDefaults.shared.getTheme(), let _theme = ThemeModel.decode(themeJson) else {
             setDefaultTheme()
             return
         }
         
-        model = theme
+        self._theme = _theme
     }
     
     private func setDefaultTheme() {
         guard let defaultThemeModel = ThemeModel.decode(defaultTheme) else { fatalError("Internal Error.") }
-        model = defaultThemeModel
+        _theme = defaultThemeModel
         
         Cache.UserDefaults.shared.setTheme(defaultTheme)
+    }
+    
+    // MARK: Publics
+    
+    public func getCurrentTheme() -> ThemeModel {
+        guard let _theme = _theme else { fatalError("Internal Error") }
+        return _theme
+    }
+    
+    public func changeTheme(_ newTheme: ThemeModel) {
+        _theme = newTheme
+        theme.accept(newTheme)
     }
 }
 
