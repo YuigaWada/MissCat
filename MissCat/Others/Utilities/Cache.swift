@@ -90,13 +90,13 @@ public class Cache {
     }
     
     public func getDisplayName(username: String, on yanagiText: YanagiText) -> Cache.UserOnYanagi? {
-//        guard  if let user = users[username] else { return }
-//        let option = user.yanagiTexts.filter({ $0 === yanagiText })
-//        if option.count > 0 {
-//            return option[0]
-//        } else {
-//            return (displayName: nil, attachments: nil)
-//        }
+        //        guard  if let user = users[username] else { return }
+        //        let option = user.yanagiTexts.filter({ $0 === yanagiText })
+        //        if option.count > 0 {
+        //            return option[0]
+        //        } else {
+        //            return (displayName: nil, attachments: nil)
+        //        }
         
         return users[username]
     }

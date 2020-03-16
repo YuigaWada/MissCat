@@ -198,15 +198,9 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         detailViewController.view.frame = getDisplayRect()
         detailViewController.item = item
         
-        //        self.addChild(detailViewController)
-        //        self.view.addSubview(detailViewController.view)
         navigationController?.pushViewController(detailViewController, animated: true)
         
         nowPage = .PostDetails
-//        self.navBar.isHidden = false
-//        self.navBar.barTitle = ""
-//        self.navBar.setButton(style: .Left, leftText: "chevron-left", leftFont: .awesomeSolid(fontSize: 16.0))
-        
         view.bringSubviewToFront(navBar)
         view.bringSubviewToFront(footerTab)
         
@@ -450,6 +444,6 @@ extension HomeViewController {
         case Profile
         
         // Others
-        case PostDetails
+        case PostDetails}
     }
 }
