@@ -444,6 +444,6 @@ extension HomeViewController {
         case Profile
         
         // Others
-        case PostDetails}
+        case PostDetails
     }
 }
