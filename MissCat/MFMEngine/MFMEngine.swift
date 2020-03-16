@@ -29,7 +29,7 @@ public class MFMEngine {
     private var attachments: [NSTextAttachment] = []
     
     public var textColor: UIColor = .black
-    private static let usernameFont = UIFont.systemFont(ofSize: 11.0)
+    public static var usernameFont = UIFont.systemFont(ofSize: 11.0)
     
     // MARK: Static
     
