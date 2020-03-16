@@ -11,12 +11,15 @@ import UIKit
 public class ThemeViewController: UITableViewController {
     private var sections = ["一般", "投稿", "リプライ", "Renote", "通知欄"]
     
-    private lazy var noteMock: NoteCell? = getNoteCell()
-    private lazy var renoteeMock: RenoteeCell? = getRenoteeCell()
-    private lazy var renoteMock: NoteCell? = getNoteCell()
-    private lazy var commentRenoteMock: NoteCell? = getNoteCell()
-    private lazy var replyMock: NoteCell? = getNoteCell()
-    private lazy var notificationsMock: NotificationCell? = getNotificationCell()
+    private lazy var noteMock = generateMockNoteModel()
+    private lazy var renoteeMock = generateMockRenoteeModel()
+    private lazy var renoteMock = generateMockNoteModel()
+    private lazy var commentRenoteMock = generateMockNoteModel()
+    private lazy var replyMock = generateMockNoteModel(isReply: true)
+//    private lazy var notificationsMock: NotificationCell? = getNotificationCell()
+    
+    private var noteMockModel: NoteCell.Model?
+    private var renoteeMockModel: NoteCell.Model?
     
     private lazy var tables: [Section: [Table]] = {
         var _tables = [Section: [Table]]()
@@ -25,7 +28,8 @@ public class ThemeViewController: UITableViewController {
         return _tables
     }()
     
-    //MARK: LifeCycle
+    // MARK: LifeCycle
+    
     public override func viewDidLoad() {
         super.viewDidLoad()
         setTables()
@@ -44,7 +48,7 @@ public class ThemeViewController: UITableViewController {
                          .init(title: "自分のリアクション", currentColor: .systemOrange),
                          .init(title: "文字サイズ", type: .Size)]
         
-        tables[.Renote] = [.init(type: .Mock),
+        tables[.Renote] = [.init(type: .Mock), .init(type: .Mock), .init(type: .Mock),
                            .init(title: "Renoteしたユーザー名", currentColor: .systemGreen),
                            .init(title: "引用RNのボーダー", currentColor: .systemBlue)]
         
@@ -61,9 +65,12 @@ public class ThemeViewController: UITableViewController {
     private func setTableView() {
         tableView.delegate = self
         tableView.dataSource = self
+        
+        tableView.register(UINib(nibName: "NoteCell", bundle: nil), forCellReuseIdentifier: "NoteMock")
+        tableView.register(UINib(nibName: "RenoteeCell", bundle: nil), forCellReuseIdentifier: "RenoteeMock")
     }
     
-    //MARK: Cell
+    // MARK: Cell
     
     private func setColorDisplay(on parent: UIView, currentColor: UIColor?) {
         let view = UIView()
@@ -118,91 +125,54 @@ public class ThemeViewController: UITableViewController {
         ])
     }
     
-    private func setMock(of section: Section, on parent: UIView) {
-        let stackView = UIStackView()
+    private func generateMockNoteModel(isReply: Bool = false) -> NoteCell.Model {
+        let model = NoteCell.Model(isReply: isReply,
+                                   noteId: "",
+                                   iconImageUrl: "https://s3.arkjp.net/misskey/c9f616c8-edce-4bbd-84ef-98320a3d5cf5.png",
+                                   userId: "",
+                                   displayName: "MissCat",
+                                   username: "misscat",
+                                   note: "MissCatとはiOS向けに開発されたMisskey用クライアントです。",
+                                   ago: "0m",
+                                   replyCount: 0,
+                                   renoteCount: 0,
+                                   reactions: [],
+                                   shapedReactions: [],
+                                   myReaction: "",
+                                   files: [],
+                                   emojis: [],
+                                   commentRNTarget: nil,
+                                   onOtherNote: false,
+                                   poll: nil)
         
-        stackView.alignment = .fill
-        stackView.distribution = .fillEqually
-        stackView.spacing = 0
-        stackView.axis = .vertical
+        MFMEngine.shapeModel(model)
+        return model
+    }
+    
+    private func generateMockRenoteeModel() -> NoteCell.Model {
+        let model = NoteCell.Model(isRenoteeCell: true,
+                                   renotee: "misscat",
+                                   baseNoteId: "",
+                                   noteId: "",
+                                   iconImageUrl: "",
+                                   iconImage: nil,
+                                   userId: "",
+                                   displayName: "",
+                                   username: "",
+                                   note: "",
+                                   ago: "",
+                                   replyCount: 0,
+                                   renoteCount: 0,
+                                   reactions: [],
+                                   shapedReactions: [],
+                                   myReaction: nil,
+                                   files: [],
+                                   emojis: [],
+                                   commentRNTarget: nil,
+                                   poll: nil)
         
-        switch section {
-        case .General:
-            return
-        case .Post:
-            guard let noteMock = noteMock else { return }
-            stackView.addArrangedSubview(noteMock)
-            
-        case .Renote:
-            guard let renoteeMock = renoteeMock,
-                let renoteMock = renoteMock,
-                let commentRenoteMock = commentRenoteMock else { return }
-            stackView.addArrangedSubview(renoteeMock)
-            stackView.addArrangedSubview(renoteMock)
-            stackView.addArrangedSubview(commentRenoteMock)
-            
-        case .Reply:
-            guard let replyMock = replyMock else { return }
-            stackView.addArrangedSubview(replyMock)
-        case .Notifications:
-            guard let notificationsMock = notificationsMock else { return }
-            stackView.addArrangedSubview(notificationsMock)
-        }
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        parent.addSubview(stackView)
-        
-        parent.addConstraints([
-            NSLayoutConstraint(item: stackView,
-                               attribute: .width,
-                               relatedBy: .equal,
-                               toItem: parent,
-                               attribute: .width,
-                               multiplier: 0.8,
-                               constant: 0),
-            
-            NSLayoutConstraint(item: stackView,
-                               attribute: .height,
-                               relatedBy: .equal,
-                               toItem: parent,
-                               attribute: .height,
-                               multiplier: 0,
-                               constant: CGFloat(120 * stackView.arrangedSubviews.count)),
-            
-            NSLayoutConstraint(item: stackView,
-                               attribute: .centerX,
-                               relatedBy: .equal,
-                               toItem: parent,
-                               attribute: .centerX,
-                               multiplier: 1.0,
-                               constant: 0),
-            
-            NSLayoutConstraint(item: stackView,
-                               attribute: .centerY,
-                               relatedBy: .equal,
-                               toItem: parent,
-                               attribute: .centerY,
-                               multiplier: 1.0,
-                               constant: 0)
-        ])
+        return model
     }
-    
-
-    
-    //MARK: Utilities
-    
-    private func getNoteCell() -> NoteCell? {
-        return UINib(nibName: "NoteCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NoteCell
-    }
-    
-    private func getNotificationCell() -> NotificationCell? {
-        return UINib(nibName: "NotificationCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NotificationCell
-    }
-    
-    private func getRenoteeCell() -> RenoteeCell? {
-        return UINib(nibName: "RenoteeCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? RenoteeCell
-    }
-    
-    
     
     // MARK: TableViewDelegate
     
@@ -223,37 +193,54 @@ public class ThemeViewController: UITableViewController {
         view.tintColor = .clear
     }
     
+    public override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 70
+    }
+    
     public override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         guard let section = Section(rawValue: indexPath.section),
             let tables = tables[section],
             indexPath.row < tables.count else { return 60 }
         
         let table = tables[indexPath.row]
-        let mockCount = section == .Renote ? 2 : 1
         
-        return table.type == .Mock ? CGFloat(150 * mockCount) : 60
+        return table.type == .Mock ? UITableView.automaticDimension : 60
     }
     
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell()
-        
         guard let section = Section(rawValue: indexPath.section),
             let tables = tables[section],
-            indexPath.row < tables.count else { return cell }
+            indexPath.row < tables.count else { return UITableViewCell() }
         
         let table = tables[indexPath.row]
-        cell.textLabel?.text = table.title
         
         switch table.type {
         case .Color:
+            let cell = UITableViewCell()
+            cell.textLabel?.text = table.title
             setColorDisplay(on: cell, currentColor: table.currentColor)
+            return cell
         case .Size:
-            break
+            let cell = UITableViewCell()
+            cell.textLabel?.text = table.title
+            return cell
         case .Mock:
-            setMock(of: section, on: cell)
+            let isRenotee = section == .Renote && indexPath.row == 0
+            if isRenotee {
+                guard let mock = tableView.dequeueReusableCell(withIdentifier: "RenoteeMock", for: indexPath) as? RenoteeCell
+                else { return UITableViewCell() }
+                
+                mock.setRenotee("misscat")
+                return mock
+            }
+            
+            guard let mock = tableView.dequeueReusableCell(withIdentifier: "NoteMock", for: indexPath) as? NoteCell
+            else { return UITableViewCell() }
+            
+            _ = mock.transform(with: .init(item: noteMock))
+            
+            return mock
         }
-        
-        return cell
     }
 }
 
