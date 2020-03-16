@@ -41,25 +41,25 @@ public class ThemeViewController: UITableViewController {
                             .init(title: "背景色", currentColor: .white),
                             .init(title: "境界線", currentColor: .lightGray)]
         
-        tables[.Post] = [.init(type: .Mock),
-                         .init(title: "文字色", currentColor: .black),
+        tables[.Post] = [.init(title: "文字色", currentColor: .black),
                          .init(title: "リンク色", currentColor: .systemBlue),
                          .init(title: "リアクションセル", currentColor: .lightGray),
                          .init(title: "自分のリアクション", currentColor: .systemOrange),
-                         .init(title: "文字サイズ", type: .Size)]
+                         .init(title: "文字サイズ", type: .Size),
+                         .init(type: .Mock)]
         
-        tables[.Renote] = [.init(type: .Mock), .init(type: .Mock), .init(type: .Mock),
-                           .init(title: "Renoteしたユーザー名", currentColor: .systemGreen),
-                           .init(title: "引用RNのボーダー", currentColor: .systemBlue)]
+        tables[.Renote] = [.init(title: "Renoteしたユーザー名", currentColor: .systemGreen),
+                           .init(title: "引用RNのボーダー", currentColor: .systemBlue),
+                           .init(type: .Mock), .init(type: .Mock), .init(type: .Mock)]
         
-        tables[.Reply] = [.init(type: .Mock),
-                          .init(title: "背景", currentColor: .lightGray),
-                          .init(title: "文字色", currentColor: .black)]
+        tables[.Reply] = [.init(title: "背景", currentColor: .lightGray),
+                          .init(title: "文字色", currentColor: .black),
+                          .init(type: .Mock)]
         
-        tables[.Notifications] = [.init(type: .Mock),
-                                  .init(title: "リアクション", currentColor: .systemRed),
+        tables[.Notifications] = [.init(title: "リアクション", currentColor: .systemRed),
                                   .init(title: "Renote", currentColor: .systemGreen),
-                                  .init(title: "文字色", currentColor: .black)]
+                                  .init(title: "文字色", currentColor: .black),
+                                  .init(type: .Mock)]
     }
     
     private func setTableView() {
@@ -191,7 +191,7 @@ public class ThemeViewController: UITableViewController {
     }
     
     public override func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
-        view.tintColor = .clear
+        view.tintColor = .white
     }
     
     public override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
