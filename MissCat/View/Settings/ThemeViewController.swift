@@ -10,6 +10,14 @@ import UIKit
 
 public class ThemeViewController: UITableViewController {
     private var sections = ["一般", "投稿", "リプライ", "Renote", "通知欄"]
+    
+    private lazy var noteMock: NoteCell? = getNoteCell()
+    private lazy var renoteeMock: RenoteeCell? = getRenoteeCell()
+    private lazy var renoteMock: NoteCell? = getNoteCell()
+    private lazy var commentRenoteMock: NoteCell? = getNoteCell()
+    private lazy var replyMock: NoteCell? = getNoteCell()
+    private lazy var notificationsMock: NotificationCell? = getNotificationCell()
+    
     private lazy var tables: [Section: [Table]] = {
         var _tables = [Section: [Table]]()
         for i in 0 ... 4 { _tables[Section(rawValue: i)!] = [] }
@@ -17,6 +25,7 @@ public class ThemeViewController: UITableViewController {
         return _tables
     }()
     
+    //MARK: LifeCycle
     public override func viewDidLoad() {
         super.viewDidLoad()
         setTables()
@@ -24,11 +33,9 @@ public class ThemeViewController: UITableViewController {
     }
     
     private func setTables() {
-        //
         tables[.General] = [.init(title: "メインカラー", currentColor: .systemBlue),
                             .init(title: "背景色", currentColor: .white),
                             .init(title: "境界線", currentColor: .lightGray)]
-        
         
         tables[.Post] = [.init(type: .Mock),
                          .init(title: "文字色", currentColor: .black),
@@ -55,6 +62,8 @@ public class ThemeViewController: UITableViewController {
         tableView.delegate = self
         tableView.dataSource = self
     }
+    
+    //MARK: Cell
     
     private func setColorDisplay(on parent: UIView, currentColor: UIColor?) {
         let view = UIView()
@@ -109,6 +118,92 @@ public class ThemeViewController: UITableViewController {
         ])
     }
     
+    private func setMock(of section: Section, on parent: UIView) {
+        let stackView = UIStackView()
+        
+        stackView.alignment = .fill
+        stackView.distribution = .fillEqually
+        stackView.spacing = 0
+        stackView.axis = .vertical
+        
+        switch section {
+        case .General:
+            return
+        case .Post:
+            guard let noteMock = noteMock else { return }
+            stackView.addArrangedSubview(noteMock)
+            
+        case .Renote:
+            guard let renoteeMock = renoteeMock,
+                let renoteMock = renoteMock,
+                let commentRenoteMock = commentRenoteMock else { return }
+            stackView.addArrangedSubview(renoteeMock)
+            stackView.addArrangedSubview(renoteMock)
+            stackView.addArrangedSubview(commentRenoteMock)
+            
+        case .Reply:
+            guard let replyMock = replyMock else { return }
+            stackView.addArrangedSubview(replyMock)
+        case .Notifications:
+            guard let notificationsMock = notificationsMock else { return }
+            stackView.addArrangedSubview(notificationsMock)
+        }
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        parent.addSubview(stackView)
+        
+        parent.addConstraints([
+            NSLayoutConstraint(item: stackView,
+                               attribute: .width,
+                               relatedBy: .equal,
+                               toItem: parent,
+                               attribute: .width,
+                               multiplier: 0.8,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: stackView,
+                               attribute: .height,
+                               relatedBy: .equal,
+                               toItem: parent,
+                               attribute: .height,
+                               multiplier: 0,
+                               constant: CGFloat(120 * stackView.arrangedSubviews.count)),
+            
+            NSLayoutConstraint(item: stackView,
+                               attribute: .centerX,
+                               relatedBy: .equal,
+                               toItem: parent,
+                               attribute: .centerX,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: stackView,
+                               attribute: .centerY,
+                               relatedBy: .equal,
+                               toItem: parent,
+                               attribute: .centerY,
+                               multiplier: 1.0,
+                               constant: 0)
+        ])
+    }
+    
+
+    
+    //MARK: Utilities
+    
+    private func getNoteCell() -> NoteCell? {
+        return UINib(nibName: "NoteCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NoteCell
+    }
+    
+    private func getNotificationCell() -> NotificationCell? {
+        return UINib(nibName: "NotificationCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NotificationCell
+    }
+    
+    private func getRenoteeCell() -> RenoteeCell? {
+        return UINib(nibName: "RenoteeCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? RenoteeCell
+    }
+    
+    
+    
     // MARK: TableViewDelegate
     
     public override func numberOfSections(in tableView: UITableView) -> Int {
@@ -128,6 +223,17 @@ public class ThemeViewController: UITableViewController {
         view.tintColor = .clear
     }
     
+    public override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        guard let section = Section(rawValue: indexPath.section),
+            let tables = tables[section],
+            indexPath.row < tables.count else { return 60 }
+        
+        let table = tables[indexPath.row]
+        let mockCount = section == .Renote ? 2 : 1
+        
+        return table.type == .Mock ? CGFloat(150 * mockCount) : 60
+    }
+    
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
         
@@ -138,8 +244,13 @@ public class ThemeViewController: UITableViewController {
         let table = tables[indexPath.row]
         cell.textLabel?.text = table.title
         
-        if table.type == .Color {
+        switch table.type {
+        case .Color:
             setColorDisplay(on: cell, currentColor: table.currentColor)
+        case .Size:
+            break
+        case .Mock:
+            setMock(of: section, on: cell)
         }
         
         return cell
