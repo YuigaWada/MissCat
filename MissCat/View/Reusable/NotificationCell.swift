@@ -66,7 +66,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
     }
     
     public func shapeCell(item: NotificationCell.Model) -> NotificationCell {
-        guard let username = item.fromUser.username else { return self }
+        guard let username = item.fromUser?.username else { return self }
         
         initialize() // セルの再利用のために各パーツを初期化しておく
         
@@ -77,7 +77,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         // アイコン画像をset
         if let image = Cache.shared.getIcon(username: username) {
             iconImageView.image = image
-        } else if let iconImageUrl = item.fromUser.avatarUrl, let iconUrl = URL(string: iconImageUrl) {
+        } else if let iconImageUrl = item.fromUser?.avatarUrl, let iconUrl = URL(string: iconImageUrl) {
             iconUrl.toUIImage { [weak self] image in
                 guard let self = self, let image = image else { return }
                 
@@ -89,10 +89,10 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         }
         
         // general
-        let displayName = (item.fromUser.name ?? "") == "" ? item.fromUser.username : item.fromUser.name // user.nameがnilか""ならusernameで代替
+        let displayName = (item.fromUser?.name ?? "") == "" ? item.fromUser?.username : item.fromUser?.name // user.nameがnilか""ならusernameで代替
         
         nameLabel.text = displayName
-        usernameLabel.text = "@" + (item.fromUser.username ?? "")
+        usernameLabel.text = "@" + (item.fromUser?.username ?? "")
         agoLabel.text = item.ago.calculateAgo()
         
         if let myNote = item.myNote {
@@ -137,7 +137,8 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         // リアクションした者のプロフィールを表示
         for aboutReactee in [nameLabel, usernameLabel, iconImageView] {
             aboutReactee?.setTapGesture(disposeBag, closure: {
-                self.delegate?.move2Profile(userId: item.fromUser.id)
+                guard let userId = item.fromUser?.id else { return }
+                self.delegate?.move2Profile(userId: userId)
             })
         }
     }
@@ -180,7 +181,7 @@ extension NotificationCell {
         let myNote: NoteCell.Model? // 自分のどの投稿に対してか
         let replyNote: NoteCell.Model? // 相手の投稿
         
-        let fromUser: UserModel
+        let fromUser: UserModel?
         
         let reaction: String?
         
