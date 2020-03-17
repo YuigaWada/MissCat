@@ -141,6 +141,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         self.setupSkeltonMode()
         self.setupProfileGesture() // プロフィールに飛ぶtapgestureを設定する
         self.setupCollectionView()
+        self.themeBinding()
         return {}
     }()
     
@@ -238,9 +239,9 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         output.ago.asDriver(onErrorDriveWith: Driver.empty()).drive(agoLabel.rx.text).disposed(by: disposeBag)
         output.name.asDriver(onErrorDriveWith: Driver.empty()).drive(nameTextView.rx.attributedText).disposed(by: disposeBag)
         
-//        output.name.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { _ in
-//            self.nameTextView.showMFM()
-//        }).disposed(by: disposeBag)
+        //        output.name.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { _ in
+        //            self.nameTextView.showMFM()
+        //        }).disposed(by: disposeBag)
         
         output.shapedNote.asDriver(onErrorDriveWith: Driver.empty()).drive(noteView.rx.attributedText).disposed(by: disposeBag)
         output.shapedNote.asDriver(onErrorDriveWith: Driver.empty()).map { $0 == nil }.drive(noteView.rx.isHidden).disposed(by: disposeBag) // 画像onlyや投票onlyの場合、noteが存在しない場合がある→ noteViewを非表示にする
@@ -257,6 +258,44 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         // hidden
         output.isReplyTarget.asDriver(onErrorDriveWith: Driver.empty()).drive(separatorBorder.rx.isHidden).disposed(by: disposeBag)
         output.isReplyTarget.map { !$0 }.asDriver(onErrorDriveWith: Driver.empty()).drive(replyIndicator.rx.isHidden).disposed(by: disposeBag)
+    }
+    
+    private func themeBinding() {
+        let theme = Theme.shared.theme
+        
+        theme.map { UIColor(hex: $0.general.main) }.subscribe(onNext: {
+            self.tintColor = $0
+        }).disposed(by: disposeBag)
+        theme.map { UIColor(hex: $0.general.background) }.bind(to: rx.backgroundColor).disposed(by: disposeBag)
+        theme.map { UIColor(hex: $0.post.text) }.subscribe(onNext: {
+            for textView in [self.nameTextView, self.noteView] {
+                guard let text = textView?.attributedText, text.length > 0 else { return }
+                let mutableAttributed = NSMutableAttributedString(attributedString: text)
+                mutableAttributed.addAttribute(.foregroundColor,
+                                               value: $0,
+                                               range: NSMakeRange(0, mutableAttributed.length - 1))
+                textView?.attributedText = mutableAttributed
+            }
+            
+        }).disposed(by: disposeBag)
+        
+//        Theme.shared.complete()
+    }
+    
+    private func colorBinding(_ cell: ReactionCell) {
+        let theme = Theme.shared.theme
+        
+        theme.map { UIColor(hex: $0.post.reaction) }.subscribe(onNext: {
+            cell.nonselectedBackGroundColor = $0
+        }).disposed(by: disposeBag)
+        theme.map { UIColor(hex: $0.post.myReaction) }.subscribe(onNext: {
+            cell.selectedBackGroundColor = $0
+        }).disposed(by: disposeBag)
+        
+        let postTheme = Theme.shared.getCurrentTheme().post
+        
+        cell.nonselectedBackGroundColor = UIColor(hex: postTheme.reaction)
+        cell.selectedBackGroundColor = UIColor(hex: postTheme.myReaction)
     }
     
     private func setupProfileGesture() {
@@ -500,6 +539,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             
             let shapedCell = viewModel.setReactionCell(with: item, to: cell)
             shapedCell.delegate = self
+            colorBinding(shapedCell)
             
             return shapedCell
         }

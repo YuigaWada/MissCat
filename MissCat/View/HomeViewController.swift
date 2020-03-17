@@ -8,6 +8,8 @@
 
 import MisskeyKit
 import PolioPager
+import RxCocoa
+import RxSwift
 import UIKit
 
 // **    方針    **
@@ -55,6 +57,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     
     private var previousPage: Page = .Main
     private var logined: Bool = false
+    private var disposeBag = DisposeBag()
     
     // MARK: Life Cycle
     
@@ -63,12 +66,8 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         needBorder = true
         selectedBarHeight = 2
         selectedBar.layer.cornerRadius = 2
-        selectedBar.backgroundColor = .systemBlue
         selectedBarMargins.lower += 1
         sectionInset = .init(top: 0, left: 20, bottom: 0, right: 5)
-        tabBackgroundColor = .white
-        view.backgroundColor = .white
-        
         navBar.isHidden = true
         
         if !isXSeries {
@@ -77,6 +76,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
             sectionInset = .init(top: 2, left: 10, bottom: 0, right: 5)
         }
         
+        setTheme()
         super.viewDidLoad()
     }
     
@@ -111,6 +111,27 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
+    }
+    
+    // MARK: Design
+    
+    private func setTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { UIColor(hex: $0.general.main) }.bind(to: selectedBar.rx.backgroundColor).disposed(by: disposeBag)
+        theme.map { UIColor(hex: $0.general.background) }.subscribe(onNext: { self.tabBackgroundColor = $0 }).disposed(by: disposeBag)
+        theme.map { UIColor(hex: $0.general.background) }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
+        theme.map { UIColor(hex: $0.post.text) }.subscribe(onNext: {
+            self.navBar.titleLabel.textColor = $0
+         }).disposed(by: disposeBag)
+        theme.map { UIColor(hex: $0.post.text) }.subscribe(onNext: {
+            self.navBar.leftButton.setTitleColor($0, for: .normal)
+        }).disposed(by: disposeBag)
+        theme.map { UIColor(hex: $0.post.text) }.subscribe(onNext: {
+            self.navBar.rightButton.setTitleColor($0, for: .normal)
+           }).disposed(by: disposeBag)
+        
+        Theme.shared.complete()
     }
     
     // MARK: Auth

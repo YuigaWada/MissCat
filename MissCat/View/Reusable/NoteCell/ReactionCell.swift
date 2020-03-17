@@ -21,8 +21,12 @@ public class ReactionCell: UICollectionViewCell {
     
     private let disposeBag = DisposeBag()
     
-    private let defaultBGColor = UIColor(hex: "C6C6C6")
-    private let defaultTextColor = UIColor(hex: "666666")
+    public var selectedBackGroundColor = UIColor(hex: "EE7258")
+    public var nonselectedBackGroundColor = UIColor(hex: "C6C6C6")
+    
+    public var selectedTextColor = UIColor.white
+    public var nonselectedTextColor = UIColor(hex: "666666")
+    
     private var isMyReaction: Bool = false
     private var rawReaction: String?
     private var noteId: String?
@@ -95,9 +99,14 @@ public class ReactionCell: UICollectionViewCell {
         view.layer.masksToBounds = true
     }
     
+    /// 色の変更をUIに反映させる
+    public func updateColor() {
+        changeColor(isMyReaction: isMyReaction)
+    }
+    
     private func changeColor(isMyReaction: Bool) {
-        backgroundColor = isMyReaction ? UIColor(hex: "EE7258") : defaultBGColor
-        reactionCounterLabel.textColor = isMyReaction ? .white : defaultTextColor
+        backgroundColor = isMyReaction ? selectedBackGroundColor : nonselectedBackGroundColor
+        reactionCounterLabel.textColor = isMyReaction ? selectedTextColor : nonselectedTextColor
     }
     
     private func incrementCounter() {
