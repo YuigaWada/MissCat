@@ -75,6 +75,12 @@ public class Theme {
         _theme = newTheme
         theme.accept(newTheme)
     }
+    
+    /// bindingが完了した後に呼びだす。現在のtheme情報をstreamに流す。
+    public func complete() {
+        guard let _theme = _theme else { return }
+        theme.accept(_theme)
+    }
 }
 
 public class ThemeModel: Codable {
