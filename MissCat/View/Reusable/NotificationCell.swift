@@ -66,7 +66,11 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
     }
     
     public func shapeCell(item: NotificationCell.Model) -> NotificationCell {
-        guard let username = item.fromUser?.username else { return self }
+        if !item.isMock, item.fromUser?.username == nil {
+            return self
+        }
+        
+        let username = item.fromUser?.username ?? ""
         
         initialize() // セルの再利用のために各パーツを初期化しておく
         
@@ -174,6 +178,8 @@ extension NotificationCell {
     public struct Model: IdentifiableType, Equatable {
         public typealias Identity = String
         public let identity: String = String(Float.random(in: 1 ..< 100))
+        
+        var isMock: Bool = false
         
         var notificationId: String
         var type: ActionType = .reply
