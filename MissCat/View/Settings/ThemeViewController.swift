@@ -250,11 +250,13 @@ public class ThemeViewController: UITableViewController {
                 else { return UITableViewCell() }
                 
                 mock.setRenotee("misscat")
+                mock.selectionStyle = .none // 選択不可能に
                 return mock
             } else if isNotification {
                 guard let mock = tableView.dequeueReusableCell(withIdentifier: "NotificationCell", for: indexPath) as? NotificationCell
                 else { return UITableViewCell() }
                 
+                mock.selectionStyle = .none // 選択不可能に
                 return mock.shapeCell(item: notificationsMock)
             }
             
@@ -268,6 +270,7 @@ public class ThemeViewController: UITableViewController {
             
             _ = mock.transform(with: .init(item: model))
             
+            mock.selectionStyle = .none // 選択不可能に
             return mock
         }
     }
