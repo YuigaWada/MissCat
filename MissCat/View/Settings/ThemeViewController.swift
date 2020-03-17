@@ -56,6 +56,7 @@ public class ThemeViewController: UITableViewController {
         
         tables[.Reply] = [.init(title: "背景", currentColor: UIColor(hex: theme.reply.background)),
                           .init(title: "文字色", currentColor: UIColor(hex: theme.reply.text)),
+                          .init(title: "インディケーター", currentColor: UIColor(hex: theme.reply.indicator)),
                           .init(type: .Mock)]
         
         tables[.Notifications] = [.init(title: "リアクション", currentColor: UIColor(hex: theme.notifications.reaction)),

@@ -26,12 +26,13 @@ public class Theme {
                 "text": "000000",
                 "link": "2F7CF6",
                 "reaction": "C6C6C6",
-                "myReaction": "CF7058",
+                "myReaction": "DF785F",
                 "textSize": 11
             },
             "reply": {
                 "background": "EFEFEF",
-                "text": "000000"
+                "text": "000000",
+                "indicator": "AAAAAA"
             },
             "renote": {
                 "user": "2ecc71",
@@ -93,13 +94,14 @@ public class ThemeModel: Codable {
         var text: String = "000000"
         var link: String = "2F7CF6"
         var reaction: String = "C6C6C6"
-        var myReaction: String = "CF7058"
+        var myReaction: String = "DF785F"
         var textSize: Float = 11.0
     }
     
     public class Reply: Codable {
         var background: String = "EFEFEF"
         var text: String = "000000"
+        var indicator: String = "AAAAAA"
     }
     
     public class Renote: Codable {
