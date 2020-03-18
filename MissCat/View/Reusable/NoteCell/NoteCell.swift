@@ -350,7 +350,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         guard let noteId = item.noteId else { return NoteCell() }
         
-        initializeComponent(hasFile: item.files.count > 0) // Initialize because NoteCell is reused by TableView.
+        initializeComponent(hasFile: item.fileVisible && item.files.count > 0) // Initialize because NoteCell is reused by TableView.
         
         // main
         self.noteId = item.noteId
@@ -367,51 +367,52 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         viewModel.setCell()
         
         // file
-        if let files = Cache.shared.getFiles(noteId: noteId) { // キャッシュが存在する場合
-            for index in 0 ..< files.count {
-                let file = files[index]
-                setupFileImage(file.thumbnail,
-                               originalUrl: file.originalUrl,
-                               index: index,
-                               isVideo: file.type == .Video,
-                               isSensitive: file.isSensitive)
-            }
-        } else { // キャッシュが存在しない場合
-            let files = item.files
-            let fileCount = files.count
-            
-            for index in 0 ..< fileCount {
-                let file = files[index]
-                let fileType = viewModel.checkFileType(file.type)
+        if item.fileVisible {
+            if let files = Cache.shared.getFiles(noteId: noteId) { // キャッシュが存在する場合
+                for index in 0 ..< files.count {
+                    let file = files[index]
+                    setupFileImage(file.thumbnail,
+                                   originalUrl: file.originalUrl,
+                                   index: index,
+                                   isVideo: file.type == .Video,
+                                   isSensitive: file.isSensitive)
+                }
+            } else { // キャッシュが存在しない場合
+                let files = item.files
+                let fileCount = files.count
                 
-                guard fileType != .Unknown,
-                    let thumbnailUrl = file.thumbnailUrl,
-                    let original = file.url,
-                    let imageView = getFileView(index) else { break }
-                
-                imageView.isHidden = false
-                
-                if fileType == .Audio {
-                } else {
-                    thumbnailUrl.toUIImage { image in
-                        guard let image = image else { return }
-                        
-                        Cache.shared.saveFiles(noteId: noteId,
-                                               image: image,
-                                               originalUrl: original,
-                                               type: fileType,
-                                               isSensitive: file.isSensitive ?? false)
-                        
-                        self.setupFileImage(image,
-                                            originalUrl: original,
-                                            index: index,
-                                            isVideo: fileType == .Video,
-                                            isSensitive: file.isSensitive ?? true)
+                for index in 0 ..< fileCount {
+                    let file = files[index]
+                    let fileType = viewModel.checkFileType(file.type)
+                    
+                    guard fileType != .Unknown,
+                        let thumbnailUrl = file.thumbnailUrl,
+                        let original = file.url,
+                        let imageView = getFileView(index) else { break }
+                    
+                    imageView.isHidden = false
+                    
+                    if fileType == .Audio {
+                    } else {
+                        thumbnailUrl.toUIImage { image in
+                            guard let image = image else { return }
+                            
+                            Cache.shared.saveFiles(noteId: noteId,
+                                                   image: image,
+                                                   originalUrl: original,
+                                                   type: fileType,
+                                                   isSensitive: file.isSensitive ?? false)
+                            
+                            self.setupFileImage(image,
+                                                originalUrl: original,
+                                                index: index,
+                                                isVideo: fileType == .Video,
+                                                isSensitive: file.isSensitive ?? true)
+                        }
                     }
                 }
             }
         }
-        
         // footer
         let replyCount = item.replyCount != 0 ? String(item.replyCount) : ""
         let renoteCount = item.renoteCount != 0 ? String(item.renoteCount) : ""
@@ -704,6 +705,7 @@ extension NoteCell {
         var baseNoteId: String? // どのcellに対するReactionGenCellなのか
         var isReply: Bool = false // リプライであるかどうか
         var isReplyTarget: Bool = false // リプライ先の投稿であるかどうか
+        var fileVisible: Bool = true // ファイルを表示するか
         
         public let identity: String = String(Float.random(in: 1 ..< 100))
         let noteId: String?

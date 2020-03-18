@@ -68,6 +68,13 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         mainTextView.becomeFirstResponder()
     }
     
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        targetNote?.onOtherNote = false
+        targetNote?.fileVisible = true
+    }
+    
     public override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
@@ -81,7 +88,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         guard let noteCell = UINib(nibName: "NoteCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NoteCell else { return }
         
         note.onOtherNote = true
-        note.files = []
+        note.fileVisible = false
         
         targetNote = note
         postType = type
