@@ -726,7 +726,7 @@ extension NoteCell {
         var reactions: [ReactionCount]
         var shapedReactions: [NoteCell.Reaction]
         var myReaction: String?
-        let files: [File]
+        var files: [File]
         let emojis: [EmojiModel]?
         
         let commentRNTarget: NoteCell.Model?
