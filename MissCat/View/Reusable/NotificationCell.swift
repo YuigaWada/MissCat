@@ -101,7 +101,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         
         if let myNote = item.myNote {
             // note
-            noteView.attributedText = viewModel.shapeNote(note: myNote.note.mfmPreTransform(),
+            noteView.attributedText = viewModel.shapeNote(note: myNote.note,
                                                           isReply: myNote.isReply)
             
             // file
