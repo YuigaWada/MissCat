@@ -16,7 +16,7 @@ import UIKit
 import WebKit
 
 public protocol NoteCellDelegate {
-    func tappedReply()
+    func tappedReply(note: NoteCell.Model)
     func tappedRenote(note: NoteCell.Model)
     func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool)
     func tappedOthers()
@@ -666,8 +666,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     // MARK: IBAction
     
     @IBAction func tappedReply(_ sender: Any) {
-        guard let delegate = delegate else { return }
-        delegate.tappedReply()
+        guard let delegate = delegate, let noteModel = noteModel else { return }
+        delegate.tappedReply(note: noteModel)
     }
     
     @IBAction func tappedRenote(_ sender: Any) {

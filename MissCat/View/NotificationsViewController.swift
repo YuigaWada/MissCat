@@ -146,7 +146,9 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
     
     // MARK: NoteCellDelegate
     
-    public func tappedReply() {}
+    public func tappedReply(note: NoteCell.Model) {
+        homeViewController?.openPost(item: note, type: .Reply)
+    }
     
     public func tappedRenote(note: NoteCell.Model) {}
     

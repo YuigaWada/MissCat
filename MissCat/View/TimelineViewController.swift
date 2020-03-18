@@ -311,7 +311,9 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     
     // MARK: NoteCell Delegate
     
-    func tappedReply() {}
+    func tappedReply(note: NoteCell.Model) {
+        homeViewController?.openPost(item: note, type: .Reply)
+    }
     
     func tappedRenote(note: NoteCell.Model) {
         guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
