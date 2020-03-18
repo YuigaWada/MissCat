@@ -56,17 +56,17 @@ public class PanelMenuViewController: UIViewController {
     /// メニュー選択肢となるviewを取得する
     /// - Parameter item: MenuItem
     private func getMenuItemView(with item: MenuItem) -> UIView {
+//        let theme = Theme.shared.getCurrentTheme()
         let menuView = UIView()
         
-        menuView.layer.borderColor = UIColor.lightGray.cgColor
-        menuView.layer.cornerRadius = 20
-        menuView.layer.borderWidth = 1
+        menuView.layer.cornerRadius = 10
+        menuView.backgroundColor = .systemBlue
         
         // label: アイコン
         let iconLabel = UILabel()
         iconLabel.text = item.awesomeIcon
         iconLabel.font = .awesomeSolid(fontSize: 25.0)
-        iconLabel.textColor = .lightGray
+        iconLabel.textColor = .white
         iconLabel.minimumScaleFactor = 0.1
         
         iconLabel.sizeToFit()
@@ -77,8 +77,8 @@ public class PanelMenuViewController: UIViewController {
         // label: 選択肢のlabel
         let titleLabel = UILabel()
         titleLabel.text = item.title
-        titleLabel.font = .boldSystemFont(ofSize: 20.0)
-        titleLabel.textColor = .lightGray
+        titleLabel.font = .systemFont(ofSize: 20.0)
+        titleLabel.textColor = .white
         
         titleLabel.sizeToFit()
         titleLabel.isUserInteractionEnabled = true
