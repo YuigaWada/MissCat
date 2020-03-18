@@ -171,20 +171,20 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="14x-13-bDJ">
-                                <rect key="frame" x="0.0" y="92.5" width="414" height="1"/>
+                                <rect key="frame" x="0.0" y="72.5" width="414" height="1"/>
                                 <color key="backgroundColor" red="0.92549019610000005" green="0.92549019610000005" blue="0.92549019610000005" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="1" id="s8m-5u-MgI"/>
                                 </constraints>
                             </view>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="EhL-Hf-yaQ">
-                                <rect key="frame" x="20" y="132.5" width="374" height="0.0"/>
+                                <rect key="frame" x="20" y="112.5" width="374" height="0.0"/>
                                 <constraints>
                                     <constraint firstAttribute="height" id="WB5-K3-2bI"/>
                                 </constraints>
                             </stackView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Panel Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="4Bp-1Y-Aqi">
-                                <rect key="frame" x="25" y="64" width="80" height="20.5"/>
+                                <rect key="frame" x="25" y="44" width="80" height="20.5"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
@@ -193,7 +193,7 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
                             <constraint firstItem="4Bp-1Y-Aqi" firstAttribute="leading" secondItem="pkb-bg-ipF" secondAttribute="leading" constant="25" id="Fou-gP-Qid"/>
-                            <constraint firstItem="4Bp-1Y-Aqi" firstAttribute="top" secondItem="pkb-bg-ipF" secondAttribute="top" constant="20" id="Tv4-Dh-j4v"/>
+                            <constraint firstItem="4Bp-1Y-Aqi" firstAttribute="top" secondItem="pkb-bg-ipF" secondAttribute="top" id="Tv4-Dh-j4v"/>
                             <constraint firstItem="14x-13-bDJ" firstAttribute="leading" secondItem="GAG-8j-7Jj" secondAttribute="leading" id="Xxj-rm-HEb"/>
                             <constraint firstItem="EhL-Hf-yaQ" firstAttribute="leading" secondItem="pkb-bg-ipF" secondAttribute="leading" constant="20" id="gkm-JI-m1P"/>
                             <constraint firstItem="14x-13-bDJ" firstAttribute="top" secondItem="4Bp-1Y-Aqi" secondAttribute="bottom" constant="8" id="nx4-sO-5P3"/>
