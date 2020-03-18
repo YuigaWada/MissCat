@@ -12,7 +12,10 @@ import RxCocoa
 import RxSwift
 
 class PostViewModel: ViewModelType {
-    struct Input {}
+    struct Input {
+        let type: PostViewController.PostType
+        let targetNote: NoteCell.Model?
+    }
     
     struct Output {
         let iconImage: Driver<UIImage>
@@ -23,6 +26,7 @@ class PostViewModel: ViewModelType {
     
     struct State {}
     
+    private var input: Input
     public lazy var output: Output = .init(iconImage: self.iconImage.asDriver(onErrorJustReturn: UIImage()),
                                            isSuccess: self.isSuccess.asDriver(onErrorJustReturn: false),
                                            attachments: self.attachments)
@@ -62,7 +66,8 @@ class PostViewModel: ViewModelType {
     private var attachmentFiles: [AttachmentFile] = []
     private var hasVideoAttachment: Bool = false // 写真と動画は共存させないようにする。尚、写真は4枚まで追加可能だが動画は一つのみとする。
     
-    init(disposeBag: DisposeBag) {
+    init(with input: Input, and disposeBag: DisposeBag) {
+        self.input = input
         self.disposeBag = disposeBag
         
         model.getIconImage { image in
@@ -74,13 +79,16 @@ class PostViewModel: ViewModelType {
     // MARK: Publics
     
     public func submitNote(_ note: String) {
+        let renoteId = input.type == .CommentRenote ? input.targetNote?.noteId : nil
+        let replyId = input.type == .Reply ? input.targetNote?.noteId : nil
+        
         guard attachmentFiles.count > 0 else {
-            model.submitNote(note, fileIds: nil) { self.isSuccess.onNext($0) }
+            model.submitNote(note, fileIds: nil, replyId: replyId, renoteId: renoteId) { self.isSuccess.onNext($0) }
             return
         }
         
         uploadFiles { fileIds in
-            self.model.submitNote(note, fileIds: fileIds) { self.isSuccess.onNext($0) }
+            self.model.submitNote(note, fileIds: fileIds, replyId: replyId, renoteId: renoteId) { self.isSuccess.onNext($0) }
         }
     }
     

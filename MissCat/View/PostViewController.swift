@@ -29,8 +29,9 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     
     private var postType: PostType = .Post
     private var targetNoteCell: NoteCell?
+    private var targetNote: NoteCell.Model?
     
-    private lazy var viewModel = PostViewModel(disposeBag: disposeBag)
+    private var viewModel: PostViewModel?
     private lazy var toolBar = UIToolbar()
     private let disposeBag = DisposeBag()
     
@@ -41,11 +42,12 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     public override func viewDidLoad() {
         super.viewDidLoad()
         
+        let viewModel = PostViewModel(with: .init(type: postType, targetNote: targetNote), and: disposeBag)
         let dataSource = setupDataSource()
-        binding(dataSource)
+        binding(viewModel, dataSource)
         
         setupCollectionView()
-        setupTextView()
+        setupTextView(viewModel)
         setupNavItem()
         setupTargetNoteCell()
         
@@ -53,6 +55,8 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
                                                selector: #selector(keyboardWillShow(_:)),
                                                name: UIResponder.keyboardWillShowNotification,
                                                object: nil)
+        
+        self.viewModel = viewModel
     }
     
     public override func viewWillAppear(_ animated: Bool) {
@@ -79,6 +83,8 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         note.onOtherNote = true
         note.files = []
         
+        targetNote = note
+        postType = type
         targetNoteCell = noteCell.transform(with: .init(item: note))
     }
     
@@ -94,7 +100,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         return dataSource
     }
     
-    private func binding(_ dataSource: AttachmentsDataSource) {
+    private func binding(_ viewModel: PostViewModel, _ dataSource: AttachmentsDataSource) {
         let output = viewModel.output
         
         output.iconImage.drive(iconImageView.rx.image).disposed(by: disposeBag)
@@ -108,7 +114,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         }.disposed(by: disposeBag)
         
         submitButton.rx.tap.asObservable().subscribe { _ in
-            self.viewModel.submitNote(self.mainTextView.text)
+            viewModel.submitNote(self.mainTextView.text)
             DispatchQueue.main.async { self.dismiss(animated: true, completion: nil) }
         }.disposed(by: disposeBag)
         
@@ -135,7 +141,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         attachmentCollectionView.collectionViewLayout = flowLayout
     }
     
-    private func setupTextView() {
+    private func setupTextView(_ viewModel: PostViewModel) {
         // miscs
         mainTextView.rx.setDelegate(self).disposed(by: disposeBag)
         mainTextView.textColor = .lightGray
@@ -156,7 +162,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         cameraButton.rx.tap.subscribe { _ in self.pickImage(type: .camera) }.disposed(by: disposeBag)
         imageButton.rx.tap.subscribe { _ in self.pickImage(type: .photoLibrary) }.disposed(by: disposeBag)
         pollButton.rx.tap.subscribe { _ in }.disposed(by: disposeBag)
-        locationButton.rx.tap.subscribe { _ in self.viewModel.getLocation() }.disposed(by: disposeBag)
+        locationButton.rx.tap.subscribe { _ in viewModel.getLocation() }.disposed(by: disposeBag)
         nsfwButton.rx.tap.subscribe { _ in self.showNSFWSettings() }.disposed(by: disposeBag)
         emojiButton.rx.tap.subscribe { _ in self.showReactionGen() }.disposed(by: disposeBag)
         
@@ -191,14 +197,14 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
             
             self.showPhotoEditor(with: item.image).subscribe(onNext: { editedImage in // 画像エディタを表示
                 guard let editedImage = editedImage else { return }
-                self.viewModel.stackFile(original: item.image, edited: editedImage)
+                self.viewModel?.stackFile(original: item.image, edited: editedImage)
                 
             }).disposed(by: self.disposeBag)
             
         }.disposed(by: disposeBag)
         
         cell.tappedDiscardButton.subscribe(onNext: { id in
-            self.viewModel.removeAttachmentView(id)
+            self.viewModel?.removeAttachmentView(id)
         }).disposed(by: disposeBag)
         
         return cell.setupCell(item)
@@ -312,7 +318,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
             
             showPhotoEditor(with: originalImage).subscribe(onNext: { editedImage in // 画像エディタを表示
                 guard let editedImage = editedImage else { return }
-                self.viewModel.stackFile(original: originalImage, edited: editedImage)
+                self.viewModel?.stackFile(original: originalImage, edited: editedImage)
             }).disposed(by: disposeBag)
             
             return
@@ -321,7 +327,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         guard let url = info[UIImagePickerController.InfoKey.mediaURL] as? NSURL else { return }
         AVAsset.convert2Mp4(videoUrl: url) { session in // 動画のデフォルトがmovなのでmp4に変換する
             guard session.status == .completed, let filePath = session.outputURL else { return }
-            self.viewModel.stackFile(videoUrl: filePath)
+            self.viewModel?.stackFile(videoUrl: filePath)
         }
     }
     

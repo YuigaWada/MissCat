@@ -27,12 +27,19 @@ public class PostModel {
         }
     }
     
-    public func submitNote(_ note: String?, fileIds: [String]? = nil, completion: @escaping (Bool) -> Void) {
+    public func submitNote(_ note: String?, fileIds: [String]? = nil, replyId: String? = nil, renoteId: String? = nil, completion: @escaping (Bool) -> Void) {
         guard let note = note else { return }
         
-        MisskeyKit.notes.createNote(text: note, fileIds: fileIds ?? []) { post, error in
-            let isSuccess = post != nil && error == nil
-            completion(isSuccess)
+        if let renoteId = renoteId { // 引用RN
+            MisskeyKit.notes.renote(renoteId: renoteId, quote: note) { post, error in
+                let isSuccess = post != nil && error == nil
+                completion(isSuccess)
+            }
+        } else { // 通常の投稿
+            MisskeyKit.notes.createNote(text: note, fileIds: fileIds ?? [], replyId: replyId ?? "") { post, error in
+                let isSuccess = post != nil && error == nil
+                completion(isSuccess)
+            }
         }
     }
     
