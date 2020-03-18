@@ -93,7 +93,7 @@
                                     <constraint firstAttribute="bottom" secondItem="E5P-wX-4mM" secondAttribute="bottom" constant="3" id="mvg-MI-Fw9"/>
                                 </constraints>
                             </view>
-                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="top" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="tzh-uX-1vt">
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="tzh-uX-1vt">
                                 <rect key="frame" x="20" y="511" width="374" height="166"/>
                                 <subviews>
                                     <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsVerticalScrollIndicator="NO" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="IOM-RT-9Xq">
@@ -116,14 +116,16 @@
                                             </collectionViewCell>
                                         </cells>
                                     </collectionView>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="57g-4F-q6D">
-                                        <rect key="frame" x="0.0" y="136" width="90" height="30"/>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="leading" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="57g-4F-q6D">
+                                        <rect key="frame" x="0.0" y="136" width="374" height="30"/>
                                         <state key="normal" title="Add Location"/>
                                     </button>
                                 </subviews>
                                 <constraints>
                                     <constraint firstItem="IOM-RT-9Xq" firstAttribute="top" secondItem="tzh-uX-1vt" secondAttribute="top" id="7nY-au-hFQ"/>
                                     <constraint firstItem="IOM-RT-9Xq" firstAttribute="leading" secondItem="tzh-uX-1vt" secondAttribute="leading" id="Wro-mv-mn9"/>
+                                    <constraint firstAttribute="trailing" secondItem="57g-4F-q6D" secondAttribute="trailing" id="ZdH-5t-RcY"/>
+                                    <constraint firstItem="57g-4F-q6D" firstAttribute="leading" secondItem="tzh-uX-1vt" secondAttribute="leading" id="gHq-3I-7EN"/>
                                     <constraint firstAttribute="trailing" secondItem="IOM-RT-9Xq" secondAttribute="trailing" id="hID-Cl-4wp"/>
                                 </constraints>
                             </stackView>
@@ -149,6 +151,7 @@
                         <viewLayoutGuide key="safeArea" id="xxL-hS-Ifh"/>
                     </view>
                     <connections>
+                        <outlet property="addLocationButon" destination="57g-4F-q6D" id="h3i-I9-H3P"/>
                         <outlet property="attachmentCollectionView" destination="IOM-RT-9Xq" id="6Hk-kT-br1"/>
                         <outlet property="bottomStackView" destination="tzh-uX-1vt" id="cby-EG-WeT"/>
                         <outlet property="cancelButton" destination="2pz-eD-46J" id="PEe-Ee-Sfs"/>
