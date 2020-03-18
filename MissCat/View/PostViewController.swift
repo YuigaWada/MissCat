@@ -25,6 +25,10 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     @IBOutlet weak var mainTextViewBottomConstraint: NSLayoutConstraint!
     
     @IBOutlet weak var bottomStackView: UIStackView!
+    @IBOutlet weak var addLocationButon: UIButton!
+    
+    private var postType: PostType = .Post
+    private var targetNoteCell: NoteCell?
     
     private lazy var viewModel = PostViewModel(disposeBag: disposeBag)
     private lazy var toolBar = UIToolbar()
@@ -43,6 +47,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         setupCollectionView()
         setupTextView()
         setupNavItem()
+        setupTargetNoteCell()
         
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(keyboardWillShow(_:)),
@@ -62,6 +67,19 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     public override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
+    }
+    
+    /// 引用RN / リプライの場合に、対象ノートのモデルを受け渡す
+    /// - Parameters:
+    ///   - note: note model
+    ///   - type: PostType
+    public func setTargetNote(_ note: NoteCell.Model, type: PostType) {
+        guard let noteCell = UINib(nibName: "NoteCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NoteCell else { return }
+        
+        note.onOtherNote = true
+        note.files = []
+        
+        targetNoteCell = noteCell.transform(with: .init(item: note))
     }
     
     // MARK: Setup
@@ -99,6 +117,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
             return String(1500 - text.count)
         }.bind(to: counter.rx.title).disposed(by: disposeBag)
         
+        output.attachments.map { $0.count == 0 }.bind(to: attachmentCollectionView.rx.isHidden).disposed(by: disposeBag)
         output.attachments.bind(to: attachmentCollectionView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
     }
     
@@ -141,6 +160,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         nsfwButton.rx.tap.subscribe { _ in self.showNSFWSettings() }.disposed(by: disposeBag)
         emojiButton.rx.tap.subscribe { _ in self.showReactionGen() }.disposed(by: disposeBag)
         
+        addLocationButon.isHidden = true // 次アップデートで機能追加する
         toolBar.setItems([cameraButton, imageButton,
                           // 次アップデートで機能追加する
                           // pollButton, locationButton,
@@ -182,6 +202,16 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         }).disposed(by: disposeBag)
         
         return cell.setupCell(item)
+    }
+    
+    private func setupTargetNoteCell() {
+        guard let targetCell = targetNoteCell else { return }
+        
+        targetCell.frame = CGRect(x: targetCell.frame.origin.x,
+                                  y: targetCell.frame.origin.y,
+                                  width: bottomStackView.frame.width,
+                                  height: targetCell.frame.height)
+        bottomStackView.addArrangedSubview(targetCell)
     }
     
     private func showReactionGen() {
@@ -303,6 +333,14 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         
         let keyboardSize = keyboardInfo.cgRectValue.size
         fitToKeyboard(keyboardHeight: keyboardSize.height)
+    }
+}
+
+public extension PostViewController {
+    enum PostType {
+        case Post
+        case Reply
+        case CommentRenote
     }
 }
 

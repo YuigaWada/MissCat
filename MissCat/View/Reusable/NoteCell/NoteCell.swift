@@ -17,7 +17,7 @@ import WebKit
 
 public protocol NoteCellDelegate {
     func tappedReply()
-    func tappedRenote(noteId: String)
+    func tappedRenote(note: NoteCell.Model)
     func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool)
     func tappedOthers()
     
@@ -97,6 +97,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     private let disposeBag = DisposeBag()
     private lazy var reactionsDataSource = self.setupDataSource()
     private var viewModel: ViewModel?
+    
+    private var noteModel: NoteCell.Model?
     private var commentRenoteView: NoteCell?
     private var onOtherNote: Bool = false
     
@@ -108,6 +110,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         let viewModel = NoteCellViewModel(with: input, and: disposeBag)
         
+        noteModel = item
         binding(viewModel: viewModel, noteId: item.noteId ?? "")
         setCommentRenoteCell()
         return viewModel
@@ -668,8 +671,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }
     
     @IBAction func tappedRenote(_ sender: Any) {
-        guard let delegate = delegate, let noteId = noteId else { return }
-        delegate.tappedRenote(noteId: noteId)
+        guard let delegate = delegate, let noteModel = noteModel else { return }
+        delegate.tappedRenote(note: noteModel)
     }
     
     @IBAction func tappedReaction(_ sender: Any) {

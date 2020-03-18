@@ -422,6 +422,14 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         navigationController?.pushViewController(settingsViewController, animated: true)
     }
     
+    public func openPost(item: NoteCell.Model, type: PostViewController.PostType) {
+        guard let postViewController = storyboard?.instantiateViewController(withIdentifier: "post") as? PostViewController else { return }
+        nowPage = .Post
+        
+        postViewController.setTargetNote(item, type: type)
+        presentOnFullScreen(postViewController, animated: true, completion: nil)
+    }
+    
     public func successInitialLoading(_ success: Bool) {
         guard !success else { return }
         

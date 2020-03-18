@@ -19,6 +19,7 @@ public protocol TimelineDelegate { // For HomeViewController
     func move2Profile(userId: String)
     func openUserPage(username: String)
     func openSettings()
+    func openPost(item: NoteCell.Model, type: PostViewController.PostType)
     
     func successInitialLoading(_ success: Bool)
     func changedStreamState(success: Bool)
@@ -312,7 +313,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     
     func tappedReply() {}
     
-    func tappedRenote(noteId: String) {
+    func tappedRenote(note: NoteCell.Model) {
         guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
         let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "Renote", awesomeIcon: "retweet", order: 0),
                                                              .init(title: "引用Renote", awesomeIcon: "quote-right", order: 1)]
@@ -325,9 +326,10 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
             
             switch order {
             case 0: // RN
+                guard let noteId = note.noteId else { return }
                 self.viewModel?.renote(noteId: noteId)
             case 1: // 引用RN
-                break
+                self.homeViewController?.openPost(item: note, type: .CommentRenote)
             default:
                 break
             }
