@@ -98,7 +98,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         guard !initialized else { return }
         
         setupFooterTab()
-        showNotificationBanner(icon: .Loading, notification: "ロード中...")
+        loadingBanner()
         initialized = true
     }
     
@@ -442,6 +442,10 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     public func changedStreamState(success: Bool) {
         guard !success else { return }
         showNotificationBanner(icon: .Failed, notification: "Streamingが切断されました")
+    }
+    
+    public func loadingBanner() {
+        showNotificationBanner(icon: .Loading, notification: "ロード中...")
     }
     
     // MARK: NavigationController Delegate
