@@ -102,6 +102,10 @@ public class StartViewController: UIViewController {
                 self.presentOnFullScreen(authViewController, animated: true, completion: nil)
             }
         }).disposed(by: disposeBag)
+        
+        changeInstanceButton.rx.tap.subscribe(onNext: { _ in
+            self.showInstanceTextFiled()
+        }).disposed(by: disposeBag)
     }
     
     // MARK: App
@@ -148,9 +152,50 @@ public class StartViewController: UIViewController {
     
     private func loginCompleted(_ apiKey: String) {
         Cache.UserDefaults.shared.setCurrentLoginedApiKey(apiKey)
+        Cache.UserDefaults.shared.setCurrentLoginedInstance(misskeyInstance)
         DispatchQueue.main.async {
             self.dismiss(animated: true, completion: nil)
         }
+    }
+    
+    private func changeInstance(_ instance: String) {
+        let shaped = shapeInstance(instance)
+        
+        misskeyInstance = shaped
+        instanceLabel.text = shaped
+    }
+    
+    private func shapeInstance(_ instance: String) -> String {
+        var shaped = instance
+        var removeList = [" ", "　"] // 空白を削除
+        if instance.contains("http") {
+            removeList.append("http://")
+            removeList.append("https://")
+        }
+        
+        removeList.forEach { shaped = shaped.remove(of: $0) }
+        
+        return shaped
+    }
+    
+    // MARK: Alert
+    
+    private func showInstanceTextFiled() {
+        let alert = UIAlertController(title: "インスタンスの変更", message: "", preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "変更", style: .default) { (_: UIAlertAction) in
+            guard let textFields = alert.textFields, textFields.count == 1, let instance = textFields[0].text else { return }
+            self.changeInstance(instance)
+        }
+        let cancelAction = UIAlertAction(title: "閉じる", style: .cancel, handler: nil)
+        
+        alert.addAction(okAction)
+        alert.addAction(cancelAction)
+        
+        alert.addTextField { text in
+            text.placeholder = "misskey.io"
+        }
+        
+        present(alert, animated: true, completion: nil)
     }
     
     // MARK: Design
