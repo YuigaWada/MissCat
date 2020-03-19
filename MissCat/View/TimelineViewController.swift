@@ -188,6 +188,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
             guard let renoteeCell = tableView.dequeueReusableCell(withIdentifier: "RenoteeCell", for: indexPath) as? RenoteeCell
             else { return RenoteeCell() }
             
+            renoteeCell.selectionStyle = UITableViewCell.SelectionStyle.none
             renoteeCell.setRenotee(item.renotee ?? "")
             return renoteeCell
         }
