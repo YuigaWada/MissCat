@@ -107,7 +107,6 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         
         view.deselectCell(on: mainTableView)
         viewModel?.setSkeltonCell()
-        mainTableView.isScrollEnabled = scrollable
         if let bottomConstraint = bottomConstraint {
             bottomConstraint.isActive = withNavBar
         }
@@ -120,6 +119,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         mainTableView.register(UINib(nibName: "RenoteeCell", bundle: nil), forCellReuseIdentifier: "RenoteeCell")
         
         mainTableView.rx.setDelegate(self).disposed(by: disposeBag)
+        mainTableView.isScrollEnabled = false
     }
     
     private func setupDataSource() -> NotesDataSource {
@@ -146,6 +146,8 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         output.finishedLoading.subscribe(onNext: { success in
             guard let homeViewController = self.homeViewController else { return }
             homeViewController.successInitialLoading(success)
+            
+            self.mainTableView.isScrollEnabled = self.scrollable
         }).disposed(by: disposeBag)
         
         output.connectedStream.subscribe(onNext: { success in
