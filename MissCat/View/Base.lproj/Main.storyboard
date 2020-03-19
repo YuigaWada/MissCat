@@ -216,6 +216,46 @@
             </objects>
             <point key="canvasLocation" x="1928" y="127"/>
         </scene>
+        <!--Account View Controller-->
+        <scene sceneID="H4k-mn-o5f">
+            <objects>
+                <tableViewController id="wW6-ud-LUX" customClass="AccountViewController" customModule="MissCat" customModuleProvider="target" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="static" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="CVQ-Ky-AW9">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <sections>
+                            <tableViewSection id="cZb-NR-TVG">
+                                <cells>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" id="Jmk-0S-aDI">
+                                        <rect key="frame" x="0.0" y="28" width="414" height="43.5"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Jmk-0S-aDI" id="F7N-o8-p6V">
+                                            <rect key="frame" x="0.0" y="0.0" width="414" height="43.5"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="sDP-kt-K5H">
+                                                    <rect key="frame" x="20" y="6" width="77" height="30"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                    <state key="normal" title="ログアウト"/>
+                                                </button>
+                                            </subviews>
+                                        </tableViewCellContentView>
+                                    </tableViewCell>
+                                </cells>
+                            </tableViewSection>
+                        </sections>
+                        <connections>
+                            <outlet property="dataSource" destination="wW6-ud-LUX" id="djh-96-G4c"/>
+                            <outlet property="delegate" destination="wW6-ud-LUX" id="p9J-gN-X0i"/>
+                        </connections>
+                    </tableView>
+                    <navigationItem key="navigationItem" id="VkY-VQ-O5H"/>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="567-OK-JmL" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="3817" y="-416"/>
+        </scene>
         <!--Home View Controller-->
         <scene sceneID="zwd-qG-Y2W">
             <objects>
@@ -947,6 +987,9 @@
                                                 <constraint firstItem="4HG-Tu-Fvo" firstAttribute="centerY" secondItem="ODt-N2-Our" secondAttribute="centerY" id="Rw4-KK-IYR"/>
                                             </constraints>
                                         </tableViewCellContentView>
+                                        <connections>
+                                            <segue destination="wW6-ud-LUX" kind="show" id="aF3-Se-oN8"/>
+                                        </connections>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" misplaced="YES" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" id="nCO-hX-VoI">
                                         <rect key="frame" x="0.0" y="71.5" width="414" height="43.5"/>
