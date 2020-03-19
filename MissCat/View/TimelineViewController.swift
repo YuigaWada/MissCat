@@ -106,6 +106,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        view.deselectCell(on: mainTableView)
         viewModel?.setSkeltonCell()
         mainTableView.isScrollEnabled = scrollable
         if let bottomConstraint = bottomConstraint {
@@ -249,7 +250,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     // セル選択後すぐに選択をキャンセルする & ReactionGenCellを消す
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let index = indexPath.row
-        tableView.deselectRow(at: indexPath as IndexPath, animated: true)
+//        tableView.deselectRow(at: indexPath as IndexPath, animated: true)
         
         guard let viewModel = viewModel else { return }
         showDetailView(item: viewModel.cellsModel[index])

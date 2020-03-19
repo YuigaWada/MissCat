@@ -53,4 +53,9 @@ extension UIView {
         label.sizeToFit()
         return label.frame.width
     }
+    
+    func deselectCell(on tableView: UITableView) {
+        guard let indexPathForSelectedRow = tableView.indexPathForSelectedRow else { return }
+        tableView.deselectRow(at: indexPathForSelectedRow, animated: true)
+    }
 }
