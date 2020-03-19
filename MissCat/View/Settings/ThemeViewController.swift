@@ -133,7 +133,7 @@ public class ThemeViewController: UITableViewController {
         let commentRNModel = isCommentRenoteTarget ? generateMockNoteModel(isCommentRenoteTarget: false, onOtherNote: true) : nil
         let model = NoteCell.Model(isReplyTarget: isReply,
                                    noteId: "",
-                                   iconImageUrl: "https://s3.arkjp.net/misskey/c9f616c8-edce-4bbd-84ef-98320a3d5cf5.png",
+                                   iconImageUrl: "https://s3.arkjp.net/misskey/1be7b029-31d4-43a2-9fe0-10c608d161af.png",
                                    userId: "",
                                    displayName: "MissCat",
                                    username: "misscat",
