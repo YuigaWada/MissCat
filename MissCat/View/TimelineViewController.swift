@@ -151,10 +151,6 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         output.connectedStream.subscribe(onNext: { success in
             guard let homeViewController = self.homeViewController else { return }
             homeViewController.changedStreamState(success: success)
-            
-            if !success {
-                homeViewController.loadingBanner()
-            }
         }).disposed(by: disposeBag)
     }
     
