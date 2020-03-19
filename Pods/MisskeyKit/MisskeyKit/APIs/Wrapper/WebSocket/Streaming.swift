@@ -29,7 +29,7 @@ extension MisskeyKit {
         
         //MARK:- Connection
         public func connect(apiKey: String, channels: [SentStreamModel.Channel], response callback: @escaping StreamingCallBack)-> Bool {
-            let wsUrlString = "wss://misskey.io/streaming?i=" + apiKey
+            let wsUrlString = "wss://\(Api.instance)/streaming?i=" + apiKey
             guard let wsUrl = URL(string: wsUrlString) else { return false }
             
             self.socket = WebSocket(url: wsUrl)
