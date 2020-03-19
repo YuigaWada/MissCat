@@ -247,6 +247,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         profileViewController.homeViewController = self
         
         if isMe {
+            profileViewController.view.layoutIfNeeded()
             addChild(profileViewController)
             view.addSubview(profileViewController.view)
             myProfileViewController = profileViewController
