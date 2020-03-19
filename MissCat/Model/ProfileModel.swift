@@ -17,4 +17,16 @@ class ProfileModel {
             completion(user)
         }
     }
+    
+    public func follow(userId: String, completion: @escaping (Bool) -> Void) {
+        MisskeyKit.users.follow(userId: userId) { _, _ in
+            completion(true)
+        }
+    }
+    
+    public func unfollow(userId: String, completion: @escaping (Bool) -> Void) {
+        MisskeyKit.users.unfollow(userId: userId) { _, _ in
+            completion(true)
+        }
+    }
 }

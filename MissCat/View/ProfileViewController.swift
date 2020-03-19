@@ -200,6 +200,17 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
                 let isFollowing = $0.isFollowing ?? false
                 self.followButton.setTitleColor(isFollowing ? UIColor.systemBlue : UIColor.white, for: .normal)
             }).disposed(by: disposeBag)
+            
+            followButton.rx.tap.subscribe(onNext: {
+                guard let isFollowing = self.viewModel.state.isFollowing else { return }
+                
+                if isFollowing { // try フォロー解除
+                    self.showUnfollowAlert()
+                } else {
+                    self.viewModel.follow()
+                }
+                
+            }).disposed(by: disposeBag)
         } else { // 自分のプロフィール画面の場合
             followButton.setTitle("編集", for: .normal)
             followButton.setTitleColor(.systemBlue, for: .normal)
@@ -255,6 +266,21 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
                                        y: 0,
                                        width: containerScrollView.frame.width,
                                        height: newHeight)
+    }
+    
+    private func showUnfollowAlert() {
+        let alert = UIAlertController(title: "フォロー解除", message: "本当にフォロー解除しますか？", preferredStyle: UIAlertController.Style.alert)
+        
+        let defaultAction: UIAlertAction = UIAlertAction(title: "Unfollow", style: UIAlertAction.Style.destructive, handler: {
+            (_: UIAlertAction!) -> Void in
+            self.viewModel.unfollow()
+        })
+        let cancelAction: UIAlertAction = UIAlertAction(title: "いいえ", style: UIAlertAction.Style.cancel, handler: nil)
+        
+        alert.addAction(cancelAction)
+        alert.addAction(defaultAction)
+        
+        present(alert, animated: true, completion: nil)
     }
     
     // MARK: UITextViewDelegate

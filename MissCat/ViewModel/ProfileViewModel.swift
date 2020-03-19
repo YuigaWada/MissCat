@@ -31,11 +31,16 @@ class ProfileViewModel: ViewModelType {
         var isMe: Bool = false
     }
     
-    struct State {}
+    struct State {
+        var isFollowing: Bool?
+    }
     
     private var input: Input
     public lazy var output: Output = .init()
+    public lazy var state: State = .init()
     
+    private var userId: String?
+    private var relation: UserRelationship?
     private lazy var model = ProfileModel()
     
     public init(with input: Input, and disposeBag: DisposeBag) {
@@ -46,6 +51,31 @@ class ProfileViewModel: ViewModelType {
         model.getUser(userId: userId, completion: handleUserInfo)
         
         output.isMe = isMe
+        self.userId = userId
+    }
+    
+    public func follow() {
+        guard let userId = userId else { return }
+        model.follow(userId: userId) { success in
+            guard success else { return }
+            if self.relation != nil {
+                self.relation?.isFollowing = true
+                self.state.isFollowing = true
+                self.output.relation.accept(self.relation!)
+            }
+        }
+    }
+    
+    public func unfollow() {
+        guard let userId = userId else { return }
+        model.unfollow(userId: userId) { success in
+            guard success else { return }
+            if self.relation != nil {
+                self.relation?.isFollowing = false
+                self.state.isFollowing = false
+                self.output.relation.accept(self.relation!)
+            }
+        }
     }
     
     private func handleUserInfo(_ user: UserModel?) {
@@ -99,6 +129,8 @@ class ProfileViewModel: ViewModelType {
         MisskeyKit.users.getUserRelationship(userId: targetUserId) { relation, error in
             guard let relation = relation, error == nil else { return }
             self.output.relation.accept(relation)
+            self.state.isFollowing = relation.isFollowing
+            self.relation = relation
         }
     }
 }
