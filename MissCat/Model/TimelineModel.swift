@@ -85,7 +85,9 @@ class TimelineModel {
                 let renote = post.renote,
                 let renoteModel = renote.getNoteCellModel(withRN: checkNoteType(renote) == .CommentRenote) else { return }
             
-            let renoteeModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "", baseNoteId: renoteId)
+            let renoteeModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "",
+                                                              renoteeUserName: user.username ?? "",
+                                                              baseNoteId: renoteId)
             
             var cellModels = [renoteeModel, renoteModel]
             if reverse { cellModels.reverse() }

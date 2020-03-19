@@ -190,6 +190,11 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
             
             renoteeCell.selectionStyle = UITableViewCell.SelectionStyle.none
             renoteeCell.setRenotee(item.renotee ?? "")
+            
+            renoteeCell.setTapGesture(disposeBag) {
+                self.openUser(username: item.username)
+            }
+            
             return renoteeCell
         }
         

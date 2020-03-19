@@ -777,7 +777,7 @@ extension NoteCell {
         
         // MARK: Statics
         
-        static func fakeRenoteecell(renotee: String, baseNoteId: String) -> NoteCell.Model {
+        static func fakeRenoteecell(renotee: String, renoteeUserName: String, baseNoteId: String) -> NoteCell.Model {
             var renotee = renotee
             if renotee.count > 7 {
                 renotee = String(renotee.prefix(10)) + "..."
@@ -791,7 +791,7 @@ extension NoteCell {
                                   iconImage: nil,
                                   userId: "",
                                   displayName: "",
-                                  username: "",
+                                  username: renoteeUserName,
                                   note: "",
                                   ago: "",
                                   replyCount: 0,
