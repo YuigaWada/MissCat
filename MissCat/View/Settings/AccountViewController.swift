@@ -15,6 +15,7 @@ public class AccountViewController: UITableViewController {
     }
     
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath as IndexPath, animated: true) // タップ解除
         showLogoutAlert()
     }
     
@@ -57,6 +58,10 @@ public class AccountViewController: UITableViewController {
     }
     
     public override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 70
+    }
+    
+    public override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 70
     }
 }

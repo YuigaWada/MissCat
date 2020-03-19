@@ -220,7 +220,7 @@
         <scene sceneID="H4k-mn-o5f">
             <objects>
                 <tableViewController id="wW6-ud-LUX" customClass="AccountViewController" customModule="MissCat" customModuleProvider="target" sceneMemberID="viewController">
-                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="static" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="CVQ-Ky-AW9">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" scrollEnabled="NO" dataMode="static" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="CVQ-Ky-AW9">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
@@ -234,12 +234,15 @@
                                             <rect key="frame" x="0.0" y="0.0" width="414" height="43.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="sDP-kt-K5H">
-                                                    <rect key="frame" x="20" y="6" width="77" height="30"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="sDP-kt-K5H">
+                                                    <rect key="frame" x="20" y="7" width="77" height="30"/>
                                                     <state key="normal" title="ログアウト"/>
                                                 </button>
                                             </subviews>
+                                            <constraints>
+                                                <constraint firstItem="sDP-kt-K5H" firstAttribute="leading" secondItem="F7N-o8-p6V" secondAttribute="leading" constant="20" id="OmQ-RF-QRF"/>
+                                                <constraint firstItem="sDP-kt-K5H" firstAttribute="centerY" secondItem="F7N-o8-p6V" secondAttribute="centerY" id="cAm-lS-2Oz"/>
+                                            </constraints>
                                         </tableViewCellContentView>
                                     </tableViewCell>
                                 </cells>
