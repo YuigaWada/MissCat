@@ -31,7 +31,7 @@ class PostViewModel: ViewModelType {
                                            isSuccess: self.isSuccess.asDriver(onErrorJustReturn: false),
                                            attachments: self.attachments)
     
-    private struct AttachmentFile {
+    private class AttachmentFile {
         fileprivate let id: String = UUID().uuidString
         fileprivate var order: Int = 0
         
@@ -40,6 +40,7 @@ class PostViewModel: ViewModelType {
         
         fileprivate var videoPath: URL?
         fileprivate var videoThumbnail: UIImage?
+        fileprivate var nsfw: Bool = false
         fileprivate var isVideo: Bool { return videoPath != nil }
         
         init(originalImage: UIImage, image: UIImage, order: Int) {
@@ -53,6 +54,11 @@ class PostViewModel: ViewModelType {
             self.videoPath = videoPath
             videoThumbnail = AVAsset.generateThumbnail(videoFrom: videoPath)
         }
+        
+        func changeNsfwState(_ nsfw: Bool) -> AttachmentFile {
+            self.nsfw = nsfw
+            return self
+        }
     }
     
     private var iconImage: PublishSubject<UIImage> = .init()
@@ -65,6 +71,10 @@ class PostViewModel: ViewModelType {
     private var disposeBag: DisposeBag
     private var attachmentFiles: [AttachmentFile] = []
     private var hasVideoAttachment: Bool = false // 写真と動画は共存させないようにする。尚、写真は4枚まで追加可能だが動画は一つのみとする。
+    private var isNsfw: Bool {
+        guard attachmentFiles.count > 0 else { return false }
+        return attachmentFiles[0].nsfw
+    }
     
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
@@ -134,6 +144,14 @@ class PostViewModel: ViewModelType {
         attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
     }
     
+    public func changeImageNsfwState() {
+        let currentState = isNsfw
+        attachmentFiles = attachmentFiles.map { $0.changeNsfwState(!currentState) }
+        attachmentsLists = attachmentsLists.map { $0.changeNsfwState(!currentState) }
+        
+        attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
+    }
+    
     // MARK: Privates
     
     private func uploadImages(completion: @escaping ([String]) -> Void) {
@@ -141,7 +159,7 @@ class PostViewModel: ViewModelType {
         attachmentFiles.forEach { image in
             guard let image = image.image else { return }
             
-            self.model.uploadFile(image) { fileId in
+            self.model.uploadFile(image, nsfw: isNsfw) { fileId in
                 guard let fileId = fileId else { return }
                 fileIds.append(fileId)
                 
@@ -157,7 +175,7 @@ class PostViewModel: ViewModelType {
         let videoAttachment = attachmentFiles[0]
         guard let path = videoAttachment.videoPath, let video = getVideoData(from: path) else { return }
         
-        model.uploadFile(video) { fileId in
+        model.uploadFile(video, nsfw: isNsfw) { fileId in
             guard let fileId = fileId else { return }
             fileIds.append(fileId)
             

@@ -199,6 +199,10 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "AttachmentCell", for: indexPath) as? AttachmentCell else { fatalError("Internal Error.") }
         
+        if item.nsfw {
+            setImageNSFW(to: cell)
+        }
+        
         cell.tappedImage.subscribe { id in
             guard item.id == id.element else { return }
             
@@ -249,9 +253,136 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
             guard order >= 0 else { return }
             panelMenu.dismiss(animated: true, completion: nil)
+            
+            if order == 0 {
+                self.showNSFWAlert()
+            } else {
+                self.viewModel?.changeImageNsfwState()
+            }
         }).disposed(by: disposeBag)
         
         presentWithSemiModal(panelMenu, animated: true, completion: nil)
+    }
+    
+    private func showNSFWAlert() {
+        let alert = UIAlertController(title: "投稿NSFWの設定", message: "開発中です。", preferredStyle: UIAlertController.Style.alert)
+        let cancelAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.cancel, handler: nil)
+        
+        alert.addAction(cancelAction)
+        present(alert, animated: true, completion: nil)
+    }
+    
+    private func setImageNSFW(to parentView: UIView) {
+        // coverView
+        let coverView = UIView()
+        let parentFrame = parentView.frame
+        coverView.backgroundColor = .clear
+        coverView.frame = parentFrame
+        coverView.translatesAutoresizingMaskIntoConstraints = false
+        parentView.addSubview(coverView)
+        
+        // すりガラス
+        let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
+        blurView.translatesAutoresizingMaskIntoConstraints = false
+        coverView.addSubview(blurView)
+        
+        // label: 閲覧注意 タップで表示
+        let nsfwLabel = UILabel()
+        nsfwLabel.text = "NSFW"
+        nsfwLabel.center = parentView.center
+        nsfwLabel.textAlignment = .center
+        nsfwLabel.numberOfLines = 2
+        nsfwLabel.textColor = .lightGray
+        
+        nsfwLabel.translatesAutoresizingMaskIntoConstraints = false
+        coverView.addSubview(nsfwLabel)
+        
+        // AutoLayout
+        parentView.addConstraints([
+            NSLayoutConstraint(item: coverView,
+                               attribute: .width,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .width,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: coverView,
+                               attribute: .height,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .height,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: coverView,
+                               attribute: .centerX,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .centerX,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: coverView,
+                               attribute: .centerY,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .centerY,
+                               multiplier: 1.0,
+                               constant: 0)
+        ])
+        
+        coverView.addConstraints([
+            NSLayoutConstraint(item: blurView,
+                               attribute: .width,
+                               relatedBy: .equal,
+                               toItem: coverView,
+                               attribute: .width,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: blurView,
+                               attribute: .height,
+                               relatedBy: .equal,
+                               toItem: coverView,
+                               attribute: .height,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: blurView,
+                               attribute: .centerX,
+                               relatedBy: .equal,
+                               toItem: coverView,
+                               attribute: .centerX,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: blurView,
+                               attribute: .centerY,
+                               relatedBy: .equal,
+                               toItem: coverView,
+                               attribute: .centerY,
+                               multiplier: 1.0,
+                               constant: 0)
+        ])
+        
+        parentView.addConstraints([
+            NSLayoutConstraint(item: nsfwLabel,
+                               attribute: .centerX,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .centerX,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: nsfwLabel,
+                               attribute: .centerY,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .centerY,
+                               multiplier: 1.0,
+                               constant: 0)
+        ])
     }
     
     private func getViewController(name: String) -> UIViewController {
@@ -362,11 +493,22 @@ public extension PostViewController {
         public var items: [Item]
     }
     
-    struct Attachments {
+    class Attachments {
         public var id: String = UUID().uuidString
         
         public var image: UIImage
         public var type: Type
+        public var nsfw: Bool = false
+        
+        init(image: UIImage, type: Type) {
+            self.image = image
+            self.type = type
+        }
+        
+        func changeNsfwState(_ nsfw: Bool) -> Attachments {
+            self.nsfw = nsfw
+            return self
+        }
     }
     
     enum `Type` {

@@ -43,18 +43,18 @@ public class PostModel {
         }
     }
     
-    public func uploadFile(_ image: UIImage, completion: @escaping (String?) -> Void) {
+    public func uploadFile(_ image: UIImage, nsfw: Bool, completion: @escaping (String?) -> Void) {
         guard let resizedImage = image.resized(widthUnder: 1024), let targetImage = resizedImage.jpegData(compressionQuality: 0.5) else { return }
         
-        MisskeyKit.drive.createFile(fileData: targetImage, fileType: "image/jpeg", name: UUID().uuidString + ".jpeg", isSensitive: false, force: false) { result, error in
+        MisskeyKit.drive.createFile(fileData: targetImage, fileType: "image/jpeg", name: UUID().uuidString + ".jpeg", isSensitive: nsfw, force: false) { result, error in
             guard let result = result, error == nil else { return }
             
             completion(result.id)
         }
     }
     
-    public func uploadFile(_ videoData: Data, completion: @escaping (String?) -> Void) {
-        MisskeyKit.drive.createFile(fileData: videoData, fileType: "video/mp4", name: UUID().uuidString + ".mp4", isSensitive: false, force: false) { result, error in
+    public func uploadFile(_ videoData: Data, nsfw: Bool, completion: @escaping (String?) -> Void) {
+        MisskeyKit.drive.createFile(fileData: videoData, fileType: "video/mp4", name: UUID().uuidString + ".mp4", isSensitive: nsfw, force: false) { result, error in
             guard let result = result, error == nil else { return }
             
             completion(result.id)
