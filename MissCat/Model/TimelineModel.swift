@@ -121,14 +121,13 @@ class TimelineModel {
                 if isReload {
                     // timelineにすでに表示してある投稿を取得した場合、ロードを終了する
                     var newPosts: [NoteModel] = []
-                    var stop: Bool = false
-                    posts.forEach { post in
-                        guard post._featuredId_ == nil else { return } // ハイライトの投稿は無視する
-                        
-                        stop = option.lastNoteId == post.id
-                        
-                        guard !stop else { return }
-                        newPosts.append(post)
+                    for index in 0 ..< posts.count {
+                        let post = posts[index]
+                        if post._featuredId_ == nil { // ハイライトの投稿は無視する
+                            // 表示済みの投稿に当たったらbreak
+                            guard option.lastNoteId != post.id, option.lastNoteId != post.renoteId else { break }
+                            newPosts.append(post)
+                        }
                     }
                     
                     newPosts.reverse() // 逆順に読み込む

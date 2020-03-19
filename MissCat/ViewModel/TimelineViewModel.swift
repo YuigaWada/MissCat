@@ -257,7 +257,7 @@ class TimelineViewModel: ViewModelType {
     }
     
     public func reloadNotes(_ completion: @escaping () -> Void) {
-        guard let lastNoteId = cellsModel[0].noteId else { return }
+        guard let lastNoteId = getLastNoteId() else { return }
         
         let option = Model.LoadOption(type: input.type,
                                       userId: input.userId,
@@ -288,6 +288,18 @@ class TimelineViewModel: ViewModelType {
         if hasMarked {
             return
         }
+    }
+    
+    private func getLastNoteId() -> String? {
+        guard cellsModel.count > 0 else { return nil }
+        
+        let lastNote = cellsModel[0]
+        if lastNote.isRenoteeCell { // RNの場合はRenoteeCellのModelが送られてくるので次のモデルを参照する
+            guard cellsModel.count > 1 else { return nil }
+            return cellsModel[1].noteId
+        }
+        
+        return lastNote.noteId
     }
     
     // MARK: RxSwift
