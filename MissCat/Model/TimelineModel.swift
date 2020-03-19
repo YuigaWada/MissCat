@@ -131,7 +131,7 @@ class TimelineModel {
                     
                     newPosts.reverse() // 逆順に読み込む
                     newPosts.forEach { post in
-                        self.transformNote(with: observer, post: post, reverse: false)
+                        self.transformNote(with: observer, post: post, reverse: true)
                     }
                     
                     observer.onCompleted()
