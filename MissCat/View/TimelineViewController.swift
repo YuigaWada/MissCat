@@ -44,7 +44,6 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     private var withNavBar: Bool = true
     private var scrollable: Bool = true
     private var streamConnecting: Bool = false
-    private var notesReloding: Bool = false
     
     private lazy var dataSource = self.setupDataSource()
     
@@ -151,14 +150,10 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         
         output.connectedStream.subscribe(onNext: { success in
             guard let homeViewController = self.homeViewController else { return }
-            
             homeViewController.changedStreamState(success: success)
             
-            if success, self.notesReloding {
-                viewModel.reloadNotes()
-                self.notesReloding = false
-            } else if !success {
-                self.notesReloding = true // streamingの接続が切れたら、次の接続時、同時にREST APIを叩いて投稿を取得する
+            if !success {
+                homeViewController.loadingBanner()
             }
         }).disposed(by: disposeBag)
     }

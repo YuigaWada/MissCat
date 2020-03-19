@@ -133,7 +133,9 @@ class TimelineViewModel: ViewModelType {
                 
             }, onError: { _ in
                 self.output.connectedStream.accept(false)
-                self.connectStream()
+                self.reloadNotes {
+                    self.connectStream() // リロード完了後にstreamingへ接続
+                }
             })
             .disposed(by: disposeBag)
         
@@ -254,7 +256,7 @@ class TimelineViewModel: ViewModelType {
         model.renote(noteId: noteId)
     }
     
-    public func reloadNotes() {
+    public func reloadNotes(_ completion: @escaping () -> Void) {
         guard let lastNoteId = cellsModel[0].noteId else { return }
         
         let option = Model.LoadOption(type: input.type,
@@ -272,6 +274,7 @@ class TimelineViewModel: ViewModelType {
             self.cellsModel.insert(cellModel, at: 0)
         }, onCompleted: {
             self.updateNotes(new: self.cellsModel)
+            completion()
         }).disposed(by: disposeBag)
     }
     
