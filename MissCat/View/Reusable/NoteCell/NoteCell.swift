@@ -138,10 +138,13 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             nameTextView.renderViewStrings()
             noteView.renderViewStrings()
         }
+        
+        // 以下２行を書くとskeltonViewが正常に表示される
+        layoutIfNeeded()
+        fileImageView.updateAnimatedGradientSkeleton()
     }
     
     private lazy var setupView: (() -> Void) = { // 必ず一回しか読み込まれない
-        self.setupSkeltonMode()
         self.setupProfileGesture() // プロフィールに飛ぶtapgestureを設定する
         self.setupCollectionView()
         self.themeBinding()
@@ -324,6 +327,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         let item = arg.item
         let isDetailMode = arg.isDetailMode
         guard !item.isSkelton else { // SkeltonViewを表示する
+            setupSkeltonMode()
             changeSkeltonState(on: true)
             return self
         }
