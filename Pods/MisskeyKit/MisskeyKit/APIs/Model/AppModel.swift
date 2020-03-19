@@ -10,5 +10,5 @@ import Foundation
 
 public struct AppModel: Codable{
     public let id, name, callbackUrl, secret: String?
-    public let permission: [String:String]?
+    public let permission: [String]?
 }
