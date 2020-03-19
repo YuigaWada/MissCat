@@ -100,12 +100,18 @@ extension String {
     
     // userIdに対して自分かどうかcheck
     public func isMe(completion: @escaping (Bool) -> Void) {
-        Cache.shared.getMe { me in
-            guard let me = me else { return }
-            let isMe = me.id == self
-            
-            completion(isMe)
+        guard let currentUserId = Cache.UserDefaults.shared.getCurrentLoginedUserId(), !currentUserId.isEmpty else {
+            Cache.shared.getMe { me in
+                guard let me = me else { return }
+                let isMe = me.id == self
+                
+                Cache.UserDefaults.shared.setCurrentLoginedUserId(me.id)
+                completion(isMe)
+            }
+            return
         }
+        
+        completion(currentUserId == self)
     }
     
     // HyperLinkを用途ごとに捌く

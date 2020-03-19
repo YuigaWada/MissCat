@@ -39,6 +39,7 @@ public class AccountViewController: UITableViewController {
         
         Cache.UserDefaults.shared.setCurrentLoginedApiKey("")
         Cache.UserDefaults.shared.setCurrentLoginedInstance("")
+        Cache.UserDefaults.shared.setCurrentLoginedUserId("")
         
         presentOnFullScreen(viewController, animated: true, completion: nil)
     }
