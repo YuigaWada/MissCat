@@ -65,6 +65,10 @@ extension String {
         }
     }
     
+    func remove(of target: String) -> String {
+        return replacingOccurrences(of: target, with: "")
+    }
+    
     // Stringの数字をインクリメントする
     func increment() -> String {
         guard let number = Int(self) else { return self }

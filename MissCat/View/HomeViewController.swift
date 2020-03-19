@@ -137,11 +137,14 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     // MARK: Auth
     
     private func userAuth() {
-        guard let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey() else {
+        guard let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey(),
+            let currentInstance = Cache.UserDefaults.shared.getCurrentLoginedInstance(),
+            !apiKey.isEmpty else {
             showStartingViewController() // ApiKeyが確認できない場合はStartViewControllerへ
             return
         }
         
+        MisskeyKit.changeInstance(instance: currentInstance)
         MisskeyKit.auth.setAPIKey(apiKey)
         logined = true
     }

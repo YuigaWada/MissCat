@@ -85,6 +85,7 @@ public class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigation
     
     public func setupLogin(misskeyInstance: String, appSecret: String) {
         self.appSecret = appSecret
+        self.misskeyInstance = misskeyInstance
         currentType = .Login
         
         MisskeyKit.changeInstance(instance: misskeyInstance) // インスタンスを変更
