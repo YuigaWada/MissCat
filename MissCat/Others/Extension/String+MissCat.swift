@@ -76,6 +76,13 @@ extension String {
         return String(number + 1)
     }
     
+    // Stringの数字をdecrementする
+    func decrement() -> String {
+        guard let number = Int(self) else { return self }
+        
+        return String(number - 1)
+    }
+    
     // Stringの数字が"0"かどうかを判定
     func isZero() -> Bool {
         guard let number = Int(self) else { return false }

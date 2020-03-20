@@ -52,13 +52,14 @@ public class ReactionCell: UICollectionViewCell {
             UIView.animate(withDuration: 0.3,
                            animations: {
                                self.changeColor(isMyReaction: self.isMyReaction)
-                               self.incrementCounter()
+                               self.changeCounter(plus: self.isMyReaction)
                            }, completion: { _ in
                                guard let delegate = self.delegate,
                                    let noteId = self.noteId,
                                    let rawReaction = self.rawReaction else { return }
                                
                                delegate.tappedReaction(noteId: noteId, reaction: rawReaction, isRegister: self.isMyReaction)
+                               
             })
         }.disposed(by: disposeBag)
         
@@ -109,8 +110,12 @@ public class ReactionCell: UICollectionViewCell {
         reactionCounterLabel.textColor = isMyReaction ? selectedTextColor : nonselectedTextColor
     }
     
-    private func incrementCounter() {
+    private func changeCounter(plus: Bool) {
         guard let count = reactionCounterLabel.text else { return }
-        reactionCounterLabel.text = count.increment()
+        if plus {
+            reactionCounterLabel.text = count.increment()
+        } else {
+            reactionCounterLabel.text = count.decrement()
+        }
     }
 }
