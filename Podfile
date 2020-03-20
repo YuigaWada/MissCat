@@ -14,6 +14,8 @@ pod 'SVGKit', :git => 'https://github.com/SVGKit/SVGKit.git', :branch => '3.x', 
 pod "SkeletonView", :binary => true
 pod 'FloatingPanel', :binary => true
 pod 'Gifu', :binary => true
+pod 'AWSSNS', :binary => true
+pod 'AWSCognito', :binary => true
 
 pod 'iOSPhotoEditor', :binary => true
 

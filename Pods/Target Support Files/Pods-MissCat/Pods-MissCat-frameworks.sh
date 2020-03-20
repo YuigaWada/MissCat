@@ -176,6 +176,12 @@ strip_invalid_archs() {
 
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
+  install_framework "${PODS_ROOT}/AWSCognito/AWSCognito.framework"
+  install_dsym "${PODS_ROOT}/AWSCognito/AWSCognito.framework.dSYM"
+  install_framework "${PODS_ROOT}/AWSCore/AWSCore.framework"
+  install_dsym "${PODS_ROOT}/AWSCore/AWSCore.framework.dSYM"
+  install_framework "${PODS_ROOT}/AWSSNS/AWSSNS.framework"
+  install_dsym "${PODS_ROOT}/AWSSNS/AWSSNS.framework.dSYM"
   install_framework "${PODS_ROOT}/Agrume/Agrume.framework"
   install_dsym "${PODS_ROOT}/Agrume/Agrume.framework.dSYM"
   install_framework "${PODS_ROOT}/CocoaLumberjack/CocoaLumberjack.framework"
@@ -209,6 +215,12 @@ if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_dsym "${PODS_ROOT}/iOSPhotoEditor/iOSPhotoEditor.framework.dSYM"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
+  install_framework "${PODS_ROOT}/AWSCognito/AWSCognito.framework"
+  install_dsym "${PODS_ROOT}/AWSCognito/AWSCognito.framework.dSYM"
+  install_framework "${PODS_ROOT}/AWSCore/AWSCore.framework"
+  install_dsym "${PODS_ROOT}/AWSCore/AWSCore.framework.dSYM"
+  install_framework "${PODS_ROOT}/AWSSNS/AWSSNS.framework"
+  install_dsym "${PODS_ROOT}/AWSSNS/AWSSNS.framework.dSYM"
   install_framework "${PODS_ROOT}/Agrume/Agrume.framework"
   install_dsym "${PODS_ROOT}/Agrume/Agrume.framework.dSYM"
   install_framework "${PODS_ROOT}/CocoaLumberjack/CocoaLumberjack.framework"

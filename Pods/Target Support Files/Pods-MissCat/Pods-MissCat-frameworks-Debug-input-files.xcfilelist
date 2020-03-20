@@ -1,4 +1,10 @@
 ${PODS_ROOT}/Target Support Files/Pods-MissCat/Pods-MissCat-frameworks.sh
+${PODS_ROOT}/AWSCognito/AWSCognito.framework
+${PODS_ROOT}/AWSCognito/AWSCognito.framework.dSYM
+${PODS_ROOT}/AWSCore/AWSCore.framework
+${PODS_ROOT}/AWSCore/AWSCore.framework.dSYM
+${PODS_ROOT}/AWSSNS/AWSSNS.framework
+${PODS_ROOT}/AWSSNS/AWSSNS.framework.dSYM
 ${PODS_ROOT}/Agrume/Agrume.framework
 ${PODS_ROOT}/Agrume/Agrume.framework.dSYM
 ${PODS_ROOT}/CocoaLumberjack/CocoaLumberjack.framework
