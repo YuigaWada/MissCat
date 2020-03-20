@@ -840,7 +840,9 @@ extension NoteCell {
         var noteId: String
         
         var url: String?
+        
         var rawEmoji: String?
+        var emoji: String?
         
         var isMyReaction: Bool
         
@@ -906,14 +908,16 @@ extension NoteCell.Model {
                 reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
                                                   noteId: self.noteId ?? "",
                                                   url: nil,
-                                                  rawEmoji: convertedEmojiData.emoji,
+                                                  rawEmoji: rawEmoji,
+                                                  emoji: convertedEmojiData.emoji,
                                                   isMyReaction: isMyReaction,
                                                   count: count)
             case "custom":
                 reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
                                                   noteId: self.noteId ?? "",
                                                   url: convertedEmojiData.emoji,
-                                                  rawEmoji: convertedEmojiData.emoji,
+                                                  rawEmoji: rawEmoji,
+                                                  emoji: convertedEmojiData.emoji,
                                                   isMyReaction: isMyReaction,
                                                   count: count)
             default:

@@ -70,8 +70,8 @@ public class ReactionCell: UICollectionViewCell {
         self.rawReaction = rawReaction
         self.noteId = noteId ?? ""
         
+        addTapGesture(to: self)
         reactionCounterLabel.text = count
-        
         if let defaultEmoji = defaultEmoji {
             defaultEmojiLabel.isHidden = false
             customEmojiView.isHidden = true
