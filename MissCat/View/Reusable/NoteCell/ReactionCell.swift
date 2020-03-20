@@ -82,6 +82,8 @@ public class ReactionCell: UICollectionViewCell {
             defaultEmojiLabel.isHidden = true
             customEmojiView.isHidden = false
             
+            customEmojiView.image = nil
+            customEmojiView.prepareForReuse()
             customEmojiView.setImage(url: customEmoji)
         } else if let rawDefaultEmoji = rawDefaultEmoji {
             defaultEmojiLabel.isHidden = false
