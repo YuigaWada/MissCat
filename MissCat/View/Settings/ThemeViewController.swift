@@ -39,29 +39,29 @@ public class ThemeViewController: UITableViewController {
     private func setTables() {
         let theme = Theme.shared.getCurrentTheme()
         
-        tables[.General] = [.init(title: "メインカラー", currentColor: UIColor(hex: theme.general.main)),
-                            .init(title: "背景色", currentColor: UIColor(hex: theme.general.background)),
-                            .init(title: "境界線", currentColor: UIColor(hex: theme.general.border))]
+        tables[.General] = [.init(title: "メインカラー", currentColor: theme.general.main),
+                            .init(title: "背景色", currentColor: theme.general.background),
+                            .init(title: "境界線", currentColor: theme.general.border)]
         
-        tables[.Post] = [.init(title: "文字色", currentColor: UIColor(hex: theme.post.text)),
-                         .init(title: "リンク色", currentColor: UIColor(hex: theme.post.link)),
-                         .init(title: "リアクションセル", currentColor: UIColor(hex: theme.post.reaction)),
-                         .init(title: "自分のリアクション", currentColor: UIColor(hex: theme.post.myReaction)),
+        tables[.Post] = [.init(title: "文字色", currentColor: theme.post.text),
+                         .init(title: "リンク色", currentColor: theme.post.link),
+                         .init(title: "リアクションセル", currentColor: theme.post.reaction),
+                         .init(title: "自分のリアクション", currentColor: theme.post.myReaction),
                          .init(title: "文字サイズ", type: .Size),
                          .init(type: .Mock)]
         
-        tables[.Renote] = [.init(title: "Renoteしたユーザー名", currentColor: UIColor(hex: theme.renote.user)),
-                           .init(title: "引用RNのボーダー", currentColor: UIColor(hex: theme.renote.commentRNBorder)),
+        tables[.Renote] = [.init(title: "Renoteしたユーザー名", currentColor: theme.renote.user),
+                           .init(title: "引用RNのボーダー", currentColor: theme.renote.commentRNBorder),
                            .init(type: .Mock), .init(type: .Mock), .init(type: .Mock)]
         
-        tables[.Reply] = [.init(title: "背景", currentColor: UIColor(hex: theme.reply.background)),
-                          .init(title: "文字色", currentColor: UIColor(hex: theme.reply.text)),
-                          .init(title: "インディケーター", currentColor: UIColor(hex: theme.reply.indicator)),
+        tables[.Reply] = [.init(title: "背景", currentColor: theme.reply.background),
+                          .init(title: "文字色", currentColor: theme.reply.text),
+                          .init(title: "インディケーター", currentColor: theme.reply.indicator),
                           .init(type: .Mock)]
         
-        tables[.Notifications] = [.init(title: "リアクション", currentColor: UIColor(hex: theme.notifications.reaction)),
-                                  .init(title: "Renote", currentColor: UIColor(hex: theme.notifications.renote)),
-                                  .init(title: "文字色", currentColor: UIColor(hex: theme.notifications.text)),
+        tables[.Notifications] = [.init(title: "リアクション", currentColor: theme.notifications.reaction),
+                                  .init(title: "Renote", currentColor: theme.notifications.renote),
+                                  .init(title: "文字色", currentColor: theme.notifications.text),
                                   .init(type: .Mock)]
     }
     

@@ -269,11 +269,11 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     private func themeBinding() {
         let theme = Theme.shared.theme
         
-        theme.map { UIColor(hex: $0.general.main) }.subscribe(onNext: {
+        theme.map { $0.general.main }.subscribe(onNext: {
             self.tintColor = $0
         }).disposed(by: disposeBag)
-        theme.map { UIColor(hex: $0.general.background) }.bind(to: rx.backgroundColor).disposed(by: disposeBag)
-        theme.map { UIColor(hex: $0.post.text) }.subscribe(onNext: {
+        theme.map { $0.general.background }.bind(to: rx.backgroundColor).disposed(by: disposeBag)
+        theme.map { $0.post.text }.subscribe(onNext: {
             for textView in [self.nameTextView, self.noteView] {
                 guard let text = textView?.attributedText, text.length > 0 else { return }
                 let mutableAttributed = NSMutableAttributedString(attributedString: text)
@@ -291,17 +291,17 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     private func colorBinding(_ cell: ReactionCell) {
         let theme = Theme.shared.theme
         
-        theme.map { UIColor(hex: $0.post.reaction) }.subscribe(onNext: {
+        theme.map { $0.post.reaction }.subscribe(onNext: {
             cell.nonselectedBackGroundColor = $0
         }).disposed(by: disposeBag)
-        theme.map { UIColor(hex: $0.post.myReaction) }.subscribe(onNext: {
+        theme.map { $0.post.myReaction }.subscribe(onNext: {
             cell.selectedBackGroundColor = $0
         }).disposed(by: disposeBag)
         
         let postTheme = Theme.shared.getCurrentTheme().post
         
-        cell.nonselectedBackGroundColor = UIColor(hex: postTheme.reaction)
-        cell.selectedBackGroundColor = UIColor(hex: postTheme.myReaction)
+        cell.nonselectedBackGroundColor = postTheme.reaction
+        cell.selectedBackGroundColor = postTheme.myReaction
     }
     
     private func setupProfileGesture() {

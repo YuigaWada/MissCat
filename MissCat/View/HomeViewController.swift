@@ -118,16 +118,16 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     private func setTheme() {
         let theme = Theme.shared.theme
         
-        theme.map { UIColor(hex: $0.general.main) }.bind(to: selectedBar.rx.backgroundColor).disposed(by: disposeBag)
-        theme.map { UIColor(hex: $0.general.background) }.subscribe(onNext: { self.tabBackgroundColor = $0 }).disposed(by: disposeBag)
-        theme.map { UIColor(hex: $0.general.background) }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
-        theme.map { UIColor(hex: $0.post.text) }.subscribe(onNext: {
+        theme.map { $0.general.main }.bind(to: selectedBar.rx.backgroundColor).disposed(by: disposeBag)
+        theme.map { $0.general.background }.subscribe(onNext: { self.tabBackgroundColor = $0 }).disposed(by: disposeBag)
+        theme.map { $0.general.background }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
+        theme.map { $0.post.text }.subscribe(onNext: {
             self.navBar.titleLabel.textColor = $0
          }).disposed(by: disposeBag)
-        theme.map { UIColor(hex: $0.post.text) }.subscribe(onNext: {
+        theme.map { $0.post.text }.subscribe(onNext: {
             self.navBar.leftButton.setTitleColor($0, for: .normal)
         }).disposed(by: disposeBag)
-        theme.map { UIColor(hex: $0.post.text) }.subscribe(onNext: {
+        theme.map { $0.post.text }.subscribe(onNext: {
             self.navBar.rightButton.setTitleColor($0, for: .normal)
            }).disposed(by: disposeBag)
         
