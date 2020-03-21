@@ -9,10 +9,13 @@
 import AWSCognito
 import AWSSNS
 import CoreData
+import MisskeyKit
 import UIKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    // MARK: Main
+    
     var window: UIWindow?
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -27,9 +30,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     
     func application(_ application: UIApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
         // バックグラウンドで実行する処理
-        print("Back")
-        sendNotification()
-//        completionHandler(.newData)
+        notification()
+        completionHandler(.newData)
     }
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
@@ -38,13 +40,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         
         switch appState {
         case .active:
-            sendNotification()
+            break
         case .inactive:
-            sendNotification()
+            notification()
         case .background:
-            sendNotification()
+            notification()
         @unknown default:
-            sendNotification()
+            notification()
         }
     }
     
@@ -112,15 +114,117 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         })
     }
     
-    private func sendNotification() {
+    private func notification() {
+        sendNotification(title: "通知テスト", body: "test")
+        guard let current = Cache.UserDefaults.shared.getLatestNotificationId() else { return } // UserDefaultsに保存してから通知を流すように
+        MisskeyKit.notifications.get(limit: 20, following: false) { results, error in
+            guard let results = results, results.count > 0, error == nil else { return }
+            
+            if let notificationId = results[0].id { // 最新の通知をsave
+                Cache.UserDefaults.shared.setLatestNotificationId(notificationId)
+            }
+            
+            for index in 0 ..< results.count {
+                let model = results[index]
+                
+                guard model.id != current else { break }
+                self.sendNotification(of: model) // 順に通知を出していく
+            }
+        }
+    }
+    
+    private func sendNotification(of model: NotificationModel) {
+        guard let type = model.type else { return }
+        
+        var contents: NotificationContents?
+        switch type {
+        case .follow:
+            contents = getFollowNotification(of: model)
+        case .mention:
+            contents = getReplyNotification(of: model)
+        case .reply:
+            contents = getReplyNotification(of: model)
+        case .renote:
+            contents = getRenoteNotification(of: model)
+        case .quote:
+            contents = getCommentRenoteNotification(of: model)
+        case .reaction:
+            contents = getReactionNotification(of: model)
+        case .pollVote:
+            break
+        case .receiveFollowRequest:
+            contents = getFollowNotification(of: model)
+        }
+        
+        if let contents = contents {
+            sendNotification(title: contents.title, body: contents.body)
+        }
+    }
+    
+    private func getReplyNotification(of model: NotificationModel) -> NotificationContents? {
+        guard let user = model.user, let note = model.note else { return nil }
+        let name = getDisplayName(user)
+        let text = note.text ?? ""
+        
+        let hasFile = (note.files?.count ?? 0) > 0
+        let hasFileTitle = hasFile ? "画像を添付して" : ""
+        
+        return .init(title: "\(name)さんが\(hasFileTitle)返信しました",
+                     body: text)
+    }
+    
+    private func getFollowNotification(of model: NotificationModel) -> NotificationContents? {
+        guard let user = model.user else { return nil }
+        let name = getDisplayName(user)
+        
+        return .init(title: "",
+                     body: "\(name)さんがフォローしました")
+    }
+    
+    private func getRenoteNotification(of model: NotificationModel) -> NotificationContents? {
+        guard let user = model.user, let note = model.note else { return nil }
+        let name = getDisplayName(user)
+        let text = note.text ?? ""
+        
+        return .init(title: "\(name)さんがRenoteしました",
+                     body: text)
+    }
+    
+    private func getCommentRenoteNotification(of model: NotificationModel) -> NotificationContents? {
+        guard let user = model.user, let note = model.note else { return nil }
+        let name = getDisplayName(user)
+        let text = note.text ?? ""
+        
+        let hasFile = (note.files?.count ?? 0) > 0
+        let hasFileTitle = hasFile ? "画像を添付して" : ""
+        
+        return .init(title: "\(name)さんが\(hasFileTitle)引用Renoteしました",
+                     body: text)
+    }
+    
+    private func getReactionNotification(of model: NotificationModel) -> NotificationContents? {
+        guard let user = model.user, let note = model.note, let reaction = model.reaction else { return nil }
+        let name = getDisplayName(user)
+        let text = note.text ?? ""
+        
+        return .init(title: "\(name)さんがリアクション\"\(reaction)\"を送信しました",
+                     body: text)
+    }
+    
+    private func sendNotification(title: String, body: String) {
         let content = UNMutableNotificationContent()
-        content.title = "通知タイトル"
-        content.body = "通知本文"
+        content.title = title
+        content.body = body
         content.sound = UNNotificationSound.default
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-        let request = UNNotificationRequest(identifier: "HogehogeNotification", content: content, trigger: trigger)
+        let request = UNNotificationRequest(identifier: "misscat.\(UUID().uuidString)", content: content, trigger: trigger)
         UNUserNotificationCenter.current().add(request)
+    }
+    
+    private func getDisplayName(_ user: UserModel) -> String {
+        guard let name = user.name else { return user.username ?? "" }
+        return name.count > 13 ? String(name.prefix(13)) : name
     }
     
     // MARK: UserDefaults
@@ -149,4 +253,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
     }
+}
+
+public struct NotificationContents {
+    let title: String
+    let body: String
 }
