@@ -256,6 +256,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
         blurAnimator = UIViewPropertyAnimator(duration: 1.0, curve: .easeInOut) {
             self.animateBlurView.alpha = 1
         }
+        blurAnimator?.pausesOnCompletion = true // 別のVCに飛ぶとアニメーションが完了状態になってしまうため、stateを.activeで維持させる
     }
     
     private func updateAnimateBlurHeight() {
