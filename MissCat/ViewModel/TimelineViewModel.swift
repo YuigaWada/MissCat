@@ -163,7 +163,7 @@ class TimelineViewModel: ViewModelType {
         }
     }
     
-    private func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool, plus: Bool, needReloading: Bool = true) {
+    public func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool, plus: Bool, needReloading: Bool = true) {
         guard let targetNoteId = targetNoteId, let rawReaction = rawReaction else { return }
         
         findNoteIndex(noteId: targetNoteId).forEach { targetIndex in

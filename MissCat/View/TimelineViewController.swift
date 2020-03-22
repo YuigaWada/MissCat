@@ -341,7 +341,22 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     }
     
     func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
-        presentReactionGen(noteId: noteId, iconUrl: iconUrl, displayName: displayName, username: username, note: note, hasFile: hasFile, hasMarked: hasMarked)
+        let reactionGen = presentReactionGen(noteId: noteId,
+                                             iconUrl: iconUrl,
+                                             displayName: displayName,
+                                             username: username,
+                                             note: note,
+                                             hasFile: hasFile,
+                                             hasMarked: hasMarked)
+        
+        reactionGen?.selectedEmoji.subscribe(onNext: { emojiModel in
+            let raw = emojiModel.isDefault ? emojiModel.rawEmoji : ":" + emojiModel.rawEmoji + ":"
+            self.viewModel?.updateReaction(targetNoteId: noteId,
+                                           reaction: raw,
+                                           isMyReaction: true,
+                                           plus: true,
+                                           needReloading: true)
+        }).disposed(by: disposeBag)
     }
     
     func tappedOthers() {}
@@ -371,6 +386,14 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     func move2Profile(userId: String) {
         guard let homeViewController = self.homeViewController else { return }
         homeViewController.move2Profile(userId: userId)
+    }
+    
+    func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {
+        viewModel?.updateReaction(targetNoteId: targetNoteId,
+                                  reaction: rawReaction,
+                                  isMyReaction: true,
+                                  plus: plus,
+                                  needReloading: false)
     }
     
     func vote(choice: Int, to noteId: String) {

@@ -43,8 +43,8 @@ extension UIViewController {
         presentOnFullScreen(target, animated: true, completion: nil)
     }
     
-    func presentReactionGen(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
-        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+    func presentReactionGen(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) -> ReactionGenViewController? {
+        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return nil }
         
         presentWithSemiModal(reactionGen, animated: true, completion: nil)
         
@@ -55,6 +55,8 @@ extension UIViewController {
                                   note: note,
                                   hasFile: hasFile,
                                   hasMarked: hasMarked)
+        
+        return reactionGen
     }
     
     // MARK: Get Size

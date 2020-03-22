@@ -70,6 +70,7 @@ public class ReactionCell: UICollectionViewCell {
         self.isMyReaction = isMyReaction
         self.rawReaction = rawReaction
         self.noteId = noteId ?? ""
+        alpha = 1
         
         addTapGesture(to: self)
         reactionCounterLabel.text = count
@@ -117,7 +118,9 @@ public class ReactionCell: UICollectionViewCell {
         if plus {
             reactionCounterLabel.text = count.increment()
         } else {
-            reactionCounterLabel.text = count.decrement()
+            let newCount = count.decrement()
+            guard newCount != "0" else { alpha = 0; return } // 1→0の場合はセルを削除
+            reactionCounterLabel.text = newCount
         }
     }
 }

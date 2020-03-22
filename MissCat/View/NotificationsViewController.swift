@@ -181,6 +181,8 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         homeViewController.move2Profile(userId: userId)
     }
     
+    public func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}
+    
     public func vote(choice: Int, to noteId: String) {}
     
     public func playVideo(url: String) {}

@@ -23,6 +23,7 @@ public protocol NoteCellDelegate {
     
     func move2PostDetail(item: NoteCell.Model)
     
+    func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool)
     func vote(choice: Int, to noteId: String)
     
     func tappedLink(text: String)
@@ -665,8 +666,10 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         if isRegister {
             viewModel.registerReaction(noteId: noteId, reaction: reaction)
+            delegate?.updateMyReaction(targetNoteId: noteId, rawReaction: reaction, plus: true)
         } else {
             viewModel.cancelReaction(noteId: noteId)
+            delegate?.updateMyReaction(targetNoteId: noteId, rawReaction: reaction, plus: false)
         }
     }
     

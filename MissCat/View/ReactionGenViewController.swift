@@ -139,6 +139,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
                 self.sendEmojiInput(emojiModel: emojiModel)
             } else { // NoteCell上ではReactionGenが投稿に対してサーバーにリアクションを送信する
                 self.react2Note(raw: raw)
+                self.selectedEmoji.accept(emojiModel)
             }
             
         }.disposed(by: disposeBag)
