@@ -101,7 +101,8 @@ class ProfileViewModel: ViewModelType {
         // Description
         if let description = user.description {
             DispatchQueue.main.async {
-                let shaped = description.mfmPreTransform().mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0))
+                let shaped = description.mfmPreTransform().mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
+                                                                        externalEmojis: user.emojis)
                 
                 self.output.intro.accept(shaped.attributed ?? .init())
                 shaped.mfmEngine.renderCustomEmojis(on: self.input.yanagi)
