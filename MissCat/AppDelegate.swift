@@ -154,6 +154,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             break
         case .receiveFollowRequest:
             contents = getFollowNotification(of: model)
+        default:
+            return
         }
         
         if let contents = contents {
