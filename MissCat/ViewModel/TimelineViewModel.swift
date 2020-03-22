@@ -145,7 +145,10 @@ class TimelineViewModel: ViewModelType {
             .disposed(by: disposeBag)
         
         model.trigger.updateReactionTrigger.subscribe(onNext: { info in
-            self.updateReaction(targetNoteId: info.targetNoteId, reaction: info.rawReaction, isMyReaction: info.isMyReaction)
+            self.updateReaction(targetNoteId: info.targetNoteId,
+                                reaction: info.rawReaction,
+                                isMyReaction: info.isMyReaction,
+                                plus: info.plus)
         })
             .disposed(by: disposeBag)
     }
@@ -153,31 +156,33 @@ class TimelineViewModel: ViewModelType {
     // MARK: Remove / Update Cell
     
     private func removeNoteCell(noteId: String) {
-        let targetCell = cellsModel.filter { $0.noteId == noteId }
-        if targetCell.count > 0, let targetIndex = cellsModel.firstIndex(of: targetCell[0]) {
+        findNoteIndex(noteId: noteId).forEach { targetIndex in
             cellsModel.remove(at: targetIndex)
             updateNotes(new: cellsModel)
+            updateNotesForcibly(index: targetIndex)
         }
     }
     
-    private func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool) {
+    private func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool, plus: Bool, needReloading: Bool = true) {
         guard let targetNoteId = targetNoteId, let rawReaction = rawReaction else { return }
         
-        let targetCell = cellsModel.filter { $0.noteId == targetNoteId }
-        if targetCell.count > 0, let targetIndex = cellsModel.firstIndex(of: targetCell[0]) {
-            // Change Count Label
-            let existReactionCount = cellsModel[targetIndex].reactions.filter { $0.name == rawReaction }
+        findNoteIndex(noteId: targetNoteId).forEach { targetIndex in
             
+            let existReactionCount = cellsModel[targetIndex].reactions.filter { $0.name == rawReaction }
             let hasThisReaction = existReactionCount.count > 0
-            if hasThisReaction {
+            
+            if hasThisReaction { // 別のユーザーがリアクションしていた場合
                 cellsModel[targetIndex].reactions = cellsModel[targetIndex].reactions.map { counter in
                     var newReactionCounter = counter
                     if counter.name == rawReaction, let count = counter.count {
-                        newReactionCounter.count = count.increment()
+                        let mustRemove = count == "1" && !plus
+                        
+                        guard !mustRemove else { return nil } // 1→0なのでmodel自体を削除
+                        newReactionCounter.count = plus ? count.increment() : count.decrement()
                     }
                     
                     return newReactionCounter
-                }
+                }.compactMap { $0 }
             } else {
                 let newReaction = ReactionCount(name: rawReaction, count: "1")
                 cellsModel[targetIndex].reactions.append(newReaction)
@@ -190,9 +195,19 @@ class TimelineViewModel: ViewModelType {
             
             cellsModel[targetIndex].shapedReactions = cellsModel[targetIndex].getReactions()
             
-            updateNotes(new: cellsModel)
-            updateNotesForcibly(index: targetIndex)
+            if needReloading {
+                updateNotes(new: cellsModel)
+                updateNotesForcibly(index: targetIndex)
+            }
         }
+    }
+    
+    /// 指定されたnoteIdを持つ投稿のindexを返します
+    /// - Parameter noteId: noteId
+    private func findNoteIndex(noteId: String) -> [Int] {
+        return cellsModel.filter { $0.noteId == noteId }
+            .map { cellsModel.firstIndex(of: $0) }
+            .compactMap { $0 }
     }
     
     // MARK: REST

@@ -56,6 +56,7 @@ class TimelineModel {
         let targetNoteId: String?
         let rawReaction: String?
         let isMyReaction: Bool
+        let plus: Bool
     }
     
     struct Trigger {
@@ -232,16 +233,21 @@ class TimelineModel {
             switch updateType {
             case .reacted:
                 userId.isMe { isMyReaction in // 自分のリアクションかどうかチェックする
+                    guard !isMyReaction else { return } // 自分のリアクションはcaptureしない
                     self.updateReaction(targetNoteId: updateContents.targetNoteId,
                                         reaction: updateContents.reaction,
-                                        isMyReaction: isMyReaction)
+                                        isMyReaction: isMyReaction,
+                                        plus: true)
                 }
                 
             case .pollVoted:
                 break
             case .deleted:
                 guard let targetNoteId = updateContents.targetNoteId else { return }
-                self.removeNoteCell(noteId: targetNoteId)
+                self.updateReaction(targetNoteId: updateContents.targetNoteId,
+                                    reaction: updateContents.reaction,
+                                    isMyReaction: false,
+                                    plus: false)
             }
         }
         
@@ -268,16 +274,13 @@ class TimelineModel {
         }
     }
     
-    // MARK: Remove / Update Cell
+    // MARK: Update Cell
     
-    private func removeNoteCell(noteId: String) {
-        removeTargetTrigger.onNext(noteId)
-    }
-    
-    private func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool) {
+    private func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool, plus: Bool) {
         let updateReaction = UpdateReaction(targetNoteId: targetNoteId,
                                             rawReaction: rawReaction,
-                                            isMyReaction: isMyReaction)
+                                            isMyReaction: isMyReaction,
+                                            plus: plus)
         
         updateReactionTrigger.onNext(updateReaction)
     }
