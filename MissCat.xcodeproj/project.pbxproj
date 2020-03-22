@@ -38,6 +38,7 @@
 		8D4A2A1F237437C000503685 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D4A2A1E237437C000503685 /* Assets.xcassets */; };
 		8D4A2A22237437C000503685 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8D4A2A20237437C000503685 /* LaunchScreen.storyboard */; };
 		8D4A2A2D237437C100503685 /* MissCatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4A2A2C237437C100503685 /* MissCatTests.swift */; };
+		8D4B02C1241FE5C90056605F /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4B02C0241FE5C90056605F /* Theme.swift */; };
 		8D502D52237D8BE300525A96 /* ReactionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D502D51237D8BE300525A96 /* ReactionCell.swift */; };
 		8D502D54237D8BEC00525A96 /* ReactionCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D502D53237D8BEC00525A96 /* ReactionCell.xib */; };
 		8D502D562380236900525A96 /* TabBar.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D502D552380236900525A96 /* TabBar.xib */; };
@@ -48,6 +49,7 @@
 		8D613551238A978700AB50C2 /* EmojiViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D613550238A978700AB50C2 /* EmojiViewCell.swift */; };
 		8D613553238B6D4F00AB50C2 /* NavBar.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D613552238B6D4F00AB50C2 /* NavBar.xib */; };
 		8D613555238B6D8B00AB50C2 /* NavBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D613554238B6D8B00AB50C2 /* NavBar.swift */; };
+		8D769D74241E7BDB0022D4D2 /* ThemeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D769D73241E7BDB0022D4D2 /* ThemeViewController.swift */; };
 		8D7779A624138120005764D9 /* PanelMenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D7779A524138120005764D9 /* PanelMenuViewController.swift */; };
 		8D79687F2404BE59004F87FA /* ReactionCollectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */; };
 		8D7968812404BE68004F87FA /* ReactionCollectionHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D7968802404BE68004F87FA /* ReactionCollectionHeader.xib */; };
@@ -59,6 +61,7 @@
 		8D8863B223848C0400A7A5A8 /* UIView+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8863B123848C0400A7A5A8 /* UIView+MissCat.swift */; };
 		8D8863B4238493FA00A7A5A8 /* RenoteeCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D8863B3238493FA00A7A5A8 /* RenoteeCell.xib */; };
 		8D8863B62384951300A7A5A8 /* RenoteeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8863B52384951200A7A5A8 /* RenoteeCell.swift */; };
+		8D8A50C1242355200065B1D2 /* AccountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8A50C0242355200065B1D2 /* AccountViewController.swift */; };
 		8D9DA9CD2402A067000EE840 /* GIFImageView+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9DA9CC2402A067000EE840 /* GIFImageView+MissCat.swift */; };
 		8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */; };
 		8D9EF4C8238187A4005449EC /* ReactionGenCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */; };
@@ -79,12 +82,18 @@
 		8DAEA1352382E4F00083AA69 /* EmojiView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DAEA1342382E4F00083AA69 /* EmojiView.xib */; };
 		8DAEA1372382E59A0083AA69 /* EmojiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEA1362382E59A0083AA69 /* EmojiView.swift */; };
 		8DAEA1392382E6D00083AA69 /* ReactionGenModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEA1382382E6D00083AA69 /* ReactionGenModel.swift */; };
+		8DAF3015241957510041BB85 /* ComponentType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAF3014241957510041BB85 /* ComponentType.swift */; };
+		8DAF3017241975030041BB85 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAF3016241975030041BB85 /* SettingsViewController.swift */; };
+		8DAF30192419842D0041BB85 /* AboutMisskeyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAF30182419842C0041BB85 /* AboutMisskeyViewController.swift */; };
+		8DAF301B241B599B0041BB85 /* LicenseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAF301A241B599B0041BB85 /* LicenseViewController.swift */; };
 		8DBC7A45241245A800D8FEA5 /* AVKit+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DBC7A44241245A800D8FEA5 /* AVKit+MissCat.swift */; };
 		8DC16154238BBD0C007793B7 /* NoteModel+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC16153238BBD0C007793B7 /* NoteModel+MissCat.swift */; };
 		8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */; };
 		8DC95AF923B0BD450013CABC /* NotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC95AF823B0BD450013CABC /* NotificationBanner.swift */; };
 		8DD8898B23935CC400D22910 /* PostDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */; };
 		8DE35E6B23F68FC300E10CB4 /* Pods_MissCat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49D674DA4870479FF355F58B /* Pods_MissCat.framework */; };
+		8DE88825242764AE002CC9DE /* NoteCell.Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE88824242764AD002CC9DE /* NoteCell.Model.swift */; };
+		8DE8882724276512002CC9DE /* NoteCell.FileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE8882624276512002CC9DE /* NoteCell.FileView.swift */; };
 		8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEFF31B239BD45700142802 /* ProfileViewModel.swift */; };
 		8DEFF31E239BD4F200142802 /* ProfileModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEFF31D239BD4F200142802 /* ProfileModel.swift */; };
 /* End PBXBuildFile section */
@@ -116,6 +125,8 @@
 		8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenPanel.swift; sourceTree = "<group>"; };
 		8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		8D16656823A0DB3100C03764 /* MFMEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MFMEngine.swift; sourceTree = "<group>"; };
+		8D1C150D2424C649004B1202 /* Bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Bridge.h; sourceTree = "<group>"; };
+		8D1C150E2424E3B6004B1202 /* MissCat.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MissCat.entitlements; sourceTree = "<group>"; };
 		8D3036F12385D5F100BA6D38 /* PostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostViewController.swift; sourceTree = "<group>"; };
 		8D3036F52385DA8900BA6D38 /* PostViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostViewModel.swift; sourceTree = "<group>"; };
 		8D3036F72385DAED00BA6D38 /* PostModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostModel.swift; sourceTree = "<group>"; };
@@ -139,6 +150,7 @@
 		8D4A2A28237437C100503685 /* MissCatTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MissCatTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D4A2A2C237437C100503685 /* MissCatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatTests.swift; sourceTree = "<group>"; };
 		8D4A2A2E237437C100503685 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8D4B02C0241FE5C90056605F /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		8D502D51237D8BE300525A96 /* ReactionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionCell.swift; sourceTree = "<group>"; };
 		8D502D53237D8BEC00525A96 /* ReactionCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReactionCell.xib; sourceTree = "<group>"; };
 		8D502D552380236900525A96 /* TabBar.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = TabBar.xib; sourceTree = "<group>"; };
@@ -150,6 +162,7 @@
 		8D613550238A978700AB50C2 /* EmojiViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiViewCell.swift; sourceTree = "<group>"; };
 		8D613552238B6D4F00AB50C2 /* NavBar.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NavBar.xib; sourceTree = "<group>"; };
 		8D613554238B6D8B00AB50C2 /* NavBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavBar.swift; sourceTree = "<group>"; };
+		8D769D73241E7BDB0022D4D2 /* ThemeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeViewController.swift; sourceTree = "<group>"; };
 		8D7779A524138120005764D9 /* PanelMenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelMenuViewController.swift; sourceTree = "<group>"; };
 		8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionCollectionHeader.swift; sourceTree = "<group>"; };
 		8D7968802404BE68004F87FA /* ReactionCollectionHeader.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReactionCollectionHeader.xib; sourceTree = "<group>"; };
@@ -161,6 +174,7 @@
 		8D8863B123848C0400A7A5A8 /* UIView+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+MissCat.swift"; sourceTree = "<group>"; };
 		8D8863B3238493FA00A7A5A8 /* RenoteeCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RenoteeCell.xib; sourceTree = "<group>"; };
 		8D8863B52384951200A7A5A8 /* RenoteeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenoteeCell.swift; sourceTree = "<group>"; };
+		8D8A50C0242355200065B1D2 /* AccountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewController.swift; sourceTree = "<group>"; };
 		8D9DA9CC2402A067000EE840 /* GIFImageView+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GIFImageView+MissCat.swift"; sourceTree = "<group>"; };
 		8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenViewController.swift; sourceTree = "<group>"; };
 		8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReactionGenCell.xib; sourceTree = "<group>"; };
@@ -181,12 +195,18 @@
 		8DAEA1342382E4F00083AA69 /* EmojiView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = EmojiView.xib; sourceTree = "<group>"; };
 		8DAEA1362382E59A0083AA69 /* EmojiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiView.swift; sourceTree = "<group>"; };
 		8DAEA1382382E6D00083AA69 /* ReactionGenModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenModel.swift; sourceTree = "<group>"; };
+		8DAF3014241957510041BB85 /* ComponentType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentType.swift; sourceTree = "<group>"; };
+		8DAF3016241975030041BB85 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
+		8DAF30182419842C0041BB85 /* AboutMisskeyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutMisskeyViewController.swift; sourceTree = "<group>"; };
+		8DAF301A241B599B0041BB85 /* LicenseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseViewController.swift; sourceTree = "<group>"; };
 		8DBC7A44241245A800D8FEA5 /* AVKit+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AVKit+MissCat.swift"; sourceTree = "<group>"; };
 		8DC16153238BBD0C007793B7 /* NoteModel+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NoteModel+MissCat.swift"; sourceTree = "<group>"; };
 		8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = NotificationBanner.xib; sourceTree = "<group>"; };
 		8DC95AF823B0BD450013CABC /* NotificationBanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationBanner.swift; sourceTree = "<group>"; };
 		8DD0D80B23B47CA8003F02ED /* YanagiText.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = YanagiText.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailViewModel.swift; sourceTree = "<group>"; };
+		8DE88824242764AD002CC9DE /* NoteCell.Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCell.Model.swift; sourceTree = "<group>"; };
+		8DE8882624276512002CC9DE /* NoteCell.FileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCell.FileView.swift; sourceTree = "<group>"; };
 		8DEFF31B239BD45700142802 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		8DEFF31D239BD4F200142802 /* ProfileModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileModel.swift; sourceTree = "<group>"; };
 		DF4146F7CC2C0143F19E0DF3 /* Pods-MissCat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCat.release.xcconfig"; path = "Target Support Files/Pods-MissCat/Pods-MissCat.release.xcconfig"; sourceTree = "<group>"; };
@@ -223,6 +243,7 @@
 		8D065B13237AC376003DFB7C /* View */ = {
 			isa = PBXGroup;
 			children = (
+				8DAF301C241B5C8D0041BB85 /* Settings */,
 				8D065B1F237ACD5D003DFB7C /* Reusable */,
 				8D4A2A19237437BE00503685 /* TimelineViewController.swift */,
 				8D4A2A1B237437BE00503685 /* Main.storyboard */,
@@ -280,6 +301,7 @@
 				8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */,
 				8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */,
 				8DC95AF823B0BD450013CABC /* NotificationBanner.swift */,
+				8DAF3014241957510041BB85 /* ComponentType.swift */,
 			);
 			path = Reusable;
 			sourceTree = "<group>";
@@ -319,6 +341,7 @@
 			children = (
 				8D3036F92388733E00BA6D38 /* ImageManager.swift */,
 				8D3037012389018800BA6D38 /* Cache.swift */,
+				8D4B02C0241FE5C90056605F /* Theme.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -340,6 +363,8 @@
 				8D502D51237D8BE300525A96 /* ReactionCell.swift */,
 				8D8863B52384951200A7A5A8 /* RenoteeCell.swift */,
 				8D4754F6240E21B900BAD410 /* PollView.swift */,
+				8DE88824242764AD002CC9DE /* NoteCell.Model.swift */,
+				8DE8882624276512002CC9DE /* NoteCell.FileView.swift */,
 			);
 			path = NoteCell;
 			sourceTree = "<group>";
@@ -387,6 +412,7 @@
 		8D4A2A14237437BE00503685 /* MissCat */ = {
 			isa = PBXGroup;
 			children = (
+				8D1C150E2424E3B6004B1202 /* MissCat.entitlements */,
 				8D4754F5240E1EA500BAD410 /* MFMEngine */,
 				8D0AC5B4237B5AC700530508 /* Resources */,
 				8D3EC236237AE52800808727 /* Others */,
@@ -398,6 +424,7 @@
 				8D4A2A1E237437C000503685 /* Assets.xcassets */,
 				8D4A2A20237437C000503685 /* LaunchScreen.storyboard */,
 				8D4A2A23237437C000503685 /* Info.plist */,
+				8D1C150D2424C649004B1202 /* Bridge.h */,
 			);
 			path = MissCat;
 			sourceTree = "<group>";
@@ -457,6 +484,18 @@
 				8DA06A15238A86DC0093A718 /* NotificationCellModel.swift */,
 			);
 			path = Reusable;
+			sourceTree = "<group>";
+		};
+		8DAF301C241B5C8D0041BB85 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				8DAF30182419842C0041BB85 /* AboutMisskeyViewController.swift */,
+				8DAF301A241B599B0041BB85 /* LicenseViewController.swift */,
+				8DAF3016241975030041BB85 /* SettingsViewController.swift */,
+				8D769D73241E7BDB0022D4D2 /* ThemeViewController.swift */,
+				8D8A50C0242355200065B1D2 /* AccountViewController.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -653,8 +692,10 @@
 				8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */,
 				8D84061F2393547800EED595 /* PostDetailViewController.swift in Sources */,
 				8D3036F82385DAED00BA6D38 /* PostModel.swift in Sources */,
+				8DAF30192419842D0041BB85 /* AboutMisskeyViewController.swift in Sources */,
 				8DAD238A240CE76000AB1F36 /* StartViewController.swift in Sources */,
 				8D53741B23A32D03004523FC /* ViewModelType.swift in Sources */,
+				8D4B02C1241FE5C90056605F /* Theme.swift in Sources */,
 				8DA06A0F2389F04E0093A718 /* NotificationModel.swift in Sources */,
 				8DA06A0D2389EEC60093A718 /* NotificationsViewModel.swift in Sources */,
 				8D3EC23A237B2C5E00808727 /* URL+MissCat.swift in Sources */,
@@ -666,16 +707,22 @@
 				8D502D52237D8BE300525A96 /* ReactionCell.swift in Sources */,
 				8D3036F22385D5F100BA6D38 /* PostViewController.swift in Sources */,
 				8DA06A0B2389E98D0093A718 /* NotificationCell.swift in Sources */,
+				8DAF3015241957510041BB85 /* ComponentType.swift in Sources */,
+				8DAF3017241975030041BB85 /* SettingsViewController.swift in Sources */,
 				8DA36F862394B9D000512459 /* UIFont+MissCat.swift in Sources */,
+				8D8A50C1242355200065B1D2 /* AccountViewController.swift in Sources */,
 				8D4A2A16237437BE00503685 /* AppDelegate.swift in Sources */,
+				8DE88825242764AE002CC9DE /* NoteCell.Model.swift in Sources */,
 				8DC95AF923B0BD450013CABC /* NotificationBanner.swift in Sources */,
 				8D613555238B6D8B00AB50C2 /* NavBar.swift in Sources */,
 				8D8863B223848C0400A7A5A8 /* UIView+MissCat.swift in Sources */,
 				8D3EC23C237B43F000808727 /* String+MissCat.swift in Sources */,
 				8D0AC5BE237B714900530508 /* EmojiHandler.swift in Sources */,
 				8D4754F7240E21B900BAD410 /* PollView.swift in Sources */,
+				8D769D74241E7BDB0022D4D2 /* ThemeViewController.swift in Sources */,
 				8DA06A072389E89A0093A718 /* NotificationsViewController.swift in Sources */,
 				8D4A2A18237437BE00503685 /* SceneDelegate.swift in Sources */,
+				8DAF301B241B599B0041BB85 /* LicenseViewController.swift in Sources */,
 				8DA06A16238A86DC0093A718 /* NotificationCellModel.swift in Sources */,
 				8D613551238A978700AB50C2 /* EmojiViewCell.swift in Sources */,
 				8D8863B02384147100A7A5A8 /* UIColor+MissCat.swift in Sources */,
@@ -688,6 +735,7 @@
 				8D7779A624138120005764D9 /* PanelMenuViewController.swift in Sources */,
 				8D8863B62384951300A7A5A8 /* RenoteeCell.swift in Sources */,
 				8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */,
+				8DE8882724276512002CC9DE /* NoteCell.FileView.swift in Sources */,
 				8DA06A12238A58A20093A718 /* NSMutableAttributedString+MissCat.swift in Sources */,
 				8D502D58238024B700525A96 /* HomeViewController.swift in Sources */,
 				8D9DA9CD2402A067000EE840 /* GIFImageView+MissCat.swift in Sources */,
@@ -862,8 +910,10 @@
 			baseConfigurationReference = 7A9C2BEAFA1B2C51A77CF66B /* Pods-MissCat.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -876,9 +926,58 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-l\"xml2\"",
+					"-framework",
+					"\"Agrume\"",
+					"-framework",
+					"\"CocoaLumberjack\"",
+					"-framework",
+					"\"CoreText\"",
+					"-framework",
+					"\"Differentiator\"",
+					"-framework",
+					"\"Down\"",
+					"-framework",
+					"\"FloatingPanel\"",
+					"-framework",
+					"\"Foundation\"",
+					"-framework",
+					"\"Gifu\"",
+					"-framework",
+					"\"MisskeyKit\"",
+					"-framework",
+					"\"PolioPager\"",
+					"-framework",
+					"\"QuartzCore\"",
+					"-framework",
+					"\"RxCocoa\"",
+					"-framework",
+					"\"RxDataSources\"",
+					"-framework",
+					"\"RxRelay\"",
+					"-framework",
+					"\"RxSwift\"",
+					"-framework",
+					"\"SVGKit\"",
+					"-framework",
+					"\"SkeletonView\"",
+					"-framework",
+					"\"Starscream\"",
+					"-framework",
+					"\"SwiftyGif\"",
+					"-framework",
+					"\"UIKit\"",
+					"-framework",
+					"\"XLPagerTabStrip\"",
+					"-framework",
+					"\"iOSPhotoEditor\"",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = ./MissCat/Bridge.h;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -889,8 +988,10 @@
 			baseConfigurationReference = DF4146F7CC2C0143F19E0DF3 /* Pods-MissCat.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -903,9 +1004,58 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-l\"xml2\"",
+					"-framework",
+					"\"Agrume\"",
+					"-framework",
+					"\"CocoaLumberjack\"",
+					"-framework",
+					"\"CoreText\"",
+					"-framework",
+					"\"Differentiator\"",
+					"-framework",
+					"\"Down\"",
+					"-framework",
+					"\"FloatingPanel\"",
+					"-framework",
+					"\"Foundation\"",
+					"-framework",
+					"\"Gifu\"",
+					"-framework",
+					"\"MisskeyKit\"",
+					"-framework",
+					"\"PolioPager\"",
+					"-framework",
+					"\"QuartzCore\"",
+					"-framework",
+					"\"RxCocoa\"",
+					"-framework",
+					"\"RxDataSources\"",
+					"-framework",
+					"\"RxRelay\"",
+					"-framework",
+					"\"RxSwift\"",
+					"-framework",
+					"\"SVGKit\"",
+					"-framework",
+					"\"SkeletonView\"",
+					"-framework",
+					"\"Starscream\"",
+					"-framework",
+					"\"SwiftyGif\"",
+					"-framework",
+					"\"UIKit\"",
+					"-framework",
+					"\"XLPagerTabStrip\"",
+					"-framework",
+					"\"iOSPhotoEditor\"",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = ./MissCat/Bridge.h;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

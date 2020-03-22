@@ -1,6 +1,7 @@
 .DS_Store
-*.swp 
+*.swp
 
-UserInterfaceState.xcuserstate 
+UserInterfaceState.xcuserstate
 MissCat.xcworkspace/xcuserdata/yuigawada.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
 MissCat.xcworkspace/xcuserdata/yuigawada.xcuserdatad/UserInterfaceState.xcuserstate
+*.DS_Store

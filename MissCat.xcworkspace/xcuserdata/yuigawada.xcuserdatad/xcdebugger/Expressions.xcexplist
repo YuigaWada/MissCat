@@ -3,16 +3,10 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "HomeViewController.viewDidLoad():HomeViewController.swift">
+         contextName = "NoteCellViewModel.getDisplayName(_:):NoteCellViewModel.swift">
          <PersistentStrings>
             <PersistentString
-               value = " MisskeyKit.auth.appSecret">
-            </PersistentString>
-            <PersistentString
-               value = "self.footerTab">
-            </PersistentString>
-            <PersistentString
-               value = "UIScreen.main.bounds.size.height">
+               value = "self.input.nameYanagi.font?.fontName">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -25,10 +19,18 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "PhotoEditorViewController.viewDidLoad():PhotoEditorViewController.swift">
+         contextName = "PollView.setPoll(with:):PollView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "image">
+               value = "votesCountSum">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "AppDelegate.application(_:didRegisterForRemoteNotificationsWithDeviceToken:):AppDelegate.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "String(data: deviceToken, encoding: .utf8)">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -171,13 +173,21 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #2 in ProfileViewController.setBlurAnimation():ProfileViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "$0">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ProfileViewController.timelineDidScroll(_:scroll:):ProfileViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "pagerTab.frame.origin.y">
+               value = "containerScrollView.contentOffset.y">
             </PersistentString>
             <PersistentString
-               value = "containerScrollView.contentOffset.y">
+               value = "pagerTab.frame.origin.y">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -225,10 +235,13 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "TimelineModel.shapeNote(identifier:note:):TimelineModel.swift">
+         contextName = "AuthWebViewController.webView(_:didFinish:):AuthWebViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "treatedNote[identifier]">
+               value = "self.misskeyInstance">
+            </PersistentString>
+            <PersistentString
+               value = "self.appSecret">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -241,10 +254,10 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "PagerTabStripViewController.scrollViewDidScroll(_:):PagerTabStripViewController.swift">
+         contextName = "closure #2 in AppDelegate.application(_:didRegisterForRemoteNotificationsWithDeviceToken:):AppDelegate.swift">
          <PersistentStrings>
             <PersistentString
-               value = "scrollView.contentOffset.x">
+               value = "task.error?.localizedDescription">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -260,10 +273,18 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "AuthWebViewController.webView(_:didFinish:):AuthWebViewController.swift">
+         contextName = "MisskeyTextView.point(inside:with:):MisskeyTextView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "webView.url">
+               value = "self.attributedText.attribute(.link, at: startIndex, effectiveRange: nil)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TimelineModel.shapeNote(identifier:note:):TimelineModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "treatedNote[identifier]">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -275,6 +296,14 @@
             </PersistentString>
             <PersistentString
                value = "customEmojis">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "PagerTabStripViewController.scrollViewDidScroll(_:):PagerTabStripViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "scrollView.contentOffset.x">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -303,10 +332,18 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "GIFImageView.isGif(url:):GIFImageView+MissCat.swift">
+         contextName = "ThemeViewController.viewDidLoad():ThemeViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "url.ext">
+               value = "tables">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TimelineViewController.setupCell(_:_:_:):TimelineViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "itemCell.frame">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -314,7 +351,18 @@
          contextName = "MisskeyTextView.showMFM():MisskeyTextView.swift">
          <PersistentStrings>
             <PersistentString
+               value = "currentUserId">
+            </PersistentString>
+            <PersistentString
                value = "attachmentList">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "GIFImageView.isGif(url:):GIFImageView+MissCat.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "url.ext">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -408,6 +456,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "NoteCell.delegate.didset:NoteCell.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "delegate">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "specialized closure #1 in static MisskeyKit.handleAPI&lt;A&gt;(needApiKey:api:params:data:type:missingCount:callback:):MisskeyKit.swift">
          <PersistentStrings>
             <PersistentString
@@ -424,13 +480,21 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "AppDelegate.notification():AppDelegate.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "error">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "static Requestor.post(url:rawJson:data:completion:):Requestor.swift">
          <PersistentStrings>
             <PersistentString
-               value = "String(data: bodyData)">
+               value = "request.httpAdditionalHeaders">
             </PersistentString>
             <PersistentString
-               value = "request.httpAdditionalHeaders">
+               value = "String(data: bodyData)">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -489,6 +553,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "TimelineViewController.viewDidAppear(_:):TimelineViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "mainTableView.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "NoteCell.setPlayIconImage(on:):NoteCell.swift">
          <PersistentStrings>
             <PersistentString
@@ -530,6 +602,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "static Api.fullUrl(_:):ApiUrl.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "Api.instance">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TimelineViewModel.loadNotes(untilId:completion:):TimelineViewModel.swift">
          <PersistentStrings>
             <PersistentString
@@ -557,14 +637,6 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "static Api.fullUrl(_:):ApiUrl.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "Api.instance">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "specialized closure #1 in static MisskeyKit.handleAPI&lt;A&gt;(needApiKey:api:params:data:fileType:type:missingCount:callback:):MisskeyKit.swift">
          <PersistentStrings>
             <PersistentString
@@ -572,6 +644,14 @@
             </PersistentString>
             <PersistentString
                value = "json">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "HomeViewController.setupNotificationsVC():HomeViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "notificationsViewController">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -628,6 +708,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "NoteCell.setCommentRenoteCell():NoteCell.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "delegate">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in TimelineViewController.setupDataSource():TimelineViewController.swift">
          <PersistentStrings>
             <PersistentString
@@ -658,10 +746,10 @@
                value = "item.displayName">
             </PersistentString>
             <PersistentString
-               value = "item.reactions">
+               value = "item.note">
             </PersistentString>
             <PersistentString
-               value = "item.note">
+               value = "item.reactions">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -725,6 +813,14 @@
          contextName = "TimelineModel.hyperUser(note:):TimelineModel.swift">
       </ContextState>
       <ContextState
+         contextName = "MisskeyTextView.isCached.getter:MisskeyTextView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.currentNoteId">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #2 in PostViewController.imagePickerController(_:didFinishPickingMediaWithInfo:):PostViewController.swift">
          <PersistentStrings>
             <PersistentString
@@ -745,6 +841,17 @@
          <PersistentStrings>
             <PersistentString
                value = "iconView.isUserInteractionEnabled">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #1 in TimelineModel.loadNotes(with:):TimelineModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "posts[0]">
+            </PersistentString>
+            <PersistentString
+               value = "posts[3]">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -811,16 +918,24 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ProfileViewController.setBlurAnimation():ProfileViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "blurAnimator?.state">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ProfileViewController.scrollViewDidScroll(_:):ProfileViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "scrollView as! UIScrollView">
+               value = "scrollView.contentOffset.x">
             </PersistentString>
             <PersistentString
                value = "scrollView.contentOffset.y">
             </PersistentString>
             <PersistentString
-               value = "scrollView.contentOffset.x">
+               value = "scrollView as! UIScrollView">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -837,6 +952,14 @@
          <PersistentStrings>
             <PersistentString
                value = "item.reactions">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ProfileViewController.viewDidAppear(_:):ProfileViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "blurAnimator?.state">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -866,10 +989,13 @@
          contextName = "TimelineViewController.tableView(_:estimatedHeightForRowAt:):TimelineViewController.swift">
          <PersistentStrings>
             <PersistentString
+               value = "viewModel.cellsModel.count">
+            </PersistentString>
+            <PersistentString
                value = "cellHeightCache">
             </PersistentString>
             <PersistentString
-               value = "viewModel.cellsModel.count">
+               value = "tableView.frame">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -882,18 +1008,18 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "NoteCell.setupReactionCell(_:_:_:):NoteCell.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "self.reactionsCollectionView.dequeueReusableCell(withReuseIdentifier: &quot;ReactionCell&quot;, for: indexPath)">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "static MisskeyKit.changeInstance(instance:):MisskeyKit.swift">
          <PersistentStrings>
             <PersistentString
                value = "Api.instance">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "NoteCell.setupReactionCell(_:_:_:):NoteCell.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.reactionsCollectionView.dequeueReusableCell(withReuseIdentifier: &quot;ReactionCell&quot;, for: indexPath)">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -940,6 +1066,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "AppDelegate.application(_:didFailToRegisterForRemoteNotificationsWithError:):AppDelegate.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "error.localizedDescription">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "StartViewController.summon(after:):StartViewController.swift">
          <PersistentStrings>
             <PersistentString
@@ -958,6 +1092,14 @@
             </PersistentString>
             <PersistentString
                value = "pollBarView.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "NoteCellViewModel.setCell():NoteCellViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "input.cellModel.shapedDisplayName">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -985,6 +1127,17 @@
          <PersistentStrings>
             <PersistentString
                value = "height">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #3 in closure #1 in closure #1 in TimelineModel.loadNotes(with:):TimelineModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "posts">
+            </PersistentString>
+            <PersistentString
+               value = "post._featuredId_">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1100,14 +1253,6 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "closure #1 in ReactionGenViewController.collectionView(_:willDisplay:forItemAt:):ReactionGenViewController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "cellLoading">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "PostViewController.viewDidAppear(_:):PostViewController.swift">
          <PersistentStrings>
             <PersistentString
@@ -1116,18 +1261,32 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "NoteCellViewModel.getDisplayName(_:):NoteCellViewModel.swift">
+         contextName = "closure #1 in ReactionGenViewController.collectionView(_:willDisplay:forItemAt:):ReactionGenViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "self.input.nameYanagi.font?.fontName">
+               value = "cellLoading">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "PollView.setPoll(with:):PollView.swift">
+         contextName = "PhotoEditorViewController.viewDidLoad():PhotoEditorViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "votesCountSum">
+               value = "image">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "HomeViewController.viewDidLoad():HomeViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = " MisskeyKit.auth.appSecret">
+            </PersistentString>
+            <PersistentString
+               value = "UIScreen.main.bounds.size.height">
+            </PersistentString>
+            <PersistentString
+               value = "self.footerTab">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
