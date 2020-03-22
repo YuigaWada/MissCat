@@ -166,38 +166,40 @@ class TimelineViewModel: ViewModelType {
     public func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool, plus: Bool, needReloading: Bool = true) {
         guard let targetNoteId = targetNoteId, let rawReaction = rawReaction else { return }
         
-        findNoteIndex(noteId: targetNoteId).forEach { targetIndex in
-            
-            let existReactionCount = cellsModel[targetIndex].reactions.filter { $0.name == rawReaction }
-            let hasThisReaction = existReactionCount.count > 0
-            
-            if hasThisReaction { // 別のユーザーがリアクションしていた場合
-                cellsModel[targetIndex].reactions = cellsModel[targetIndex].reactions.map { counter in
-                    var newReactionCounter = counter
-                    if counter.name == rawReaction, let count = counter.count {
-                        let mustRemove = count == "1" && !plus
+        DispatchQueue.global().async {
+            self.findNoteIndex(noteId: targetNoteId).forEach { targetIndex in
+                
+                let existReactionCount = self.cellsModel[targetIndex].reactions.filter { $0.name == rawReaction }
+                let hasThisReaction = existReactionCount.count > 0
+                
+                if hasThisReaction { // 別のユーザーがリアクションしていた場合
+                    self.cellsModel[targetIndex].reactions = self.cellsModel[targetIndex].reactions.map { counter in
+                        var newReactionCounter = counter
+                        if counter.name == rawReaction, let count = counter.count {
+                            let mustRemove = count == "1" && !plus
+                            
+                            guard !mustRemove else { return nil } // 1→0なのでmodel自体を削除
+                            newReactionCounter.count = plus ? count.increment() : count.decrement()
+                        }
                         
-                        guard !mustRemove else { return nil } // 1→0なのでmodel自体を削除
-                        newReactionCounter.count = plus ? count.increment() : count.decrement()
-                    }
-                    
-                    return newReactionCounter
-                }.compactMap { $0 }
-            } else {
-                let newReaction = ReactionCount(name: rawReaction, count: "1")
-                cellsModel[targetIndex].reactions.append(newReaction)
-            }
-            
-            // My reaction...?
-            if isMyReaction {
-                cellsModel[targetIndex].myReaction = rawReaction
-            }
-            
-            cellsModel[targetIndex].shapedReactions = cellsModel[targetIndex].getReactions()
-            
-            if needReloading {
-                updateNotes(new: cellsModel)
-                updateNotesForcibly(index: targetIndex)
+                        return newReactionCounter
+                    }.compactMap { $0 }
+                } else {
+                    let newReaction = ReactionCount(name: rawReaction, count: "1")
+                    self.cellsModel[targetIndex].reactions.append(newReaction)
+                }
+                
+                // My reaction...?
+                if isMyReaction {
+                    self.cellsModel[targetIndex].myReaction = rawReaction
+                }
+                
+                self.cellsModel[targetIndex].shapedReactions = self.cellsModel[targetIndex].getReactions()
+                
+                if needReloading {
+                    self.updateNotes(new: self.cellsModel)
+                    self.updateNotesForcibly(index: targetIndex)
+                }
             }
         }
     }
