@@ -48,19 +48,10 @@
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
                             <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                         </textView>
-                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="v72-g7-6Ca">
+                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="v72-g7-6Ca" customClass="FileContainer" customModule="MissCat" customModuleProvider="target">
                             <rect key="frame" x="0.0" y="5" width="314" height="69"/>
-                            <subviews>
-                                <stackView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="249" verticalCompressionResistancePriority="749" distribution="fillEqually" spacing="2" translatesAutoresizingMaskIntoConstraints="NO" id="xbq-eM-CO3">
-                                    <rect key="frame" x="0.0" y="0.0" width="314" height="69"/>
-                                </stackView>
-                            </subviews>
                             <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                             <constraints>
-                                <constraint firstItem="xbq-eM-CO3" firstAttribute="top" secondItem="v72-g7-6Ca" secondAttribute="top" id="3ui-0T-ohh"/>
-                                <constraint firstAttribute="trailing" secondItem="xbq-eM-CO3" secondAttribute="trailing" id="5Z6-mb-aRT"/>
-                                <constraint firstAttribute="bottom" secondItem="xbq-eM-CO3" secondAttribute="bottom" id="MgR-pz-L7h"/>
-                                <constraint firstItem="xbq-eM-CO3" firstAttribute="leading" secondItem="v72-g7-6Ca" secondAttribute="leading" id="SoY-nv-zEb"/>
                                 <constraint firstAttribute="height" priority="999" constant="130" id="cKX-Vb-WMJ"/>
                             </constraints>
                         </view>
@@ -167,23 +158,31 @@
                         </userDefinedRuntimeAttribute>
                     </userDefinedRuntimeAttributes>
                 </view>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="cHu-Gc-hbB">
+                    <rect key="frame" x="80" y="53" width="314" height="69"/>
+                    <color key="backgroundColor" systemColor="systemGrayColor" red="0.5568627451" green="0.5568627451" blue="0.57647058819999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                </view>
             </subviews>
             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
             <constraints>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="Grd-xu-LJU" secondAttribute="trailing" constant="20" id="3iA-Tz-weY"/>
                 <constraint firstItem="1yE-dE-XcT" firstAttribute="width" secondItem="iN0-l3-epB" secondAttribute="width" multiplier="0.101449" id="BpZ-YK-vSH"/>
                 <constraint firstItem="Grd-xu-LJU" firstAttribute="leading" secondItem="RdM-y6-bNI" secondAttribute="leading" priority="999" constant="4" id="EFB-Ex-45q"/>
+                <constraint firstItem="cHu-Gc-hbB" firstAttribute="leading" secondItem="v72-g7-6Ca" secondAttribute="leading" id="EIK-7C-9ir"/>
                 <constraint firstItem="1yE-dE-XcT" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="13" id="I62-9Z-NWk"/>
                 <constraint firstItem="nBn-X2-lSh" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="NLJ-V0-l3m"/>
                 <constraint firstItem="eTu-WM-TmR" firstAttribute="top" secondItem="RdM-y6-bNI" secondAttribute="top" id="NLg-kX-2v0"/>
                 <constraint firstItem="nBn-X2-lSh" firstAttribute="top" secondItem="hNW-sZ-76E" secondAttribute="bottom" constant="8" id="R1l-mV-qJz"/>
+                <constraint firstItem="cHu-Gc-hbB" firstAttribute="top" secondItem="v72-g7-6Ca" secondAttribute="top" id="ToM-7H-cvf"/>
                 <constraint firstItem="Grd-xu-LJU" firstAttribute="top" secondItem="eTu-WM-TmR" secondAttribute="bottom" id="UrY-dd-Ckw"/>
                 <constraint firstItem="RdM-y6-bNI" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="13" id="Vbb-0Q-eNU"/>
                 <constraint firstItem="Grd-xu-LJU" firstAttribute="leading" secondItem="RdM-y6-bNI" secondAttribute="trailing" constant="10" id="Y7B-yr-k9d"/>
+                <constraint firstItem="cHu-Gc-hbB" firstAttribute="bottom" secondItem="v72-g7-6Ca" secondAttribute="bottom" id="aap-hJ-wlV"/>
                 <constraint firstItem="hNW-sZ-76E" firstAttribute="centerX" secondItem="RdM-y6-bNI" secondAttribute="centerX" id="bGt-XN-nPN"/>
                 <constraint firstAttribute="bottom" secondItem="Grd-xu-LJU" secondAttribute="bottom" id="bUC-l4-xWo"/>
                 <constraint firstAttribute="trailing" secondItem="eTu-WM-TmR" secondAttribute="trailing" constant="51" id="bnX-es-t4m"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="1yE-dE-XcT" secondAttribute="trailing" constant="20" id="cPw-rF-QYz"/>
+                <constraint firstItem="cHu-Gc-hbB" firstAttribute="trailing" secondItem="v72-g7-6Ca" secondAttribute="trailing" id="cR1-2z-MTH"/>
                 <constraint firstItem="RdM-y6-bNI" firstAttribute="width" secondItem="iN0-l3-epB" secondAttribute="width" multiplier="0.171498" constant="-21.000172000000006" id="pQZ-s8-JDR"/>
                 <constraint firstItem="RdM-y6-bNI" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="20" id="pVd-g6-X46"/>
                 <constraint firstItem="hNW-sZ-76E" firstAttribute="top" secondItem="RdM-y6-bNI" secondAttribute="bottom" constant="7.5" id="php-Ym-V53"/>
@@ -195,12 +194,10 @@
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
             <connections>
-                <outlet property="FileImageContainer" destination="v72-g7-6Ca" id="tT2-cg-M0s"/>
                 <outlet property="actionStackView" destination="BIZ-13-U4a" id="J3x-71-KSu"/>
                 <outlet property="agoLabel" destination="1yE-dE-XcT" id="NnA-P8-rZc"/>
                 <outlet property="displayName2MainStackConstraint" destination="UrY-dd-Ckw" id="YkC-wp-n9Q"/>
-                <outlet property="fileImageContainer" destination="v72-g7-6Ca" id="LiQ-OA-WHb"/>
-                <outlet property="fileImageView" destination="xbq-eM-CO3" id="Bgd-OQ-FLL"/>
+                <outlet property="fileContainer" destination="v72-g7-6Ca" id="gOj-yk-KU8"/>
                 <outlet property="icon2MainStackConstraint" destination="Y7B-yr-k9d" id="7VJ-uh-TUq"/>
                 <outlet property="iconView" destination="RdM-y6-bNI" id="Zys-le-deV"/>
                 <outlet property="innerRenoteDisplay" destination="bh7-Dx-jOD" id="clK-es-fKR"/>
@@ -217,6 +214,7 @@
                 <outlet property="replyButton" destination="RmY-Dj-6tO" id="wY2-3H-TAf"/>
                 <outlet property="replyIndicator" destination="hNW-sZ-76E" id="Xs0-D1-DPj"/>
                 <outlet property="separatorBorder" destination="nBn-X2-lSh" id="fed-aU-kdd"/>
+                <outlet property="skeltonCover" destination="cHu-Gc-hbB" id="bcw-wA-A3n"/>
             </connections>
             <point key="canvasLocation" x="220.28985507246378" y="-14.732142857142856"/>
         </view>
