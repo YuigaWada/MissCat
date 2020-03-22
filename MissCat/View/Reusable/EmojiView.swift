@@ -51,7 +51,6 @@ public class EmojiView: UIView {
     public override func layoutSubviews() {
         super.layoutSubviews()
         setEmoji()
-        adjustFontSize()
     }
     
     public func initialize() {
@@ -78,6 +77,7 @@ public class EmojiView: UIView {
         if emoji.isDefault {
             emojiLabel.text = emoji.defaultEmoji
             emojiLabel.backgroundColor = .clear
+            adjustFontSize()
         } else {
             guard let customEmojiUrl = emoji.customEmojiUrl else { return }
             emojiImageView.setImage(url: customEmojiUrl, cachedToStorage: true) // イメージをset
