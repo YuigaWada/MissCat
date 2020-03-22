@@ -47,11 +47,6 @@ public class FileContainer: UICollectionView, UICollectionViewDelegate, Componen
     public func transform(with arg: Arg) -> FileContainer {
         noteCellDelegate = arg.delegate
         viewModel.setFile(with: arg)
-        
-        let mosaicLayout = MosaicLayout()
-        mosaicLayout.itemCount = arg.files.count
-        collectionViewLayout = mosaicLayout
-        
         return self
     }
     
@@ -63,10 +58,21 @@ public class FileContainer: UICollectionView, UICollectionViewDelegate, Componen
     
     private func binding() {
         let fileDataSources = setupDataSource()
-        let output = viewModel.output
+        let files = viewModel.output.files.asDriver(onErrorDriveWith: Driver.empty())
         
-        output.files.asDriver(onErrorDriveWith: Driver.empty())
-            .drive(rx.items(dataSource: fileDataSources)).disposed(by: disposeBag)
+        files.drive(onNext: { // TODO: ここの処理が重いっぽいのでどうにかする
+            guard $0.count > 0 else { return }
+            let count = $0[0].items.count
+            
+            if count > 0 {
+                let mosaicLayout = MosaicLayout()
+                mosaicLayout.itemCount = count
+                self.collectionViewLayout = mosaicLayout
+            } else {
+                self.collectionViewLayout = .init()
+            }
+        }).disposed(by: disposeBag)
+        files.drive(rx.items(dataSource: fileDataSources)).disposed(by: disposeBag)
     }
     
     private func setupDataSource() -> FileDataSource {
@@ -158,10 +164,9 @@ private class MosaicLayout: UICollectionViewLayout {
     
     /// - Tag: PrepareMosaicLayout
     override func prepare() {
+        guard let collectionView = collectionView, collectionView.numberOfSections > 0 else { return }
+        
         super.prepare()
-        
-        guard let collectionView = collectionView else { return }
-        
         // Reset cached information.
         cachedAttributes.removeAll()
         contentBounds = CGRect(origin: .zero, size: collectionView.bounds.size)
