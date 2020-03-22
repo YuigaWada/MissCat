@@ -288,7 +288,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
 //        Theme.shared.complete()
     }
     
-    private func colorBinding(_ cell: ReactionCell) {
+    private func reactionColorBinding(_ cell: ReactionCell) {
         let theme = Theme.shared.theme
         
         theme.map { $0.post.reaction }.subscribe(onNext: {
@@ -547,7 +547,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             
             let shapedCell = viewModel.setReactionCell(with: item, to: cell)
             shapedCell.delegate = self
-            colorBinding(shapedCell)
+            reactionColorBinding(shapedCell)
             
             return shapedCell
         }
