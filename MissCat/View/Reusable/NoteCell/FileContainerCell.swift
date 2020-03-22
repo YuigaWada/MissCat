@@ -34,11 +34,35 @@ public class FileContainerCell: UICollectionViewCell {
         backgroundColor = .lightGray
     }
     
-    public func setImage(with fileModel: FileContainer.Model, and delegate: NoteCellDelegate?) {
-        imageView.backgroundColor = .clear
-        imageView.image = fileModel.image
-        imageView.isHidden = false
-        imageView.setPlayIconImage(hide: !fileModel.isVideo)
-        imageView.setNSFW(hide: !fileModel.isSensitive)
+    public func transform(with fileModel: FileContainer.Model, and delegate: NoteCellDelegate?) {
+        if let thumbnail = Cache.shared.getUiImage(url: fileModel.thumbnailUrl) {
+            setImage(image: thumbnail,
+                     originalUrl: fileModel.originalUrl,
+                     isVideo: fileModel.isVideo,
+                     isSensitive: fileModel.isSensitive)
+            return
+        }
+        // キャッシュが存在しない場合
+        
+        fileModel.thumbnailUrl.toUIImage { image in
+            guard let image = image else { return }
+            
+            Cache.shared.saveUiImage(image, url: fileModel.thumbnailUrl)
+            
+            self.setImage(image: image,
+                          originalUrl: fileModel.originalUrl,
+                          isVideo: fileModel.isVideo,
+                          isSensitive: fileModel.isSensitive)
+        }
+    }
+    
+    private func setImage(image: UIImage, originalUrl: String, isVideo: Bool, isSensitive: Bool) {
+        DispatchQueue.main.async {
+            self.imageView.backgroundColor = .clear
+            self.imageView.image = image
+            self.imageView.isHidden = false
+            self.imageView.setPlayIconImage(hide: !isVideo)
+            self.imageView.setNSFW(hide: !isSensitive)
+        }
     }
 }

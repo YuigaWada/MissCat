@@ -90,7 +90,7 @@ public class FileContainer: UICollectionView, UICollectionViewDelegate, Componen
         
         if index < fileModel.count {
             let item = fileModel[index]
-            cell.setImage(with: item, and: noteCellDelegate)
+            cell.transform(with: item, and: noteCellDelegate)
         }
         
         return cell
@@ -125,7 +125,7 @@ extension FileContainer {
         
         public var identity: String = UUID().uuidString
         
-        let image: UIImage
+        let thumbnailUrl: String
         let originalUrl: String
         let isVideo: Bool
         let isSensitive: Bool

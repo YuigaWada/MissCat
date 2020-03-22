@@ -33,18 +33,7 @@ public class FileContainerViewModel: ViewModelType {
     
     public func setFile(with arg: FileContainer.Arg) {
         guard arg.fileVisible else { return }
-        if let files = Cache.shared.getFiles(noteId: arg.noteId) { // キャッシュが存在する場合
-            for index in 0 ..< files.count {
-                let file = files[index]
-                fileModel.append(FileContainer.Model(image: file.thumbnail,
-                                                     originalUrl: file.originalUrl,
-                                                     isVideo: file.type == .Video,
-                                                     isSensitive: file.isSensitive))
-                updateFiles(new: fileModel)
-            }
-            return
-        }
-        // キャッシュが存在しない場合
+        
         let files = arg.files
         let fileCount = files.count
         
@@ -58,23 +47,14 @@ public class FileContainerViewModel: ViewModelType {
             
             if fileType == .Audio {
             } else {
-                thumbnailUrl.toUIImage { image in
-                    guard let image = image else { return }
-                    
-                    Cache.shared.saveFiles(noteId: arg.noteId,
-                                           image: image,
-                                           originalUrl: original,
-                                           type: fileType,
-                                           isSensitive: file.isSensitive ?? false)
-                    
-                    self.fileModel.append(FileContainer.Model(image: image,
-                                                              originalUrl: original,
-                                                              isVideo: fileType == .Video,
-                                                              isSensitive: file.isSensitive ?? true))
-                    self.updateFiles(new: self.fileModel)
-                }
+                fileModel.append(FileContainer.Model(thumbnailUrl: thumbnailUrl,
+                                                     originalUrl: original,
+                                                     isVideo: fileType == .Video,
+                                                     isSensitive: file.isSensitive ?? true))
             }
         }
+        
+        updateFiles(new: fileModel)
     }
     
     /// ファイルの種類を識別する

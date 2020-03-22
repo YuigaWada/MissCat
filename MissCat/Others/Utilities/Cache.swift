@@ -24,7 +24,7 @@ public class Cache {
     private var notes: [String: Cache.NoteOnYanagi] = [:] // key: noteId
     private var users: [String: Cache.UserOnYanagi] = [:] // key: username
     
-    private var files: [Cache.File] = []
+    private var uiImage: [String: UIImage] = [:] // key: url
     private var dataOnUrl: [String: Data] = [:] // key: url
     
     private var me: UserModel?
@@ -56,24 +56,8 @@ public class Cache {
         }
     }
     
-    public func saveFiles(noteId: String, image: UIImage, originalUrl: String, type: FileType, isSensitive: Bool) {
-        let imageTuple = (thumbnail: image, originalUrl: originalUrl, type: type, isSensitive: isSensitive)
-        var hasFile: Bool = false
-        
-        files = files.map {
-            guard $0.noteId == noteId else { return $0 }
-            hasFile = true
-            
-            var file = $0
-            file.images.append(imageTuple)
-            return file
-        }
-        
-        // Cache.Fileが存在しない場合はつくる
-        guard !hasFile else { return }
-        let file = File(noteId: noteId, images: [imageTuple])
-        
-        files.append(file)
+    public func saveUiImage(_ image: UIImage, url: String) {
+        uiImage[url] = image
     }
     
     public func saveUrlData(_ data: Data, on rawUrl: String, toStorage: Bool = false) {
@@ -105,13 +89,8 @@ public class Cache {
         return users[username]?.iconImage
     }
     
-    public func getFiles(noteId: String) -> [(thumbnail: UIImage, originalUrl: String, type: FileType, isSensitive: Bool)]? {
-        let options = files.filter {
-            $0.noteId == noteId
-        }
-        
-        guard options.count > 0 else { return nil }
-        return options[0].images
+    public func getUiImage(url: String) -> UIImage? {
+        return uiImage[url]
     }
     
     public func getMe(result callback: @escaping (UserModel?) -> Void) {
@@ -251,10 +230,5 @@ public extension Cache {
         
         public var yanagiTexts: [YanagiText]
         public var attachments: [NSTextAttachment: YanagiText.Attachment] = [:]
-    }
-    
-    struct File {
-        public var noteId: String
-        public var images: [(thumbnail: UIImage, originalUrl: String, type: FileType, isSensitive: Bool)]
     }
 }
