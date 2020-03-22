@@ -324,6 +324,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     // MARK: Public Methods
     
     public func transform(with arg: Arg) -> NoteCell {
+        setupView()
+        
         let item = arg.item
         let isDetailMode = arg.isDetailMode
         guard !item.isSkelton else { // SkeltonViewを表示する
