@@ -56,6 +56,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     @IBOutlet weak var reactionsCollectionView: UICollectionView!
     
+    @IBOutlet weak var skeltonCover: UIView!
     @IBOutlet weak var fileContainer: FileContainer!
     @IBOutlet weak var pollView: PollView!
     
@@ -101,6 +102,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     private var noteModel: NoteCell.Model?
     private var commentRenoteView: NoteCell?
     private var onOtherNote: Bool = false
+    private var isSkelton: Bool = false
     
     private func getViewModel(item: NoteCell.Model, isDetailMode: Bool) -> ViewModel {
         let input: ViewModel.Input = .init(cellModel: item,
@@ -139,9 +141,11 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             noteView.renderViewStrings()
         }
         
-        // 以下２行を書くとskeltonViewが正常に表示される
-        layoutIfNeeded()
-        fileImageView.updateAnimatedGradientSkeleton()
+        if isSkelton {
+            // 以下２行を書くとskeltonViewが正常に表示される
+            layoutIfNeeded()
+            skeltonCover.updateAnimatedGradientSkeleton()
+        }
     }
     
     private lazy var setupView: (() -> Void) = { // 必ず一回しか読み込まれない
@@ -330,6 +334,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         let item = arg.item
         let isDetailMode = arg.isDetailMode
+        isSkelton = item.isSkelton
         guard !item.isSkelton else { // SkeltonViewを表示する
             setupSkeltonMode()
             changeSkeltonState(on: true)
