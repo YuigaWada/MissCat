@@ -201,8 +201,8 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         // 通常のcellをつくる
         guard let itemCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell else { fatalError("Internal Error.") }
         
-        let shapedCell = viewModel.getCell(cell: itemCell, item: item)
-        shapedCell.delegate = self
+        let shapedCell = itemCell.transform(with: .init(item: item,
+                                                        delegate: self))
         
         shapedCell.nameTextView.renderViewStrings()
         shapedCell.noteView.renderViewStrings()

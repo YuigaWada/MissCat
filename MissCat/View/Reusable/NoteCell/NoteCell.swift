@@ -39,6 +39,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     public struct Arg {
         var item: NoteCell.Model
         var isDetailMode: Bool = false
+        var delegate: NoteCellDelegate?
     }
     
     public typealias Transformed = NoteCell
@@ -53,11 +54,9 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     @IBOutlet weak var noteView: MisskeyTextView!
     
-    @IBOutlet weak var fileImageView: UIStackView!
-    @IBOutlet weak var fileImageContainer: UIView!
-    
     @IBOutlet weak var reactionsCollectionView: UICollectionView!
     
+    @IBOutlet weak var fileContainer: FileContainer!
     @IBOutlet weak var pollView: PollView!
     
     @IBOutlet weak var innerRenoteDisplay: UIView!
@@ -193,9 +192,12 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         noteView.isUserInteractionEnabled = true
         
-        if fileImageView.arrangedSubviews.count > 0 {
-            fileImageContainer.translatesAutoresizingMaskIntoConstraints = false
-        }
+        fileContainer.clipsToBounds = true
+        fileContainer.layer.cornerRadius = 10
+        fileContainer.layer.borderColor = UIColor.lightGray.cgColor
+        fileContainer.layer.borderWidth = 1
+        
+        skeltonCover.isUserInteractionEnabled = false
     }
     
     private func binding(viewModel: ViewModel, noteId: String) {
@@ -219,7 +221,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         // Renote With Comment
         
         output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { renoteModel in
-            self.commentRenoteView = self.commentRenoteView?.transform(with: .init(item: renoteModel)) // MEMO: やっぱりここが重いっぽい
+            self.commentRenoteView = self.commentRenoteView?.transform(with: .init(item: renoteModel, delegate: self.delegate)) // MEMO: やっぱりここが重いっぽい
             self.commentRenoteView?.setTapGesture(self.disposeBag, closure: {
                 guard let noteId = renoteModel.noteId else { return }
                 self.delegate?.move2PostDetail(item: renoteModel)
@@ -318,8 +320,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }
     
     private func changeStateFileImage(isHidden: Bool) {
-        fileImageView.isHidden = isHidden
-        fileImageContainer.isHidden = isHidden
+        fileContainer.isHidden = isHidden
     }
     
     // MARK: Public Methods
@@ -374,52 +375,11 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         viewModel.setCell()
         
         // file
-        if item.fileVisible {
-            if let files = Cache.shared.getFiles(noteId: noteId) { // キャッシュが存在する場合
-                for index in 0 ..< files.count {
-                    let file = files[index]
-                    setupFileImage(file.thumbnail,
-                                   originalUrl: file.originalUrl,
-                                   index: index,
-                                   isVideo: file.type == .Video,
-                                   isSensitive: file.isSensitive)
-                }
-            } else { // キャッシュが存在しない場合
-                let files = item.files
-                let fileCount = files.count
-                
-                for index in 0 ..< fileCount {
-                    let file = files[index]
-                    let fileType = viewModel.checkFileType(file.type)
-                    
-                    guard fileType != .Unknown,
-                        let thumbnailUrl = file.thumbnailUrl,
-                        let original = file.url,
-                        let imageView = getFileView(index) else { break }
-                    
-                    imageView.isHidden = false
-                    
-                    if fileType == .Audio {
-                    } else {
-                        thumbnailUrl.toUIImage { image in
-                            guard let image = image else { return }
-                            
-                            Cache.shared.saveFiles(noteId: noteId,
-                                                   image: image,
-                                                   originalUrl: original,
-                                                   type: fileType,
-                                                   isSensitive: file.isSensitive ?? false)
-                            
-                            self.setupFileImage(image,
-                                                originalUrl: original,
-                                                index: index,
-                                                isVideo: fileType == .Video,
-                                                isSensitive: file.isSensitive ?? true)
-                        }
-                    }
-                }
-            }
-        }
+        _ = fileContainer.transform(with: FileContainer.Arg(files: item.files,
+                                                            noteId: noteId,
+                                                            fileVisible: item.fileVisible,
+                                                            delegate: arg.delegate))
+        
         // footer
         let replyCount = item.replyCount != 0 ? String(item.replyCount) : ""
         let renoteCount = item.renoteCount != 0 ? String(item.renoteCount) : ""
@@ -455,14 +415,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         noteView.isHidden = false
         noteView.resetViewString()
         
-        setupFileView()
-        fileImageView.arrangedSubviews.forEach {
-            guard let imageView = $0 as? UIImageView else { return }
-            imageView.isHidden = true
-            imageView.image = nil
-        }
-        
         changeStateFileImage(isHidden: !hasFile)
+        fileContainer.initialize()
         
         replyButton.setTitle("", for: .normal)
         renoteButton.setTitle("", for: .normal)
@@ -475,67 +429,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     }
     
     // MARK: Privates
-    
-    private func setupFileImage(_ image: UIImage, originalUrl: String, index: Int, isVideo: Bool, isSensitive: Bool) {
-        // self.changeStateFileImage(isHidden: false) //メインスレッドでこれ実行するとStackViewの内部計算と順番が前後するのでダメ
-        
-        DispatchQueue.main.async {
-            guard let imageView = self.getFileView(index) else { return }
-            
-            // tap gestureを付加する
-            imageView.setTapGesture(self.disposeBag, closure: {
-                if isVideo {
-                    self.delegate?.playVideo(url: originalUrl)
-                } else {
-                    self.showImage(url: originalUrl)
-                }
-            })
-            
-            imageView.backgroundColor = .clear
-            imageView.image = image
-            imageView.isHidden = false
-            imageView.setPlayIconImage(hide: !isVideo)
-            imageView.setNSFW(hide: !isSensitive)
-            
-            imageView.layoutIfNeeded()
-            self.mainStackView.setNeedsLayout()
-        }
-    }
-    
-    // ファイルは同時に4つしか載せることができないので、先に4つViewを追加しておく
-    private func setupFileView() {
-        guard fileImageView.arrangedSubviews.count == 0 else { return }
-        
-        for _ in 0 ..< 4 {
-            let imageView = FileView()
-            
-            imageView.contentMode = .scaleAspectFill
-            imageView.clipsToBounds = true
-            imageView.isHidden = true
-            imageView.layer.cornerRadius = 10
-            imageView.isUserInteractionEnabled = true
-            imageView.backgroundColor = .lightGray
-            imageView.layer.borderColor = UIColor.lightGray.cgColor
-            imageView.layer.borderWidth = 1
-            imageView.layer.masksToBounds = true
-            
-            fileImageView.addArrangedSubview(imageView)
-        }
-    }
-    
-    private func getFileView(_ index: Int) -> FileView? {
-        guard index < fileImageView.arrangedSubviews.count,
-            let imageView = fileImageView.arrangedSubviews[index] as? FileView else { return nil }
-        
-        return imageView
-    }
-    
-    private func showImage(url: String) {
-        guard let url = URL(string: url), let delegate = self.delegate as? UIViewController else { return }
-        
-        let agrume = Agrume(url: url)
-        agrume.show(from: delegate) // 画像を表示
-    }
     
     private func setupReactionCell(_ dataSource: CollectionViewSectionedDataSource<NoteCell.Reaction.Section>, _ collectionView: UICollectionView, _ indexPath: IndexPath) -> UICollectionViewCell {
         guard let viewModel = viewModel else { fatalError("Internal Error.") }
@@ -626,7 +519,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         reactionsCollectionView.isSkeletonable = true
         
-        fileImageView.isSkeletonable = true
+        skeltonCover.isSkeletonable = true
     }
     
     private func changeSkeltonState(on: Bool) {
@@ -642,12 +535,13 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             pollView.isHidden = true
             innerRenoteDisplay.isHidden = true
             
-            fileImageView.showAnimatedGradientSkeleton()
+            skeltonCover.showAnimatedGradientSkeleton()
         } else {
             nameTextView.hideSkeleton()
             iconView.hideSkeleton()
             
-            fileImageView.hideSkeleton()
+            skeltonCover.hideSkeleton()
+            skeltonCover.isHidden = true
         }
     }
     
