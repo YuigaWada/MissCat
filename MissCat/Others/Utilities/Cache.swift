@@ -56,7 +56,7 @@ public class Cache {
         }
     }
     
-    public func saveFiles(noteId: String, image: UIImage, originalUrl: String, type: NoteCell.FileType, isSensitive: Bool) {
+    public func saveFiles(noteId: String, image: UIImage, originalUrl: String, type: FileType, isSensitive: Bool) {
         let imageTuple = (thumbnail: image, originalUrl: originalUrl, type: type, isSensitive: isSensitive)
         var hasFile: Bool = false
         
@@ -105,7 +105,7 @@ public class Cache {
         return users[username]?.iconImage
     }
     
-    public func getFiles(noteId: String) -> [(thumbnail: UIImage, originalUrl: String, type: NoteCell.FileType, isSensitive: Bool)]? {
+    public func getFiles(noteId: String) -> [(thumbnail: UIImage, originalUrl: String, type: FileType, isSensitive: Bool)]? {
         let options = files.filter {
             $0.noteId == noteId
         }
@@ -255,6 +255,6 @@ public extension Cache {
     
     struct File {
         public var noteId: String
-        public var images: [(thumbnail: UIImage, originalUrl: String, type: NoteCell.FileType, isSensitive: Bool)]
+        public var images: [(thumbnail: UIImage, originalUrl: String, type: FileType, isSensitive: Bool)]
     }
 }

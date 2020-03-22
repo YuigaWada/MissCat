@@ -130,7 +130,7 @@ class NoteCellViewModel: ViewModelType {
     
     /// ファイルの種類を識別する
     /// - Parameter type: MIME Type
-    public func checkFileType(_ type: String?) -> NoteCell.FileType {
+    public func checkFileType(_ type: String?) -> FileType {
         guard let type = type else { return .Unknown }
         
         if type.contains("video") {
