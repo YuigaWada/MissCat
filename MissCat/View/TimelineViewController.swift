@@ -350,7 +350,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
                                              hasMarked: hasMarked)
         
         reactionGen?.selectedEmoji.subscribe(onNext: { emojiModel in
-            let raw = emojiModel.isDefault ? emojiModel.rawEmoji : ":" + emojiModel.rawEmoji + ":"
+            guard let raw = emojiModel.isDefault ? emojiModel.defaultEmoji : ":" + emojiModel.rawEmoji + ":" else { return }
             self.viewModel?.updateReaction(targetNoteId: noteId,
                                            reaction: raw,
                                            isMyReaction: true,
