@@ -129,12 +129,11 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     }
     
     private func setupTapGesture(to view: EmojiViewCell, emojiModel: EmojiView.EmojiModel) {
-        let emoji = emojiModel.rawEmoji
         let tapGesture = UITapGestureRecognizer()
         
         // 各々のEmojiViewに対してtap gestureを付加する
         tapGesture.rx.event.bind { _ in
-            let raw = ":" + emoji + ":"
+            guard let raw = emojiModel.isDefault ? emojiModel.defaultEmoji : ":" + emojiModel.rawEmoji + ":" else { return }
             if self.onPostViewController { // Post画面のときは入力をPostViewControllerへと渡す
                 self.sendEmojiInput(emojiModel: emojiModel)
             } else { // NoteCell上ではReactionGenが投稿に対してサーバーにリアクションを送信する
