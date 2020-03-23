@@ -397,8 +397,9 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
 //        let targetView = MFMEngine.generateAsyncImageView(imageUrl: imageUrl)
 //
         if let selectedTextRange = mainTextView.selectedTextRange {
+            guard let emoji = emojiModel.isDefault ? emojiModel.defaultEmoji : ":\(emojiModel.rawEmoji):" else { return }
             mainTextView.replace(selectedTextRange,
-                                 withText: emojiModel.isDefault ? emojiModel.rawEmoji : ":\(emojiModel.rawEmoji):")
+                                 withText: emoji)
         }
     }
     
