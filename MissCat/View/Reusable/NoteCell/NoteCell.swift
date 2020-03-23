@@ -341,6 +341,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             return self
         }
         
+        let hasFile = item.fileVisible && item.files.count > 0
+        
         // Font
         noteView.font = UIFont(name: "Helvetica",
                                size: isDetailMode ? 15.0 : 11.0)
@@ -363,12 +365,13 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         guard let noteId = item.noteId else { return NoteCell() }
         
-        initializeComponent(hasFile: item.fileVisible && item.files.count > 0) // Initialize because NoteCell is reused by TableView.
+        initializeComponent(hasFile: hasFile) // Initialize because NoteCell is reused by TableView.
         
         // main
         self.noteId = item.noteId
         userId = item.userId
         iconImageUrl = item.iconImageUrl
+        delegate = arg.delegate
         
         // YanagiTextと一対一にキャッシュを保存できるように、idをYanagiTextに渡す
         noteView.setId(noteId: item.noteId)
@@ -380,10 +383,12 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         viewModel.setCell()
         
         // file
-        _ = fileContainer.transform(with: FileContainer.Arg(files: item.files,
-                                                            noteId: noteId,
-                                                            fileVisible: item.fileVisible,
-                                                            delegate: arg.delegate))
+        if hasFile {
+            _ = fileContainer.transform(with: FileContainer.Arg(files: item.files,
+                                                                noteId: noteId,
+                                                                fileVisible: item.fileVisible,
+                                                                delegate: arg.delegate))
+        }
         
         // footer
         let replyCount = item.replyCount != 0 ? String(item.replyCount) : ""

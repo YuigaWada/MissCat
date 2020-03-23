@@ -31,7 +31,8 @@ public class FileContainerViewModel: ViewModelType {
         self.disposeBag = disposeBag
     }
     
-    public func setFile(with arg: FileContainer.Arg) {
+    /// モデルをsetする
+    public func setFileModel(with arg: FileContainer.Arg) {
         guard arg.fileVisible else { return }
         
         let files = arg.files
@@ -53,7 +54,11 @@ public class FileContainerViewModel: ViewModelType {
                                                      isSensitive: file.isSensitive ?? true))
             }
         }
-        
+        updateFiles(new: fileModel)
+    }
+    
+    public func initialize() {
+        fileModel = []
         updateFiles(new: fileModel)
     }
     

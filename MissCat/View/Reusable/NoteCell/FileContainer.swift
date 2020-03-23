@@ -46,11 +46,14 @@ public class FileContainer: UICollectionView, UICollectionViewDelegate, Componen
     
     public func transform(with arg: Arg) -> FileContainer {
         noteCellDelegate = arg.delegate
-        viewModel.setFile(with: arg)
+        
+        collectionViewLayout = MosaicLayout()
+        viewModel.setFileModel(with: arg)
         return self
     }
     
     public func initialize() {
+        collectionViewLayout = .init()
         viewModel.fileModel = []
     }
     
@@ -60,18 +63,6 @@ public class FileContainer: UICollectionView, UICollectionViewDelegate, Componen
         let fileDataSources = setupDataSource()
         let files = viewModel.output.files.asDriver(onErrorDriveWith: Driver.empty())
         
-        files.drive(onNext: { // TODO: ここの処理が重いっぽいのでどうにかする
-            guard $0.count > 0 else { return }
-            let count = $0[0].items.count
-            
-            if count > 0 {
-                let mosaicLayout = MosaicLayout()
-                mosaicLayout.itemCount = count
-                self.collectionViewLayout = mosaicLayout
-            } else {
-                self.collectionViewLayout = .init()
-            }
-        }).disposed(by: disposeBag)
         files.drive(rx.items(dataSource: fileDataSources)).disposed(by: disposeBag)
     }
     
@@ -159,7 +150,6 @@ extension FileContainer.Section: AnimatableSectionModelType {
 private class MosaicLayout: UICollectionViewLayout {
     var contentBounds = CGRect.zero
     var cachedAttributes = [UICollectionViewLayoutAttributes]()
-    var itemCount: Int = 0
     var cellHeight: CGFloat = 130
     
     /// - Tag: PrepareMosaicLayout
@@ -171,8 +161,7 @@ private class MosaicLayout: UICollectionViewLayout {
         cachedAttributes.removeAll()
         contentBounds = CGRect(origin: .zero, size: collectionView.bounds.size)
         
-        let count = itemCount
-        
+        let count = collectionView.numberOfItems(inSection: 0)
         var currentIndex = 0
         var segment: MosaicSegmentStyle = .fullWidth
         var lastFrame: CGRect = .zero
@@ -180,6 +169,7 @@ private class MosaicLayout: UICollectionViewLayout {
         let cvWidth = collectionView.bounds.size.width
         
         let segmentFrame = CGRect(x: 0, y: lastFrame.maxY + 1.0, width: cvWidth, height: cellHeight)
+        guard count > 0 else { return }
         
         switch count {
         case 2:

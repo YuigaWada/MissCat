@@ -34,7 +34,13 @@ public class FileContainerCell: UICollectionViewCell {
         backgroundColor = .lightGray
     }
     
+    private func initialize() {
+        setComponent()
+        imageView.image = nil
+    }
+    
     public func transform(with fileModel: FileContainer.Model, and delegate: NoteCellDelegate?) {
+        initialize()
         if let thumbnail = Cache.shared.getUiImage(url: fileModel.thumbnailUrl) {
             setImage(image: thumbnail,
                      originalUrl: fileModel.originalUrl,
