@@ -49,6 +49,10 @@
 		8D613551238A978700AB50C2 /* EmojiViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D613550238A978700AB50C2 /* EmojiViewCell.swift */; };
 		8D613553238B6D4F00AB50C2 /* NavBar.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D613552238B6D4F00AB50C2 /* NavBar.xib */; };
 		8D613555238B6D8B00AB50C2 /* NavBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D613554238B6D8B00AB50C2 /* NavBar.swift */; };
+		8D61391A2427B9B0003B5BEF /* FileContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D6139192427B9B0003B5BEF /* FileContainer.swift */; };
+		8D61391C2427C1B3003B5BEF /* FileContainerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D61391B2427C1B3003B5BEF /* FileContainerViewModel.swift */; };
+		8D61391E2427CA0C003B5BEF /* FileContainerCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D61391D2427CA0C003B5BEF /* FileContainerCell.xib */; };
+		8D6139202427CAED003B5BEF /* FileContainerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D61391F2427CAED003B5BEF /* FileContainerCell.swift */; };
 		8D769D74241E7BDB0022D4D2 /* ThemeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D769D73241E7BDB0022D4D2 /* ThemeViewController.swift */; };
 		8D7779A624138120005764D9 /* PanelMenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D7779A524138120005764D9 /* PanelMenuViewController.swift */; };
 		8D79687F2404BE59004F87FA /* ReactionCollectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */; };
@@ -162,6 +166,10 @@
 		8D613550238A978700AB50C2 /* EmojiViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiViewCell.swift; sourceTree = "<group>"; };
 		8D613552238B6D4F00AB50C2 /* NavBar.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NavBar.xib; sourceTree = "<group>"; };
 		8D613554238B6D8B00AB50C2 /* NavBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavBar.swift; sourceTree = "<group>"; };
+		8D6139192427B9B0003B5BEF /* FileContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileContainer.swift; sourceTree = "<group>"; };
+		8D61391B2427C1B3003B5BEF /* FileContainerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileContainerViewModel.swift; sourceTree = "<group>"; };
+		8D61391D2427CA0C003B5BEF /* FileContainerCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = FileContainerCell.xib; sourceTree = "<group>"; };
+		8D61391F2427CAED003B5BEF /* FileContainerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileContainerCell.swift; sourceTree = "<group>"; };
 		8D769D73241E7BDB0022D4D2 /* ThemeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeViewController.swift; sourceTree = "<group>"; };
 		8D7779A524138120005764D9 /* PanelMenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelMenuViewController.swift; sourceTree = "<group>"; };
 		8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionCollectionHeader.swift; sourceTree = "<group>"; };
@@ -365,6 +373,8 @@
 				8D4754F6240E21B900BAD410 /* PollView.swift */,
 				8DE88824242764AD002CC9DE /* NoteCell.Model.swift */,
 				8DE8882624276512002CC9DE /* NoteCell.FileView.swift */,
+				8D6139192427B9B0003B5BEF /* FileContainer.swift */,
+				8D61391F2427CAED003B5BEF /* FileContainerCell.swift */,
 			);
 			path = NoteCell;
 			sourceTree = "<group>";
@@ -375,6 +385,7 @@
 				8D065B18237AC825003DFB7C /* NoteCell.xib */,
 				8D502D53237D8BEC00525A96 /* ReactionCell.xib */,
 				8D4754F8240E21F800BAD410 /* PollView.xib */,
+				8D61391D2427CA0C003B5BEF /* FileContainerCell.xib */,
 			);
 			path = nib;
 			sourceTree = "<group>";
@@ -472,6 +483,7 @@
 			children = (
 				8D8863A82383F8A900A7A5A8 /* NoteCellViewModel.swift */,
 				8DA06A13238A86B80093A718 /* NotificationCellViewModel.swift */,
+				8D61391B2427C1B3003B5BEF /* FileContainerViewModel.swift */,
 			);
 			path = Reusable;
 			sourceTree = "<group>";
@@ -599,6 +611,7 @@
 				8DA536AC23AC8B70005EB1B5 /* AttachmentCell.xib in Resources */,
 				8D065B19237AC826003DFB7C /* NoteCell.xib in Resources */,
 				8D8863B4238493FA00A7A5A8 /* RenoteeCell.xib in Resources */,
+				8D61391E2427CA0C003B5BEF /* FileContainerCell.xib in Resources */,
 				8DAEA1352382E4F00083AA69 /* EmojiView.xib in Resources */,
 				8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */,
 			);
@@ -694,6 +707,7 @@
 				8D3036F82385DAED00BA6D38 /* PostModel.swift in Sources */,
 				8DAF30192419842D0041BB85 /* AboutMisskeyViewController.swift in Sources */,
 				8DAD238A240CE76000AB1F36 /* StartViewController.swift in Sources */,
+				8D61391A2427B9B0003B5BEF /* FileContainer.swift in Sources */,
 				8D53741B23A32D03004523FC /* ViewModelType.swift in Sources */,
 				8D4B02C1241FE5C90056605F /* Theme.swift in Sources */,
 				8DA06A0F2389F04E0093A718 /* NotificationModel.swift in Sources */,
@@ -721,6 +735,7 @@
 				8D4754F7240E21B900BAD410 /* PollView.swift in Sources */,
 				8D769D74241E7BDB0022D4D2 /* ThemeViewController.swift in Sources */,
 				8DA06A072389E89A0093A718 /* NotificationsViewController.swift in Sources */,
+				8D61391C2427C1B3003B5BEF /* FileContainerViewModel.swift in Sources */,
 				8D4A2A18237437BE00503685 /* SceneDelegate.swift in Sources */,
 				8DAF301B241B599B0041BB85 /* LicenseViewController.swift in Sources */,
 				8DA06A16238A86DC0093A718 /* NotificationCellModel.swift in Sources */,
@@ -734,6 +749,7 @@
 				8DC16154238BBD0C007793B7 /* NoteModel+MissCat.swift in Sources */,
 				8D7779A624138120005764D9 /* PanelMenuViewController.swift in Sources */,
 				8D8863B62384951300A7A5A8 /* RenoteeCell.swift in Sources */,
+				8D6139202427CAED003B5BEF /* FileContainerCell.swift in Sources */,
 				8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */,
 				8DE8882724276512002CC9DE /* NoteCell.FileView.swift in Sources */,
 				8DA06A12238A58A20093A718 /* NSMutableAttributedString+MissCat.swift in Sources */,
@@ -979,7 +995,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = ./MissCat/Bridge.h;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -1057,7 +1073,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = ./MissCat/Bridge.h;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
