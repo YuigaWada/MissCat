@@ -442,7 +442,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     
     public func changedStreamState(success: Bool) {
         guard !success else { return }
-        showNotificationBanner(icon: .Failed, notification: "Streamingへ再接続します")
+//        showNotificationBanner(icon: .Failed, notification: "Streamingへ再接続します")
     }
     
     public func loadingBanner() {
