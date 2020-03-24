@@ -45,15 +45,17 @@ public class FileContainer: UICollectionView, UICollectionViewDelegate, Componen
     // MARK: Publics
     
     public func transform(with arg: Arg) -> FileContainer {
-        noteCellDelegate = arg.delegate
+        initialize()
         
+        noteCellDelegate = arg.delegate
         collectionViewLayout = MosaicLayout()
-        viewModel.setFileModel(with: arg)
+        DispatchQueue.global().async {
+            self.viewModel.setFileModel(with: arg)
+        }
         return self
     }
     
     public func initialize() {
-        collectionViewLayout = .init()
         viewModel.fileModel = []
     }
     

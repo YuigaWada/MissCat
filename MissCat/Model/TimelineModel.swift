@@ -93,14 +93,20 @@ class TimelineModel {
             var cellModels = [renoteeModel, renoteModel]
             if reverse { cellModels.reverse() }
             
-            for cellModel in cellModels { observer.onNext(cellModel) }
+            for cellModel in cellModels {
+                MFMEngine.shapeModel(cellModel)
+                observer.onNext(cellModel)
+            }
             
         } else { // just a note or a note with commentRN
             var newCellsModel = getCellsModel(post, withRN: noteType == .CommentRenote)
             guard newCellsModel != nil else { return }
             
             if reverse { newCellsModel!.reverse() } // reverseしてからinsert (streamingの場合)
-            newCellsModel!.forEach { observer.onNext($0) }
+            newCellsModel!.forEach {
+                MFMEngine.shapeModel($0)
+                observer.onNext($0)
+            }
         }
     }
     
@@ -118,40 +124,41 @@ class TimelineModel {
                     print(error ?? "error is nil")
                     return
                 }
-                
-                if isReload {
-                    // timelineにすでに表示してある投稿を取得した場合、ロードを終了する
-                    var newPosts: [NoteModel] = []
-                    for index in 0 ..< posts.count {
-                        let post = posts[index]
-                        if post._featuredId_ == nil { // ハイライトの投稿は無視する
-                            // 表示済みの投稿に当たったらbreak
-                            guard option.lastNoteId != post.id, option.lastNoteId != post.renoteId else { break }
-                            newPosts.append(post)
+                DispatchQueue.global().async {
+                    if isReload {
+                        // timelineにすでに表示してある投稿を取得した場合、ロードを終了する
+                        var newPosts: [NoteModel] = []
+                        for index in 0 ..< posts.count {
+                            let post = posts[index]
+                            if post._featuredId_ == nil { // ハイライトの投稿は無視する
+                                // 表示済みの投稿に当たったらbreak
+                                guard option.lastNoteId != post.id, option.lastNoteId != post.renoteId else { break }
+                                newPosts.append(post)
+                            }
+                        }
+                        
+                        newPosts.reverse() // 逆順に読み込む
+                        newPosts.forEach { post in
+                            self.transformNote(with: observer, post: post, reverse: true)
+                        }
+                        
+                        observer.onCompleted()
+                        return
+                    }
+                    
+                    // if !isReload...
+                    
+                    posts.forEach { post in
+                        guard post._featuredId_ == nil else { return } // ハイライトの投稿は無視する
+                        
+                        self.transformNote(with: observer, post: post, reverse: false)
+                        if let noteId = post.id {
+                            self.initialNoteIds.append(noteId) // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
                         }
                     }
                     
-                    newPosts.reverse() // 逆順に読み込む
-                    newPosts.forEach { post in
-                        self.transformNote(with: observer, post: post, reverse: true)
-                    }
-                    
                     observer.onCompleted()
-                    return
                 }
-                
-                // if !isReload...
-                
-                posts.forEach { post in
-                    guard post._featuredId_ == nil else { return } // ハイライトの投稿は無視する
-                    
-                    self.transformNote(with: observer, post: post, reverse: false)
-                    if let noteId = post.id {
-                        self.initialNoteIds.append(noteId) // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
-                    }
-                }
-                
-                observer.onCompleted()
             }
             
             switch option.type {

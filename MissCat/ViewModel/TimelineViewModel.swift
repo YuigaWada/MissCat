@@ -126,11 +126,8 @@ class TimelineViewModel: ViewModelType {
             .subscribe(onNext: { cellModel in
                 self.output.connectedStream.accept(true)
                 
-                MFMEngine.shapeModel(cellModel)
-                
                 self.cellsModel.insert(cellModel, at: 0)
                 self.updateNotes(new: self.cellsModel)
-                
             }, onError: { _ in
                 self.output.connectedStream.accept(false)
                 self.reloadNotes {
@@ -241,7 +238,6 @@ class TimelineViewModel: ViewModelType {
         _isLoading = true
         
         return model.loadNotes(with: option).do(onNext: { cellModel in
-            MFMEngine.shapeModel(cellModel)
             self.cellsModel.append(cellModel)
         }, onCompleted: {
             self.initialNoteIds = self.model.initialNoteIds
@@ -283,7 +279,6 @@ class TimelineViewModel: ViewModelType {
                                       lastNoteId: lastNoteId)
         
         model.loadNotes(with: option).subscribe(onNext: { cellModel in
-            MFMEngine.shapeModel(cellModel)
             self.cellsModel.insert(cellModel, at: 0)
         }, onCompleted: {
             self.updateNotes(new: self.cellsModel)

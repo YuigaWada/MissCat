@@ -373,9 +373,9 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         iconImageUrl = item.iconImageUrl
         delegate = arg.delegate
         
-        // YanagiTextと一対一にキャッシュを保存できるように、idをYanagiTextに渡す
-        noteView.setId(noteId: item.noteId)
-        nameTextView.setId(userId: item.userId)
+//        // YanagiTextと一対一にキャッシュを保存できるように、idをYanagiTextに渡す
+//        noteView.setId(noteId: item.noteId)
+//        nameTextView.setId(userId: item.userId)
         
         let viewModel = getViewModel(item: item, isDetailMode: isDetailMode)
         self.viewModel = viewModel
@@ -426,7 +426,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         noteView.resetViewString()
         
         changeStateFileImage(isHidden: !hasFile)
-        fileContainer.initialize()
+//        fileContainer.initialize()
         
         replyButton.setTitle("", for: .normal)
         renoteButton.setTitle("", for: .normal)
