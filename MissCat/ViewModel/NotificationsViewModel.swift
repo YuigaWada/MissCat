@@ -42,7 +42,8 @@ public class NotificationsViewModel {
             
             results.forEach { notification in
                 guard let cellModel = self.model.getModel(notification: notification) else { return }
-                if cellModel.type == .mention || cellModel.type == .reply, let replyNote = cellModel.replyNote {
+                if cellModel.type == .mention || cellModel.type == .reply || cellModel.type == .quote,
+                    let replyNote = cellModel.replyNote {
                     MFMEngine.shapeModel(replyNote)
                 } else {
                     MFMEngine.shapeModel(cellModel)

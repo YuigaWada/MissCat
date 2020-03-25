@@ -74,12 +74,11 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
         let index = indexPath.row
         let item = viewModel.cellsModel[index]
         
-        if item.type == .reply || item.type == .mention {
+        if item.type == .reply || item.type == .mention || item.type == .quote {
             guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell, let replyNote = item.replyNote
             else { return NoteCell() }
             
             let shapedCell = noteCell.transform(with: .init(item: replyNote, delegate: self))
-            shapedCell.delegate = self
             
             shapedCell.noteView.renderViewStrings()
             shapedCell.nameTextView.renderViewStrings()

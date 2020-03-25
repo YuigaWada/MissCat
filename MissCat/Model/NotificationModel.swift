@@ -28,9 +28,10 @@ public class NotificationsModel {
         
         let isReply = type == .mention || type == .reply
         let isRenote = type == .renote
+        let isCommentRenote = type == .quote
         
         // replyかどうかで.noteと.replyの役割が入れ替わる
-        let replyNote = isReply ? (note.getNoteCellModel() ?? nil) : nil
+        var replyNote = isReply ? (note.getNoteCellModel() ?? nil) : nil
         
         var myNote: NoteCell.Model?
         if isReply {
@@ -39,6 +40,13 @@ public class NotificationsModel {
         } else if isRenote {
             guard let renote = note.renote else { return nil }
             myNote = renote.getNoteCellModel()
+        } else if isCommentRenote {
+            guard let renote = note.renote else { return nil }
+            let commentRNTarget = renote.getNoteCellModel()
+            commentRNTarget?.onOtherNote = true
+            
+            replyNote = note.getNoteCellModel()
+            replyNote?.commentRNTarget = commentRNTarget
         } else {
             myNote = note.getNoteCellModel()
         }
