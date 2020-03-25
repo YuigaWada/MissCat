@@ -254,6 +254,9 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" id="VkY-VQ-O5H"/>
+                    <connections>
+                        <outlet property="logoutButton" destination="sDP-kt-K5H" id="cfo-d6-VpX"/>
+                    </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="567-OK-JmL" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>

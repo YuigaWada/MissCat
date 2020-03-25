@@ -6,12 +6,22 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
+import RxCocoa
+import RxSwift
 import UIKit
 
 public class AccountViewController: UITableViewController {
+    @IBOutlet weak var logoutButton: UIButton!
+    
+    private var disposeBag = DisposeBag()
+    
     public override func viewDidLoad() {
         super.viewDidLoad()
         tableView.delegate = self
+        
+        logoutButton.rx.tap.subscribe(onNext: { _ in
+            self.showLogoutAlert()
+        }).disposed(by: disposeBag)
     }
     
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
