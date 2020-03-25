@@ -172,13 +172,13 @@ extension MisskeyKit {
         
         
         //MARK:- Follow / Unfollow someone
-        public func follow(userId: String = "", result callback: @escaping BooleanCallBack) {
+        public func follow(userId: String = "", result callback: @escaping OneUserCallBack) {
             
             var params = ["userId":userId] as [String : Any]
             
             params = params.removeRedundant()
-            MisskeyKit.handleAPI(needApiKey: true, api: "following/create", params: params, type: Bool.self) { _, error in
-                callback(error == nil, error)
+            MisskeyKit.handleAPI(needApiKey: true, api: "following/create", params: params, type: UserModel.self) { user, error in
+                callback(user, error)
             }
         }
         
