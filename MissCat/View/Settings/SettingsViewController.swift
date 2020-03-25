@@ -55,7 +55,7 @@ public class SettingsViewController: UITableViewController {
         let index = indexPath.row
         
         if index == 1 || index == 2 {
-            let viewController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "under-development")
+            let viewController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "404-page")
             
             navigationController?.pushViewController(viewController, animated: true)
         }

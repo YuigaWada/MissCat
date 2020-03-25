@@ -1168,7 +1168,7 @@
         <!--View Controller-->
         <scene sceneID="O3q-om-X6A">
             <objects>
-                <viewController storyboardIdentifier="under-development" id="vEg-5E-hdO" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="404-page" id="vEg-5E-hdO" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="tZj-Vp-fhj">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1180,14 +1180,14 @@
                                     <constraint firstAttribute="width" constant="170" id="zgM-a0-jru"/>
                                 </constraints>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="開発中" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pIe-Ui-yql">
-                                <rect key="frame" x="181" y="402" width="52" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Under Development." textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pIe-Ui-yql">
+                                <rect key="frame" x="128" y="402" width="158" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Under Development." textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Sdh-hN-eka">
-                                <rect key="frame" x="128" y="431" width="158" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="開発中" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Sdh-hN-eka">
+                                <rect key="frame" x="181" y="431" width="52" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
@@ -1515,6 +1515,6 @@
     </scenes>
     <resources>
         <image name="Logo" width="581" height="150.5"/>
-        <image name="Sad_Ai" width="1172" height="1072"/>
+        <image name="Sad_Ai" width="586" height="536"/>
     </resources>
 </document>

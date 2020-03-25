@@ -38,7 +38,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     private var myProfileViewController: ProfileViewController?
     private var currentProfileViewController: ProfileViewController?
     
-    private lazy var search = self.getViewController(name: "under-development")
+    private lazy var search = self.getViewController(name: "404-page")
     private lazy var home = self.generateTimelineVC(type: .Home)
     private lazy var local = self.generateTimelineVC(type: .Local)
     private lazy var global = self.generateTimelineVC(type: .Global)
@@ -206,7 +206,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     private func setupFavVC() {
         if favViewController == nil {
             guard let storyboard = self.storyboard else { return }
-            let favViewController = storyboard.instantiateViewController(withIdentifier: "under-development")
+            let favViewController = storyboard.instantiateViewController(withIdentifier: "404-page")
             favViewController.view.isHidden = true
             //               favViewController.homeViewController = self
             self.favViewController = favViewController
