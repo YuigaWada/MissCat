@@ -148,7 +148,10 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
     
     public func tappedNotifications() {
         let zeroIndexPath = IndexPath(row: 0, section: 0)
-        if mainTableView.cellForRow(at: zeroIndexPath) != nil { // セルが存在しないと落ちるので制約をつける
+        
+        // セルが存在しないと落ちるので制約をつける
+        if mainTableView.numberOfSections > zeroIndexPath.section,
+            mainTableView.numberOfRows(inSection: zeroIndexPath.section) > zeroIndexPath.row {
             mainTableView.scrollToRow(at: zeroIndexPath, at: .top, animated: true)
         }
     }
