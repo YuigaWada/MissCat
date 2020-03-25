@@ -357,7 +357,7 @@
          contextName = "HomeViewController.tappedHome():HomeViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "nowPage">
+               value = "previousPage">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1009,14 +1009,6 @@
             </PersistentString>
             <PersistentString
                value = "type.needsStreaming ">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "NotificationsViewController.tableView(_:didSelectRowAt:):NotificationsViewController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "viewModel?.cellsModel[0]">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
