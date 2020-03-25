@@ -49,6 +49,12 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     
     public var xlTitle: IndicatorInfo? // XLPagerTabStripで用いるtitle
     
+    private var loggedIn: Bool = false
+    private var hasApiKey: Bool {
+        guard let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey() else { return false }
+        return !apiKey.isEmpty
+    }
+    
     // MARK: Life Cycle
     
     /// 外部からTimelineViewContollerのインスタンスを生成する場合、このメソッドを通じて適切なパラメータをセットしていく
@@ -98,14 +104,23 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         }
         
         binding(dataSource: dataSource)
-        viewModel?.setupInitialCell()
+        
+        loggedIn = hasApiKey
+        if hasApiKey {
+            viewModel?.setupInitialCell()
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
         view.deselectCell(on: mainTableView)
+        
+        if !loggedIn, hasApiKey {
+            loggedIn = true
+            viewModel?.setupInitialCell()
+        }
         viewModel?.setSkeltonCell()
+        
         if let bottomConstraint = bottomConstraint {
             bottomConstraint.isActive = withNavBar
         }
