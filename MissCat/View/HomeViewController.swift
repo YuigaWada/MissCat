@@ -576,6 +576,8 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
             nowPage = previousPage
         } else if viewController is ProfileViewController {
             nowPage = .Profile
+        } else {
+            nowPage = .Others // 例えば設定画面とか
         }
     }
     
@@ -603,5 +605,6 @@ extension HomeViewController {
         
         // Others
         case PostDetails
+        case Others
     }
 }
