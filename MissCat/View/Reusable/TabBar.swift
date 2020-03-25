@@ -108,8 +108,10 @@ public class FooterTabBar: UIView {
     }
     
     @IBAction func tappedFav(_ sender: Any) {
-        guard selected != .fav else { return }
+        guard let delegate = delegate else { return }
+        
         selected = .fav
+        delegate.tappedFav()
     }
     
     @IBAction func tappedUser(_ sender: Any) {

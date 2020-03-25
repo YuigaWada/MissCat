@@ -32,6 +32,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     // ViewController
     private var notificationsViewController: UIViewController?
     private var detailViewController: UIViewController?
+    private var favViewController: UIViewController?
     
     private var myProfileViewController: ProfileViewController?
     private var currentProfileViewController: ProfileViewController?
@@ -106,6 +107,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         super.viewDidLayoutSubviews()
         
         setupNotificationsVC() // 先にNotificationsVCをロードしておく → 通知のロードを裏で行う
+        setupFavVC()
         setupNavTab()
     }
     
@@ -198,6 +200,26 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         notificationsViewController!.view.frame = getDisplayRect()
     }
     
+    private func setupFavVC() {
+        if favViewController == nil {
+            guard let storyboard = self.storyboard else { return }
+            let favViewController = storyboard.instantiateViewController(withIdentifier: "under-development")
+            favViewController.view.isHidden = true
+            //               favViewController.homeViewController = self
+            self.favViewController = favViewController
+            
+            navBar.barTitle = "Favorites"
+            navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
+            
+            addChild(self.favViewController!)
+            view.addSubview(self.favViewController!.view)
+            view.bringSubviewToFront(navBar)
+            view.bringSubviewToFront(footerTab)
+        }
+        
+        favViewController!.view.frame = getDisplayRect()
+    }
+    
     // MARK: FooterTab's Pages
     
     // 下タブに対応するViewControllerを操作するメソッド群
@@ -256,6 +278,18 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
+    public func showFavView() {
+        nowPage = .Favorites
+        guard let favViewController = favViewController else { return }
+        
+        navBar.isHidden = false
+        navBar.barTitle = "Favorites"
+        navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
+        
+        nowPage = .Favorites
+        favViewController.view.isHidden = false
+    }
+    
     // MARK: Utilities
     
     private func getViewController(name: String) -> UIViewController {
@@ -303,16 +337,18 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     }
     
     private func hideView(without type: Page) {
-        if type != .Notifications, let notificationsViewController = notificationsViewController {
-            notificationsViewController.view.isHidden = true
+        if type != .Notifications {
+            notificationsViewController?.view.isHidden = true
             navBar.isHidden = true
         }
         
-        if type != .Profile, let myProfileViewController = self.myProfileViewController {
-            myProfileViewController.view.isHidden = true
+        if type != .Profile {
+            myProfileViewController?.view.isHidden = true
+            currentProfileViewController?.view.isHidden = true
         }
-        if type != .Profile, let currentProfileViewController = self.currentProfileViewController {
-            currentProfileViewController.view.isHidden = true
+        
+        if type != .Favorites {
+            favViewController?.view.isHidden = true
         }
     }
     
@@ -358,7 +394,10 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     }
     
     public func tappedFav() {
-        home.tappedFav()
+        if nowPage != .Favorites {
+            DispatchQueue.main.async { self.hideView(without: .Favorites) }
+            showFavView()
+        }
     }
     
     public func tappedProfile() {
@@ -479,6 +518,7 @@ extension HomeViewController {
         case Notifications
         case Post
         case Profile
+        case Favorites
         
         // Others
         case PostDetails
