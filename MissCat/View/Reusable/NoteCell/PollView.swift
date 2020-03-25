@@ -24,13 +24,13 @@ public class PollView: UIView {
     }
     
     private var pollBarHeight = 30
-    private var pollBarCount = 0 {
+    private var pollBarCount = 0
+    private var votesCountSum: Float = 0 {
         didSet {
-            totalPollLabel.text = "計 \(pollBarCount)票"
+            totalPollLabel.text = "計 \(Int(votesCountSum))票"
         }
     }
     
-    private var votesCountSum: Float = 0
     private var pollBars: [PollBar] = []
     private let disposeBag = DisposeBag()
     
