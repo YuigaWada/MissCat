@@ -52,7 +52,7 @@ extension NoteCell {
         var files: [File]
         let emojis: [EmojiModel]?
         
-        let commentRNTarget: NoteCell.Model?
+        var commentRNTarget: NoteCell.Model?
         
         var onOtherNote: Bool = false // 引用RNはNoteCellの上にNoteCellが乗るという二重構造になっているので、内部のNoteCellかどうかを判別する
         var poll: Poll?
