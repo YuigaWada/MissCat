@@ -64,6 +64,10 @@ class TimelineModel {
         let updateReactionTrigger: PublishSubject<UpdateReaction>
     }
     
+    enum NotesLoadingError: Error {
+        case NotesEmpty
+    }
+    
     public lazy var trigger: Trigger = .init(removeTargetTrigger: self.removeTargetTrigger,
                                              updateReactionTrigger: self.updateReactionTrigger)
     
@@ -124,6 +128,11 @@ class TimelineModel {
                     print(error ?? "error is nil")
                     return
                 }
+                
+                if posts.count == 0 { // 新規登録された場合はpostsが空集合
+                    observer.onError(NotesLoadingError.NotesEmpty)
+                }
+                
                 DispatchQueue.global().async {
                     if isReload {
                         // timelineにすでに表示してある投稿を取得した場合、ロードを終了する

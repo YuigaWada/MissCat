@@ -427,16 +427,18 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     }
     
     public func showNotificationBanner(icon: NotificationBanner.IconType, notification: String) {
-        let bannerWidth = view.frame.width / 3
-        
-        let frame = CGRect(x: view.frame.width - bannerWidth - 10,
-                           y: footerTab.frame.origin.y - 30,
-                           width: bannerWidth,
-                           height: 30)
-        
-        let notificationBanner = NotificationBanner(frame: frame, icon: icon, notification: notification)
-        view.addSubview(notificationBanner)
-        view.bringSubviewToFront(notificationBanner)
+        DispatchQueue.main.async {
+            let bannerWidth = self.view.frame.width / 3
+            
+            let frame = CGRect(x: self.view.frame.width - bannerWidth - 10,
+                               y: self.footerTab.frame.origin.y - 30,
+                               width: bannerWidth,
+                               height: 30)
+            
+            let notificationBanner = NotificationBanner(frame: frame, icon: icon, notification: notification)
+            self.view.addSubview(notificationBanner)
+            self.view.bringSubviewToFront(notificationBanner)
+        }
     }
     
     // MARK: FooterTabBar Delegate

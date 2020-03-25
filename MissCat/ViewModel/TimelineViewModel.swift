@@ -75,6 +75,8 @@ class TimelineViewModel: ViewModelType {
     private var dataSource: NotesDataSource?
     private var disposeBag: DisposeBag
     
+    private var initialNoteCount: Int = 0
+    
     // MARK: Life Cycle
     
     public init(with input: Input, and disposeBag: DisposeBag) {
@@ -85,6 +87,10 @@ class TimelineViewModel: ViewModelType {
     public func setupInitialCell() {
         // タイムラインをロードする
         loadNotes().subscribe(onError: { error in
+            if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty, self.input.type == .Home {
+                self.initialPost()
+            }
+            
             print(error)
         }, onCompleted: {
             DispatchQueue.main.async {
@@ -117,6 +123,35 @@ class TimelineViewModel: ViewModelType {
         cellsModel = Array(removed)
         
         updateNotes(new: cellsModel)
+    }
+    
+    private func initialPost() {
+        guard initialNoteCount < 2 else { return }
+        MisskeyKit.notes.createNote(text: "MissCatからアカウントを作成しました。") { note, error in
+            guard note != nil, error == nil else { // 失敗した場合は何回か再帰
+                self.initialNoteCount += 1
+                self.initialPost()
+                return
+            }
+            DispatchQueue.main.async {
+                self.initialNoteCount = 0
+                self.initialFollow() // 次にユーザーをフォローしておく
+            }
+        }
+    }
+    
+    private func initialFollow() {
+        guard initialNoteCount < 2 else { return }
+        MisskeyKit.users.follow(userId: "7ze0f2goa7") { user, error in
+            guard user != nil, error == nil else { // 失敗した場合は何回か再帰
+                self.initialNoteCount += 1
+                self.initialFollow()
+                return
+            }
+            DispatchQueue.main.async {
+                self.setupInitialCell() // 成功したらまたタイムラインのロードを試みる
+            }
+        }
     }
     
     // MARK: Streaming
