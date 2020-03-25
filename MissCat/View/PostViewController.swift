@@ -27,6 +27,8 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     @IBOutlet weak var bottomStackView: UIStackView!
     @IBOutlet weak var addLocationButon: UIButton!
     
+    public var homeViewController: HomeViewController?
+    
     private var postType: PostType = .Post
     private var targetNoteCell: NoteCell?
     private var targetNote: NoteCell.Model?

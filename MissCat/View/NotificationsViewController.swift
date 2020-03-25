@@ -12,15 +12,13 @@ import RxSwift
 import UIKit
 
 public typealias NotificationDataSource = RxTableViewSectionedAnimatedDataSource<NotificationCell.Section>
-public class NotificationsViewController: UIViewController, UITableViewDelegate, FooterTabBarDelegate, NoteCellDelegate {
+public class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDelegate {
     @IBOutlet weak var mainTableView: UITableView!
     
     private var viewModel: NotificationsViewModel?
     private let disposeBag = DisposeBag()
     private var loadCompleted: Bool = true
     private var cellHeightCache: [String: CGFloat] = [:] // String → identifier
-    
-    public var homeViewController: TimelineDelegate?
     
     // MARK: Life Cycle
     
@@ -33,6 +31,11 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         guard let viewModel = viewModel else { return }
         viewModel.dataSource = setupDataSource()
         binding(dataSource: viewModel.dataSource)
+    }
+    
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        view.deselectCell(on: mainTableView)
     }
     
     // MARK: Setup TableView
@@ -75,7 +78,7 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
             guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell, let replyNote = item.replyNote
             else { return NoteCell() }
             
-            let shapedCell = noteCell.transform(with: .init(item: replyNote))
+            let shapedCell = noteCell.transform(with: .init(item: replyNote, delegate: self))
             shapedCell.delegate = self
             
             shapedCell.noteView.renderViewStrings()
@@ -104,11 +107,6 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         return height
     }
     
-    // セル選択後すぐに選択をキャンセルする
-    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath as IndexPath, animated: true)
-    }
-    
     public func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         guard let viewModel = viewModel else { return }
         
@@ -130,6 +128,23 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
         }
     }
     
+    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let index = indexPath.row
+        
+        guard let cellModel = viewModel?.cellsModel[index],
+            let replyNote = cellModel.replyNote,
+            cellModel.type == .mention || cellModel.type == .reply else { return }
+        showDetailView(item: replyNote)
+    }
+    
+    private func showDetailView(item: NoteCell.Model) {
+        guard let homeViewController = self.homeViewController else { return }
+        
+        let item = item
+        item.isReplyTarget = false // NoteCellのReplyIndicatorを消す
+        homeViewController.tappedCell(item: item) // 画面遷移に関してはすべてHomeViewControllerが受け持つ
+    }
+    
     // MARK: Delegate
     
     public func tappedNotifications() {
@@ -143,51 +158,4 @@ public class NotificationsViewController: UIViewController, UITableViewDelegate,
     public func tappedFav() {}
     
     public func tappedProfile() {}
-    
-    // MARK: NoteCellDelegate
-    
-    public func tappedReply(note: NoteCell.Model) {
-        homeViewController?.openPost(item: note, type: .Reply)
-    }
-    
-    public func tappedRenote(note: NoteCell.Model) {}
-    
-    public func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
-        presentReactionGen(noteId: noteId, iconUrl: iconUrl, displayName: displayName, username: username, note: note, hasFile: hasFile, hasMarked: hasMarked)
-    }
-    
-    public func tappedOthers() {}
-    
-    public func tappedLink(text: String) {
-        let (linkType, value) = text.analyzeHyperLink()
-        
-        switch linkType {
-        case "URL":
-            openLink(url: value)
-        case "User":
-            openUser(username: value)
-        default:
-            break
-        }
-    }
-    
-    func openUser(username: String) {
-        guard let homeViewController = self.homeViewController else { return }
-        homeViewController.openUserPage(username: username)
-    }
-    
-    public func move2Profile(userId: String) {
-        guard let homeViewController = self.homeViewController else { return }
-        homeViewController.move2Profile(userId: userId)
-    }
-    
-    public func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}
-    
-    public func vote(choice: Int, to noteId: String) {}
-    
-    public func playVideo(url: String) {}
-    
-    public func move2PostDetail(item: NoteCell.Model) {
-        homeViewController?.tappedCell(item: item)
-    }
 }

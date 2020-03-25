@@ -11,7 +11,7 @@ import RxDataSources
 import RxSwift
 import UIKit
 
-class PostDetailViewController: UIViewController, UITableViewDelegate, FooterTabBarDelegate {
+class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDelegate {
     @IBOutlet weak var mainTableView: UITableView!
     
     private var viewModel: PostDetailViewModel?
@@ -84,7 +84,7 @@ class PostDetailViewController: UIViewController, UITableViewDelegate, FooterTab
         guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell
         else { return NoteCell() }
         
-        let shapedCell = noteCell.transform(with: .init(item: item, isDetailMode: true))
+        let shapedCell = noteCell.transform(with: .init(item: item, isDetailMode: true, delegate: self))
 //        shapedCell.delegate = self
         
         shapedCell.nameTextView.renderViewStrings()

@@ -6,6 +6,7 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import AVKit
 import MisskeyKit
 import PolioPager
 import RxCocoa
@@ -24,7 +25,7 @@ import UIKit
 
 // (OOPの対極的存在である)一時的なキャッシュ管理についてはsingletonのCacheクラスを使用。
 
-public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate, TimelineDelegate, NavBarDelegate, UIGestureRecognizerDelegate, UINavigationControllerDelegate {
+public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate, TimelineDelegate, NavBarDelegate, NoteCellDelegate, UIGestureRecognizerDelegate, UINavigationControllerDelegate {
     private var isXSeries = UIScreen.main.bounds.size.height > 811
     private let footerTabHeight: CGFloat = 55
     private var initialized: Bool = false
@@ -58,6 +59,8 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     
     private var previousPage: Page = .Main
     private var logined: Bool = false
+    
+    private var viewModel = HomeViewModel()
     private var disposeBag = DisposeBag()
     
     // MARK: Life Cycle
@@ -220,6 +223,76 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         favViewController!.view.frame = getDisplayRect()
     }
     
+    // MARK: NoteCell Delegate
+    
+    public func tappedReply(note: NoteCell.Model) {
+        openPost(item: note, type: .Reply)
+    }
+    
+    public func tappedRenote(note: NoteCell.Model) {
+        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
+        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "Renote", awesomeIcon: "retweet", order: 0),
+                                                             .init(title: "引用Renote", awesomeIcon: "quote-right", order: 1)]
+        
+        panelMenu.setPanelTitle("Renote")
+        panelMenu.setupMenu(items: menuItems)
+        panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
+            guard order >= 0 else { return }
+            panelMenu.dismiss(animated: true, completion: nil)
+            
+            switch order {
+            case 0: // RN
+                guard let noteId = note.noteId else { return }
+                self.viewModel.renote(noteId: noteId)
+            case 1: // 引用RN
+                self.openPost(item: note, type: .CommentRenote)
+            default:
+                break
+            }
+         }).disposed(by: disposeBag)
+        
+        presentWithSemiModal(panelMenu, animated: true, completion: nil)
+    }
+    
+    public func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {}
+    
+    public func tappedOthers() {}
+    
+    public func move2PostDetail(item: NoteCell.Model) {
+        tappedCell(item: item)
+    }
+    
+    public func tappedLink(text: String) {
+        let (linkType, value) = text.analyzeHyperLink()
+        
+        switch linkType {
+        case "URL":
+            openLink(url: value)
+        case "User":
+            openUserPage(username: value)
+        default:
+            break
+        }
+    }
+    
+    public func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}
+    
+    public func vote(choice: Int, to noteId: String) {
+        // TODO: modelの変更 / api処理
+        viewModel.vote(choice: choice, to: noteId)
+    }
+    
+    public func playVideo(url: String) {
+        guard let url = URL(string: url) else { return }
+        let videoPlayer = AVPlayer(url: url)
+        let playerController = AVPlayerViewController()
+        playerController.player = videoPlayer
+        
+        present(playerController, animated: true, completion: {
+            videoPlayer.play()
+         })
+    }
+    
     // MARK: FooterTab's Pages
     
     // 下タブに対応するViewControllerを操作するメソッド群
@@ -254,6 +327,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         
         detailViewController.view.frame = getDisplayRect()
         detailViewController.item = item
+        detailViewController.homeViewController = self
         
         navigationController?.pushViewController(detailViewController, animated: true)
         

@@ -29,7 +29,7 @@ public protocol TimelineDelegate { // For HomeViewController
 typealias NotesDataSource = RxTableViewSectionedAnimatedDataSource<NoteCell.Section>
 private typealias ViewModel = TimelineViewModel
 
-class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBarDelegate, NoteCellDelegate, IndicatorInfoProvider {
+class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDelegate, IndicatorInfoProvider {
     @IBOutlet weak var mainTableView: UITableView!
     @IBOutlet weak var bottomConstraint: NSLayoutConstraint!
     
@@ -47,7 +47,6 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     
     private lazy var dataSource = self.setupDataSource()
     
-    public var homeViewController: HomeViewController?
     public var xlTitle: IndicatorInfo? // XLPagerTabStripで用いるtitle
     
     // MARK: Life Cycle
@@ -213,7 +212,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     private func showDetailView(item: NoteCell.Model) {
         guard let homeViewController = self.homeViewController else { return }
         
-        var item = item
+        let item = item
         item.isReplyTarget = false // NoteCellのReplyIndicatorを消す
         homeViewController.tappedCell(item: item) // 画面遷移に関してはすべてHomeViewControllerが受け持つ
     }
@@ -244,18 +243,12 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
 //            return viewModel.cellsModel[index].isRenoteeCell ? 25 : UITableView.automaticDimension
 //        }
 //        return height
-//    }
+    //    }
     
-    // セル選択後すぐに選択をキャンセルする & ReactionGenCellを消す
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let index = indexPath.row
-//        tableView.deselectRow(at: indexPath as IndexPath, animated: true)
-        
         guard let viewModel = viewModel else { return }
+        let index = indexPath.row
         showDetailView(item: viewModel.cellsModel[index])
-        
-        // TODO: renoteeCellをタップしたらrenote先までタップしたことにする
-        // tableView.selectRow(at: <#T##IndexPath?#>, animated: true, scrollPosition: .none)
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
@@ -311,36 +304,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
     
     // MARK: NoteCell Delegate
     
-    func tappedReply(note: NoteCell.Model) {
-        homeViewController?.openPost(item: note, type: .Reply)
-    }
-    
-    func tappedRenote(note: NoteCell.Model) {
-        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
-        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "Renote", awesomeIcon: "retweet", order: 0),
-                                                             .init(title: "引用Renote", awesomeIcon: "quote-right", order: 1)]
-        
-        panelMenu.setPanelTitle("Renote")
-        panelMenu.setupMenu(items: menuItems)
-        panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
-            guard order >= 0 else { return }
-            panelMenu.dismiss(animated: true, completion: nil)
-            
-            switch order {
-            case 0: // RN
-                guard let noteId = note.noteId else { return }
-                self.viewModel?.renote(noteId: noteId)
-            case 1: // 引用RN
-                self.homeViewController?.openPost(item: note, type: .CommentRenote)
-            default:
-                break
-            }
-        }).disposed(by: disposeBag)
-        
-        presentWithSemiModal(panelMenu, animated: true, completion: nil)
-    }
-    
-    func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
+    override func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
         let reactionGen = presentReactionGen(noteId: noteId,
                                              iconUrl: iconUrl,
                                              displayName: displayName,
@@ -359,57 +323,12 @@ class TimelineViewController: UIViewController, UITableViewDelegate, FooterTabBa
         }).disposed(by: disposeBag)
     }
     
-    func tappedOthers() {}
-    
-    public func move2PostDetail(item: NoteCell.Model) {
-        homeViewController?.tappedCell(item: item)
-    }
-    
-    func tappedLink(text: String) {
-        let (linkType, value) = text.analyzeHyperLink()
-        
-        switch linkType {
-        case "URL":
-            openLink(url: value)
-        case "User":
-            openUser(username: value)
-        default:
-            break
-        }
-    }
-    
-    func openUser(username: String) {
-        guard let homeViewController = self.homeViewController else { return }
-        homeViewController.openUserPage(username: username)
-    }
-    
-    func move2Profile(userId: String) {
-        guard let homeViewController = self.homeViewController else { return }
-        homeViewController.move2Profile(userId: userId)
-    }
-    
-    func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {
+    override func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {
         viewModel?.updateReaction(targetNoteId: targetNoteId,
                                   reaction: rawReaction,
                                   isMyReaction: true,
                                   plus: plus,
                                   needReloading: false)
-    }
-    
-    func vote(choice: Int, to noteId: String) {
-        // TODO: modelの変更 / api処理
-        viewModel?.vote(choice: choice, to: noteId)
-    }
-    
-    func playVideo(url: String) {
-        guard let url = URL(string: url) else { return }
-        let videoPlayer = AVPlayer(url: url)
-        let playerController = AVPlayerViewController()
-        playerController.player = videoPlayer
-        
-        homeViewController?.present(playerController, animated: true, completion: {
-            videoPlayer.play()
-        })
     }
     
     // MARK: XLPagerTabStrip delegate
