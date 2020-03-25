@@ -132,7 +132,7 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
         
         guard let cellModel = viewModel?.cellsModel[index],
             let replyNote = cellModel.replyNote,
-            cellModel.type == .mention || cellModel.type == .reply else { return }
+            cellModel.type == .mention || cellModel.type == .reply || cellModel.type == .quote else { return }
         showDetailView(item: replyNote)
     }
     
