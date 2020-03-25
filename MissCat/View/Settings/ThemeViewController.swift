@@ -274,6 +274,11 @@ public class ThemeViewController: UITableViewController {
             return mock
         }
     }
+    
+    public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let viewController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "404-page")
+        navigationController?.pushViewController(viewController, animated: true)
+    }
 }
 
 extension ThemeViewController {
