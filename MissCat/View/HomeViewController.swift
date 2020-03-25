@@ -235,6 +235,17 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         notificationsViewController.view.isHidden = false
     }
     
+    public func showFavView() {
+        guard let favViewController = favViewController else { return }
+        
+        navBar.isHidden = false
+        navBar.barTitle = "Favorites"
+        navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
+        
+        nowPage = .Favorites
+        favViewController.view.isHidden = false
+    }
+    
     // MARK: Other Pages
     
     private func showPostDetailView(item: NoteCell.Model) {
@@ -276,18 +287,6 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         } else {
             navigationController?.pushViewController(profileViewController, animated: true)
         }
-    }
-    
-    public func showFavView() {
-        nowPage = .Favorites
-        guard let favViewController = favViewController else { return }
-        
-        navBar.isHidden = false
-        navBar.barTitle = "Favorites"
-        navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
-        
-        nowPage = .Favorites
-        favViewController.view.isHidden = false
     }
     
     // MARK: Utilities
@@ -337,9 +336,10 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     }
     
     private func hideView(without type: Page) {
+        navBar.isHidden = true
+        
         if type != .Notifications {
             notificationsViewController?.view.isHidden = true
-            navBar.isHidden = true
         }
         
         if type != .Profile {
@@ -383,8 +383,10 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
             guard let notificationsView = notificationsViewController as? FooterTabBarDelegate else { return }
             notificationsView.tappedNotifications()
         } else {
-            DispatchQueue.main.async { self.hideView(without: .Notifications) }
-            showNotificationsView()
+            DispatchQueue.main.async {
+                self.hideView(without: .Notifications)
+                self.showNotificationsView()
+            }
         }
     }
     
@@ -395,7 +397,10 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     
     public func tappedFav() {
         if nowPage != .Favorites {
-            DispatchQueue.main.async { self.hideView(without: .Favorites) }
+            DispatchQueue.main.async {
+                self.hideView(without: .Favorites)
+                self.showFavView()
+            }
             showFavView()
         }
     }
