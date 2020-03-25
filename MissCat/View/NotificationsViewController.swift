@@ -147,7 +147,10 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
     // MARK: Delegate
     
     public func tappedNotifications() {
-        mainTableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+        let zeroIndexPath = IndexPath(row: 0, section: 0)
+        if mainTableView.cellForRow(at: zeroIndexPath) != nil { // セルが存在しないと落ちるので制約をつける
+            mainTableView.scrollToRow(at: zeroIndexPath, at: .top, animated: true)
+        }
     }
     
     public func tappedHome() {}
