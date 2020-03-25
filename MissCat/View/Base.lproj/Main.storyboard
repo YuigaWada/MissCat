@@ -1168,11 +1168,40 @@
         <!--View Controller-->
         <scene sceneID="O3q-om-X6A">
             <objects>
-                <viewController storyboardIdentifier="search" id="vEg-5E-hdO" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="under-development" id="vEg-5E-hdO" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="tZj-Vp-fhj">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Sad_Ai" translatesAutoresizingMaskIntoConstraints="NO" id="ZLp-io-Zmc">
+                                <rect key="frame" x="122" y="224" width="170" height="170"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="ZLp-io-Zmc" secondAttribute="height" multiplier="1:1" id="Vbd-Zs-5yP"/>
+                                    <constraint firstAttribute="width" constant="170" id="zgM-a0-jru"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="開発中" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pIe-Ui-yql">
+                                <rect key="frame" x="181" y="402" width="52" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Under Development." textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Sdh-hN-eka">
+                                <rect key="frame" x="128" y="431" width="158" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="ZLp-io-Zmc" firstAttribute="top" secondItem="16g-Ib-Mki" secondAttribute="top" constant="180" id="5PR-RE-wUh"/>
+                            <constraint firstItem="Sdh-hN-eka" firstAttribute="centerX" secondItem="tZj-Vp-fhj" secondAttribute="centerX" id="IbS-qX-jWq"/>
+                            <constraint firstItem="Sdh-hN-eka" firstAttribute="top" secondItem="pIe-Ui-yql" secondAttribute="bottom" constant="8" id="S5l-bb-mND"/>
+                            <constraint firstItem="ZLp-io-Zmc" firstAttribute="centerX" secondItem="tZj-Vp-fhj" secondAttribute="centerX" id="umh-CN-6Fm"/>
+                            <constraint firstItem="pIe-Ui-yql" firstAttribute="centerX" secondItem="tZj-Vp-fhj" secondAttribute="centerX" id="vUg-2c-Tyw"/>
+                            <constraint firstItem="pIe-Ui-yql" firstAttribute="top" secondItem="ZLp-io-Zmc" secondAttribute="bottom" constant="8" id="y6J-nw-LK5"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="16g-Ib-Mki"/>
                     </view>
                 </viewController>
@@ -1486,5 +1515,6 @@
     </scenes>
     <resources>
         <image name="Logo" width="581" height="150.5"/>
+        <image name="Sad_Ai" width="1172" height="1072"/>
     </resources>
 </document>

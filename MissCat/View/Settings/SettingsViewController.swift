@@ -50,4 +50,14 @@ public class SettingsViewController: UITableViewController {
         guard let header = view as? UITableViewHeaderFooterView else { return }
         header.textLabel?.text = "MissCat"
     }
+    
+    public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let index = indexPath.row
+        
+        if index == 1 || index == 2 {
+            let viewController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "under-development")
+            
+            navigationController?.pushViewController(viewController, animated: true)
+        }
+    }
 }

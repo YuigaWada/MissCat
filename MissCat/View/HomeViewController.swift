@@ -36,7 +36,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     private var myProfileViewController: ProfileViewController?
     private var currentProfileViewController: ProfileViewController?
     
-    private lazy var search = self.getViewController(name: "search")
+    private lazy var search = self.getViewController(name: "under-development")
     private lazy var home = self.generateTimelineVC(type: .Home)
     private lazy var local = self.generateTimelineVC(type: .Local)
     private lazy var global = self.generateTimelineVC(type: .Global)
