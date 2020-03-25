@@ -1,0 +1,13 @@
+{
+  'version': 0,
+  'case-sensitive': 'false',
+  'roots': [{
+    'type': 'directory',
+    'name': "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/build/Release-iphonesimulator/RxRelay/RxRelay.framework/Modules"
+    'contents': [{
+      'type': 'file',
+      'name': "module.modulemap",
+      'external-contents': "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/build/Pods.build/Release-iphonesimulator/RxRelay.build/unextended-module.modulemap",
+    }]
+  }]
+}

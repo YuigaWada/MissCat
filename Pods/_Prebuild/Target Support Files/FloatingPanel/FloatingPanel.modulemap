@@ -1,0 +1,6 @@
+framework module FloatingPanel {
+  umbrella header "FloatingPanel-umbrella.h"
+
+  export *
+  module * { export * }
+}

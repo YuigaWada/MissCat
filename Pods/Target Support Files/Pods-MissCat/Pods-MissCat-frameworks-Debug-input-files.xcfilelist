@@ -9,8 +9,7 @@ ${PODS_ROOT}/Agrume/Agrume.framework
 ${PODS_ROOT}/Agrume/Agrume.framework.dSYM
 ${PODS_ROOT}/CocoaLumberjack/CocoaLumberjack.framework
 ${PODS_ROOT}/CocoaLumberjack/CocoaLumberjack.framework.dSYM
-${PODS_ROOT}/Differentiator/Differentiator.framework
-${PODS_ROOT}/Differentiator/Differentiator.framework.dSYM
+${BUILT_PRODUCTS_DIR}/Differentiator/Differentiator.framework
 ${BUILT_PRODUCTS_DIR}/Down/Down.framework
 ${PODS_ROOT}/FloatingPanel/FloatingPanel.framework
 ${PODS_ROOT}/FloatingPanel/FloatingPanel.framework.dSYM
@@ -20,8 +19,7 @@ ${BUILT_PRODUCTS_DIR}/MisskeyKit/MisskeyKit.framework
 ${BUILT_PRODUCTS_DIR}/PolioPager/PolioPager.framework
 ${PODS_ROOT}/RxCocoa/RxCocoa.framework
 ${PODS_ROOT}/RxCocoa/RxCocoa.framework.dSYM
-${PODS_ROOT}/RxDataSources/RxDataSources.framework
-${PODS_ROOT}/RxDataSources/RxDataSources.framework.dSYM
+${BUILT_PRODUCTS_DIR}/RxDataSources/RxDataSources.framework
 ${PODS_ROOT}/RxRelay/RxRelay.framework
 ${PODS_ROOT}/RxRelay/RxRelay.framework.dSYM
 ${PODS_ROOT}/RxSwift/RxSwift.framework

@@ -1,0 +1,92 @@
+PODS:
+  - Agrume (5.6.5):
+    - SwiftyGif
+  - AWSCognito (2.13.0):
+    - AWSCore (= 2.13.0)
+  - AWSCore (2.13.0)
+  - AWSSNS (2.13.0):
+    - AWSCore (= 2.13.0)
+  - CocoaLumberjack (3.6.1):
+    - CocoaLumberjack/Core (= 3.6.1)
+  - CocoaLumberjack/Core (3.6.1)
+  - Differentiator (4.0.1)
+  - FloatingPanel (1.7.4)
+  - Gifu (3.2.0)
+  - iOSPhotoEditor (1.0.0)
+  - RxCocoa (5.1.0):
+    - RxRelay (~> 5)
+    - RxSwift (~> 5)
+  - RxDataSources (4.0.1):
+    - Differentiator (~> 4.0)
+    - RxCocoa (~> 5.0)
+    - RxSwift (~> 5.0)
+  - RxRelay (5.1.0):
+    - RxSwift (~> 5)
+  - RxSwift (5.1.0)
+  - SkeletonView (1.8.6)
+  - SVGKit (2.1.0):
+    - CocoaLumberjack (~> 3.0)
+  - SwiftyGif (5.2.0)
+
+DEPENDENCIES:
+  - Agrume
+  - AWSCognito
+  - AWSSNS
+  - FloatingPanel
+  - Gifu
+  - iOSPhotoEditor
+  - RxCocoa (~> 5)
+  - RxDataSources
+  - RxSwift (~> 5)
+  - SkeletonView
+  - SVGKit (from `https://github.com/SVGKit/SVGKit.git`, branch `3.x`)
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - Agrume
+    - AWSCognito
+    - AWSCore
+    - AWSSNS
+    - CocoaLumberjack
+    - Differentiator
+    - FloatingPanel
+    - Gifu
+    - iOSPhotoEditor
+    - RxCocoa
+    - RxDataSources
+    - RxRelay
+    - RxSwift
+    - SkeletonView
+    - SwiftyGif
+
+EXTERNAL SOURCES:
+  SVGKit:
+    :branch: 3.x
+    :git: https://github.com/SVGKit/SVGKit.git
+
+CHECKOUT OPTIONS:
+  SVGKit:
+    :commit: 8560ef56bd61e34d5cd8d9739954f9765e3ac794
+    :git: https://github.com/SVGKit/SVGKit.git
+
+SPEC CHECKSUMS:
+  Agrume: ad8e6428b9e1cb305ff14ee6195cefe2f938d13d
+  AWSCognito: b91a9aa7c211b84f5b7c4d4cbdc47b35817973ff
+  AWSCore: 167aba8cdaff6873193a66f062f41749c6c6a3d3
+  AWSSNS: f7989d5f566fb255854382ddee86a3ddcb67f558
+  CocoaLumberjack: b17ae15142558d08bbacf69775fa10c4abbebcc9
+  Differentiator: 886080237d9f87f322641dedbc5be257061b0602
+  FloatingPanel: 3c9d0e30fe350e1613157557769d2ec97f76b96b
+  Gifu: 7bcb6427457d85e0b4dff5a84ec5947ac19a93ea
+  iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
+  RxCocoa: 13d2a4d7546a34b8ececae8c281e4ea1dbb94f2b
+  RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
+  RxRelay: a168bd6caf712d00c676ac344e9295afc93b418e
+  RxSwift: ad5874f24bb0dbffd1e9bb8443604e3578796c7a
+  SkeletonView: 0bf463145522c0c551b76a829b397e2a15a16d46
+  SVGKit: 8a2fc74258bdb2abb54d3b65f3dd68b0277a9c4d
+  SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
+
+PODFILE CHECKSUM: 1f288a3938e96f00f3238ff3cf38ff427cb3c03c
+
+COCOAPODS: 1.7.1

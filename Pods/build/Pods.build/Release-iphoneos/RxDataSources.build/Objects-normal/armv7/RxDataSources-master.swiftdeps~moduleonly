@@ -1,0 +1,20 @@
+version: "Apple Swift version 5.1.3 (swiftlang-1100.0.282.1 clang-1100.0.33.15)"
+options: "edec20e523d8dfb3fe2ed986bbcbef8a"
+build_time: [1585138528, 484764000]
+inputs:
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/AnimationConfiguration.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/Array+Extensions.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/CollectionViewSectionedDataSource.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/DataSources.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/Deprecated.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/FloatingPointType+IdentifiableType.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/IntegerType+IdentifiableType.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/RxCollectionViewSectionedAnimatedDataSource.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/RxCollectionViewSectionedReloadDataSource.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/RxPickerViewAdapter.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/RxTableViewSectionedAnimatedDataSource.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/RxTableViewSectionedReloadDataSource.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/String+IdentifiableType.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/TableViewSectionedDataSource.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/UI+SectionedViewType.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxDataSources/Sources/RxDataSources/ViewTransition.swift": [9223372036, 854775807]

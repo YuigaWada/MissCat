@@ -1,0 +1,16 @@
+version: "Apple Swift version 5.1.3 (swiftlang-1100.0.282.1 clang-1100.0.33.15)"
+options: "df98b51b04df714e626614421034563a"
+build_time: [1585138489, 639173000]
+inputs:
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/Differentiator/Sources/Differentiator/AnimatableSectionModel.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/Differentiator/Sources/Differentiator/AnimatableSectionModelType+ItemPath.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/Differentiator/Sources/Differentiator/AnimatableSectionModelType.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/Differentiator/Sources/Differentiator/Changeset.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/Differentiator/Sources/Differentiator/Diff.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/Differentiator/Sources/Differentiator/IdentifiableType.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/Differentiator/Sources/Differentiator/IdentifiableValue.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/Differentiator/Sources/Differentiator/ItemPath.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/Differentiator/Sources/Differentiator/Optional+Extensions.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/Differentiator/Sources/Differentiator/SectionModel.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/Differentiator/Sources/Differentiator/SectionModelType.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/Differentiator/Sources/Differentiator/Utilities.swift": [9223372036, 854775807]

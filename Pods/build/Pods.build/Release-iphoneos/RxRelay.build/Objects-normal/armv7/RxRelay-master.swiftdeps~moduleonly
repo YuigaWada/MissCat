@@ -1,0 +1,8 @@
+version: "Apple Swift version 5.1.3 (swiftlang-1100.0.282.1 clang-1100.0.33.15)"
+options: "146b1635986a4f3f2c3feb37e4b685ac"
+build_time: [1585138511, 477016000]
+inputs:
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxRelay/RxRelay/BehaviorRelay.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxRelay/RxRelay/Observable+Bind.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxRelay/RxRelay/PublishRelay.swift": [9223372036, 854775807]
+  "/Users/yuigawada/Desktop/Development/iOS/MissCat/Pods/_Prebuild/RxRelay/RxRelay/Utils.swift": [9223372036, 854775807]
