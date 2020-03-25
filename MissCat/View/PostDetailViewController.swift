@@ -19,10 +19,17 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     private var loadCompleted: Bool = false
     private var cellHeightCache: [String: CGFloat] = [:] // String → identifier
     
+    private var wasReplyTarget: Bool = false
+    private var wasOnOtherNote: Bool = false
+    
     public var item: NoteCell.Model? {
         didSet {
             guard let item = item else { return }
             
+            wasReplyTarget = item.isReplyTarget
+            wasOnOtherNote = item.onOtherNote
+            
+            item.isReplyTarget = false
             item.onOtherNote = false
             viewModel!.setItem(item)
         }
@@ -44,6 +51,13 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+    
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        item?.isReplyTarget = wasReplyTarget
+        item?.onOtherNote = wasOnOtherNote // 投稿モデルは参照渡しなので、viewWillDisappearで元に戻す
     }
     
     // MARK: Setup TableView

@@ -213,7 +213,6 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         guard let homeViewController = self.homeViewController else { return }
         
         let item = item
-        item.isReplyTarget = false // NoteCellのReplyIndicatorを消す
         homeViewController.tappedCell(item: item) // 画面遷移に関してはすべてHomeViewControllerが受け持つ
     }
     
