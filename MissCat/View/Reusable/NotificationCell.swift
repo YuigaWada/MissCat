@@ -102,8 +102,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         
         if let myNote = item.myNote {
             // note
-            noteView.attributedText = viewModel.shapeNote(note: myNote.note,
-                                                          isReply: myNote.isReply)
+            noteView.attributedText = item.myNote?.shapedNote?.attributed
             
             // file
             let fileCount = myNote.files.count
