@@ -140,7 +140,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         })
         
         // リアクションした者のプロフィールを表示
-        for aboutReactee in [nameTextView, iconImageView] {
+        for aboutReactee in [nameTextView, iconImageView, emojiView] {
             aboutReactee?.setTapGesture(disposeBag, closure: {
                 guard let userId = item.fromUser?.id else { return }
                 self.delegate?.move2Profile(userId: userId)
