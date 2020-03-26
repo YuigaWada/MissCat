@@ -27,7 +27,7 @@ public class PollView: UIView {
     private var pollBarCount = 0
     private var votesCountSum: Float = 0 {
         didSet {
-            totalPollLabel.text = "計 \(Int(votesCountSum))票"
+            totalPollLabel.text = "\(Int(votesCountSum))票"
         }
     }
     
