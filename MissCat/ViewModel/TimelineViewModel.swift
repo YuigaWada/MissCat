@@ -17,7 +17,6 @@ class TimelineViewModel: ViewModelType {
     
     struct Input {
         let dataSource: NotesDataSource
-        
         let type: TimelineType
         let includeReplies: Bool?
         let onlyFiles: Bool?
@@ -27,6 +26,8 @@ class TimelineViewModel: ViewModelType {
     }
     
     struct Output {
+        let lockTableScroll: PublishRelay<Bool> = .init()
+        
         let notes: PublishSubject<[NoteCell.Section]> = .init()
         let forceUpdateIndex: PublishSubject<Int> = .init()
         
@@ -39,28 +40,32 @@ class TimelineViewModel: ViewModelType {
         var cellCount: Int
         var renoteeCellCount: Int
         var isLoading: Bool
+        var reloadTopModelId: String? // untilLoadした分のセルのうち、最上端にある投稿のid
         
         var cellCompleted: Bool { // 準備した分のセルがすべて表示されたかどうか
             return (cellCount - renoteeCellCount) % loadLimit == 0
         }
         
-        init(cellCount: Int, renoteeCellCount: Int, isLoading: Bool, loadLimit: Int) {
+        init(cellCount: Int, renoteeCellCount: Int, isLoading: Bool, loadLimit: Int, reloadTopModelId: String? = nil) {
             self.cellCount = cellCount
             self.renoteeCellCount = renoteeCellCount
             self.isLoading = isLoading
             self.loadLimit = loadLimit
+            self.reloadTopModelId = reloadTopModelId
         }
     }
     
     private let input: Input
     public let output: Output = .init()
     
+    private var reloadTopModelId: String?
     private var _isLoading: Bool = false
     public var state: State {
         return .init(cellCount: { cellsModel.count }(),
                      renoteeCellCount: { cellsModel.filter { $0.isRenoteeCell }.count }(),
                      isLoading: _isLoading,
-                     loadLimit: input.loadLimit)
+                     loadLimit: input.loadLimit,
+                     reloadTopModelId: reloadTopModelId)
     }
     
     // MARK: PublishSubject
@@ -255,6 +260,7 @@ class TimelineViewModel: ViewModelType {
         }
         
         return loadNotes(untilId: untilId).do(onCompleted: {
+            self.output.lockTableScroll.accept(false) // スクロールのロックを解除
             self.updateNotes(new: self.cellsModel)
         })
     }
@@ -274,6 +280,9 @@ class TimelineViewModel: ViewModelType {
         
         return model.loadNotes(with: option).do(onNext: { cellModel in
             self.cellsModel.append(cellModel)
+            if untilId != nil, self.reloadTopModelId == nil { // reloadTopModelIdを記憶
+                self.reloadTopModelId = cellModel.identity
+            }
         }, onCompleted: {
             self.initialNoteIds = self.model.initialNoteIds
             self._isLoading = false

@@ -30,7 +30,7 @@ typealias NotesDataSource = RxTableViewSectionedAnimatedDataSource<NoteCell.Sect
 private typealias ViewModel = TimelineViewModel
 
 class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDelegate, IndicatorInfoProvider {
-    @IBOutlet weak var mainTableView: UITableView!
+    @IBOutlet weak var mainTableView: MissCatTableView!
     @IBOutlet weak var bottomConstraint: NSLayoutConstraint!
     
     private let disposeBag = DisposeBag()
@@ -168,6 +168,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             guard let homeViewController = self.homeViewController else { return }
             homeViewController.changedStreamState(success: success)
         }).disposed(by: disposeBag)
+        
+        mainTableView.lockScroll = output.lockTableScroll
     }
     
     // MARK: Gesture
@@ -196,6 +198,11 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         
         let index = indexPath.row
         let item = viewModel.cellsModel[index]
+        
+        if item.identity == viewModel.state.reloadTopModelId { // untilLoadが完了した場合
+            viewModel.state.reloadTopModelId = nil
+            mainTableView.lockScroll?.accept(true) // スクロールを固定し直す
+        }
         
         // View側で NoteCell / RenoteeCellを区別する
         if item.isRenoteeCell {

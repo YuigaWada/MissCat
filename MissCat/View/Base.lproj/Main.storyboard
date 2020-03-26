@@ -44,7 +44,7 @@
                     </view>
                     <connections>
                         <outlet property="bottomConstraint" destination="okI-Ql-qqn" id="AKL-PR-sm1"/>
-                        <outlet property="mainTableView" destination="IZb-qv-NCN" id="tE4-2Y-rr5"/>
+                        <outlet property="mainTableView" destination="IZb-qv-NCN" id="wbA-gK-ddq"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
