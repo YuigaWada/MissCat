@@ -69,7 +69,7 @@
                         <constraint firstAttribute="width" constant="105" id="aQ5-fQ-eH9"/>
                     </constraints>
                     <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="12"/>
-                    <state key="normal" title="フォロー">
+                    <state key="normal" title="詳細">
                         <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     </state>
                     <userDefinedRuntimeAttributes>

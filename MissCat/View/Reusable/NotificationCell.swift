@@ -19,7 +19,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
     @IBOutlet weak var agoLabel: UILabel!
     @IBOutlet weak var noteView: MisskeyTextView!
     
-    @IBOutlet weak var followButton: UIButton!
+    @IBOutlet weak var followButton: UIButton! // APIがフォロー済みかどうかの情報をワタシてくれないので一時的に「くわしくボタン」へ変更
     @IBOutlet weak var typeIconView: UILabel!
     @IBOutlet weak var typeLabel: UILabel!
     @IBOutlet weak var defaultNoteBottomConstraint: NSLayoutConstraint!
@@ -165,6 +165,11 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
                 self.delegate?.move2Profile(userId: userId)
             })
         }
+        
+        followButton.rx.tap.subscribe(onNext: { _ in
+            guard let userId = item.fromUser?.id else { return }
+            self.delegate?.move2Profile(userId: userId)
+        }).disposed(by: disposeBag)
     }
     
     private func generateEmojiView() -> EmojiView {
