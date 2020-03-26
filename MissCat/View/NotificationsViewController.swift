@@ -88,8 +88,11 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
             guard let notificationCell = tableView.dequeueReusableCell(withIdentifier: "NotificationCell", for: indexPath) as? NotificationCell
             else { return NotificationCell() }
             
-            notificationCell.delegate = self
-            return notificationCell.shapeCell(item: item)
+            let shapedCell = notificationCell.shapeCell(item: item)
+            shapedCell.delegate = self
+            shapedCell.nameTextView.renderViewStrings()
+            
+            return shapedCell
         }
         
         return UITableViewCell()

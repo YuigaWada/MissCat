@@ -236,6 +236,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         output.onOtherNote.asDriver(onErrorDriveWith: Driver.empty()).drive(actionStackView.rx.isHidden).disposed(by: disposeBag)
         output.onOtherNote.asDriver(onErrorDriveWith: Driver.empty()).drive(reactionsCollectionView.rx.isHidden).disposed(by: disposeBag)
+        output.onOtherNote.asDriver(onErrorDriveWith: Driver.empty()).drive(separatorBorder.rx.isHidden).disposed(by: disposeBag)
         
         // poll
         output.poll.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { poll in

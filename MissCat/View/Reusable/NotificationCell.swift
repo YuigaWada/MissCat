@@ -14,8 +14,7 @@ import UIKit
 public class NotificationCell: UITableViewCell, UITextViewDelegate {
     @IBOutlet weak var iconImageView: UIImageView!
     
-    @IBOutlet weak var nameLabel: UILabel!
-    @IBOutlet weak var usernameLabel: UILabel!
+    @IBOutlet weak var nameTextView: MisskeyTextView!
     
     @IBOutlet weak var agoLabel: UILabel!
     @IBOutlet weak var noteView: MisskeyTextView!
@@ -38,6 +37,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
     public override func layoutSubviews() {
         super.layoutSubviews()
         setupComponents()
+        nameTextView.transformText()
     }
     
     private func setupComponents() {
@@ -54,12 +54,13 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
     
     public func initialize() {
         iconImageView.image = nil
-        nameLabel.text = nil
-        usernameLabel.text = nil
         agoLabel.text = nil
         noteView.attributedText = nil
         typeIconView.text = nil
         typeLabel.text = nil
+        
+        nameTextView.attributedText = nil
+        nameTextView.resetViewString()
         
         emojiView.isHidden = false
         emojiView.initialize()
@@ -93,10 +94,10 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         }
         
         // general
-        let displayName = (item.fromUser?.name ?? "") == "" ? item.fromUser?.username : item.fromUser?.name // user.nameがnilか""ならusernameで代替
         
-        nameLabel.text = displayName
-        usernameLabel.text = "@" + (item.fromUser?.username ?? "")
+        nameTextView.attributedText = item.shapedDisplayName?.attributed
+        item.shapedDisplayName?.mfmEngine.renderCustomEmojis(on: nameTextView)
+        
         agoLabel.text = item.ago.calculateAgo()
         
         if let myNote = item.myNote {
@@ -139,7 +140,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         })
         
         // リアクションした者のプロフィールを表示
-        for aboutReactee in [nameLabel, usernameLabel, iconImageView] {
+        for aboutReactee in [nameTextView, iconImageView] {
             aboutReactee?.setTapGesture(disposeBag, closure: {
                 guard let userId = item.fromUser?.id else { return }
                 self.delegate?.move2Profile(userId: userId)
@@ -175,7 +176,19 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
 // MARK: NotificationCell.Model
 
 extension NotificationCell {
-    public struct Model: IdentifiableType, Equatable {
+    public class Model: IdentifiableType, Equatable {
+        internal init(isMock: Bool = false, notificationId: String, type: ActionType = .reply, shapedDisplayName: MFMString? = nil, myNote: NoteCell.Model?, replyNote: NoteCell.Model?, fromUser: UserModel?, reaction: String?, ago: String) {
+            self.isMock = isMock
+            self.notificationId = notificationId
+            self.type = type
+            self.shapedDisplayName = shapedDisplayName
+            self.myNote = myNote
+            self.replyNote = replyNote
+            self.fromUser = fromUser
+            self.reaction = reaction
+            self.ago = ago
+        }
+        
         public typealias Identity = String
         public let identity: String = String(Float.random(in: 1 ..< 100))
         
@@ -183,6 +196,8 @@ extension NotificationCell {
         
         var notificationId: String
         var type: ActionType = .reply
+        
+        var shapedDisplayName: MFMString?
         
         let myNote: NoteCell.Model? // 自分のどの投稿に対してか
         let replyNote: NoteCell.Model? // 相手の投稿
