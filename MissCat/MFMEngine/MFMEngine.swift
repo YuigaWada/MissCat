@@ -120,6 +120,7 @@ public class MFMEngine {
         guard let myNote = cellModel.myNote else { return }
         cellModel.myNote?.shapedNote = shapeNote(myNote)
         cellModel.myNote?.shapedDisplayName = shapeDisplayName(myNote)
+        cellModel.shapedDisplayName = shapeDisplayName(user: cellModel.fromUser)
         
         if let commentRNTarget = myNote.commentRNTarget {
             commentRNTarget.shapedNote = shapeNote(commentRNTarget)
@@ -147,13 +148,24 @@ public class MFMEngine {
     }
     
     private static func shapeDisplayName(_ cellModel: NoteCell.Model) -> MFMString {
-        let mfmString = cellModel.displayName.mfmTransform(font: UIFont(name: "Helvetica", size: 10.0) ?? .systemFont(ofSize: 10.0),
-                                                           externalEmojis: cellModel.emojis,
-                                                           lineHeight: 25)
+        return shapeDisplayName(name: cellModel.displayName, username: cellModel.username, emojis: cellModel.emojis)
+    }
+    
+    private static func shapeDisplayName(user: UserModel?) -> MFMString? {
+        guard let user = user else { return nil }
+        return shapeDisplayName(name: user.name, username: user.username, emojis: user.emojis)
+    }
+    
+    private static func shapeDisplayName(name: String?, username: String?, emojis: [EmojiModel?]?) -> MFMString {
+        let displayName = name ?? ""
+        let mfmString = displayName.mfmTransform(font: UIFont(name: "Helvetica", size: 10.0) ?? .systemFont(ofSize: 10.0),
+                                                 externalEmojis: emojis,
+                                                 lineHeight: 25)
         
+        let nameAttributed = mfmString.attributed ?? .init()
+        let usernameAttributed = " @\(username ?? "")".getAttributedString(font: usernameFont, color: .darkGray)
         return MFMString(mfmEngine: mfmString.mfmEngine,
-                         attributed: (mfmString.attributed ?? .init()) + " @\(cellModel.username)".getAttributedString(font: usernameFont,
-                                                                                                                       color: .darkGray))
+                         attributed: nameAttributed + usernameAttributed)
     }
     
     /// Stringを適切なフォントを指定してNSAttributedStringに変換する

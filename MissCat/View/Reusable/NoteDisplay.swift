@@ -8,7 +8,6 @@
 
 import Foundation
 
-
 /// NoteCell上のタップ処理はすべてHomeViewControllerが行う。
 /// そこで、NoteCellを表示するViewControllerはすべて、このNoteDisplayを継承することで、
 /// それらのタップ処理は勝手にHomeViewControllerへと流れてくれる。
