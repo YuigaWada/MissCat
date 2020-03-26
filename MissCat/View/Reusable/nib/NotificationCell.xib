@@ -62,9 +62,10 @@
                     </subviews>
                 </stackView>
                 <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5uB-Xc-Pr3">
-                    <rect key="frame" x="289" y="153" width="105" height="27"/>
+                    <rect key="frame" x="289" y="142" width="105" height="27"/>
                     <color key="backgroundColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     <constraints>
+                        <constraint firstAttribute="height" constant="27" id="9yE-Xj-O7s"/>
                         <constraint firstAttribute="width" constant="105" id="aQ5-fQ-eH9"/>
                     </constraints>
                     <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="12"/>
@@ -100,12 +101,12 @@
                 <constraint firstItem="FT4-DB-FmT" firstAttribute="top" secondItem="MnR-xv-ces" secondAttribute="bottom" constant="5" id="Q9r-BU-maP"/>
                 <constraint firstItem="ed0-lQ-ZXA" firstAttribute="leading" secondItem="FT4-DB-FmT" secondAttribute="trailing" constant="7" id="TEF-ow-sdM"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="5uB-Xc-Pr3" secondAttribute="trailing" constant="20" id="Un4-cS-cxg"/>
-                <constraint firstItem="acT-dO-I9n" firstAttribute="top" secondItem="5uB-Xc-Pr3" secondAttribute="bottom" constant="8" id="UyK-6j-qfc"/>
                 <constraint firstItem="ed0-lQ-ZXA" firstAttribute="top" secondItem="FT4-DB-FmT" secondAttribute="top" constant="-7" id="YL7-3U-dIw"/>
                 <constraint firstItem="yGc-gb-yjT" firstAttribute="top" secondItem="ed0-lQ-ZXA" secondAttribute="bottom" id="cdX-Pc-y8C"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="yGc-gb-yjT" secondAttribute="trailing" constant="20" id="coL-Gg-JCQ"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="acT-dO-I9n" secondAttribute="bottom" id="cpu-U1-iRL"/>
                 <constraint firstItem="acT-dO-I9n" firstAttribute="top" secondItem="yGc-gb-yjT" secondAttribute="bottom" constant="19" id="dKU-ck-Nzp"/>
+                <constraint firstItem="5uB-Xc-Pr3" firstAttribute="bottom" secondItem="yGc-gb-yjT" secondAttribute="bottom" id="eOq-b7-MKE"/>
                 <constraint firstItem="MnR-xv-ces" firstAttribute="leading" secondItem="FT4-DB-FmT" secondAttribute="leading" constant="8" id="fkj-Al-7bC"/>
                 <constraint firstItem="yGc-gb-yjT" firstAttribute="leading" secondItem="ed0-lQ-ZXA" secondAttribute="leading" id="hdo-8R-iGT"/>
                 <constraint firstItem="acT-dO-I9n" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="uKp-Yr-Z0O"/>
@@ -115,6 +116,8 @@
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
             <connections>
                 <outlet property="agoLabel" destination="Lj3-B8-yoO" id="wzg-Cl-TSX"/>
+                <outlet property="defaultNoteBottomConstraint" destination="dKU-ck-Nzp" id="LCa-bc-7XG"/>
+                <outlet property="followButton" destination="5uB-Xc-Pr3" id="2O8-NZ-gmn"/>
                 <outlet property="iconImageView" destination="FT4-DB-FmT" id="vLO-7c-xDC"/>
                 <outlet property="nameTextView" destination="ed0-lQ-ZXA" id="XQP-kF-eDH"/>
                 <outlet property="noteView" destination="yGc-gb-yjT" id="dkN-2p-1Wn"/>
