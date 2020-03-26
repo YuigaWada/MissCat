@@ -24,8 +24,39 @@ public class NotificationsModel {
     }
     
     public func getModel(notification: NotificationModel) -> NotificationCell.Model? {
-        guard let id = notification.id, let type = notification.type, let user = notification.user, let note = notification.note else { return nil }
+        guard let id = notification.id, let type = notification.type, let user = notification.user else { return nil }
         
+        if type == .follow {
+            return NotificationCell.Model(notificationId: id,
+                                          type: type,
+                                          myNote: nil,
+                                          replyNote: nil,
+                                          fromUser: user,
+                                          reaction: nil,
+                                          ago: notification.createdAt ?? "")
+        }
+        
+        return getNoteModel(notification: notification, id: id, type: type, user: user)
+    }
+    
+    // 任意のresponseからNotificationCell.Modelを生成する
+    public func getModel(type: String?, target: Any?) -> NotificationCell.Model? {
+        guard let type = type, let target = target else { return nil }
+        // StreamingModel
+        switch type {
+        case "mention":
+            return convertNoteModel(target)
+            
+        case "notification": // 多分reactionの通知と一対一に対応してるはず
+            return convertNotification(target)
+            
+        default:
+            return nil
+        }
+    }
+    
+    private func getNoteModel(notification: NotificationModel, id: String, type: ActionType, user: UserModel) -> NotificationCell.Model? {
+        guard let note = notification.note else { return nil }
         let isReply = type == .mention || type == .reply
         let isRenote = type == .renote
         let isCommentRenote = type == .quote
@@ -60,22 +91,6 @@ public class NotificationsModel {
                                                ago: notification.createdAt ?? "")
         
         return cellModel
-    }
-    
-    // 任意のresponseからNotificationCell.Modelを生成する
-    public func getModel(type: String?, target: Any?) -> NotificationCell.Model? {
-        guard let type = type, let target = target else { return nil }
-        // StreamingModel
-        switch type {
-        case "mention":
-            return convertNoteModel(target)
-            
-        case "notification": // 多分reactionの通知と一対一に対応してるはず
-            return convertNotification(target)
-            
-        default:
-            return nil
-        }
     }
     
     // 生のNoteModelをNotificationCell.Modelに変換する

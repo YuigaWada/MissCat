@@ -19,8 +19,10 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
     @IBOutlet weak var agoLabel: UILabel!
     @IBOutlet weak var noteView: MisskeyTextView!
     
+    @IBOutlet weak var followButton: UIButton!
     @IBOutlet weak var typeIconView: UILabel!
     @IBOutlet weak var typeLabel: UILabel!
+    @IBOutlet weak var defaultNoteBottomConstraint: NSLayoutConstraint!
     
     public var delegate: NoteCellDelegate?
     
@@ -38,6 +40,9 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         super.layoutSubviews()
         setupComponents()
         nameTextView.transformText()
+        
+        // MEMO: MisskeyApiの "i/notifications"はfromUserの自己紹介を流してくれないので、対応するまで非表示にする
+//        noteView.transformText()
     }
     
     private func setupComponents() {
@@ -64,6 +69,8 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         
         emojiView.isHidden = false
         emojiView.initialize()
+        
+        followButton.isHidden = true
     }
     
     public func shapeCell(item: NotificationCell.Model) -> NotificationCell {
@@ -125,6 +132,19 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
             typeIconView.textColor = reactionIconColor
             typeLabel.text = "Reaction"
             emojiView.emoji = EmojiHandler.convert2EmojiModel(raw: reaction)
+        }
+        
+        // follow
+        else if item.type == .follow {
+            typeIconView.text = "user-friends"
+            typeIconView.textColor = .systemBlue
+            typeLabel.text = "Follow"
+            emojiView.isHidden = true
+            followButton.isHidden = false
+            // MEMO: MisskeyApiの "i/notifications"はfromUserの自己紹介を流してくれないので、対応するまで非表示にする
+            
+//            noteView.attributedText = item.shapedDescritpion?.attributed
+//            item.shapedDescritpion?.mfmEngine.renderCustomEmojis(on: noteView)
         }
         
         setupGesture(item: item)
@@ -197,6 +217,7 @@ extension NotificationCell {
         var type: ActionType = .reply
         
         var shapedDisplayName: MFMString?
+        var shapedDescritpion: MFMString?
         
         let myNote: NoteCell.Model? // 自分のどの投稿に対してか
         let replyNote: NoteCell.Model? // 相手の投稿

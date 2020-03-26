@@ -84,7 +84,7 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
             shapedCell.nameTextView.renderViewStrings()
             
             return shapedCell
-        } else if item.type == .reaction || item.type == .renote {
+        } else if item.type == .reaction || item.type == .renote || item.type == .follow {
             guard let notificationCell = tableView.dequeueReusableCell(withIdentifier: "NotificationCell", for: indexPath) as? NotificationCell
             else { return NotificationCell() }
             

@@ -117,12 +117,24 @@ public class MFMEngine {
     // MARK: Statics
     
     public static func shapeModel(_ cellModel: NotificationCell.Model) {
-        guard let myNote = cellModel.myNote else { return }
-        cellModel.myNote?.shapedNote = shapeNote(myNote)
-        cellModel.myNote?.shapedDisplayName = shapeDisplayName(myNote)
-        cellModel.shapedDisplayName = shapeDisplayName(user: cellModel.fromUser)
+        if let user = cellModel.fromUser {
+            cellModel.shapedDisplayName = shapeDisplayName(user: user)
+            // MEMO: MisskeyApiの "i/notifications"はfromUserの自己紹介を流してくれないので、対応するまで非表示にする
+            
+//            if cellModel.type == .follow {
+//                let description = user.description ?? "自己紹介文はありません"
+//                cellModel.shapedDescritpion = shapeString(needReplyMark: false,
+//                                                          text: description,
+//                                                          emojis: user.emojis)
+//            }
+        }
         
-        if let commentRNTarget = myNote.commentRNTarget {
+        if let myNote = cellModel.myNote {
+            cellModel.myNote?.shapedNote = shapeNote(myNote)
+            cellModel.myNote?.shapedDisplayName = shapeDisplayName(myNote)
+        }
+        
+        if let commentRNTarget = cellModel.myNote?.commentRNTarget {
             commentRNTarget.shapedNote = shapeNote(commentRNTarget)
             commentRNTarget.shapedDisplayName = shapeDisplayName(commentRNTarget)
         }
@@ -139,10 +151,14 @@ public class MFMEngine {
     }
     
     private static func shapeNote(_ cellModel: NoteCell.Model) -> MFMString {
-        let replyHeader: NSMutableAttributedString = cellModel.isReply ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
-        let mfmString = cellModel.note.mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
-                                                    externalEmojis: cellModel.emojis,
-                                                    lineHeight: 30)
+        return shapeString(needReplyMark: cellModel.isReply, text: cellModel.note, emojis: cellModel.emojis)
+    }
+    
+    private static func shapeString(needReplyMark: Bool, text: String, emojis: [EmojiModel?]?) -> MFMString {
+        let replyHeader: NSMutableAttributedString = needReplyMark ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
+        let mfmString = text.mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
+                                          externalEmojis: emojis,
+                                          lineHeight: 30)
         
         return MFMString(mfmEngine: mfmString.mfmEngine, attributed: replyHeader + (mfmString.attributed ?? .init()))
     }
