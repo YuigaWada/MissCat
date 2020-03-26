@@ -152,6 +152,8 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     private lazy var setupView: (() -> Void) = { // 必ず一回しか読み込まれない
         self.setupProfileGesture() // プロフィールに飛ぶtapgestureを設定する
         self.setupCollectionView()
+        self.setupFileContainer()
+        self.setupInnerRenoteDisplay()
         self.themeBinding()
         return {}
     }()
@@ -194,15 +196,22 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         othersButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
         
         noteView.delegate = self
-        
         noteView.isUserInteractionEnabled = true
         
+        skeltonCover.isUserInteractionEnabled = false
+    }
+    
+    private func setupFileContainer() {
         fileContainer.clipsToBounds = true
         fileContainer.layer.cornerRadius = 10
         fileContainer.layer.borderColor = UIColor.lightGray.cgColor
         fileContainer.layer.borderWidth = 1
-        
-        skeltonCover.isUserInteractionEnabled = false
+    }
+    
+    private func setupInnerRenoteDisplay() {
+        innerRenoteDisplay.layer.borderWidth = 1
+        innerRenoteDisplay.layer.borderColor = UIColor.systemBlue.cgColor
+        innerRenoteDisplay.layer.cornerRadius = 5
     }
     
     private func binding(viewModel: ViewModel, noteId: String) {
@@ -471,10 +480,6 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             let commentRenoteView = UINib(nibName: "NoteCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NoteCell else { return }
         
         // NibからNoteCellを生成し、parentViewに対してAutoLayoutを設定 + 枠線を設定
-        innerRenoteDisplay.layer.borderWidth = 1
-        innerRenoteDisplay.layer.borderColor = UIColor.systemBlue.cgColor
-        innerRenoteDisplay.layer.cornerRadius = 5
-        
         commentRenoteView.onOtherNote = true
         commentRenoteView.translatesAutoresizingMaskIntoConstraints = false
         innerRenoteDisplay.addSubview(commentRenoteView)
