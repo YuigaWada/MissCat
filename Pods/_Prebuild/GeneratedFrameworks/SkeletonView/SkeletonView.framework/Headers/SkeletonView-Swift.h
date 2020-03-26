@@ -183,8 +183,6 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 #if __has_warning("-Watimport-in-framework-header")
 #pragma clang diagnostic ignored "-Watimport-in-framework-header"
 #endif
-@import CoreGraphics;
-@import Foundation;
 @import ObjectiveC;
 @import QuartzCore;
 @import UIKit;
@@ -246,18 +244,10 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 
 
 
-
-
 @interface UILabel (SWIFT_EXTENSION(SkeletonView))
 @property (nonatomic) NSInteger lastLineFillPercent;
 @property (nonatomic) NSInteger linesCornerRadius;
-@property (nonatomic) CGFloat skeletonLineSpacing;
-@property (nonatomic) UIEdgeInsets skeletonPaddingInsets;
 @end
-
-
-
-
 
 
 
@@ -279,8 +269,6 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 @interface UITextView (SWIFT_EXTENSION(SkeletonView))
 @property (nonatomic) NSInteger lastLineFillPercent;
 @property (nonatomic) NSInteger linesCornerRadius;
-@property (nonatomic) CGFloat skeletonLineSpacing;
-@property (nonatomic) UIEdgeInsets skeletonPaddingInsets;
 @end
 
 
@@ -509,8 +497,6 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 #if __has_warning("-Watimport-in-framework-header")
 #pragma clang diagnostic ignored "-Watimport-in-framework-header"
 #endif
-@import CoreGraphics;
-@import Foundation;
 @import ObjectiveC;
 @import QuartzCore;
 @import UIKit;
@@ -572,18 +558,10 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 
 
 
-
-
 @interface UILabel (SWIFT_EXTENSION(SkeletonView))
 @property (nonatomic) NSInteger lastLineFillPercent;
 @property (nonatomic) NSInteger linesCornerRadius;
-@property (nonatomic) CGFloat skeletonLineSpacing;
-@property (nonatomic) UIEdgeInsets skeletonPaddingInsets;
 @end
-
-
-
-
 
 
 
@@ -605,8 +583,6 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 @interface UITextView (SWIFT_EXTENSION(SkeletonView))
 @property (nonatomic) NSInteger lastLineFillPercent;
 @property (nonatomic) NSInteger linesCornerRadius;
-@property (nonatomic) CGFloat skeletonLineSpacing;
-@property (nonatomic) UIEdgeInsets skeletonPaddingInsets;
 @end
 
 
@@ -831,8 +807,6 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 #if __has_warning("-Watimport-in-framework-header")
 #pragma clang diagnostic ignored "-Watimport-in-framework-header"
 #endif
-@import CoreGraphics;
-@import Foundation;
 @import ObjectiveC;
 @import QuartzCore;
 @import UIKit;
@@ -894,18 +868,10 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 
 
 
-
-
 @interface UILabel (SWIFT_EXTENSION(SkeletonView))
 @property (nonatomic) NSInteger lastLineFillPercent;
 @property (nonatomic) NSInteger linesCornerRadius;
-@property (nonatomic) CGFloat skeletonLineSpacing;
-@property (nonatomic) UIEdgeInsets skeletonPaddingInsets;
 @end
-
-
-
-
 
 
 
@@ -927,8 +893,6 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 @interface UITextView (SWIFT_EXTENSION(SkeletonView))
 @property (nonatomic) NSInteger lastLineFillPercent;
 @property (nonatomic) NSInteger linesCornerRadius;
-@property (nonatomic) CGFloat skeletonLineSpacing;
-@property (nonatomic) UIEdgeInsets skeletonPaddingInsets;
 @end
 
 
