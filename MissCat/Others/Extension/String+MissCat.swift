@@ -6,7 +6,6 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import Down
 import MisskeyKit
 import UIKit
 
