@@ -202,6 +202,7 @@
                 <outlet property="iconView" destination="RdM-y6-bNI" id="Zys-le-deV"/>
                 <outlet property="innerRenoteDisplay" destination="bh7-Dx-jOD" id="clK-es-fKR"/>
                 <outlet property="mainStackView" destination="Grd-xu-LJU" id="wyt-gG-XXj"/>
+                <outlet property="nameHeightConstraint" destination="GLT-MI-LJQ" id="VHC-ga-kX7"/>
                 <outlet property="nameTextView" destination="eTu-WM-TmR" id="4Rc-La-4Uo"/>
                 <outlet property="noteView" destination="yT1-N6-SIZ" id="8BC-Nn-b5w"/>
                 <outlet property="othersButton" destination="m58-si-Q2a" id="olW-Ai-vBQ"/>

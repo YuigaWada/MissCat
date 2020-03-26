@@ -75,6 +75,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     // MARK: IBOutlet (Constraint)
     
+    @IBOutlet weak var nameHeightConstraint: NSLayoutConstraint!
     @IBOutlet weak var displayName2MainStackConstraint: NSLayoutConstraint!
     @IBOutlet weak var icon2MainStackConstraint: NSLayoutConstraint!
     @IBOutlet weak var reactionCollectionHeightConstraint: NSLayoutConstraint!
@@ -547,12 +548,14 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
             innerRenoteDisplay.isHidden = true
             
             skeltonCover.showAnimatedGradientSkeleton()
+            nameHeightConstraint.constant = 20
         } else {
             nameTextView.hideSkeleton()
             iconView.hideSkeleton()
             
             skeltonCover.hideSkeleton()
             skeltonCover.isHidden = true
+            nameHeightConstraint.constant = 35
         }
     }
     
