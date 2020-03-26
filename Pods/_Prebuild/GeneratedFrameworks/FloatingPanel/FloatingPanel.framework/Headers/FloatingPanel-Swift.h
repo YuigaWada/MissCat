@@ -225,6 +225,10 @@ SWIFT_CLASS("_TtC13FloatingPanel23FloatingPanelController")
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id <UIViewControllerTransitionCoordinator> _Nonnull)coordinator;
 - (void)willTransitionToTraitCollection:(UITraitCollection * _Nonnull)newCollection withTransitionCoordinator:(id <UIViewControllerTransitionCoordinator> _Nonnull)coordinator;
 - (void)viewWillDisappear:(BOOL)animated;
+@property (nonatomic, readonly, strong) UIViewController * _Nullable childViewControllerForStatusBarStyle;
+@property (nonatomic, readonly, strong) UIViewController * _Nullable childViewControllerForStatusBarHidden;
+@property (nonatomic, readonly, strong) UIViewController * _Nullable childViewControllerForScreenEdgesDeferringSystemGestures;
+@property (nonatomic, readonly, strong) UIViewController * _Nullable childViewControllerForHomeIndicatorAutoHidden;
 - (void)showViewController:(UIViewController * _Nonnull)vc sender:(id _Nullable)sender SWIFT_UNAVAILABLE_MSG("'show' has been renamed to 'set(contentViewController:)'");
 - (void)showDetailViewController:(UIViewController * _Nonnull)vc sender:(id _Nullable)sender SWIFT_UNAVAILABLE_MSG("'showDetailViewController' has been renamed to 'set(contentViewController:)'");
 - (nonnull instancetype)initWithNibName:(NSString * _Nullable)nibNameOrNil bundle:(NSBundle * _Nullable)nibBundleOrNil SWIFT_UNAVAILABLE;
@@ -519,6 +523,10 @@ SWIFT_CLASS("_TtC13FloatingPanel23FloatingPanelController")
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id <UIViewControllerTransitionCoordinator> _Nonnull)coordinator;
 - (void)willTransitionToTraitCollection:(UITraitCollection * _Nonnull)newCollection withTransitionCoordinator:(id <UIViewControllerTransitionCoordinator> _Nonnull)coordinator;
 - (void)viewWillDisappear:(BOOL)animated;
+@property (nonatomic, readonly, strong) UIViewController * _Nullable childViewControllerForStatusBarStyle;
+@property (nonatomic, readonly, strong) UIViewController * _Nullable childViewControllerForStatusBarHidden;
+@property (nonatomic, readonly, strong) UIViewController * _Nullable childViewControllerForScreenEdgesDeferringSystemGestures;
+@property (nonatomic, readonly, strong) UIViewController * _Nullable childViewControllerForHomeIndicatorAutoHidden;
 - (void)showViewController:(UIViewController * _Nonnull)vc sender:(id _Nullable)sender SWIFT_UNAVAILABLE_MSG("'show' has been renamed to 'set(contentViewController:)'");
 - (void)showDetailViewController:(UIViewController * _Nonnull)vc sender:(id _Nullable)sender SWIFT_UNAVAILABLE_MSG("'showDetailViewController' has been renamed to 'set(contentViewController:)'");
 - (nonnull instancetype)initWithNibName:(NSString * _Nullable)nibNameOrNil bundle:(NSBundle * _Nullable)nibBundleOrNil SWIFT_UNAVAILABLE;
@@ -809,6 +817,10 @@ SWIFT_CLASS("_TtC13FloatingPanel23FloatingPanelController")
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id <UIViewControllerTransitionCoordinator> _Nonnull)coordinator;
 - (void)willTransitionToTraitCollection:(UITraitCollection * _Nonnull)newCollection withTransitionCoordinator:(id <UIViewControllerTransitionCoordinator> _Nonnull)coordinator;
 - (void)viewWillDisappear:(BOOL)animated;
+@property (nonatomic, readonly, strong) UIViewController * _Nullable childViewControllerForStatusBarStyle;
+@property (nonatomic, readonly, strong) UIViewController * _Nullable childViewControllerForStatusBarHidden;
+@property (nonatomic, readonly, strong) UIViewController * _Nullable childViewControllerForScreenEdgesDeferringSystemGestures;
+@property (nonatomic, readonly, strong) UIViewController * _Nullable childViewControllerForHomeIndicatorAutoHidden;
 - (void)showViewController:(UIViewController * _Nonnull)vc sender:(id _Nullable)sender SWIFT_UNAVAILABLE_MSG("'show' has been renamed to 'set(contentViewController:)'");
 - (void)showDetailViewController:(UIViewController * _Nonnull)vc sender:(id _Nullable)sender SWIFT_UNAVAILABLE_MSG("'showDetailViewController' has been renamed to 'set(contentViewController:)'");
 - (nonnull instancetype)initWithNibName:(NSString * _Nullable)nibNameOrNil bundle:(NSBundle * _Nullable)nibBundleOrNil SWIFT_UNAVAILABLE;

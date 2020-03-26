@@ -9,7 +9,7 @@ ${DWARF_DSYM_FOLDER_PATH}/Agrume.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CocoaLumberjack.framework
 ${DWARF_DSYM_FOLDER_PATH}/CocoaLumberjack.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Differentiator.framework
-${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Down.framework
+${DWARF_DSYM_FOLDER_PATH}/Differentiator.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FloatingPanel.framework
 ${DWARF_DSYM_FOLDER_PATH}/FloatingPanel.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Gifu.framework
@@ -19,6 +19,7 @@ ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PolioPager.framework
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxCocoa.framework
 ${DWARF_DSYM_FOLDER_PATH}/RxCocoa.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxDataSources.framework
+${DWARF_DSYM_FOLDER_PATH}/RxDataSources.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxRelay.framework
 ${DWARF_DSYM_FOLDER_PATH}/RxRelay.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxSwift.framework
@@ -31,5 +32,6 @@ ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Starscream.framework
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyGif.framework
 ${DWARF_DSYM_FOLDER_PATH}/SwiftyGif.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/XLPagerTabStrip.framework
+${DWARF_DSYM_FOLDER_PATH}/XLPagerTabStrip.framework.dSYM
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/iOSPhotoEditor.framework
 ${DWARF_DSYM_FOLDER_PATH}/iOSPhotoEditor.framework.dSYM

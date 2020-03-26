@@ -1,5 +1,4 @@
 Agrume
-Down
 FloatingPanel
 Gifu
 MisskeyKit
