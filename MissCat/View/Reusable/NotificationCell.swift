@@ -107,7 +107,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
             // file
             let fileCount = myNote.files.count
             if fileCount > 0 {
-                noteView.attributedText = noteView.attributedText + NSAttributedString(string: "\n> \(fileCount)個の画像 ")
+                noteView.attributedText = noteView.attributedText + NSAttributedString(string: "\n> \(fileCount)個のファイル ")
             }
         }
         
