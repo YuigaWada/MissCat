@@ -290,6 +290,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         
         print("loadUntilNotes...")
         viewModel.loadUntilNotes().subscribe(onError: { error in
+            if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty { return }
             self.homeViewController?.showNotificationBanner(icon: .Failed, notification: error.localizedDescription)
         }).disposed(by: disposeBag)
     }
