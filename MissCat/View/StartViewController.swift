@@ -193,7 +193,7 @@ public class StartViewController: UIViewController {
         let alert = UIAlertController(title: "インスタンスの変更", message: "", preferredStyle: .alert)
         let okAction = UIAlertAction(title: "変更", style: .default) { (_: UIAlertAction) in
             guard let textFields = alert.textFields, textFields.count == 1, let instance = textFields[0].text else { return }
-            self.changeInstance(instance)
+            self.changeInstance(instance.isEmpty ? "misskey.io" : instance)
         }
         let cancelAction = UIAlertAction(title: "閉じる", style: .cancel, handler: nil)
         
