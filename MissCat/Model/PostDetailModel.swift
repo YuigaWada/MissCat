@@ -14,14 +14,22 @@ public class PostDetailModel {
     
     /// リプライを遡る
     /// - Parameter note: モデル
-    public func goBackReplies(of note: NoteModel?) -> [NoteCell.Model] {
-        guard let note = note, let shaped = note.getNoteCellModel() else { return backReplies }
-        
-        shaped.isReplyTarget = true
-        MFMEngine.shapeModel(shaped)
-        
-        backReplies.append(shaped)
-        return goBackReplies(of: note.reply) // 再帰
+    public func goBackReplies(id: String, completion: @escaping ([NoteCell.Model]) -> Void) {
+        MisskeyKit.notes.showNote(noteId: id) { note, error in
+            guard error == nil,
+                let note = note,
+                let shaped = note.getNoteCellModel() else { completion(self.backReplies); return }
+            
+            shaped.isReplyTarget = true
+            MFMEngine.shapeModel(shaped)
+            self.backReplies.append(shaped)
+            
+            if let replyId = note.replyId {
+                self.goBackReplies(id: replyId, completion: completion)
+            } else {
+                completion(self.backReplies)
+            }
+        }
     }
     
     /// リプライを探す
