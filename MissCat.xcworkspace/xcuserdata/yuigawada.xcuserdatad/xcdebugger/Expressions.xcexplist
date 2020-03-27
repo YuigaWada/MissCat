@@ -317,6 +317,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "static MisskeyKit.handleResponse&lt;A&gt;(response:resultRawJson:error:needApiKey:api:params:data:fileType:type:missingCount:callback:):MisskeyKit.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "resultRawJson">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in PanelMenuViewController.viewWillAppear(_:):PanelMenuViewController.swift">
          <PersistentStrings>
             <PersistentString
@@ -393,13 +401,7 @@
                value = "self.misskeyInstance">
             </PersistentString>
             <PersistentString
-               value = "webView.url">
-            </PersistentString>
-            <PersistentString
                value = "self.appSecret">
-            </PersistentString>
-            <PersistentString
-               value = "webView.url!.absoluteString">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -886,6 +888,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "NoteCell.binding(viewModel:noteId:):NoteCell.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "icon2MainStackConstraint">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TimelineViewController.viewDidLoad():TimelineViewController.swift">
          <PersistentStrings>
             <PersistentString
@@ -1299,14 +1309,6 @@
          <PersistentStrings>
             <PersistentString
                value = "fileModel.thumbnailUrl">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in AuthWebViewController.webView(_:didFinish:):AuthWebViewController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "self.currentType">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
