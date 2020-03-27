@@ -409,7 +409,8 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     private func fitToKeyboard(keyboardHeight: CGFloat) {
         layoutIfNeeded(to: [bottomStackView, toolBar])
         
-        mainTextViewBottomConstraint.constant = bottomStackView.frame.height + keyboardHeight - getSafeAreaSize().height
+        // 15: 微調整
+        mainTextViewBottomConstraint.constant = bottomStackView.frame.height + keyboardHeight - getSafeAreaSize().height + 15
     }
     
     // MARK: Utilities
