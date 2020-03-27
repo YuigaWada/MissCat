@@ -129,6 +129,11 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
                                              verticalFittingPriority: verticalFittingPriority)
     }
     
+    public override func awakeFromNib() {
+        super.awakeFromNib()
+        setupView()
+    }
+    
     public override func layoutSubviews() {
         super.layoutSubviews()
         setupView()
