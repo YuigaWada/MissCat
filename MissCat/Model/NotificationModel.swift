@@ -51,7 +51,7 @@ public class NotificationsModel {
             return convertNotification(target)
             
         default:
-            return nil
+            return convertNotification(target)
         }
     }
     
@@ -107,14 +107,23 @@ public class NotificationsModel {
     }
     
     private func convertNotification(_ target: Any) -> NotificationCell.Model? {
-        guard let target = target as? StreamingModel, let reaction = target.reaction, let toNote = target.note, let fromUser = target.user else { return nil }
+        guard let target = target as? StreamingModel, let fromUser = target.user else { return nil }
+        
+        var type: ActionType = .reply
+        if target.reaction != nil {
+            type = .reaction
+        } else if target.type == "follow" {
+            type = .follow
+        } else if target.type == "renote" {
+            type = .renote
+        }
         
         return NotificationCell.Model(notificationId: target.id ?? "",
-                                      type: .reaction,
-                                      myNote: toNote.getNoteCellModel(),
+                                      type: type,
+                                      myNote: target.note?.getNoteCellModel(),
                                       replyNote: nil,
                                       fromUser: fromUser,
-                                      reaction: reaction,
+                                      reaction: target.reaction,
                                       ago: target.createdAt ?? "")
     }
 }
