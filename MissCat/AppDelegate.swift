@@ -115,8 +115,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
     
     private func notification() {
-//        sendNotification(title: "通知テスト", body: "test")
-        guard let current = Cache.UserDefaults.shared.getLatestNotificationId() else { return } // UserDefaultsに保存してから通知を流すように
+        // UserDefaultsに保存してから通知を流すように
+        guard let current = Cache.UserDefaults.shared.getLatestNotificationId(),
+            !current.isEmpty else { return }
+        
         MisskeyKit.notifications.get(limit: 20, following: false) { results, error in
             guard let results = results, results.count > 0, error == nil else { return }
             
