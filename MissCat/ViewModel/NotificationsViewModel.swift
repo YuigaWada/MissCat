@@ -19,9 +19,7 @@ public class NotificationsViewModel {
     
     private lazy var model = NotificationsModel()
     
-    init(disposeBag: DisposeBag) {
-        initialLoad()
-    }
+    init(disposeBag: DisposeBag) {}
     
     public func initialLoad() {
         loadNotification {
@@ -46,13 +44,8 @@ public class NotificationsViewModel {
             
             results.forEach { notification in
                 guard let cellModel = self.model.getModel(notification: notification) else { return }
-                if cellModel.type == .mention || cellModel.type == .reply || cellModel.type == .quote,
-                    let replyNote = cellModel.replyNote {
-                    MFMEngine.shapeModel(replyNote)
-                } else {
-                    MFMEngine.shapeModel(cellModel)
-                }
                 
+                self.shapeModel(cellModel)
                 self.cellsModel.append(cellModel)
             }
             
@@ -75,10 +68,20 @@ public class NotificationsViewModel {
         }
         
         guard let channel = channel, channel == .main, let cellModel = model.getModel(type: type, target: response) else { return }
-        MFMEngine.shapeModel(cellModel)
+        
+        shapeModel(cellModel)
         cellsModel.insert(cellModel, at: 0)
         
         update(new: cellsModel)
+    }
+    
+    private func shapeModel(_ cellModel: NotificationCell.Model) {
+        if cellModel.type == .mention || cellModel.type == .reply || cellModel.type == .quote,
+            let replyNote = cellModel.replyNote {
+            MFMEngine.shapeModel(replyNote)
+        } else {
+            MFMEngine.shapeModel(cellModel)
+        }
     }
     
     private func update(new: [NotificationCell.Model]) {
