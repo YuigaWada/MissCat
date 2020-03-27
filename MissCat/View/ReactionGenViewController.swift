@@ -76,11 +76,11 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     // MARK: Setup
     
     private func setupViewModel() -> ReactionGenViewModel {
-        let viewModel = ReactionGenViewModel(and: disposeBag)
+        let viewModel = ReactionGenViewModel(with: .init(searchTrigger: getSearchTrigger()),
+                                             and: disposeBag)
         let dataSource = setupDataSource()
         
         binding(dataSource: dataSource, viewModel: viewModel)
-        
         self.viewModel = viewModel
         return viewModel
     }
@@ -112,6 +112,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
         emojiCollectionView.register(UINib(nibName: "EmojiViewCell", bundle: nil), forCellWithReuseIdentifier: "EmojiCell")
         emojiCollectionView.rx.setDelegate(self).disposed(by: disposeBag)
         searchBar.delegate = self
+        searchBar.autocorrectionType = .no
         
         targetNoteTextView.textContainer.lineBreakMode = .byTruncatingTail
         targetNoteTextView.textContainer.maximumNumberOfLines = 2
@@ -188,6 +189,14 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
             
             return cell
         }
+    }
+    
+    private func getSearchTrigger() -> Observable<String> {
+        let debounceInterval = DispatchTimeInterval.milliseconds(500)
+        return searchBar.rx.text.compactMap { $0?.localizedLowercase }.asObservable()
+            .skip(1)
+            .debounce(debounceInterval, scheduler: MainScheduler.instance)
+            .distinctUntilChanged()
     }
     
     // MARK: Set Methods
