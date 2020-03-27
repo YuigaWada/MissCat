@@ -567,6 +567,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #1 in NoteCell.setupView.getter:NoteCell.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "onOtherNote">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "NoteCell.binding(viewModel:):NoteCell.swift">
          <PersistentStrings>
             <PersistentString
@@ -765,6 +773,17 @@
             </PersistentString>
             <PersistentString
                value = "emojiImageView.isHidden">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "NoteCell.setupCollectionView():NoteCell.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "reactionsCollectionView">
+            </PersistentString>
+            <PersistentString
+               value = "agoLabel">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1145,6 +1164,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "NotificationsViewController.setupCell(_:_:_:):NotificationsViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "viewModel.cellsModel">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "Cache.getUrlData(on:):Cache.swift">
          <PersistentStrings>
             <PersistentString
@@ -1424,6 +1451,9 @@
       <ContextState
          contextName = "NoteCell.layoutSubviews():NoteCell.swift">
          <PersistentStrings>
+            <PersistentString
+               value = "onOtherNote">
+            </PersistentString>
             <PersistentString
                value = "self.replyButton.titleLabel?.font">
             </PersistentString>
