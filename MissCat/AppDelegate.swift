@@ -22,7 +22,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Override point for customization after application launch.
         
         setupMissCat()
-        setupCognito()
+        // setupCognito()
         setupNotifications(with: application)
         
         return true
@@ -108,14 +108,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         center.requestAuthorization(options: [.badge, .sound, .alert], completionHandler: { granted, error in
             guard error == nil, granted else { return }
             print("通知許可")
-            DispatchQueue.main.async {
-                application.registerForRemoteNotifications()
-            }
+//            DispatchQueue.main.async {
+//                application.registerForRemoteNotifications()
+//            }
         })
     }
     
     private func notification() {
-        sendNotification(title: "通知テスト", body: "test")
+//        sendNotification(title: "通知テスト", body: "test")
         guard let current = Cache.UserDefaults.shared.getLatestNotificationId() else { return } // UserDefaultsに保存してから通知を流すように
         MisskeyKit.notifications.get(limit: 20, following: false) { results, error in
             guard let results = results, results.count > 0, error == nil else { return }
