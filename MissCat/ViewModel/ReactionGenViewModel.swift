@@ -124,7 +124,12 @@ class ReactionGenViewModel: ViewModelType {
             target = String(target.suffix(target.count - 1))
         }
         
-        searched = emojisList.filter { String($0.rawEmoji.prefix(target.count)) == target }
+        searched = emojisList.filter {
+            if text.count == 1, let emoji = $0.defaultEmoji { // デフォルト絵文字を検索
+                return emoji == text
+            }
+            return String($0.rawEmoji.prefix(target.count)) == target
+        }
         updateEmojis(searched)
     }
     
