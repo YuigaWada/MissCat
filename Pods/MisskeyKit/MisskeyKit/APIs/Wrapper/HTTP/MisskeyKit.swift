@@ -111,6 +111,7 @@ open class MisskeyKit {
                                type: type,
                                missingCount: missingCount + 1,
                                callback: callback)
+                return 
             }
             
             // If being initial error...
