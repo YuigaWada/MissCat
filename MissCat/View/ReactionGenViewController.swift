@@ -113,6 +113,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
         emojiCollectionView.rx.setDelegate(self).disposed(by: disposeBag)
         searchBar.delegate = self
         searchBar.autocorrectionType = .no
+        searchBar.keyboardType = .emailAddress
         
         targetNoteTextView.textContainer.lineBreakMode = .byTruncatingTail
         targetNoteTextView.textContainer.maximumNumberOfLines = 2
@@ -258,5 +259,9 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
         guard let delegate = delegate else { return }
         
         delegate.scrollUp()
+    }
+    
+    public func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.endEditing(true)
     }
 }
