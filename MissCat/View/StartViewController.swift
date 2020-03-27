@@ -23,7 +23,7 @@ public class StartViewController: UIViewController {
     @IBOutlet weak var changeInstanceButton: UIButton!
     
     private var appSecret: String?
-    private var ioAppSecret: String = "lXnA5ZviFTeaA35bvkxmFlTomlDVJ9GH" // misskey.ioの場合はappSecret固定
+    private var ioAppSecret: String = "0fRSNkKKl9hcZTGrUSyZOb19n8UUVkxw" // misskey.ioの場合はappSecret固定
     private var misskeyInstance: String = "misskey.io" {
         didSet {
             MisskeyKit.changeInstance(instance: misskeyInstance) // インスタンスを変更
