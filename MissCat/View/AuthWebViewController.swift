@@ -133,6 +133,9 @@ public class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigation
         }
     }
     
+    
+    /// コールバックurlかどうか判定
+    /// - Parameter url: url
     private func checkCallback(of url: URL?) -> Bool {
         guard let url = url else { return false }
         
