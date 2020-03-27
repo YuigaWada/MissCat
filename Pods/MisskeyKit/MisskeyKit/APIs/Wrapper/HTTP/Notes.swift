@@ -83,10 +83,10 @@ extension MisskeyKit {
             var params = ["noteId":noteId,
                           "limit":limit,
                           "sinceId":sinceId,
-                          "sinceId":sinceId] as [String : Any]
+                          "untilId":untilId] as [String : Any]
             
             params = params.removeRedundant()
-            MisskeyKit.handleAPI(needApiKey: true, api: "notes/conversation", params: params, type: [NoteModel].self) { posts, error in
+            MisskeyKit.handleAPI(needApiKey: true, api: "notes/children", params: params, type: [NoteModel].self) { posts, error in
                 
                 if let error = error  { callback(nil, error); return }
                 guard let posts = posts else { callback(nil, error); return }
