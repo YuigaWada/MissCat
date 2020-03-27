@@ -153,6 +153,9 @@ public class StartViewController: UIViewController {
     private func loginCompleted(_ apiKey: String) {
         Cache.UserDefaults.shared.setCurrentLoginedApiKey(apiKey)
         Cache.UserDefaults.shared.setCurrentLoginedInstance(misskeyInstance)
+        
+        _ = EmojiHandler.handler // カスタム絵文字を読み込む
+        
         DispatchQueue.main.async {
             self.dismiss(animated: true, completion: nil)
         }

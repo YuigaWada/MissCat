@@ -84,7 +84,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     // MARK: Setup
     
     private func setupMissCat() {
-        _ = EmojiHandler.handler
+        if let currentInstance = Cache.UserDefaults.shared.getCurrentLoginedInstance(),
+            !currentInstance.isEmpty {
+            MisskeyKit.changeInstance(instance: currentInstance)
+            _ = EmojiHandler.handler
+        }
+        
         _ = Theme.shared
     }
     
