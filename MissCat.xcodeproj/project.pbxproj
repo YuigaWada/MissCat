@@ -70,6 +70,7 @@
 		8D8863B4238493FA00A7A5A8 /* RenoteeCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D8863B3238493FA00A7A5A8 /* RenoteeCell.xib */; };
 		8D8863B62384951300A7A5A8 /* RenoteeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8863B52384951200A7A5A8 /* RenoteeCell.swift */; };
 		8D8A50C1242355200065B1D2 /* AccountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8A50C0242355200065B1D2 /* AccountViewController.swift */; };
+		8D98C268242E0AD600BB8049 /* PostDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D98C267242E0AD600BB8049 /* PostDetailModel.swift */; };
 		8D9DA9CD2402A067000EE840 /* GIFImageView+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9DA9CC2402A067000EE840 /* GIFImageView+MissCat.swift */; };
 		8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */; };
 		8D9EF4C8238187A4005449EC /* ReactionGenCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */; };
@@ -191,6 +192,7 @@
 		8D8863B3238493FA00A7A5A8 /* RenoteeCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RenoteeCell.xib; sourceTree = "<group>"; };
 		8D8863B52384951200A7A5A8 /* RenoteeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenoteeCell.swift; sourceTree = "<group>"; };
 		8D8A50C0242355200065B1D2 /* AccountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewController.swift; sourceTree = "<group>"; };
+		8D98C267242E0AD600BB8049 /* PostDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailModel.swift; sourceTree = "<group>"; };
 		8D9DA9CC2402A067000EE840 /* GIFImageView+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GIFImageView+MissCat.swift"; sourceTree = "<group>"; };
 		8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenViewController.swift; sourceTree = "<group>"; };
 		8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReactionGenCell.xib; sourceTree = "<group>"; };
@@ -300,6 +302,7 @@
 				8DA06A0E2389F04E0093A718 /* NotificationModel.swift */,
 				8DEFF31D239BD4F200142802 /* ProfileModel.swift */,
 				8D63BFC4242BBF12009C3ADE /* HomeModel.swift */,
+				8D98C267242E0AD600BB8049 /* PostDetailModel.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -757,6 +760,7 @@
 				8D613551238A978700AB50C2 /* EmojiViewCell.swift in Sources */,
 				8D8863B02384147100A7A5A8 /* UIColor+MissCat.swift in Sources */,
 				8D42C3A8238076B600337DD2 /* Double+MissCat.swift in Sources */,
+				8D98C268242E0AD600BB8049 /* PostDetailModel.swift in Sources */,
 				8D8863A92383F8A900A7A5A8 /* NoteCellViewModel.swift in Sources */,
 				8D0D47AA23A74EC80095361D /* UIViewController+PhotoEditor.swift in Sources */,
 				8D84061D238FFC5C00EED595 /* UIImage+MissCat.swift in Sources */,
