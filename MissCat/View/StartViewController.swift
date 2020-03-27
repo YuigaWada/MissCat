@@ -118,7 +118,13 @@ public class StartViewController: UIViewController {
         }
         
         MisskeyKit.app.create(name: "MissCat", description: "MissCat is an flexible Misskey client for iOS!", permission: appPermissions, callbackUrl: "https://misscat.dev") { data, error in
-            guard let data = data, error == nil, let secret = data.secret else { return }
+            guard let data = data, error == nil, let secret = data.secret else {
+                if error == .some(.FailedToCommunicateWithServer) {
+                    self.invalidUrlError()
+                }
+                return
+            }
+            
             self.appSecret = secret
             DispatchQueue.main.async {
                 completion(secret)
@@ -199,6 +205,16 @@ public class StartViewController: UIViewController {
         }
         
         present(alert, animated: true, completion: nil)
+    }
+    
+    private func invalidUrlError() {
+        DispatchQueue.main.async {
+            let alert = UIAlertController(title: "エラー", message: "インスタンスに接続できません", preferredStyle: UIAlertController.Style.alert)
+            let cancelAction: UIAlertAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.destructive, handler: nil)
+            
+            alert.addAction(cancelAction)
+            self.present(alert, animated: true, completion: nil)
+        }
     }
     
     // MARK: Design
