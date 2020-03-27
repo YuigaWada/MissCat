@@ -27,7 +27,7 @@ public class PostDetailModel {
     /// リプライを探す
     /// - Parameter id: noteId
     public func getReplies(id: String, completion: @escaping ([NoteCell.Model]) -> Void) {
-        MisskeyKit.notes.getReplies(noteId: id) { notes, error in
+        MisskeyKit.notes.getChildren(noteId: id) { notes, error in
             guard let notes = notes, error == nil else { return }
             DispatchQueue.global().async {
                 self.replies = self.convertReplies(notes)
