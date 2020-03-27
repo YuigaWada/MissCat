@@ -133,21 +133,30 @@ public class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigation
         }
     }
     
+    private func checkCallback(of url: URL?) -> Bool {
+        guard let url = url else { return false }
+        
+        return url.absoluteString.contains("https://misscat.dev")
+    }
+    
     // MARK: Delegate
+    
+    public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        guard checkCallback(of: webView.url) else { return }
+        getApiKey()
+    }
     
     // WebViewの読み込みが完了したらログイン処理が完了したかどうかをチェックする
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { // 読み込み完了
         guard let appSecret = self.appSecret, let misskeyInstance = self.misskeyInstance else { return }
         
+        if checkCallback(of: webView.url) {
+            getApiKey()
+        }
+        
         checkLogined { success in
-            guard success else { return }
-            if self.currentType == .Signup {
-                self.setupLogin(misskeyInstance: misskeyInstance, appSecret: appSecret) // WebKit内でログインページへと遷移させる
-            } else { // If currentType == .Login
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3) { // TODO: コールバックに対応させる
-                    self.getApiKey()
-                }
-            }
+            guard success, self.currentType == .Signup else { return }
+            self.setupLogin(misskeyInstance: misskeyInstance, appSecret: appSecret) // WebKit内でログインページへと遷移させる
         }
     }
 }

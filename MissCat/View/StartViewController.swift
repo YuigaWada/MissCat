@@ -117,7 +117,7 @@ public class StartViewController: UIViewController {
             completion(ioAppSecret); return
         }
         
-        MisskeyKit.app.create(name: "MissCat", description: "MissCat is an flexible Misskey client for iOS!", permission: appPermissions) { data, error in
+        MisskeyKit.app.create(name: "MissCat", description: "MissCat is an flexible Misskey client for iOS!", permission: appPermissions, callbackUrl: "https://misscat.dev") { data, error in
             guard let data = data, error == nil, let secret = data.secret else { return }
             self.appSecret = secret
             DispatchQueue.main.async {
