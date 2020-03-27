@@ -75,6 +75,7 @@ class TimelineModel {
     public let updateReactionTrigger: PublishSubject<UpdateReaction> = .init()
     
     public var initialNoteIds: [String] = []
+    private var capturedNoteIds: [String] = []
     
     private var type: TimelineType = .Home
     private let handleTargetType: [String] = ["note", "CapturedNoteUpdated"]
@@ -149,6 +150,7 @@ class TimelineModel {
                         newPosts.reverse() // 逆順に読み込む
                         newPosts.forEach { post in
                             self.transformNote(with: observer, post: post, reverse: true)
+                            if let noteId = post.id { self.initialNoteIds.append(noteId) }
                         }
                         
                         observer.onCompleted()
@@ -209,7 +211,7 @@ class TimelineModel {
     
     // MARK: Streaming API
     
-    public func connectStream(type: TimelineType) -> Observable<NoteCell.Model> { // streamingのresponseを捌くのはhandleStreamで行う
+    public func connectStream(type: TimelineType, isReconnection: Bool = false) -> Observable<NoteCell.Model> { // streamingのresponseを捌くのはhandleStreamで行う
         let dipose = Disposables.create()
         self.type = type
         
@@ -217,19 +219,20 @@ class TimelineModel {
             guard let apiKey = MisskeyKit.auth.getAPIKey(), let channel = type.convert2Channel() else { return dipose }
             
             _ = self.streaming.connect(apiKey: apiKey, channels: [channel]) { (response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) in
-                self.handleStream(response: response, channel: channel, typeString: type, error: error, observer: observer)
+                self.handleStream(response: response,
+                                  channel: channel,
+                                  typeString: type,
+                                  isReconnection: isReconnection,
+                                  error: error,
+                                  observer: observer)
             }
             
             return dipose
         }
     }
     
-    private func handleStream(response: Any?, channel: SentStreamModel.Channel?, typeString: String?, error: MisskeyKitError?, observer: AnyObserver<NoteCell.Model>) {
-        let isInitialConnection = self.initialNoteIds.count > 0 // 初期接続かどうか
-        if isInitialConnection {
-            self.captureNotes(self.initialNoteIds) // websocket接続が確定してからcapture
-            self.initialNoteIds = []
-        }
+    private func handleStream(response: Any?, channel: SentStreamModel.Channel?, typeString: String?, isReconnection: Bool, error: MisskeyKitError?, observer: AnyObserver<NoteCell.Model>) {
+        self.captureNote(isReconnection)
         
         if let error = error {
             print(error)
@@ -275,12 +278,26 @@ class TimelineModel {
     
     // MARK: Capture
     
+    private func captureNote(_ isReconnection: Bool) {
+        // 再接続の場合
+        if isReconnection {
+            captureNotes(capturedNoteIds)
+        }
+        
+        let isInitialConnection = initialNoteIds.count > 0 // 初期接続かどうか
+        if isInitialConnection {
+            captureNotes(initialNoteIds)
+            initialNoteIds = []
+        }
+    }
+    
     private func captureNote(noteId: String?) {
         guard let noteId = noteId else { return }
         captureNotes([noteId])
     }
     
     private func captureNotes(_ noteIds: [String]) {
+        capturedNoteIds += noteIds // streamingが切れた時のために記憶
         noteIds.forEach { id in
             do {
                 try streaming.captureNote(noteId: id)

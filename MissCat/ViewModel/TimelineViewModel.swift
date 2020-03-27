@@ -161,8 +161,8 @@ class TimelineViewModel: ViewModelType {
     
     // MARK: Streaming
     
-    private func connectStream() {
-        model.connectStream(type: input.type)
+    private func connectStream(isReconnection: Bool = false) {
+        model.connectStream(type: input.type, isReconnection: isReconnection)
             .subscribe(onNext: { cellModel in
                 self.output.connectedStream.accept(true)
                 
@@ -171,7 +171,7 @@ class TimelineViewModel: ViewModelType {
             }, onError: { _ in
                 self.output.connectedStream.accept(false)
                 self.reloadNotes {
-                    self.connectStream() // リロード完了後にstreamingへ接続
+                    self.connectStream(isReconnection: true) // リロード完了後にstreamingへ接続
                 }
             })
             .disposed(by: disposeBag)
