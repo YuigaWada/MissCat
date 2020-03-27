@@ -274,8 +274,15 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         output.iconImage.asDriver(onErrorDriveWith: Driver.empty()).drive(iconView.rx.image).disposed(by: disposeBag)
         
         // constraint
-        output.defaultConstraintActive.asDriver(onErrorDriveWith: Driver.empty()).drive(displayName2MainStackConstraint.rx.active).disposed(by: disposeBag)
-        output.defaultConstraintActive.asDriver(onErrorDriveWith: Driver.empty()).drive(icon2MainStackConstraint.rx.active).disposed(by: disposeBag)
+        output.defaultConstraintActive.asDriver(onErrorDriveWith: Driver.empty())
+            .map { UILayoutPriority(rawValue: $0 ? 1000 : 900) }
+            .drive(onNext: { self.displayName2MainStackConstraint.priority = $0 })
+            .disposed(by: disposeBag)
+        
+        output.defaultConstraintActive.asDriver(onErrorDriveWith: Driver.empty())
+            .map { UILayoutPriority(rawValue: $0 ? 1000 : 900) }
+            .drive(onNext: { self.icon2MainStackConstraint.priority = $0 })
+            .disposed(by: disposeBag)
         
         // color
         output.backgroundColor.asDriver(onErrorDriveWith: Driver.empty()).drive(rx.backgroundColor).disposed(by: disposeBag)
