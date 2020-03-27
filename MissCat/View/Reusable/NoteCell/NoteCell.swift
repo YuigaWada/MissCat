@@ -275,12 +275,12 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         
         // constraint
         output.defaultConstraintActive.asDriver(onErrorDriveWith: Driver.empty())
-            .map { UILayoutPriority(rawValue: $0 ? 999 : 900) }
+            .map { UILayoutPriority(rawValue: $0 ? 999.5 : 900) }
             .drive(onNext: { self.displayName2MainStackConstraint.priority = $0 })
             .disposed(by: disposeBag)
         
         output.defaultConstraintActive.asDriver(onErrorDriveWith: Driver.empty())
-            .map { UILayoutPriority(rawValue: $0 ? 999 : 900) }
+            .map { UILayoutPriority(rawValue: $0 ? 999.5 : 900) }
             .drive(onNext: { self.icon2MainStackConstraint.priority = $0 })
             .disposed(by: disposeBag)
         
