@@ -44,7 +44,7 @@ public class NotificationsModel {
         guard let type = type, let target = target else { return nil }
         // StreamingModel
         switch type {
-        case "reply":
+        case "mention":
             return convertNoteModel(target)
             
         case "notification": // 多分reactionの通知と一対一に対応してるはず
