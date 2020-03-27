@@ -326,7 +326,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         guard let detailViewController = storyboard.instantiateViewController(withIdentifier: "post-detail") as? PostDetailViewController else { return }
         
         detailViewController.view.frame = getDisplayRect()
-        detailViewController.item = item
+        detailViewController.mainItem = item
         detailViewController.homeViewController = self
         
         navigationController?.pushViewController(detailViewController, animated: true)

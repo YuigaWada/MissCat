@@ -41,6 +41,7 @@ extension NoteModel {
                                        files: post.files?.compactMap { $0 } ?? [],
                                        emojis: emojis.compactMap { $0 },
                                        commentRNTarget: withRN ? post.renote?.getNoteCellModel(onOtherNote: true) ?? nil : nil,
+                                       original: self,
                                        onOtherNote: onOtherNote,
                                        poll: post.poll)
         

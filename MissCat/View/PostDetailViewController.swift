@@ -22,9 +22,9 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     private var wasReplyTarget: Bool = false
     private var wasOnOtherNote: Bool = false
     
-    public var item: NoteCell.Model? {
+    public var mainItem: NoteCell.Model? {
         didSet {
-            guard let item = item else { return }
+            guard let item = mainItem else { return }
             
             wasReplyTarget = item.isReplyTarget
             wasOnOtherNote = item.onOtherNote
@@ -56,8 +56,8 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
-        item?.isReplyTarget = wasReplyTarget
-        item?.onOtherNote = wasOnOtherNote // 投稿モデルは参照渡しなので、viewWillDisappearで元に戻す
+        mainItem?.isReplyTarget = wasReplyTarget
+        mainItem?.onOtherNote = wasOnOtherNote // 投稿モデルは参照渡しなので、viewWillDisappearで元に戻す
     }
     
     // MARK: Setup TableView
@@ -94,12 +94,12 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
         
         let index = indexPath.row
         let item = viewModel.cellsModel[index]
+        let isDetailMode = item.identity == mainItem?.identity // リプライはDetailModeにしない
         
         guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell
         else { return NoteCell() }
         
-        let shapedCell = noteCell.transform(with: .init(item: item, isDetailMode: true, delegate: self))
-//        shapedCell.delegate = self
+        let shapedCell = noteCell.transform(with: .init(item: item, isDetailMode: isDetailMode, delegate: self))
         
         shapedCell.nameTextView.renderViewStrings()
         shapedCell.noteView.renderViewStrings()

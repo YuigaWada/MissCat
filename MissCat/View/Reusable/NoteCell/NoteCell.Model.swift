@@ -53,11 +53,12 @@ extension NoteCell {
         let emojis: [EmojiModel]?
         
         var commentRNTarget: NoteCell.Model?
+        var original: NoteModel?
         
         var onOtherNote: Bool = false // 引用RNはNoteCellの上にNoteCellが乗るという二重構造になっているので、内部のNoteCellかどうかを判別する
         var poll: Poll?
         
-        init(isSkelton: Bool = false, isReactionGenCell: Bool = false, isRenoteeCell: Bool = false, renotee: String? = nil, baseNoteId: String? = nil, isReply: Bool = false, isReplyTarget: Bool = false, noteId: String? = nil, iconImageUrl: String? = nil, iconImage: UIImage? = nil, userId: String, displayName: String, username: String, note: String, ago: String, replyCount: Int, renoteCount: Int, reactions: [ReactionCount], shapedReactions: [NoteCell.Reaction], myReaction: String? = nil, files: [File], emojis: [EmojiModel]? = nil, commentRNTarget: NoteCell.Model? = nil, onOtherNote: Bool = false, poll: Poll? = nil) {
+        init(isSkelton: Bool = false, isReactionGenCell: Bool = false, isRenoteeCell: Bool = false, renotee: String? = nil, baseNoteId: String? = nil, isReply: Bool = false, isReplyTarget: Bool = false, noteId: String? = nil, iconImageUrl: String? = nil, iconImage: UIImage? = nil, userId: String, displayName: String, username: String, note: String, ago: String, replyCount: Int, renoteCount: Int, reactions: [ReactionCount], shapedReactions: [NoteCell.Reaction], myReaction: String? = nil, files: [File], emojis: [EmojiModel]? = nil, commentRNTarget: NoteCell.Model? = nil, original: NoteModel? = nil, onOtherNote: Bool = false, poll: Poll? = nil) {
             self.isSkelton = isSkelton
             self.isReactionGenCell = isReactionGenCell
             self.isRenoteeCell = isRenoteeCell
@@ -81,6 +82,7 @@ extension NoteCell {
             self.files = files
             self.emojis = emojis
             self.commentRNTarget = commentRNTarget
+            self.original = original
             self.onOtherNote = onOtherNote
             self.poll = poll
         }

@@ -17,6 +17,8 @@ class PostDetailViewModel {
     private var hasReactionGenCell: Bool = false
     public var cellsModel: [NoteCell.Model] = [] // TODO: エラー再発しないか意識しておく
     
+    private let model = PostDetailModel()
+    
     //    private lazy var model = PostDetailModel()
     
     // MARK: Life Cycle
@@ -26,9 +28,32 @@ class PostDetailViewModel {
     public func setItem(_ item: NoteCell.Model) {
         cellsModel.append(item)
         updateNotes(new: cellsModel)
+        
+        DispatchQueue.global().async {
+            self.goBackReplies(item) // リプライ先を遡る
+            self.getReplies(item)
+        }
     }
     
     // MARK: Setup
+    
+    // MARK: REST
+    
+    private func goBackReplies(_ item: NoteCell.Model) {
+        var replies = model.goBackReplies(of: item.original?.reply)
+        
+        replies.reverse()
+        cellsModel = replies + cellsModel
+        updateNotes(new: cellsModel)
+    }
+    
+    private func getReplies(_ item: NoteCell.Model) {
+        guard let noteId = item.noteId else { return }
+        model.getReplies(id: noteId) { replies in
+            self.cellsModel += replies
+            self.updateNotes(new: self.cellsModel)
+        }
+    }
     
     // MARK: Utilities
     
