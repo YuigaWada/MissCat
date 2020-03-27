@@ -20,6 +20,10 @@ public class NotificationsViewModel {
     private lazy var model = NotificationsModel()
     
     init(disposeBag: DisposeBag) {
+        initialLoad()
+    }
+    
+    public func initialLoad() {
         loadNotification {
             // 読み込み完了後、Viewに伝達 & Streamingに接続
             self.update(new: self.cellsModel)

@@ -20,6 +20,12 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
     private var loadCompleted: Bool = true
     private var cellHeightCache: [String: CGFloat] = [:] // String → identifier
     
+    private var loggedIn: Bool = false
+    private var hasApiKey: Bool {
+        guard let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey() else { return false }
+        return !apiKey.isEmpty
+    }
+    
     // MARK: Life Cycle
     
     public override func loadView() {
@@ -36,6 +42,11 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         view.deselectCell(on: mainTableView)
+        
+        if !loggedIn, hasApiKey {
+            loggedIn = true
+            viewModel?.initialLoad()
+        }
     }
     
     // MARK: Setup TableView
