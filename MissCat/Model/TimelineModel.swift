@@ -211,18 +211,19 @@ class TimelineModel {
     
     // MARK: Streaming API
     
-    public func connectStream(type: TimelineType, isReconnection: Bool = false) -> Observable<NoteCell.Model> { // streamingのresponseを捌くのはhandleStreamで行う
+    public func connectStream(type: TimelineType, isReconnection reconnect: Bool = false) -> Observable<NoteCell.Model> { // streamingのresponseを捌くのはhandleStreamで行う
         let dipose = Disposables.create()
+        var isReconnection = reconnect
         self.type = type
         
         return Observable.create { [unowned self] observer in
             guard let apiKey = MisskeyKit.auth.getAPIKey(), let channel = type.convert2Channel() else { return dipose }
             
             _ = self.streaming.connect(apiKey: apiKey, channels: [channel]) { (response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) in
+                self.captureNote(&isReconnection)
                 self.handleStream(response: response,
                                   channel: channel,
                                   typeString: type,
-                                  isReconnection: isReconnection,
                                   error: error,
                                   observer: observer)
             }
@@ -231,9 +232,7 @@ class TimelineModel {
         }
     }
     
-    private func handleStream(response: Any?, channel: SentStreamModel.Channel?, typeString: String?, isReconnection: Bool, error: MisskeyKitError?, observer: AnyObserver<NoteCell.Model>) {
-        self.captureNote(isReconnection)
-        
+    private func handleStream(response: Any?, channel: SentStreamModel.Channel?, typeString: String?, error: MisskeyKitError?, observer: AnyObserver<NoteCell.Model>) {
         if let error = error {
             print(error)
             if error == .CannotConnectStream || error == .NoStreamConnection {
@@ -278,10 +277,11 @@ class TimelineModel {
     
     // MARK: Capture
     
-    private func captureNote(_ isReconnection: Bool) {
+    private func captureNote(_ isReconnection: inout Bool) {
         // 再接続の場合
         if isReconnection {
             captureNotes(capturedNoteIds)
+            isReconnection = false
         }
         
         let isInitialConnection = initialNoteIds.count > 0 // 初期接続かどうか
