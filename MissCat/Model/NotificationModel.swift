@@ -44,7 +44,7 @@ public class NotificationsModel {
         guard let type = type, let target = target else { return nil }
         // StreamingModel
         switch type {
-        case "mention":
+        case "reply":
             return convertNoteModel(target)
             
         case "notification": // 多分reactionの通知と一対一に対応してるはず
@@ -109,13 +109,15 @@ public class NotificationsModel {
     private func convertNotification(_ target: Any) -> NotificationCell.Model? {
         guard let target = target as? StreamingModel, let fromUser = target.user else { return nil }
         
-        var type: ActionType = .reply
+        var type: ActionType
         if target.reaction != nil {
             type = .reaction
         } else if target.type == "follow" {
             type = .follow
         } else if target.type == "renote" {
             type = .renote
+        } else {
+            return nil
         }
         
         return NotificationCell.Model(notificationId: target.id ?? "",

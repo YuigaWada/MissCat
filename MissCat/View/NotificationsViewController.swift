@@ -7,6 +7,7 @@
 //
 
 import MisskeyKit
+import RxCocoa
 import RxDataSources
 import RxSwift
 import UIKit
@@ -72,8 +73,8 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
     private func binding(dataSource: NotificationDataSource?) {
         guard let dataSource = dataSource, let viewModel = viewModel else { return }
         
-        viewModel.notes
-            .bind(to: mainTableView.rx.items(dataSource: dataSource))
+        viewModel.notes.asDriver(onErrorDriveWith: Driver.empty())
+            .drive(mainTableView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)
     }
     
