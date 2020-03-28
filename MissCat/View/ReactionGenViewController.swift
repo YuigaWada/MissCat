@@ -119,6 +119,15 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
         targetNoteTextView.textContainer.maximumNumberOfLines = 2
         
         settingsButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
+        
+        settingsButton.rx.tap.subscribe(onNext: { _ in
+            let alert = UIAlertController(title: "", message: "開発中です", preferredStyle: UIAlertController.Style.alert)
+            let cancelAction: UIAlertAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.cancel, handler: nil)
+            
+            alert.addAction(cancelAction)
+            
+            self.present(alert, animated: true, completion: nil)
+        }).disposed(by: disposeBag)
     }
     
     private func setupCollectionViewLayout() {
