@@ -30,7 +30,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     
     func application(_ application: UIApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
         // バックグラウンドで実行する処理
-        notification()
+//        notification()
         completionHandler(.newData)
     }
     
@@ -38,16 +38,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                      fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
         let appState = application.applicationState
         
-        switch appState {
-        case .active:
-            break
-        case .inactive:
-            notification()
-        case .background:
-            notification()
-        @unknown default:
-            notification()
-        }
+//        switch appState {
+//        case .active:
+//            break
+//        case .inactive:
+//            notification()
+//        case .background:
+//            notification()
+//        @unknown default:
+//            notification()
+//        }
     }
     
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
