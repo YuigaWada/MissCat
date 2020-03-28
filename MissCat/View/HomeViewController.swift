@@ -574,10 +574,6 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     public func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
         if viewController is HomeViewController {
             nowPage = previousPage
-        } else if viewController is ProfileViewController {
-            nowPage = .Profile
-        } else {
-            nowPage = .Others // 例えば設定画面とか
         }
     }
     
