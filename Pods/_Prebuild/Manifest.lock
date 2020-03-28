@@ -23,7 +23,7 @@ PODS:
   - RxRelay (5.1.1):
     - RxSwift (~> 5)
   - RxSwift (5.1.1)
-  - SkeletonView (1.8.6)
+  - SkeletonView (1.8.2)
   - SVGKit (2.1.0):
     - CocoaLumberjack (~> 3.0)
   - SwiftyGif (5.2.0)
@@ -39,7 +39,7 @@ DEPENDENCIES:
   - RxCocoa (~> 5)
   - RxDataSources
   - RxSwift (~> 5)
-  - SkeletonView
+  - SkeletonView (= 1.8.2)
   - SVGKit (from `https://github.com/SVGKit/SVGKit.git`, branch `3.x`)
   - XLPagerTabStrip
 
@@ -86,11 +86,11 @@ SPEC CHECKSUMS:
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
   RxRelay: d77f7d771495f43c556cbc43eebd1bb54d01e8e9
   RxSwift: 81470a2074fa8780320ea5fe4102807cb7118178
-  SkeletonView: 0bf463145522c0c551b76a829b397e2a15a16d46
+  SkeletonView: bb27c39857e5492136f02ee8a3aa78de55d12ecd
   SVGKit: 8a2fc74258bdb2abb54d3b65f3dd68b0277a9c4d
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
 
-PODFILE CHECKSUM: 1e5e20bbb8a1ed38807cd93e65a4c86648e48f98
+PODFILE CHECKSUM: f6ba48b9f488a83c8a81d5e22bd5b3f2c7d0204f
 
 COCOAPODS: 1.7.1
