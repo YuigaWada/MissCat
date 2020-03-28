@@ -205,6 +205,7 @@
 		8DA06A13238A86B80093A718 /* NotificationCellViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCellViewModel.swift; sourceTree = "<group>"; };
 		8DA06A15238A86DC0093A718 /* NotificationCellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCellModel.swift; sourceTree = "<group>"; };
 		8DA36F852394B9D000512459 /* UIFont+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIFont+MissCat.swift"; sourceTree = "<group>"; };
+		8DA37093242F6F52004BCA5D /* AWSCognito.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AWSCognito.framework; path = Pods/_Prebuild/GeneratedFrameworks/AWSCognito/AWSCognito.framework; sourceTree = "<group>"; };
 		8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AttachmentCell.xib; sourceTree = "<group>"; };
 		8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentCell.swift; sourceTree = "<group>"; };
 		8DABCD092414D52D00D9F054 /* AuthWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthWebViewController.swift; sourceTree = "<group>"; };
@@ -467,6 +468,7 @@
 		8D4A2A372374388300503685 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8DA37093242F6F52004BCA5D /* AWSCognito.framework */,
 				8D5733E123F667DB002C17D2 /* Agrume.framework */,
 				8D08B546237863C10001D9C9 /* MisskeyKit.framework */,
 				8DD0D80B23B47CA8003F02ED /* YanagiText.framework */,
@@ -955,6 +957,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Pods/_Prebuild/GeneratedFrameworks/Agrume",
+					"$(PROJECT_DIR)/Pods/_Prebuild/GeneratedFrameworks/AWSCognito",
 				);
 				INFOPLIST_FILE = MissCat/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
@@ -1031,6 +1034,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Pods/_Prebuild/GeneratedFrameworks/Agrume",
+					"$(PROJECT_DIR)/Pods/_Prebuild/GeneratedFrameworks/AWSCognito",
 				);
 				INFOPLIST_FILE = MissCat/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
