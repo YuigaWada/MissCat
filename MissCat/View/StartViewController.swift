@@ -11,7 +11,7 @@ import RxCocoa
 import RxSwift
 import UIKit
 
-public class StartViewController: UIViewController {
+class StartViewController: UIViewController {
     @IBOutlet weak var logoImageView: UIImageView!
     @IBOutlet weak var phraseLabel: UILabel!
     
@@ -62,7 +62,7 @@ public class StartViewController: UIViewController {
     
     // MARK: LifeCycle
     
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         setGradientLayer()
         binding()
@@ -70,12 +70,12 @@ public class StartViewController: UIViewController {
         MisskeyKit.changeInstance(instance: misskeyInstance) // インスタンスを変更
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         hideComponents()
     }
     
-    public override func viewDidAppear(_ animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         summon(after: false)
         super.viewDidAppear(animated)
         

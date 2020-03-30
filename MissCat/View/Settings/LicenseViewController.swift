@@ -8,10 +8,10 @@
 
 import UIKit
 
-public class LicenseViewController: UIViewController {
+class LicenseViewController: UIViewController {
     @IBOutlet weak var textView: UITextView!
     
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         
         let font = UIFont(name: "Helvetica", size: 11.0)
@@ -329,7 +329,7 @@ public class LicenseViewController: UIViewController {
           this License, each Contributor hereby grants to You a perpetual,
           worldwide, non-exclusive, no-charge, royalty-free, irrevocable
           copyright license to reproduce, prepare Derivative Works of,
-          publicly display, publicly perform, sublicense, and distribute the
+          ly display, ly perform, sublicense, and distribute the
           Work and such Derivative Works in Source or Object form.
     
        3. Grant of Patent License. Subject to the terms and conditions of

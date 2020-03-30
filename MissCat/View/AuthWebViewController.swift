@@ -12,11 +12,11 @@ import RxSwift
 import UIKit
 import WebKit
 
-public class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigationDelegate {
+class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigationDelegate {
     @IBOutlet weak var returnButton: UIButton!
     @IBOutlet weak var webView: WKWebView!
     
-    public var completion: PublishRelay<String> = .init()
+    var completion: PublishRelay<String> = .init()
     
     private var currentUrl: URL?
     private var currentType: AuthType = .Signup
@@ -27,7 +27,7 @@ public class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigation
     
     // MARK: LifeCycle
     
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         setupWebView()
         setupReturnButton()
@@ -64,7 +64,7 @@ public class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigation
     
     // MARK: Publics
     
-    public func setupSignup(misskeyInstance: String, appSecret: String) {
+    func setupSignup(misskeyInstance: String, appSecret: String) {
         self.appSecret = appSecret
         self.misskeyInstance = misskeyInstance
         currentType = .Signup
@@ -83,7 +83,7 @@ public class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigation
         }
     }
     
-    public func setupLogin(misskeyInstance: String, appSecret: String) {
+    func setupLogin(misskeyInstance: String, appSecret: String) {
         self.appSecret = appSecret
         self.misskeyInstance = misskeyInstance
         currentType = .Login
@@ -133,7 +133,6 @@ public class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigation
         }
     }
     
-    
     /// コールバックurlかどうか判定
     /// - Parameter url: url
     private func checkCallback(of url: URL?) -> Bool {
@@ -144,13 +143,13 @@ public class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigation
     
     // MARK: Delegate
     
-    public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         guard checkCallback(of: webView.url) else { return }
         getApiKey()
     }
     
     // WebViewの読み込みが完了したらログイン処理が完了したかどうかをチェックする
-    public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { // 読み込み完了
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { // 読み込み完了
         guard let appSecret = self.appSecret, let misskeyInstance = self.misskeyInstance else { return }
         
         if checkCallback(of: webView.url) {
@@ -165,7 +164,7 @@ public class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigation
 }
 
 extension AuthWebViewController {
-    public enum AuthType {
+    enum AuthType {
         case Signup
         case Login
     }

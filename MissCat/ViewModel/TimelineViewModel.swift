@@ -56,11 +56,11 @@ class TimelineViewModel: ViewModelType {
     }
     
     private let input: Input
-    public let output: Output = .init()
+    let output: Output = .init()
     
     private var reloadTopModelId: String?
     private var _isLoading: Bool = false
-    public var state: State {
+    var state: State {
         return .init(cellCount: { cellsModel.count }(),
                      renoteeCellCount: { cellsModel.filter { $0.isRenoteeCell }.count }(),
                      isLoading: _isLoading,
@@ -71,7 +71,7 @@ class TimelineViewModel: ViewModelType {
     // MARK: PublishSubject
     
     private var hasReactionGenCell: Bool = false
-    public var cellsModel: [NoteCell.Model] = [] // TODO: エラー再発しないか意識しておく
+    var cellsModel: [NoteCell.Model] = [] // TODO: エラー再発しないか意識しておく
     private var initialNoteIds: [String] = [] // WebSocketの接続が確立してからcaptureするためのキャッシュ
     private var hasSkeltonCell: Bool = false
     private let usernameFont = UIFont.systemFont(ofSize: 11.0)
@@ -84,12 +84,12 @@ class TimelineViewModel: ViewModelType {
     
     // MARK: Life Cycle
     
-    public init(with input: Input, and disposeBag: DisposeBag) {
+    init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
         self.disposeBag = disposeBag
     }
     
-    public func setupInitialCell() {
+    func setupInitialCell() {
         // タイムラインをロードする
         loadNotes().subscribe(onError: { error in
             if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty, self.input.type == .Home {
@@ -110,7 +110,7 @@ class TimelineViewModel: ViewModelType {
         }, onDisposed: nil).disposed(by: disposeBag)
     }
     
-    public func setSkeltonCell() {
+    func setSkeltonCell() {
         guard !hasSkeltonCell else { return }
         
         for _ in 0 ..< 5 {
@@ -200,7 +200,7 @@ class TimelineViewModel: ViewModelType {
         }
     }
     
-    public func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool, plus: Bool, needReloading: Bool = true) {
+    func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool, plus: Bool, needReloading: Bool = true) {
         guard let targetNoteId = targetNoteId, let rawReaction = rawReaction else { return }
         
         DispatchQueue.global().async {
@@ -252,7 +252,7 @@ class TimelineViewModel: ViewModelType {
     // MARK: REST
     
     // 古い投稿から順にfetchしてくる
-    public func loadUntilNotes() -> Observable<NoteCell.Model> {
+    func loadUntilNotes() -> Observable<NoteCell.Model> {
         guard let untilId = cellsModel[cellsModel.count - 1].noteId else {
             return Observable.create { _ in
                 Disposables.create()
@@ -266,7 +266,7 @@ class TimelineViewModel: ViewModelType {
     }
     
     // 投稿をfetchしてくる
-    public func loadNotes(untilId: String? = nil) -> Observable<NoteCell.Model> {
+    func loadNotes(untilId: String? = nil) -> Observable<NoteCell.Model> {
         let option = Model.LoadOption(type: input.type,
                                       userId: input.userId,
                                       untilId: untilId,
@@ -289,7 +289,7 @@ class TimelineViewModel: ViewModelType {
         })
     }
     
-    public func vote(choice: Int, to noteId: String) {
+    func vote(choice: Int, to noteId: String) {
         model.vote(choice: choice, to: noteId) // API叩く
         
         cellsModel = cellsModel.map { // セルのモデルを変更する
@@ -305,11 +305,11 @@ class TimelineViewModel: ViewModelType {
         }
     }
     
-    public func renote(noteId: String) {
+    func renote(noteId: String) {
         model.renote(noteId: noteId)
     }
     
-    public func reloadNotes(_ completion: @escaping () -> Void) {
+    func reloadNotes(_ completion: @escaping () -> Void) {
         guard let lastNoteId = getLastNoteId() else { return }
         
         let option = Model.LoadOption(type: input.type,
@@ -331,7 +331,7 @@ class TimelineViewModel: ViewModelType {
     }
     
     // dataSourceからnoteを探してtargetのindexの下にreactiongencell入れる
-    public func tappedReaction(noteId: String, hasMarked: Bool) {
+    func tappedReaction(noteId: String, hasMarked: Bool) {
         guard cellsModel.filter({ $0.baseNoteId == noteId }).count == 0 else {
             // 複数個reactiongencellを挿入させない
             return

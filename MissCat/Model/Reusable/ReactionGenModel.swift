@@ -11,7 +11,7 @@ import RxDataSources
 import RxSwift
 
 private typealias EmojiModel = EmojiView.EmojiModel
-public class ReactionGenModel {
+class ReactionGenModel {
     // MARK: EMOJIS
     
     fileprivate static let fileShared: ReactionGenModel = .init(isFileShared: true) // 事前に詠み込んだ絵文字データを半永続化
@@ -41,7 +41,7 @@ public class ReactionGenModel {
     // MARK: Public Methods
     
     // プリセットｎ絵文字を取得
-    public func getPresets() -> [EmojiView.EmojiModel] {
+    func getPresets() -> [EmojiView.EmojiModel] {
         guard EmojiModel.hasUserDefaultsEmojis else { // UserDefaultsが存在しないならUserDefaultsセットしておく
             var emojiModels: [EmojiModel] = []
             defaultPreset.forEach { char in
@@ -63,7 +63,7 @@ public class ReactionGenModel {
         return emojiModels
     }
     
-    public func getEmojiModel() -> Observable<EmojiView.EmojiModel> {
+    func getEmojiModel() -> Observable<EmojiView.EmojiModel> {
         let dispose = Disposables.create()
         
         return Observable.create { [unowned self] observer in
@@ -80,13 +80,13 @@ public class ReactionGenModel {
         }
     }
     
-    public func registerReaction(noteId: String, reaction: String, completion: @escaping (Bool) -> Void) {
+    func registerReaction(noteId: String, reaction: String, completion: @escaping (Bool) -> Void) {
         MisskeyKit.notes.createReaction(noteId: noteId, reaction: reaction) { result, _ in
             completion(result)
         }
     }
     
-    public func cancelReaction(noteId: String, completion: @escaping (Bool) -> Void) {
+    func cancelReaction(noteId: String, completion: @escaping (Bool) -> Void) {
         MisskeyKit.notes.deleteReaction(noteId: noteId) { result, _ in
             completion(result)
         }
@@ -129,16 +129,16 @@ public class ReactionGenModel {
 
 // MARK: ReactionGenCell.Model
 
-public extension ReactionGenViewController {
+extension ReactionGenViewController {
     struct EmojisSection {
-        public var items: [Item]
+        var items: [Item]
     }
 }
 
 extension ReactionGenViewController.EmojisSection: SectionModelType {
-    public typealias Item = EmojiView.EmojiModel
+    typealias Item = EmojiView.EmojiModel
     
-    public init(original: ReactionGenViewController.EmojisSection, items: [Item]) {
+    init(original: ReactionGenViewController.EmojisSection, items: [Item]) {
         self = original
         self.items = items
     }

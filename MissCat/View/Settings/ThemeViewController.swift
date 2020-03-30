@@ -8,7 +8,7 @@
 
 import UIKit
 
-public class ThemeViewController: UITableViewController {
+class ThemeViewController: UITableViewController {
     private var sections = ["一般", "投稿", "Renote", "リプライ", "通知欄"]
     
     private lazy var noteMock = generateMockNoteModel()
@@ -30,7 +30,7 @@ public class ThemeViewController: UITableViewController {
     
     // MARK: LifeCycle
     
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         setTables()
         setTableView()
@@ -191,28 +191,28 @@ public class ThemeViewController: UITableViewController {
     
     // MARK: TableViewDelegate
     
-    public override func numberOfSections(in tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         return tables.keys.count
     }
     
-    public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         return sections[section]
     }
     
-    public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         guard let section = Section(rawValue: section) else { return 0 }
         return tables[section]?.count ?? 0
     }
     
-    public override func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
+    override func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
         view.tintColor = .white
     }
     
-    public override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+    override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 70
     }
     
-    public override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         guard let section = Section(rawValue: indexPath.section),
             let tables = tables[section],
             indexPath.row < tables.count else { return 60 }
@@ -222,7 +222,7 @@ public class ThemeViewController: UITableViewController {
         return table.type == .Mock ? UITableView.automaticDimension : 60
     }
     
-    public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let section = Section(rawValue: indexPath.section),
             let tables = tables[section],
             indexPath.row < tables.count else { return UITableViewCell() }
@@ -275,7 +275,7 @@ public class ThemeViewController: UITableViewController {
         }
     }
     
-    public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let viewController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "404-page")
         navigationController?.pushViewController(viewController, animated: true)
     }

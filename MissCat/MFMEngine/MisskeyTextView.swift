@@ -11,10 +11,10 @@ import UIKit
 // MARK: YanagiText
 
 open class YanagiText: UITextView {
-    public var xMargin: CGFloat = 10
-    public var yMargin: CGFloat = 0
+    var xMargin: CGFloat = 10
+    var yMargin: CGFloat = 0
     
-    open var attachmentList: [NSTextAttachment: YanagiText.Attachment] = [:]
+    var attachmentList: [NSTextAttachment: YanagiText.Attachment] = [:]
     
     // MARK: Publics
     
@@ -31,7 +31,7 @@ open class YanagiText: UITextView {
         return NSAttributedString(attachment: nsAttachment)
     }
     
-    public static func getAttachmentString(size: CGSize) -> (attributedString: NSAttributedString?, attachment: NSTextAttachment) {
+    static func getAttachmentString(size: CGSize) -> (attributedString: NSAttributedString?, attachment: NSTextAttachment) {
         let nsAttachment = NSTextAttachment()
         let fakeImageSize = CGSize(width: size.width, height: size.height)
         
@@ -40,7 +40,7 @@ open class YanagiText: UITextView {
         return (attributedString: NSAttributedString(attachment: nsAttachment), attachment: nsAttachment)
     }
     
-    public func removeViewString(view: UIView, removeFromList: Bool = true) {
+    func removeViewString(view: UIView, removeFromList: Bool = true) {
         view.removeFromSuperview()
         
         if removeFromList {
@@ -51,15 +51,15 @@ open class YanagiText: UITextView {
         }
     }
     
-    public func getAttachments() -> [NSTextAttachment: YanagiText.Attachment] {
+    func getAttachments() -> [NSTextAttachment: YanagiText.Attachment] {
         return attachmentList
     }
     
-    public func addAttachment(ns: NSTextAttachment, yanagi: YanagiText.Attachment) {
+    func addAttachment(ns: NSTextAttachment, yanagi: YanagiText.Attachment) {
         attachmentList[ns] = yanagi
     }
     
-    public func resetViewString(resetList: Bool = true) {
+    func resetViewString(resetList: Bool = true) {
         attachmentList.forEach { _, yanagi in
             yanagi.view.removeFromSuperview()
         }
@@ -86,14 +86,14 @@ open class YanagiText: UITextView {
         return fakeImage
     }
     
-    public func renderViewStrings() {
+    func renderViewStrings() {
         attachmentList.values.forEach { target in
             guard !self.subviews.contains(target.view) else { return }
             self.addSubview(target.view)
         }
     }
     
-    public func transformText() {
+    func transformText() {
         layoutIfNeeded()
         attributedText.enumerateAttribute(.attachment, in: NSMakeRange(0, attributedText.length), options: .longestEffectiveRangeNotRequired, using: { [weak self] value, range, _ in
             guard let self = self else { return }
@@ -125,7 +125,7 @@ open class YanagiText: UITextView {
         })
     }
     
-    open func register(_ nsAttachment: NSTextAttachment, and yanagiAttachment: YanagiText.Attachment) {
+    func register(_ nsAttachment: NSTextAttachment, and yanagiAttachment: YanagiText.Attachment) {
         attachmentList[nsAttachment] = yanagiAttachment
     }
     
@@ -175,59 +175,12 @@ open class YanagiText: UITextView {
         
         return true
     }
-    
-//
-//    open func _textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-//
-//        textView.attributedText.enumerateAttribute(NSAttributedString.Key.attachment, in: NSMakeRange(0, textView.attributedText.length), options: NSAttributedString.EnumerationOptions(rawValue: 0)) { [weak self] (value, viewStringRange, stop) in
-//            guard let self = self, viewStringRange.location >= range.location else { return }
-//
-//            let currentSelectedRange = self.selectedRange
-//            defer {
-//                self.selectedRange = currentSelectedRange
-//            }
-//
-//
-//            let movement = text.count - range.length
-//            let direction: CGFloat = movement > 0 ? 1 : -1
-//
-//            let nextLineRange = NSMakeRange(viewStringRange.location + movement, viewStringRange.length)
-//
-//            self.selectedRange = nextLineRange
-//
-//
-//
-//            guard let attachment = value as? NSTextAttachment,
-//                let selectedTextRange = selectedTextRange,
-//                let yanagiAttachment = self.findYanagiAttachment(nsAttachment: attachment) else { return }
-//
-//
-//            let targetView = yanagiAttachment.view
-//
-//            let nextLineRect = self.firstRect(for: selectedTextRange)
-//
-//            let estimatedRect = CGRect(x: targetView.frame.origin.x + nextLineRect.width * direction,
-//                                       y: targetView.frame.origin.y,
-//                                       width: yanagiAttachment.size.width,
-//                                       height: yanagiAttachment.size.height)
-//
-//
-//            if text.isEmpty, NSEqualRanges(range, viewStringRange){
-//                targetView.removeFromSuperview() // delete the target of View.
-//            }
-//            else {
-//                targetView.frame = estimatedRect
-//            }
-//        }
-//
-//        return true
-//    }
 }
 
-public extension YanagiText {
+extension YanagiText {
     struct Attachment {
-        public var view: UIView
-        public var size: CGSize
+        var view: UIView
+        var size: CGSize
     }
 }
 
@@ -266,7 +219,7 @@ class MisskeyTextView: YanagiText {
     private var noteAttachmentList: [String: AttachmentDic] = [:]
     private var userAttachmentList: [String: AttachmentDic] = [:]
     
-    public var isCached: Bool { // setされたcurrent〇〇Idについて、Cacheが存在するかどうか
+    var isCached: Bool { // setされたcurrent〇〇Idについて、Cacheが存在するかどうか
         var count = 0
         
         if let currentNoteId = currentNoteId {
@@ -301,14 +254,14 @@ class MisskeyTextView: YanagiText {
     
     // MARK: Publics
     
-    public func setId(noteId: String? = nil, userId: String? = nil) {
+    func setId(noteId: String? = nil, userId: String? = nil) {
         currentNoteId = noteId
         currentUserId = userId
         
 //        showMFM()
     }
     
-    public func showMFM() {
+    func showMFM() {
         isRefreshing = true
         defer {
             self.isRefreshing = false

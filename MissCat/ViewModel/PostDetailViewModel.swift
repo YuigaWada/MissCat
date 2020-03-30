@@ -9,13 +9,13 @@
 import RxSwift
 
 class PostDetailViewModel {
-    public let notes: PublishSubject<[NoteCell.Section]> = .init()
-    public let forceUpdateIndex: PublishSubject<Int> = .init()
-    public var dataSource: NotesDataSource?
-    public var cellCount: Int { return cellsModel.count }
+    let notes: PublishSubject<[NoteCell.Section]> = .init()
+    let forceUpdateIndex: PublishSubject<Int> = .init()
+    var dataSource: NotesDataSource?
+    var cellCount: Int { return cellsModel.count }
     
     private var hasReactionGenCell: Bool = false
-    public var cellsModel: [NoteCell.Model] = [] // TODO: エラー再発しないか意識しておく
+    var cellsModel: [NoteCell.Model] = [] // TODO: エラー再発しないか意識しておく
     
     private let model = PostDetailModel()
     
@@ -25,7 +25,7 @@ class PostDetailViewModel {
     
     init(disposeBag: DisposeBag) {}
     
-    public func setItem(_ item: NoteCell.Model) {
+    func setItem(_ item: NoteCell.Model) {
         cellsModel.append(item)
         updateNotes(new: cellsModel)
         

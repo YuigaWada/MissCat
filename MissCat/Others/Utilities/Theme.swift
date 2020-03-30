@@ -10,9 +10,9 @@ import Foundation
 import RxCocoa
 import RxSwift
 
-public class Theme {
-    public static var shared: Theme = .init()
-    public var theme: PublishRelay<ThemeColorModel> = .init()
+class Theme {
+    static var shared: Theme = .init()
+    var theme: PublishRelay<ThemeColorModel> = .init()
     private var _theme: ThemeColorModel?
     
     private lazy var defaultTheme = """
@@ -66,25 +66,25 @@ public class Theme {
     
     // MARK: Publics
     
-    public func getCurrentTheme() -> ThemeColorModel {
+    func getCurrentTheme() -> ThemeColorModel {
         guard let _theme = _theme else { fatalError("Internal Error") }
         return _theme
     }
     
-    public func changeTheme(_ newTheme: ThemeColorModel) {
+    func changeTheme(_ newTheme: ThemeColorModel) {
         _theme = newTheme
         
         theme.accept(newTheme)
     }
     
     /// bindingが完了した後に呼びだす。現在のtheme情報をstreamに流す。
-    public func complete() {
+    func complete() {
         guard let _theme = _theme else { return }
         theme.accept(_theme)
     }
 }
 
-public class ThemeColorModel {
+class ThemeColorModel {
     internal init(general: ThemeColorModel.General,
                   post: ThemeColorModel.Post,
                   reply: ThemeColorModel.Reply,
@@ -97,13 +97,13 @@ public class ThemeColorModel {
         self.notifications = notifications
     }
     
-    public var general: General
-    public var post: Post
-    public var reply: Reply
-    public var renote: Renote
-    public var notifications: Notifications
+    var general: General
+    var post: Post
+    var reply: Reply
+    var renote: Renote
+    var notifications: Notifications
     
-    public class General {
+    class General {
         internal init(main: UIColor, background: UIColor, border: UIColor) {
             self.main = main
             self.background = background
@@ -115,7 +115,7 @@ public class ThemeColorModel {
         var border: UIColor
     }
     
-    public class Post {
+    class Post {
         internal init(text: UIColor, link: UIColor, reaction: UIColor, myReaction: UIColor) {
             self.text = text
             self.link = link
@@ -130,7 +130,7 @@ public class ThemeColorModel {
         var textSize: Float = 11.0
     }
     
-    public class Reply {
+    class Reply {
         internal init(background: UIColor, text: UIColor, indicator: UIColor) {
             self.background = background
             self.text = text
@@ -142,7 +142,7 @@ public class ThemeColorModel {
         var indicator: UIColor
     }
     
-    public class Renote {
+    class Renote {
         internal init(user: UIColor, commentRNBorder: UIColor) {
             self.user = user
             self.commentRNBorder = commentRNBorder
@@ -152,7 +152,7 @@ public class ThemeColorModel {
         var commentRNBorder: UIColor
     }
     
-    public class Notifications {
+    class Notifications {
         internal init(reaction: UIColor, renote: UIColor, text: UIColor) {
             self.reaction = reaction
             self.renote = renote
@@ -165,20 +165,20 @@ public class ThemeColorModel {
     }
 }
 
-public class ThemeModel: Codable {
-    public var general: General
-    public var post: Post
-    public var reply: Reply
-    public var renote: Renote
-    public var notifications: Notifications
+class ThemeModel: Codable {
+    var general: General
+    var post: Post
+    var reply: Reply
+    var renote: Renote
+    var notifications: Notifications
     
-    public class General: Codable {
+    class General: Codable {
         var main: String = "2F7CF6"
         var background: String = "ffffff"
         var border: String = "C6C6C6"
     }
     
-    public class Post: Codable {
+    class Post: Codable {
         var text: String = "000000"
         var link: String = "2F7CF6"
         var reaction: String = "C6C6C6"
@@ -186,24 +186,24 @@ public class ThemeModel: Codable {
         var textSize: Float = 11.0
     }
     
-    public class Reply: Codable {
+    class Reply: Codable {
         var background: String = "EFEFEF"
         var text: String = "000000"
         var indicator: String = "AAAAAA"
     }
     
-    public class Renote: Codable {
+    class Renote: Codable {
         var user: String = "2ecc71"
         var commentRNBorder: String = "2F7CF6"
     }
     
-    public class Notifications: Codable {
+    class Notifications: Codable {
         var reaction: String = "e74c3c"
         var renote: String = "2ecc71"
         var text: String = "000000"
     }
     
-    public static func decode(_ raw: String) -> ThemeModel? {
+    static func decode(_ raw: String) -> ThemeModel? {
         guard raw.count > 0 else { return nil }
         
         do {
@@ -215,7 +215,7 @@ public class ThemeModel: Codable {
     }
 }
 
-public extension ThemeModel {
+extension ThemeModel {
     func encode() -> String? {
         do {
             let data = try JSONEncoder().encode(self)

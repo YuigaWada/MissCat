@@ -8,7 +8,7 @@
 
 import UIKit
 
-public class NotificationBanner: UIView {
+class NotificationBanner: UIView {
     @IBOutlet weak var iconLabel: UILabel!
     @IBOutlet weak var mainContentLabel: UILabel!
     
@@ -41,14 +41,14 @@ public class NotificationBanner: UIView {
         setupTimer()
     }
     
-    public func loadNib() {
+    func loadNib() {
         if let view = UINib(nibName: "NotificationBanner", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
             addSubview(view)
         }
     }
     
-    public override func layoutSubviews() {
+    override func layoutSubviews() {
         super.layoutSubviews()
         setupComponents()
         
@@ -147,7 +147,7 @@ public class NotificationBanner: UIView {
 }
 
 extension NotificationBanner {
-    public enum IconType {
+    enum IconType {
         case Loading
         case Success
         

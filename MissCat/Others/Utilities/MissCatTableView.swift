@@ -12,9 +12,9 @@ import UIKit
 
 /// スクロール位置を固定するTableView
 /// Qiitaに記事書いた→ https://qiita.com/yuwd/items/bc152a0c9c4ce7754003
-public class MissCatTableView: UITableView {
-    public var _lockScroll: Bool = true
-    public var lockScroll: PublishRelay<Bool>? {
+class MissCatTableView: UITableView {
+    var _lockScroll: Bool = true
+    var lockScroll: PublishRelay<Bool>? {
         didSet {
             lockScroll?.subscribe(onNext: { self._lockScroll = $0 }).disposed(by: disposeBag)
         }
@@ -25,7 +25,7 @@ public class MissCatTableView: UITableView {
         return contentOffset.y <= 0
     }
     
-    public override func performBatchUpdates(_ updates: (() -> Void)?, completion: ((Bool) -> Void)? = nil) {
+    override func performBatchUpdates(_ updates: (() -> Void)?, completion: ((Bool) -> Void)? = nil) {
         #if !targetEnvironment(simulator)
             let bottomOffset = contentSize.height - contentOffset.y
             

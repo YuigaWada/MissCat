@@ -8,10 +8,10 @@
 
 import MisskeyKit
 
-public class PostModel {
+class PostModel {
     private var iconImage: UIImage?
     
-    public func getIconImage(completion: @escaping (UIImage?) -> Void) {
+    func getIconImage(completion: @escaping (UIImage?) -> Void) {
         if let iconImage = iconImage {
             completion(iconImage)
             return
@@ -27,7 +27,7 @@ public class PostModel {
         }
     }
     
-    public func submitNote(_ note: String?, fileIds: [String]? = nil, replyId: String? = nil, renoteId: String? = nil, completion: @escaping (Bool) -> Void) {
+    func submitNote(_ note: String?, fileIds: [String]? = nil, replyId: String? = nil, renoteId: String? = nil, completion: @escaping (Bool) -> Void) {
         guard let note = note else { return }
         
         if let renoteId = renoteId { // 引用RN
@@ -43,7 +43,7 @@ public class PostModel {
         }
     }
     
-    public func uploadFile(_ image: UIImage, nsfw: Bool, completion: @escaping (String?) -> Void) {
+    func uploadFile(_ image: UIImage, nsfw: Bool, completion: @escaping (String?) -> Void) {
         guard let resizedImage = image.resized(widthUnder: 1024), let targetImage = resizedImage.jpegData(compressionQuality: 0.5) else { return }
         
         MisskeyKit.drive.createFile(fileData: targetImage, fileType: "image/jpeg", name: UUID().uuidString + ".jpeg", isSensitive: nsfw, force: false) { result, error in
@@ -53,7 +53,7 @@ public class PostModel {
         }
     }
     
-    public func uploadFile(_ videoData: Data, nsfw: Bool, completion: @escaping (String?) -> Void) {
+    func uploadFile(_ videoData: Data, nsfw: Bool, completion: @escaping (String?) -> Void) {
         MisskeyKit.drive.createFile(fileData: videoData, fileType: "video/mp4", name: UUID().uuidString + ".mp4", isSensitive: nsfw, force: false) { result, error in
             guard let result = result, error == nil else { return }
             

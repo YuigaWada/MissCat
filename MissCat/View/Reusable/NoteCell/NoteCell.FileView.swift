@@ -8,7 +8,7 @@
 
 import UIKit
 
-public enum FileType {
+enum FileType {
     case PlaneImage
     case GIFImage
     case Video
@@ -16,11 +16,11 @@ public enum FileType {
     case Unknown
 }
 
-public class FileView: UIImageView {
+class FileView: UIImageView {
     private var playIconImageView: UIImageView?
     private var nsfwCover: UIView?
     
-    public func setPlayIconImage(hide: Bool = false) {
+    func setPlayIconImage(hide: Bool = false) {
         let parentView = self
         guard playIconImageView == nil, !hide else {
             playIconImageView?.isHidden = hide; return
@@ -82,7 +82,7 @@ public class FileView: UIImageView {
         self.playIconImageView = playIconImageView
     }
     
-    public func setNSFW(hide: Bool = false) {
+    func setNSFW(hide: Bool = false) {
         guard nsfwCover == nil, !hide else {
             nsfwCover?.isHidden = hide; return
         }

@@ -10,12 +10,12 @@ import Agrume
 import RxSwift
 import UIKit
 
-public class FileContainerCell: UICollectionViewCell {
+class FileContainerCell: UICollectionViewCell {
     @IBOutlet weak var imageView: FileView!
     
     private let disposeBag = DisposeBag()
     
-    public override init(frame: CGRect) {
+    override init(frame: CGRect) {
         super.init(frame: frame)
         setComponent()
     }
@@ -25,7 +25,7 @@ public class FileContainerCell: UICollectionViewCell {
         setComponent()
     }
     
-    public override func layoutSubviews() {
+    override func layoutSubviews() {
         imageView.contentMode = .scaleAspectFill
         super.layoutSubviews()
     }
@@ -39,7 +39,7 @@ public class FileContainerCell: UICollectionViewCell {
         imageView.image = nil
     }
     
-    public func transform(with fileModel: FileContainer.Model, and delegate: NoteCellDelegate?) {
+    func transform(with fileModel: FileContainer.Model, and delegate: NoteCellDelegate?) {
         initialize()
         if let thumbnail = Cache.shared.getUiImage(url: fileModel.thumbnailUrl) {
             setImage(image: thumbnail,

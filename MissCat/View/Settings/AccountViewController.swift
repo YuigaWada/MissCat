@@ -10,12 +10,12 @@ import RxCocoa
 import RxSwift
 import UIKit
 
-public class AccountViewController: UITableViewController {
+class AccountViewController: UITableViewController {
     @IBOutlet weak var logoutButton: UIButton!
     
     private var disposeBag = DisposeBag()
     
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         tableView.delegate = self
         
@@ -24,7 +24,7 @@ public class AccountViewController: UITableViewController {
         }).disposed(by: disposeBag)
     }
     
-    public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath as IndexPath, animated: true) // タップ解除
         showLogoutAlert()
     }
@@ -61,18 +61,18 @@ public class AccountViewController: UITableViewController {
         return viewController
     }
     
-    public override func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
+    override func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
         view.tintColor = .clear
         
         guard let header = view as? UITableViewHeaderFooterView else { return }
         header.textLabel?.text = "アカウント管理"
     }
     
-    public override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+    override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 70
     }
     
-    public override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 70
     }
 }

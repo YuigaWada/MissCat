@@ -9,7 +9,7 @@
 import RxSwift
 import UIKit
 
-public class PanelMenuViewController: UIViewController {
+class PanelMenuViewController: UIViewController {
     @IBOutlet weak var panelTitleLabel: UILabel!
     @IBOutlet weak var stackView: UIStackView!
     @IBOutlet weak var stackViewHeightContraint: NSLayoutConstraint!
@@ -18,19 +18,19 @@ public class PanelMenuViewController: UIViewController {
     private var itemViews: [UIView] = []
     private var disposeBag = DisposeBag()
     
-    public var tapTrigger: Observable<Int> = Observable.of(-1) // タップされたらどの選択肢がおされたのか(=order)を流す
+    var tapTrigger: Observable<Int> = Observable.of(-1) // タップされたらどの選択肢がおされたのか(=order)を流す
     
-    public func setPanelTitle(_ title: String) {
+    func setPanelTitle(_ title: String) {
         panelTitle = title
     }
     
-    public func setupMenu(items: [MenuItem]) {
+    func setupMenu(items: [MenuItem]) {
         items.forEach { item in
             itemViews.append(self.getMenuItemView(with: item))
         }
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         panelTitleLabel.text = panelTitle
         
@@ -159,7 +159,7 @@ public class PanelMenuViewController: UIViewController {
 }
 
 extension PanelMenuViewController {
-    public struct MenuItem {
+    struct MenuItem {
         let title: String
         let awesomeIcon: String
         

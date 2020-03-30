@@ -22,7 +22,7 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     private var wasReplyTarget: Bool = false
     private var wasOnOtherNote: Bool = false
     
-    public var mainItem: NoteCell.Model? {
+    var mainItem: NoteCell.Model? {
         didSet {
             guard let item = mainItem else { return }
             
@@ -37,7 +37,7 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     
     // MARK: Life Cycle
     
-    public override func loadView() {
+    override func loadView() {
         super.loadView()
         setupTableView()
         
@@ -48,12 +48,12 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
         binding(dataSource: viewModel.dataSource)
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
-    public override func viewWillDisappear(_ animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
         mainItem?.isReplyTarget = wasReplyTarget
@@ -108,7 +108,7 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     }
     
     // tableViewの負担を軽減するようキャッシュを活用
-    public func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
+    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         guard let viewModel = viewModel else { return UITableView.automaticDimension }
         
         let index = indexPath.row
@@ -119,11 +119,11 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     }
     
     // セル選択後すぐに選択をキャンセルする
-    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath as IndexPath, animated: true)
     }
     
-    public func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         guard let viewModel = viewModel else { return }
         
         let index = indexPath.row
@@ -146,15 +146,15 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     
     // MARK: Delegate
     
-    public func tappedNotifications() {
+    func tappedNotifications() {
         mainTableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
     }
     
-    public func tappedHome() {}
+    func tappedHome() {}
     
-    public func tappedPost() {}
+    func tappedPost() {}
     
-    public func tappedFav() {}
+    func tappedFav() {}
     
-    public func tappedProfile() {}
+    func tappedProfile() {}
 }

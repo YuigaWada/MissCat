@@ -264,7 +264,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 }
 
-public struct NotificationContents {
+struct NotificationContents {
     let title: String
     let body: String
 }

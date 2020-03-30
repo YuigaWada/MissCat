@@ -8,13 +8,13 @@
 
 import MisskeyKit
 
-public class PostDetailModel {
+class PostDetailModel {
     private var backReplies: [NoteCell.Model] = []
     private var replies: [NoteCell.Model] = []
     
     /// リプライを遡る
     /// - Parameter note: モデル
-    public func goBackReplies(id: String, completion: @escaping ([NoteCell.Model]) -> Void) {
+    func goBackReplies(id: String, completion: @escaping ([NoteCell.Model]) -> Void) {
         MisskeyKit.notes.showNote(noteId: id) { note, error in
             guard error == nil,
                 let note = note,
@@ -34,7 +34,7 @@ public class PostDetailModel {
     
     /// リプライを探す
     /// - Parameter id: noteId
-    public func getReplies(id: String, completion: @escaping ([NoteCell.Model]) -> Void) {
+    func getReplies(id: String, completion: @escaping ([NoteCell.Model]) -> Void) {
         MisskeyKit.notes.getChildren(noteId: id) { notes, error in
             guard let notes = notes, error == nil else { return }
             DispatchQueue.global().async {

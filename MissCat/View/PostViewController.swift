@@ -13,8 +13,8 @@ import RxDataSources
 import RxSwift
 import UIKit
 
-public typealias AttachmentsDataSource = RxCollectionViewSectionedReloadDataSource<PostViewController.AttachmentsSection>
-public class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UICollectionViewDelegate {
+typealias AttachmentsDataSource = RxCollectionViewSectionedReloadDataSource<PostViewController.AttachmentsSection>
+class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UICollectionViewDelegate {
     @IBOutlet weak var attachmentCollectionView: UICollectionView!
     
     @IBOutlet weak var cancelButton: UIButton!
@@ -27,7 +27,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     @IBOutlet weak var bottomStackView: UIStackView!
     @IBOutlet weak var addLocationButon: UIButton!
     
-    public var homeViewController: HomeViewController?
+    var homeViewController: HomeViewController?
     
     private var postType: PostType = .Post
     private var targetNoteCell: NoteCell?
@@ -41,7 +41,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     
     // MARK: Life Cycle
     
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         
         let viewModel = PostViewModel(with: .init(type: postType, targetNote: targetNote), and: disposeBag)
@@ -61,23 +61,23 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
         self.viewModel = viewModel
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
     }
     
-    public override func viewDidAppear(_ animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         mainTextView.becomeFirstResponder()
     }
     
-    public override func viewWillDisappear(_ animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
         targetNote?.onOtherNote = false
         targetNote?.fileVisible = true
     }
     
-    public override func viewWillLayoutSubviews() {
+    override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
     }
@@ -86,7 +86,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     /// - Parameters:
     ///   - note: note model
     ///   - type: PostType
-    public func setTargetNote(_ note: NoteCell.Model, type: PostType) {
+    func setTargetNote(_ note: NoteCell.Model, type: PostType) {
         guard let noteCell = UINib(nibName: "NoteCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NoteCell else { return }
         
         note.onOtherNote = true
@@ -436,21 +436,21 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     
     // MARK: Delegate
     
-    public func textViewDidBeginEditing(_ textView: UITextView) {
+    func textViewDidBeginEditing(_ textView: UITextView) {
         if mainTextView.textColor == .lightGray {
             mainTextView.text = ""
             mainTextView.textColor = .black
         }
     }
     
-    public func textViewDidEndEditing(_ textView: UITextView) {
+    func textViewDidEndEditing(_ textView: UITextView) {
         if mainTextView.text == "" {
             mainTextView.text = "What's happening?"
             mainTextView.textColor = .lightGray
         }
     }
     
-    public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
         picker.dismiss(animated: true, completion: nil)
         
         let isImage = info[UIImagePickerController.InfoKey.originalImage] is UIImage
@@ -484,7 +484,7 @@ public class PostViewController: UIViewController, UITextViewDelegate, UIImagePi
     }
 }
 
-public extension PostViewController {
+extension PostViewController {
     enum PostType {
         case Post
         case Reply
@@ -492,17 +492,17 @@ public extension PostViewController {
     }
 }
 
-public extension PostViewController {
+extension PostViewController {
     struct AttachmentsSection {
-        public var items: [Item]
+        var items: [Item]
     }
     
     class Attachments {
-        public var id: String = UUID().uuidString
+        var id: String = UUID().uuidString
         
-        public var image: UIImage
-        public var type: Type
-        public var nsfw: Bool = false
+        var image: UIImage
+        var type: Type
+        var nsfw: Bool = false
         
         init(image: UIImage, type: Type) {
             self.image = image
@@ -522,9 +522,9 @@ public extension PostViewController {
 }
 
 extension PostViewController.AttachmentsSection: SectionModelType {
-    public typealias Item = PostViewController.Attachments
+    typealias Item = PostViewController.Attachments
     
-    public init(original: PostViewController.AttachmentsSection, items: [Item]) {
+    init(original: PostViewController.AttachmentsSection, items: [Item]) {
         self = original
         self.items = items
     }

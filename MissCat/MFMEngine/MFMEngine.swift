@@ -13,12 +13,12 @@ import UIKit
 
 // ** MFM実装のためのクラス **
 
-public struct MFMString {
+struct MFMString {
     let mfmEngine: MFMEngine
     let attributed: NSAttributedString?
 }
 
-public class MFMEngine {
+class MFMEngine {
     private var lineHeight: CGFloat = 30
     
     private let original: String
@@ -28,14 +28,14 @@ public class MFMEngine {
     private var customEmojis: [String] = []
     private var attachments: [NSTextAttachment] = []
     
-    public var textColor: UIColor = .black
-    public static var usernameFont = UIFont.systemFont(ofSize: 11.0)
+    var textColor: UIColor = .black
+    static var usernameFont = UIFont.systemFont(ofSize: 11.0)
     
     // MARK: Static
     
     /// リンク化・md→htmlの変換等、カスタム絵文字以外の処理を行う
     /// - Parameter string: 加工対象のstring
-    public static func preTransform(string: String) -> String {
+    static func preTransform(string: String) -> String {
         var preTransed = string.hyperLink() // MUST BE DONE BEFORE ANYTHING !
         preTransed = preTransed.hyperUser()
         preTransed = preTransed.hyperHashtag()
@@ -62,7 +62,7 @@ public class MFMEngine {
     /// - Parameters:
     ///   - yanagi: どのTextViewか(YanagiText)
     ///   - externalEmojis: 他インスタンスの絵文字配列
-    public func transform(font: UIFont, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
+    func transform(font: UIFont, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
         var rest = original
         let shaped = NSMutableAttributedString()
         
@@ -100,7 +100,7 @@ public class MFMEngine {
         return shaped
     }
     
-    public func renderCustomEmojis(on yanagi: YanagiText) {
+    func renderCustomEmojis(on yanagi: YanagiText) {
         guard customEmojis.count == attachments.count else { return }
         
         for index in 0 ..< customEmojis.count {
@@ -116,7 +116,7 @@ public class MFMEngine {
     
     // MARK: Statics
     
-    public static func shapeModel(_ cellModel: NotificationCell.Model) {
+    static func shapeModel(_ cellModel: NotificationCell.Model) {
         if let user = cellModel.fromUser {
             cellModel.shapedDisplayName = shapeDisplayName(user: user)
             // MEMO: MisskeyApiの "i/notifications"はfromUserの自己紹介を流してくれないので、対応するまで非表示にする
@@ -140,7 +140,7 @@ public class MFMEngine {
         }
     }
     
-    public static func shapeModel(_ cellModel: NoteCell.Model) {
+    static func shapeModel(_ cellModel: NoteCell.Model) {
         cellModel.shapedNote = shapeNote(cellModel)
         cellModel.shapedDisplayName = shapeDisplayName(cellModel)
         
@@ -188,7 +188,7 @@ public class MFMEngine {
     /// - Parameters:
     ///   - string: 対象のstring
     ///   - font: フォント
-    public static func generatePlaneString(string: String, font: UIFont?) -> NSAttributedString {
+    static func generatePlaneString(string: String, font: UIFont?) -> NSAttributedString {
         let fontName = font?.familyName ?? "Helvetica"
         let fontSize = font?.pointSize ?? 15.0
         
@@ -197,7 +197,7 @@ public class MFMEngine {
     
     /// カスタム絵文字のURLから画像データを取得し、非同期でsetされるようなUIImageViewを返す
     /// - Parameter imageUrl: 画像データのurl (アニメGIF / SVGも可)
-    public static func generateAsyncImageView(imageUrl: String, lineHeight: CGFloat = 30) -> UIImageView {
+    static func generateAsyncImageView(imageUrl: String, lineHeight: CGFloat = 30) -> UIImageView {
         let imageSize = lineHeight
         let imageView = GIFImageView(frame: CGRect(x: 0, y: 0, width: 200, height: 100))
         

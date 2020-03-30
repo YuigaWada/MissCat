@@ -46,8 +46,8 @@ class NoteCellViewModel: ViewModelType {
     
     struct State {}
     
-    public lazy var output: Output = .init(displayName: input.cellModel.displayName,
-                                           username: input.cellModel.username)
+    lazy var output: Output = .init(displayName: input.cellModel.displayName,
+                                    username: input.cellModel.username)
     
     private var input: Input
     private var model = NoteCellModel()
@@ -57,7 +57,7 @@ class NoteCellViewModel: ViewModelType {
     private let usernameFont = UIFont.systemFont(ofSize: 11.0)
     
     private var dataSource: ReactionsDataSource?
-    public var reactionsModel: [NoteCell.Reaction] = []
+    var reactionsModel: [NoteCell.Reaction] = []
     
     private var properBackgroundColor: UIColor {
         return input.cellModel.isReplyTarget ? replyTargetColor : .white
@@ -70,7 +70,7 @@ class NoteCellViewModel: ViewModelType {
         self.disposeBag = disposeBag
     }
     
-    public func setCell() {
+    func setCell() {
         let item = input.cellModel
         DispatchQueue.global(qos: .default).async {
             self.output.isReplyTarget.accept(item.isReplyTarget)
@@ -96,7 +96,7 @@ class NoteCellViewModel: ViewModelType {
         }
     }
     
-    public func setReactionCell(with item: NoteCell.Reaction, to reactionCell: ReactionCell) -> ReactionCell {
+    func setReactionCell(with item: NoteCell.Reaction, to reactionCell: ReactionCell) -> ReactionCell {
         guard let rawEmoji = item.rawEmoji else { return reactionCell }
         
         if let customEmojiUrl = item.url {
@@ -116,7 +116,7 @@ class NoteCellViewModel: ViewModelType {
         return reactionCell
     }
     
-    public func setImage(username: String, imageRawUrl: String?) {
+    func setImage(username: String, imageRawUrl: String?) {
         if let image = Cache.shared.getIcon(username: username) {
             output.iconImage.accept(image)
         } else if let imageRawUrl = imageRawUrl, let imageUrl = URL(string: imageRawUrl) {
@@ -130,7 +130,7 @@ class NoteCellViewModel: ViewModelType {
     
     /// ファイルの種類を識別する
     /// - Parameter type: MIME Type
-    public func checkFileType(_ type: String?) -> FileType {
+    func checkFileType(_ type: String?) -> FileType {
         guard let type = type else { return .Unknown }
         
         if type.contains("video") {
@@ -172,11 +172,11 @@ class NoteCellViewModel: ViewModelType {
         output.commentRenoteTarget.accept(renoteCellModel)
     }
     
-    public func registerReaction(noteId: String, reaction: String) {
+    func registerReaction(noteId: String, reaction: String) {
         model.registerReaction(noteId: noteId, reaction: reaction)
     }
     
-    public func cancelReaction(noteId: String) {
+    func cancelReaction(noteId: String) {
         model.cancelReaction(noteId: noteId)
     }
     

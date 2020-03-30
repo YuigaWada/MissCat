@@ -12,8 +12,8 @@ import RxDataSources
 import RxSwift
 import UIKit
 
-public typealias NotificationDataSource = RxTableViewSectionedAnimatedDataSource<NotificationCell.Section>
-public class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDelegate {
+typealias NotificationDataSource = RxTableViewSectionedAnimatedDataSource<NotificationCell.Section>
+class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDelegate {
     @IBOutlet weak var mainTableView: UITableView!
     
     private var viewModel: NotificationsViewModel?
@@ -29,7 +29,7 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
     
     // MARK: Life Cycle
     
-    public override func loadView() {
+    override func loadView() {
         super.loadView()
         setupTableView()
         
@@ -40,7 +40,7 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
         binding(dataSource: viewModel.dataSource)
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         view.deselectCell(on: mainTableView)
         
@@ -111,7 +111,7 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
     }
     
     // tableViewの負担を軽減するようキャッシュを活用
-    public func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
+    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         guard let viewModel = viewModel else { return UITableView.automaticDimension }
         
         let index = indexPath.row
@@ -121,7 +121,7 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
         return height
     }
     
-    public func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         guard let viewModel = viewModel else { return }
         
         let index = indexPath.row
@@ -142,7 +142,7 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
         }
     }
     
-    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let index = indexPath.row
         
         guard let cellModel = viewModel?.cellsModel[index],
@@ -161,7 +161,7 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
     
     // MARK: Delegate
     
-    public func tappedNotifications() {
+    func tappedNotifications() {
         let zeroIndexPath = IndexPath(row: 0, section: 0)
         
         // セルが存在しないと落ちるので制約をつける
@@ -171,11 +171,11 @@ public class NotificationsViewController: NoteDisplay, UITableViewDelegate, Foot
         }
     }
     
-    public func tappedHome() {}
+    func tappedHome() {}
     
-    public func tappedPost() {}
+    func tappedPost() {}
     
-    public func tappedFav() {}
+    func tappedFav() {}
     
-    public func tappedProfile() {}
+    func tappedProfile() {}
 }

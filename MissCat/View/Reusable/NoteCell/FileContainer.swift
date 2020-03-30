@@ -14,9 +14,9 @@ import RxSwift
 import UIKit
 
 typealias FileDataSource = RxCollectionViewSectionedReloadDataSource<FileContainer.Section>
-public class FileContainer: UICollectionView, UICollectionViewDelegate, ComponentType {
-    public typealias Transformed = FileContainer
-    public struct Arg {
+class FileContainer: UICollectionView, UICollectionViewDelegate, ComponentType {
+    typealias Transformed = FileContainer
+    struct Arg {
         let files: [File]
         let noteId: String
         let fileVisible: Bool
@@ -30,7 +30,7 @@ public class FileContainer: UICollectionView, UICollectionViewDelegate, Componen
     
     // MARK: LifeCycle
     
-    public override init(frame: CGRect, collectionViewLayout layout: UICollectionViewLayout) {
+    override init(frame: CGRect, collectionViewLayout layout: UICollectionViewLayout) {
         super.init(frame: frame, collectionViewLayout: MosaicLayout())
         binding()
         isScrollEnabled = false
@@ -44,7 +44,7 @@ public class FileContainer: UICollectionView, UICollectionViewDelegate, Componen
     
     // MARK: Publics
     
-    public func transform(with arg: Arg) -> FileContainer {
+    func transform(with arg: Arg) -> FileContainer {
         initialize()
         
         noteCellDelegate = arg.delegate
@@ -55,7 +55,7 @@ public class FileContainer: UICollectionView, UICollectionViewDelegate, Componen
         return self
     }
     
-    public func initialize() {
+    func initialize() {
         viewModel.fileModel = []
     }
     
@@ -97,7 +97,7 @@ public class FileContainer: UICollectionView, UICollectionViewDelegate, Componen
     
     // MARK: Delegate
     
-    public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let index = indexPath.row
         let fileModel = viewModel.fileModel
         guard index < fileModel.count else { return }
@@ -119,10 +119,10 @@ public class FileContainer: UICollectionView, UICollectionViewDelegate, Componen
 }
 
 extension FileContainer {
-    public struct Model: IdentifiableType, Equatable {
-        public typealias Identity = String
+    struct Model: IdentifiableType, Equatable {
+        typealias Identity = String
         
-        public var identity: String = UUID().uuidString
+        var identity: String = UUID().uuidString
         
         let thumbnailUrl: String
         let originalUrl: String
@@ -139,7 +139,7 @@ extension FileContainer.Section: AnimatableSectionModelType {
     typealias Item = FileContainer.Model
     typealias Identity = String
     
-    public var identity: String {
+    var identity: String {
         return ""
     }
     

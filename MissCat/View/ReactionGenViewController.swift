@@ -11,13 +11,13 @@ import RxDataSources
 import RxSwift
 import UIKit
 
-public protocol ReactionGenViewControllerDelegate {
+protocol ReactionGenViewControllerDelegate {
     func scrollUp() // 半モーダルviewを上まで引き上げる
 }
 
 private typealias ViewModel = ReactionGenViewModel
-public typealias EmojisDataSource = RxCollectionViewSectionedReloadDataSource<ReactionGenViewController.EmojisSection>
-public class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScrollViewDelegate, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+typealias EmojisDataSource = RxCollectionViewSectionedReloadDataSource<ReactionGenViewController.EmojisSection>
+class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScrollViewDelegate, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var iconImageView: UIImageView!
     @IBOutlet weak var displayNameLabel: UILabel!
@@ -28,10 +28,10 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     @IBOutlet weak var emojiCollectionView: UICollectionView!
     @IBOutlet weak var borderOriginXConstraint: NSLayoutConstraint!
     
-    public var delegate: ReactionGenViewControllerDelegate?
-    public var onPostViewController: Bool = false
+    var delegate: ReactionGenViewControllerDelegate?
+    var onPostViewController: Bool = false
     
-    public var selectedEmoji: PublishRelay<EmojiView.EmojiModel> = .init()
+    var selectedEmoji: PublishRelay<EmojiView.EmojiModel> = .init()
     
     private var viewModel: ReactionGenViewModel?
     private let disposeBag = DisposeBag()
@@ -44,7 +44,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     
     // MARK: Life Cycle
     
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         setupComponents()
         setupCollectionViewLayout()
@@ -53,7 +53,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
         setEmojiModel(viewModel: viewModel)
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         targetNoteDisplayView.isHidden = onPostViewController
@@ -61,13 +61,13 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
     }
     
-    public override func viewDidAppear(_ animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
         viewDidAppeared = true
     }
     
-    public override func viewWillDisappear(_ animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
         viewDidAppeared = false
@@ -222,7 +222,7 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     // MARK: CollectionView Delegate
     
     // Headerセルの場合はの幅を設定
-    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let defaultSize = CGSize(width: defaultCellsize, height: defaultCellsize)
         guard let viewModel = viewModel else { return defaultSize }
         let isHeader = viewModel.checkHeader(index: indexPath.row)
@@ -230,13 +230,13 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
         return isHeader ? CGSize(width: emojiCollectionView.frame.width, height: 30) : defaultSize
     }
     
-    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
         return 0
     }
     
     // MARK: Public Methods
     
-    public func setTargetNote(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
+    func setTargetNote(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
         // noteId
         setTargetNoteId(noteId)
         
@@ -264,13 +264,13 @@ public class ReactionGenViewController: UIViewController, UISearchBarDelegate, U
     
     // MARK: TextField Delegate
     
-    public func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
         guard let delegate = delegate else { return }
         
         delegate.scrollUp()
     }
     
-    public func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchBar.endEditing(true)
     }
 }

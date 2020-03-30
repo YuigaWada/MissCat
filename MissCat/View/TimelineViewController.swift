@@ -14,7 +14,7 @@ import RxSwift
 import UIKit
 import XLPagerTabStrip
 
-public protocol TimelineDelegate { // For HomeViewController
+protocol TimelineDelegate { // For HomeViewController
     func tappedCell(item: NoteCell.Model)
     func move2Profile(userId: String)
     func openUserPage(username: String)
@@ -47,7 +47,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     
     private lazy var dataSource = self.setupDataSource()
     
-    public var xlTitle: IndicatorInfo? // XLPagerTabStripで用いるtitle
+    var xlTitle: IndicatorInfo? // XLPagerTabStripで用いるtitle
     
     private var loggedIn: Bool = false
     private var hasApiKey: Bool {
@@ -68,15 +68,15 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     ///   - scrollable: スクロール可能か
     ///   - loadLimit: 一度に読み込むnoteの量
     ///   - xlTitle: タブに表示する名前
-    public func setup(type: TimelineType,
-                      includeReplies: Bool? = nil,
-                      onlyFiles: Bool? = nil,
-                      userId: String? = nil,
-                      listId: String? = nil,
-                      withNavBar: Bool = true,
-                      scrollable: Bool = true,
-                      loadLimit: Int = 40,
-                      xlTitle: IndicatorInfo? = nil) {
+    func setup(type: TimelineType,
+               includeReplies: Bool? = nil,
+               onlyFiles: Bool? = nil,
+               userId: String? = nil,
+               listId: String? = nil,
+               withNavBar: Bool = true,
+               scrollable: Bool = true,
+               loadLimit: Int = 40,
+               xlTitle: IndicatorInfo? = nil) {
         let input = ViewModel.Input(dataSource: dataSource,
                                     type: type,
                                     includeReplies: includeReplies,

@@ -8,8 +8,8 @@
 
 import FloatingPanel
 
-public class ReactionGenPanel: FloatingPanelController, ReactionGenViewControllerDelegate {
-    public override func viewDidLoad() {
+class ReactionGenPanel: FloatingPanelController, ReactionGenViewControllerDelegate {
+    override func viewDidLoad() {
         super.viewDidLoad()
         
         surfaceView.cornerRadius = 12
@@ -18,19 +18,19 @@ public class ReactionGenPanel: FloatingPanelController, ReactionGenViewControlle
     
     // MARK: ReactionGenViewControllerDelegate
     
-    public func scrollUp() {
+    func scrollUp() {
         move(to: .full, animated: true)
     }
 }
 
 // MARK: Layout
 
-public class MissCatFloatingPanelLayout: FloatingPanelLayout {
-    public var initialPosition: FloatingPanelPosition {
+class MissCatFloatingPanelLayout: FloatingPanelLayout {
+    var initialPosition: FloatingPanelPosition {
         return .half
     }
     
-    public func insetFor(position: FloatingPanelPosition) -> CGFloat? {
+    func insetFor(position: FloatingPanelPosition) -> CGFloat? {
         switch position {
         case .full: return 16.0 // A top inset from safe area
         case .half: return 330 // A bottom inset from the safe area
@@ -39,13 +39,13 @@ public class MissCatFloatingPanelLayout: FloatingPanelLayout {
         }
     }
     
-    public func backdropAlphaFor(position: FloatingPanelPosition) -> CGFloat {
+    func backdropAlphaFor(position: FloatingPanelPosition) -> CGFloat {
         return 0.5
     }
 }
 
-public class MissCatFloatingPanelStocksBehavior: FloatingPanelBehavior {
-    public func shouldProjectMomentum(_ fpc: FloatingPanelController, for proposedTargetPosition: FloatingPanelPosition) -> Bool {
+class MissCatFloatingPanelStocksBehavior: FloatingPanelBehavior {
+    func shouldProjectMomentum(_ fpc: FloatingPanelController, for proposedTargetPosition: FloatingPanelPosition) -> Bool {
         return true
     }
 }

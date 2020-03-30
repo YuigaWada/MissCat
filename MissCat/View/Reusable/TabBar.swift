@@ -8,14 +8,14 @@
 
 import UIKit
 
-public enum TabKind {
+enum TabKind {
     case home
     case notifications
     case fav
     case profile
 }
 
-public protocol FooterTabBarDelegate {
+protocol FooterTabBarDelegate {
     var storyboard: UIStoryboard? { get }
     
     func tappedHome()
@@ -28,7 +28,7 @@ public protocol FooterTabBarDelegate {
     func dismiss(animated flag: Bool, completion: (() -> Void)?)
 }
 
-public class FooterTabBar: UIView {
+class FooterTabBar: UIView {
     @IBOutlet weak var homeButton: UIButton!
     @IBOutlet weak var notificationButton: UIButton!
     @IBOutlet weak var postButton: UIButton!
@@ -37,8 +37,8 @@ public class FooterTabBar: UIView {
     
     @IBOutlet weak var postBottonFrame: UIView!
     
-    public var delegate: FooterTabBarDelegate?
-    public var selected: TabKind = .home {
+    var delegate: FooterTabBarDelegate?
+    var selected: TabKind = .home {
         willSet(new) {
             self.lightupButton(old: selected, new)
         }
@@ -56,26 +56,26 @@ public class FooterTabBar: UIView {
         loadNib()
     }
     
-    public func loadNib() {
+    func loadNib() {
         if let view = UINib(nibName: "TabBar", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
             addSubview(view)
         }
     }
     
-    public override func layoutSubviews() {
+    override func layoutSubviews() {
         super.layoutSubviews()
         setupComponents()
     }
     
-    public override func draw(_ rect: CGRect) {
+    override func draw(_ rect: CGRect) {
         super.draw(rect)
         postBottonFrame.layer.cornerRadius = postBottonFrame.frame.height / 2
     }
     
     // MARK: Setup
     
-    public func setupComponents() {
+    func setupComponents() {
         let fontSize: CGFloat = 20.0
         
         homeButton.titleLabel?.font = .awesomeSolid(fontSize: fontSize)

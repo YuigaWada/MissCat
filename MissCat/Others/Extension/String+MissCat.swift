@@ -90,7 +90,7 @@ extension String {
     }
     
     // ISO 8601形式のdateを "○m", "◯s" 形式に変換する
-    public func calculateAgo() -> String {
+    func calculateAgo() -> String {
         let date = self
         
         let iso8601formatter = ISO8601DateFormatter()
@@ -105,7 +105,7 @@ extension String {
     }
     
     // userIdに対して自分かどうかcheck
-    public func isMe(completion: @escaping (Bool) -> Void) {
+    func isMe(completion: @escaping (Bool) -> Void) {
         guard let currentUserId = Cache.UserDefaults.shared.getCurrentLoginedUserId(), !currentUserId.isEmpty else {
             Cache.shared.getMe { me in
                 guard let me = me else { return }
@@ -121,7 +121,7 @@ extension String {
     }
     
     // HyperLinkを用途ごとに捌く
-    public func analyzeHyperLink() -> (linkType: String, value: String) {
+    func analyzeHyperLink() -> (linkType: String, value: String) {
         let magicHeaders = ["http://tapevents.misscat/": "User", "http://hashtags.misscat/": "Hashtag"]
         var result = (linkType: "URL", value: self)
         

@@ -9,12 +9,12 @@
 import RxSwift
 import UIKit
 
-public protocol NavBarDelegate {
+protocol NavBarDelegate {
     func tappedLeftNavButton()
     func tappedRightNavButton()
 }
 
-public class NavBar: UIView {
+class NavBar: UIView {
     @IBOutlet weak var titleLabel: UILabel!
     
     @IBOutlet weak var leftButton: UIButton!
@@ -22,8 +22,8 @@ public class NavBar: UIView {
     
     private let disposeBag = DisposeBag()
     
-    public var delegate: NavBarDelegate?
-    public var barTitle: String? {
+    var delegate: NavBarDelegate?
+    var barTitle: String? {
         didSet {
             self.titleLabel.text = self.barTitle
         }
@@ -41,21 +41,21 @@ public class NavBar: UIView {
         loadNib()
     }
     
-    public func loadNib() {
+    func loadNib() {
         if let view = UINib(nibName: "NavBar", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
             addSubview(view)
         }
     }
     
-    public override func layoutSubviews() {
+    override func layoutSubviews() {
         super.layoutSubviews()
         
         setupGesture()
     }
     
     // Public Methods
-    public func setButton(style: NavBar.Button, rightText: String? = nil, leftText: String? = nil, rightFont: UIFont? = nil, leftFont: UIFont? = nil) {
+    func setButton(style: NavBar.Button, rightText: String? = nil, leftText: String? = nil, rightFont: UIFont? = nil, leftFont: UIFont? = nil) {
         // isHidden
         rightButton.isHidden = false
         leftButton.isHidden = false
@@ -105,7 +105,7 @@ public class NavBar: UIView {
 }
 
 extension NavBar {
-    public enum Button {
+    enum Button {
         case Right
         case Left
         case Both

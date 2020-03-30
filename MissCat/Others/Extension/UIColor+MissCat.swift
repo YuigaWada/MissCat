@@ -21,7 +21,7 @@ extension UIColor {
         self.init(hex: hex, alpha: 1.0)
     }
     
-    public func toUInt32() -> UInt32 {
+    func toUInt32() -> UInt32 {
         let color = self
         // read colors to CGFloats and convert and position to proper bit positions in UInt32
         var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0

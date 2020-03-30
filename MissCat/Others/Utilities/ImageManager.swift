@@ -13,7 +13,7 @@ import UIKit
 
 // cf. https://qiita.com/KosukeOhmura/items/b5986bfe9a8b6778ffc8
 // Thanks for @KosukeOhmura.
-public class ImageManager {
+class ImageManager {
     // 権限確認 -> 選択された画像のストリーム
     func pick(on viewController: UIViewController, sourceType: UIImagePickerController.SourceType) -> Observable<Result<UIImage, Error>> {
         return authorizedSourceType(sourceType)

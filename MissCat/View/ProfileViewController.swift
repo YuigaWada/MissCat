@@ -12,7 +12,7 @@ import UIKit
 import XLPagerTabStrip
 
 private typealias ViewModel = ProfileViewModel
-public class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDelegate {
+class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDelegate {
     private let disposeBag = DisposeBag()
     private var blurAnimator: UIViewPropertyAnimator?
     
@@ -37,7 +37,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
     @IBOutlet weak var settingsButton: UIButton!
     @IBOutlet weak var containerHeightContraint: NSLayoutConstraint!
     
-    public var homeViewController: HomeViewController?
+    var homeViewController: HomeViewController?
     
     private var userId: String?
     private var scrollBegining: CGFloat = 0
@@ -58,7 +58,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
     
     // MARK: Life Cycle
     
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         viewModel.setUserId(userId ?? "", isMe: isMe)
         setupTabStyle()
         
@@ -72,7 +72,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
         containerScrollView.contentInsetAdjustmentBehavior = .never
     }
     
-    public override func viewWillLayoutSubviews() {
+    override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         
         layoutIfNeeded(to: [iconImageView])
@@ -81,21 +81,21 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
         containerHeightContraint.constant = 2 * view.frame.height - (view.frame.height - containerScrollView.frame.origin.y)
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         navigationController?.setNavigationBarHidden(true, animated: animated)
         childVCs.forEach { $0.homeViewController = homeViewController }
     }
     
-    public override func viewDidLayoutSubviews() {
+    override func viewDidLayoutSubviews() {
         introTextView.renderViewStrings()
         introTextView.transformText()
         
         super.viewDidLayoutSubviews()
     }
     
-    public override func viewDidAppear(_ animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if blurAnimator == nil { setBlurAnimator() }
     }
@@ -132,7 +132,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
     
     // MARK: Public Methods
     
-    public func setUserId(_ userId: String, isMe: Bool) {
+    func setUserId(_ userId: String, isMe: Bool) {
         self.userId = userId
         self.isMe = isMe
     }
@@ -286,7 +286,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
     
     // MARK: UITextViewDelegate
     
-    public func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+    func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
         tappedLink(text: URL.absoluteString)
         return false
     }
@@ -316,7 +316,7 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
     
     // MARK: XLPagerTabStrip
     
-    public override func viewControllers(for pagerTabStripController: PagerTabStripViewController) -> [UIViewController] {
+    override func viewControllers(for pagerTabStripController: PagerTabStripViewController) -> [UIViewController] {
         return getChildVC()
     }
     
@@ -379,14 +379,14 @@ public class ProfileViewController: ButtonBarPagerTabStripViewController, UIText
     
     // MARK: Scrolling...
     
-    public override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+    override func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         super.scrollViewWillBeginDragging(scrollView) // XLPagerTabStripの処理
         
         scrollBegining = scrollView.contentOffset.y
     }
     
     // 二重構造になっているユーザー画面のScrollViewのスクロールを制御する
-    public override func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    override func scrollViewDidScroll(_ scrollView: UIScrollView) {
         super.scrollViewDidScroll(scrollView) // XLPagerTabStripの処理
         
         let scroll = scrollView.contentOffset.y - scrollBegining

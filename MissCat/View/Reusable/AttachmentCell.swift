@@ -15,7 +15,7 @@ class AttachmentCell: UICollectionViewCell {
     @IBOutlet weak var discardButton: UIButton!
     
     let tapGesture = UITapGestureRecognizer()
-    public lazy var tappedImage: Observable<String> = {
+    lazy var tappedImage: Observable<String> = {
         Observable.create { observer in
             
             self.imageView.setTapGesture(self.disposeBag) {
@@ -26,7 +26,7 @@ class AttachmentCell: UICollectionViewCell {
         }
     }()
     
-    public lazy var tappedDiscardButton: Observable<String> = {
+    lazy var tappedDiscardButton: Observable<String> = {
         Observable.create { observer in
             
             self.discardButton.rx.tap.subscribe { _ in
@@ -40,13 +40,13 @@ class AttachmentCell: UICollectionViewCell {
     private var disposeBag: DisposeBag = .init()
     private var id: String = ""
     
-    public override func layoutSubviews() {
+    override func layoutSubviews() {
         super.layoutSubviews()
         
         setupComponent()
     }
     
-    public func setupComponent() {
+    func setupComponent() {
         contentMode = .left
         
         // imageView / discardButtonの上にcontentViewが掛かっているのでUserInteractionをfalseにする
@@ -71,7 +71,7 @@ class AttachmentCell: UICollectionViewCell {
         }
     }
     
-    public func setupCell(_ attachment: PostViewController.Attachments) -> AttachmentCell {
+    func setupCell(_ attachment: PostViewController.Attachments) -> AttachmentCell {
         imageView.image = attachment.image
         id = attachment.id
         

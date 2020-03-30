@@ -12,7 +12,7 @@ import RxSwift
 
 // MARK: ENUM
 
-public enum TimelineType {
+enum TimelineType {
     case Home
     case Local
     case Global
@@ -68,13 +68,13 @@ class TimelineModel {
         case NotesEmpty
     }
     
-    public lazy var trigger: Trigger = .init(removeTargetTrigger: self.removeTargetTrigger,
-                                             updateReactionTrigger: self.updateReactionTrigger)
+    lazy var trigger: Trigger = .init(removeTargetTrigger: self.removeTargetTrigger,
+                                      updateReactionTrigger: self.updateReactionTrigger)
     
-    public let removeTargetTrigger: PublishSubject<String> = .init() // arg: noteId
-    public let updateReactionTrigger: PublishSubject<UpdateReaction> = .init()
+    let removeTargetTrigger: PublishSubject<String> = .init() // arg: noteId
+    let updateReactionTrigger: PublishSubject<UpdateReaction> = .init()
     
-    public var initialNoteIds: [String] = []
+    var initialNoteIds: [String] = []
     private var capturedNoteIds: [String] = []
     
     private var type: TimelineType = .Home
@@ -117,7 +117,7 @@ class TimelineModel {
     
     // MARK: REST API
     
-    public func loadNotes(with option: LoadOption) -> Observable<NoteCell.Model> {
+    func loadNotes(with option: LoadOption) -> Observable<NoteCell.Model> {
         let dispose = Disposables.create()
         let isReload = option.isReload && (option.lastNoteId != nil)
         
@@ -211,7 +211,7 @@ class TimelineModel {
     
     // MARK: Streaming API
     
-    public func connectStream(type: TimelineType, isReconnection reconnect: Bool = false) -> Observable<NoteCell.Model> { // streamingのresponseを捌くのはhandleStreamで行う
+    func connectStream(type: TimelineType, isReconnection reconnect: Bool = false) -> Observable<NoteCell.Model> { // streamingのresponseを捌くのはhandleStreamで行う
         let dipose = Disposables.create()
         var isReconnection = reconnect
         self.type = type
@@ -319,7 +319,7 @@ class TimelineModel {
     }
     
     // MisskeyKitのNoteModelをNoteCell.Modelに変換する
-    public func getCellsModel(_ post: NoteModel, withRN: Bool = false) -> [NoteCell.Model]? {
+    func getCellsModel(_ post: NoteModel, withRN: Bool = false) -> [NoteCell.Model]? {
         var cellsModel: [NoteCell.Model] = []
         
         if let reply = post.reply { // リプライ対象も表示する
@@ -339,13 +339,13 @@ class TimelineModel {
         return cellsModel.count > 0 ? cellsModel : nil
     }
     
-    public func vote(choice: Int, to noteId: String) {
+    func vote(choice: Int, to noteId: String) {
         MisskeyKit.notes.vote(noteId: noteId, choice: choice, result: { _, _ in
             //            print(error)
         })
     }
     
-    public func renote(noteId: String) {
+    func renote(noteId: String) {
         MisskeyKit.notes.renote(renoteId: noteId) { _, _ in
             //            print(error)
         }

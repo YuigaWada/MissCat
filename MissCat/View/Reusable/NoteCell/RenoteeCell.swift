@@ -8,7 +8,7 @@
 
 import UIKit
 
-public class RenoteeCell: UITableViewCell {
+class RenoteeCell: UITableViewCell {
     @IBOutlet weak var renoteMarkLabel: UILabel!
     @IBOutlet weak var renoteeLabel: UILabel!
     
@@ -19,7 +19,7 @@ public class RenoteeCell: UITableViewCell {
         }
     }
     
-    public override func layoutSubviews() {
+    override func layoutSubviews() {
         setupComponent()
     }
     
@@ -27,7 +27,7 @@ public class RenoteeCell: UITableViewCell {
         renoteMarkLabel.font = .awesomeSolid(fontSize: 15.0)
     }
     
-    public func setRenotee(_ renotee: String?) {
+    func setRenotee(_ renotee: String?) {
         self.renotee = renotee
     }
 }

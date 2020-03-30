@@ -10,32 +10,32 @@ import Gifu
 import RxSwift
 import UIKit
 
-public protocol ReactionCellDelegate {
+protocol ReactionCellDelegate {
     func tappedReaction(noteId: String, reaction: String, isRegister: Bool) // isRegister: リアクションを「登録」するのか「取り消す」のか
 }
 
-public class ReactionCell: UICollectionViewCell {
+class ReactionCell: UICollectionViewCell {
     @IBOutlet weak var reactionCounterLabel: UILabel!
     @IBOutlet weak var defaultEmojiLabel: UILabel!
     @IBOutlet weak var customEmojiView: GIFImageView!
     
     private let disposeBag = DisposeBag()
     
-    public var selectedBackGroundColor = UIColor(hex: "EE7258")
-    public var nonselectedBackGroundColor = UIColor(hex: "C6C6C6")
+    var selectedBackGroundColor = UIColor(hex: "EE7258")
+    var nonselectedBackGroundColor = UIColor(hex: "C6C6C6")
     
-    public var selectedTextColor = UIColor.white
-    public var nonselectedTextColor = UIColor(hex: "666666")
+    var selectedTextColor = UIColor.white
+    var nonselectedTextColor = UIColor(hex: "666666")
     
     private var isMyReaction: Bool = false
     private var rawReaction: String?
     private var noteId: String?
     
-    public var delegate: ReactionCellDelegate?
+    var delegate: ReactionCellDelegate?
     
     // MARK: Life Cycle
     
-    public override func layoutSubviews() {
+    override func layoutSubviews() {
         super.layoutSubviews()
         changeColor(isMyReaction: isMyReaction)
     }
@@ -66,7 +66,7 @@ public class ReactionCell: UICollectionViewCell {
         view.addGestureRecognizer(tapGesture)
     }
     
-    public func setup(noteId: String?, count: String, defaultEmoji: String? = nil, customEmoji: String? = nil, rawDefaultEmoji: String? = nil, isMyReaction: Bool, rawReaction: String) {
+    func setup(noteId: String?, count: String, defaultEmoji: String? = nil, customEmoji: String? = nil, rawDefaultEmoji: String? = nil, isMyReaction: Bool, rawReaction: String) {
         self.isMyReaction = isMyReaction
         self.rawReaction = rawReaction
         self.noteId = noteId ?? ""
@@ -94,7 +94,7 @@ public class ReactionCell: UICollectionViewCell {
         }
     }
     
-    public func setGradation(view: UIView) {
+    func setGradation(view: UIView) {
         let gradientLayer = CAGradientLayer()
         gradientLayer.colors = [UIColor.darkGray.cgColor, UIColor.lightGray.cgColor]
         gradientLayer.frame.size = view.frame.size
@@ -104,7 +104,7 @@ public class ReactionCell: UICollectionViewCell {
     }
     
     /// 色の変更をUIに反映させる
-    public func updateColor() {
+    func updateColor() {
         changeColor(isMyReaction: isMyReaction)
     }
     

@@ -9,19 +9,19 @@
 import MisskeyKit
 import RxSwift
 
-public class NotificationsViewModel {
-    public let notes: PublishSubject<[NotificationCell.Section]> = .init()
-    public var dataSource: NotificationDataSource?
-    public var cellCount: Int { return cellsModel.count }
+class NotificationsViewModel {
+    let notes: PublishSubject<[NotificationCell.Section]> = .init()
+    var dataSource: NotificationDataSource?
+    var cellCount: Int { return cellsModel.count }
     
     private var hasReactionGenCell: Bool = false
-    public var cellsModel: [NotificationCell.Model] = []
+    var cellsModel: [NotificationCell.Model] = []
     
     private lazy var model = NotificationsModel()
     
     init(disposeBag: DisposeBag) {}
     
-    public func initialLoad() {
+    func initialLoad() {
         loadNotification {
             // 読み込み完了後、Viewに伝達 & Streamingに接続
             self.update(new: self.cellsModel)
@@ -29,7 +29,7 @@ public class NotificationsViewModel {
         }
     }
     
-    public func loadUntilNotification(completion: (() -> Void)? = nil) {
+    func loadUntilNotification(completion: (() -> Void)? = nil) {
         let untilId = cellsModel[cellsModel.count - 1].notificationId
         
         loadNotification(untilId: untilId) {
@@ -38,7 +38,7 @@ public class NotificationsViewModel {
         }
     }
     
-    public func loadNotification(untilId: String? = nil, completion: (() -> Void)? = nil) {
+    func loadNotification(untilId: String? = nil, completion: (() -> Void)? = nil) {
         model.loadNotification(untilId: untilId) { results in
             guard let results = results else { return }
             

@@ -15,7 +15,7 @@ import SkeletonView
 import UIKit
 import WebKit
 
-public protocol NoteCellDelegate {
+protocol NoteCellDelegate {
     func tappedReply(note: NoteCell.Model)
     func tappedRenote(note: NoteCell.Model)
     func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool)
@@ -35,14 +35,14 @@ public protocol NoteCellDelegate {
 private typealias ViewModel = NoteCellViewModel
 typealias ReactionsDataSource = RxCollectionViewSectionedReloadDataSource<NoteCell.Reaction.Section>
 
-public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICollectionViewDelegate, ComponentType {
-    public struct Arg {
+class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICollectionViewDelegate, ComponentType {
+    struct Arg {
         var item: NoteCell.Model
         var isDetailMode: Bool = false
         var delegate: NoteCellDelegate?
     }
     
-    public typealias Transformed = NoteCell
+    typealias Transformed = NoteCell
     
     // MARK: IBOutlet (UIView)
     
@@ -83,16 +83,16 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     // MARK: Public Var
     
-    public var delegate: NoteCellDelegate? {
+    var delegate: NoteCellDelegate? {
         didSet {
             guard let commentRenoteView = commentRenoteView else { return }
             commentRenoteView.delegate = delegate
         }
     }
     
-    public var noteId: String?
-    public var userId: String?
-    public var iconImageUrl: String?
+    var noteId: String?
+    var userId: String?
+    var iconImageUrl: String?
     
     // MARK: Private Var
     
@@ -121,7 +121,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     // MARK: Life Cycle
     
-    public override func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {
+    override func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {
         contentView.bounds.size = targetSize
         contentView.layoutIfNeeded()
         return super.systemLayoutSizeFitting(targetSize,
@@ -129,12 +129,12 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
                                              verticalFittingPriority: verticalFittingPriority)
     }
     
-    public override func awakeFromNib() {
+    override func awakeFromNib() {
         super.awakeFromNib()
         setupView()
     }
     
-    public override func layoutSubviews() {
+    override func layoutSubviews() {
         super.layoutSubviews()
         setupView()
         setupComponents()
@@ -353,7 +353,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     // MARK: Public Methods
     
-    public func transform(with arg: Arg) -> NoteCell {
+    func transform(with arg: Arg) -> NoteCell {
         setupView()
         
         let item = arg.item
@@ -577,7 +577,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
     
     // MARK: DELEGATE
     
-    public func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+    func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
         if let delegate = delegate {
             delegate.tappedLink(text: URL.absoluteString)
         }
@@ -585,7 +585,7 @@ public class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate
         return false
     }
     
-    public func tappedReaction(noteId: String, reaction: String, isRegister: Bool) {
+    func tappedReaction(noteId: String, reaction: String, isRegister: Bool) {
         guard let viewModel = viewModel else { return }
         
         if isRegister {

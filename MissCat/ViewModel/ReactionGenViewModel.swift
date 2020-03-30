@@ -24,7 +24,7 @@ class ReactionGenViewModel: ViewModelType {
     struct State {}
     
     private let input: Input
-    public lazy var output: Output = {
+    lazy var output: Output = {
         let presets = model.getPresets()
         let favorites = [ReactionGenViewController.EmojisSection(items: presets)]
         
@@ -40,9 +40,9 @@ class ReactionGenViewModel: ViewModelType {
     
     private var searched: [EmojiView.EmojiModel] = []
     
-    public var dataSource: EmojisDataSource?
-    public var targetNoteId: String?
-    public var hasMarked: Bool { // リアクションが登録されているか?
+    var dataSource: EmojisDataSource?
+    var targetNoteId: String?
+    var hasMarked: Bool { // リアクションが登録されているか?
         return myReaction != nil
     }
     
@@ -61,7 +61,7 @@ class ReactionGenViewModel: ViewModelType {
     
     // MARK: Publics
     
-    public func setEmojiModel(completion: (() -> Void)? = nil) {
+    func setEmojiModel(completion: (() -> Void)? = nil) {
         guard !isLoading else { return }
         
         model.getEmojiModel().subscribe(onNext: { emojis in
@@ -75,12 +75,12 @@ class ReactionGenViewModel: ViewModelType {
         }).disposed(by: disposeBag)
     }
     
-    public func checkHeader(index: Int) -> Bool {
+    func checkHeader(index: Int) -> Bool {
         guard searched.count == 0 else { return false } // 検索時はヘッダーなし
         return emojisList[index] is EmojiViewHeader
     }
     
-    public func registerReaction(noteId: String, reaction: String) {
+    func registerReaction(noteId: String, reaction: String) {
         model.registerReaction(noteId: noteId, reaction: reaction) { success in
             guard success else { return }
             
@@ -88,7 +88,7 @@ class ReactionGenViewModel: ViewModelType {
         }
     }
     
-    public func cancelReaction(noteId: String) {
+    func cancelReaction(noteId: String) {
         model.cancelReaction(noteId: noteId) { success in
             guard success else { return }
             

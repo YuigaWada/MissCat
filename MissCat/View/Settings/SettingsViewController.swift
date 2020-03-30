@@ -8,7 +8,7 @@
 
 import UIKit
 
-public class SettingsViewController: UITableViewController {
+class SettingsViewController: UITableViewController {
     // MARK: LifeCycle
     
     @IBOutlet weak var accountIcon: UILabel!
@@ -18,14 +18,14 @@ public class SettingsViewController: UITableViewController {
     @IBOutlet weak var catIcon: UILabel!
     @IBOutlet weak var licenseIcon: UILabel!
     
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         
         tableView.delegate = self
         setFont()
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
     }
@@ -40,18 +40,18 @@ public class SettingsViewController: UITableViewController {
     
     // MARK: TableViewDelegate
     
-    public override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+    override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 60
     }
     
-    public override func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
+    override func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
         view.tintColor = .clear
         
         guard let header = view as? UITableViewHeaderFooterView else { return }
         header.textLabel?.text = "MissCat"
     }
     
-    public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let index = indexPath.row
         
         if index == 1 || index == 2 {

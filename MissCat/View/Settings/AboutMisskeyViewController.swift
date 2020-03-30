@@ -11,7 +11,7 @@ import RxSwift
 import SafariServices
 import UIKit
 
-public class AboutMisskeyViewController: UIViewController {
+class AboutMisskeyViewController: UIViewController {
     @IBOutlet weak var backButton: UIButton!
     
     @IBOutlet weak var logoImageView: UIImageView!
@@ -38,14 +38,14 @@ public class AboutMisskeyViewController: UIViewController {
     
     // MARK: LifeCycle
     
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         setGradientLayer()
         setComponents()
         binding()
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
         
@@ -54,7 +54,7 @@ public class AboutMisskeyViewController: UIViewController {
         }
     }
     
-    public override func viewDidAppear(_ animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         guard initialAppearing else { super.viewDidAppear(animated); return }
         summon(after: false)
         super.viewDidAppear(animated)

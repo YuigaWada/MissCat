@@ -27,9 +27,9 @@ class PostViewModel: ViewModelType {
     struct State {}
     
     private var input: Input
-    public lazy var output: Output = .init(iconImage: self.iconImage.asDriver(onErrorJustReturn: UIImage()),
-                                           isSuccess: self.isSuccess.asDriver(onErrorJustReturn: false),
-                                           attachments: self.attachments)
+    lazy var output: Output = .init(iconImage: self.iconImage.asDriver(onErrorJustReturn: UIImage()),
+                                    isSuccess: self.isSuccess.asDriver(onErrorJustReturn: false),
+                                    attachments: self.attachments)
     
     private class AttachmentFile {
         fileprivate let id: String = UUID().uuidString
@@ -88,7 +88,7 @@ class PostViewModel: ViewModelType {
     
     // MARK: Publics
     
-    public func submitNote(_ note: String) {
+    func submitNote(_ note: String) {
         let renoteId = input.type == .CommentRenote ? input.targetNote?.noteId : nil
         let replyId = input.type == .Reply ? input.targetNote?.noteId : nil
         
@@ -102,9 +102,9 @@ class PostViewModel: ViewModelType {
         }
     }
     
-    public func getLocation() {}
+    func getLocation() {}
     
-    public func uploadFiles(completion: @escaping ([String]) -> Void) {
+    func uploadFiles(completion: @escaping ([String]) -> Void) {
         if hasVideoAttachment {
             uploadVideo(completion: completion)
         } else {
@@ -113,7 +113,7 @@ class PostViewModel: ViewModelType {
     }
     
     // 画像をスタックさせておいて、アップロードは直前に
-    public func stackFile(original: UIImage, edited: UIImage) {
+    func stackFile(original: UIImage, edited: UIImage) {
         guard !hasVideoAttachment else { return } // 写真と動画は共存させないように
         let targetImage = AttachmentFile(originalImage: original, image: edited, order: attachmentFiles.count + 1)
         
@@ -121,7 +121,7 @@ class PostViewModel: ViewModelType {
         addAttachmentView(targetImage)
     }
     
-    public func stackFile(videoUrl: URL) {
+    func stackFile(videoUrl: URL) {
         guard attachmentFiles.count == 0 else { return } // 動画は1つまで
         let targetVideo = AttachmentFile(videoPath: videoUrl)
         
@@ -131,7 +131,7 @@ class PostViewModel: ViewModelType {
         hasVideoAttachment = true
     }
     
-    public func removeAttachmentView(_ id: String) {
+    func removeAttachmentView(_ id: String) {
         for index in 0 ..< attachmentsLists.count {
             let attachment = attachmentsLists[index]
             
@@ -144,7 +144,7 @@ class PostViewModel: ViewModelType {
         attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
     }
     
-    public func changeImageNsfwState() {
+    func changeImageNsfwState() {
         let currentState = isNsfw
         attachmentFiles = attachmentFiles.map { $0.changeNsfwState(!currentState) }
         attachmentsLists = attachmentsLists.map { $0.changeNsfwState(!currentState) }

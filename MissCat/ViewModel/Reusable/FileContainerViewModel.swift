@@ -8,20 +8,20 @@
 
 import RxSwift
 
-public class FileContainerViewModel: ViewModelType {
+class FileContainerViewModel: ViewModelType {
     // MARK: IO
     
     struct Input {}
     
-    public struct Output {
+    struct Output {
         let files: PublishSubject<[FileContainer.Section]> = .init()
     }
     
     struct State {}
     
-    public let output: Output = .init()
+    let output: Output = .init()
     
-    public var fileModel: [FileContainer.Model] = []
+    var fileModel: [FileContainer.Model] = []
     
     private let disposeBag: DisposeBag
     
@@ -32,7 +32,7 @@ public class FileContainerViewModel: ViewModelType {
     }
     
     /// モデルをsetする
-    public func setFileModel(with arg: FileContainer.Arg) {
+    func setFileModel(with arg: FileContainer.Arg) {
         guard arg.fileVisible else { return }
         
         let files = arg.files
@@ -57,14 +57,14 @@ public class FileContainerViewModel: ViewModelType {
         updateFiles(new: fileModel)
     }
     
-    public func initialize() {
+    func initialize() {
         fileModel = []
         updateFiles(new: fileModel)
     }
     
     /// ファイルの種類を識別する
     /// - Parameter type: MIME Type
-    public func checkFileType(_ type: String?) -> FileType {
+    func checkFileType(_ type: String?) -> FileType {
         guard let type = type else { return .Unknown }
         
         if type.contains("video") {

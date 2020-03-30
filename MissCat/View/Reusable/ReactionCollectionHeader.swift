@@ -8,10 +8,10 @@
 
 import UIKit
 
-public class ReactionCollectionHeader: UICollectionViewCell {
+class ReactionCollectionHeader: UICollectionViewCell {
     @IBOutlet weak var headerTitleLabel: UILabel!
     
-    public func setTitle(_ name: String) {
+    func setTitle(_ name: String) {
         headerTitleLabel.text = name
     }
 }

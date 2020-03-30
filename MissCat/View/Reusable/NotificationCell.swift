@@ -11,7 +11,7 @@ import RxDataSources
 import RxSwift
 import UIKit
 
-public class NotificationCell: UITableViewCell, UITextViewDelegate {
+class NotificationCell: UITableViewCell, UITextViewDelegate {
     @IBOutlet weak var iconImageView: UIImageView!
     
     @IBOutlet weak var nameTextView: MisskeyTextView!
@@ -24,7 +24,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
     @IBOutlet weak var typeLabel: UILabel!
     @IBOutlet weak var defaultNoteBottomConstraint: NSLayoutConstraint!
     
-    public var delegate: NoteCellDelegate?
+    var delegate: NoteCellDelegate?
     
     private let viewModel = NotificationCellViewModel()
     private lazy var emojiView = self.generateEmojiView()
@@ -36,7 +36,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
     private var emojiViewOnView: Bool = false
     private var disposeBag = DisposeBag()
     
-    public override func layoutSubviews() {
+    override func layoutSubviews() {
         super.layoutSubviews()
         setupComponents()
         nameTextView.transformText()
@@ -57,7 +57,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         emojiViewOnView = true
     }
     
-    public func initialize() {
+    func initialize() {
         iconImageView.image = nil
         agoLabel.text = nil
         noteView.attributedText = nil
@@ -73,7 +73,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
         followButton.isHidden = true
     }
     
-    public func shapeCell(item: NotificationCell.Model) -> NotificationCell {
+    func shapeCell(item: NotificationCell.Model) -> NotificationCell {
         if !item.isMock, item.fromUser?.username == nil {
             return self
         }
@@ -198,7 +198,7 @@ public class NotificationCell: UITableViewCell, UITextViewDelegate {
 // MARK: NotificationCell.Model
 
 extension NotificationCell {
-    public class Model: IdentifiableType, Equatable {
+    class Model: IdentifiableType, Equatable {
         internal init(isMock: Bool = false, notificationId: String, type: ActionType = .reply, shapedDisplayName: MFMString? = nil, myNote: NoteCell.Model?, replyNote: NoteCell.Model?, fromUser: UserModel?, reaction: String?, ago: String) {
             self.isMock = isMock
             self.notificationId = notificationId
@@ -211,8 +211,8 @@ extension NotificationCell {
             self.ago = ago
         }
         
-        public typealias Identity = String
-        public let identity: String = String(Float.random(in: 1 ..< 100))
+        typealias Identity = String
+        let identity: String = String(Float.random(in: 1 ..< 100))
         
         var isMock: Bool = false
         
@@ -231,25 +231,25 @@ extension NotificationCell {
         
         let ago: String
         
-        public static func == (lhs: NotificationCell.Model, rhs: NotificationCell.Model) -> Bool {
+        static func == (lhs: NotificationCell.Model, rhs: NotificationCell.Model) -> Bool {
             return lhs.identity == rhs.identity
         }
     }
     
-    public struct Section {
-        public var items: [Model]
+    struct Section {
+        var items: [Model]
     }
 }
 
 extension NotificationCell.Section: AnimatableSectionModelType {
-    public typealias Item = NotificationCell.Model
-    public typealias Identity = String
+    typealias Item = NotificationCell.Model
+    typealias Identity = String
     
-    public var identity: String {
+    var identity: String {
         return ""
     }
     
-    public init(original: NotificationCell.Section, items: [NotificationCell.Model]) {
+    init(original: NotificationCell.Section, items: [NotificationCell.Model]) {
         self = original
         self.items = items
     }

@@ -16,16 +16,9 @@ import UIKit
 // **    方針    **
 // 基本的にはMVVMパターンを採用し、View / UIViewControllerの管理はこのHomeViewControllerが行う。
 // 上タブ管理はBGで動いている親クラスのPolioPagerが行い、下タブ管理はHomeViewControllerが自前で行う。
+// 一時的なキャッシュ管理についてはsingletonのCacheクラスを使用
 
-// 各Timeline: それぞれのtimelineの情報をそれぞれのview上で行う / Streamingは"hogehoge timeline"チャンネルを通す。
-//  | ← 上タブ管理
-// HomeViewController: 上下のタブを管理し、すべてのViewはこのvc上で動かす ＝ 画面遷移はすべてこのVCに委譲する
-//  | ← 通知のバインディング
-// NotificationsViewController: 通知を管理 / Streamingは"main"チャンネルを通す / UserDefaultsで最新通知のidを永続化
-
-// (OOPの対極的存在である)一時的なキャッシュ管理についてはsingletonのCacheクラスを使用。
-
-public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate, TimelineDelegate, NavBarDelegate, NoteCellDelegate, UIGestureRecognizerDelegate, UINavigationControllerDelegate {
+class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate {
     private var isXSeries = UIScreen.main.bounds.size.height > 811
     private let footerTabHeight: CGFloat = 55
     private var initialized: Bool = false
@@ -65,8 +58,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
     
     // MARK: Life Cycle
     
-    // 27929d28b8549999fe11dca576f92c6898561a651a8fd9f979f83c9b49b05703
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         needBorder = true
         selectedBarHeight = 2
         selectedBar.layer.cornerRadius = 2
@@ -84,7 +76,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         super.viewDidLoad()
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
         if !logined {
@@ -92,7 +84,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
-    public override func viewDidAppear(_ animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
         navigationController?.delegate = self
@@ -106,7 +98,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         initialized = true
     }
     
-    public override func viewDidLayoutSubviews() {
+    override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
         setupNotificationsVC() // 先にNotificationsVCをロードしておく → 通知のロードを裏で行う
@@ -114,7 +106,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         setupNavTab()
     }
     
-    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
     }
     
@@ -128,13 +120,13 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         theme.map { $0.general.background }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
         theme.map { $0.post.text }.subscribe(onNext: {
             self.navBar.titleLabel.textColor = $0
-         }).disposed(by: disposeBag)
+        }).disposed(by: disposeBag)
         theme.map { $0.post.text }.subscribe(onNext: {
             self.navBar.leftButton.setTitleColor($0, for: .normal)
         }).disposed(by: disposeBag)
         theme.map { $0.post.text }.subscribe(onNext: {
             self.navBar.rightButton.setTitleColor($0, for: .normal)
-           }).disposed(by: disposeBag)
+        }).disposed(by: disposeBag)
         
         Theme.shared.complete()
     }
@@ -223,103 +215,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         favViewController!.view.frame = getDisplayRect()
     }
     
-    // MARK: NoteCell Delegate
-    
-    public func tappedReply(note: NoteCell.Model) {
-        openPost(item: note, type: .Reply)
-    }
-    
-    public func tappedRenote(note: NoteCell.Model) {
-        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
-        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "Renote", awesomeIcon: "retweet", order: 0),
-                                                             .init(title: "引用Renote", awesomeIcon: "quote-right", order: 1)]
-        
-        panelMenu.setPanelTitle("Renote")
-        panelMenu.setupMenu(items: menuItems)
-        panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
-            guard order >= 0 else { return }
-            panelMenu.dismiss(animated: true, completion: nil)
-            
-            switch order {
-            case 0: // RN
-                guard let noteId = note.noteId else { return }
-                self.viewModel.renote(noteId: noteId)
-            case 1: // 引用RN
-                self.openPost(item: note, type: .CommentRenote)
-            default:
-                break
-            }
-         }).disposed(by: disposeBag)
-        
-        presentWithSemiModal(panelMenu, animated: true, completion: nil)
-    }
-    
-    public func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {}
-    
-    public func tappedOthers() {}
-    
-    public func move2PostDetail(item: NoteCell.Model) {
-        tappedCell(item: item)
-    }
-    
-    public func tappedLink(text: String) {
-        let (linkType, value) = text.analyzeHyperLink()
-        
-        switch linkType {
-        case "URL":
-            openLink(url: value)
-        case "User":
-            openUserPage(username: value)
-        default:
-            break
-        }
-    }
-    
-    public func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}
-    
-    public func vote(choice: Int, to noteId: String) {
-        // TODO: modelの変更 / api処理
-        viewModel.vote(choice: choice, to: noteId)
-    }
-    
-    public func playVideo(url: String) {
-        guard let url = URL(string: url) else { return }
-        let videoPlayer = AVPlayer(url: url)
-        let playerController = AVPlayerViewController()
-        playerController.player = videoPlayer
-        
-        present(playerController, animated: true, completion: {
-            videoPlayer.play()
-         })
-    }
-    
-    // MARK: FooterTab's Pages
-    
-    // 下タブに対応するViewControllerを操作するメソッド群
-    
-    private func showNotificationsView() {
-        guard let notificationsViewController = notificationsViewController else { return }
-        
-        navBar.isHidden = false
-        navBar.barTitle = "Notifications"
-        navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
-        
-        nowPage = .Notifications
-        notificationsViewController.view.isHidden = false
-    }
-    
-    public func showFavView() {
-        guard let favViewController = favViewController else { return }
-        
-        navBar.isHidden = false
-        navBar.barTitle = "Favorites"
-        navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
-        
-        nowPage = .Favorites
-        favViewController.view.isHidden = false
-    }
-    
-    // MARK: Other Pages
+    // MARK: Pages
     
     private func showPostDetailView(item: NoteCell.Model) {
         guard let storyboard = self.storyboard else { return }
@@ -426,7 +322,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
-    public func showNotificationBanner(icon: NotificationBanner.IconType, notification: String) {
+    func showNotificationBanner(icon: NotificationBanner.IconType, notification: String) {
         DispatchQueue.main.async {
             let bannerWidth = self.view.frame.width / 3
             
@@ -441,9 +337,95 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
-    // MARK: FooterTabBar Delegate
+    // MARK: PolioPager Delegate
     
-    public func tappedHome() {
+    override func tabItems() -> [TabItem] {
+        return [TabItem(title: "Home", backgroundColor: UIColor(hex: "ECECEC")),
+                TabItem(title: "Local", backgroundColor: UIColor(hex: "ECECEC")),
+                TabItem(title: "Global", backgroundColor: UIColor(hex: "ECECEC"))]
+    }
+    
+    override func viewControllers() -> [UIViewController] {
+        return [search, home, local, global]
+    }
+}
+
+// MARK: NoteCell Delegate
+
+extension HomeViewController: NoteCellDelegate {
+    func tappedReply(note: NoteCell.Model) {
+        openPost(item: note, type: .Reply)
+    }
+    
+    func tappedRenote(note: NoteCell.Model) {
+        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
+        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "Renote", awesomeIcon: "retweet", order: 0),
+                                                             .init(title: "引用Renote", awesomeIcon: "quote-right", order: 1)]
+        
+        panelMenu.setPanelTitle("Renote")
+        panelMenu.setupMenu(items: menuItems)
+        panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
+            guard order >= 0 else { return }
+            panelMenu.dismiss(animated: true, completion: nil)
+            
+            switch order {
+            case 0: // RN
+                guard let noteId = note.noteId else { return }
+                self.viewModel.renote(noteId: noteId)
+            case 1: // 引用RN
+                self.openPost(item: note, type: .CommentRenote)
+            default:
+                break
+            }
+       }).disposed(by: disposeBag)
+        
+        presentWithSemiModal(panelMenu, animated: true, completion: nil)
+    }
+    
+    func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {}
+    
+    func tappedOthers() {}
+    
+    func move2PostDetail(item: NoteCell.Model) {
+        tappedCell(item: item)
+    }
+    
+    func tappedLink(text: String) {
+        let (linkType, value) = text.analyzeHyperLink()
+        
+        switch linkType {
+        case "URL":
+            openLink(url: value)
+        case "User":
+            openUserPage(username: value)
+        default:
+            break
+        }
+    }
+    
+    func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}
+    
+    func vote(choice: Int, to noteId: String) {
+        // TODO: modelの変更 / api処理
+        viewModel.vote(choice: choice, to: noteId)
+    }
+    
+    func playVideo(url: String) {
+        guard let url = URL(string: url) else { return }
+        let videoPlayer = AVPlayer(url: url)
+        let playerController = AVPlayerViewController()
+        playerController.player = videoPlayer
+        
+        present(playerController, animated: true, completion: {
+            videoPlayer.play()
+       })
+    }
+}
+
+// MARK: FooterTabBar Delegate
+
+extension HomeViewController: FooterTabBarDelegate {
+    func tappedHome() {
         if nowPage != .Main {
             nowPage = .Main
             DispatchQueue.main.async { self.hideView(without: .Main) }
@@ -452,7 +434,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
-    public func tappedNotifications() {
+    func tappedNotifications() {
         guard let notificationsViewController = notificationsViewController else { return }
         
         if nowPage == .Notifications {
@@ -466,12 +448,12 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
-    public func tappedPost() {
+    func tappedPost() {
         nowPage = .Post
         move2ViewController(identifier: "post")
     }
     
-    public func tappedFav() {
+    func tappedFav() {
         if nowPage != .Favorites {
             DispatchQueue.main.async {
                 self.hideView(without: .Favorites)
@@ -481,7 +463,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
-    public func tappedProfile() {
+    func tappedProfile() {
         guard nowPage != .Profile else { return }
         
         Cache.shared.getMe { me in
@@ -493,9 +475,37 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
+    // MARK: FooterTab's Pages
+    
+    // 下タブに対応するViewControllerを操作するメソッド群
+    
+    private func showNotificationsView() {
+        guard let notificationsViewController = notificationsViewController else { return }
+        
+        navBar.isHidden = false
+        navBar.barTitle = "Notifications"
+        navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
+        
+        nowPage = .Notifications
+        notificationsViewController.view.isHidden = false
+    }
+    
+    func showFavView() {
+        guard let favViewController = favViewController else { return }
+        
+        navBar.isHidden = false
+        navBar.barTitle = "Favorites"
+        navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
+        
+        nowPage = .Favorites
+        favViewController.view.isHidden = false
+    }
+}
+
+extension HomeViewController: NavBarDelegate {
     // MARK: NavBar Delegate
     
-    public func tappedLeftNavButton() {
+    func tappedLeftNavButton() {
         if nowPage == .PostDetails {
             guard let detailViewController = detailViewController else { return }
             detailViewController.view.removeFromSuperview()
@@ -504,19 +514,21 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
-    public func tappedRightNavButton() {}
-    
-    // MARK: Timeline Delegate
-    
-    public func tappedCell(item: NoteCell.Model) {
+    func tappedRightNavButton() {}
+}
+
+// MARK: Timeline Delegate
+
+extension HomeViewController: TimelineDelegate {
+    func tappedCell(item: NoteCell.Model) {
         showPostDetailView(item: item)
     }
     
-    public func move2Profile(userId: String) {
+    func move2Profile(userId: String) {
         showProfileView(userId: userId)
     }
     
-    public func openUserPage(username: String) {
+    func openUserPage(username: String) {
         // usernameから真のusernameとhostを切り離す
         let decomp = username.components(separatedBy: "@").filter { $0 != "" }
         
@@ -538,7 +550,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         }
     }
     
-    public func openSettings() {
+    func openSettings() {
         guard let storyboard = self.storyboard,
             let settingsViewController = storyboard.instantiateViewController(withIdentifier: "settings")
             as? SettingsViewController else { return }
@@ -546,7 +558,7 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         navigationController?.pushViewController(settingsViewController, animated: true)
     }
     
-    public func openPost(item: NoteCell.Model, type: PostViewController.PostType) {
+    func openPost(item: NoteCell.Model, type: PostViewController.PostType) {
         guard let postViewController = storyboard?.instantiateViewController(withIdentifier: "post") as? PostViewController else { return }
         nowPage = .Post
         
@@ -554,44 +566,34 @@ public class HomeViewController: PolioPagerViewController, FooterTabBarDelegate,
         presentOnFullScreen(postViewController, animated: true, completion: nil)
     }
     
-    public func successInitialLoading(_ success: Bool) {
+    func successInitialLoading(_ success: Bool) {
         guard !success else { return }
         
         showNotificationBanner(icon: .Failed, notification: "投稿の取得に失敗しました")
     }
     
-    public func changedStreamState(success: Bool) {
+    func changedStreamState(success: Bool) {
         guard !success else { return }
-//        showNotificationBanner(icon: .Failed, notification: "Streamingへ再接続します")
+        //        showNotificationBanner(icon: .Failed, notification: "Streamingへ再接続します")
     }
     
-    public func loadingBanner() {
+    func loadingBanner() {
         showNotificationBanner(icon: .Loading, notification: "ロード中...")
     }
-    
-    // MARK: NavigationController Delegate
-    
-    public func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
+}
+
+// MARK: NavigationController Delegate
+
+extension HomeViewController: UINavigationControllerDelegate {
+    func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
         if viewController is HomeViewController {
             nowPage = previousPage
         }
     }
-    
-    // MARK: PolioPager Delegate
-    
-    public override func tabItems() -> [TabItem] {
-        return [TabItem(title: "Home", backgroundColor: UIColor(hex: "ECECEC")),
-                TabItem(title: "Local", backgroundColor: UIColor(hex: "ECECEC")),
-                TabItem(title: "Global", backgroundColor: UIColor(hex: "ECECEC"))]
-    }
-    
-    public override func viewControllers() -> [UIViewController] {
-        return [search, home, local, global]
-    }
 }
 
 extension HomeViewController {
-    public enum Page {
+    enum Page {
         // FooterTab
         case Main
         case Notifications

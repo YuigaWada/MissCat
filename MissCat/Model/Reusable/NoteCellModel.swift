@@ -9,14 +9,14 @@
 import Foundation
 import MisskeyKit
 
-public class NoteCellModel {
-    public func registerReaction(noteId: String, reaction: String) {
+class NoteCellModel {
+    func registerReaction(noteId: String, reaction: String) {
         MisskeyKit.notes.createReaction(noteId: noteId, reaction: reaction) { _, _ in
 //            print("registerReaction: [result: \(result), error: \(error)]")
         }
     }
     
-    public func cancelReaction(noteId: String) {
+    func cancelReaction(noteId: String) {
         MisskeyKit.notes.deleteReaction(noteId: noteId) { _, _ in
 //            print("cancelReaction: [result: \(result), error: \(error)]")
         }

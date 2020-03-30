@@ -36,25 +36,25 @@ class ProfileViewModel: ViewModelType {
     }
     
     private var input: Input
-    public lazy var output: Output = .init()
-    public lazy var state: State = .init()
+    lazy var output: Output = .init()
+    lazy var state: State = .init()
     
     private var userId: String?
     private var relation: UserRelationship?
     private lazy var model = ProfileModel()
     
-    public init(with input: Input, and disposeBag: DisposeBag) {
+    init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
     }
     
-    public func setUserId(_ userId: String, isMe: Bool) {
+    func setUserId(_ userId: String, isMe: Bool) {
         model.getUser(userId: userId, completion: handleUserInfo)
         
         output.isMe = isMe
         self.userId = userId
     }
     
-    public func follow() {
+    func follow() {
         guard let userId = userId else { return }
         model.follow(userId: userId) { success in
             guard success else { return }
@@ -66,7 +66,7 @@ class ProfileViewModel: ViewModelType {
         }
     }
     
-    public func unfollow() {
+    func unfollow() {
         guard let userId = userId else { return }
         model.unfollow(userId: userId) { success in
             guard success else { return }

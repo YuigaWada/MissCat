@@ -9,10 +9,10 @@
 import MisskeyKit
 import UIKit
 
-public class NotificationCellViewModel {
+class NotificationCellViewModel {
     private var model = NotificationCellModel()
     
-    public func shapeNote(note: String, isReply: Bool) -> NSAttributedString? {
+    func shapeNote(note: String, isReply: Bool) -> NSAttributedString? {
         let treatedNote = model.shapeNote(note: note, isReply: isReply)
         
         return treatedNote

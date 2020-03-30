@@ -11,12 +11,12 @@ import RxCocoa
 import RxSwift
 import UIKit
 
-public class PollView: UIView {
+class PollView: UIView {
     @IBOutlet weak var stackView: UIStackView!
     @IBOutlet weak var totalPollLabel: UILabel!
     
-    public var voteTriggar: Observable<Int>? // タップされるとvote対象のidを流す
-    public var height: CGFloat {
+    var voteTriggar: Observable<Int>? // タップされるとvote対象のidを流す
+    var height: CGFloat {
         guard pollBarCount > 0 else { return 0 }
         
         let spaceCount = pollBarCount - 1
@@ -46,7 +46,7 @@ public class PollView: UIView {
         loadNib()
     }
     
-    public func loadNib() {
+    func loadNib() {
         if let view = UINib(nibName: "PollView", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
             addSubview(view)
@@ -55,7 +55,7 @@ public class PollView: UIView {
     
     // MARK: Publics
     
-    public func setPoll(with pollModel: Poll) {
+    func setPoll(with pollModel: Poll) {
         guard let choices = pollModel.choices?.compactMap({ $0 })
         else { isHidden = true; return } // Poll情報が取得できない場合はPollView自体を非表示にする
         
@@ -82,14 +82,14 @@ public class PollView: UIView {
         }
     }
     
-    public func initialize() {
+    func initialize() {
         pollBars.removeAll()
         stackView.arrangedSubviews.forEach {
             $0.removeFromSuperview()
         }
     }
     
-    public func changePoll() {}
+    func changePoll() {}
     
     // MARK: Privates
     
@@ -113,8 +113,8 @@ public class PollView: UIView {
 // MARK: PollBar
 
 extension PollView {
-    public class PollBar: UIView {
-        public struct Style {
+    class PollBar: UIView {
+        struct Style {
             var backgroundColor: UIColor = .init(hex: "ebebeb")
             var textColor: UIColor = .black
             var progressColor: UIColor = .systemBlue
@@ -122,9 +122,9 @@ extension PollView {
             var cornerRadius: CGFloat = 8
         }
         
-        public var id: Int = -1
-        public var voteCount: Int = 0
-        public var idOfTapped: Observable<Int>? // PollBarのidを流す
+        var id: Int = -1
+        var voteCount: Int = 0
+        var idOfTapped: Observable<Int>? // PollBarのidを流す
         
         private var style: Style = .init()
         private var canSeeRate: Bool = false
@@ -161,7 +161,7 @@ extension PollView {
         
         /// 投票率を変更し、アニメートさせる
         /// - Parameter newRate: 新しい投票率
-        public func changePollRate(to newRate: Float) {
+        func changePollRate(to newRate: Float) {
             rateLabel.text = "\(Int(100 * newRate))%"
             
             // AutoLayoutを再設定
@@ -192,7 +192,7 @@ extension PollView {
         
         /// 投票済みかどうかの状態を変更する
         /// - Parameter voted: 投票済みならtrue
-        public func changeState(voted: Bool, voteCount: Int, rate: Float) {
+        func changeState(voted: Bool, voteCount: Int, rate: Float) {
             self.voteCount = voteCount
             isUserInteractionEnabled = !voted // 投票されたらタップできないようにする
             if voted {

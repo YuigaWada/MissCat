@@ -15,7 +15,7 @@ import UIKit
 // MARK: NoteCell.Model
 
 extension NoteCell {
-    public class Model: IdentifiableType, Equatable {
+    class Model: IdentifiableType, Equatable {
         var isSkelton = false
         var isReactionGenCell = false
         var isRenoteeCell = false
@@ -25,10 +25,10 @@ extension NoteCell {
         var isReplyTarget: Bool = false // リプライ先の投稿であるかどうか
         var fileVisible: Bool = true // ファイルを表示するか
         
-        public let identity: String = String(Float.random(in: 1 ..< 100))
+        let identity: String = String(Float.random(in: 1 ..< 100))
         let noteId: String?
         
-        public typealias Identity = String
+        typealias Identity = String
         
         let iconImageUrl: String?
         var iconImage: UIImage?
@@ -87,7 +87,7 @@ extension NoteCell {
             self.poll = poll
         }
         
-        public static func == (lhs: NoteCell.Model, rhs: NoteCell.Model) -> Bool {
+        static func == (lhs: NoteCell.Model, rhs: NoteCell.Model) -> Bool {
             return lhs.identity == rhs.identity
         }
         
@@ -174,7 +174,7 @@ extension NoteCell.Section: AnimatableSectionModelType {
     typealias Item = NoteCell.Model
     typealias Identity = String
     
-    public var identity: String {
+    var identity: String {
         return ""
     }
     
@@ -188,7 +188,7 @@ extension NoteCell.Reaction.Section: AnimatableSectionModelType {
     typealias Item = NoteCell.Reaction
     typealias Identity = String
     
-    public var identity: String {
+    var identity: String {
         return ""
     }
     

@@ -8,7 +8,7 @@
 
 import UIKit
 
-public protocol ComponentType {
+protocol ComponentType {
     associatedtype Arg
     associatedtype Transformed
     

@@ -8,10 +8,10 @@
 
 import MisskeyKit
 
-public class NotificationsModel {
+class NotificationsModel {
     private let needMyNoteType = ["mention", "reply", "renote", "quote", "reaction"]
     
-    public func loadNotification(untilId: String? = nil, completion: @escaping ([NotificationModel]?) -> Void) {
+    func loadNotification(untilId: String? = nil, completion: @escaping ([NotificationModel]?) -> Void) {
         MisskeyKit.notifications.get(limit: 20, untilId: untilId ?? "", following: false) { results, error in
             guard let results = results, results.count > 0, error == nil else { completion(nil); return }
             
@@ -23,7 +23,7 @@ public class NotificationsModel {
         }
     }
     
-    public func getModel(notification: NotificationModel) -> NotificationCell.Model? {
+    func getModel(notification: NotificationModel) -> NotificationCell.Model? {
         guard let id = notification.id, let type = notification.type, let user = notification.user else { return nil }
         
         if type == .follow {
@@ -40,7 +40,7 @@ public class NotificationsModel {
     }
     
     // 任意のresponseからNotificationCell.Modelを生成する
-    public func getModel(type: String?, target: Any?) -> NotificationCell.Model? {
+    func getModel(type: String?, target: Any?) -> NotificationCell.Model? {
         guard let type = type, let target = target else { return nil }
         // StreamingModel
         switch type {

@@ -8,16 +8,16 @@
 
 import MisskeyKit
 
-public class EmojiHandler {
+class EmojiHandler {
     // setされた瞬間カテゴリー分けを行うが、カスタム絵文字を先にcategorizedEmojisへ格納する
-    public var defaultEmojis: [DefaultEmojiModel]? {
+    var defaultEmojis: [DefaultEmojiModel]? {
         didSet {
             guard let defaultEmojis = defaultEmojis else { return }
             categorizeDefaultEmojis(defaultEmojis)
         }
     }
     
-    public var customEmojis: [EmojiModel]? {
+    var customEmojis: [EmojiModel]? {
         didSet {
             guard let customEmojis = customEmojis else { return }
             categorizeCustomEmojis(customEmojis)
@@ -25,10 +25,10 @@ public class EmojiHandler {
     }
     
     // 絵文字のカテゴリーによって分類分けする(Dictionaryは順序を保証しないので、デフォルト・カスタムで分割する)
-    public var categorizedDefaultEmojis: [String: [EmojiView.EmojiModel]] = .init()
-    public var categorizedCustomEmojis: [String: [EmojiView.EmojiModel]] = .init()
+    var categorizedDefaultEmojis: [String: [EmojiView.EmojiModel]] = .init()
+    var categorizedCustomEmojis: [String: [EmojiView.EmojiModel]] = .init()
     
-    public static let handler = EmojiHandler() // Singleton
+    static let handler = EmojiHandler() // Singleton
     
     init() { // 先に絵文字情報をダウンロードしておく
         MisskeyKit.Emojis.getDefault { self.defaultEmojis = $0 }
@@ -39,7 +39,7 @@ public class EmojiHandler {
     /// - Parameters:
     ///   - raw: :hoge_hoge:形式の絵文字
     ///   - external: 他インスタンス由来の絵文字配列
-    public func convertEmoji(raw: String, external: [EmojiModel?]? = nil) -> (type: String, emoji: String)? {
+    func convertEmoji(raw: String, external: [EmojiModel?]? = nil) -> (type: String, emoji: String)? {
         // 自インスタンス由来のEmoji
         let encoded = encodeEmoji(raw: raw)
         
@@ -61,7 +61,7 @@ public class EmojiHandler {
     
     /// 自インスタンス由来の絵文字をデフォルト絵文字かカスタム絵文字のurlに変換する
     /// - Parameter raw: :hoge_hoge:形式の絵文字
-    public func encodeEmoji(raw: String) -> Any? {
+    func encodeEmoji(raw: String) -> Any? {
         guard let defaultEmojis = defaultEmojis, let customEmojis = customEmojis else { return nil }
         
         // name: "wara"  char: "(^o^)"
@@ -144,7 +144,7 @@ public class EmojiHandler {
     
     // Emoji形式":hogehoge:"をデフォルト絵文字 / カスタム絵文字のurl/imgに変更
     // TODO: このメソッドはレガシーで今は使わないはず？？
-    public func emojiEncoder(note: String, externalEmojis: [EmojiModel?]?) -> String {
+    func emojiEncoder(note: String, externalEmojis: [EmojiModel?]?) -> String {
         var newNote = note
         let targets = note.regexMatches(pattern: "(:[^(\\s|:)]+:)")
         

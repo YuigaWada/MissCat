@@ -10,11 +10,11 @@ import Foundation
 import MisskeyKit
 import UIKit
 
-public typealias Attachments = [NSTextAttachment: YanagiText.Attachment]
-public class Cache {
+typealias Attachments = [NSTextAttachment: YanagiText.Attachment]
+class Cache {
     // MARK: Singleton
     
-    public static var shared: Cache = .init()
+    static var shared: Cache = .init()
     
     // MARK: Var
     
@@ -33,13 +33,13 @@ public class Cache {
     
     // MARK: Save
     
-    public func saveNote(noteId: String, mfmString: MFMString, attachments: Attachments) {
+    func saveNote(noteId: String, mfmString: MFMString, attachments: Attachments) {
         guard notes[noteId] == nil else { return }
         
         notes[noteId] = NoteOnYanagi(mfmString: mfmString, yanagiTexts: [], attachments: attachments)
     }
     
-    public func saveDisplayName(username: String, mfmString: MFMString, attachments: Attachments, on yanagiText: YanagiText) {
+    func saveDisplayName(username: String, mfmString: MFMString, attachments: Attachments, on yanagiText: YanagiText) {
         if let _ = users[username] {
             users[username]!.mfmString = mfmString
             users[username]!.yanagiTexts.append(yanagiText)
@@ -48,7 +48,7 @@ public class Cache {
         }
     }
     
-    public func saveIcon(username: String, image: UIImage) {
+    func saveIcon(username: String, image: UIImage) {
         if let _ = users[username] {
             users[username]!.iconImage = image
         } else {
@@ -56,11 +56,11 @@ public class Cache {
         }
     }
     
-    public func saveUiImage(_ image: UIImage, url: String) {
+    func saveUiImage(_ image: UIImage, url: String) {
         uiImage[url] = image
     }
     
-    public func saveUrlData(_ data: Data, on rawUrl: String, toStorage: Bool = false) {
+    func saveUrlData(_ data: Data, on rawUrl: String, toStorage: Bool = false) {
         dataOnUrl[rawUrl] = data
         if toStorage {
             saveToStorage(data: data, url: rawUrl)
@@ -69,11 +69,11 @@ public class Cache {
     
     // MARK: Get
     
-    public func getNote(noteId: String) -> Cache.NoteOnYanagi? {
+    func getNote(noteId: String) -> Cache.NoteOnYanagi? {
         return notes[noteId]
     }
     
-    public func getDisplayName(username: String, on yanagiText: YanagiText) -> Cache.UserOnYanagi? {
+    func getDisplayName(username: String, on yanagiText: YanagiText) -> Cache.UserOnYanagi? {
         //        guard  if let user = users[username] else { return }
         //        let option = user.yanagiTexts.filter({ $0 === yanagiText })
         //        if option.count > 0 {
@@ -85,15 +85,15 @@ public class Cache {
         return users[username]
     }
     
-    public func getIcon(username: String) -> UIImage? {
+    func getIcon(username: String) -> UIImage? {
         return users[username]?.iconImage
     }
     
-    public func getUiImage(url: String) -> UIImage? {
+    func getUiImage(url: String) -> UIImage? {
         return uiImage[url]
     }
     
-    public func getMe(result callback: @escaping (UserModel?) -> Void) {
+    func getMe(result callback: @escaping (UserModel?) -> Void) {
         if let me = me {
             callback(me)
             return
@@ -107,7 +107,7 @@ public class Cache {
         }
     }
     
-    public func getUrlData(on rawUrl: String) -> Data? {
+    func getUrlData(on rawUrl: String) -> Data? {
         if !dataOnUrl.keys.contains(rawUrl), let savedOnStorage = getFromStorage(url: rawUrl) {
             saveUrlData(savedOnStorage, on: rawUrl) // RAM上に載せる
             return savedOnStorage
@@ -165,70 +165,70 @@ public class Cache {
     }
 }
 
-public extension Cache {
+extension Cache {
     class UserDefaults {
-        public static var shared: Cache.UserDefaults = .init()
+        static var shared: Cache.UserDefaults = .init()
         private let latestNotificationKey = "latest-notification"
         private let currentLoginedApiKey = "current-logined-ApiKey"
         private let currentLoginedUserId = "current-logined-UserId"
         private let currentLoginedInstance = "current-logined-instance"
         private let themeKey = "theme"
         
-        public func getLatestNotificationId() -> String? {
+        func getLatestNotificationId() -> String? {
             return Foundation.UserDefaults.standard.string(forKey: latestNotificationKey)
         }
         
-        public func setLatestNotificationId(_ id: String) {
+        func setLatestNotificationId(_ id: String) {
             Foundation.UserDefaults.standard.set(id, forKey: latestNotificationKey)
         }
         
-        public func getCurrentLoginedApiKey() -> String? {
+        func getCurrentLoginedApiKey() -> String? {
             return Foundation.UserDefaults.standard.string(forKey: currentLoginedApiKey)
         }
         
-        public func setCurrentLoginedApiKey(_ id: String) {
+        func setCurrentLoginedApiKey(_ id: String) {
             Foundation.UserDefaults.standard.set(id, forKey: currentLoginedApiKey)
         }
         
-        public func getCurrentLoginedUserId() -> String? {
+        func getCurrentLoginedUserId() -> String? {
             return Foundation.UserDefaults.standard.string(forKey: currentLoginedUserId)
         }
         
-        public func setCurrentLoginedUserId(_ id: String) {
+        func setCurrentLoginedUserId(_ id: String) {
             Foundation.UserDefaults.standard.set(id, forKey: currentLoginedUserId)
         }
         
-        public func getCurrentLoginedInstance() -> String? {
+        func getCurrentLoginedInstance() -> String? {
             return Foundation.UserDefaults.standard.string(forKey: currentLoginedInstance)
         }
         
-        public func setCurrentLoginedInstance(_ id: String) {
+        func setCurrentLoginedInstance(_ id: String) {
             Foundation.UserDefaults.standard.set(id, forKey: currentLoginedInstance)
         }
         
-        public func getTheme() -> String? {
+        func getTheme() -> String? {
             return Foundation.UserDefaults.standard.string(forKey: themeKey)
         }
         
-        public func setTheme(_ rawJson: String) {
+        func setTheme(_ rawJson: String) {
             Foundation.UserDefaults.standard.set(rawJson, forKey: themeKey)
         }
     }
 }
 
-public extension Cache {
+extension Cache {
     struct NoteOnYanagi {
-        public var mfmString: MFMString
+        var mfmString: MFMString
         
-        public var yanagiTexts: [YanagiText]
-        public var attachments: [NSTextAttachment: YanagiText.Attachment] = [:]
+        var yanagiTexts: [YanagiText]
+        var attachments: [NSTextAttachment: YanagiText.Attachment] = [:]
     }
     
     struct UserOnYanagi {
-        public var iconImage: UIImage?
-        public var mfmString: MFMString?
+        var iconImage: UIImage?
+        var mfmString: MFMString?
         
-        public var yanagiTexts: [YanagiText]
-        public var attachments: [NSTextAttachment: YanagiText.Attachment] = [:]
+        var yanagiTexts: [YanagiText]
+        var attachments: [NSTextAttachment: YanagiText.Attachment] = [:]
     }
 }

@@ -8,8 +8,8 @@
 
 import MisskeyKit
 
-public class NotificationCellModel {
-    public func shapeNote(note: String, isReply: Bool) -> NSAttributedString? {
+class NotificationCellModel {
+    func shapeNote(note: String, isReply: Bool) -> NSAttributedString? {
         let replyHeader: NSMutableAttributedString = isReply ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
         let body = MFMEngine.generatePlaneString(string: note, font: UIFont(name: "Helvetica", size: 11.0))
         

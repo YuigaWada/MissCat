@@ -13,7 +13,7 @@ extension AVAsset {
     /// - Parameters:
     ///   - videoUrl: 動画のurl
     ///   - completion:  completion
-    public static func convert2Mp4(videoUrl: NSURL, completion: @escaping (_ session: AVAssetExportSession) -> Void) {
+    static func convert2Mp4(videoUrl: NSURL, completion: @escaping (_ session: AVAssetExportSession) -> Void) {
         let documentsPath = NSSearchPathForDirectoriesInDomains(.documentationDirectory, .userDomainMask, true)[0] as String
         let fileName = UUID().uuidString + ".mp4"
         let tempPath = documentsPath + fileName
@@ -35,7 +35,7 @@ extension AVAsset {
     
     /// 動画からサムネイルを取得する
     /// - Parameter url: 動画のPath
-    public static func generateThumbnail(videoFrom url: URL) -> UIImage {
+    static func generateThumbnail(videoFrom url: URL) -> UIImage {
         let asset = AVAsset(url: url)
         let imageGenerator = AVAssetImageGenerator(asset: asset)
         imageGenerator.appliesPreferredTrackTransform = true

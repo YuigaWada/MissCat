@@ -10,12 +10,12 @@ import Gifu
 import SVGKit
 import UIKit
 
-public class EmojiView: UIView {
+class EmojiView: UIView {
     @IBOutlet weak var emojiLabel: UILabel!
     @IBOutlet weak var emojiImageView: GIFImageView!
     @IBOutlet var view: UIView!
     
-    public var isFake: Bool = false {
+    var isFake: Bool = false {
         didSet {
             guard isFake else { return }
             emojiImageView.backgroundColor = .clear
@@ -23,7 +23,7 @@ public class EmojiView: UIView {
         }
     }
     
-    public var emoji: EmojiView.EmojiModel? {
+    var emoji: EmojiView.EmojiModel? {
         didSet {
             self.setEmoji()
         }
@@ -41,19 +41,19 @@ public class EmojiView: UIView {
         loadNib()
     }
     
-    public func loadNib() {
+    func loadNib() {
         if let view = UINib(nibName: "EmojiView", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
             addSubview(view)
         }
     }
     
-    public override func layoutSubviews() {
+    override func layoutSubviews() {
         super.layoutSubviews()
         setEmoji()
     }
     
-    public func initialize() {
+    func initialize() {
         emojiLabel.text = nil
         emojiImageView.image = nil
         emojiImageView.prepareForReuse() // GIFImageView → prepareForReuseしないとセルの再利用時、再利用前の画像が残ってしまう
@@ -107,15 +107,15 @@ public class EmojiView: UIView {
 }
 
 extension EmojiView {
-    @objc(EmojiModel) public class EmojiModel: NSObject, NSCoding {
+    @objc(EmojiModel) class EmojiModel: NSObject, NSCoding {
         // MARK: Emoji Info
         
-        public let rawEmoji: String
-        public let isDefault: Bool
-        public let defaultEmoji: String?
-        public let customEmojiUrl: String?
+        let rawEmoji: String
+        let isDefault: Bool
+        let defaultEmoji: String?
+        let customEmojiUrl: String?
         
-        public var isFake: Bool = false
+        var isFake: Bool = false
         
         init(rawEmoji: String, isDefault: Bool, defaultEmoji: String?, customEmojiUrl: String?, isFake: Bool = false) {
             self.rawEmoji = rawEmoji
@@ -127,14 +127,14 @@ extension EmojiView {
         
         // MARK: UserDefaults Init
         
-        public required init?(coder aDecoder: NSCoder) {
+        required init?(coder aDecoder: NSCoder) {
             rawEmoji = (aDecoder.decodeObject(forKey: "rawEmoji") ?? true) as? String ?? ""
             isDefault = (aDecoder.decodeObject(forKey: "isDefault") ?? true) as? Bool ?? true
             defaultEmoji = aDecoder.decodeObject(forKey: "defaultEmoji") as? String
             customEmojiUrl = aDecoder.decodeObject(forKey: "customEmojiUrl") as? String
         }
         
-        public func encode(with aCoder: NSCoder) {
+        func encode(with aCoder: NSCoder) {
             aCoder.encode(rawEmoji, forKey: "rawEmoji")
             aCoder.encode(isDefault, forKey: "isDefault")
             aCoder.encode(defaultEmoji, forKey: "defaultEmoji")
@@ -143,18 +143,18 @@ extension EmojiView {
         
         // MARK: GET/SET
         
-        public static func getModelArray() -> [EmojiModel]? {
+        static func getModelArray() -> [EmojiModel]? {
             guard let array = UserDefaults.standard.data(forKey: "[EmojiModel]") else { return nil }
             return NSKeyedUnarchiver.unarchiveObject(with: array) as? [EmojiModel] // nil許容なのでOK
         }
         
-        public static func saveModelArray(with target: [EmojiModel]) {
+        static func saveModelArray(with target: [EmojiModel]) {
             let targetRawData = NSKeyedArchiver.archivedData(withRootObject: target)
             UserDefaults.standard.set(targetRawData, forKey: "[EmojiModel]")
             UserDefaults.standard.synchronize()
         }
         
-        public static var hasUserDefaultsEmojis: Bool { // UserDefaultsに保存されてるかcheck
+        static var hasUserDefaultsEmojis: Bool { // UserDefaultsに保存されてるかcheck
             return UserDefaults.standard.object(forKey: "[EmojiModel]") != nil
         }
     }
@@ -165,14 +165,14 @@ extension EmojiView {
 class EmojiViewHeader: EmojiView.EmojiModel {
     // MARK: Header
     
-    public var title: String
+    var title: String
     
     init(title: String) {
         self.title = title
         super.init(rawEmoji: "", isDefault: true, defaultEmoji: nil, customEmojiUrl: nil)
     }
     
-    public required init?(coder aDecoder: NSCoder) {
+    required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 }

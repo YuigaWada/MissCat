@@ -11,7 +11,7 @@ import MisskeyKit
 extension NoteModel {
     fileprivate var post: NoteModel { return self }
     
-    public func getNoteCellModel(withRN: Bool = false, onOtherNote: Bool = false) -> NoteCell.Model? {
+    func getNoteCellModel(withRN: Bool = false, onOtherNote: Bool = false) -> NoteCell.Model? {
         guard let user = post.user else { return nil }
         
 //        var reactions: [Any?] = []
