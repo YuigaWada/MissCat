@@ -223,10 +223,14 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         let output = viewModel.output
         
         // reaction
-        output.reactions.asDriver(onErrorDriveWith: Driver.empty()).drive(reactionsCollectionView.rx.items(dataSource: reactionsDataSource)).disposed(by: disposeBag)
+        output.reactions
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(reactionsCollectionView.rx.items(dataSource: reactionsDataSource))
+            .disposed(by: disposeBag)
+        
         output.reactions.asDriver(onErrorDriveWith: Driver.empty()).map { // リアクションの数が0のときはreactionsCollectionViewを非表示に
-            guard $0.count == 1 else { return true }
-            return $0[0].items.count == 0
+                guard $0.count == 1 else { return true }
+                return $0[0].items.count == 0
         }.drive(reactionsCollectionView.rx.isHidden).disposed(by: disposeBag)
         
         output.reactions.asDriver(onErrorDriveWith: Driver.empty()).map { // リアクションの数によってreactionsCollectionViewの高さを調節
@@ -247,31 +251,50 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             })
         }).disposed(by: disposeBag)
         
-        output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).map { _ in false }.drive(innerRenoteDisplay.rx.isHidden).disposed(by: disposeBag)
+        output.commentRenoteTarget
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .map { _ in false }
+            .drive(innerRenoteDisplay.rx.isHidden)
+            .disposed(by: disposeBag)
         
         // poll
-        output.poll.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { poll in
-            self.pollView.isHidden = false
-            self.pollView.setPoll(with: poll)
-            self.pollViewHeightConstraint.constant = self.pollView.height
-            
-            self.pollView.voteTriggar?.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { id in
-                self.delegate?.vote(choice: id, to: noteId)
-            }).disposed(by: self.disposeBag)
-        }).disposed(by: disposeBag)
+        output.poll
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { poll in
+                self.pollView.isHidden = false
+                self.pollView.setPoll(with: poll)
+                self.pollViewHeightConstraint.constant = self.pollView.height
+                
+                self.pollView.voteTriggar?.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { id in
+                    self.delegate?.vote(choice: id, to: noteId)
+                }).disposed(by: self.disposeBag)
+            }).disposed(by: disposeBag)
         
         // general
-        output.ago.asDriver(onErrorDriveWith: Driver.empty()).drive(agoLabel.rx.text).disposed(by: disposeBag)
-        output.name.asDriver(onErrorDriveWith: Driver.empty()).drive(nameTextView.rx.attributedText).disposed(by: disposeBag)
+        output.ago
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(agoLabel.rx.text)
+            .disposed(by: disposeBag)
         
-        //        output.name.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { _ in
-        //            self.nameTextView.showMFM()
-        //        }).disposed(by: disposeBag)
+        output.name
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(nameTextView.rx.attributedText)
+            .disposed(by: disposeBag)
+
+        output.shapedNote
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(noteView.rx.attributedText)
+            .disposed(by: disposeBag)
         
-        output.shapedNote.asDriver(onErrorDriveWith: Driver.empty()).drive(noteView.rx.attributedText).disposed(by: disposeBag)
-        output.shapedNote.asDriver(onErrorDriveWith: Driver.empty()).map { $0 == nil }.drive(noteView.rx.isHidden).disposed(by: disposeBag) // 画像onlyや投票onlyの場合、noteが存在しない場合がある→ noteViewを非表示にする
+        output.shapedNote.asDriver(onErrorDriveWith: Driver.empty())
+            .map { $0 == nil }
+            .drive(noteView.rx.isHidden)
+            .disposed(by: disposeBag) // 画像onlyや投票onlyの場合、noteが存在しない場合がある→ noteViewを非表示にする
         
-        output.iconImage.asDriver(onErrorDriveWith: Driver.empty()).drive(iconView.rx.image).disposed(by: disposeBag)
+        output.iconImage
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(iconView.rx.image)
+            .disposed(by: disposeBag)
         
         // constraint
         output.defaultConstraintActive.asDriver(onErrorDriveWith: Driver.empty())
@@ -285,16 +308,30 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             .disposed(by: disposeBag)
         
         // color
-        output.backgroundColor.asDriver(onErrorDriveWith: Driver.empty()).drive(rx.backgroundColor).disposed(by: disposeBag)
+        output.backgroundColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(rx.backgroundColor)
+            .disposed(by: disposeBag)
         
         // hidden
         Observable.combineLatest(output.isReplyTarget.asObservable(), output.onOtherNote.asObservable()) { $0 || $1 }
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(separatorBorder.rx.isHidden).disposed(by: disposeBag)
         
-        output.isReplyTarget.map { !$0 }.asDriver(onErrorDriveWith: Driver.empty()).drive(replyIndicator.rx.isHidden).disposed(by: disposeBag)
-        output.onOtherNote.asDriver(onErrorDriveWith: Driver.empty()).drive(actionStackView.rx.isHidden).disposed(by: disposeBag)
-        output.onOtherNote.asDriver(onErrorDriveWith: Driver.empty()).drive(reactionsCollectionView.rx.isHidden).disposed(by: disposeBag)
+        output.isReplyTarget.map { !$0 }
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(replyIndicator.rx.isHidden)
+            .disposed(by: disposeBag)
+        
+        output.onOtherNote
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(actionStackView.rx.isHidden)
+            .disposed(by: disposeBag)
+        
+        output.onOtherNote
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(reactionsCollectionView.rx.isHidden)
+            .disposed(by: disposeBag)
     }
     
     private func themeBinding() {
@@ -426,8 +463,6 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         renoteButton.setTitle("retweet\(renoteCount)", for: .normal)
         reactionButton.setTitle("plus\(reactionsCount == 0 ? "" : String(reactionsCount))", for: .normal)
         
-        // reaction
-        
         return self
     }
     
@@ -450,7 +485,6 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         noteView.resetViewString()
         
         changeStateFileImage(isHidden: !hasFile)
-//        fileContainer.initialize()
         
         replyButton.setTitle("", for: .normal)
         renoteButton.setTitle("", for: .normal)

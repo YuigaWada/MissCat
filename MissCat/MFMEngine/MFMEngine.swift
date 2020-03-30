@@ -100,6 +100,9 @@ class MFMEngine {
         return shaped
     }
     
+    
+    /// カスタム絵文字を表示するViewを生成し、YanagiTextへAddする
+    /// - Parameter yanagi: YanagiText
     func renderCustomEmojis(on yanagi: YanagiText) {
         guard customEmojis.count == attachments.count else { return }
         
@@ -116,6 +119,9 @@ class MFMEngine {
     
     // MARK: Statics
     
+    
+    /// NotificationCell.Modelを整形する
+    /// - Parameter cellModel: NotificationCell.Model
     static func shapeModel(_ cellModel: NotificationCell.Model) {
         if let user = cellModel.fromUser {
             cellModel.shapedDisplayName = shapeDisplayName(user: user)
@@ -140,6 +146,9 @@ class MFMEngine {
         }
     }
     
+    
+    /// NoteCell.Modelを整形する
+    /// - Parameter cellModel: NoteCell.Model
     static func shapeModel(_ cellModel: NoteCell.Model) {
         cellModel.shapedNote = shapeNote(cellModel)
         cellModel.shapedDisplayName = shapeDisplayName(cellModel)
@@ -150,10 +159,19 @@ class MFMEngine {
         }
     }
     
+    
+    /// NoteCell.Modelのうち、投稿を整形する
+    /// - Parameter cellModel: NoteCell.Model
     private static func shapeNote(_ cellModel: NoteCell.Model) -> MFMString {
         return shapeString(needReplyMark: cellModel.isReply, text: cellModel.note, emojis: cellModel.emojis)
     }
     
+    
+    /// 任意の文字列を整形する
+    /// - Parameters:
+    ///   - needReplyMark: リプライマークがい必要か
+    ///   - text: 任意の文字列
+    ///   - emojis: 外インスタンスによるカスタム絵文字
     private static func shapeString(needReplyMark: Bool, text: String, emojis: [EmojiModel?]?) -> MFMString {
         let replyHeader: NSMutableAttributedString = needReplyMark ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
         let mfmString = text.mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
@@ -163,15 +181,27 @@ class MFMEngine {
         return MFMString(mfmEngine: mfmString.mfmEngine, attributed: replyHeader + (mfmString.attributed ?? .init()))
     }
     
+    
+    /// 名前を整形
+    /// - Parameter cellModel: NoteCell.Model
     private static func shapeDisplayName(_ cellModel: NoteCell.Model) -> MFMString {
         return shapeDisplayName(name: cellModel.displayName, username: cellModel.username, emojis: cellModel.emojis)
     }
     
+    
+    /// 名前を整形
+    /// - Parameter user: UserModel
     private static func shapeDisplayName(user: UserModel?) -> MFMString? {
         guard let user = user else { return nil }
         return shapeDisplayName(name: user.name, username: user.username, emojis: user.emojis)
     }
     
+    
+    /// 名前を整形
+    /// - Parameters:
+    ///   - name: String
+    ///   - username: String
+    ///   - emojis: 外インスタンスによるカスタム絵文字
     private static func shapeDisplayName(name: String?, username: String?, emojis: [EmojiModel?]?) -> MFMString {
         let displayName = name ?? ""
         let mfmString = displayName.mfmTransform(font: UIFont(name: "Helvetica", size: 10.0) ?? .systemFont(ofSize: 10.0),
@@ -215,14 +245,16 @@ class MFMEngine {
 
 // 装飾関係
 extension String {
-    // Emoji形式":hogehoge:"をデフォルト絵文字 / カスタム絵文字のurl/imgに変更
+    ///  Emoji形式":hogehoge:"をデフォルト絵文字 / カスタム絵文字のurl/imgに変更
+    /// - Parameter externalEmojis: 外インスタンスのカスタム絵文字
     func emojiEncoder(externalEmojis: [EmojiModel?]?) -> String {
         return EmojiHandler.handler.emojiEncoder(note: self, externalEmojis: externalEmojis)
     }
     
-    // linkをリンク化
-    // この時、urlに@が入ると後々hyperUserと干渉するので、
-    // @ → [at-mark.misscat.header] / # → [hash-tag.misscat.header] に変換しておく
+    
+    /// lリンク化する
+    /// この時、urlに@が入ると後々hyperUserと干渉するので、
+    /// @ → [at-mark.misscat.header] / # → [hash-tag.misscat.header] に変換しておく
     func hyperLink() -> String {
         // markdown link
         var result = replacingOccurrences(of: "\\[([^\\]]+)\\]\\(([^\\)]+)\\)",
@@ -248,6 +280,8 @@ extension String {
         return result
     }
     
+    
+    /// MarkDownのため、文字列に修正を加える
     func markdown() -> String {
         let bold = replacingOccurrences(of: "\\*\\*([^\\*]+)\\*\\*",
                                         with: "<b>$1</b>",
@@ -260,6 +294,8 @@ extension String {
         return strikeThrough.disablingTags()
     }
     
+    
+    /// 特定のタグを無効化していく
     func disablingTags() -> String {
         var result = self
         let targetTags = ["motion", "flip", "spin", "jump", "small"]
@@ -279,29 +315,39 @@ extension String {
         return result
     }
     
-    // usernameをリンク化
+    /// usernameをリンク化
     func hyperUser() -> String {
         return replacingOccurrences(of: "(@([a-zA-Z0-9]|\\.|_|@)+)",
                                     with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"http://tapEvents.misscat/$0\">$0</a>",
                                     options: .regularExpression)
     }
-    
+    /// ハッシュタグをリンク化
     func hyperHashtag() -> String {
         return replacingOccurrences(of: "(#[^(\\s|,)]+)",
                                     with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"http://hashtags.misscat/$0\">$0</a>",
                                     options: .regularExpression)
     }
     
+    
+    /// [at-mark.misscat.header], [hash-tag.misscat.header]を元に戻す
     func dehyperMagic() -> String {
         return replacingOccurrences(of: "[at-mark.misscat.header]", with: "@")
             .replacingOccurrences(of: "[hash-tag.misscat.header]", with: "#")
     }
     
+    
+    
+    /// カスタム絵文字以外のMFM処理を行う
     func mfmPreTransform() -> String {
         return MFMEngine.preTransform(string: self)
     }
     
-    // Must Be Used From Main Thread !
+    
+    /// 主にカスタム絵文字に関するMFM処理を行う
+    /// - Parameters:
+    ///   - font: フォント
+    ///   - externalEmojis: 外インスタンスのカスタム絵文字
+    ///   - lineHeight: 文字の高さ
     func mfmTransform(font: UIFont, externalEmojis: [EmojiModel?]? = nil, lineHeight: CGFloat? = nil) -> MFMString {
         let mfm = MFMEngine(with: self, lineHeight: lineHeight)
         let mfmString = MFMString(mfmEngine: mfm, attributed: mfm.transform(font: font, externalEmojis: externalEmojis))
@@ -311,6 +357,7 @@ extension String {
 }
 
 extension NoteModel {
+    /// MFMEngineをラッピング・MFMの前処理を行う
     func mfmPreTransform() -> NoteModel {
         text = MFMEngine.preTransform(string: text ?? "")
         return self
