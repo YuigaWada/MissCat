@@ -229,8 +229,8 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             .disposed(by: disposeBag)
         
         output.reactions.asDriver(onErrorDriveWith: Driver.empty()).map { // リアクションの数が0のときはreactionsCollectionViewを非表示に
-                guard $0.count == 1 else { return true }
-                return $0[0].items.count == 0
+            guard $0.count == 1 else { return true }
+            return $0[0].items.count == 0
         }.drive(reactionsCollectionView.rx.isHidden).disposed(by: disposeBag)
         
         output.reactions.asDriver(onErrorDriveWith: Driver.empty()).map { // リアクションの数によってreactionsCollectionViewの高さを調節
@@ -280,7 +280,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(nameTextView.rx.attributedText)
             .disposed(by: disposeBag)
-
+        
         output.shapedNote
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(noteView.rx.attributedText)

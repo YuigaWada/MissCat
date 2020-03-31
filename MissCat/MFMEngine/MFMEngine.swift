@@ -100,7 +100,6 @@ class MFMEngine {
         return shaped
     }
     
-    
     /// カスタム絵文字を表示するViewを生成し、YanagiTextへAddする
     /// - Parameter yanagi: YanagiText
     func renderCustomEmojis(on yanagi: YanagiText) {
@@ -118,7 +117,6 @@ class MFMEngine {
     }
     
     // MARK: Statics
-    
     
     /// NotificationCell.Modelを整形する
     /// - Parameter cellModel: NotificationCell.Model
@@ -146,7 +144,6 @@ class MFMEngine {
         }
     }
     
-    
     /// NoteCell.Modelを整形する
     /// - Parameter cellModel: NoteCell.Model
     static func shapeModel(_ cellModel: NoteCell.Model) {
@@ -159,13 +156,11 @@ class MFMEngine {
         }
     }
     
-    
     /// NoteCell.Modelのうち、投稿を整形する
     /// - Parameter cellModel: NoteCell.Model
     private static func shapeNote(_ cellModel: NoteCell.Model) -> MFMString {
         return shapeString(needReplyMark: cellModel.isReply, text: cellModel.note, emojis: cellModel.emojis)
     }
-    
     
     /// 任意の文字列を整形する
     /// - Parameters:
@@ -181,13 +176,11 @@ class MFMEngine {
         return MFMString(mfmEngine: mfmString.mfmEngine, attributed: replyHeader + (mfmString.attributed ?? .init()))
     }
     
-    
     /// 名前を整形
     /// - Parameter cellModel: NoteCell.Model
     private static func shapeDisplayName(_ cellModel: NoteCell.Model) -> MFMString {
         return shapeDisplayName(name: cellModel.displayName, username: cellModel.username, emojis: cellModel.emojis)
     }
-    
     
     /// 名前を整形
     /// - Parameter user: UserModel
@@ -195,7 +188,6 @@ class MFMEngine {
         guard let user = user else { return nil }
         return shapeDisplayName(name: user.name, username: user.username, emojis: user.emojis)
     }
-    
     
     /// 名前を整形
     /// - Parameters:
@@ -251,7 +243,6 @@ extension String {
         return EmojiHandler.handler.emojiEncoder(note: self, externalEmojis: externalEmojis)
     }
     
-    
     /// lリンク化する
     /// この時、urlに@が入ると後々hyperUserと干渉するので、
     /// @ → [at-mark.misscat.header] / # → [hash-tag.misscat.header] に変換しておく
@@ -280,7 +271,6 @@ extension String {
         return result
     }
     
-    
     /// MarkDownのため、文字列に修正を加える
     func markdown() -> String {
         let bold = replacingOccurrences(of: "\\*\\*([^\\*]+)\\*\\*",
@@ -293,7 +283,6 @@ extension String {
         
         return strikeThrough.disablingTags()
     }
-    
     
     /// 特定のタグを無効化していく
     func disablingTags() -> String {
@@ -321,6 +310,7 @@ extension String {
                                     with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"http://tapEvents.misscat/$0\">$0</a>",
                                     options: .regularExpression)
     }
+    
     /// ハッシュタグをリンク化
     func hyperHashtag() -> String {
         return replacingOccurrences(of: "(#[^(\\s|,)]+)",
@@ -328,20 +318,16 @@ extension String {
                                     options: .regularExpression)
     }
     
-    
     /// [at-mark.misscat.header], [hash-tag.misscat.header]を元に戻す
     func dehyperMagic() -> String {
         return replacingOccurrences(of: "[at-mark.misscat.header]", with: "@")
             .replacingOccurrences(of: "[hash-tag.misscat.header]", with: "#")
     }
     
-    
-    
     /// カスタム絵文字以外のMFM処理を行う
     func mfmPreTransform() -> String {
         return MFMEngine.preTransform(string: self)
     }
-    
     
     /// 主にカスタム絵文字に関するMFM処理を行う
     /// - Parameters:
