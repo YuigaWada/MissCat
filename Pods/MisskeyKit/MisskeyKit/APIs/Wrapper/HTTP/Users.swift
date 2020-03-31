@@ -314,9 +314,9 @@ extension MisskeyKit {
         
         
         //MARK:- User Report
-        public func reportAsAbuse(userIds: [String], comment: String, result callback: @escaping BooleanCallBack) {
+        public func reportAsAbuse(userId: String, comment: String, result callback: @escaping BooleanCallBack) {
             
-            var params = ["userId":userIds,
+            var params = ["userId":userId,
                           "comment":comment] as [String : Any]
             
             params = params.removeRedundant()
