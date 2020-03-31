@@ -32,6 +32,7 @@
 		8D42C3A8238076B600337DD2 /* Double+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D42C3A7238076B600337DD2 /* Double+MissCat.swift */; };
 		8D4754F7240E21B900BAD410 /* PollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4754F6240E21B900BAD410 /* PollView.swift */; };
 		8D4754F9240E21F800BAD410 /* PollView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D4754F8240E21F800BAD410 /* PollView.xib */; };
+		8D47FAD8243388B100549A0B /* TosViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D47FAD7243388B100549A0B /* TosViewController.swift */; };
 		8D4A2A16237437BE00503685 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4A2A15237437BE00503685 /* AppDelegate.swift */; };
 		8D4A2A18237437BE00503685 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4A2A17237437BE00503685 /* SceneDelegate.swift */; };
 		8D4A2A1A237437BE00503685 /* TimelineViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4A2A19237437BE00503685 /* TimelineViewController.swift */; };
@@ -149,6 +150,7 @@
 		8D42C3A7238076B600337DD2 /* Double+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double+MissCat.swift"; sourceTree = "<group>"; };
 		8D4754F6240E21B900BAD410 /* PollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollView.swift; sourceTree = "<group>"; };
 		8D4754F8240E21F800BAD410 /* PollView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PollView.xib; sourceTree = "<group>"; };
+		8D47FAD7243388B100549A0B /* TosViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TosViewController.swift; sourceTree = "<group>"; };
 		8D4A2A12237437BE00503685 /* MissCat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MissCat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D4A2A15237437BE00503685 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8D4A2A17237437BE00503685 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -274,6 +276,7 @@
 				8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */,
 				8DAD2389240CE76000AB1F36 /* StartViewController.swift */,
 				8DABCD092414D52D00D9F054 /* AuthWebViewController.swift */,
+				8D47FAD7243388B100549A0B /* TosViewController.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -713,6 +716,7 @@
 				8D3037002388F71E00BA6D38 /* MisskeyTextView.swift in Sources */,
 				8D0F7D0F2398F21F009B45E1 /* ReactionGenPanel.swift in Sources */,
 				8DEFF31E239BD4F200142802 /* ProfileModel.swift in Sources */,
+				8D47FAD8243388B100549A0B /* TosViewController.swift in Sources */,
 				8D63BFC3242BBF03009C3ADE /* HomeViewModel.swift in Sources */,
 				8D065B1B237ACA68003DFB7C /* NoteCell.swift in Sources */,
 				8D8863AB2383F96C00A7A5A8 /* NoteCellModel.swift in Sources */,
