@@ -241,6 +241,19 @@ class TimelineViewModel: ViewModelType {
         }
     }
     
+    /// 特定ユーザーの投稿をすべてTLから削除
+    /// - Parameter userId: userId
+    private func removeUser(of userId: String) {
+        cellsModel.filter { $0.userId == userId }
+            .map { cellsModel.firstIndex(of: $0) }
+            .compactMap { $0 }
+            .forEach { targetIndex in
+                cellsModel.remove(at: targetIndex)
+                updateNotes(new: cellsModel)
+                updateNotesForcibly(index: targetIndex)
+            }
+    }
+    
     /// 指定されたnoteIdを持つ投稿のindexを返します
     /// - Parameter noteId: noteId
     private func findNoteIndex(noteId: String) -> [Int] {
@@ -307,6 +320,21 @@ class TimelineViewModel: ViewModelType {
     
     func renote(noteId: String) {
         model.renote(noteId: noteId)
+    }
+    
+    func report(message: String, userId: String) {
+        removeUser(of: userId)
+        model.report(message: message, userId: userId)
+    }
+    
+    func block(userId: String) {
+        removeUser(of: userId)
+        model.block(userId)
+    }
+    
+    func deleteMyNote(noteId: String) {
+        removeNoteCell(noteId: noteId)
+        model.deleteMyNote(noteId)
     }
     
     func reloadNotes(_ completion: @escaping () -> Void) {

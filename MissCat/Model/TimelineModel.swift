@@ -209,6 +209,21 @@ class TimelineModel {
         }
     }
     
+    func report(message: String, userId: String) {
+        MisskeyKit.users.reportAsAbuse(userId: userId, comment: message) { _, _ in
+        }
+    }
+    
+    func block(_ userId: String) {
+        MisskeyKit.users.block(userId: userId) { _, _ in
+        }
+    }
+    
+    func deleteMyNote(_ noteId: String) {
+        MisskeyKit.notes.deletePost(noteId: noteId) { _, _ in
+        }
+    }
+    
     // MARK: Streaming API
     
     func connectStream(type: TimelineType, isReconnection reconnect: Bool = false) -> Observable<NoteCell.Model> { // streamingのresponseを捌くのはhandleStreamで行う

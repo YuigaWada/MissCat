@@ -19,7 +19,7 @@ protocol NoteCellDelegate {
     func tappedReply(note: NoteCell.Model)
     func tappedRenote(note: NoteCell.Model)
     func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool)
-    func tappedOthers()
+    func tappedOthers(note: NoteCell.Model)
     
     func move2PostDetail(item: NoteCell.Model)
     
@@ -656,7 +656,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     }
     
     @IBAction func tappedOthers(_ sender: Any) {
-        guard let delegate = delegate else { return }
-        delegate.tappedOthers()
+        guard let delegate = delegate, let noteModel = noteModel else { return }
+        delegate.tappedOthers(note: noteModel)
     }
 }

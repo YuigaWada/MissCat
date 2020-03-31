@@ -186,9 +186,9 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     @objc func refreshTableView(_ sender: Any) {
         guard let viewModel = viewModel else { return }
         
-//        viewModel.loadUntilNotes {
-//            DispatchQueue.main.async { self.refreshControl.endRefreshing() }
-//        }
+        //        viewModel.loadUntilNotes {
+        //            DispatchQueue.main.async { self.refreshControl.endRefreshing() }
+        //        }
     }
     
     // MARK: Setup Cell
@@ -254,16 +254,16 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     
     // estimatedHeightForRowAtとheightForRowAtてどっちもいるのか？
     // TODO: リアクションがつくと、高さが更新されずtextViewが潰れる
-//    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-//        guard let viewModel = viewModel else { return UITableView.automaticDimension }
-//
-//        let index = indexPath.row
-//        let id = viewModel.cellsModel[index].identity
-//
-//        guard let height = self.cellHeightCache[id] else {
-//            return viewModel.cellsModel[index].isRenoteeCell ? 25 : UITableView.automaticDimension
-//        }
-//        return height
+    //    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+    //        guard let viewModel = viewModel else { return UITableView.automaticDimension }
+    //
+    //        let index = indexPath.row
+    //        let id = viewModel.cellsModel[index].identity
+    //
+    //        guard let height = self.cellHeightCache[id] else {
+    //            return viewModel.cellsModel[index].isRenoteeCell ? 25 : UITableView.automaticDimension
+    //        }
+    //        return height
     //    }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -357,6 +357,132 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                                   isMyReaction: true,
                                   plus: plus,
                                   needReloading: false)
+    }
+    
+    override func tappedOthers(note: NoteCell.Model) {
+        // ユーザーをブロック・投稿を通報する
+        // 投稿の削除
+        note.userId.isMe { isMe in
+            if isMe { self.showDeletePanel(note); return }
+            self.showReportPanel(note)
+        }
+    }
+    
+    private func showReportPanel(_ note: NoteCell.Model) {
+        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
+        
+        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "ユーザーをブロック", awesomeIcon: "angry", order: 0),
+                                                             .init(title: "投稿を通報する", awesomeIcon: "ban", order: 1)]
+        
+        panelMenu.setPanelTitle("その他")
+        panelMenu.setupMenu(items: menuItems)
+        panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
+            guard order >= 0 else { return }
+            panelMenu.dismiss(animated: true, completion: nil)
+            
+            switch order {
+            case 0: // Block
+                self.showBlockAlert(note)
+            case 1: // Report
+                self.showReportAlert(note)
+            default:
+                break
+            }
+        }).disposed(by: disposeBag)
+        
+        presentWithSemiModal(panelMenu, animated: true, completion: nil)
+    }
+    
+    private func showDeletePanel(_ note: NoteCell.Model) {
+        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
+        
+        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "投稿を削除する", awesomeIcon: "trash-alt", order: 0)]
+        
+        panelMenu.setPanelTitle("その他")
+        panelMenu.setupMenu(items: menuItems)
+        panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
+            guard order >= 0 else { return }
+            panelMenu.dismiss(animated: true, completion: nil)
+            
+            switch order {
+            case 0:
+                self.showDeleteAlert(note)
+            default:
+                break
+            }
+        }).disposed(by: disposeBag)
+        
+        presentWithSemiModal(panelMenu, animated: true, completion: nil)
+    }
+    
+    private func showBlockAlert(_ note: NoteCell.Model) {
+        showAlert(title: "ブロック", message: "本当にこのユーザーをブロックしますか？", yesOption: "ブロック") { yes in
+            guard yes else { return }
+            self.viewModel?.block(userId: note.userId)
+        }
+    }
+    
+    private func showReportAlert(_ note: NoteCell.Model) {
+        // 投稿を削除する
+        // ユーザーをブロック
+        showTextAlert(title: "迷惑行為の詳細を記述してください", placeholder: "例: 著作権侵害/不適切な投稿など") { message in
+            self.showAlert(title: "通報", message: "本当にこの投稿を通報しますか？", yesOption: "通報") { yes in
+                guard yes else { return }
+                self.viewModel?.report(message: message, userId: note.userId)
+            }
+        }
+    }
+    
+    private func showDeleteAlert(_ note: NoteCell.Model) {
+        showAlert(title: "削除", message: "本当にこの投稿を削除しますか？", yesOption: "削除") { _ in
+            guard let noteId = note.noteId else { return }
+            self.viewModel?.deleteMyNote(noteId: noteId)
+        }
+    }
+    
+    private func showAlert(title: String, message: String, yesOption: String? = nil, action: @escaping (Bool) -> Void) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertController.Style.alert)
+        let cancelAction: UIAlertAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.cancel, handler: {
+            (_: UIAlertAction!) -> Void in
+            action(yesOption == nil)
+        })
+        
+        alert.addAction(cancelAction)
+        
+        if let yesOption = yesOption {
+            let defaultAction: UIAlertAction = UIAlertAction(title: yesOption, style: UIAlertAction.Style.destructive, handler: {
+                (_: UIAlertAction!) -> Void in
+                action(true)
+            })
+            alert.addAction(defaultAction)
+        }
+        
+        present(alert, animated: true, completion: nil)
+    }
+    
+    private func showTextAlert(title: String, placeholder: String, handler: @escaping (String) -> Void) {
+        let alert = UIAlertController(title: title, message: "", preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "決定", style: .default) { (_: UIAlertAction) in
+            guard let textFields = alert.textFields, textFields.count == 1, let text = textFields[0].text else { return }
+            if text.isEmpty {
+                self.showAlert(title: "エラー", message: "必ず入力してください") { _ in
+                    self.showTextAlert(title: title, placeholder: placeholder, handler: handler)
+                }
+                return
+            }
+            
+            handler(text)
+        }
+        let cancelAction = UIAlertAction(title: "閉じる", style: .cancel, handler: nil)
+        
+        alert.addAction(okAction)
+        alert.addAction(cancelAction)
+        
+        alert.addTextField { text in
+            text.placeholder = placeholder
+        }
+        
+        present(alert, animated: true, completion: nil)
     }
     
     // MARK: XLPagerTabStrip delegate

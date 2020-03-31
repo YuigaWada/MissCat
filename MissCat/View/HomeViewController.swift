@@ -384,7 +384,7 @@ extension HomeViewController: NoteCellDelegate {
     
     func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {}
     
-    func tappedOthers() {}
+    func tappedOthers(note: NoteCell.Model) {}
     
     func move2PostDetail(item: NoteCell.Model) {
         tappedCell(item: item)

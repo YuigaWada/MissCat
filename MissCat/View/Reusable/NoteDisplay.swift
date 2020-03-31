@@ -32,7 +32,9 @@ class NoteDisplay: UIViewController, NoteCellDelegate {
                                              hasMarked: hasMarked)
     }
     
-    func tappedOthers() {}
+    func tappedOthers(note: NoteCell.Model) {
+        homeViewController?.tappedOthers(note: note)
+    }
     
     func move2PostDetail(item: NoteCell.Model) {
         homeViewController?.tappedCell(item: item)
