@@ -51,7 +51,7 @@ class AccountViewController: UITableViewController {
         Cache.UserDefaults.shared.setCurrentLoginedInstance("")
         Cache.UserDefaults.shared.setCurrentLoginedUserId("")
         
-        presentOnFullScreen(viewController, animated: true, completion: nil)
+        navigationController?.pushViewController(viewController, animated: true)
     }
     
     private func getViewController(name: String) -> UIViewController {

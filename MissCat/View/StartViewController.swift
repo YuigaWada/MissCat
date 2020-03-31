@@ -72,6 +72,8 @@ class StartViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        navigationController?.setNavigationBarHidden(true, animated: animated)
         hideComponents()
     }
     
@@ -84,28 +86,45 @@ class StartViewController: UIViewController {
         }, completion: nil)
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+    
     // MARK: Privates
     
     // MARK: Binding
     
     private func binding() {
         signupButton.rx.tap.subscribe(onNext: { _ in
-            self.generateAppSecret { appSecret in
-                guard let authViewController = self.getAuthViewController(type: .Signup, appSecret: appSecret) else { return }
-                self.presentOnFullScreen(authViewController, animated: true, completion: nil)
-            }
+            guard let tos = self.getViewController(name: "tos") as? TosViewController else { return }
+            tos.agreed = self.signup
+            self.navigationController?.pushViewController(tos, animated: true)
         }).disposed(by: disposeBag)
         
         loginButton.rx.tap.subscribe(onNext: { _ in
-            self.generateAppSecret { appSecret in
-                guard let authViewController = self.getAuthViewController(type: .Login, appSecret: appSecret) else { return }
-                self.presentOnFullScreen(authViewController, animated: true, completion: nil)
-            }
+            guard let tos = self.getViewController(name: "tos") as? TosViewController else { return }
+            tos.agreed = self.login
+            self.navigationController?.pushViewController(tos, animated: true)
         }).disposed(by: disposeBag)
         
         changeInstanceButton.rx.tap.subscribe(onNext: { _ in
             self.showInstanceTextFiled()
         }).disposed(by: disposeBag)
+    }
+    
+    private func signup() {
+        generateAppSecret { appSecret in
+            guard let authViewController = self.getAuthViewController(type: .Signup, appSecret: appSecret) else { return }
+            self.presentOnFullScreen(authViewController, animated: true, completion: nil)
+        }
+    }
+    
+    private func login() {
+        generateAppSecret { appSecret in
+            guard let authViewController = self.getAuthViewController(type: .Login, appSecret: appSecret) else { return }
+            self.presentOnFullScreen(authViewController, animated: true, completion: nil)
+        }
     }
     
     // MARK: App
@@ -163,7 +182,7 @@ class StartViewController: UIViewController {
         _ = EmojiHandler.handler // カスタム絵文字を読み込む
         
         DispatchQueue.main.async {
-            self.dismiss(animated: true, completion: nil)
+            self.navigationController?.popViewController(animated: true)
         }
     }
     

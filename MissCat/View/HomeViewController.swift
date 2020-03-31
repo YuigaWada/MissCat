@@ -148,7 +148,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     
     private func showStartingViewController() {
         guard let startViewController = getViewController(name: "start") as? StartViewController else { return }
-        presentOnFullScreen(startViewController, animated: true, completion: nil)
+        navigationController?.pushViewController(startViewController, animated: true)
     }
     
     // MARK: Setup Tab
