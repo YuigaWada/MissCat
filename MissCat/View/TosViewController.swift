@@ -15,6 +15,7 @@ class TosViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(true)
+        title = "利用規約"
         navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
