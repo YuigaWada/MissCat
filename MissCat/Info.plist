@@ -31,13 +31,13 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string></string>
+	<string>アップロードする画像を撮影するために必要です。</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string></string>
+	<string>アップロードする動画を撮影するために必要です。</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string></string>
+	<string>アップロードする画像を管理するために必要です。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string></string>
+	<string>アップロードする画像を選択するために必要です。</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Font Awesome 5 Free-Solid-900.otf</string>
