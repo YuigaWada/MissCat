@@ -202,7 +202,7 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
     }
     
     private func getSearchTrigger() -> Observable<String> {
-        let debounceInterval = DispatchTimeInterval.milliseconds(500)
+        let debounceInterval = DispatchTimeInterval.milliseconds(300)
         return searchBar.rx.text.compactMap { $0?.localizedLowercase }.asObservable()
             .skip(1)
             .debounce(debounceInterval, scheduler: MainScheduler.instance)
