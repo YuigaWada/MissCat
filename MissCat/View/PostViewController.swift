@@ -205,16 +205,16 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
             setImageNSFW(to: cell)
         }
         
-        cell.tappedImage.subscribe { id in
-            guard item.id == id.element else { return }
+        cell.tappedImage.subscribe(onNext: { id in
+            guard item.id == id else { return }
             
             self.showPhotoEditor(with: item.image).subscribe(onNext: { editedImage in // 画像エディタを表示
                 guard let editedImage = editedImage else { return }
-                self.viewModel?.stackFile(original: item.image, edited: editedImage)
+                self.viewModel?.updateFile(id: id, edited: editedImage)
                 
             }).disposed(by: self.disposeBag)
             
-        }.disposed(by: disposeBag)
+        }).disposed(by: disposeBag)
         
         cell.tappedDiscardButton.subscribe(onNext: { id in
             self.viewModel?.removeAttachmentView(id)
@@ -498,13 +498,14 @@ extension PostViewController {
     }
     
     class Attachments {
-        var id: String = UUID().uuidString
+        var id: String
         
         var image: UIImage
         var type: Type
         var nsfw: Bool = false
         
-        init(image: UIImage, type: Type) {
+        init(id: String, image: UIImage, type: Type) {
+            self.id = id
             self.image = image
             self.type = type
         }

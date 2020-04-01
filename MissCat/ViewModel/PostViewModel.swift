@@ -131,6 +131,12 @@ class PostViewModel: ViewModelType {
         hasVideoAttachment = true
     }
     
+    func updateFile(id: String, edited: UIImage) {
+        guard !hasVideoAttachment else { return } // 写真と動画は共存させないように
+        
+        attachmentFiles.filter { $0.id == id }.forEach { $0.image = edited }
+    }
+    
     func removeAttachmentView(_ id: String) {
         for index in 0 ..< attachmentsLists.count {
             let attachment = attachmentsLists[index]
@@ -187,10 +193,10 @@ class PostViewModel: ViewModelType {
         var item: PostViewController.Attachments
         if attachment.isVideo {
             guard let thumbnail = attachment.videoThumbnail else { return }
-            item = .init(image: thumbnail, type: .Video)
+            item = .init(id: attachment.id, image: thumbnail, type: .Video)
         } else {
             guard let originalImage = attachment.originalImage else { return }
-            item = .init(image: originalImage, type: .Image)
+            item = .init(id: attachment.id, image: originalImage, type: .Image)
         }
         
         attachmentsLists.append(item)
