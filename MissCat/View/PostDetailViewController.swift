@@ -118,9 +118,18 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
         return height
     }
     
-    // セル選択後すぐに選択をキャンセルする
+    // セル選択後すぐに選択をキャンセルする + タップ処理
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath as IndexPath, animated: true)
+        
+        guard let viewModel = viewModel else { return }
+        let index = indexPath.row
+        let item = viewModel.cellsModel[index]
+        
+        let isTappable = item.identity != mainItem?.identity
+        if isTappable {
+            homeViewController?.tappedCell(item: item)
+        }
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
