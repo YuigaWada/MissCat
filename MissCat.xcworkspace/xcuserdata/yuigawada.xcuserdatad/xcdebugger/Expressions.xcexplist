@@ -27,6 +27,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "PostViewModel.updateFile(id:edited:):PostViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "attachmentFiles[0].id">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in TimelineViewModel.init(type:includeReplies:onlyFiles:userId:listId:disposeBag:):TimelineViewModel.swift">
          <PersistentStrings>
             <PersistentString
