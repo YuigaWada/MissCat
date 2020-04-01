@@ -600,12 +600,14 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             innerRenoteDisplay.isHidden = true
             
             skeltonCover.showAnimatedGradientSkeleton()
+            isUserInteractionEnabled = false // skelton表示されたセルはタップできないように
         } else {
             nameTextView.hideSkeleton()
             iconView.hideSkeleton()
             
             skeltonCover.hideSkeleton()
             skeltonCover.isHidden = true
+            isUserInteractionEnabled = true
         }
     }
     
