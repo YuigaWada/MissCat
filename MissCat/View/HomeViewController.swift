@@ -31,9 +31,10 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     private var myProfileViewController: ProfileViewController?
     private var currentProfileViewController: ProfileViewController?
     
+    // ioの場合はLTLではなくHomeを表示(Appleに怒られた)
     private lazy var search = self.getViewController(name: "404-page")
     private lazy var home = self.generateTimelineVC(type: .Home)
-    private lazy var local = self.generateTimelineVC(type: .Local)
+    private lazy var local = io ? self.generateTimelineVC(type: .Home) : self.generateTimelineVC(type: .Local)
     private lazy var global = self.generateTimelineVC(type: .Global)
     
     // Tab
@@ -52,6 +53,8 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     
     private var previousPage: Page = .Main
     private var logined: Bool = false
+    private var currentInstance: String = "misskey.io"
+    private var io: Bool { return currentInstance == "misskey.io" }
     
     private var viewModel = HomeViewModel()
     private var disposeBag = DisposeBag()
@@ -143,7 +146,9 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         
         MisskeyKit.changeInstance(instance: currentInstance)
         MisskeyKit.auth.setAPIKey(apiKey)
+        
         logined = true
+        self.currentInstance = currentInstance
     }
     
     private func showStartingViewController() {
