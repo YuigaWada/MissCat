@@ -125,12 +125,12 @@ class MFMEngine {
             cellModel.shapedDisplayName = shapeDisplayName(user: user)
             // MEMO: MisskeyApiの "i/notifications"はfromUserの自己紹介を流してくれないので、対応するまで非表示にする
             
-//            if cellModel.type == .follow {
-//                let description = user.description ?? "自己紹介文はありません"
-//                cellModel.shapedDescritpion = shapeString(needReplyMark: false,
-//                                                          text: description,
-//                                                          emojis: user.emojis)
-//            }
+            //            if cellModel.type == .follow {
+            //                let description = user.description ?? "自己紹介文はありません"
+            //                cellModel.shapedDescritpion = shapeString(needReplyMark: false,
+            //                                                          text: description,
+            //                                                          emojis: user.emojis)
+            //            }
         }
         
         if let myNote = cellModel.myNote {
@@ -255,11 +255,10 @@ extension String {
         // normal Link
         let normalLink = "(https?://[\\w/:%#\\$&\\?\\(~\\.=\\+\\-@\"]+)"
         let targets = result.regexMatches(pattern: normalLink).map { $0[0] }.filter {
-            $0.suffix(1) != "\""
+            $0.suffix(1) != "\"" // 上で処理されたものは弾く
         }
         
         // 先ににaタグに変換しておくと都合が良い
-        
         targets.forEach { target in
             var to = target.replacingOccurrences(of: "@", with: "[at-mark.misscat.header]")
             to = to.replacingOccurrences(of: "#", with: "[hash-tag.misscat.header]")
@@ -267,6 +266,9 @@ extension String {
             result = result.replacingOccurrences(of: target,
                                                  with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"\(to)\">\(to)</a>")
         }
+        
+        // mfm link (ex. <http~~>で、日本語を含めたリンク化ができるらしい)
+        result = result.replacingOccurrences(of: "<<a", with: "<a").replacingOccurrences(of: "a>>", with: "a>")
         
         return result
     }
