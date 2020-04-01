@@ -243,7 +243,7 @@ extension String {
         return EmojiHandler.handler.emojiEncoder(note: self, externalEmojis: externalEmojis)
     }
     
-    /// lリンク化する
+    /// リンク化する
     /// この時、urlに@が入ると後々hyperUserと干渉するので、
     /// @ → [at-mark.misscat.header] / # → [hash-tag.misscat.header] に変換しておく
     func hyperLink() -> String {
