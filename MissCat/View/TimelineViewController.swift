@@ -104,11 +104,6 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         }
         
         binding(dataSource: dataSource)
-        
-        loggedIn = hasApiKey
-        if hasApiKey {
-            viewModel?.setupInitialCell()
-        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
