@@ -1,6 +1,0 @@
-framework module MisskeyKit {
-  umbrella header "MisskeyKit-umbrella.h"
-
-  export *
-  module * { export * }
-}
