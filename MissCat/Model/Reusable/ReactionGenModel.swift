@@ -142,7 +142,8 @@ class ReactionGenModel {
             return
         }
         
-        var history = ReactionGenModel.fileShared.historyEmojis!.filter { !$0.isFake }
+        // 重複する分とpaddingのためのフェイクは除く
+        var history = ReactionGenModel.fileShared.historyEmojis!.filter { !$0.isFake && $0.rawEmoji != emojiModel.rawEmoji }
         if history.count > 7 * 2 { // 2行分だけ表示させる
             history.removeLast()
         }
