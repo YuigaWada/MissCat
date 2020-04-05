@@ -140,7 +140,9 @@ class ReactionGenModel {
     /// - Parameter emojiModel: EmojiView.EmojiModel
     private func saveHistory(_ emojiModel: EmojiView.EmojiModel) {
         guard ReactionGenModel.fileShared.historyEmojis != nil else {
-            ReactionGenModel.fileShared.historyEmojis = [emojiModel]
+            let history = [emojiModel]
+            ReactionGenModel.fileShared.historyEmojis = history
+            EmojiModel.saveEmojis(with: history, type: .history)
             return
         }
         
