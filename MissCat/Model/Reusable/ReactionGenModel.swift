@@ -49,8 +49,10 @@ class ReactionGenModel {
                                               defaultEmoji: char,
                                               customEmojiUrl: nil))
             }
-            fakeCellPadding(array: &emojiModels, count: defaultPreset.count)
+            
             EmojiModel.saveEmojis(with: emojiModels, type: .favs)
+            fakeCellPadding(array: &emojiModels, count: defaultPreset.count)
+            
             return emojiModels
         }
         
