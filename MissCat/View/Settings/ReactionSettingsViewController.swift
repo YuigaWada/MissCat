@@ -37,7 +37,13 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         super.viewWillAppear(animated)
     }
     
-    override func viewWillDisappear(_ animated: Bool) {}
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        if let viewModel = viewModel, !viewModel.state.saved {
+            viewModel.save()
+        }
+    }
     
     // MARK: Setup
     
@@ -184,7 +190,9 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     
     // MARK: Others
     
-    @objc func save() {}
+    @objc func save() {
+        viewModel?.save()
+    }
     
     private func showReactionGen() {
         guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }

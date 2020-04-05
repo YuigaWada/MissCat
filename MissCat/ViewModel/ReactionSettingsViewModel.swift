@@ -21,6 +21,7 @@ class ReactionSettingsViewModel: ViewModelType {
     
     struct State {
         var editting: Bool = false
+        var saved: Bool = true
     }
     
     var output = Output()
@@ -73,6 +74,13 @@ class ReactionSettingsViewModel: ViewModelType {
         updateEmojis(emojis)
     }
     
+    /// お気に入り絵文字を保存する
+    func save() {
+        EmojiView.EmojiModel.saveEmojis(with: emojis, type: .favs)
+        ReactionGenModel.fileShared.favEmojiModels = emojis
+        state.saved = true
+    }
+    
     // MARK: Utilities
     
     private func updateEmojis(_ items: [EmojiView.EmojiModel]) {
@@ -82,5 +90,6 @@ class ReactionSettingsViewModel: ViewModelType {
     
     private func updateEmojis(_ section: ReactionGenViewController.EmojisSection) {
         output.favs.onNext([section])
+        state.saved = false
     }
 }
