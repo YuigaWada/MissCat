@@ -94,6 +94,7 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     private func setupGesture() {
         let longGesture = UILongPressGestureRecognizer()
         
+        longGesture.cancelsTouchesInView = false
         longGesture.minimumPressDuration = 0.01 // 検知間隔を調整
         longGesture.rx.event.bind { gesture in
             guard let viewModel = self.viewModel, !viewModel.state.editting else { return }
@@ -172,6 +173,19 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         }
     }
     
+    // MARK: Delegate
+    
+    // タップ処理
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard let viewModel = viewModel else { return }
+        
+        let index = indexPath.row
+        if viewModel.state.editting {
+            viewModel.removeCell(index)
+            changeEditState(false)
+        }
+    }
+    
     // MARK: Others
     
     @objc func save() {}
@@ -197,7 +211,11 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     
     private func changeEditState(_ editState: Bool) {
         viewModel?.changeEditState(editState)
-        emojiCollectionView.visibleCells.forEach { self.vibrated(vibrated: editState, view: $0) }
+        vibrateCell(on: editState)
+    }
+    
+    private func vibrateCell(on vibrated: Bool) {
+        emojiCollectionView.visibleCells.forEach { self.vibrated(vibrated: vibrated, view: $0) }
     }
     
     private func degreesToRadians(_ degrees: Float) -> Float {

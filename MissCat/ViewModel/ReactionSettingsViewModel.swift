@@ -64,6 +64,15 @@ class ReactionSettingsViewModel: ViewModelType {
         updateEmojis(emojis)
     }
     
+    /// セルを削除する
+    /// - Parameter index: Int
+    func removeCell(_ index: Int) {
+        guard index >= 0, index < emojis.count, state.editting else { return }
+        
+        emojis.remove(at: index)
+        updateEmojis(emojis)
+    }
+    
     // MARK: Utilities
     
     private func updateEmojis(_ items: [EmojiView.EmojiModel]) {
