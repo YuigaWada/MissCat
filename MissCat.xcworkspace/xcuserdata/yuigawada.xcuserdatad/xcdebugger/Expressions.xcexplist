@@ -76,6 +76,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "ReactionSettingsViewController.handleGesture(with:):ReactionSettingsViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = " gesture.view">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "HomeViewController.setupNavTab():HomeViewController.swift">
          <PersistentStrings>
             <PersistentString
@@ -721,6 +729,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #1 in ReactionGenViewModel.emojisList.getter:ReactionGenViewModel.swift">
+      </ContextState>
+      <ContextState
          contextName = "PagerTabStripViewController.updateContent():PagerTabStripViewController.swift">
          <PersistentStrings>
             <PersistentString
@@ -1094,14 +1105,6 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "ReactionGenModel.saveHistory(_:):ReactionGenModel.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = " ReactionGenModel.fileShared.historyEmojis">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "TimelineViewModel.loadUntilNotes(completion:):TimelineViewModel.swift">
          <PersistentStrings>
             <PersistentString
@@ -1467,14 +1470,6 @@
          <PersistentStrings>
             <PersistentString
                value = "item.defaultEmoji">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "EmojiView.EmojiModel.init(coder:):EmojiView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "aDecoder.decodeBool(forKey: &quot;isDefault&quot;) ">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

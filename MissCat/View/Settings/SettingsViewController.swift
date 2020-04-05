@@ -54,7 +54,7 @@ class SettingsViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let index = indexPath.row
         
-        if index == 1 || index == 2 {
+        if index == 1 {
             let viewController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "404-page")
             
             navigationController?.pushViewController(viewController, animated: true)

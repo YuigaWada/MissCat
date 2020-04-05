@@ -14,7 +14,7 @@ private typealias EmojiModel = EmojiView.EmojiModel
 class ReactionGenModel {
     // MARK: EMOJIS
     
-    fileprivate static let fileShared: ReactionGenModel = .init(isFileShared: true) // 事前に詠み込んだ絵文字データを半永続化
+    static let fileShared: ReactionGenModel = .init(isFileShared: true) // 事前に詠み込んだ絵文字データを半永続化
     fileprivate class Emojis {
         var currentIndex: Int = 0
         var isLoading: Bool = false
@@ -24,8 +24,8 @@ class ReactionGenModel {
         lazy var categorizedCustom = EmojiHandler.handler.categorizedCustomEmojis
     }
     
-    fileprivate lazy var favEmojiModels = EmojiModel.getEmojis(type: .favs)
-    fileprivate lazy var historyEmojis = EmojiModel.getEmojis(type: .history)
+    lazy var favEmojiModels = EmojiModel.getEmojis(type: .favs)
+    lazy var historyEmojis = EmojiModel.getEmojis(type: .history)
     
     // MARK: Private Vars
     
