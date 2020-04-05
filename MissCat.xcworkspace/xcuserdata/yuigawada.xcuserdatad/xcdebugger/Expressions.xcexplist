@@ -106,10 +106,10 @@
                value = "item.displayName">
             </PersistentString>
             <PersistentString
-               value = "item.reactions">
+               value = "item.note">
             </PersistentString>
             <PersistentString
-               value = "item.note">
+               value = "item.reactions">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -152,10 +152,10 @@
                value = " MisskeyKit.auth.appSecret">
             </PersistentString>
             <PersistentString
-               value = "self.footerTab">
+               value = "UIScreen.main.bounds.size.height">
             </PersistentString>
             <PersistentString
-               value = "UIScreen.main.bounds.size.height">
+               value = "self.footerTab">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -304,6 +304,9 @@
                value = "initialLoaded">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ReactionGenModel.getHistoryEmojis():ReactionGenModel.swift">
       </ContextState>
       <ContextState
          contextName = "YanagiText.transformText():YanagiText.swift">
@@ -788,10 +791,10 @@
          contextName = "NoteCell.setupCollectionView():NoteCell.swift">
          <PersistentStrings>
             <PersistentString
-               value = "agoLabel">
+               value = "reactionsCollectionView">
             </PersistentString>
             <PersistentString
-               value = "reactionsCollectionView">
+               value = "agoLabel">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -845,10 +848,10 @@
          contextName = "ProfileViewController.timelineDidScroll(_:scroll:):ProfileViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "pagerTab.frame.origin.y">
+               value = "containerScrollView.contentOffset.y">
             </PersistentString>
             <PersistentString
-               value = "containerScrollView.contentOffset.y">
+               value = "pagerTab.frame.origin.y">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1031,13 +1034,13 @@
          contextName = "TimelineViewController.tableView(_:estimatedHeightForRowAt:):TimelineViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "tableView.frame">
+               value = "viewModel.cellsModel.count">
             </PersistentString>
             <PersistentString
                value = "cellHeightCache">
             </PersistentString>
             <PersistentString
-               value = "viewModel.cellsModel.count">
+               value = "tableView.frame">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1087,6 +1090,14 @@
             </PersistentString>
             <PersistentString
                value = "self.iconView">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ReactionGenModel.saveHistory(_:):ReactionGenModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = " ReactionGenModel.fileShared.historyEmojis">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1267,13 +1278,13 @@
          contextName = "ProfileViewController.scrollViewDidScroll(_:):ProfileViewController.swift">
          <PersistentStrings>
             <PersistentString
-               value = "scrollView as! UIScrollView">
+               value = "scrollView.contentOffset.x">
             </PersistentString>
             <PersistentString
                value = "scrollView.contentOffset.y">
             </PersistentString>
             <PersistentString
-               value = "scrollView.contentOffset.x">
+               value = "scrollView as! UIScrollView">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1444,10 +1455,10 @@
          contextName = "static Requestor.post(url:rawJson:data:completion:):Requestor.swift">
          <PersistentStrings>
             <PersistentString
-               value = "String(data: bodyData)">
+               value = "request.httpAdditionalHeaders">
             </PersistentString>
             <PersistentString
-               value = "request.httpAdditionalHeaders">
+               value = "String(data: bodyData)">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -1456,6 +1467,14 @@
          <PersistentStrings>
             <PersistentString
                value = "item.defaultEmoji">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "EmojiView.EmojiModel.init(coder:):EmojiView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "aDecoder.decodeBool(forKey: &quot;isDefault&quot;) ">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
