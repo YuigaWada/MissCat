@@ -40,6 +40,11 @@ class ReactionSettingsViewModel: ViewModelType {
         updateEmojis(emojis)
     }
     
+    func addEmoji(_ emojiModel: EmojiView.EmojiModel) {
+        emojis.append(emojiModel)
+        updateEmojis(emojis)
+    }
+    
     private func updateEmojis(_ items: [EmojiView.EmojiModel]) {
         let section = ReactionGenViewController.EmojisSection(items: items)
         updateEmojis(section)

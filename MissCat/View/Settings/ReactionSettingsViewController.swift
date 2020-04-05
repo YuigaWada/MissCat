@@ -13,10 +13,10 @@ import UIKit
 
 class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate {
     @IBOutlet weak var emojiCollectionView: UICollectionView!
-    
     @IBOutlet weak var plusButton: UIButton!
-    private lazy var defaultCellsize = view.frame.width / 8
     @IBOutlet weak var minusButton: UIButton!
+    
+    private lazy var defaultCellsize = view.frame.width / 8
     
     private var viewModel: ReactionSettingsViewModel?
     private let disposeBag = DisposeBag()
@@ -125,6 +125,14 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         
         let output = viewModel.output
         output.favs.bind(to: emojiCollectionView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
+        
+        plusButton.rx.tap.subscribe(onNext: { _ in
+            self.showReactionGen()
+        }).disposed(by: disposeBag)
+        
+        minusButton.rx.tap.subscribe(onNext: { _ in
+            
+        }).disposed(by: disposeBag)
     }
     
     private func setupCell(_ dataSource: CollectionViewSectionedDataSource<ReactionGenViewController.EmojisSection>, _ collectionView: UICollectionView, _ indexPath: IndexPath) -> UICollectionViewCell {
@@ -152,5 +160,34 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         }
     }
     
+    // MARK: Others
+    
     @objc func save() {}
+    
+    private func showReactionGen() {
+        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+        
+        reactionGen.onPostViewController = true
+        reactionGen.selectedEmoji.subscribe(onNext: { emojiModel in // ReactionGenで絵文字が選択されたらに送られてくる
+            self.viewModel?.addEmoji(emojiModel)
+            reactionGen.dismiss(animated: true, completion: nil)
+        }).disposed(by: disposeBag)
+        
+        presentWithSemiModal(reactionGen, animated: true, completion: nil)
+    }
+    
+    private func getViewController(name: String) -> UIViewController {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let viewController = storyboard.instantiateViewController(withIdentifier: name)
+        
+        return viewController
+    }
+    
+    private func shake(_ view: UIView) {
+        let animation = CAKeyframeAnimation(keyPath: "transform.translation.x")
+        animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
+        animation.duration = 0.6
+        animation.values = [-20.0, 20.0, -20.0, 20.0, -10.0, 10.0, -5.0, 5.0, 0.0]
+        view.layer.add(animation, forKey: "shake")
+    }
 }
