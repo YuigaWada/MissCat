@@ -131,15 +131,19 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         output.favs.bind(to: emojiCollectionView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
         
         plusButton.rx.tap.subscribe(onNext: { _ in
-            self.showReactionGen()
+            let currentEditState = self.viewModel?.state.editting ?? false
+            if currentEditState {
+                self.changeEditState(false)
+            } else {
+                self.showReactionGen()
+            }
         }).disposed(by: disposeBag)
         
         minusButton.rx.tap.subscribe(onNext: { _ in
             guard let viewModel = self.viewModel else { return }
             
             let currentEditState = viewModel.state.editting
-            viewModel.changeEditState(!currentEditState)
-            self.emojiCollectionView.visibleCells.forEach { self.vibrated(vibrated: !currentEditState, view: $0) }
+            self.changeEditState(!currentEditState)
         }).disposed(by: disposeBag)
     }
     
@@ -189,6 +193,11 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         let viewController = storyboard.instantiateViewController(withIdentifier: name)
         
         return viewController
+    }
+    
+    private func changeEditState(_ editState: Bool) {
+        viewModel?.changeEditState(editState)
+        emojiCollectionView.visibleCells.forEach { self.vibrated(vibrated: editState, view: $0) }
     }
     
     private func degreesToRadians(_ degrees: Float) -> Float {
