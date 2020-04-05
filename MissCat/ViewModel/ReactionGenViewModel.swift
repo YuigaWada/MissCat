@@ -47,8 +47,6 @@ class ReactionGenViewModel: ViewModelType {
     private let model = ReactionGenModel()
     private let disposeBag: DisposeBag
     
-    private var isLoading: Bool = false
-    
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
         self.disposeBag = disposeBag
@@ -59,15 +57,9 @@ class ReactionGenViewModel: ViewModelType {
     // MARK: Publics
     
     func setEmojiModel(completion: (() -> Void)? = nil) {
-        guard !isLoading else { return }
-        
         model.getEmojiModel().subscribe(onNext: { emojis in
-            self.isLoading = true
-            
             self.emojisList.append(emojis)
             self.updateEmojis(self.emojisList)
-            
-            self.isLoading = false
             completion?()
         }).disposed(by: disposeBag)
     }
