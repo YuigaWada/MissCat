@@ -128,8 +128,8 @@ extension EmojiView {
         // MARK: UserDefaults Init
         
         required init?(coder aDecoder: NSCoder) {
-            rawEmoji = (aDecoder.decodeObject(forKey: "rawEmoji") ?? true) as? String ?? ""
-            isDefault = (aDecoder.decodeObject(forKey: "isDefault") ?? true) as? Bool ?? true
+            rawEmoji = aDecoder.decodeObject(forKey: "rawEmoji") as? String ?? ""
+            isDefault = aDecoder.decodeBool(forKey: "isDefault")
             defaultEmoji = aDecoder.decodeObject(forKey: "defaultEmoji") as? String
             customEmojiUrl = aDecoder.decodeObject(forKey: "customEmojiUrl") as? String
         }
