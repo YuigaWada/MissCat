@@ -54,6 +54,9 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     private func setupComponents() {
         emojiCollectionView.register(UINib(nibName: "EmojiViewCell", bundle: nil), forCellWithReuseIdentifier: "EmojiCell")
         emojiCollectionView.rx.setDelegate(self).disposed(by: disposeBag)
+        
+        plusButton.titleLabel?.font = UIFont.awesomeSolid(fontSize: 14.0)
+        minusButton.titleLabel?.font = UIFont.awesomeSolid(fontSize: 14.0)
     }
     
     private func setupCollectionViewLayout() {
@@ -93,6 +96,7 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         
         longGesture.minimumPressDuration = 0.01 // 検知間隔を調整
         longGesture.rx.event.bind { gesture in
+            guard let viewModel = self.viewModel, !viewModel.state.editting else { return }
             self.handleGesture(with: gesture)
         }.disposed(by: disposeBag)
         
@@ -131,7 +135,11 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         }).disposed(by: disposeBag)
         
         minusButton.rx.tap.subscribe(onNext: { _ in
+            guard let viewModel = self.viewModel else { return }
             
+            let currentEditState = viewModel.state.editting
+            viewModel.changeEditState(!currentEditState)
+            self.emojiCollectionView.visibleCells.forEach { self.vibrated(vibrated: !currentEditState, view: $0) }
         }).disposed(by: disposeBag)
     }
     
@@ -183,11 +191,22 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         return viewController
     }
     
-    private func shake(_ view: UIView) {
-        let animation = CAKeyframeAnimation(keyPath: "transform.translation.x")
-        animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
-        animation.duration = 0.6
-        animation.values = [-20.0, 20.0, -20.0, 20.0, -10.0, 10.0, -5.0, 5.0, 0.0]
-        view.layer.add(animation, forKey: "shake")
+    private func degreesToRadians(_ degrees: Float) -> Float {
+        return degrees * Float(Double.pi) / 180.0
+    }
+    
+    private func vibrated(vibrated: Bool, view: UIView) {
+        if vibrated {
+            let animation = CABasicAnimation(keyPath: "transform.rotation")
+            
+            animation.duration = 0.05
+            animation.fromValue = degreesToRadians(5.0)
+            animation.toValue = degreesToRadians(-5.0)
+            animation.repeatCount = Float.infinity
+            animation.autoreverses = true
+            view.layer.add(animation, forKey: "VibrateAnimationKey")
+        } else {
+            view.layer.removeAnimation(forKey: "VibrateAnimationKey")
+        }
     }
 }

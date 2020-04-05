@@ -19,9 +19,13 @@ class ReactionSettingsViewModel: ViewModelType {
         let favs: PublishSubject<[ReactionGenViewController.EmojisSection]> = .init()
     }
     
-    struct State {}
+    struct State {
+        var editting: Bool = false
+    }
     
     var output = Output()
+    var state = State()
+    
     private var disposeBag: DisposeBag
     private var emojis: [EmojiView.EmojiModel] = []
     
