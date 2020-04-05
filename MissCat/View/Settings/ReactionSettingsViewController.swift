@@ -35,7 +35,6 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        setupNavButton()
     }
     
     override func viewWillDisappear(_ animated: Bool) {}
@@ -84,11 +83,6 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         )
         
         return dataSource
-    }
-    
-    private func setupNavButton() {
-        let saveButton = UIBarButtonItem(title: "保存", style: .done, target: self, action: #selector(save))
-        navigationItem.rightBarButtonItems = [saveButton]
     }
     
     // MARK: Gesture
