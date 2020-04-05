@@ -11,6 +11,8 @@ import MisskeyKit
 extension NoteModel {
     fileprivate var post: NoteModel { return self }
     
+    /// おすすめノートかどうか
+    var isRecommended: Bool { return post._featuredId_ != nil || post._prId_ != nil }
     
     /// NoteModelをNoteCell.Modelに変換する
     /// - Parameters:
