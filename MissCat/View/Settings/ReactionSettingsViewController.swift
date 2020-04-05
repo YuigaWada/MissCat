@@ -57,6 +57,8 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         
         plusButton.titleLabel?.font = UIFont.awesomeSolid(fontSize: 14.0)
         minusButton.titleLabel?.font = UIFont.awesomeSolid(fontSize: 14.0)
+        
+        title = "絵文字の編集"
     }
     
     private func setupCollectionViewLayout() {
