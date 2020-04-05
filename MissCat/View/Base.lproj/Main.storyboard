@@ -1553,7 +1553,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="rFm-Vy-dpN">
-                                <rect key="frame" x="20" y="85" width="374" height="229"/>
+                                <rect key="frame" x="10" y="85" width="394" height="723"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="DjG-km-0nL">
                                     <size key="itemSize" width="50" height="50"/>
@@ -1572,19 +1572,49 @@
                                     </collectionViewCell>
                                 </cells>
                             </collectionView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="pPR-IU-ps1">
+                                <rect key="frame" x="73" y="40" width="30" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="30" id="2v1-0p-UVr"/>
+                                    <constraint firstAttribute="width" constant="30" id="rl8-x3-OWN"/>
+                                </constraints>
+                                <state key="normal" title="Button" image="minus" catalog="system"/>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="dtf-6a-1dk">
+                                <rect key="frame" x="30" y="40" width="30" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="30" id="GZ2-v0-jCd"/>
+                                    <constraint firstAttribute="width" constant="30" id="xMR-dn-Gsg"/>
+                                </constraints>
+                                <state key="normal" title="Button" image="plus" catalog="system"/>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="長押しで順序を変更できます" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ngt-3s-MrJ">
+                                <rect key="frame" x="247" y="63" width="147" height="14"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="11"/>
+                                <color key="textColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
-                            <constraint firstItem="6aJ-ZQ-cCw" firstAttribute="trailing" secondItem="rFm-Vy-dpN" secondAttribute="trailing" constant="20" id="37e-bJ-bv1"/>
-                            <constraint firstItem="rFm-Vy-dpN" firstAttribute="leading" secondItem="6aJ-ZQ-cCw" secondAttribute="leading" constant="20" id="AjM-Fb-tLt"/>
-                            <constraint firstItem="rFm-Vy-dpN" firstAttribute="top" secondItem="6aJ-ZQ-cCw" secondAttribute="top" constant="85" id="WYu-l6-qzV"/>
-                            <constraint firstItem="6aJ-ZQ-cCw" firstAttribute="bottom" secondItem="rFm-Vy-dpN" secondAttribute="bottom" constant="494" id="pzl-fT-GdP"/>
+                            <constraint firstItem="rFm-Vy-dpN" firstAttribute="top" secondItem="ngt-3s-MrJ" secondAttribute="bottom" constant="8" id="19W-q7-y15"/>
+                            <constraint firstItem="6aJ-ZQ-cCw" firstAttribute="trailing" secondItem="rFm-Vy-dpN" secondAttribute="trailing" constant="10" id="37e-bJ-bv1"/>
+                            <constraint firstItem="rFm-Vy-dpN" firstAttribute="leading" secondItem="6aJ-ZQ-cCw" secondAttribute="leading" constant="10" id="AjM-Fb-tLt"/>
+                            <constraint firstItem="dtf-6a-1dk" firstAttribute="leading" secondItem="6aJ-ZQ-cCw" secondAttribute="leading" constant="30" id="Iro-6j-W42"/>
+                            <constraint firstItem="pPR-IU-ps1" firstAttribute="leading" secondItem="dtf-6a-1dk" secondAttribute="trailing" constant="13" id="SLr-my-TOn"/>
+                            <constraint firstItem="rFm-Vy-dpN" firstAttribute="top" secondItem="dtf-6a-1dk" secondAttribute="bottom" constant="15" id="WYu-l6-qzV"/>
+                            <constraint firstItem="6aJ-ZQ-cCw" firstAttribute="trailing" secondItem="ngt-3s-MrJ" secondAttribute="trailing" constant="20" id="kIa-WK-7H0"/>
+                            <constraint firstItem="pPR-IU-ps1" firstAttribute="top" secondItem="dtf-6a-1dk" secondAttribute="top" id="klZ-Dc-uh0"/>
+                            <constraint firstItem="dtf-6a-1dk" firstAttribute="top" secondItem="6aJ-ZQ-cCw" secondAttribute="top" constant="40" id="o0x-SZ-cEJ"/>
+                            <constraint firstItem="6aJ-ZQ-cCw" firstAttribute="bottom" secondItem="rFm-Vy-dpN" secondAttribute="bottom" id="pzl-fT-GdP"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6aJ-ZQ-cCw"/>
                     </view>
                     <navigationItem key="navigationItem" id="XhT-VD-0B6"/>
                     <connections>
                         <outlet property="emojiCollectionView" destination="rFm-Vy-dpN" id="wic-PH-5dy"/>
+                        <outlet property="minusButton" destination="pPR-IU-ps1" id="SgX-12-X5v"/>
+                        <outlet property="plusButton" destination="dtf-6a-1dk" id="9U3-ZT-dD4"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="teO-MD-jCE" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -1667,5 +1697,7 @@
     <resources>
         <image name="Logo" width="581" height="150.5"/>
         <image name="Sad_Ai" width="586" height="536"/>
+        <image name="minus" catalog="system" width="64" height="12"/>
+        <image name="plus" catalog="system" width="64" height="56"/>
     </resources>
 </document>

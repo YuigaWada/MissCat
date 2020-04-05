@@ -14,7 +14,9 @@ import UIKit
 class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate {
     @IBOutlet weak var emojiCollectionView: UICollectionView!
     
+    @IBOutlet weak var plusButton: UIButton!
     private lazy var defaultCellsize = view.frame.width / 8
+    @IBOutlet weak var minusButton: UIButton!
     
     private var viewModel: ReactionSettingsViewModel?
     private let disposeBag = DisposeBag()
@@ -31,6 +33,13 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         viewModel.setEmojiModel()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        setupNavButton()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {}
+    
     // MARK: Setup
     
     private func setupViewModel() -> ReactionSettingsViewModel {
@@ -43,7 +52,6 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     }
     
     private func setupComponents() {
-        emojiCollectionView.register(UINib(nibName: "ReactionCollectionHeader", bundle: nil), forCellWithReuseIdentifier: "ReactionCollectionHeader")
         emojiCollectionView.register(UINib(nibName: "EmojiViewCell", bundle: nil), forCellWithReuseIdentifier: "EmojiCell")
         emojiCollectionView.rx.setDelegate(self).disposed(by: disposeBag)
     }
@@ -73,11 +81,17 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         return dataSource
     }
     
+    private func setupNavButton() {
+        let saveButton = UIBarButtonItem(title: "保存", style: .done, target: self, action: #selector(save))
+        navigationItem.rightBarButtonItems = [saveButton]
+    }
+    
     // MARK: Gesture
     
     private func setupGesture() {
         let longGesture = UILongPressGestureRecognizer()
         
+        longGesture.minimumPressDuration = 0.01 // 検知間隔を調整
         longGesture.rx.event.bind { gesture in
             self.handleGesture(with: gesture)
         }.disposed(by: disposeBag)
@@ -137,4 +151,6 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
             return cell
         }
     }
+    
+    @objc func save() {}
 }
