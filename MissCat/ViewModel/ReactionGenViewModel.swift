@@ -17,26 +17,23 @@ class ReactionGenViewModel: ViewModelType {
     }
     
     struct Output {
-        let favorites: [ReactionGenViewController.EmojisSection] // 同期
-        let otherEmojis: PublishSubject<[ReactionGenViewController.EmojisSection]> // 非同期
+        let emojis: PublishSubject<[ReactionGenViewController.EmojisSection]> = .init()
     }
     
     struct State {}
     
     private let input: Input
-    lazy var output: Output = {
-        let presets = model.getPresets()
-        let favorites = [ReactionGenViewController.EmojisSection(items: presets)]
-        
-        return .init(favorites: favorites,
-                     otherEmojis: self.otherEmojis)
-    }()
+    lazy var output: Output = .init()
     
     private lazy var emojisList: [EmojiView.EmojiModel] = {
-        [EmojiViewHeader(title: "Favorites")] + model.getPresets() // ヘッダーを追加する
+        var history = model.getHistoryEmojis()
+        let favs = [EmojiViewHeader(title: "Favorites")] + model.getFavEmojis()
+        
+        let hasHistory = history.count > 0
+        history = hasHistory ? [EmojiViewHeader(title: "History")] + history : []
+        
+        return history + favs
     }()
-    
-    private let otherEmojis: PublishSubject<[ReactionGenViewController.EmojisSection]> = .init()
     
     private var searched: [EmojiView.EmojiModel] = []
     
@@ -80,10 +77,11 @@ class ReactionGenViewModel: ViewModelType {
         return emojisList[index] is EmojiViewHeader
     }
     
-    func registerReaction(noteId: String, reaction: String) {
-        model.registerReaction(noteId: noteId, reaction: reaction) { success in
+    func registerReaction(noteId: String, emojiModel: EmojiView.EmojiModel) {
+        guard let reaction = emojiModel.isDefault ? emojiModel.defaultEmoji : ":" + emojiModel.rawEmoji + ":" else { return }
+        
+        model.registerReaction(noteId: noteId, reaction: reaction, emojiModel: emojiModel) { success in
             guard success else { return }
-            
             self.myReaction = reaction
         }
     }
@@ -139,6 +137,6 @@ class ReactionGenViewModel: ViewModelType {
     }
     
     private func updateEmojis(_ section: ReactionGenViewController.EmojisSection) {
-        otherEmojis.onNext([section])
+        output.emojis.onNext([section])
     }
 }

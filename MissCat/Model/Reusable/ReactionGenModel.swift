@@ -24,14 +24,14 @@ class ReactionGenModel {
         lazy var categorizedCustom = EmojiHandler.handler.categorizedCustomEmojis
     }
     
-    fileprivate lazy var presetEmojiModels = EmojiModel.getModelArray()
+    fileprivate lazy var favEmojiModels = EmojiModel.getEmojis(type: .favs)
+    fileprivate lazy var historyEmojis = EmojiModel.getEmojis(type: .history)
     
     // MARK: Private Vars
     
     private var emojis = Emojis()
     private var maxOnceLoad: Int = 50
     private var defaultPreset = ["👍", "❤️", "😆", "🤔", "😮", "🎉", "💢", "😥", "😇", "🍮", "🤯"]
-    
     private var defaultLoaded = false
     
     // MARK: Life Cycle
@@ -40,9 +40,8 @@ class ReactionGenModel {
     
     // MARK: Public Methods
     
-    // プリセットｎ絵文字を取得
-    func getPresets() -> [EmojiView.EmojiModel] {
-        guard EmojiModel.hasUserDefaultsEmojis else { // UserDefaultsが存在しないならUserDefaultsセットしておく
+    func getFavEmojis() -> [EmojiView.EmojiModel] {
+        guard EmojiModel.hasFavEmojis else { // UserDefaultsが存在しないならUserDefaultsセットしておく
             var emojiModels: [EmojiModel] = []
             defaultPreset.forEach { char in
                 emojiModels.append(EmojiModel(rawEmoji: char,
@@ -51,16 +50,24 @@ class ReactionGenModel {
                                               customEmojiUrl: nil))
             }
             fakeCellPadding(array: &emojiModels, count: defaultPreset.count)
-            EmojiModel.saveModelArray(with: emojiModels)
+            EmojiModel.saveEmojis(with: emojiModels, type: .favs)
             return emojiModels
         }
         
         // UserDefaultsが存在したら...
-        guard ReactionGenModel.fileShared.presetEmojiModels != nil else { fatalError("Internal Error.") }
+        guard ReactionGenModel.fileShared.favEmojiModels != nil else { return [] }
         
-        var emojiModels = ReactionGenModel.fileShared.presetEmojiModels!
+        var emojiModels = ReactionGenModel.fileShared.favEmojiModels!
         fakeCellPadding(array: &emojiModels, count: emojiModels.count)
         return emojiModels
+    }
+    
+    func getHistoryEmojis() -> [EmojiView.EmojiModel] {
+        guard EmojiModel.hasHistory, ReactionGenModel.fileShared.historyEmojis != nil else { return [] }
+        
+        var historyEmojis = ReactionGenModel.fileShared.historyEmojis!
+        fakeCellPadding(array: &historyEmojis, count: historyEmojis.count)
+        return historyEmojis
     }
     
     func getEmojiModel() -> Observable<EmojiView.EmojiModel> {
@@ -80,7 +87,8 @@ class ReactionGenModel {
         }
     }
     
-    func registerReaction(noteId: String, reaction: String, completion: @escaping (Bool) -> Void) {
+    func registerReaction(noteId: String, reaction: String, emojiModel: EmojiView.EmojiModel, completion: @escaping (Bool) -> Void) {
+        saveHistory(emojiModel) // リアクションの履歴を保存
         MisskeyKit.notes.createReaction(noteId: noteId, reaction: reaction) { result, _ in
             completion(result)
         }
@@ -124,6 +132,24 @@ class ReactionGenModel {
                                                   isFake: true))
             }
         }
+    }
+    
+    /// リアクションの履歴を保存
+    /// - Parameter emojiModel: EmojiView.EmojiModel
+    private func saveHistory(_ emojiModel: EmojiView.EmojiModel) {
+        guard ReactionGenModel.fileShared.historyEmojis != nil else {
+            ReactionGenModel.fileShared.historyEmojis = [emojiModel]
+            return
+        }
+        
+        var history = ReactionGenModel.fileShared.historyEmojis!.filter { !$0.isFake }
+        if history.count > 7 * 2 { // 2行分だけ表示させる
+            history.removeLast()
+        }
+        
+        history.insert(emojiModel, at: 0)
+        EmojiModel.saveEmojis(with: history, type: .history)
+        ReactionGenModel.fileShared.historyEmojis = history
     }
 }
 
