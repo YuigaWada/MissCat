@@ -2,11 +2,11 @@ PODS:
   - Agrume (5.6.7):
     - SwiftyGif
   - APNGKit (1.1.3)
-  - AWSCognito (2.13.0):
-    - AWSCore (= 2.13.0)
-  - AWSCore (2.13.0)
-  - AWSSNS (2.13.0):
-    - AWSCore (= 2.13.0)
+  - AWSCognito (2.13.1):
+    - AWSCore (= 2.13.1)
+  - AWSCore (2.13.1)
+  - AWSSNS (2.13.1):
+    - AWSCore (= 2.13.1)
   - CocoaLumberjack (3.6.1):
     - CocoaLumberjack/Core (= 3.6.1)
   - CocoaLumberjack/Core (3.6.1)
@@ -91,9 +91,9 @@ CHECKOUT OPTIONS:
 SPEC CHECKSUMS:
   Agrume: 1440351654f1d8669f240b5e7f1c76bafa15cd02
   APNGKit: fbf5270804a2861f451ca27cf1cce0893b13fbf5
-  AWSCognito: b91a9aa7c211b84f5b7c4d4cbdc47b35817973ff
-  AWSCore: 167aba8cdaff6873193a66f062f41749c6c6a3d3
-  AWSSNS: f7989d5f566fb255854382ddee86a3ddcb67f558
+  AWSCognito: c6311e35fe74c9ee490fff3e03548afae629dc5c
+  AWSCore: ec394695d054fa4136b20ccd22d8901faea5de04
+  AWSSNS: e6b9b684aec01af0f161670d3e1ebfe445b80426
   CocoaLumberjack: b17ae15142558d08bbacf69775fa10c4abbebcc9
   Differentiator: 886080237d9f87f322641dedbc5be257061b0602
   FloatingPanel: 3c9d0e30fe350e1613157557769d2ec97f76b96b
