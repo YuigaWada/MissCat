@@ -12,7 +12,8 @@ import UIKit
 
 class EmojiView: UIView {
     @IBOutlet weak var emojiLabel: UILabel!
-    @IBOutlet weak var emojiImageView: GIFImageView!
+    
+    @IBOutlet weak var emojiImageView: MFMImageView!
     @IBOutlet var view: UIView!
     
     var isFake: Bool = false {
@@ -107,9 +108,12 @@ class EmojiView: UIView {
 }
 
 extension EmojiView {
+    enum EmojiType: String {
+        case favs
+        case history
+    }
+    
     @objc(EmojiModel) class EmojiModel: NSObject, NSCoding {
-        // MARK: Emoji Info
-        
         let rawEmoji: String
         let isDefault: Bool
         let defaultEmoji: String?
@@ -128,8 +132,8 @@ extension EmojiView {
         // MARK: UserDefaults Init
         
         required init?(coder aDecoder: NSCoder) {
-            rawEmoji = (aDecoder.decodeObject(forKey: "rawEmoji") ?? true) as? String ?? ""
-            isDefault = (aDecoder.decodeObject(forKey: "isDefault") ?? true) as? Bool ?? true
+            rawEmoji = aDecoder.decodeObject(forKey: "rawEmoji") as? String ?? ""
+            isDefault = aDecoder.decodeBool(forKey: "isDefault")
             defaultEmoji = aDecoder.decodeObject(forKey: "defaultEmoji") as? String
             customEmojiUrl = aDecoder.decodeObject(forKey: "customEmojiUrl") as? String
         }
@@ -143,19 +147,23 @@ extension EmojiView {
         
         // MARK: GET/SET
         
-        static func getModelArray() -> [EmojiModel]? {
-            guard let array = UserDefaults.standard.data(forKey: "[EmojiModel]") else { return nil }
+        static func getEmojis(type: EmojiType) -> [EmojiModel]? {
+            guard let array = UserDefaults.standard.data(forKey: type.rawValue) else { return nil }
             return NSKeyedUnarchiver.unarchiveObject(with: array) as? [EmojiModel] // nil許容なのでOK
         }
         
-        static func saveModelArray(with target: [EmojiModel]) {
+        static func saveEmojis(with target: [EmojiModel], type: EmojiType) {
             let targetRawData = NSKeyedArchiver.archivedData(withRootObject: target)
-            UserDefaults.standard.set(targetRawData, forKey: "[EmojiModel]")
+            UserDefaults.standard.set(targetRawData, forKey: type.rawValue)
             UserDefaults.standard.synchronize()
         }
         
-        static var hasUserDefaultsEmojis: Bool { // UserDefaultsに保存されてるかcheck
-            return UserDefaults.standard.object(forKey: "[EmojiModel]") != nil
+        static var hasFavEmojis: Bool { // UserDefaultsに保存されてるかcheck
+            return UserDefaults.standard.object(forKey: EmojiType.favs.rawValue) != nil
+        }
+        
+        static var hasHistory: Bool { // UserDefaultsに保存されてるかcheck
+            return UserDefaults.standard.object(forKey: EmojiType.history.rawValue) != nil
         }
     }
 }

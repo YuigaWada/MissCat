@@ -10,7 +10,7 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="EmojiView" customModule="MissCat" customModuleProvider="target">
             <connections>
-                <outlet property="emojiImageView" destination="ghp-T9-5W5" id="gS5-NX-Z0h"/>
+                <outlet property="emojiImageView" destination="ghp-T9-5W5" id="oGo-D5-kJT"/>
                 <outlet property="emojiLabel" destination="Ync-qB-ISH" id="mBJ-Xj-kNj"/>
                 <outlet property="view" destination="iN0-l3-epB" id="Kfb-nK-k4I"/>
             </connections>
@@ -26,7 +26,7 @@
                     <nil key="textColor"/>
                     <nil key="highlightedColor"/>
                 </label>
-                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ghp-T9-5W5" customClass="GIFImageView" customModule="Gifu">
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ghp-T9-5W5" customClass="MFMImageView" customModule="MissCat" customModuleProvider="target">
                     <rect key="frame" x="6" y="5" width="46" height="41"/>
                     <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                 </view>

@@ -410,12 +410,6 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         nameTextView.font = UIFont(name: "Helvetica",
                                    size: 10.0)
         
-        nameTextView.xMargin = 0
-        nameTextView.yMargin = 0
-        
-        noteView.xMargin = 0
-        noteView.yMargin = 0
-        
         reactionsCollectionView.isHidden = true // リアクションが存在しない場合はHideする
         
         // 余白消す

@@ -11,7 +11,7 @@ import UIKit
 // MARK: YanagiText
 
 open class YanagiText: UITextView {
-    var xMargin: CGFloat = 10
+    var xMargin: CGFloat = 0
     var yMargin: CGFloat = 0
     
     var attachmentList: [NSTextAttachment: YanagiText.Attachment] = [:]

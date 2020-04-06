@@ -142,6 +142,7 @@ class PostViewModel: ViewModelType {
             let attachment = attachmentsLists[index]
             
             if attachment.id == id {
+                attachmentFiles.remove(at: index)
                 attachmentsLists.remove(at: index)
                 break
             }
