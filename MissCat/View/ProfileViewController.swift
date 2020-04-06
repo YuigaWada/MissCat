@@ -22,8 +22,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     @IBOutlet weak var bannerImageView: UIImageView!
     
-    @IBOutlet weak var displayName: UILabel!
-    @IBOutlet weak var usernameLabel: UILabel!
+    @IBOutlet weak var nameTextView: MisskeyTextView!
     
     @IBOutlet weak var iconImageView: UIImageView!
     @IBOutlet weak var introTextView: MisskeyTextView!
@@ -89,10 +88,13 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     }
     
     override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
         introTextView.renderViewStrings()
         introTextView.transformText()
         
-        super.viewDidLayoutSubviews()
+        nameTextView.renderViewStrings()
+        nameTextView.transformText()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -101,7 +103,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     }
     
     private func getViewModel() -> ViewModel {
-        let input = ViewModel.Input(yanagi: introTextView)
+        let input = ViewModel.Input(nameYanagi: nameTextView, introYanagi: introTextView)
         return .init(with: input, and: disposeBag)
     }
     
@@ -126,8 +128,6 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         followButton.layer.borderWidth = 1
         
         introTextView.delegate = self
-        introTextView.xMargin = 0
-        introTextView.yMargin = 0
     }
     
     // MARK: Public Methods
@@ -178,9 +178,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             })
         }).disposed(by: disposeBag)
         
-        output.displayName.asDriver(onErrorDriveWith: Driver.empty()).drive(displayName.rx.text).disposed(by: disposeBag)
-        output.username.asDriver(onErrorDriveWith: Driver.empty()).drive(usernameLabel.rx.text).disposed(by: disposeBag)
-        
+        output.displayName.asDriver(onErrorDriveWith: Driver.empty()).drive(nameTextView.rx.attributedText).disposed(by: disposeBag)
         output.notesCount.asDriver(onErrorDriveWith: Driver.empty()).drive(notesCountButton.rx.title()).disposed(by: disposeBag)
         output.followCount.asDriver(onErrorDriveWith: Driver.empty()).drive(followCountButton.rx.title()).disposed(by: disposeBag)
         output.followerCount.asDriver(onErrorDriveWith: Driver.empty()).drive(followerCountButton.rx.title()).disposed(by: disposeBag)
@@ -436,9 +434,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         iconImageView.isSkeletonable = true
         introTextView.isSkeletonable = true
         
-        displayName.text = nil
-        usernameLabel.text = nil
-        
+        nameTextView.text = nil
         changeSkeltonState(on: true)
     }
     
