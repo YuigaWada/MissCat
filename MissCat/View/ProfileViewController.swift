@@ -6,6 +6,7 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import Agrume
 import RxCocoa
 import RxSwift
 import UIKit
@@ -182,6 +183,11 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         output.notesCount.asDriver(onErrorDriveWith: Driver.empty()).drive(notesCountButton.rx.title()).disposed(by: disposeBag)
         output.followCount.asDriver(onErrorDriveWith: Driver.empty()).drive(followCountButton.rx.title()).disposed(by: disposeBag)
         output.followerCount.asDriver(onErrorDriveWith: Driver.empty()).drive(followerCountButton.rx.title()).disposed(by: disposeBag)
+        
+        iconImageView.setTapGesture(disposeBag) {
+            guard let icon = self.iconImageView.image else { return }
+            Agrume(image: icon).show(from: self) // 画像を表示
+        }
         
         if !isMe {
             output.relation.asDriver(onErrorDriveWith: Driver.empty()).map {

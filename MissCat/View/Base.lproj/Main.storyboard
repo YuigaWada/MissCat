@@ -774,9 +774,21 @@
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fb3-8M-JPG" userLabel="ScrolledTargetView">
                                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                                         <subviews>
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="o1r-bc-asi">
+                                                <rect key="frame" x="0.0" y="114.5" width="414" height="39"/>
+                                            </view>
                                             <imageView clipsSubviews="YES" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="BPw-nG-rsB">
                                                 <rect key="frame" x="0.0" y="0.0" width="414" height="153.5"/>
                                             </imageView>
+                                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" text="Name @name" textAlignment="natural" adjustsFontForContentSizeCategory="YES" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="t3h-0j-bbP" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
+                                                <rect key="frame" x="106" y="108.5" width="288" height="45"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="45" id="bUr-4i-1i5"/>
+                                                </constraints>
+                                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                            </textView>
                                             <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ck2-Ts-76E" userLabel="TLScrollView">
                                                 <rect key="frame" x="0.0" y="490.5" width="414" height="896"/>
                                                 <subviews>
@@ -947,18 +959,6 @@
                                                 <rect key="frame" x="364" y="44" width="30" height="30"/>
                                                 <state key="normal" title="cog"/>
                                             </button>
-                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="o1r-bc-asi">
-                                                <rect key="frame" x="0.0" y="114.5" width="414" height="39"/>
-                                            </view>
-                                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" text="Name @name" textAlignment="natural" adjustsFontForContentSizeCategory="YES" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="t3h-0j-bbP" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
-                                                <rect key="frame" x="106" y="108.5" width="288" height="45"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="45" id="bUr-4i-1i5"/>
-                                                </constraints>
-                                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
-                                            </textView>
                                         </subviews>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                         <constraints>
