@@ -1,6 +1,7 @@
 PODS:
   - Agrume (5.6.7):
     - SwiftyGif
+  - APNGKit (1.1.3)
   - AWSCognito (2.13.0):
     - AWSCore (= 2.13.0)
   - AWSCore (2.13.0)
@@ -36,6 +37,7 @@ PODS:
 
 DEPENDENCIES:
   - Agrume
+  - APNGKit (~> 1.0)
   - AWSCognito
   - AWSSNS
   - FloatingPanel
@@ -55,6 +57,7 @@ DEPENDENCIES:
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
     - Agrume
+    - APNGKit
     - AWSCognito
     - AWSCore
     - AWSSNS
@@ -87,6 +90,7 @@ CHECKOUT OPTIONS:
 
 SPEC CHECKSUMS:
   Agrume: 1440351654f1d8669f240b5e7f1c76bafa15cd02
+  APNGKit: fbf5270804a2861f451ca27cf1cce0893b13fbf5
   AWSCognito: b91a9aa7c211b84f5b7c4d4cbdc47b35817973ff
   AWSCore: 167aba8cdaff6873193a66f062f41749c6c6a3d3
   AWSSNS: f7989d5f566fb255854382ddee86a3ddcb67f558
@@ -108,6 +112,6 @@ SPEC CHECKSUMS:
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
 
-PODFILE CHECKSUM: f6ba48b9f488a83c8a81d5e22bd5b3f2c7d0204f
+PODFILE CHECKSUM: c00ecf050dc0b9e9c8e3e778af0b95da5ec8bb82
 
 COCOAPODS: 1.7.1
