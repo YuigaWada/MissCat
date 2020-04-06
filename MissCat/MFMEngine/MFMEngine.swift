@@ -28,7 +28,6 @@ class MFMEngine {
     private var customEmojis: [String] = []
     private var attachments: [NSTextAttachment] = []
     
-    var textColor: UIColor = .black
     static var usernameFont = UIFont.systemFont(ofSize: 11.0)
     
     // MARK: Static
@@ -62,7 +61,7 @@ class MFMEngine {
     /// - Parameters:
     ///   - yanagi: どのTextViewか(YanagiText)
     ///   - externalEmojis: 他インスタンスの絵文字配列
-    func transform(font: UIFont, externalEmojis: [EmojiModel?]?) -> NSAttributedString? {
+    func transform(font: UIFont, externalEmojis: [EmojiModel?]?, textHex: String?) -> NSAttributedString? {
         var rest = original
         let shaped = NSMutableAttributedString()
         
@@ -73,7 +72,7 @@ class MFMEngine {
             
             // カスタム絵文字を支点に文章を分割していく
             let plane = String(rest[rest.startIndex ..< range.lowerBound])
-            shaped.append(MFMEngine.generatePlaneString(string: plane, font: font))
+            shaped.append(MFMEngine.generatePlaneString(string: plane, font: font, textHex: textHex))
             
             // カスタム絵文字を適切な形に変換していく
             switch converted.type {
@@ -96,7 +95,7 @@ class MFMEngine {
         }
         
         // 末端
-        shaped.append(MFMEngine.generatePlaneString(string: rest, font: font))
+        shaped.append(MFMEngine.generatePlaneString(string: rest, font: font, textHex: textHex))
         return shaped
     }
     
@@ -194,14 +193,28 @@ class MFMEngine {
     ///   - name: String
     ///   - username: String
     ///   - emojis: 外インスタンスによるカスタム絵文字
-    private static func shapeDisplayName(name: String?, username: String?, emojis: [EmojiModel?]?) -> MFMString {
+    ///   - namefont:
+    ///   - _usernameFont:
+    ///   - nameHex:
+    ///   - usernameColor:
+    static func shapeDisplayName(name: String?,
+                                 username: String?,
+                                 emojis: [EmojiModel?]?,
+                                 nameFont: UIFont? = nil,
+                                 usernameFont _usernameFont: UIFont? = nil,
+                                 nameHex: String? = nil,
+                                 usernameColor: UIColor = .darkGray) -> MFMString {
         let displayName = name ?? ""
-        let mfmString = displayName.mfmTransform(font: UIFont(name: "Helvetica", size: 10.0) ?? .systemFont(ofSize: 10.0),
+        let font = nameFont ?? UIFont(name: "Helvetica", size: 10.0) ?? .systemFont(ofSize: 10.0)
+        
+        let mfmString = displayName.mfmTransform(font: font,
                                                  externalEmojis: emojis,
-                                                 lineHeight: 25)
+                                                 lineHeight: 25,
+                                                 textHex: nameHex)
         
         let nameAttributed = mfmString.attributed ?? .init()
-        let usernameAttributed = " @\(username ?? "")".getAttributedString(font: usernameFont, color: .darkGray)
+        let usernameAttributed = " @\(username ?? "")".getAttributedString(font: _usernameFont ?? usernameFont,
+                                                                           color: usernameColor)
         return MFMString(mfmEngine: mfmString.mfmEngine,
                          attributed: nameAttributed + usernameAttributed)
     }
@@ -210,11 +223,11 @@ class MFMEngine {
     /// - Parameters:
     ///   - string: 対象のstring
     ///   - font: フォント
-    static func generatePlaneString(string: String, font: UIFont?) -> NSAttributedString {
+    static func generatePlaneString(string: String, font: UIFont?, textHex: String? = nil) -> NSAttributedString {
         let fontName = font?.familyName ?? "Helvetica"
         let fontSize = font?.pointSize ?? 15.0
         
-        return string.toAttributedString(family: fontName, size: fontSize) ?? .init()
+        return string.toAttributedString(family: fontName, size: fontSize, textHex: textHex) ?? .init()
     }
     
     /// カスタム絵文字のURLから画像データを取得し、非同期でsetされるようなUIImageViewを返す
@@ -336,9 +349,11 @@ extension String {
     ///   - font: フォント
     ///   - externalEmojis: 外インスタンスのカスタム絵文字
     ///   - lineHeight: 文字の高さ
-    func mfmTransform(font: UIFont, externalEmojis: [EmojiModel?]? = nil, lineHeight: CGFloat? = nil) -> MFMString {
+    func mfmTransform(font: UIFont, externalEmojis: [EmojiModel?]? = nil, lineHeight: CGFloat? = nil, textHex: String? = nil) -> MFMString {
         let mfm = MFMEngine(with: self, lineHeight: lineHeight)
-        let mfmString = MFMString(mfmEngine: mfm, attributed: mfm.transform(font: font, externalEmojis: externalEmojis))
+        let mfmString = MFMString(mfmEngine: mfm, attributed: mfm.transform(font: font,
+                                                                            externalEmojis: externalEmojis,
+                                                                            textHex: textHex))
         
         return mfmString
     }
