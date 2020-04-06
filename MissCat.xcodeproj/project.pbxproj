@@ -28,6 +28,7 @@
 		8D3037022389018800BA6D38 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3037012389018800BA6D38 /* Cache.swift */; };
 		8D31018D24397B45004F8E55 /* ReactionSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D31018C24397B45004F8E55 /* ReactionSettingsViewController.swift */; };
 		8D31018F24397D5E004F8E55 /* ReactionSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D31018E24397D5E004F8E55 /* ReactionSettingsViewModel.swift */; };
+		8D310191243AE9AB004F8E55 /* MFMImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D310190243AE9AA004F8E55 /* MFMImageView.swift */; };
 		8D3EC23A237B2C5E00808727 /* URL+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3EC239237B2C5E00808727 /* URL+MissCat.swift */; };
 		8D3EC23C237B43F000808727 /* String+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3EC23B237B43EF00808727 /* String+MissCat.swift */; };
 		8D42C3A623804B6200337DD2 /* UIViewController+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D42C3A523804B6200337DD2 /* UIViewController+MissCat.swift */; };
@@ -148,6 +149,7 @@
 		8D3037012389018800BA6D38 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
 		8D31018C24397B45004F8E55 /* ReactionSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionSettingsViewController.swift; sourceTree = "<group>"; };
 		8D31018E24397D5E004F8E55 /* ReactionSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionSettingsViewModel.swift; sourceTree = "<group>"; };
+		8D310190243AE9AA004F8E55 /* MFMImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MFMImageView.swift; sourceTree = "<group>"; };
 		8D3EC239237B2C5E00808727 /* URL+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+MissCat.swift"; sourceTree = "<group>"; };
 		8D3EC23B237B43EF00808727 /* String+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+MissCat.swift"; sourceTree = "<group>"; };
 		8D42C3A523804B6200337DD2 /* UIViewController+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+MissCat.swift"; sourceTree = "<group>"; };
@@ -420,6 +422,7 @@
 				8D16656823A0DB3100C03764 /* MFMEngine.swift */,
 				8D0AC5BD237B714900530508 /* EmojiHandler.swift */,
 				8D3036FF2388F71E00BA6D38 /* MisskeyTextView.swift */,
+				8D310190243AE9AA004F8E55 /* MFMImageView.swift */,
 			);
 			path = MFMEngine;
 			sourceTree = "<group>";
@@ -776,6 +779,7 @@
 				8D42C3A8238076B600337DD2 /* Double+MissCat.swift in Sources */,
 				8D98C268242E0AD600BB8049 /* PostDetailModel.swift in Sources */,
 				8D8863A92383F8A900A7A5A8 /* NoteCellViewModel.swift in Sources */,
+				8D310191243AE9AB004F8E55 /* MFMImageView.swift in Sources */,
 				8D0D47AA23A74EC80095361D /* UIViewController+PhotoEditor.swift in Sources */,
 				8D84061D238FFC5C00EED595 /* UIImage+MissCat.swift in Sources */,
 				8DBC7A45241245A800D8FEA5 /* AVKit+MissCat.swift in Sources */,

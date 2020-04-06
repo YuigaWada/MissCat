@@ -17,7 +17,8 @@ protocol ReactionCellDelegate {
 class ReactionCell: UICollectionViewCell {
     @IBOutlet weak var reactionCounterLabel: UILabel!
     @IBOutlet weak var defaultEmojiLabel: UILabel!
-    @IBOutlet weak var customEmojiView: GIFImageView!
+    
+    @IBOutlet weak var customEmojiView: MFMImageView!
     
     private let disposeBag = DisposeBag()
     

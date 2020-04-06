@@ -14,7 +14,7 @@
             <rect key="frame" x="0.0" y="0.0" width="105" height="61"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="7CG-fO-wEF" customClass="GIFImageView" customModule="Gifu">
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="7CG-fO-wEF" customClass="MFMImageView" customModule="MissCat" customModuleProvider="target">
                     <rect key="frame" x="19.5" y="8" width="45" height="45"/>
                     <constraints>
                         <constraint firstAttribute="width" secondItem="7CG-fO-wEF" secondAttribute="height" multiplier="1:1" id="8ym-6i-jy0"/>
@@ -59,7 +59,7 @@
                 </userDefinedRuntimeAttribute>
             </userDefinedRuntimeAttributes>
             <connections>
-                <outlet property="customEmojiView" destination="7CG-fO-wEF" id="2uz-M3-RwZ"/>
+                <outlet property="customEmojiView" destination="7CG-fO-wEF" id="bk0-AT-xom"/>
                 <outlet property="defaultEmojiLabel" destination="MiS-8V-srE" id="TIX-a9-LBe"/>
                 <outlet property="reactionCounterLabel" destination="qpt-bl-cyr" id="R74-Am-Imi"/>
             </connections>

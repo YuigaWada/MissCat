@@ -234,7 +234,7 @@ class MFMEngine {
     /// - Parameter imageUrl: 画像データのurl (アニメGIF / SVGも可)
     static func generateAsyncImageView(imageUrl: String, lineHeight: CGFloat = 30) -> UIImageView {
         let imageSize = lineHeight
-        let imageView = GIFImageView(frame: CGRect(x: 0, y: 0, width: 200, height: 100))
+        let imageView = MFMImageView(frame: CGRect(x: 0, y: 0, width: 200, height: 100))
         
         imageView.backgroundColor = .lightGray
         imageView.frame = CGRect(x: 0, y: 0, width: imageSize, height: imageSize)

@@ -12,7 +12,8 @@ import UIKit
 
 class EmojiView: UIView {
     @IBOutlet weak var emojiLabel: UILabel!
-    @IBOutlet weak var emojiImageView: GIFImageView!
+    
+    @IBOutlet weak var emojiImageView: MFMImageView!
     @IBOutlet var view: UIView!
     
     var isFake: Bool = false {
