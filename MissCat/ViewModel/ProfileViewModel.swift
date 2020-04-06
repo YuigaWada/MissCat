@@ -13,13 +13,13 @@ import UIKit
 
 class ProfileViewModel: ViewModelType {
     struct Input {
-        let yanagi: YanagiText
+        let nameYanagi: YanagiText
+        let introYanagi: YanagiText
     }
     
     struct Output {
         let bannerImage: PublishRelay<UIImage> = .init()
-        let displayName: PublishRelay<String> = .init()
-        let username: PublishRelay<String> = .init()
+        let displayName: PublishRelay<NSAttributedString> = .init()
         let iconImage: PublishRelay<UIImage> = .init()
         let intro: PublishRelay<NSAttributedString> = .init()
         
@@ -105,7 +105,7 @@ class ProfileViewModel: ViewModelType {
                                                                         externalEmojis: user.emojis)
                 
                 self.output.intro.accept(shaped.attributed ?? .init())
-                shaped.mfmEngine.renderCustomEmojis(on: self.input.yanagi)
+                shaped.mfmEngine.renderCustomEmojis(on: self.input.introYanagi)
             }
         } else {
             output.intro.accept("自己紹介はありません".toAttributedString(family: "Helvetica", size: 11.0) ?? .init())
@@ -121,8 +121,18 @@ class ProfileViewModel: ViewModelType {
         
         // username / displayName
         if let username = user.username {
-            output.username.accept("@" + username)
-            output.displayName.accept(user.name ?? username)
+            let shaped = MFMEngine.shapeDisplayName(name: user.name ?? username,
+                                                    username: username,
+                                                    emojis: user.emojis,
+                                                    nameFont: UIFont(name: "Helvetica", size: 13.0),
+                                                    usernameFont: UIFont(name: "Helvetica", size: 12.0),
+                                                    nameHex: "#ffffff",
+                                                    usernameColor: .white)
+            
+            output.displayName.accept(shaped.attributed ?? .init())
+            DispatchQueue.main.async {
+                shaped.mfmEngine.renderCustomEmojis(on: self.input.nameYanagi)
+            }
         }
     }
     

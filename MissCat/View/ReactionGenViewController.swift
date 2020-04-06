@@ -99,12 +99,7 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         guard let dataSource = dataSource else { return }
         
         let output = viewModel.output
-        
-        Observable.just(viewModel.output.favorites)
-            .bind(to: emojiCollectionView.rx.items(dataSource: dataSource))
-            .disposed(by: disposeBag)
-        
-        output.otherEmojis.bind(to: emojiCollectionView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
+        output.emojis.bind(to: emojiCollectionView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
     }
     
     private func setupComponents() {
@@ -144,11 +139,10 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         
         // 各々のEmojiViewに対してtap gestureを付加する
         tapGesture.rx.event.bind { _ in
-            guard let raw = emojiModel.isDefault ? emojiModel.defaultEmoji : ":" + emojiModel.rawEmoji + ":" else { return }
             if self.onPostViewController { // Post画面のときは入力をPostViewControllerへと渡す
                 self.sendEmojiInput(emojiModel: emojiModel)
             } else { // NoteCell上ではReactionGenが投稿に対してサーバーにリアクションを送信する
-                self.react2Note(raw: raw)
+                self.react2Note(emojiModel)
                 self.selectedEmoji.accept(emojiModel)
             }
             
@@ -161,13 +155,13 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         selectedEmoji.accept(emojiModel)
     }
     
-    private func react2Note(raw: String) {
+    private func react2Note(_ emojiModel: EmojiView.EmojiModel) {
         guard let targetNoteId = viewModel!.targetNoteId else { return }
         
         if viewModel!.hasMarked {
             viewModel!.cancelReaction(noteId: targetNoteId)
         } else {
-            viewModel!.registerReaction(noteId: targetNoteId, reaction: raw)
+            viewModel!.registerReaction(noteId: targetNoteId, emojiModel: emojiModel)
         }
         
         dismiss(animated: true, completion: nil) // 半モーダルを消す

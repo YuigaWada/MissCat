@@ -140,7 +140,7 @@ class TimelineModel {
                         var newPosts: [NoteModel] = []
                         for index in 0 ..< posts.count {
                             let post = posts[index]
-                            if post._featuredId_ == nil { // ハイライトの投稿は無視する
+                            if !post.isRecommended { // ハイライトの投稿は無視する
                                 // 表示済みの投稿に当たったらbreak
                                 guard option.lastNoteId != post.id, option.lastNoteId != post.renoteId else { break }
                                 newPosts.append(post)
@@ -160,7 +160,7 @@ class TimelineModel {
                     // if !isReload...
                     
                     posts.forEach { post in
-                        guard post._featuredId_ == nil else { return } // ハイライトの投稿は無視する
+                        guard !post.isRecommended else { return } // ハイライトの投稿は無視する
                         
                         self.transformNote(with: observer, post: post, reverse: false)
                         if let noteId = post.id {

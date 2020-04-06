@@ -82,9 +82,6 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
         
         initialize() // セルの再利用のために各パーツを初期化しておく
         
-        nameTextView.xMargin = 0
-        nameTextView.yMargin = 0
-        
         // font
         noteView.font = UIFont(name: "Helvetica",
                                size: 11.0)
