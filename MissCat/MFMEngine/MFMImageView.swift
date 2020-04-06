@@ -12,21 +12,40 @@ import SVGKit
 import UIKit
 
 class MFMImageView: UIImageView {
-    private lazy var apngView: APNGImageView = {
+    // MARK: Views
+    
+    private var apngView: APNGImageView?
+    private var gifView: GIFImageView?
+    
+    // MARK: LifeCycle
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        apngView = setupApngView()
+        gifView = setupGifView()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        apngView = setupApngView()
+        gifView = setupGifView()
+    }
+    
+    private func setupApngView() -> APNGImageView {
         let apngView = APNGImageView()
         apngView.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(apngView)
-        self.setAutoLayout(to: apngView)
+        addSubview(apngView)
+        setAutoLayout(to: apngView)
         return apngView
-    }()
+    }
     
-    private lazy var gifView: GIFImageView = {
+    private func setupGifView() -> GIFImageView {
         let gifView = GIFImageView()
         gifView.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(gifView)
-        self.setAutoLayout(to: gifView)
+        addSubview(gifView)
+        setAutoLayout(to: gifView)
         return gifView
-    }()
+    }
     
     // MARK: Publics
     
@@ -46,11 +65,11 @@ class MFMImageView: UIImageView {
     
     /// セルを再利用する際に呼ぶ
     func prepareForReuse() {
-        gifView.prepareForReuse()
-        gifView.gifImage = nil
-        gifView.image = nil
-        apngView.image = nil
-        apngView.stopAnimating()
+        gifView?.prepareForReuse()
+        gifView?.gifImage = nil
+        gifView?.image = nil
+        apngView?.image = nil
+        apngView?.stopAnimating()
         image = nil
         backgroundColor = .darkGray
     }
