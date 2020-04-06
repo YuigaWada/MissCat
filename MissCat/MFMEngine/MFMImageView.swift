@@ -44,7 +44,6 @@ class MFMImageView: UIImageView {
         }
     }
     
-    
     /// セルを再利用する際に呼ぶ
     func prepareForReuse() {
         gifView.prepareForReuse()
@@ -74,12 +73,11 @@ class MFMImageView: UIImageView {
         }
     }
     
-    
     /// ApngフォーマットのImageをset
     /// - Parameter data: Data
     private func setApngImage(with data: Data) {
         DispatchQueue.main.async {
-            let apngImage = APNGImage(data: data)
+            let apngImage = APNGImage(data: data, progressive: true)
             self.apngView.image = apngImage
             self.apngView.startAnimating()
             self.backgroundColor = .clear
