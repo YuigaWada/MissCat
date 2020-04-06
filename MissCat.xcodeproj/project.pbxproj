@@ -106,6 +106,7 @@
 		8DE35E6B23F68FC300E10CB4 /* Pods_MissCat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49D674DA4870479FF355F58B /* Pods_MissCat.framework */; };
 		8DE88825242764AE002CC9DE /* NoteCell.Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE88824242764AD002CC9DE /* NoteCell.Model.swift */; };
 		8DE8882724276512002CC9DE /* NoteCell.FileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE8882624276512002CC9DE /* NoteCell.FileView.swift */; };
+		8DEB21C5243B0C1400E4D1EB /* Error+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */; };
 		8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEFF31B239BD45700142802 /* ProfileViewModel.swift */; };
 		8DEFF31E239BD4F200142802 /* ProfileModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEFF31D239BD4F200142802 /* ProfileModel.swift */; };
 /* End PBXBuildFile section */
@@ -232,6 +233,7 @@
 		8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailViewModel.swift; sourceTree = "<group>"; };
 		8DE88824242764AD002CC9DE /* NoteCell.Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCell.Model.swift; sourceTree = "<group>"; };
 		8DE8882624276512002CC9DE /* NoteCell.FileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCell.FileView.swift; sourceTree = "<group>"; };
+		8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Error+MissCat.swift"; sourceTree = "<group>"; };
 		8DEFF31B239BD45700142802 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		8DEFF31D239BD4F200142802 /* ProfileModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileModel.swift; sourceTree = "<group>"; };
 		DF4146F7CC2C0143F19E0DF3 /* Pods-MissCat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCat.release.xcconfig"; path = "Target Support Files/Pods-MissCat/Pods-MissCat.release.xcconfig"; sourceTree = "<group>"; };
@@ -362,6 +364,7 @@
 				8DA36F852394B9D000512459 /* UIFont+MissCat.swift */,
 				8D0D47A923A74EC80095361D /* UIViewController+PhotoEditor.swift */,
 				8DBC7A44241245A800D8FEA5 /* AVKit+MissCat.swift */,
+				8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */,
 			);
 			path = Extension;
 			sourceTree = "<group>";
@@ -740,6 +743,7 @@
 				8D61391A2427B9B0003B5BEF /* FileContainer.swift in Sources */,
 				8D53741B23A32D03004523FC /* ViewModelType.swift in Sources */,
 				8D4B02C1241FE5C90056605F /* Theme.swift in Sources */,
+				8DEB21C5243B0C1400E4D1EB /* Error+MissCat.swift in Sources */,
 				8DA06A0F2389F04E0093A718 /* NotificationModel.swift in Sources */,
 				8DA06A0D2389EEC60093A718 /* NotificationsViewModel.swift in Sources */,
 				8D3EC23A237B2C5E00808727 /* URL+MissCat.swift in Sources */,
