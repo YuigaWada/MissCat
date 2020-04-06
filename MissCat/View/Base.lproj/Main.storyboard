@@ -775,25 +775,8 @@
                                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                                         <subviews>
                                             <imageView clipsSubviews="YES" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="BPw-nG-rsB">
-                                                <rect key="frame" x="0.0" y="0.0" width="414" height="147.5"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="414" height="153.5"/>
                                             </imageView>
-                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MTL-6d-wBR" userLabel="NameTag">
-                                                <rect key="frame" x="98" y="105" width="296" height="42.5"/>
-                                                <subviews>
-                                                    <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" text="Name @name" textAlignment="natural" adjustsFontForContentSizeCategory="YES" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="t3h-0j-bbP" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
-                                                        <rect key="frame" x="8" y="0.0" width="280" height="42.5"/>
-                                                        <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                                        <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
-                                                    </textView>
-                                                </subviews>
-                                                <constraints>
-                                                    <constraint firstItem="t3h-0j-bbP" firstAttribute="leading" secondItem="MTL-6d-wBR" secondAttribute="leading" constant="8" id="HZF-Qs-CBS"/>
-                                                    <constraint firstAttribute="trailing" secondItem="t3h-0j-bbP" secondAttribute="trailing" constant="8" id="NYC-HC-xOi"/>
-                                                    <constraint firstItem="t3h-0j-bbP" firstAttribute="height" secondItem="MTL-6d-wBR" secondAttribute="height" id="SWG-BJ-DGr"/>
-                                                    <constraint firstItem="t3h-0j-bbP" firstAttribute="top" secondItem="MTL-6d-wBR" secondAttribute="top" id="c74-Cm-VbA"/>
-                                                </constraints>
-                                            </view>
                                             <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ck2-Ts-76E" userLabel="TLScrollView">
                                                 <rect key="frame" x="0.0" y="490.5" width="414" height="896"/>
                                                 <subviews>
@@ -964,26 +947,41 @@
                                                 <rect key="frame" x="364" y="44" width="30" height="30"/>
                                                 <state key="normal" title="cog"/>
                                             </button>
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="o1r-bc-asi">
+                                                <rect key="frame" x="0.0" y="114.5" width="414" height="39"/>
+                                            </view>
+                                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" text="Name @name" textAlignment="natural" adjustsFontForContentSizeCategory="YES" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="t3h-0j-bbP" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
+                                                <rect key="frame" x="106" y="108.5" width="288" height="45"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="45" id="bUr-4i-1i5"/>
+                                                </constraints>
+                                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                            </textView>
                                         </subviews>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                         <constraints>
                                             <constraint firstAttribute="trailing" secondItem="BPw-nG-rsB" secondAttribute="trailing" id="5BF-gf-9AZ"/>
                                             <constraint firstItem="rGP-dP-dhq" firstAttribute="top" secondItem="fb3-8M-JPG" secondAttribute="top" constant="95" id="6eB-vR-12N"/>
-                                            <constraint firstAttribute="trailing" secondItem="MTL-6d-wBR" secondAttribute="trailing" constant="20" id="7Al-S4-vyZ"/>
                                             <constraint firstItem="s5R-R7-cBu" firstAttribute="leading" secondItem="ZH5-kq-n9g" secondAttribute="trailing" constant="53" id="804-De-Bx3"/>
                                             <constraint firstAttribute="trailing" secondItem="Ck2-Ts-76E" secondAttribute="trailing" id="88T-xt-MOa"/>
+                                            <constraint firstItem="o1r-bc-asi" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" id="Ad5-gx-SmM"/>
                                             <constraint firstItem="DKm-jx-5xf" firstAttribute="top" secondItem="ZH5-kq-n9g" secondAttribute="bottom" constant="10.5" id="D1Z-69-I0p"/>
+                                            <constraint firstAttribute="trailing" secondItem="o1r-bc-asi" secondAttribute="trailing" id="HwI-UE-ZXr"/>
                                             <constraint firstAttribute="trailing" secondItem="q7w-bY-daS" secondAttribute="trailing" constant="20" id="IbL-eJ-0ny"/>
-                                            <constraint firstItem="MTL-6d-wBR" firstAttribute="top" secondItem="rGP-dP-dhq" secondAttribute="top" constant="10" id="LKG-46-O7m"/>
-                                            <constraint firstItem="BPw-nG-rsB" firstAttribute="bottom" secondItem="MTL-6d-wBR" secondAttribute="bottom" id="Lck-cB-RVq"/>
+                                            <constraint firstItem="BPw-nG-rsB" firstAttribute="bottom" secondItem="o1r-bc-asi" secondAttribute="bottom" id="Lck-cB-RVq"/>
                                             <constraint firstItem="BPw-nG-rsB" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" id="Ma4-mg-bIO"/>
+                                            <constraint firstItem="o1r-bc-asi" firstAttribute="height" secondItem="rGP-dP-dhq" secondAttribute="height" multiplier="0.5" id="Nq2-GF-DaB"/>
                                             <constraint firstItem="BPw-nG-rsB" firstAttribute="width" secondItem="fb3-8M-JPG" secondAttribute="width" id="O4z-eE-9z1"/>
-                                            <constraint firstItem="MTL-6d-wBR" firstAttribute="height" secondItem="rGP-dP-dhq" secondAttribute="height" multiplier="0.546667" id="RT1-u3-BWd"/>
+                                            <constraint firstAttribute="trailing" secondItem="t3h-0j-bbP" secondAttribute="trailing" constant="20" id="Otp-kt-X3F"/>
+                                            <constraint firstItem="t3h-0j-bbP" firstAttribute="bottom" secondItem="BPw-nG-rsB" secondAttribute="bottom" id="Ruv-6s-pBh"/>
                                             <constraint firstItem="q7w-bY-daS" firstAttribute="top" secondItem="8NI-ap-XjW" secondAttribute="top" id="Tfm-Jr-rpL"/>
                                             <constraint firstItem="Ck2-Ts-76E" firstAttribute="top" secondItem="DKm-jx-5xf" secondAttribute="bottom" constant="8" id="UeG-Kc-ej1"/>
                                             <constraint firstItem="rGP-dP-dhq" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" constant="20" id="VJz-KW-q01"/>
+                                            <constraint firstItem="o1r-bc-asi" firstAttribute="centerY" secondItem="rGP-dP-dhq" secondAttribute="centerY" id="VR0-2N-HQE"/>
                                             <constraint firstItem="ZH5-kq-n9g" firstAttribute="top" secondItem="Cmd-dt-Rnt" secondAttribute="bottom" constant="10.5" id="dbg-zS-Y7Z"/>
-                                            <constraint firstItem="MTL-6d-wBR" firstAttribute="leading" secondItem="rGP-dP-dhq" secondAttribute="trailing" id="hyJ-zK-YP4"/>
+                                            <constraint firstItem="t3h-0j-bbP" firstAttribute="leading" secondItem="rGP-dP-dhq" secondAttribute="trailing" constant="8" id="er3-kj-j8z"/>
                                             <constraint firstItem="s5R-R7-cBu" firstAttribute="bottom" secondItem="ZH5-kq-n9g" secondAttribute="bottom" id="iSY-G6-6Qa"/>
                                             <constraint firstAttribute="trailing" secondItem="DKm-jx-5xf" secondAttribute="trailing" id="jX3-1a-CFl"/>
                                             <constraint firstItem="ZH5-kq-n9g" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" constant="10" id="mju-po-dgW"/>
