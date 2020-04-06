@@ -10,11 +10,12 @@ import MisskeyKit
 import UIKit
 
 extension String {
-    func toAttributedString(family: String?, size: CGFloat) -> NSAttributedString? {
+    func toAttributedString(family: String?, size: CGFloat, textHex: String? = nil) -> NSAttributedString? {
         do {
             let rawHtml = "<style>" +
                 " html * {" +
                 "font-size: \(size)pt !important;" +
+                "color: \(textHex ?? "black");" +
                 "font-family: \(family ?? "Helvetica"), Helvetica !important; } " +
                 "a:hover, a:visited, a:link, a:active { text-decoration: none!important; -webkit-box-shadow: none!important; box-shadow: none!important; }" +
                 "</style> \(replacingOccurrences(of: "\n", with: "<br>"))"
