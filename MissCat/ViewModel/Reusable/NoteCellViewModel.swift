@@ -36,6 +36,7 @@ class NoteCellViewModel: ViewModelType {
         let onOtherNote: PublishRelay<Bool> = .init() // 引用RNはNoteCellの上にNoteCellが乗るという二重構造になっているので、内部のNoteCellかどうかを判別する
         
         let iconImage: PublishRelay<UIImage> = .init()
+        let innerIconImage: PublishRelay<UIImage> = .init()
         
         let defaultConstraintActive: PublishRelay<Bool> = .init()
         let isReplyTarget: PublishRelay<Bool> = .init()
@@ -97,7 +98,8 @@ class NoteCellViewModel: ViewModelType {
         prepareCommentRenote(item)
         output.onOtherNote.accept(item.onOtherNote)
         
-        setImage(username: item.username, imageRawUrl: item.iconImageUrl)
+        setImage(to: output.iconImage, username: item.username, imageRawUrl: item.iconImageUrl)
+        setImage(to: output.innerIconImage, username: item.commentRNTarget?.username, imageRawUrl: item.commentRNTarget?.iconImageUrl)
         
         getUrl(from: item)
         if let pollModel = item.poll {
@@ -125,14 +127,16 @@ class NoteCellViewModel: ViewModelType {
         return reactionCell
     }
     
-    func setImage(username: String, imageRawUrl: String?) {
+    func setImage(to target: PublishRelay<UIImage>, username: String?, imageRawUrl: String?) {
+        guard let username = username, let imageRawUrl = imageRawUrl else { return }
+        
         if let image = Cache.shared.getIcon(username: username) {
-            output.iconImage.accept(image)
-        } else if let imageRawUrl = imageRawUrl, let imageUrl = URL(string: imageRawUrl) {
-            imageUrl.toUIImage { [weak self] image in
-                guard let self = self, let image = image else { return }
+            target.accept(image)
+        } else if let imageUrl = URL(string: imageRawUrl) {
+            imageUrl.toUIImage { image in
+                guard let image = image else { return }
                 Cache.shared.saveIcon(username: username, image: image) // CACHE!
-                self.output.iconImage.accept(image)
+                target.accept(image)
             }
         }
     }

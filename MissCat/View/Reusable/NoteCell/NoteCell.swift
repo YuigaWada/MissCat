@@ -62,6 +62,10 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     @IBOutlet weak var urlPreviewer: UrlPreviewer!
     
     @IBOutlet weak var innerRenoteDisplay: UIView!
+    @IBOutlet weak var innerIconView: UIImageView!
+    @IBOutlet weak var innerNameTextView: MisskeyTextView!
+    @IBOutlet weak var innerNoteTextView: MisskeyTextView!
+    @IBOutlet weak var innerAgoLabel: UILabel!
     
     @IBOutlet weak var actionStackView: UIStackView!
     @IBOutlet weak var replyButton: UIButton!
@@ -84,12 +88,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     
     // MARK: Public Var
     
-    var delegate: NoteCellDelegate? {
-        didSet {
-            guard let commentRenoteView = commentRenoteView else { return }
-            commentRenoteView.delegate = delegate
-        }
-    }
+    var delegate: NoteCellDelegate?
     
     var noteId: String?
     var userId: String?
@@ -101,8 +100,8 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     private lazy var reactionsDataSource = self.setupDataSource()
     private var viewModel: ViewModel?
     
+    private var renoteTarget: NoteCell.Model?
     private var noteModel: NoteCell.Model?
-    private var commentRenoteView: NoteCell?
     private var onOtherNote: Bool = false
     private var isSkelton: Bool = false
     
@@ -116,7 +115,6 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         noteModel = item
         binding(viewModel: viewModel, noteId: item.noteId ?? "")
-        setCommentRenoteCell()
         return viewModel
     }
     
@@ -142,6 +140,12 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         nameTextView.transformText() // TODO: せっかくisHiddenがどうこうやってたのが反映されていないような気がする
         noteView.transformText()
+        
+        innerNameTextView.renderViewStrings()
+        innerNoteTextView.renderViewStrings()
+        
+        innerNameTextView.transformText()
+        innerNoteTextView.transformText()
         
         if onOtherNote {
             nameTextView.renderViewStrings()
@@ -201,8 +205,13 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         reactionButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
         othersButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
         
+        innerIconView.layer.cornerRadius = innerIconView.frame.height / 2
+        
         noteView.delegate = self
         noteView.isUserInteractionEnabled = true
+        
+        innerNoteTextView.delegate = self
+        innerNoteTextView.isUserInteractionEnabled = true
         
         skeltonCover.isUserInteractionEnabled = false
     }
@@ -218,6 +227,11 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         innerRenoteDisplay.layer.borderWidth = 1
         innerRenoteDisplay.layer.borderColor = UIColor.systemBlue.cgColor
         innerRenoteDisplay.layer.cornerRadius = 5
+        
+        innerRenoteDisplay.setTapGesture(disposeBag) {
+            guard let renoteTarget = self.renoteTarget else { return }
+            self.delegate?.move2PostDetail(item: renoteTarget)
+        }
     }
     
     private func binding(viewModel: ViewModel, noteId: String) {
@@ -250,13 +264,44 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         // Renote With Comment
         
-        output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { renoteModel in
-            self.commentRenoteView = self.commentRenoteView?.transform(with: .init(item: renoteModel, delegate: self.delegate)) // MEMO: やっぱりここが重いっぽい
-            self.commentRenoteView?.setTapGesture(self.disposeBag, closure: {
-                guard let noteId = renoteModel.noteId else { return }
-                self.delegate?.move2PostDetail(item: renoteModel)
-            })
-        }).disposed(by: disposeBag)
+        output.commentRenoteTarget
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { self.renoteTarget = $0 })
+            .disposed(by: disposeBag)
+        
+        output.commentRenoteTarget
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .map { $0.iconImage }
+            .drive(innerIconView.rx.image)
+            .disposed(by: disposeBag)
+        
+        output.commentRenoteTarget
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .map { $0.shapedNote }
+            .compactMap { $0 }
+            .drive(onNext: { mfmString in
+                self.innerNoteTextView.attributedText = mfmString.attributed
+                mfmString.mfmEngine.renderCustomEmojis(on: self.innerNoteTextView)
+            }).disposed(by: disposeBag)
+        
+        output.commentRenoteTarget
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .map { $0.shapedDisplayName }
+            .compactMap { $0 }
+            .drive(onNext: { mfmString in
+                self.innerNameTextView.attributedText = mfmString.attributed
+                mfmString.mfmEngine.renderCustomEmojis(on: self.innerNameTextView)
+            }).disposed(by: disposeBag)
+        
+        output.commentRenoteTarget
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .map { $0.ago.calculateAgo() }
+            .drive(innerAgoLabel.rx.text).disposed(by: disposeBag)
+        
+        output.innerIconImage
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(innerIconView.rx.image)
+            .disposed(by: disposeBag)
         
         output.commentRenoteTarget
             .asDriver(onErrorDriveWith: Driver.empty())
@@ -503,6 +548,12 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         urlPreviewer.initialize()
         
         innerRenoteDisplay.isHidden = true
+        
+        innerNameTextView.attributedText = nil
+        innerNameTextView.resetViewString()
+        
+        innerNoteTextView.attributedText = nil
+        innerNoteTextView.resetViewString()
     }
     
     // MARK: Privates
@@ -526,57 +577,6 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         }
         
         return cell
-    }
-    
-    // MARK: 引用RN
-    
-    private func setCommentRenoteCell() { // 引用RN
-        guard !onOtherNote,
-            commentRenoteView == nil,
-            let commentRenoteView = UINib(nibName: "NoteCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NoteCell else { return }
-        
-        // NibからNoteCellを生成し、parentViewに対してAutoLayoutを設定 + 枠線を設定
-        commentRenoteView.onOtherNote = true
-        commentRenoteView.translatesAutoresizingMaskIntoConstraints = false
-        innerRenoteDisplay.addSubview(commentRenoteView)
-        
-        if let innerRenoteDisplay = innerRenoteDisplay {
-            innerRenoteDisplay.addConstraints([
-                NSLayoutConstraint(item: innerRenoteDisplay,
-                                   attribute: .top,
-                                   relatedBy: .equal,
-                                   toItem: commentRenoteView,
-                                   attribute: .top,
-                                   multiplier: 1.0,
-                                   constant: 0),
-                
-                NSLayoutConstraint(item: innerRenoteDisplay,
-                                   attribute: .bottom,
-                                   relatedBy: .equal,
-                                   toItem: commentRenoteView,
-                                   attribute: .bottom,
-                                   multiplier: 1.0,
-                                   constant: 0),
-                
-                NSLayoutConstraint(item: innerRenoteDisplay,
-                                   attribute: .right,
-                                   relatedBy: .equal,
-                                   toItem: commentRenoteView,
-                                   attribute: .right,
-                                   multiplier: 1.0,
-                                   constant: 0),
-                
-                NSLayoutConstraint(item: innerRenoteDisplay,
-                                   attribute: .left,
-                                   relatedBy: .equal,
-                                   toItem: commentRenoteView,
-                                   attribute: .left,
-                                   multiplier: 1.0,
-                                   constant: 0)
-            ])
-        }
-        
-        self.commentRenoteView = commentRenoteView
     }
     
     // MARK: Skelton
