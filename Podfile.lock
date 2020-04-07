@@ -14,7 +14,7 @@ PODS:
   - FloatingPanel (1.7.4)
   - Gifu (3.2.0)
   - iOSPhotoEditor (1.0.0)
-  - MisskeyKit (1.8):
+  - MisskeyKit (1.9):
     - Starscream (= 3.1.1)
   - PolioPager (2.3)
   - RxCocoa (5.1.1):
@@ -102,7 +102,7 @@ SPEC CHECKSUMS:
   FloatingPanel: 3c9d0e30fe350e1613157557769d2ec97f76b96b
   Gifu: 7bcb6427457d85e0b4dff5a84ec5947ac19a93ea
   iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
-  MisskeyKit: 2b9048401113c764a16c0f1c45f1871e944c3884
+  MisskeyKit: 9b517d6bde7c34e0b04b616e88527a549cf996a8
   PolioPager: d1d3ae9032bc4bbf5071b3aea5a748ac7c1337d1
   RxCocoa: 32065309a38d29b5b0db858819b5bf9ef038b601
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
