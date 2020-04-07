@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:/Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/View/Reusable/NoteCell/UrlPreviewer.swift">
+   </FileRef>
+   <FileRef
       location = "group:MissCat.xcodeproj">
    </FileRef>
    <FileRef
