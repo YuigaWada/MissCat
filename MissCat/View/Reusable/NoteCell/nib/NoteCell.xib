@@ -64,9 +64,55 @@
                         </view>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bh7-Dx-jOD">
                             <rect key="frame" x="0.0" y="139" width="314" height="100"/>
+                            <subviews>
+                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" editable="NO" text="Note" translatesAutoresizingMaskIntoConstraints="NO" id="ncX-Oa-Twn" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
+                                    <rect key="frame" x="62.5" y="48" width="231.5" height="42"/>
+                                    <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
+                                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                    <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                </textView>
+                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="UOQ-wI-ocg">
+                                    <rect key="frame" x="20" y="13" width="32.5" height="32.5"/>
+                                    <color key="backgroundColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                    <constraints>
+                                        <constraint firstAttribute="width" secondItem="UOQ-wI-ocg" secondAttribute="height" multiplier="1:1" id="kOF-MX-TNH"/>
+                                    </constraints>
+                                </imageView>
+                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" contentInsetAdjustmentBehavior="never" editable="NO" text="Name" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="UkI-sj-8aP" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
+                                    <rect key="frame" x="62.5" y="13" width="200.5" height="35"/>
+                                    <constraints>
+                                        <constraint firstAttribute="height" constant="35" id="5cn-bf-RfV"/>
+                                    </constraints>
+                                    <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
+                                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                    <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                </textView>
+                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="ago" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Blq-vv-14B">
+                                    <rect key="frame" x="262" y="13" width="32" height="16"/>
+                                    <constraints>
+                                        <constraint firstAttribute="width" secondItem="Blq-vv-14B" secondAttribute="height" multiplier="2:1" id="92m-8e-vlD"/>
+                                    </constraints>
+                                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                    <color key="textColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                    <nil key="highlightedColor"/>
+                                </label>
+                            </subviews>
                             <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                             <constraints>
+                                <constraint firstAttribute="trailing" secondItem="Blq-vv-14B" secondAttribute="trailing" constant="20" id="2fH-d4-ldU"/>
+                                <constraint firstItem="ncX-Oa-Twn" firstAttribute="leading" secondItem="UOQ-wI-ocg" secondAttribute="trailing" constant="10" id="9pa-du-0s2"/>
+                                <constraint firstItem="Blq-vv-14B" firstAttribute="top" secondItem="bh7-Dx-jOD" secondAttribute="top" constant="13" id="HY7-6J-GK5"/>
+                                <constraint firstAttribute="bottom" secondItem="ncX-Oa-Twn" secondAttribute="bottom" constant="10" id="KHf-Ro-20g"/>
+                                <constraint firstItem="UOQ-wI-ocg" firstAttribute="width" secondItem="bh7-Dx-jOD" secondAttribute="width" multiplier="0.17" constant="-21" id="OuM-v1-YE9"/>
+                                <constraint firstItem="ncX-Oa-Twn" firstAttribute="top" secondItem="UkI-sj-8aP" secondAttribute="bottom" id="SWc-AL-WVd"/>
                                 <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="100" id="V0X-th-80u"/>
+                                <constraint firstItem="UOQ-wI-ocg" firstAttribute="top" secondItem="bh7-Dx-jOD" secondAttribute="top" constant="13" id="YaE-jl-RKN"/>
+                                <constraint firstItem="UkI-sj-8aP" firstAttribute="top" secondItem="UOQ-wI-ocg" secondAttribute="top" id="h6q-a4-cL2"/>
+                                <constraint firstAttribute="trailing" secondItem="UkI-sj-8aP" secondAttribute="trailing" constant="51" id="iwc-gH-VYB"/>
+                                <constraint firstItem="UkI-sj-8aP" firstAttribute="leading" secondItem="UOQ-wI-ocg" secondAttribute="trailing" constant="10" id="j0E-iU-5uQ"/>
+                                <constraint firstAttribute="trailing" secondItem="ncX-Oa-Twn" secondAttribute="trailing" constant="20" id="kG7-rd-Ra6"/>
+                                <constraint firstItem="Blq-vv-14B" firstAttribute="width" secondItem="bh7-Dx-jOD" secondAttribute="width" multiplier="0.101911" id="kRj-Oj-fe8"/>
+                                <constraint firstItem="UOQ-wI-ocg" firstAttribute="leading" secondItem="bh7-Dx-jOD" secondAttribute="leading" constant="20" id="mKM-aq-p4A"/>
                             </constraints>
                         </view>
                         <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="KkD-L3-5tQ">
@@ -207,6 +253,10 @@
                 <outlet property="fileContainer" destination="v72-g7-6Ca" id="gOj-yk-KU8"/>
                 <outlet property="icon2MainStackConstraint" destination="Y7B-yr-k9d" id="7VJ-uh-TUq"/>
                 <outlet property="iconView" destination="RdM-y6-bNI" id="Zys-le-deV"/>
+                <outlet property="innerAgoLabel" destination="Blq-vv-14B" id="Vqy-Ac-dvS"/>
+                <outlet property="innerIconView" destination="UOQ-wI-ocg" id="NdV-iY-Fs6"/>
+                <outlet property="innerNameTextView" destination="UkI-sj-8aP" id="bgT-PQ-qkG"/>
+                <outlet property="innerNoteTextView" destination="ncX-Oa-Twn" id="JJg-QD-aJa"/>
                 <outlet property="innerRenoteDisplay" destination="bh7-Dx-jOD" id="clK-es-fKR"/>
                 <outlet property="mainStackView" destination="Grd-xu-LJU" id="wyt-gG-XXj"/>
                 <outlet property="nameHeightConstraint" destination="GLT-MI-LJQ" id="VHC-ga-kX7"/>
