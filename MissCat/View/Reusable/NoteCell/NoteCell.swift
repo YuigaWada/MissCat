@@ -18,7 +18,7 @@ import WebKit
 protocol NoteCellDelegate {
     func tappedReply(note: NoteCell.Model)
     func tappedRenote(note: NoteCell.Model)
-    func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool)
+    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?)
     func tappedOthers(note: NoteCell.Model)
     
     func move2PostDetail(item: NoteCell.Model)
@@ -312,6 +312,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         // poll
         output.poll
             .asDriver(onErrorDriveWith: Driver.empty())
+            .compactMap { $0 }
             .drive(onNext: { poll in
                 self.pollView.isHidden = false
                 self.pollView.setPoll(with: poll)
@@ -385,6 +386,21 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             .drive(reactionsCollectionView.rx.isHidden)
             .disposed(by: disposeBag)
         
+        output.replyLabel
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(replyButton.rx.title())
+            .disposed(by: disposeBag)
+        
+        output.renoteLabel
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(renoteButton.rx.title())
+            .disposed(by: disposeBag)
+        
+        output.reactionLabel
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(reactionButton.rx.title())
+            .disposed(by: disposeBag)
+        
         urlPreviewer.setTapGesture(disposeBag) {
             guard let previewdUrl = viewModel.state.previewedUrl else { return }
             self.delegate?.tappedLink(text: previewdUrl)
@@ -410,7 +426,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             
         }).disposed(by: disposeBag)
         
-//        Theme.shared.complete()
+        //        Theme.shared.complete()
     }
     
     private func reactionColorBinding(_ cell: ReactionCell) {
@@ -485,9 +501,9 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         iconImageUrl = item.iconImageUrl
         delegate = arg.delegate
         
-//        // YanagiTextと一対一にキャッシュを保存できるように、idをYanagiTextに渡す
-//        noteView.setId(noteId: item.noteId)
-//        nameTextView.setId(userId: item.userId)
+        //        // YanagiTextと一対一にキャッシュを保存できるように、idをYanagiTextに渡す
+        //        noteView.setId(noteId: item.noteId)
+        //        nameTextView.setId(userId: item.userId)
         
         let viewModel = getViewModel(item: item, isDetailMode: isDetailMode)
         self.viewModel = viewModel
@@ -501,18 +517,6 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
                                                                 fileVisible: item.fileVisible,
                                                                 delegate: arg.delegate))
         }
-        
-        // footer
-        let replyCount = item.replyCount != 0 ? String(item.replyCount) : ""
-        let renoteCount = item.renoteCount != 0 ? String(item.renoteCount) : ""
-        var reactionsCount: Int = 0
-        item.reactions.forEach {
-            reactionsCount += Int($0.count ?? "0") ?? 0
-        }
-        
-        replyButton.setTitle("reply\(replyCount)", for: .normal)
-        renoteButton.setTitle("retweet\(renoteCount)", for: .normal)
-        reactionButton.setTitle("plus\(reactionsCount == 0 ? "" : String(reactionsCount))", for: .normal)
         
         return self
     }
@@ -566,6 +570,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         guard let cell = reactionsCollectionView.dequeueReusableCell(withReuseIdentifier: "ReactionCell", for: indexPath) as? ReactionCell else { fatalError("Internal Error.") }
         
+        cell.isUserInteractionEnabled = !viewModel.state.isMe // 自分の投稿ではリアクションをタップできないように
         if index < reactionsModel.count {
             let item = reactionsModel[index]
             
@@ -656,15 +661,17 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     }
     
     @IBAction func tappedReaction(_ sender: Any) {
-        guard let delegate = delegate, let noteId = self.noteId, let viewModel = viewModel else { return }
+        guard let delegate = delegate, let noteId = self.noteId, let viewModel = viewModel, !viewModel.state.isMe else { return }
         
-        delegate.tappedReaction(noteId: noteId,
+        delegate.tappedReaction(reactioned: viewModel.state.reactioned,
+                                noteId: noteId,
                                 iconUrl: iconImageUrl,
                                 displayName: viewModel.output.displayName,
                                 username: viewModel.output.username,
                                 note: noteView.attributedText,
                                 hasFile: false,
-                                hasMarked: false)
+                                hasMarked: false,
+                                myReaction: viewModel.state.myReaction)
     }
     
     @IBAction func tappedOthers(_ sender: Any) {
