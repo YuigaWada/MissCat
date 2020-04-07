@@ -32,7 +32,7 @@ class ReactionGenViewModel: ViewModelType {
         let hasHistory = history.count > 0
         history = hasHistory ? [EmojiViewHeader(title: "History")] + history : []
         
-        return history + favs
+        return favs + history
     }()
     
     private var searched: [EmojiView.EmojiModel] = []

@@ -100,6 +100,10 @@
 		8DAF301B241B599B0041BB85 /* LicenseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAF301A241B599B0041BB85 /* LicenseViewController.swift */; };
 		8DBC7A45241245A800D8FEA5 /* AVKit+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DBC7A44241245A800D8FEA5 /* AVKit+MissCat.swift */; };
 		8DC16154238BBD0C007793B7 /* NoteModel+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC16153238BBD0C007793B7 /* NoteModel+MissCat.swift */; };
+		8DC27D96243BF2DF0037E610 /* UrlPreviewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC27D95243BF2DF0037E610 /* UrlPreviewer.xib */; };
+		8DC27D98243BF4FB0037E610 /* UrlPreviewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC27D97243BF4FA0037E610 /* UrlPreviewer.swift */; };
+		8DC27D9A243BF57A0037E610 /* UrlPreviewerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC27D99243BF57A0037E610 /* UrlPreviewerViewModel.swift */; };
+		8DC27D9C243BF6DD0037E610 /* UrlPreviewerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */; };
 		8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */; };
 		8DC95AF923B0BD450013CABC /* NotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC95AF823B0BD450013CABC /* NotificationBanner.swift */; };
 		8DD8898B23935CC400D22910 /* PostDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */; };
@@ -227,6 +231,10 @@
 		8DAF301A241B599B0041BB85 /* LicenseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseViewController.swift; sourceTree = "<group>"; };
 		8DBC7A44241245A800D8FEA5 /* AVKit+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AVKit+MissCat.swift"; sourceTree = "<group>"; };
 		8DC16153238BBD0C007793B7 /* NoteModel+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NoteModel+MissCat.swift"; sourceTree = "<group>"; };
+		8DC27D95243BF2DF0037E610 /* UrlPreviewer.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = UrlPreviewer.xib; sourceTree = "<group>"; };
+		8DC27D97243BF4FA0037E610 /* UrlPreviewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UrlPreviewer.swift; path = /Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/View/Reusable/NoteCell/UrlPreviewer.swift; sourceTree = "<absolute>"; };
+		8DC27D99243BF57A0037E610 /* UrlPreviewerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UrlPreviewerViewModel.swift; sourceTree = "<group>"; };
+		8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UrlPreviewerModel.swift; sourceTree = "<group>"; };
 		8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = NotificationBanner.xib; sourceTree = "<group>"; };
 		8DC95AF823B0BD450013CABC /* NotificationBanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationBanner.swift; sourceTree = "<group>"; };
 		8DD0D80B23B47CA8003F02ED /* YanagiText.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = YanagiText.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -401,6 +409,7 @@
 				8DE8882624276512002CC9DE /* NoteCell.FileView.swift */,
 				8D6139192427B9B0003B5BEF /* FileContainer.swift */,
 				8D61391F2427CAED003B5BEF /* FileContainerCell.swift */,
+				8DC27D97243BF4FA0037E610 /* UrlPreviewer.swift */,
 			);
 			path = NoteCell;
 			sourceTree = "<group>";
@@ -412,6 +421,7 @@
 				8D502D53237D8BEC00525A96 /* ReactionCell.xib */,
 				8D4754F8240E21F800BAD410 /* PollView.xib */,
 				8D61391D2427CA0C003B5BEF /* FileContainerCell.xib */,
+				8DC27D95243BF2DF0037E610 /* UrlPreviewer.xib */,
 			);
 			path = nib;
 			sourceTree = "<group>";
@@ -512,6 +522,7 @@
 				8D8863A82383F8A900A7A5A8 /* NoteCellViewModel.swift */,
 				8DA06A13238A86B80093A718 /* NotificationCellViewModel.swift */,
 				8D61391B2427C1B3003B5BEF /* FileContainerViewModel.swift */,
+				8DC27D99243BF57A0037E610 /* UrlPreviewerViewModel.swift */,
 			);
 			path = Reusable;
 			sourceTree = "<group>";
@@ -522,6 +533,7 @@
 				8DAEA1382382E6D00083AA69 /* ReactionGenModel.swift */,
 				8D8863AA2383F96C00A7A5A8 /* NoteCellModel.swift */,
 				8DA06A15238A86DC0093A718 /* NotificationCellModel.swift */,
+				8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */,
 			);
 			path = Reusable;
 			sourceTree = "<group>";
@@ -639,6 +651,7 @@
 				8D502D54237D8BEC00525A96 /* ReactionCell.xib in Resources */,
 				8DA536AC23AC8B70005EB1B5 /* AttachmentCell.xib in Resources */,
 				8D065B19237AC826003DFB7C /* NoteCell.xib in Resources */,
+				8DC27D96243BF2DF0037E610 /* UrlPreviewer.xib in Resources */,
 				8D8863B4238493FA00A7A5A8 /* RenoteeCell.xib in Resources */,
 				8D61391E2427CA0C003B5BEF /* FileContainerCell.xib in Resources */,
 				8DAEA1352382E4F00083AA69 /* EmojiView.xib in Resources */,
@@ -726,6 +739,7 @@
 				8D0F7D0F2398F21F009B45E1 /* ReactionGenPanel.swift in Sources */,
 				8DEFF31E239BD4F200142802 /* ProfileModel.swift in Sources */,
 				8D47FAD8243388B100549A0B /* TosViewController.swift in Sources */,
+				8DC27D9A243BF57A0037E610 /* UrlPreviewerViewModel.swift in Sources */,
 				8D63BFC3242BBF03009C3ADE /* HomeViewModel.swift in Sources */,
 				8D065B1B237ACA68003DFB7C /* NoteCell.swift in Sources */,
 				8D8863AB2383F96C00A7A5A8 /* NoteCellModel.swift in Sources */,
@@ -779,6 +793,7 @@
 				8D8863B02384147100A7A5A8 /* UIColor+MissCat.swift in Sources */,
 				8D42C3A8238076B600337DD2 /* Double+MissCat.swift in Sources */,
 				8D98C268242E0AD600BB8049 /* PostDetailModel.swift in Sources */,
+				8DC27D9C243BF6DD0037E610 /* UrlPreviewerModel.swift in Sources */,
 				8D8863A92383F8A900A7A5A8 /* NoteCellViewModel.swift in Sources */,
 				8D310191243AE9AB004F8E55 /* MFMImageView.swift in Sources */,
 				8D0D47AA23A74EC80095361D /* UIViewController+PhotoEditor.swift in Sources */,
@@ -789,6 +804,7 @@
 				8D8863B62384951300A7A5A8 /* RenoteeCell.swift in Sources */,
 				8D6139202427CAED003B5BEF /* FileContainerCell.swift in Sources */,
 				8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */,
+				8DC27D98243BF4FB0037E610 /* UrlPreviewer.swift in Sources */,
 				8DE8882724276512002CC9DE /* NoteCell.FileView.swift in Sources */,
 				8DA06A12238A58A20093A718 /* NSMutableAttributedString+MissCat.swift in Sources */,
 				8D502D58238024B700525A96 /* HomeViewController.swift in Sources */,
@@ -967,7 +983,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.4;
+				CURRENT_PROJECT_VERSION = 1.0.5;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -982,7 +998,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",
@@ -1046,7 +1062,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.4;
+				CURRENT_PROJECT_VERSION = 1.0.5;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -1061,7 +1077,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",

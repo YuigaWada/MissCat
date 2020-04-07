@@ -94,7 +94,7 @@
                                 </constraints>
                             </view>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="tzh-uX-1vt">
-                                <rect key="frame" x="20" y="511" width="374" height="166"/>
+                                <rect key="frame" x="20" y="511" width="374" height="214"/>
                                 <subviews>
                                     <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsVerticalScrollIndicator="NO" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="IOM-RT-9Xq">
                                         <rect key="frame" x="0.0" y="0.0" width="374" height="128"/>
@@ -120,6 +120,45 @@
                                         <rect key="frame" x="0.0" y="136" width="374" height="30"/>
                                         <state key="normal" title="Add Location"/>
                                     </button>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Xr7-JV-f30">
+                                        <rect key="frame" x="0.0" y="174" width="374" height="40"/>
+                                        <subviews>
+                                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="dMO-dA-QM0">
+                                                <rect key="frame" x="30.5" y="4" width="32" height="32"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" secondItem="dMO-dA-QM0" secondAttribute="height" multiplier="1:1" id="Mj5-KE-Chm"/>
+                                                </constraints>
+                                            </imageView>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Izf-jI-LTK">
+                                                <rect key="frame" x="70.5" y="16.5" width="295.5" height="14.5"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                                <color key="textColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="chevron-right" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zCb-5a-luU">
+                                                <rect key="frame" x="5" y="7" width="25.5" height="26"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" secondItem="zCb-5a-luU" secondAttribute="height" multiplier="1:1" id="7fS-rg-67t"/>
+                                                </constraints>
+                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                        </subviews>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                                        <constraints>
+                                            <constraint firstItem="dMO-dA-QM0" firstAttribute="centerY" secondItem="Xr7-JV-f30" secondAttribute="centerY" id="26S-AV-hMp"/>
+                                            <constraint firstItem="dMO-dA-QM0" firstAttribute="bottom" secondItem="Izf-jI-LTK" secondAttribute="bottom" constant="5" id="41N-Xk-VwE"/>
+                                            <constraint firstAttribute="height" constant="40" id="FQJ-wi-VTa"/>
+                                            <constraint firstAttribute="trailing" secondItem="Izf-jI-LTK" secondAttribute="trailing" constant="8" id="Fkh-e2-9XD"/>
+                                            <constraint firstItem="dMO-dA-QM0" firstAttribute="leading" secondItem="zCb-5a-luU" secondAttribute="trailing" id="G1l-DA-stq"/>
+                                            <constraint firstItem="zCb-5a-luU" firstAttribute="leading" secondItem="Xr7-JV-f30" secondAttribute="leading" constant="5" id="GW5-Vp-3e9"/>
+                                            <constraint firstItem="zCb-5a-luU" firstAttribute="height" secondItem="dMO-dA-QM0" secondAttribute="height" multiplier="0.8" id="low-nj-OVB"/>
+                                            <constraint firstItem="dMO-dA-QM0" firstAttribute="height" secondItem="Xr7-JV-f30" secondAttribute="height" multiplier="0.8" id="mAa-Af-IHP"/>
+                                            <constraint firstItem="Izf-jI-LTK" firstAttribute="leading" secondItem="dMO-dA-QM0" secondAttribute="trailing" constant="8" id="pii-yT-Trl"/>
+                                            <constraint firstItem="zCb-5a-luU" firstAttribute="centerY" secondItem="Xr7-JV-f30" secondAttribute="centerY" id="xoD-Aa-3k3"/>
+                                        </constraints>
+                                    </view>
                                 </subviews>
                                 <constraints>
                                     <constraint firstItem="IOM-RT-9Xq" firstAttribute="top" secondItem="tzh-uX-1vt" secondAttribute="top" id="7nY-au-hFQ"/>
@@ -156,8 +195,12 @@
                         <outlet property="bottomStackView" destination="tzh-uX-1vt" id="cby-EG-WeT"/>
                         <outlet property="cancelButton" destination="2pz-eD-46J" id="PEe-Ee-Sfs"/>
                         <outlet property="iconImageView" destination="Csp-qU-w8d" id="MR7-xt-sqx"/>
+                        <outlet property="innerIconView" destination="dMO-dA-QM0" id="w6u-Fk-cS6"/>
+                        <outlet property="innerNoteCell" destination="Xr7-JV-f30" id="n57-57-Ceq"/>
+                        <outlet property="innerNoteLabel" destination="Izf-jI-LTK" id="7XB-so-TX2"/>
                         <outlet property="mainTextView" destination="EU5-Xs-Hwc" id="Da9-uM-miV"/>
                         <outlet property="mainTextViewBottomConstraint" destination="l9a-1F-Als" id="WSY-FH-EiL"/>
+                        <outlet property="markLabel" destination="zCb-5a-luU" id="1nh-gX-VZi"/>
                         <outlet property="submitButton" destination="E5P-wX-4mM" id="kHB-mM-lhF"/>
                     </connections>
                 </viewController>

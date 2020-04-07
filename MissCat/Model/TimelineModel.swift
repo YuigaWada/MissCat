@@ -261,10 +261,11 @@ class TimelineModel {
         }
         
         if typeString == "CapturedNoteUpdated" {
-            guard let updateContents = response as? NoteUpdatedModel, let updateType = updateContents.type, let userId = updateContents.userId else { return }
+            guard let updateContents = response as? NoteUpdatedModel, let updateType = updateContents.type else { return }
             
             switch updateType {
             case .reacted:
+                guard let userId = updateContents.userId else { return }
                 userId.isMe { isMyReaction in // 自分のリアクションかどうかチェックする
                     guard !isMyReaction else { return } // 自分のリアクションはcaptureしない
                     self.updateReaction(targetNoteId: updateContents.targetNoteId,
@@ -275,12 +276,20 @@ class TimelineModel {
                 
             case .pollVoted:
                 break
+                
+            case .unreacted:
+                guard let userId = updateContents.userId else { return }
+                userId.isMe { isMyReaction in
+                    guard !isMyReaction else { return } // 自分のリアクションはcaptureしない
+                    self.updateReaction(targetNoteId: updateContents.targetNoteId,
+                                        reaction: updateContents.reaction,
+                                        isMyReaction: false,
+                                        plus: false)
+                }
+                
             case .deleted:
                 guard let targetNoteId = updateContents.targetNoteId else { return }
-                self.updateReaction(targetNoteId: updateContents.targetNoteId,
-                                    reaction: updateContents.reaction,
-                                    isMyReaction: false,
-                                    plus: false)
+                self.removeTargetTrigger.onNext(targetNoteId)
             }
         }
         
@@ -295,7 +304,7 @@ class TimelineModel {
     private func captureNote(_ isReconnection: inout Bool) {
         // 再接続の場合
         if isReconnection {
-            captureNotes(capturedNoteIds)
+            captureNotes(capturedNoteIds, isReconnection)
             isReconnection = false
         }
         
@@ -311,8 +320,8 @@ class TimelineModel {
         captureNotes([noteId])
     }
     
-    private func captureNotes(_ noteIds: [String]) {
-        capturedNoteIds += noteIds // streamingが切れた時のために記憶
+    private func captureNotes(_ noteIds: [String], _ isReconnection: Bool = false) {
+        if !isReconnection { capturedNoteIds += noteIds } // streamingが切れた時のために記憶
         noteIds.forEach { id in
             do {
                 try streaming.captureNote(noteId: id)
