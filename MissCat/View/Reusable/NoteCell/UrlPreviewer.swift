@@ -72,6 +72,7 @@ class UrlPreviewer: UIView, ComponentType {
         clipsToBounds = true
         
         imageView.backgroundColor = .lightGray
+        imageView.contentMode = .scaleAspectFill
         previewTextView.textContainer.lineBreakMode = .byTruncatingTail
     }
     
