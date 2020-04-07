@@ -23,4 +23,5 @@ pod 'Gifu', :binary => true
 pod 'iOSPhotoEditor', :binary => true
 pod 'XLPagerTabStrip', :binary => true
 pod 'APNGKit', '~> 1.0', :binary => true
+pod 'SwiftLinkPreview', '~> 3.1.0', :binary => true
 end 
