@@ -439,8 +439,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     }
     
     private func showDeleteAlert(_ note: NoteCell.Model) {
-        showAlert(title: "削除", message: "本当にこの投稿を削除しますか？", yesOption: "削除") { _ in
-            guard let noteId = note.noteId else { return }
+        showAlert(title: "削除", message: "本当にこの投稿を削除しますか？", yesOption: "削除") { okay in
+            guard let noteId = note.noteId, okay else { return }
             self.viewModel?.deleteMyNote(noteId: noteId)
         }
     }
