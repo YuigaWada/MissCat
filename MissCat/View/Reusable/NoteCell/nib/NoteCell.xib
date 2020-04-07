@@ -82,7 +82,6 @@
                                     <rect key="frame" x="62.5" y="13" width="200.5" height="35"/>
                                     <constraints>
                                         <constraint firstAttribute="height" constant="35" id="5cn-bf-RfV"/>
-                                        <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="35" id="K5h-6c-1f1"/>
                                     </constraints>
                                     <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
                                     <fontDescription key="fontDescription" type="system" pointSize="14"/>
