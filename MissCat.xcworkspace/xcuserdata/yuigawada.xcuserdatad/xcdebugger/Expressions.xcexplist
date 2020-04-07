@@ -236,6 +236,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "PostViewController.viewDidLoad():PostViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "targetNote">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "GIFImageView.isGif(url:):GIFImageView+MissCat.swift">
          <PersistentStrings>
             <PersistentString
@@ -1125,6 +1133,14 @@
          <PersistentStrings>
             <PersistentString
                value = "String(data: deviceToken, encoding: .utf8)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "NoteCellViewModel.searchUrl(from:):NoteCellViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "item.note">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

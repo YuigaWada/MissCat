@@ -8,6 +8,7 @@
 
 import Foundation
 import MisskeyKit
+import SwiftLinkPreview
 import UIKit
 
 typealias Attachments = [NSTextAttachment: YanagiText.Attachment]
@@ -26,6 +27,7 @@ class Cache {
     
     private var uiImage: [String: UIImage] = [:] // key: url
     private var dataOnUrl: [String: Data] = [:] // key: url
+    private var urlPreview: [String: Response] = [:] // key: url
     
     private var me: UserModel?
     
@@ -65,6 +67,10 @@ class Cache {
         if toStorage {
             saveToStorage(data: data, url: rawUrl)
         }
+    }
+    
+    func saveUrlPreview(response: Response, on rawUrl: String) {
+        urlPreview[rawUrl] = response
     }
     
     // MARK: Get
@@ -114,6 +120,11 @@ class Cache {
         }
         
         return dataOnUrl[rawUrl]
+    }
+    
+    func getUrlPreview(on rawUrl: String) -> Response? {
+        guard urlPreview.keys.contains(rawUrl) else { return nil }
+        return urlPreview[rawUrl]
     }
     
     /// データをハッシュを利用して保存する

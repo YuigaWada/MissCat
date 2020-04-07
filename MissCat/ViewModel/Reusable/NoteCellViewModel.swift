@@ -28,36 +28,56 @@ class NoteCellViewModel: ViewModelType {
         let name: PublishRelay<NSAttributedString?> = .init()
         
         let shapedNote: PublishRelay<NSAttributedString?> = .init()
+        let url: PublishRelay<String> = .init()
+        
         let reactions: PublishSubject<[NoteCell.Reaction.Section]> = .init()
-        let poll: PublishRelay<Poll> = .init()
+        let poll: PublishRelay<Poll?> = .init()
         let commentRenoteTarget: PublishRelay<NoteCell.Model> = .init()
         let onOtherNote: PublishRelay<Bool> = .init() // 引用RNはNoteCellの上にNoteCellが乗るという二重構造になっているので、内部のNoteCellかどうかを判別する
         
         let iconImage: PublishRelay<UIImage> = .init()
+        let innerIconImage: PublishRelay<UIImage> = .init()
         
         let defaultConstraintActive: PublishRelay<Bool> = .init()
         let isReplyTarget: PublishRelay<Bool> = .init()
         
         let backgroundColor: PublishRelay<UIColor> = .init()
         
+        let replyLabel: PublishRelay<String> = .init()
+        let renoteLabel: PublishRelay<String> = .init()
+        let reactionLabel: PublishRelay<String> = .init()
+        
         let displayName: String
         let username: String
     }
     
-    struct State {}
-    
-    lazy var output: Output = .init(displayName: input.cellModel.displayName,
-                                    username: input.cellModel.username)
+    struct State {
+        var previewedUrl: String?
+        var isMe: Bool
+        var myReaction: String?
+        var reactioned: Bool {
+            return myReaction != nil
+        }
+    }
     
     private var input: Input
-    private var model = NoteCellModel()
-    private var disposeBag: DisposeBag
+    lazy var output: Output = .init(displayName: input.cellModel.displayName,
+                                    username: input.cellModel.username)
+    var state: State {
+        return .init(previewedUrl: previewedUrl, isMe: isMe, myReaction: myReaction)
+    }
+    
+    private var previewedUrl: String?
+    private var isMe: Bool = false
+    private var myReaction: String?
     
     private let replyTargetColor = UIColor(hex: "f0f0f0")
     private let usernameFont = UIFont.systemFont(ofSize: 11.0)
     
     private var dataSource: ReactionsDataSource?
     var reactionsModel: [NoteCell.Reaction] = []
+    private var model = NoteCellModel()
+    private var disposeBag: DisposeBag
     
     private var properBackgroundColor: UIColor {
         return input.cellModel.isReplyTarget ? replyTargetColor : .white
@@ -86,14 +106,14 @@ class NoteCellViewModel: ViewModelType {
         input.cellModel.shapedNote?.mfmEngine.renderCustomEmojis(on: input.noteYanagi)
         
         getReactions(item)
+        getUrl(from: item)
         prepareCommentRenote(item)
         output.onOtherNote.accept(item.onOtherNote)
+        output.poll.accept(item.poll)
         
-        setImage(username: item.username, imageRawUrl: item.iconImageUrl)
-        
-        if let pollModel = item.poll {
-            output.poll.accept(pollModel)
-        }
+        setImage(to: output.iconImage, username: item.username, imageRawUrl: item.iconImageUrl)
+        setImage(to: output.innerIconImage, username: item.commentRNTarget?.username, imageRawUrl: item.commentRNTarget?.iconImageUrl)
+        setFooter(from: item)
     }
     
     func setReactionCell(with item: NoteCell.Reaction, to reactionCell: ReactionCell) -> ReactionCell {
@@ -116,14 +136,16 @@ class NoteCellViewModel: ViewModelType {
         return reactionCell
     }
     
-    func setImage(username: String, imageRawUrl: String?) {
+    func setImage(to target: PublishRelay<UIImage>, username: String?, imageRawUrl: String?) {
+        guard let username = username, let imageRawUrl = imageRawUrl else { return }
+        
         if let image = Cache.shared.getIcon(username: username) {
-            output.iconImage.accept(image)
-        } else if let imageRawUrl = imageRawUrl, let imageUrl = URL(string: imageRawUrl) {
-            imageUrl.toUIImage { [weak self] image in
-                guard let self = self, let image = image else { return }
+            target.accept(image)
+        } else if let imageUrl = URL(string: imageRawUrl) {
+            imageUrl.toUIImage { image in
+                guard let image = image else { return }
                 Cache.shared.saveIcon(username: username, image: image) // CACHE!
-                self.output.iconImage.accept(image)
+                target.accept(image)
             }
         }
     }
@@ -167,16 +189,64 @@ class NoteCellViewModel: ViewModelType {
         return attachmentCount == attachments.count // 一致しない＝キャッシュされたattachmentsに欠損あり
     }
     
+    private func getUrl(from item: NoteCell.Model) {
+        guard let url = searchUrl(from: item) else { return }
+        
+        previewedUrl = url
+        output.url.accept(url)
+    }
+    
+    private func searchUrl(from item: NoteCell.Model) -> String? {
+        let normalLink = "(https?://[\\w/:%#\\$&\\?\\(~\\.=\\+\\-@\"]+)"
+        let targets = item.original?.text?.regexMatches(pattern: normalLink).map { $0[0] }
+        if let targets = targets, targets.count > 0 {
+            return targets[0]
+        }
+        return nil
+    }
+    
+    private func setFooter(from item: NoteCell.Model) {
+        let replyCount = item.replyCount != 0 ? String(item.replyCount) : ""
+        let renoteCount = item.renoteCount != 0 ? String(item.renoteCount) : ""
+        
+        output.replyLabel.accept("reply\(replyCount)")
+        output.renoteLabel.accept("retweet\(renoteCount)")
+        
+        setReactionCount(from: item, myReaction: item.myReaction)
+        myReaction = item.myReaction
+    }
+    
+    private func setReactionCount(from item: NoteCell.Model, myReaction: String? = nil, startCount: Int = 0) {
+        var reactionsCount: Int = startCount
+        item.reactions.forEach {
+            reactionsCount += Int($0.count ?? "0") ?? 0
+        }
+        
+        // リアクション済みor自分の投稿ならばリアクションボタンを ＋ → − へ
+        item.userId.isMe { me in
+            let reactioned = myReaction != nil
+            let minusShape = me || reactioned
+            
+            self.isMe = me
+            let reactionsCountText = reactionsCount == 0 ? "" : String(reactionsCount)
+            self.output.reactionLabel.accept((minusShape ? "minus " : "plus") + reactionsCountText)
+        }
+    }
+    
     private func prepareCommentRenote(_ item: NoteCell.Model) {
         guard let renoteCellModel = item.commentRNTarget else { return }
         output.commentRenoteTarget.accept(renoteCellModel)
     }
     
     func registerReaction(noteId: String, reaction: String) {
+        myReaction = reaction // stateの変更
+        setReactionCount(from: input.cellModel, myReaction: reaction, startCount: 1)
         model.registerReaction(noteId: noteId, reaction: reaction)
     }
     
     func cancelReaction(noteId: String) {
+        myReaction = nil // stateの変更
+        setReactionCount(from: input.cellModel, startCount: -1)
         model.cancelReaction(noteId: noteId)
     }
     

@@ -21,16 +21,21 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     @IBOutlet weak var submitButton: UIButton!
     @IBOutlet weak var iconImageView: UIImageView!
     
+    @IBOutlet weak var innerNoteCell: UIView!
+    @IBOutlet weak var markLabel: UILabel!
+    @IBOutlet weak var innerIconView: UIImageView!
+    @IBOutlet weak var innerNoteLabel: UILabel!
+    
     @IBOutlet weak var mainTextView: UITextView!
     @IBOutlet weak var mainTextViewBottomConstraint: NSLayoutConstraint!
     
     @IBOutlet weak var bottomStackView: UIStackView!
+    
     @IBOutlet weak var addLocationButon: UIButton!
     
     var homeViewController: HomeViewController?
     
     private var postType: PostType = .Post
-    private var targetNoteCell: NoteCell?
     private var targetNote: NoteCell.Model?
     
     private var viewModel: PostViewModel?
@@ -48,11 +53,8 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
         let dataSource = setupDataSource()
         binding(viewModel, dataSource)
         
-        setupCollectionView()
-        setupTextView(viewModel)
-        setupNavItem()
-        setupTargetNoteCell()
-        
+        viewModel.setInnerNote()
+        setupComponent(with: viewModel)
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(keyboardWillShow(_:)),
                                                name: UIResponder.keyboardWillShowNotification,
@@ -70,16 +72,11 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
         mainTextView.becomeFirstResponder()
     }
     
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        
-        targetNote?.onOtherNote = false
-        targetNote?.fileVisible = true
-    }
-    
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
+        
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
+        innerIconView.layer.cornerRadius = innerIconView.frame.width / 2
     }
     
     /// 引用RN / リプライの場合に、対象ノートのモデルを受け渡す
@@ -87,17 +84,20 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     ///   - note: note model
     ///   - type: PostType
     func setTargetNote(_ note: NoteCell.Model, type: PostType) {
-        guard let noteCell = UINib(nibName: "NoteCell", bundle: nil).instantiate(withOwner: self, options: nil).first as? NoteCell else { return }
-        
-        note.onOtherNote = true
-        note.fileVisible = false
-        
         targetNote = note
         postType = type
-        targetNoteCell = noteCell.transform(with: .init(item: note))
     }
     
     // MARK: Setup
+    
+    private func setupComponent(with viewModel: PostViewModel) {
+        setupCollectionView()
+        setupTextView(viewModel)
+        setupNavItem()
+        
+        innerNoteCell.isHidden = targetNote == nil
+        markLabel.font = .awesomeSolid(fontSize: 11.0)
+    }
     
     private func setupDataSource() -> AttachmentsDataSource {
         let dataSource = AttachmentsDataSource(
@@ -132,8 +132,24 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
             return String(1500 - text.count)
         }.bind(to: counter.rx.title).disposed(by: disposeBag)
         
-        output.attachments.map { $0.count == 0 }.bind(to: attachmentCollectionView.rx.isHidden).disposed(by: disposeBag)
-        output.attachments.bind(to: attachmentCollectionView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
+        output.attachments
+            .map { $0.count == 0 }
+            .bind(to: attachmentCollectionView.rx.isHidden)
+            .disposed(by: disposeBag)
+        
+        output.attachments
+            .bind(to: attachmentCollectionView.rx.items(dataSource: dataSource))
+            .disposed(by: disposeBag)
+        
+        output.innerIcon
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(innerIconView.rx.image)
+            .disposed(by: disposeBag)
+        
+        output.innerNote
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(innerNoteLabel.rx.text)
+            .disposed(by: disposeBag)
     }
     
     private func setupCollectionView() {
@@ -221,16 +237,6 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
         }).disposed(by: disposeBag)
         
         return cell.setupCell(item)
-    }
-    
-    private func setupTargetNoteCell() {
-        guard let targetCell = targetNoteCell else { return }
-        
-        targetCell.frame = CGRect(x: targetCell.frame.origin.x,
-                                  y: targetCell.frame.origin.y,
-                                  width: bottomStackView.frame.width,
-                                  height: targetCell.frame.height)
-        bottomStackView.addArrangedSubview(targetCell)
     }
     
     private func showReactionGen() {
@@ -395,9 +401,9 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     }
     
     private func insertCustomEmoji(with emojiModel: EmojiView.EmojiModel) {
-//        guard let imageUrl = emojiModel.customEmojiUrl else { return }
-//        let targetView = MFMEngine.generateAsyncImageView(imageUrl: imageUrl)
-//
+        //        guard let imageUrl = emojiModel.customEmojiUrl else { return }
+        //        let targetView = MFMEngine.generateAsyncImageView(imageUrl: imageUrl)
+        //
         if let selectedTextRange = mainTextView.selectedTextRange {
             guard let emoji = emojiModel.isDefault ? emojiModel.defaultEmoji : ":\(emojiModel.rawEmoji):" else { return }
             mainTextView.replace(selectedTextRange,

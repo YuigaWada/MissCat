@@ -327,7 +327,17 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     
     // MARK: NoteCell Delegate
     
-    override func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
+    override func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {
+        if reactioned { // リアクションを取り消す
+            guard let myReaction = myReaction else { return }
+            viewModel?.updateReaction(targetNoteId: noteId,
+                                      reaction: myReaction,
+                                      isMyReaction: true,
+                                      plus: false,
+                                      needReloading: true)
+            return
+        }
+        
         let reactionGen = presentReactionGen(noteId: noteId,
                                              iconUrl: iconUrl,
                                              displayName: displayName,
@@ -429,8 +439,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     }
     
     private func showDeleteAlert(_ note: NoteCell.Model) {
-        showAlert(title: "削除", message: "本当にこの投稿を削除しますか？", yesOption: "削除") { _ in
-            guard let noteId = note.noteId else { return }
+        showAlert(title: "削除", message: "本当にこの投稿を削除しますか？", yesOption: "削除") { okay in
+            guard let noteId = note.noteId, okay else { return }
             self.viewModel?.deleteMyNote(noteId: noteId)
         }
     }

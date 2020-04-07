@@ -21,6 +21,9 @@ class PostViewModel: ViewModelType {
         let iconImage: Driver<UIImage>
         let isSuccess: Driver<Bool>
         
+        let innerIcon: PublishRelay<UIImage> = .init()
+        let innerNote: PublishRelay<String> = .init()
+        
         let attachments: PublishSubject<[PostViewController.AttachmentsSection]>
     }
     
@@ -157,6 +160,21 @@ class PostViewModel: ViewModelType {
         attachmentsLists = attachmentsLists.map { $0.changeNsfwState(!currentState) }
         
         attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
+    }
+    
+    func setInnerNote() {
+        guard let target = input.targetNote else { return }
+        
+        output.innerNote.accept(target.original?.text ?? "")
+        if let image = Cache.shared.getIcon(username: target.username) {
+            output.innerIcon.accept(image)
+        } else if let iconImageUrl = target.iconImageUrl, let imageUrl = URL(string: iconImageUrl) {
+            imageUrl.toUIImage { image in
+                guard let image = image else { return }
+                Cache.shared.saveIcon(username: target.username, image: image) // CACHE!
+                self.output.innerIcon.accept(image)
+            }
+        }
     }
     
     // MARK: Privates

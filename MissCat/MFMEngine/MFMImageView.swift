@@ -12,21 +12,40 @@ import SVGKit
 import UIKit
 
 class MFMImageView: UIImageView {
-    private lazy var apngView: APNGImageView = {
+    // MARK: Views
+    
+    private var apngView: APNGImageView?
+    private var gifView: GIFImageView?
+    
+    // MARK: LifeCycle
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        apngView = setupApngView()
+        gifView = setupGifView()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        apngView = setupApngView()
+        gifView = setupGifView()
+    }
+    
+    private func setupApngView() -> APNGImageView {
         let apngView = APNGImageView()
         apngView.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(apngView)
-        self.setAutoLayout(to: apngView)
+        addSubview(apngView)
+        setAutoLayout(to: apngView)
         return apngView
-    }()
+    }
     
-    private lazy var gifView: GIFImageView = {
+    private func setupGifView() -> GIFImageView {
         let gifView = GIFImageView()
         gifView.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(gifView)
-        self.setAutoLayout(to: gifView)
+        addSubview(gifView)
+        setAutoLayout(to: gifView)
         return gifView
-    }()
+    }
     
     // MARK: Publics
     
@@ -44,14 +63,13 @@ class MFMImageView: UIImageView {
         }
     }
     
-    
     /// セルを再利用する際に呼ぶ
     func prepareForReuse() {
-        gifView.prepareForReuse()
-        gifView.gifImage = nil
-        gifView.image = nil
-        apngView.image = nil
-        apngView.stopAnimating()
+        gifView?.prepareForReuse()
+        gifView?.gifImage = nil
+        gifView?.image = nil
+        apngView?.image = nil
+        apngView?.stopAnimating()
         image = nil
         backgroundColor = .darkGray
     }
@@ -61,38 +79,39 @@ class MFMImageView: UIImageView {
     /// フォーマットを識別してImageをsetする
     /// - Parameter data: Data
     private func setImage(data: Data) {
-        let format = getImageFormat(data)
-        switch format {
-        case .gif:
-            setGifuImage(with: data)
-        case .apng:
-            setApngImage(with: data)
-        case .png:
-            setUIImage(with: data)
-        case .other:
-            setUIImage(with: data)
+        DispatchQueue.global().async {
+            let format = self.getImageFormat(data)
+            switch format {
+            case .gif:
+                self.setGifuImage(with: data)
+            case .apng:
+                self.setApngImage(with: data)
+            case .png:
+                self.setUIImage(with: data)
+            case .other:
+                self.setUIImage(with: data)
+            }
         }
     }
-    
     
     /// ApngフォーマットのImageをset
     /// - Parameter data: Data
     private func setApngImage(with data: Data) {
         DispatchQueue.main.async {
-            let apngImage = APNGImage(data: data)
-            self.apngView.image = apngImage
-            self.apngView.startAnimating()
+            let apngImage = APNGImage(data: data, progressive: true)
+            self.apngView?.image = apngImage
+            self.apngView?.startAnimating()
             self.backgroundColor = .clear
         }
     }
     
-    /// アニメーションGifに対応するため、非同期にGifuへ画像をsetする
+    /// アニメーションGifに対応するためGifuへ画像をsetする
     /// - Parameters:
     ///   - data: 画像データ
     ///   - imageView: set対象のGIFImageView
     private func setGifuImage(with data: Data) {
         DispatchQueue.main.async {
-            self.gifView.animate(withGIFData: data) {
+            self.gifView?.animate(withGIFData: data) {
                 DispatchQueue.main.async {
                     self.backgroundColor = .clear
                 }
@@ -100,23 +119,21 @@ class MFMImageView: UIImageView {
         }
     }
     
-    /// 非同期で画像をimageViewにsetする
+    /// 画像をimageViewにsetする
     /// - Parameters:
     ///   - data: 画像データ
     ///   - imageView: set対象のGIFImageView
     private func setUIImage(with data: Data) {
-        DispatchQueue.global().async {
-            if let image = UIImage(data: data) {
-                DispatchQueue.main.async {
-                    self.backgroundColor = .clear
-                    self.image = image
-                }
-            } else { // Type: SVG
-                guard let svgKitImage = SVGKImage(data: data), let svgImage = svgKitImage.uiImage else { return }
-                DispatchQueue.main.async {
-                    self.backgroundColor = .clear
-                    self.image = svgImage
-                }
+        if let image = UIImage(data: data) {
+            DispatchQueue.main.async {
+                self.backgroundColor = .clear
+                self.image = image
+            }
+        } else { // Type: SVG
+            guard let svgKitImage = SVGKImage(data: data), let svgImage = svgKitImage.uiImage else { return }
+            DispatchQueue.main.async {
+                self.backgroundColor = .clear
+                self.image = svgImage
             }
         }
     }

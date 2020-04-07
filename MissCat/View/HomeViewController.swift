@@ -18,7 +18,7 @@ import UIKit
 // 上タブ管理はBGで動いている親クラスのPolioPagerが行い、下タブ管理はHomeViewControllerが自前で行う。
 // 一時的なキャッシュ管理についてはsingletonのCacheクラスを使用
 
-class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate {
+class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate, UINavigationControllerDelegate {
     private var isXSeries = UIScreen.main.bounds.size.height > 811
     private let footerTabHeight: CGFloat = 55
     private var initialized: Bool = false
@@ -232,7 +232,6 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         
         navigationController?.pushViewController(detailViewController, animated: true)
         
-        nowPage = .PostDetails
         view.bringSubviewToFront(navBar)
         view.bringSubviewToFront(footerTab)
         
@@ -240,7 +239,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     }
     
     private func showProfileView(userId: String, isMe: Bool = false) {
-        nowPage = .Profile
+        nowPage = isMe ? .Profile : nowPage
         if isMe, let myProfileViewController = myProfileViewController {
             myProfileViewController.view.isHidden = false
             return
@@ -387,7 +386,7 @@ extension HomeViewController: NoteCellDelegate {
         presentWithSemiModal(panelMenu, animated: true, completion: nil)
     }
     
-    func tappedReaction(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {}
+    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {}
     
     func tappedOthers(note: NoteCell.Model) {}
     
@@ -454,7 +453,6 @@ extension HomeViewController: FooterTabBarDelegate {
     }
     
     func tappedPost() {
-        nowPage = .Post
         move2ViewController(identifier: "post")
     }
     
@@ -510,14 +508,7 @@ extension HomeViewController: FooterTabBarDelegate {
 extension HomeViewController: NavBarDelegate {
     // MARK: NavBar Delegate
     
-    func tappedLeftNavButton() {
-        if nowPage == .PostDetails {
-            guard let detailViewController = detailViewController else { return }
-            detailViewController.view.removeFromSuperview()
-            
-            backNavBarStatus() // NavBarの表示を元に戻す
-        }
-    }
+    func tappedLeftNavButton() {}
     
     func tappedRightNavButton() {}
 }
@@ -565,7 +556,6 @@ extension HomeViewController: TimelineDelegate {
     
     func openPost(item: NoteCell.Model, type: PostViewController.PostType) {
         guard let postViewController = storyboard?.instantiateViewController(withIdentifier: "post") as? PostViewController else { return }
-        nowPage = .Post
         
         postViewController.setTargetNote(item, type: type)
         presentOnFullScreen(postViewController, animated: true, completion: nil)
@@ -587,27 +577,12 @@ extension HomeViewController: TimelineDelegate {
     }
 }
 
-// MARK: NavigationController Delegate
-
-extension HomeViewController: UINavigationControllerDelegate {
-    func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
-        if viewController is HomeViewController {
-            nowPage = previousPage
-        }
-    }
-}
-
 extension HomeViewController {
     enum Page {
         // FooterTab
         case Main
         case Notifications
-        case Post
         case Profile
         case Favorites
-        
-        // Others
-        case PostDetails
-        case Others
     }
 }
