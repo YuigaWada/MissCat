@@ -59,6 +59,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     @IBOutlet weak var skeltonCover: UIView!
     @IBOutlet weak var fileContainer: FileContainer!
     @IBOutlet weak var pollView: PollView!
+    @IBOutlet weak var urlPreviewer: UrlPreviewer!
     
     @IBOutlet weak var innerRenoteDisplay: UIView!
     
@@ -241,6 +242,12 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             return CGFloat(step * 40)
         }.drive(reactionCollectionHeightConstraint.rx.constant).disposed(by: disposeBag)
         
+        output.url.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { url in
+            guard !url.isEmpty else { return }
+            self.urlPreviewer.isHidden = false
+            _ = self.urlPreviewer.transform(with: .init(url: url))
+        }).disposed(by: disposeBag)
+        
         // Renote With Comment
         
         output.commentRenoteTarget.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { renoteModel in
@@ -332,6 +339,11 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(reactionsCollectionView.rx.isHidden)
             .disposed(by: disposeBag)
+        
+        urlPreviewer.setTapGesture(disposeBag) {
+            guard let previewdUrl = viewModel.state.previewedUrl else { return }
+            self.delegate?.tappedLink(text: previewdUrl)
+        }
     }
     
     private func themeBinding() {
@@ -487,6 +499,9 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         pollView.isHidden = true
         pollView.initialize()
         
+        urlPreviewer.isHidden = true
+        urlPreviewer.initialize()
+        
         innerRenoteDisplay.isHidden = true
     }
     
@@ -591,6 +606,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             
             reactionsCollectionView.isHidden = true
             pollView.isHidden = true
+            urlPreviewer.isHidden = true
             innerRenoteDisplay.isHidden = true
             
             skeltonCover.showAnimatedGradientSkeleton()

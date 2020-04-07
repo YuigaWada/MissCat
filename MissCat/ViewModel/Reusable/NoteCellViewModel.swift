@@ -28,6 +28,8 @@ class NoteCellViewModel: ViewModelType {
         let name: PublishRelay<NSAttributedString?> = .init()
         
         let shapedNote: PublishRelay<NSAttributedString?> = .init()
+        let url: PublishRelay<String> = .init()
+        
         let reactions: PublishSubject<[NoteCell.Reaction.Section]> = .init()
         let poll: PublishRelay<Poll> = .init()
         let commentRenoteTarget: PublishRelay<NoteCell.Model> = .init()
@@ -44,20 +46,26 @@ class NoteCellViewModel: ViewModelType {
         let username: String
     }
     
-    struct State {}
-    
-    lazy var output: Output = .init(displayName: input.cellModel.displayName,
-                                    username: input.cellModel.username)
+    struct State {
+        var previewedUrl: String?
+    }
     
     private var input: Input
-    private var model = NoteCellModel()
-    private var disposeBag: DisposeBag
+    lazy var output: Output = .init(displayName: input.cellModel.displayName,
+                                    username: input.cellModel.username)
+    var state: State {
+        return .init(previewedUrl: previewedUrl)
+    }
+    
+    private var previewedUrl: String?
     
     private let replyTargetColor = UIColor(hex: "f0f0f0")
     private let usernameFont = UIFont.systemFont(ofSize: 11.0)
     
     private var dataSource: ReactionsDataSource?
     var reactionsModel: [NoteCell.Reaction] = []
+    private var model = NoteCellModel()
+    private var disposeBag: DisposeBag
     
     private var properBackgroundColor: UIColor {
         return input.cellModel.isReplyTarget ? replyTargetColor : .white
@@ -91,6 +99,7 @@ class NoteCellViewModel: ViewModelType {
         
         setImage(username: item.username, imageRawUrl: item.iconImageUrl)
         
+        getUrl(from: item)
         if let pollModel = item.poll {
             output.poll.accept(pollModel)
         }
@@ -165,6 +174,22 @@ class NoteCellViewModel: ViewModelType {
         }
         
         return attachmentCount == attachments.count // 一致しない＝キャッシュされたattachmentsに欠損あり
+    }
+    
+    private func getUrl(from item: NoteCell.Model) {
+        guard let url = searchUrl(from: item) else { return }
+        
+        previewedUrl = url
+        output.url.accept(url)
+    }
+    
+    private func searchUrl(from item: NoteCell.Model) -> String? {
+        let normalLink = "(https?://[\\w/:%#\\$&\\?\\(~\\.=\\+\\-@\"]+)"
+        let targets = item.original?.text?.regexMatches(pattern: normalLink).map { $0[0] }
+        if let targets = targets, targets.count > 0 {
+            return targets[0]
+        }
+        return nil
     }
     
     private func prepareCommentRenote(_ item: NoteCell.Model) {
