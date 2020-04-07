@@ -60,9 +60,15 @@ class UrlPreviewerViewModel: ViewModelType {
     /// urlからプレビューimageを取得
     /// - Parameter url: URL
     private func getImage(from url: String) {
+        if let cache = Cache.shared.getUiImage(url: url) {
+            output.image.accept(cache)
+            return
+        }
+        
         url.toUIImage {
             guard let image = $0 else { return }
             self.output.image.accept(image)
+            Cache.shared.saveUiImage(image, url: url)
         }
     }
 }
