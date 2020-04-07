@@ -304,7 +304,7 @@ class TimelineModel {
     private func captureNote(_ isReconnection: inout Bool) {
         // 再接続の場合
         if isReconnection {
-            captureNotes(capturedNoteIds)
+            captureNotes(capturedNoteIds, isReconnection)
             isReconnection = false
         }
         
@@ -320,8 +320,8 @@ class TimelineModel {
         captureNotes([noteId])
     }
     
-    private func captureNotes(_ noteIds: [String]) {
-        capturedNoteIds += noteIds // streamingが切れた時のために記憶
+    private func captureNotes(_ noteIds: [String], _ isReconnection: Bool = false) {
+        if !isReconnection { capturedNoteIds += noteIds } // streamingが切れた時のために記憶
         noteIds.forEach { id in
             do {
                 try streaming.captureNote(noteId: id)
