@@ -76,7 +76,10 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         super.viewWillLayoutSubviews()
         
         layoutIfNeeded(to: [iconImageView])
+        
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
+        settingsButton.layer.cornerRadius = settingsButton.frame.width / 2
+        backButton.layer.cornerRadius = backButton.frame.width / 2
         
         containerHeightContraint.constant = 2 * view.frame.height - (view.frame.height - containerScrollView.frame.origin.y)
     }
@@ -109,13 +112,17 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     }
     
     private func setupComponent() {
-        backButton.titleLabel?.font = .awesomeSolid(fontSize: 18.0)
+        backButton.titleLabel?.font = .awesomeSolid(fontSize: 16.0)
         backButton.alpha = 0.5
-        backButton.setTitleColor(.black, for: .normal)
+        backButton.setTitleColor(.white, for: .normal)
+        backButton.backgroundColor = .black
+        backButton.alpha = 0.8
         
-        settingsButton.titleLabel?.font = .awesomeSolid(fontSize: 18.0)
+        settingsButton.titleLabel?.font = .awesomeSolid(fontSize: 16.0)
         settingsButton.alpha = 0.5
-        settingsButton.setTitleColor(.black, for: .normal)
+        settingsButton.setTitleColor(.white, for: .normal)
+        settingsButton.backgroundColor = .black
+        settingsButton.alpha = 0.8
         
         introTextView.font = UIFont(name: "Helvetica",
                                     size: 11.0)
@@ -169,15 +176,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             self.introTextView.attributedText = attributedText
         }).disposed(by: disposeBag)
         
-        output.bannerImage.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { image in
-            self.bannerImageView.image = image
-            
-            let opticaTextColor = image.opticalTextColor
-            
-            UIView.animate(withDuration: 1.5, animations: {
-                self.backButton.titleLabel?.textColor = opticaTextColor
-            })
-        }).disposed(by: disposeBag)
+        output.bannerImage.asDriver(onErrorDriveWith: Driver.empty()).drive(bannerImageView.rx.image).disposed(by: disposeBag)
         
         output.displayName.asDriver(onErrorDriveWith: Driver.empty()).drive(nameTextView.rx.attributedText).disposed(by: disposeBag)
         output.notesCount.asDriver(onErrorDriveWith: Driver.empty()).drive(notesCountButton.rx.title()).disposed(by: disposeBag)
