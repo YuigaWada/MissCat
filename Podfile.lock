@@ -14,7 +14,7 @@ PODS:
   - FloatingPanel (1.7.4)
   - Gifu (3.2.0)
   - iOSPhotoEditor (1.0.0)
-  - MisskeyKit (1.5):
+  - MisskeyKit (1.7):
     - Starscream (= 3.1.1)
   - PolioPager (2.3)
   - RxCocoa (5.1.1):
@@ -31,7 +31,7 @@ PODS:
   - Starscream (3.1.1)
   - SVGKit (2.1.0):
     - CocoaLumberjack (~> 3.0)
-  - SwiftFormat/CLI (0.44.6)
+  - SwiftFormat/CLI (0.44.7)
   - SwiftLinkPreview (3.1.0)
   - SwiftyGif (5.2.0)
   - XLPagerTabStrip (9.0.0)
@@ -102,7 +102,7 @@ SPEC CHECKSUMS:
   FloatingPanel: 3c9d0e30fe350e1613157557769d2ec97f76b96b
   Gifu: 7bcb6427457d85e0b4dff5a84ec5947ac19a93ea
   iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
-  MisskeyKit: aa687ba3371dd4f61cab148760cae5d940dd7f44
+  MisskeyKit: 7a8ad348242b8b06b40e0955f6b068f011ce4489
   PolioPager: d1d3ae9032bc4bbf5071b3aea5a748ac7c1337d1
   RxCocoa: 32065309a38d29b5b0db858819b5bf9ef038b601
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
@@ -111,7 +111,7 @@ SPEC CHECKSUMS:
   SkeletonView: bb27c39857e5492136f02ee8a3aa78de55d12ecd
   Starscream: 4bb2f9942274833f7b4d296a55504dcfc7edb7b0
   SVGKit: 8a2fc74258bdb2abb54d3b65f3dd68b0277a9c4d
-  SwiftFormat: 226f259067268a452772fc2bd635bbcecb5ecb09
+  SwiftFormat: fd97e27b8de5a46c9d1988bf1db1dc92e79f86a3
   SwiftLinkPreview: 3d924eeaae8d17410a827a4b37675713af1a0a8a
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
