@@ -276,6 +276,17 @@ class TimelineModel {
                 
             case .pollVoted:
                 break
+                
+            case .unreacted:
+                guard let userId = updateContents.userId else { return }
+                userId.isMe { isMyReaction in
+                    guard !isMyReaction else { return } // 自分のリアクションはcaptureしない
+                    self.updateReaction(targetNoteId: updateContents.targetNoteId,
+                                        reaction: updateContents.reaction,
+                                        isMyReaction: false,
+                                        plus: false)
+                }
+                
             case .deleted:
                 guard let targetNoteId = updateContents.targetNoteId else { return }
                 self.removeTargetTrigger.onNext(targetNoteId)
