@@ -261,10 +261,11 @@ class TimelineModel {
         }
         
         if typeString == "CapturedNoteUpdated" {
-            guard let updateContents = response as? NoteUpdatedModel, let updateType = updateContents.type, let userId = updateContents.userId else { return }
+            guard let updateContents = response as? NoteUpdatedModel, let updateType = updateContents.type else { return }
             
             switch updateType {
             case .reacted:
+                guard let userId = updateContents.userId else { return }
                 userId.isMe { isMyReaction in // 自分のリアクションかどうかチェックする
                     guard !isMyReaction else { return } // 自分のリアクションはcaptureしない
                     self.updateReaction(targetNoteId: updateContents.targetNoteId,
@@ -277,10 +278,7 @@ class TimelineModel {
                 break
             case .deleted:
                 guard let targetNoteId = updateContents.targetNoteId else { return }
-                self.updateReaction(targetNoteId: updateContents.targetNoteId,
-                                    reaction: updateContents.reaction,
-                                    isMyReaction: false,
-                                    plus: false)
+                self.removeTargetTrigger.onNext(targetNoteId)
             }
         }
         
