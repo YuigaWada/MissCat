@@ -41,7 +41,8 @@ extension NoteModel {
                                        commentRNTarget: withRN ? post.renote?.getNoteCellModel(onOtherNote: true) ?? nil : nil,
                                        original: self,
                                        onOtherNote: onOtherNote,
-                                       poll: post.poll)
+                                       poll: post.poll,
+                                       cw: post.cw)
         
         cellModel.shapedReactions = cellModel.getReactions()
         cellModel.isReply = post.reply != nil

@@ -133,13 +133,7 @@ class MFMEngine {
         }
         
         if let myNote = cellModel.myNote {
-            cellModel.myNote?.shapedNote = shapeNote(myNote)
-            cellModel.myNote?.shapedDisplayName = shapeDisplayName(myNote)
-        }
-        
-        if let commentRNTarget = cellModel.myNote?.commentRNTarget {
-            commentRNTarget.shapedNote = shapeNote(commentRNTarget)
-            commentRNTarget.shapedDisplayName = shapeDisplayName(commentRNTarget)
+            shapeModel(myNote)
         }
     }
     
@@ -148,10 +142,12 @@ class MFMEngine {
     static func shapeModel(_ cellModel: NoteCell.Model) {
         cellModel.shapedNote = shapeNote(cellModel)
         cellModel.shapedDisplayName = shapeDisplayName(cellModel)
+        cellModel.shapedCw = shapedCw(cellModel)
         
         if let commentRNTarget = cellModel.commentRNTarget {
             commentRNTarget.shapedNote = shapeNote(commentRNTarget)
             commentRNTarget.shapedDisplayName = shapeDisplayName(commentRNTarget)
+            commentRNTarget.shapedCw = shapedCw(commentRNTarget)
         }
     }
     
@@ -159,6 +155,11 @@ class MFMEngine {
     /// - Parameter cellModel: NoteCell.Model
     private static func shapeNote(_ cellModel: NoteCell.Model) -> MFMString {
         return shapeString(needReplyMark: cellModel.isReply, text: cellModel.note, emojis: cellModel.emojis)
+    }
+    
+    private static func shapedCw(_ cellModel: NoteCell.Model) -> MFMString? {
+        guard let cw = cellModel.cw else { return nil }
+        return shapeString(needReplyMark: cellModel.isReply, text: cw, emojis: cellModel.emojis)
     }
     
     /// 任意の文字列を整形する

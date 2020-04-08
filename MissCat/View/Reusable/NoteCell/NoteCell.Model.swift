@@ -46,6 +46,12 @@ extension NoteCell {
         let username: String
         var shapedDisplayName: MFMString?
         
+        // MARK: CW
+        
+        var hasCw: Bool { return cw != nil }
+        let cw: String?
+        var shapedCw: MFMString?
+        
         // MARK: Note
         
         let note: String
@@ -74,7 +80,7 @@ extension NoteCell {
         let replyCount: Int
         let renoteCount: Int
         
-        init(isSkelton: Bool = false, isReactionGenCell: Bool = false, isRenoteeCell: Bool = false, renotee: String? = nil, baseNoteId: String? = nil, isReply: Bool = false, isReplyTarget: Bool = false, noteId: String? = nil, iconImageUrl: String? = nil, iconImage: UIImage? = nil, userId: String, displayName: String, username: String, note: String, ago: String, replyCount: Int, renoteCount: Int, reactions: [ReactionCount], shapedReactions: [NoteCell.Reaction], myReaction: String? = nil, files: [File], emojis: [EmojiModel]? = nil, commentRNTarget: NoteCell.Model? = nil, original: NoteModel? = nil, onOtherNote: Bool = false, poll: Poll? = nil) {
+        init(isSkelton: Bool = false, isReactionGenCell: Bool = false, isRenoteeCell: Bool = false, renotee: String? = nil, baseNoteId: String? = nil, isReply: Bool = false, isReplyTarget: Bool = false, noteId: String? = nil, iconImageUrl: String? = nil, iconImage: UIImage? = nil, userId: String, displayName: String, username: String, note: String, ago: String, replyCount: Int, renoteCount: Int, reactions: [ReactionCount], shapedReactions: [NoteCell.Reaction], myReaction: String? = nil, files: [File], emojis: [EmojiModel]? = nil, commentRNTarget: NoteCell.Model? = nil, original: NoteModel? = nil, onOtherNote: Bool = false, poll: Poll? = nil, cw: String? = nil) {
             self.isSkelton = isSkelton
             self.isReactionGenCell = isReactionGenCell
             self.isRenoteeCell = isRenoteeCell
@@ -101,6 +107,7 @@ extension NoteCell {
             self.original = original
             self.onOtherNote = onOtherNote
             self.poll = poll
+            self.cw = cw
         }
         
         static func == (lhs: NoteCell.Model, rhs: NoteCell.Model) -> Bool {
