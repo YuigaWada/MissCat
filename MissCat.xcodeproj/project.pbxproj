@@ -421,6 +421,7 @@
 				8D502D53237D8BEC00525A96 /* ReactionCell.xib */,
 				8D4754F8240E21F800BAD410 /* PollView.xib */,
 				8D61391D2427CA0C003B5BEF /* FileContainerCell.xib */,
+				8D8863B3238493FA00A7A5A8 /* RenoteeCell.xib */,
 				8DC27D95243BF2DF0037E610 /* UrlPreviewer.xib */,
 			);
 			path = nib;
@@ -506,7 +507,6 @@
 				8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */,
 				8D502D552380236900525A96 /* TabBar.xib */,
 				8DAEA1342382E4F00083AA69 /* EmojiView.xib */,
-				8D8863B3238493FA00A7A5A8 /* RenoteeCell.xib */,
 				8DA06A082389E9820093A718 /* NotificationCell.xib */,
 				8D61354E238A974400AB50C2 /* EmojiViewCell.xib */,
 				8D613552238B6D4F00AB50C2 /* NavBar.xib */,
