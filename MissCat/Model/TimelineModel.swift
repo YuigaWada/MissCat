@@ -321,13 +321,16 @@ class TimelineModel {
     }
     
     private func captureNotes(_ noteIds: [String], _ isReconnection: Bool = false) {
-        if !isReconnection { capturedNoteIds += noteIds } // streamingが切れた時のために記憶
         noteIds.forEach { id in
             do {
                 try streaming.captureNote(noteId: id)
             } catch {
                 /* Ignore :P */
             }
+        }
+        
+        if !isReconnection { // streamingが切れた時のために記憶
+            capturedNoteIds += noteIds.filter { !capturedNoteIds.contains($0) } // 重複しないように
         }
     }
     
