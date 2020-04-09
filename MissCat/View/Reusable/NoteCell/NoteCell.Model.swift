@@ -19,6 +19,7 @@ extension NoteCell {
         var isSkelton = false
         var isReactionGenCell = false
         var isRenoteeCell = false
+        var isPromotionCell = false
         var renotee: String?
         var baseNoteId: String? // どのcellに対するReactionGenCellなのか
         var isReply: Bool = false // リプライであるかどうか
@@ -58,10 +59,11 @@ extension NoteCell {
         var onOtherNote: Bool = false // 引用RNはNoteCellの上にNoteCellが乗るという二重構造になっているので、内部のNoteCellかどうかを判別する
         var poll: Poll?
         
-        init(isSkelton: Bool = false, isReactionGenCell: Bool = false, isRenoteeCell: Bool = false, renotee: String? = nil, baseNoteId: String? = nil, isReply: Bool = false, isReplyTarget: Bool = false, noteId: String? = nil, iconImageUrl: String? = nil, iconImage: UIImage? = nil, userId: String, displayName: String, username: String, note: String, ago: String, replyCount: Int, renoteCount: Int, reactions: [ReactionCount], shapedReactions: [NoteCell.Reaction], myReaction: String? = nil, files: [File], emojis: [EmojiModel]? = nil, commentRNTarget: NoteCell.Model? = nil, original: NoteModel? = nil, onOtherNote: Bool = false, poll: Poll? = nil) {
+        init(isSkelton: Bool = false, isReactionGenCell: Bool = false, isRenoteeCell: Bool = false, isPromotionCell: Bool = false, renotee: String? = nil, baseNoteId: String? = nil, isReply: Bool = false, isReplyTarget: Bool = false, noteId: String? = nil, iconImageUrl: String? = nil, iconImage: UIImage? = nil, userId: String, displayName: String, username: String, note: String, ago: String, replyCount: Int, renoteCount: Int, reactions: [ReactionCount], shapedReactions: [NoteCell.Reaction], myReaction: String? = nil, files: [File], emojis: [EmojiModel]? = nil, commentRNTarget: NoteCell.Model? = nil, original: NoteModel? = nil, onOtherNote: Bool = false, poll: Poll? = nil) {
             self.isSkelton = isSkelton
             self.isReactionGenCell = isReactionGenCell
             self.isRenoteeCell = isRenoteeCell
+            self.isPromotionCell = isPromotionCell
             self.renotee = renotee
             self.baseNoteId = baseNoteId
             self.isReply = isReply
@@ -108,6 +110,28 @@ extension NoteCell {
                                   userId: "",
                                   displayName: "",
                                   username: renoteeUserName,
+                                  note: "",
+                                  ago: "",
+                                  replyCount: 0,
+                                  renoteCount: 0,
+                                  reactions: [],
+                                  shapedReactions: [],
+                                  myReaction: nil,
+                                  files: [],
+                                  emojis: [],
+                                  commentRNTarget: nil,
+                                  poll: nil)
+        }
+        
+        static func fakePromotioncell(baseNoteId: String) -> NoteCell.Model {
+            return NoteCell.Model(isPromotionCell: true,
+                                  baseNoteId: baseNoteId,
+                                  noteId: "",
+                                  iconImageUrl: "",
+                                  iconImage: nil,
+                                  userId: "",
+                                  displayName: "",
+                                  username: "",
                                   note: "",
                                   ago: "",
                                   replyCount: 0,

@@ -102,7 +102,19 @@ class TimelineModel {
                 MFMEngine.shapeModel(cellModel)
                 observer.onNext(cellModel)
             }
+        } else if noteType == .Promotion {
+            guard let noteId = post.id,
+                let cellModel = post.getNoteCellModel(withRN: checkNoteType(post) == .CommentRenote) else { return }
             
+            let prModel = NoteCell.Model.fakePromotioncell(baseNoteId: noteId)
+            var cellModels = [prModel, cellModel]
+            
+            if reverse { cellModels.reverse() }
+            
+            for cellModel in cellModels {
+                MFMEngine.shapeModel(cellModel)
+                observer.onNext(cellModel)
+            }
         } else { // just a note or a note with commentRN
             var newCellsModel = getCellsModel(post, withRN: noteType == .CommentRenote)
             guard newCellsModel != nil else { return }
@@ -119,6 +131,7 @@ class TimelineModel {
     
     func loadNotes(with option: LoadOption) -> Observable<NoteCell.Model> {
         let dispose = Disposables.create()
+        let isInitalLoad = option.untilId == nil
         let isReload = option.isReload && (option.lastNoteId != nil)
         
         return Observable.create { [unowned self] observer in
@@ -160,7 +173,9 @@ class TimelineModel {
                     // if !isReload...
                     
                     posts.forEach { post in
-                        guard !post.isRecommended else { return } // ハイライトの投稿は無視する
+                        // 初期ロード: prのみ表示する / 二回目からはprとハイライトを無視
+                        let ignore = isInitalLoad ? post.isFeatured : post.isRecommended
+                        guard !ignore else { return }
                         
                         self.transformNote(with: observer, post: post, reverse: false)
                         if let noteId = post.id {
@@ -385,11 +400,14 @@ extension TimelineModel {
         case Renote
         case CommentRenote
         case Note
+        case Promotion
     }
     
     /// NoteModelが RNなのか、引用RNなのか、ただの投稿なのか判別する
     /// - Parameter post: NoteModel
     private func checkNoteType(_ post: NoteModel) -> NoteType {
+        guard post._prId_ == nil else { return .Promotion }
+        
         let isRenote = post.renoteId != nil && post.user != nil && post.renote != nil
         let isCommentRenote = isRenote && post.text != nil && post.text != ""
         return isRenote ? (isCommentRenote ? .CommentRenote : .Renote) : .Note
