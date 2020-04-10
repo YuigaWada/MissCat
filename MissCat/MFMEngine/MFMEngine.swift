@@ -15,7 +15,7 @@ import UIKit
 
 struct MFMString {
     let mfmEngine: MFMEngine
-    let attributed: NSAttributedString?
+    var attributed: NSAttributedString?
 }
 
 class MFMEngine {
@@ -133,13 +133,7 @@ class MFMEngine {
         }
         
         if let myNote = cellModel.myNote {
-            cellModel.myNote?.shapedNote = shapeNote(myNote)
-            cellModel.myNote?.shapedDisplayName = shapeDisplayName(myNote)
-        }
-        
-        if let commentRNTarget = cellModel.myNote?.commentRNTarget {
-            commentRNTarget.shapedNote = shapeNote(commentRNTarget)
-            commentRNTarget.shapedDisplayName = shapeDisplayName(commentRNTarget)
+            shapeModel(myNote)
         }
     }
     
@@ -148,10 +142,12 @@ class MFMEngine {
     static func shapeModel(_ cellModel: NoteCell.Model) {
         cellModel.shapedNote = shapeNote(cellModel)
         cellModel.shapedDisplayName = shapeDisplayName(cellModel)
+        cellModel.shapedCw = shapedCw(cellModel)
         
         if let commentRNTarget = cellModel.commentRNTarget {
             commentRNTarget.shapedNote = shapeNote(commentRNTarget)
             commentRNTarget.shapedDisplayName = shapeDisplayName(commentRNTarget)
+            commentRNTarget.shapedCw = shapedCw(commentRNTarget)
         }
     }
     
@@ -159,6 +155,19 @@ class MFMEngine {
     /// - Parameter cellModel: NoteCell.Model
     private static func shapeNote(_ cellModel: NoteCell.Model) -> MFMString {
         return shapeString(needReplyMark: cellModel.isReply, text: cellModel.note, emojis: cellModel.emojis)
+    }
+    
+    private static func shapedCw(_ cellModel: NoteCell.Model) -> MFMString? {
+        guard let cw = cellModel.cw else { return nil }
+        var shaped = shapeString(needReplyMark: cellModel.isReply, text: cw, emojis: cellModel.emojis)
+        
+        if let attributed = shaped.attributed {
+            shaped.attributed = attributed + generatePlaneString(string: "\n > タップで詳細表示",
+                                                                 font: UIFont(name: "Helvetica", size: 10.0) ?? .systemFont(ofSize: 10.0),
+                                                                 textHex: "#808080")
+        }
+        
+        return shaped
     }
     
     /// 任意の文字列を整形する

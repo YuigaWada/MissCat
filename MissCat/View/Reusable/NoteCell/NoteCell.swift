@@ -475,7 +475,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             return self
         }
         
-        let hasFile = item.fileVisible && item.files.count > 0
+        let hasFile = item.fileVisible && item.files.count > 0 && !(item.hasCw && !isDetailMode)
         
         // Font
         noteView.font = UIFont(name: "Helvetica",

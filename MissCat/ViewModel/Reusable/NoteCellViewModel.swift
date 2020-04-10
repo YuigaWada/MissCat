@@ -98,12 +98,11 @@ class NoteCellViewModel: ViewModelType {
             self.output.ago.accept(item.ago.calculateAgo())
         }
         
-        output.name.accept(input.cellModel.shapedDisplayName?.attributed)
-        output.shapedNote.accept(input.cellModel.shapedNote?.attributed)
-        output.defaultConstraintActive.accept(!input.isDetailMode)
+        setNote()
         
+        output.defaultConstraintActive.accept(!input.isDetailMode)
+        output.name.accept(input.cellModel.shapedDisplayName?.attributed)
         input.cellModel.shapedDisplayName?.mfmEngine.renderCustomEmojis(on: input.nameYanagi)
-        input.cellModel.shapedNote?.mfmEngine.renderCustomEmojis(on: input.noteYanagi)
         
         getReactions(item)
         getUrl(from: item)
@@ -134,6 +133,18 @@ class NoteCellViewModel: ViewModelType {
         }
         
         return reactionCell
+    }
+    
+    private func setNote() {
+        var target: MFMString?
+        if input.cellModel.hasCw, !input.isDetailMode {
+            target = input.cellModel.shapedCw
+        } else {
+            target = input.cellModel.shapedNote
+        }
+        
+        output.shapedNote.accept(target?.attributed)
+        target?.mfmEngine.renderCustomEmojis(on: input.noteYanagi)
     }
     
     func setImage(to target: PublishRelay<UIImage>, username: String?, imageRawUrl: String?) {
