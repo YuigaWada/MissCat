@@ -15,7 +15,7 @@ import UIKit
 
 struct MFMString {
     let mfmEngine: MFMEngine
-    let attributed: NSAttributedString?
+    var attributed: NSAttributedString?
 }
 
 class MFMEngine {
@@ -159,7 +159,15 @@ class MFMEngine {
     
     private static func shapedCw(_ cellModel: NoteCell.Model) -> MFMString? {
         guard let cw = cellModel.cw else { return nil }
-        return shapeString(needReplyMark: cellModel.isReply, text: cw, emojis: cellModel.emojis)
+        var shaped = shapeString(needReplyMark: cellModel.isReply, text: cw, emojis: cellModel.emojis)
+        
+        if let attributed = shaped.attributed {
+            shaped.attributed = attributed + generatePlaneString(string: "\n > タップで詳細表示",
+                                                                 font: UIFont(name: "Helvetica", size: 10.0) ?? .systemFont(ofSize: 10.0),
+                                                                 textHex: "#808080")
+        }
+        
+        return shaped
     }
     
     /// 任意の文字列を整形する
