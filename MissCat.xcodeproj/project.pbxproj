@@ -52,6 +52,7 @@
 		8D53741B23A32D03004523FC /* ViewModelType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D53741A23A32D03004523FC /* ViewModelType.swift */; };
 		8D57CA43243FDB9C005DCEB2 /* PromotionCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D57CA42243FDB9C005DCEB2 /* PromotionCell.xib */; };
 		8D57CA47243FDBC3005DCEB2 /* PromotionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D57CA46243FDBC3005DCEB2 /* PromotionCell.swift */; };
+		8D57CA4924412430005DCEB2 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D57CA4824412430005DCEB2 /* SearchViewController.swift */; };
 		8D61354F238A974400AB50C2 /* EmojiViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D61354E238A974400AB50C2 /* EmojiViewCell.xib */; };
 		8D613551238A978700AB50C2 /* EmojiViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D613550238A978700AB50C2 /* EmojiViewCell.swift */; };
 		8D613553238B6D4F00AB50C2 /* NavBar.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D613552238B6D4F00AB50C2 /* NavBar.xib */; };
@@ -184,6 +185,7 @@
 		8D5733E123F667DB002C17D2 /* Agrume.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Agrume.framework; path = Pods/_Prebuild/GeneratedFrameworks/Agrume/Agrume.framework; sourceTree = "<group>"; };
 		8D57CA42243FDB9C005DCEB2 /* PromotionCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PromotionCell.xib; sourceTree = "<group>"; };
 		8D57CA46243FDBC3005DCEB2 /* PromotionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromotionCell.swift; sourceTree = "<group>"; };
+		8D57CA4824412430005DCEB2 /* SearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewController.swift; sourceTree = "<group>"; };
 		8D61354E238A974400AB50C2 /* EmojiViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = EmojiViewCell.xib; sourceTree = "<group>"; };
 		8D613550238A978700AB50C2 /* EmojiViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiViewCell.swift; sourceTree = "<group>"; };
 		8D613552238B6D4F00AB50C2 /* NavBar.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NavBar.xib; sourceTree = "<group>"; };
@@ -295,6 +297,7 @@
 				8DAD2389240CE76000AB1F36 /* StartViewController.swift */,
 				8DABCD092414D52D00D9F054 /* AuthWebViewController.swift */,
 				8D47FAD7243388B100549A0B /* TosViewController.swift */,
+				8D57CA4824412430005DCEB2 /* SearchViewController.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -760,6 +763,7 @@
 				8D84061F2393547800EED595 /* PostDetailViewController.swift in Sources */,
 				8D3036F82385DAED00BA6D38 /* PostModel.swift in Sources */,
 				8DAF30192419842D0041BB85 /* AboutMisskeyViewController.swift in Sources */,
+				8D57CA4924412430005DCEB2 /* SearchViewController.swift in Sources */,
 				8DAD238A240CE76000AB1F36 /* StartViewController.swift in Sources */,
 				8D61391A2427B9B0003B5BEF /* FileContainer.swift in Sources */,
 				8D53741B23A32D03004523FC /* ViewModelType.swift in Sources */,
