@@ -126,6 +126,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     private func setupTableView() {
         mainTableView.register(UINib(nibName: "NoteCell", bundle: nil), forCellReuseIdentifier: "NoteCell")
         mainTableView.register(UINib(nibName: "RenoteeCell", bundle: nil), forCellReuseIdentifier: "RenoteeCell")
+        mainTableView.register(UINib(nibName: "PromotionCell", bundle: nil), forCellReuseIdentifier: "PromotionCell")
         
         mainTableView.rx.setDelegate(self).disposed(by: disposeBag)
         mainTableView.isScrollEnabled = false
@@ -199,8 +200,12 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             mainTableView.lockScroll?.accept(true) // スクロールを固定し直す
         }
         
-        // View側で NoteCell / RenoteeCellを区別する
-        if item.isRenoteeCell {
+        // View側で NoteCell / RenoteeCell / PromotionCell を区別する
+        if item.isPromotionCell {
+            let prCell = tableView.dequeueReusableCell(withIdentifier: "PromotionCell", for: indexPath)
+            prCell.selectionStyle = UITableViewCell.SelectionStyle.none
+            return prCell
+        } else if item.isRenoteeCell {
             guard let renoteeCell = tableView.dequeueReusableCell(withIdentifier: "RenoteeCell", for: indexPath) as? RenoteeCell
             else { return RenoteeCell() }
             
@@ -276,7 +281,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         
         // 再計算しないでいいようにセルの高さをキャッシュ
         if cellHeightCache.keys.contains(id) != true {
-            cellHeightCache[id] = cellModel.isRenoteeCell ? 25 : cell.frame.height
+            cellHeightCache[id] = cellModel.isRenoteeCell || cellModel.isPromotionCell ? 25 : cell.frame.height
         }
         
         // 下位4分の1のcellでセル更新
@@ -288,6 +293,17 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty { return }
             self.homeViewController?.showNotificationBanner(icon: .Failed, notification: error.description)
         }).disposed(by: disposeBag)
+    }
+    
+    func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
+        let index = indexPath.row
+        guard let item = viewModel?.cellsModel[index] else { return indexPath }
+        
+        if item.isPromotionCell { //  PromotionCellはタップできないように
+            return nil
+        }
+        
+        return indexPath
     }
     
     // MARK: Utilities

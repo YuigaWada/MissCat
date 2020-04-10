@@ -15,7 +15,7 @@ import UIKit
 
 struct MFMString {
     let mfmEngine: MFMEngine
-    let attributed: NSAttributedString?
+    var attributed: NSAttributedString?
 }
 
 class MFMEngine {
@@ -29,20 +29,6 @@ class MFMEngine {
     private var attachments: [NSTextAttachment] = []
     
     static var usernameFont = UIFont.systemFont(ofSize: 11.0)
-    
-    // MARK: Static
-    
-    /// リンク化・md→htmlの変換等、カスタム絵文字以外の処理を行う
-    /// - Parameter string: 加工対象のstring
-    static func preTransform(string: String) -> String {
-        var preTransed = string.hyperLink() // MUST BE DONE BEFORE ANYTHING !
-        preTransed = preTransed.hyperUser()
-        preTransed = preTransed.hyperHashtag()
-        preTransed = preTransed.markdown()
-        preTransed = preTransed.dehyperMagic()
-        
-        return preTransed
-    }
     
     // MARK: Init
     
@@ -117,6 +103,20 @@ class MFMEngine {
     
     // MARK: Statics
     
+    /// リンク化・md→htmlの変換等、カスタム絵文字以外の処理を行う
+    /// - Parameter string: 加工対象のstring
+    static func preTransform(string: String) -> String {
+        var preTransed = hyperLink(string) // MUST BE DONE BEFORE ANYTHING !
+        preTransed = hyperUser(preTransed)
+        preTransed = hyperHashtag(preTransed)
+        preTransed = markdown(preTransed)
+        preTransed = dehyperMagic(preTransed)
+        
+        return preTransed
+    }
+    
+    // MARK: Shape
+    
     /// NotificationCell.Modelを整形する
     /// - Parameter cellModel: NotificationCell.Model
     static func shapeModel(_ cellModel: NotificationCell.Model) {
@@ -133,13 +133,7 @@ class MFMEngine {
         }
         
         if let myNote = cellModel.myNote {
-            cellModel.myNote?.shapedNote = shapeNote(myNote)
-            cellModel.myNote?.shapedDisplayName = shapeDisplayName(myNote)
-        }
-        
-        if let commentRNTarget = cellModel.myNote?.commentRNTarget {
-            commentRNTarget.shapedNote = shapeNote(commentRNTarget)
-            commentRNTarget.shapedDisplayName = shapeDisplayName(commentRNTarget)
+            shapeModel(myNote)
         }
     }
     
@@ -148,10 +142,12 @@ class MFMEngine {
     static func shapeModel(_ cellModel: NoteCell.Model) {
         cellModel.shapedNote = shapeNote(cellModel)
         cellModel.shapedDisplayName = shapeDisplayName(cellModel)
+        cellModel.shapedCw = shapedCw(cellModel)
         
         if let commentRNTarget = cellModel.commentRNTarget {
             commentRNTarget.shapedNote = shapeNote(commentRNTarget)
             commentRNTarget.shapedDisplayName = shapeDisplayName(commentRNTarget)
+            commentRNTarget.shapedCw = shapedCw(commentRNTarget)
         }
     }
     
@@ -159,6 +155,19 @@ class MFMEngine {
     /// - Parameter cellModel: NoteCell.Model
     private static func shapeNote(_ cellModel: NoteCell.Model) -> MFMString {
         return shapeString(needReplyMark: cellModel.isReply, text: cellModel.note, emojis: cellModel.emojis)
+    }
+    
+    private static func shapedCw(_ cellModel: NoteCell.Model) -> MFMString? {
+        guard let cw = cellModel.cw else { return nil }
+        var shaped = shapeString(needReplyMark: cellModel.isReply, text: cw, emojis: cellModel.emojis)
+        
+        if let attributed = shaped.attributed {
+            shaped.attributed = attributed + generatePlaneString(string: "\n > タップで詳細表示",
+                                                                 font: UIFont(name: "Helvetica", size: 10.0) ?? .systemFont(ofSize: 10.0),
+                                                                 textHex: "#808080")
+        }
+        
+        return shaped
     }
     
     /// 任意の文字列を整形する
@@ -219,6 +228,8 @@ class MFMEngine {
                          attributed: nameAttributed + usernameAttributed)
     }
     
+    // MARK: Utilities
+    
     /// Stringを適切なフォントを指定してNSAttributedStringに変換する
     /// - Parameters:
     ///   - string: 対象のstring
@@ -244,26 +255,17 @@ class MFMEngine {
         
         return imageView
     }
-}
-
-// MARK: String Extension
-
-// 装飾関係
-extension String {
-    ///  Emoji形式":hogehoge:"をデフォルト絵文字 / カスタム絵文字のurl/imgに変更
-    /// - Parameter externalEmojis: 外インスタンスのカスタム絵文字
-    func emojiEncoder(externalEmojis: [EmojiModel?]?) -> String {
-        return EmojiHandler.handler.emojiEncoder(note: self, externalEmojis: externalEmojis)
-    }
+    
+    // MARK: Pre-Transform
     
     /// リンク化する
     /// この時、urlに@が入ると後々hyperUserと干渉するので、
     /// @ → [at-mark.misscat.header] / # → [hash-tag.misscat.header] に変換しておく
-    func hyperLink() -> String {
+    private static func hyperLink(_ text: String) -> String {
         // markdown link
-        var result = replacingOccurrences(of: "\\[([^\\]]+)\\]\\(([^\\)]+)\\)",
-                                          with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"$2\">$1</a>",
-                                          options: .regularExpression)
+        var result = text.replacingOccurrences(of: "\\[([^\\]]+)\\]\\(([^\\)]+)\\)",
+                                               with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"$2\">$1</a>",
+                                               options: .regularExpression)
         
         // normal Link
         let normalLink = "(https?://[\\w/:%#\\$&\\?\\(~\\.=\\+\\-@\"]+)"
@@ -287,21 +289,32 @@ extension String {
     }
     
     /// MarkDownのため、文字列に修正を加える
-    func markdown() -> String {
-        let bold = replacingOccurrences(of: "\\*\\*([^\\*]+)\\*\\*",
-                                        with: "<b>$1</b>",
-                                        options: .regularExpression)
+    private static func markdown(_ text: String) -> String {
+        // bold
+        let bold = text.replacingOccurrences(of: "\\*\\*([^\\*]+)\\*\\*",
+                                             with: "<b>$1</b>",
+                                             options: .regularExpression)
         
+        // strike-through
         let strikeThrough = bold.replacingOccurrences(of: "~~([^\\~]+)~~",
                                                       with: "<s>$1</s>",
                                                       options: .regularExpression)
         
-        return strikeThrough.disablingTags()
+        // code-block
+        let codeBlock = strikeThrough.replacingOccurrences(of: "```([^\\`]+)```",
+                                                           with: "<span style=\"background-color:#272823;color:white;\">$1</span>",
+                                                           options: .regularExpression)
+        // code
+        let code = codeBlock.replacingOccurrences(of: "`([^\\`]+)`",
+                                                  with: "<span style=\"background-color:#272823;color:white;\">$1</span>",
+                                                  options: .regularExpression)
+        
+        return disablingTags(code)
     }
     
     /// 特定のタグを無効化していく
-    func disablingTags() -> String {
-        var result = self
+    private static func disablingTags(_ text: String) -> String {
+        var result = text
         let targetTags = ["motion", "flip", "spin", "jump", "small"]
         let otherTargets: [String: String] = ["***": "***", "(((": ")))"]
         
@@ -320,23 +333,34 @@ extension String {
     }
     
     /// usernameをリンク化
-    func hyperUser() -> String {
-        return replacingOccurrences(of: "(@([a-zA-Z0-9]|\\.|_|@)+)",
-                                    with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"http://tapEvents.misscat/$0\">$0</a>",
-                                    options: .regularExpression)
+    private static func hyperUser(_ text: String) -> String {
+        return text.replacingOccurrences(of: "(@([a-zA-Z0-9]|\\.|_|@)+)",
+                                         with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"http://tapEvents.misscat/$0\">$0</a>",
+                                         options: .regularExpression)
     }
     
     /// ハッシュタグをリンク化
-    func hyperHashtag() -> String {
-        return replacingOccurrences(of: "(#[^(\\s|,)]+)",
-                                    with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"http://hashtags.misscat/$0\">$0</a>",
-                                    options: .regularExpression)
+    private static func hyperHashtag(_ text: String) -> String {
+        return text.replacingOccurrences(of: "(#[^(\\s|,)]+)",
+                                         with: "<a style=\"color: [hash-tag.misscat.header]2F7CF6;\" href=\"http://hashtags.misscat/$0\">$0</a>",
+                                         options: .regularExpression)
     }
     
     /// [at-mark.misscat.header], [hash-tag.misscat.header]を元に戻す
-    func dehyperMagic() -> String {
-        return replacingOccurrences(of: "[at-mark.misscat.header]", with: "@")
+    private static func dehyperMagic(_ text: String) -> String {
+        return text.replacingOccurrences(of: "[at-mark.misscat.header]", with: "@")
             .replacingOccurrences(of: "[hash-tag.misscat.header]", with: "#")
+    }
+}
+
+// MARK: String Extension
+
+// 装飾関係
+extension String {
+    ///  Emoji形式":hogehoge:"をデフォルト絵文字 / カスタム絵文字のurl/imgに変更
+    /// - Parameter externalEmojis: 外インスタンスのカスタム絵文字
+    func emojiEncoder(externalEmojis: [EmojiModel?]?) -> String {
+        return EmojiHandler.handler.emojiEncoder(note: self, externalEmojis: externalEmojis)
     }
     
     /// カスタム絵文字以外のMFM処理を行う

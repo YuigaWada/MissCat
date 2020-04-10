@@ -27,7 +27,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     @IBOutlet weak var innerNoteLabel: UILabel!
     
     @IBOutlet weak var mainTextView: UITextView!
-    @IBOutlet weak var mainTextViewBottomConstraint: NSLayoutConstraint!
+    @IBOutlet weak var bottomConstraint: NSLayoutConstraint!
     
     @IBOutlet weak var bottomStackView: UIStackView!
     
@@ -96,6 +96,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
         setupNavItem()
         
         innerNoteCell.isHidden = targetNote == nil
+        attachmentCollectionView.isHidden = true
         markLabel.font = .awesomeSolid(fontSize: 11.0)
     }
     
@@ -132,10 +133,10 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
             return String(1500 - text.count)
         }.bind(to: counter.rx.title).disposed(by: disposeBag)
         
-        output.attachments
-            .map { $0.count == 0 }
-            .bind(to: attachmentCollectionView.rx.isHidden)
-            .disposed(by: disposeBag)
+        output.attachments.map {
+            guard $0.count == 1 else { return true }
+            return $0[0].items.count == 0
+        }.bind(to: attachmentCollectionView.rx.isHidden).disposed(by: disposeBag)
         
         output.attachments
             .bind(to: attachmentCollectionView.rx.items(dataSource: dataSource))
@@ -414,9 +415,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     // キーボードの高さに合わせてcomponentの高さを調整する
     private func fitToKeyboard(keyboardHeight: CGFloat) {
         layoutIfNeeded(to: [bottomStackView, toolBar])
-        
-        // 15: 微調整
-        mainTextViewBottomConstraint.constant = bottomStackView.frame.height + keyboardHeight - getSafeAreaSize().height + 15
+        bottomConstraint.constant = keyboardHeight
     }
     
     // MARK: Utilities
