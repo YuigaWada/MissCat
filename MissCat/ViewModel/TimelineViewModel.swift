@@ -22,6 +22,7 @@ class TimelineViewModel: ViewModelType {
         let onlyFiles: Bool?
         let userId: String?
         let listId: String?
+        let query: String?
         let loadLimit: Int
     }
     
@@ -287,6 +288,7 @@ class TimelineViewModel: ViewModelType {
                                       onlyFiles: input.onlyFiles,
                                       listId: input.listId,
                                       loadLimit: input.loadLimit,
+                                      query: input.query,
                                       isReload: false,
                                       lastNoteId: nil)
         _isLoading = true
@@ -347,6 +349,7 @@ class TimelineViewModel: ViewModelType {
                                       onlyFiles: input.onlyFiles,
                                       listId: input.listId,
                                       loadLimit: 10,
+                                      query: input.query,
                                       isReload: true,
                                       lastNoteId: lastNoteId)
         

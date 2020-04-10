@@ -64,6 +64,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     ///   - onlyFiles: ファイルのみのタイムラインか
     ///   - userId: 注目するユーザーのuserId
     ///   - listId: 注目するリストのlistId
+    ///   - query: 検索クエリ
     ///   - withNavBar: NavBarが必要か
     ///   - scrollable: スクロール可能か
     ///   - loadLimit: 一度に読み込むnoteの量
@@ -73,6 +74,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                onlyFiles: Bool? = nil,
                userId: String? = nil,
                listId: String? = nil,
+               query: String? = nil,
                withNavBar: Bool = true,
                scrollable: Bool = true,
                loadLimit: Int = 40,
@@ -83,6 +85,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                                     onlyFiles: onlyFiles,
                                     userId: userId,
                                     listId: listId,
+                                    query: query,
                                     loadLimit: loadLimit)
         
         viewModel = ViewModel(with: input, and: disposeBag)
