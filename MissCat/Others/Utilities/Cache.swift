@@ -19,12 +19,7 @@ class Cache {
     
     // MARK: Var
     
-    // 下２つのcacheはYanagiTextと一対一に対応してキャッシュしてあげる
-    // (YanagiTextのロジック上、attributedStringとカスタム絵文字のViewは一対一で対応しているため)
-    
-    private var notes: [String: Cache.NoteOnYanagi] = [:] // key: noteId
-    private var users: [String: Cache.UserOnYanagi] = [:] // key: username
-    
+    private var icon: [String: UIImage] = [:] // key: username
     private var uiImage: [String: UIImage] = [:] // key: url
     private var dataOnUrl: [String: Data] = [:] // key: url
     private var urlPreview: [String: Response] = [:] // key: url
@@ -35,27 +30,8 @@ class Cache {
     
     // MARK: Save
     
-    func saveNote(noteId: String, mfmString: MFMString, attachments: Attachments) {
-        guard notes[noteId] == nil else { return }
-        
-        notes[noteId] = NoteOnYanagi(mfmString: mfmString, yanagiTexts: [], attachments: attachments)
-    }
-    
-    func saveDisplayName(username: String, mfmString: MFMString, attachments: Attachments, on yanagiText: YanagiText) {
-        if let _ = users[username] {
-            users[username]!.mfmString = mfmString
-            users[username]!.yanagiTexts.append(yanagiText)
-        } else {
-            users[username] = UserOnYanagi(iconImage: nil, mfmString: mfmString, yanagiTexts: [yanagiText], attachments: attachments)
-        }
-    }
-    
     func saveIcon(username: String, image: UIImage) {
-        if let _ = users[username] {
-            users[username]!.iconImage = image
-        } else {
-            users[username] = UserOnYanagi(iconImage: image, mfmString: nil, yanagiTexts: [], attachments: [:])
-        }
+        icon[username] = image
     }
     
     func saveUiImage(_ image: UIImage, url: String) {
@@ -75,24 +51,8 @@ class Cache {
     
     // MARK: Get
     
-    func getNote(noteId: String) -> Cache.NoteOnYanagi? {
-        return notes[noteId]
-    }
-    
-    func getDisplayName(username: String, on yanagiText: YanagiText) -> Cache.UserOnYanagi? {
-        //        guard  if let user = users[username] else { return }
-        //        let option = user.yanagiTexts.filter({ $0 === yanagiText })
-        //        if option.count > 0 {
-        //            return option[0]
-        //        } else {
-        //            return (displayName: nil, attachments: nil)
-        //        }
-        
-        return users[username]
-    }
-    
     func getIcon(username: String) -> UIImage? {
-        return users[username]?.iconImage
+        return icon[username]
     }
     
     func getUiImage(url: String) -> UIImage? {
@@ -224,22 +184,5 @@ extension Cache {
         func setTheme(_ rawJson: String) {
             Foundation.UserDefaults.standard.set(rawJson, forKey: themeKey)
         }
-    }
-}
-
-extension Cache {
-    struct NoteOnYanagi {
-        var mfmString: MFMString
-        
-        var yanagiTexts: [YanagiText]
-        var attachments: [NSTextAttachment: YanagiText.Attachment] = [:]
-    }
-    
-    struct UserOnYanagi {
-        var iconImage: UIImage?
-        var mfmString: MFMString?
-        
-        var yanagiTexts: [YanagiText]
-        var attachments: [NSTextAttachment: YanagiText.Attachment] = [:]
     }
 }

@@ -11,6 +11,8 @@ import MisskeyKit
 extension NoteModel {
     fileprivate var post: NoteModel { return self }
     
+    var isFeatured: Bool { return post._featuredId_ != nil }
+    var isPr: Bool { return post._prId_ != nil }
     /// おすすめノートかどうか
     var isRecommended: Bool { return post._featuredId_ != nil || post._prId_ != nil }
     
@@ -41,7 +43,8 @@ extension NoteModel {
                                        commentRNTarget: withRN ? post.renote?.getNoteCellModel(onOtherNote: true) ?? nil : nil,
                                        original: self,
                                        onOtherNote: onOtherNote,
-                                       poll: post.poll)
+                                       poll: post.poll,
+                                       cw: post.cw)
         
         cellModel.shapedReactions = cellModel.getReactions()
         cellModel.isReply = post.reply != nil

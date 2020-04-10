@@ -374,7 +374,7 @@ class TimelineViewModel: ViewModelType {
         guard cellsModel.count > 0 else { return nil }
         
         let lastNote = cellsModel[0]
-        if lastNote.isRenoteeCell || lastNote.isReplyTarget { // RN/リプライの場合はRenoteeCellのModelが送られてくるので次のモデルを参照する
+        if lastNote.isRenoteeCell || lastNote.isReplyTarget || lastNote.isPromotionCell { // RN/リプライ/RRの場合はRenoteeCellのModelが送られてくるので次のモデルを参照する
             guard cellsModel.count > 1 else { return nil }
             return cellsModel[1].noteId
         }

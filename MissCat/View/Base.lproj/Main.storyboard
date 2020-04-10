@@ -60,7 +60,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" text="What's happening?" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="EU5-Xs-Hwc">
-                                <rect key="frame" x="60.5" y="98" width="333.5" height="413"/>
+                                <rect key="frame" x="60.5" y="98" width="333.5" height="545"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                 <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
@@ -94,7 +94,7 @@
                                 </constraints>
                             </view>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="tzh-uX-1vt">
-                                <rect key="frame" x="20" y="511" width="374" height="214"/>
+                                <rect key="frame" x="20" y="648" width="374" height="214"/>
                                 <subviews>
                                     <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsVerticalScrollIndicator="NO" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="IOM-RT-9Xq">
                                         <rect key="frame" x="0.0" y="0.0" width="374" height="128"/>
@@ -182,16 +182,17 @@
                             <constraint firstItem="IOM-RT-9Xq" firstAttribute="height" secondItem="fFf-eE-SeL" secondAttribute="height" multiplier="0.142857" id="bgo-Lb-4vj"/>
                             <constraint firstItem="Csp-qU-w8d" firstAttribute="leading" secondItem="xxL-hS-Ifh" secondAttribute="leading" constant="20" id="cRb-F4-DQc"/>
                             <constraint firstItem="xxL-hS-Ifh" firstAttribute="trailing" secondItem="EU5-Xs-Hwc" secondAttribute="trailing" constant="20" id="d9g-ed-VGF"/>
-                            <constraint firstItem="tzh-uX-1vt" firstAttribute="top" secondItem="EU5-Xs-Hwc" secondAttribute="bottom" id="fPW-Zk-FMc"/>
+                            <constraint firstItem="tzh-uX-1vt" firstAttribute="top" secondItem="EU5-Xs-Hwc" secondAttribute="bottom" constant="5" id="fPW-Zk-FMc"/>
                             <constraint firstItem="jE1-Xj-0I9" firstAttribute="leading" secondItem="xxL-hS-Ifh" secondAttribute="leading" id="ff0-Xy-3Oq"/>
+                            <constraint firstItem="xxL-hS-Ifh" firstAttribute="bottom" secondItem="tzh-uX-1vt" secondAttribute="bottom" id="ggO-iS-dbr"/>
                             <constraint firstItem="jE1-Xj-0I9" firstAttribute="height" secondItem="fFf-eE-SeL" secondAttribute="height" multiplier="0.0926339" id="i46-Wq-oZO"/>
-                            <constraint firstItem="xxL-hS-Ifh" firstAttribute="bottom" secondItem="EU5-Xs-Hwc" secondAttribute="bottom" constant="351" id="l9a-1F-Als"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="xxL-hS-Ifh"/>
                     </view>
                     <connections>
                         <outlet property="addLocationButon" destination="57g-4F-q6D" id="h3i-I9-H3P"/>
                         <outlet property="attachmentCollectionView" destination="IOM-RT-9Xq" id="6Hk-kT-br1"/>
+                        <outlet property="bottomConstraint" destination="ggO-iS-dbr" id="q4G-rr-QuF"/>
                         <outlet property="bottomStackView" destination="tzh-uX-1vt" id="cby-EG-WeT"/>
                         <outlet property="cancelButton" destination="2pz-eD-46J" id="PEe-Ee-Sfs"/>
                         <outlet property="iconImageView" destination="Csp-qU-w8d" id="MR7-xt-sqx"/>
@@ -199,7 +200,6 @@
                         <outlet property="innerNoteCell" destination="Xr7-JV-f30" id="n57-57-Ceq"/>
                         <outlet property="innerNoteLabel" destination="Izf-jI-LTK" id="7XB-so-TX2"/>
                         <outlet property="mainTextView" destination="EU5-Xs-Hwc" id="Da9-uM-miV"/>
-                        <outlet property="mainTextViewBottomConstraint" destination="l9a-1F-Als" id="WSY-FH-EiL"/>
                         <outlet property="markLabel" destination="zCb-5a-luU" id="1nh-gX-VZi"/>
                         <outlet property="submitButton" destination="E5P-wX-4mM" id="kHB-mM-lhF"/>
                     </connections>

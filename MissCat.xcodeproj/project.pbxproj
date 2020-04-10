@@ -50,6 +50,8 @@
 		8D502D58238024B700525A96 /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D502D57238024B700525A96 /* HomeViewController.swift */; };
 		8D502D5A2380270A00525A96 /* TabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D502D592380270A00525A96 /* TabBar.swift */; };
 		8D53741B23A32D03004523FC /* ViewModelType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D53741A23A32D03004523FC /* ViewModelType.swift */; };
+		8D57CA43243FDB9C005DCEB2 /* PromotionCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D57CA42243FDB9C005DCEB2 /* PromotionCell.xib */; };
+		8D57CA47243FDBC3005DCEB2 /* PromotionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D57CA46243FDBC3005DCEB2 /* PromotionCell.swift */; };
 		8D61354F238A974400AB50C2 /* EmojiViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D61354E238A974400AB50C2 /* EmojiViewCell.xib */; };
 		8D613551238A978700AB50C2 /* EmojiViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D613550238A978700AB50C2 /* EmojiViewCell.swift */; };
 		8D613553238B6D4F00AB50C2 /* NavBar.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D613552238B6D4F00AB50C2 /* NavBar.xib */; };
@@ -180,6 +182,8 @@
 		8D502D592380270A00525A96 /* TabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBar.swift; sourceTree = "<group>"; };
 		8D53741A23A32D03004523FC /* ViewModelType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModelType.swift; sourceTree = "<group>"; };
 		8D5733E123F667DB002C17D2 /* Agrume.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Agrume.framework; path = Pods/_Prebuild/GeneratedFrameworks/Agrume/Agrume.framework; sourceTree = "<group>"; };
+		8D57CA42243FDB9C005DCEB2 /* PromotionCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PromotionCell.xib; sourceTree = "<group>"; };
+		8D57CA46243FDBC3005DCEB2 /* PromotionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromotionCell.swift; sourceTree = "<group>"; };
 		8D61354E238A974400AB50C2 /* EmojiViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = EmojiViewCell.xib; sourceTree = "<group>"; };
 		8D613550238A978700AB50C2 /* EmojiViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiViewCell.swift; sourceTree = "<group>"; };
 		8D613552238B6D4F00AB50C2 /* NavBar.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NavBar.xib; sourceTree = "<group>"; };
@@ -410,6 +414,7 @@
 				8D6139192427B9B0003B5BEF /* FileContainer.swift */,
 				8D61391F2427CAED003B5BEF /* FileContainerCell.swift */,
 				8DC27D97243BF4FA0037E610 /* UrlPreviewer.swift */,
+				8D57CA46243FDBC3005DCEB2 /* PromotionCell.swift */,
 			);
 			path = NoteCell;
 			sourceTree = "<group>";
@@ -421,7 +426,9 @@
 				8D502D53237D8BEC00525A96 /* ReactionCell.xib */,
 				8D4754F8240E21F800BAD410 /* PollView.xib */,
 				8D61391D2427CA0C003B5BEF /* FileContainerCell.xib */,
+				8D8863B3238493FA00A7A5A8 /* RenoteeCell.xib */,
 				8DC27D95243BF2DF0037E610 /* UrlPreviewer.xib */,
+				8D57CA42243FDB9C005DCEB2 /* PromotionCell.xib */,
 			);
 			path = nib;
 			sourceTree = "<group>";
@@ -506,7 +513,6 @@
 				8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */,
 				8D502D552380236900525A96 /* TabBar.xib */,
 				8DAEA1342382E4F00083AA69 /* EmojiView.xib */,
-				8D8863B3238493FA00A7A5A8 /* RenoteeCell.xib */,
 				8DA06A082389E9820093A718 /* NotificationCell.xib */,
 				8D61354E238A974400AB50C2 /* EmojiViewCell.xib */,
 				8D613552238B6D4F00AB50C2 /* NavBar.xib */,
@@ -642,6 +648,7 @@
 				8D502D562380236900525A96 /* TabBar.xib in Resources */,
 				8D7968812404BE68004F87FA /* ReactionCollectionHeader.xib in Resources */,
 				8D0AC5BA237B5D0D00530508 /* Font Awesome 5 Free-Solid-900.otf in Resources */,
+				8D57CA43243FDB9C005DCEB2 /* PromotionCell.xib in Resources */,
 				8D4A2A22237437C000503685 /* LaunchScreen.storyboard in Resources */,
 				8D4754F9240E21F800BAD410 /* PollView.xib in Resources */,
 				8DA06A092389E9820093A718 /* NotificationCell.xib in Resources */,
@@ -802,6 +809,7 @@
 				8DC16154238BBD0C007793B7 /* NoteModel+MissCat.swift in Sources */,
 				8D7779A624138120005764D9 /* PanelMenuViewController.swift in Sources */,
 				8D8863B62384951300A7A5A8 /* RenoteeCell.swift in Sources */,
+				8D57CA47243FDBC3005DCEB2 /* PromotionCell.swift in Sources */,
 				8D6139202427CAED003B5BEF /* FileContainerCell.swift in Sources */,
 				8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */,
 				8DC27D98243BF4FB0037E610 /* UrlPreviewer.swift in Sources */,
@@ -983,7 +991,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.5;
+				CURRENT_PROJECT_VERSION = 1.0.6;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -998,7 +1006,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.6;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",
@@ -1062,7 +1070,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.5;
+				CURRENT_PROJECT_VERSION = 1.0.6;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -1077,7 +1085,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.6;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",

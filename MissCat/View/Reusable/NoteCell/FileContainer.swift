@@ -74,14 +74,14 @@ class FileContainer: UICollectionView, UICollectionViewDelegate, ComponentType {
         
         let dataSource = FileDataSource(
             configureCell: { dataSource, collectionView, indexPath, _ in
-                self.setupReactionCell(dataSource, collectionView, indexPath)
+                self.setupCell(dataSource, collectionView, indexPath)
             }
         )
         
         return dataSource
     }
     
-    private func setupReactionCell(_ dataSource: CollectionViewSectionedDataSource<FileContainer.Section>, _ collectionView: UICollectionView, _ indexPath: IndexPath) -> UICollectionViewCell {
+    private func setupCell(_ dataSource: CollectionViewSectionedDataSource<FileContainer.Section>, _ collectionView: UICollectionView, _ indexPath: IndexPath) -> UICollectionViewCell {
         let index = indexPath.row
         let fileModel = viewModel.fileModel
         
