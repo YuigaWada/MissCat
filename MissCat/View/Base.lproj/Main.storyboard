@@ -321,6 +321,36 @@
             </objects>
             <point key="canvasLocation" x="-810.14492753623199" y="125.89285714285714"/>
         </scene>
+        <!--Search View Controller-->
+        <scene sceneID="sbY-10-kXt">
+            <objects>
+                <viewController storyboardIdentifier="search" id="lGf-QW-8oR" customClass="SearchViewController" customModule="MissCat" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="C6X-e2-Uni">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Yrm-RD-9Du">
+                                <rect key="frame" x="0.0" y="117" width="414" height="690"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="Yrm-RD-9Du" firstAttribute="leading" secondItem="HRl-1n-hak" secondAttribute="leading" id="3pY-mZ-6iQ"/>
+                            <constraint firstItem="Yrm-RD-9Du" firstAttribute="top" secondItem="HRl-1n-hak" secondAttribute="top" constant="73" id="J8U-4Z-qec"/>
+                            <constraint firstItem="Yrm-RD-9Du" firstAttribute="bottom" secondItem="HRl-1n-hak" secondAttribute="bottom" constant="-55" id="h62-Xf-st0"/>
+                            <constraint firstItem="Yrm-RD-9Du" firstAttribute="trailing" secondItem="HRl-1n-hak" secondAttribute="trailing" id="sOk-cO-TFT"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="HRl-1n-hak"/>
+                    </view>
+                    <connections>
+                        <outlet property="timelineView" destination="Yrm-RD-9Du" id="5Im-Vg-Qr0"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Y62-cI-IE1" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-1739.1304347826087" y="920.75892857142856"/>
+        </scene>
         <!--Notifications View Controller-->
         <scene sceneID="Cxp-Xa-ESV">
             <objects>

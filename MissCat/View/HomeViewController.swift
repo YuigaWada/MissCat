@@ -32,7 +32,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     private var currentProfileViewController: ProfileViewController?
     
     // ioの場合はLTLではなくHomeを表示(Appleに怒られた)
-    private lazy var search = self.getViewController(name: "404-page")
+    private lazy var search = self.generateSearchVC()
     private lazy var home = self.generateTimelineVC(type: .Home)
     private lazy var local = io ? self.generateTimelineVC(type: .Home) : self.generateTimelineVC(type: .Local)
     private lazy var global = self.generateTimelineVC(type: .Global)
@@ -299,6 +299,14 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         default:
             return
         }
+    }
+    
+    private func generateSearchVC() -> SearchViewController {
+        guard let viewController = getViewController(name: "search") as? SearchViewController
+        else { fatalError("Internal Error.") }
+        
+        viewController.homeViewController = self
+        return viewController
     }
     
     private func generateTimelineVC(type: TimelineType) -> TimelineViewController {
