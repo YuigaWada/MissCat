@@ -12,9 +12,15 @@ import RxSwift
 import UIKit
 
 class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITextFieldDelegate {
-    // MARK: IBOutlet
+    // MARK: UIView
     
     @IBOutlet weak var timelineView: UIView!
+    
+    @IBOutlet weak var noteTab: UIButton!
+    @IBOutlet weak var userTab: UIButton!
+    @IBOutlet weak var tabContainer: UIView!
+    
+    private lazy var tabIndicator: UIView = .init()
     
     // MARK: PolioPager
     
@@ -26,19 +32,57 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     var homeViewController: HomeViewController?
     private var timelineVC: TimelineViewController?
+    private var selected: Tab = .note
+    
+    private let disposeBag: DisposeBag = .init()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         searchTextField.delegate = self
+        
+        setupTab()
     }
     
-//    private func getSearchTrigger() -> Observable<String> {
-//        let debounceInterval = DispatchTimeInterval.milliseconds(300)
-//        return searchBar.rx.text.compactMap { $0?.localizedLowercase }.asObservable()
-//            .skip(1)
-//            .debounce(debounceInterval, scheduler: MainScheduler.instance)
-//            .distinctUntilChanged()
-//    }
+    // MARK: Design
+    
+    private func setupTab() {
+        tabIndicator.frame = noteTab.frame.insetBy(dx: -4, dy: 0)
+        tabIndicator.backgroundColor = .systemBlue
+        
+        userTab.setTitleColor(.lightGray, for: .normal)
+        noteTab.setTitleColor(.white, for: .normal)
+        
+        noteTab.rx.tap.subscribe(onNext: { _ in
+            guard self.selected != .note else { return }
+            self.animateTab(next: .note)
+        }).disposed(by: disposeBag)
+        
+        userTab.rx.tap.subscribe(onNext: { _ in
+            guard self.selected != .user else { return }
+            self.animateTab(next: .user)
+        }).disposed(by: disposeBag)
+        
+        tabIndicator.layer.cornerRadius = 5
+        tabContainer.addSubview(tabIndicator)
+        tabContainer.bringSubviewToFront(noteTab)
+        tabContainer.bringSubviewToFront(userTab)
+    }
+    
+    private func animateTab(next: Tab) {
+        guard selected != .moving,
+            let target = next == .note ? noteTab : userTab,
+            let previous = next == .note ? userTab : noteTab else { return }
+        
+        selected = .moving
+        UIView.animate(withDuration: 0.2, delay: 0, options: .curveEaseInOut, animations: {
+            self.tabIndicator.frame = target.frame.insetBy(dx: -4, dy: 0)
+        }, completion: { fin in
+            guard fin else { return }
+            self.selected = next
+            target.setTitleColor(.white, for: .normal)
+            previous.setTitleColor(.lightGray, for: .normal)
+        })
+    }
     
     // MARK: Utilities
     
@@ -48,7 +92,9 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
         
         viewController.setup(type: .NoteSearch, query: query)
         viewController.view.frame = timelineView.frame
+        viewController.view.translatesAutoresizingMaskIntoConstraints = false
         timelineView.addSubview(viewController.view)
+        setAutoLayout(to: viewController.view)
         addChild(viewController)
         
         return viewController
@@ -124,5 +170,13 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
+    }
+}
+
+extension SearchViewController {
+    enum Tab {
+        case note
+        case user
+        case moving
     }
 }
