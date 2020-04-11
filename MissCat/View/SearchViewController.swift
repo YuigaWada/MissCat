@@ -168,6 +168,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
         guard let query = textField.text, !query.isEmpty else { removeTimelineVC(); return true }
         
         if query != self.query {
+            removeTimelineVC()
             let timelineVC = generateTimelineVC(query: query)
             self.timelineVC = timelineVC
             self.query = query
