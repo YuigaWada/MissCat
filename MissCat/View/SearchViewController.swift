@@ -32,6 +32,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     var homeViewController: HomeViewController?
     private var timelineVC: TimelineViewController?
+    
     private var selected: Tab = .note
     
     private let disposeBag: DisposeBag = .init()
@@ -90,7 +91,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
         guard let viewController = getViewController(name: "timeline") as? TimelineViewController
         else { fatalError("Internal Error.") }
         
-        viewController.setup(type: .NoteSearch, query: query)
+        viewController.setup(type: .NoteSearch, query: query, withTopShadow: true)
         viewController.view.frame = timelineView.frame
         viewController.view.translatesAutoresizingMaskIntoConstraints = false
         timelineView.addSubview(viewController.view)
