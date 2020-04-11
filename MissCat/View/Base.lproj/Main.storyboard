@@ -337,22 +337,30 @@
                                 <rect key="frame" x="0.0" y="44" width="414" height="50"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AqI-ij-aqh">
-                                        <rect key="frame" x="92" y="10.5" width="58" height="29"/>
+                                        <rect key="frame" x="131" y="10.5" width="58" height="29"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <state key="normal" title="ユーザー"/>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="nfx-UM-AZg">
-                                        <rect key="frame" x="30" y="10.5" width="37" height="29"/>
+                                        <rect key="frame" x="69" y="10.5" width="37" height="29"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <state key="normal" title=" 投稿 "/>
                                     </button>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="検索" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pMA-Kf-oMC">
+                                        <rect key="frame" x="20" y="16.5" width="29" height="17"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
                                 </subviews>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                 <constraints>
-                                    <constraint firstItem="nfx-UM-AZg" firstAttribute="leading" secondItem="8Rd-lt-1l5" secondAttribute="leading" constant="30" id="8tT-Gl-LEb"/>
+                                    <constraint firstItem="nfx-UM-AZg" firstAttribute="leading" secondItem="pMA-Kf-oMC" secondAttribute="trailing" constant="20" id="8tT-Gl-LEb"/>
                                     <constraint firstItem="nfx-UM-AZg" firstAttribute="centerY" secondItem="8Rd-lt-1l5" secondAttribute="centerY" id="KV5-m5-JmA"/>
                                     <constraint firstItem="AqI-ij-aqh" firstAttribute="leading" secondItem="nfx-UM-AZg" secondAttribute="trailing" constant="25" id="KrM-8h-l7p"/>
+                                    <constraint firstItem="pMA-Kf-oMC" firstAttribute="leading" secondItem="8Rd-lt-1l5" secondAttribute="leading" constant="20" id="Kte-0c-vIe"/>
                                     <constraint firstItem="AqI-ij-aqh" firstAttribute="centerY" secondItem="8Rd-lt-1l5" secondAttribute="centerY" id="jhd-0Y-IXr"/>
+                                    <constraint firstItem="pMA-Kf-oMC" firstAttribute="centerY" secondItem="8Rd-lt-1l5" secondAttribute="centerY" id="udw-Db-iac"/>
                                 </constraints>
                             </view>
                         </subviews>

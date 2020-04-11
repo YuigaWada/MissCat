@@ -45,6 +45,10 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     override func viewDidLoad() {
         super.viewDidLoad()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         setupTab()
     }
     
@@ -72,6 +76,8 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     // MARK: Design
     
     private func setupTab() {
+        guard tabIndicator.frame == .zero else { return }
+        
         tabIndicator.frame = noteTab.frame.insetBy(dx: -4, dy: 0)
         tabIndicator.backgroundColor = .systemBlue
         
