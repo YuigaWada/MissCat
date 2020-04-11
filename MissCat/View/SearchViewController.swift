@@ -45,8 +45,28 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         setupTab()
+    }
+    
+    // MARK: Publics
+    
+    func searchNote(with text: String) {
+        selected = .note
+        animateTab(next: .note)
+        
+        searchTextField.text = text
+        search(with: text)
+    }
+    
+    // MARK: Privates
+    
+    private func search(with query: String) {
+        guard query != self.query else { return }
+        
+        removeTimelineVC()
+        let timelineVC = generateTimelineVC(query: query)
+        self.timelineVC = timelineVC
+        self.query = query
     }
     
     // MARK: Design
@@ -167,13 +187,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
         guard let query = textField.text, !query.isEmpty else { removeTimelineVC(); return true }
         
-        if query != self.query {
-            removeTimelineVC()
-            let timelineVC = generateTimelineVC(query: query)
-            self.timelineVC = timelineVC
-            self.query = query
-        }
-        
+        search(with: query)
         return true
     }
     

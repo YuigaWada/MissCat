@@ -406,10 +406,12 @@ extension HomeViewController: NoteCellDelegate {
         let (linkType, value) = text.analyzeHyperLink()
         
         switch linkType {
-        case "URL":
+        case .url:
             openLink(url: value)
-        case "User":
+        case .user:
             openUserPage(username: value)
+        case .hashtag:
+            searchHashtag(tag: value)
         default:
             break
         }
@@ -437,6 +439,23 @@ extension HomeViewController: NoteCellDelegate {
 // MARK: FooterTabBar Delegate
 
 extension HomeViewController: FooterTabBarDelegate {
+    func emulateFooterTabTap(tab: TabKind) {
+        footerTab.selected = tab
+        switch tab {
+        case .home:
+            tappedHome()
+            
+        case .notifications:
+            tappedNotifications()
+            
+        case .profile:
+            tappedProfile()
+            
+        case .fav:
+            tappedFav()
+        }
+    }
+    
     func tappedHome() {
         if nowPage != .Main {
             nowPage = .Main
@@ -552,6 +571,11 @@ extension HomeViewController: TimelineDelegate {
                 self.showProfileView(userId: user.id)
             }
         }
+    }
+    
+    func searchHashtag(tag: String) {
+        moveTo(index: 0)
+        search.searchNote(with: tag)
     }
     
     func openSettings() {

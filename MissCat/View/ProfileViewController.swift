@@ -298,23 +298,14 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         let (linkType, value) = text.analyzeHyperLink()
         
         switch linkType {
-        case "URL":
-            openLink(url: value)
-        case "User":
-            openUser(username: value)
-        default:
-            break
+        case .url:
+            homeViewController?.openUserPage(username: value)
+        case .user:
+            homeViewController?.move2Profile(userId: value)
+        case .hashtag:
+            homeViewController?.emulateFooterTabTap(tab: .home)
+            homeViewController?.searchHashtag(tag: value)
         }
-    }
-    
-    func openUser(username: String) {
-        guard let homeViewController = self.homeViewController else { return }
-        homeViewController.openUserPage(username: username)
-    }
-    
-    func move2Profile(userId: String) {
-        guard let homeViewController = self.homeViewController else { return }
-        homeViewController.move2Profile(userId: userId)
     }
     
     // MARK: XLPagerTabStrip
