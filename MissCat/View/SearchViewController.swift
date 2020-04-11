@@ -25,7 +25,12 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     // MARK: PolioPager
     
     var searchBar: UIView!
-    var searchTextField: UITextField!
+    var searchTextField: UITextField! {
+        didSet {
+            searchTextField.delegate = self
+        }
+    }
+    
     var cancelButton: UIButton!
     
     // MARK: Vars
@@ -39,7 +44,6 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        searchTextField.delegate = self
         
         setupTab()
     }
