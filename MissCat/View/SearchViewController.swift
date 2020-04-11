@@ -20,6 +20,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     @IBOutlet weak var userTab: UIButton!
     @IBOutlet weak var tabContainer: UIView!
     
+    private var query: String?
     private lazy var tabIndicator: UIView = .init()
     
     // MARK: PolioPager
@@ -121,6 +122,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
         timelineVC.removeFromParent()
         timelineVC.view.removeFromSuperview()
         self.timelineVC = nil
+        query = nil
     }
     
     private func setAutoLayout(to view: UIView) {
@@ -165,8 +167,11 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
         guard let query = textField.text, !query.isEmpty else { removeTimelineVC(); return true }
         
-        let timelineVC = generateTimelineVC(query: query)
-        self.timelineVC = timelineVC
+        if query != self.query {
+            let timelineVC = generateTimelineVC(query: query)
+            self.timelineVC = timelineVC
+            self.query = query
+        }
         
         return true
     }
