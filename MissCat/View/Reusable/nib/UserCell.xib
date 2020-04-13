@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15705" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="UserCell" customModule="MissCat" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="414" height="336"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" contentInsetAdjustmentBehavior="never" editable="NO" text="Name" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="SfV-fE-pUJ" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
+                    <rect key="frame" x="79.5" y="13" width="314.5" height="35"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="35" id="8Hn-Ip-dQI"/>
+                    </constraints>
+                    <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                </textView>
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="3M2-tT-IDL">
+                    <rect key="frame" x="20" y="13" width="49.5" height="50"/>
+                    <color key="backgroundColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                </imageView>
+                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" contentInsetAdjustmentBehavior="never" editable="NO" text="Name" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="2Ub-e8-85o" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
+                    <rect key="frame" x="79.5" y="56" width="314.5" height="260"/>
+                    <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                </textView>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="8S3-Ev-eOU">
+                    <rect key="frame" x="0.0" y="335" width="414" height="1"/>
+                    <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="1" id="gHC-uW-mBa"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="8S3-Ev-eOU" secondAttribute="trailing" id="900-Ro-Md6"/>
+                <constraint firstItem="3M2-tT-IDL" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="20" id="LCc-Zm-bzf"/>
+                <constraint firstItem="8S3-Ev-eOU" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="NcZ-Gq-9pU"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="2Ub-e8-85o" secondAttribute="bottom" constant="20" id="OK7-Sl-1wz"/>
+                <constraint firstItem="2Ub-e8-85o" firstAttribute="top" secondItem="SfV-fE-pUJ" secondAttribute="bottom" constant="8" id="RuA-j7-Bz6"/>
+                <constraint firstItem="3M2-tT-IDL" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="13" id="VB4-Om-msk"/>
+                <constraint firstItem="SfV-fE-pUJ" firstAttribute="leading" secondItem="3M2-tT-IDL" secondAttribute="trailing" constant="10" id="Yiu-gE-6Ho"/>
+                <constraint firstItem="3M2-tT-IDL" firstAttribute="width" secondItem="iN0-l3-epB" secondAttribute="width" multiplier="0.17" constant="-21" id="feP-Us-Ofh"/>
+                <constraint firstItem="2Ub-e8-85o" firstAttribute="leading" secondItem="SfV-fE-pUJ" secondAttribute="leading" id="gf3-LW-8sj"/>
+                <constraint firstAttribute="bottom" secondItem="8S3-Ev-eOU" secondAttribute="bottom" id="iJZ-l9-74p"/>
+                <constraint firstItem="3M2-tT-IDL" firstAttribute="width" secondItem="3M2-tT-IDL" secondAttribute="height" multiplier="71:72" id="lbf-J1-hcX"/>
+                <constraint firstItem="2Ub-e8-85o" firstAttribute="trailing" secondItem="SfV-fE-pUJ" secondAttribute="trailing" id="sf7-ae-0Nq"/>
+                <constraint firstItem="SfV-fE-pUJ" firstAttribute="top" secondItem="3M2-tT-IDL" secondAttribute="top" id="stE-Qu-ppG"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="SfV-fE-pUJ" secondAttribute="trailing" constant="20" id="ydD-G9-2eS"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
+            <connections>
+                <outlet property="descriptionTextView" destination="2Ub-e8-85o" id="H5e-SI-j5G"/>
+                <outlet property="iconView" destination="3M2-tT-IDL" id="bg4-5Z-D6n"/>
+                <outlet property="nameTextView" destination="SfV-fE-pUJ" id="ca9-ab-9kY"/>
+            </connections>
+            <point key="canvasLocation" x="131.8840579710145" y="-64.955357142857139"/>
+        </view>
+    </objects>
+</document>

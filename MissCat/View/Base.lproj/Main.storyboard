@@ -1799,6 +1799,47 @@
             </objects>
             <point key="canvasLocation" x="3815.9420289855075" y="1646.6517857142856"/>
         </scene>
+        <!--User List View Controller-->
+        <scene sceneID="9AW-Ug-5Fv">
+            <objects>
+                <viewController storyboardIdentifier="user-list" id="SBL-VU-4nU" customClass="UserListViewController" customModule="MissCat" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="lpD-eK-yz3">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="UfX-DD-uYG" customClass="MissCatTableView" customModule="MissCat" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="44" width="414" height="763"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                                <prototypes>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="cell" id="9Ci-og-cLH">
+                                        <rect key="frame" x="0.0" y="28" width="414" height="44"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="9Ci-og-cLH" id="ovb-zx-tF0">
+                                            <rect key="frame" x="0.0" y="0.0" width="414" height="44"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </tableViewCellContentView>
+                                    </tableViewCell>
+                                </prototypes>
+                            </tableView>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="UfX-DD-uYG" firstAttribute="trailing" secondItem="vBx-1N-WNv" secondAttribute="trailing" id="3fm-XK-qsq"/>
+                            <constraint firstItem="vBx-1N-WNv" firstAttribute="bottom" secondItem="UfX-DD-uYG" secondAttribute="bottom" priority="999" id="Ucr-tY-h1u"/>
+                            <constraint firstItem="UfX-DD-uYG" firstAttribute="bottom" secondItem="vBx-1N-WNv" secondAttribute="bottom" constant="-55" id="fFN-q6-Q2Q"/>
+                            <constraint firstItem="UfX-DD-uYG" firstAttribute="leading" secondItem="vBx-1N-WNv" secondAttribute="leading" id="le0-1X-kK9"/>
+                            <constraint firstItem="UfX-DD-uYG" firstAttribute="top" secondItem="vBx-1N-WNv" secondAttribute="top" id="nEB-aw-JHu"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="vBx-1N-WNv"/>
+                    </view>
+                    <connections>
+                        <outlet property="mainTableView" destination="UfX-DD-uYG" id="ufB-Bd-Zdp"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="hQJ-U1-Ukz" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="138" y="-550"/>
+        </scene>
     </scenes>
     <resources>
         <image name="Logo" width="581" height="150.5"/>
