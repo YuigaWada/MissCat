@@ -126,4 +126,20 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         topShadow?.isHidden = scrollView.contentOffset.y <= 0
     }
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        guard let viewModel = viewModel else { return }
+        
+        let index = indexPath.row
+        
+        // 下位4分の1のcellでセル更新
+        let state = viewModel.state
+        guard !state.isLoading, viewModel.cellsModel.count - indexPath.row < 40 / 4 else { return } //  state.cellCompleted,
+        
+        print("loadUntilUsers...")
+        viewModel.loadUntilUsers().subscribe(onError: { error in
+            if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty { return }
+            self.homeViewController?.showNotificationBanner(icon: .Failed, notification: error.description)
+        }).disposed(by: disposeBag)
+    }
 }

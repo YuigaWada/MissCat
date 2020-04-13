@@ -120,6 +120,7 @@ extension UserCell {
         
         let isSkelton: Bool
         
+        let userId: String?
         let icon: String?
         let name: String?
         let username: String?
@@ -128,8 +129,9 @@ extension UserCell {
         var shapedName: MFMString?
         var shapedDescritpion: MFMString?
         
-        init(isSkelton: Bool = false, icon: String?, name: String?, username: String?, description: String?, shapedName: MFMString? = nil, shapedDescritpion: MFMString? = nil) {
+        init(isSkelton: Bool = false, userId: String, icon: String?, name: String?, username: String?, description: String?, shapedName: MFMString? = nil, shapedDescritpion: MFMString? = nil) {
             self.isSkelton = isSkelton
+            self.userId = userId
             self.icon = icon
             self.name = name
             self.username = username
@@ -144,6 +146,7 @@ extension UserCell {
         
         static func fakeSkeltonCell() -> UserCell.Model {
             return .init(isSkelton: true,
+                         userId: "",
                          icon: nil,
                          name: nil,
                          username: nil,

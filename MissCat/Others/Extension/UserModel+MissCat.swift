@@ -10,7 +10,8 @@ import MisskeyKit
 
 extension UserModel {
     func getUserCellModel() -> UserCell.Model {
-        return UserCell.Model(icon: avatarUrl,
+        return UserCell.Model(userId: id,
+                              icon: avatarUrl,
                               name: name,
                               username: username,
                               description: description)

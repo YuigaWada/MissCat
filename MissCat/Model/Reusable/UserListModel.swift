@@ -63,7 +63,8 @@ class UserListModel {
                 guard let query = option.query else { return dispose }
                 MisskeyKit.search.user(query: query,
                                        limit: option.loadLimit,
-                                       untilId: option.untilId ?? "",
+                                       untilId: option.untilId ?? "", // TODO: ここOffsetにすべき
+                                       localOnly: false,
                                        result: handleResult)
             default:
                 break

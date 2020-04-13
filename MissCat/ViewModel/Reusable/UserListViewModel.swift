@@ -23,15 +23,22 @@ class UserListViewModel: ViewModelType {
         let users: PublishSubject<[UserCell.Section]> = .init()
     }
     
-    struct State {}
+    struct State {
+        var isLoading: Bool
+    }
     
     private let input: Input
     let output: Output = .init()
+    var state: State {
+        return .init(isLoading: _isLoading)
+    }
     
     var cellsModel: [UserCell.Model] = []
     private let model: UserListModel = .init()
+    
     private let disposeBag: DisposeBag
     private var hasSkeltonCell: Bool = false
+    private var _isLoading: Bool = false
     
     // MARK: LifeCycle
     
@@ -73,6 +80,18 @@ class UserListViewModel: ViewModelType {
     
     // MARK: Load
     
+    func loadUntilUsers() -> Observable<UserCell.Model> {
+        guard let untilId = cellsModel[cellsModel.count - 1].userId else {
+            return Observable.create { _ in
+                Disposables.create()
+            }
+        }
+        
+        return loadUsers(untilId: untilId).do(onCompleted: {
+            self.updateUsers(new: self.cellsModel)
+        })
+    }
+    
     func loadUsers(untilId: String? = nil) -> Observable<UserCell.Model> {
         let option = UserListModel.LoadOption(type: input.type,
                                               userId: input.userId,
@@ -80,9 +99,12 @@ class UserListViewModel: ViewModelType {
                                               listId: input.listId,
                                               untilId: untilId)
         
+        _isLoading = true
         return model.loadUsers(with: option).do(onNext: { cellModel in
             self.cellsModel.append(cellModel)
-        }, onCompleted: nil)
+        }, onCompleted: {
+            self._isLoading = false
+        })
     }
     
     // MARK: Rx
