@@ -115,17 +115,30 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     private func animateTab(next: Tab) {
         guard selected != .moving,
-            let target = next == .note ? noteTab : userTab,
-            let previous = next == .note ? userTab : noteTab else { return }
+            let nextTab = next == .note ? noteTab : userTab,
+            let previousTab = next == .note ? userTab : noteTab else { return }
         
         selected = .moving
+        let nextVC = next == .note ? timelineVC : userListVC
+        let previousVC = next == .note ? userListVC : timelineVC
+        
+        nextVC?.view.alpha = 0
+        nextVC?.view.isHidden = false
         UIView.animate(withDuration: 0.2, delay: 0, options: .curveEaseInOut, animations: {
-            self.tabIndicator.frame = target.frame.insetBy(dx: -4, dy: 0)
+            self.tabIndicator.frame = nextTab.frame.insetBy(dx: -4, dy: 0)
+            
+            previousVC?.view.alpha = 0
+            nextVC?.view.alpha = 1
         }, completion: { fin in
             guard fin else { return }
             self.selected = next
-            target.setTitleColor(.white, for: .normal)
-            previous.setTitleColor(.lightGray, for: .normal)
+            
+            // tab
+            nextTab.setTitleColor(.white, for: .normal)
+            previousTab.setTitleColor(.lightGray, for: .normal)
+            
+            // vc
+            previousVC?.view.isHidden = true
         })
     }
     
