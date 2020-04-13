@@ -51,11 +51,22 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupTrends()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         setupTab()
+    }
+    
+    private func setupTrends() {
+        let trendVC = getViewController(name: "trend")
+        
+        trendVC.view.frame = timelineView.frame
+        trendVC.view.translatesAutoresizingMaskIntoConstraints = false
+        timelineView.addSubview(trendVC.view)
+        setAutoLayout(to: trendVC.view)
+        addChild(trendVC)
     }
     
     // MARK: Publics

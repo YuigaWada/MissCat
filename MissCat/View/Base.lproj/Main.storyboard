@@ -321,6 +321,55 @@
             </objects>
             <point key="canvasLocation" x="-810.14492753623199" y="125.89285714285714"/>
         </scene>
+        <!--Trend View Controller-->
+        <scene sceneID="VZG-5a-h41">
+            <objects>
+                <viewController storyboardIdentifier="trend" id="tvs-gz-Q4o" customClass="TrendViewController" customModule="MissCat" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="bLQ-aG-eFF">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" scrollEnabled="NO" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="60X-Aq-y4s" customClass="MissCatTableView" customModule="MissCat" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="145" width="414" height="662"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                                <prototypes>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="cell" id="ocB-eI-wkf">
+                                        <rect key="frame" x="0.0" y="28" width="414" height="44"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="ocB-eI-wkf" id="k2q-VF-3wc">
+                                            <rect key="frame" x="0.0" y="0.0" width="414" height="44"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </tableViewCellContentView>
+                                    </tableViewCell>
+                                </prototypes>
+                            </tableView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="トレンド" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ypH-vZ-5W6">
+                                <rect key="frame" x="20" y="104" width="70" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="60X-Aq-y4s" firstAttribute="top" secondItem="QbE-VX-9WG" secondAttribute="top" constant="101" id="1rV-DQ-kPv"/>
+                            <constraint firstItem="60X-Aq-y4s" firstAttribute="top" secondItem="ypH-vZ-5W6" secondAttribute="bottom" constant="20" id="4z8-ub-RB4"/>
+                            <constraint firstItem="ypH-vZ-5W6" firstAttribute="leading" secondItem="QbE-VX-9WG" secondAttribute="leading" constant="20" id="Mdb-TJ-mWk"/>
+                            <constraint firstItem="QbE-VX-9WG" firstAttribute="bottom" secondItem="60X-Aq-y4s" secondAttribute="bottom" constant="55" id="Z3Y-MQ-wxL"/>
+                            <constraint firstItem="60X-Aq-y4s" firstAttribute="trailing" secondItem="QbE-VX-9WG" secondAttribute="trailing" id="omH-uf-dYZ"/>
+                            <constraint firstItem="60X-Aq-y4s" firstAttribute="leading" secondItem="QbE-VX-9WG" secondAttribute="leading" id="zi5-3j-iBf"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="QbE-VX-9WG"/>
+                    </view>
+                    <connections>
+                        <outlet property="mainTableView" destination="60X-Aq-y4s" id="cJN-HU-zIF"/>
+                        <outlet property="titleLabe" destination="ypH-vZ-5W6" id="4Hn-PW-Rvl"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Fdj-Hy-FLd" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-2789.8550724637685" y="902.67857142857133"/>
+        </scene>
         <!--Search View Controller-->
         <scene sceneID="sbY-10-kXt">
             <objects>
