@@ -12,7 +12,7 @@ import RxSwift
 import UIKit
 
 typealias UsersDataSource = RxTableViewSectionedAnimatedDataSource<UserCell.Section>
-class UserListViewController: NoteDisplay {
+class UserListViewController: NoteDisplay, UITableViewDelegate {
     @IBOutlet weak var mainTableView: MissCatTableView!
     
     private var viewModel: UserListViewModel?
@@ -20,6 +20,7 @@ class UserListViewController: NoteDisplay {
     private let disposeBag: DisposeBag = .init()
     
     private var withTopShadow: Bool = false
+    private var topShadow: CALayer?
     
     // MARK: I/O
     
@@ -40,6 +41,7 @@ class UserListViewController: NoteDisplay {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTableView()
+        setupTopShadow()
         
         if viewModel == nil {
             setup(type: .search)
@@ -67,6 +69,7 @@ class UserListViewController: NoteDisplay {
     
     private func setupTableView() {
         mainTableView.register(UINib(nibName: "UserCell", bundle: nil), forCellReuseIdentifier: "UserCell")
+        mainTableView.delegate = self
     }
     
     private func setupDataSource() -> UsersDataSource {
@@ -78,6 +81,24 @@ class UserListViewController: NoteDisplay {
         )
         
         return dataSource
+    }
+    
+    private func setupTopShadow() {
+        guard withTopShadow,
+            let target = mainTableView else { return }
+        
+        let path = UIBezierPath(rect: CGRect(x: -5.0, y: -5.0, width: target.bounds.size.width + 5.0, height: 3.0))
+        let innerLayer = CALayer()
+        innerLayer.frame = target.bounds
+        innerLayer.masksToBounds = true
+        innerLayer.shadowColor = UIColor.black.cgColor
+        innerLayer.shadowOffset = CGSize(width: 2.5, height: 2.5)
+        innerLayer.shadowOpacity = 0.5
+        innerLayer.isHidden = true
+        innerLayer.shadowPath = path.cgPath
+        view.layer.addSublayer(innerLayer)
+        
+        topShadow = innerLayer
     }
     
     private func setupCell(_ dataSource: TableViewSectionedDataSource<UserCell.Section>, _ tableView: UITableView, _ indexPath: IndexPath) -> UITableViewCell {
@@ -100,5 +121,9 @@ class UserListViewController: NoteDisplay {
         shapedCell.descriptionTextView.renderViewStrings()
         
         return shapedCell
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        topShadow?.isHidden = scrollView.contentOffset.y <= 0
     }
 }
