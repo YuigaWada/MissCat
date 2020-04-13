@@ -117,6 +117,7 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
                                                         shapedName: item.shapedName,
                                                         shapedDescription: item.shapedDescritpion))
         
+        shapedCell.delegate = self
         shapedCell.nameTextView.renderViewStrings()
         shapedCell.descriptionTextView.renderViewStrings()
         
@@ -142,5 +143,16 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
 //            if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty { return }
 //            self.homeViewController?.showNotificationBanner(icon: .Failed, notification: error.description)
 //        }).disposed(by: disposeBag)
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard let viewModel = viewModel else { return }
+        
+        let index = indexPath.row
+        let item = viewModel.cellsModel[index]
+        
+        if let userId = item.userId {
+            move2Profile(userId: userId)
+        }
     }
 }

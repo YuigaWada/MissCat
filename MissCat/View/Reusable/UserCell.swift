@@ -11,7 +11,11 @@ import RxDataSources
 import RxSwift
 import UIKit
 
-class UserCell: UITableViewCell, ComponentType {
+protocol UserCellDelegate {
+    func tappedLink(text: String)
+}
+
+class UserCell: UITableViewCell, ComponentType, UITextViewDelegate {
     // MARK: I/O
     
     typealias Transformed = UserCell
@@ -28,6 +32,8 @@ class UserCell: UITableViewCell, ComponentType {
     @IBOutlet weak var descriptionTextView: MisskeyTextView!
     
     // MARK: Vars
+    
+    var delegate: UserCellDelegate?
     
     private var viewModel: UserCellViewModel?
     private let disposeBag: DisposeBag = .init()
@@ -96,6 +102,7 @@ class UserCell: UITableViewCell, ComponentType {
     
     private func setupComponents() {
         iconView.layer.cornerRadius = iconView.frame.height / 2
+        descriptionTextView.delegate = self
     }
     
     private func changeSkeltonState(on: Bool) {
@@ -110,6 +117,11 @@ class UserCell: UITableViewCell, ComponentType {
             iconView.hideSkeleton()
             isUserInteractionEnabled = true
         }
+    }
+    
+    func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+        delegate?.tappedLink(text: URL.absoluteString)
+        return false
     }
 }
 
