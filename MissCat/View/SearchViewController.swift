@@ -20,7 +20,8 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     @IBOutlet weak var userTab: UIButton!
     @IBOutlet weak var tabContainer: UIView!
     
-    private var query: String?
+    private var noteQuery: String?
+    private var userQuery: String?
     private lazy var tabIndicator: UIView = .init()
     
     // MARK: PolioPager
@@ -66,24 +67,26 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     // MARK: Privates
     
     private func search(with query: String) {
-        guard query != self.query else { return }
-        
         switch selected {
         case .note:
+            guard query != noteQuery else { return }
+            
             removeTimelineVC()
             let timelineVC = generateTimelineVC(query: query)
             self.timelineVC = timelineVC
+            noteQuery = query
             
         case .user:
+            guard query != userQuery else { return }
+            
             removeUserListVC()
             let userListVC = generateUserListVC(query: query)
             self.userListVC = userListVC
+            userQuery = query
             
         case .moving:
             break
         }
-        
-        self.query = query
     }
     
     // MARK: Design
@@ -133,12 +136,17 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
             guard fin else { return }
             self.selected = next
             
+            // vc
+            previousVC?.view.isHidden = true
+            
             // tab
             nextTab.setTitleColor(.white, for: .normal)
             previousTab.setTitleColor(.lightGray, for: .normal)
             
-            // vc
-            previousVC?.view.isHidden = true
+            if let preQuery = next == .note ? self.userQuery : self.noteQuery {
+                self.search(with: preQuery)
+            }
+            
         })
     }
     
@@ -188,7 +196,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
         timelineVC.removeFromParent()
         timelineVC.view.removeFromSuperview()
         self.timelineVC = nil
-        query = nil
+        noteQuery = nil
     }
     
     private func removeUserListVC() {
@@ -197,7 +205,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
         userListVC.removeFromParent()
         userListVC.view.removeFromSuperview()
         self.userListVC = nil
-        query = nil
+        userQuery = nil
     }
     
     private func setAutoLayout(to view: UIView) {
