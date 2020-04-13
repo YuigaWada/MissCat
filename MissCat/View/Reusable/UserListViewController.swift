@@ -134,12 +134,13 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
         
         // 下位4分の1のcellでセル更新
         let state = viewModel.state
-        guard !state.isLoading, viewModel.cellsModel.count - indexPath.row < 40 / 4 else { return } //  state.cellCompleted,
+        guard !state.isLoading, viewModel.cellsModel.count - index < 40 / 4 else { return } //  state.cellCompleted,
         
+        // MEMO: MisskeyがOffsetに対応するまで連続ロードしないようにする？
         print("loadUntilUsers...")
-        viewModel.loadUntilUsers().subscribe(onError: { error in
-            if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty { return }
-            self.homeViewController?.showNotificationBanner(icon: .Failed, notification: error.description)
-        }).disposed(by: disposeBag)
+//        viewModel.loadUntilUsers().subscribe(onError: { error in
+//            if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty { return }
+//            self.homeViewController?.showNotificationBanner(icon: .Failed, notification: error.description)
+//        }).disposed(by: disposeBag)
     }
 }
