@@ -38,6 +38,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     var homeViewController: HomeViewController?
     private var timelineVC: TimelineViewController?
+    private var userListVC: UserListViewController?
     
     private var selected: Tab = .note
     
@@ -67,9 +68,21 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     private func search(with query: String) {
         guard query != self.query else { return }
         
-        removeTimelineVC()
-        let timelineVC = generateTimelineVC(query: query)
-        self.timelineVC = timelineVC
+        switch selected {
+        case .note:
+            removeTimelineVC()
+            let timelineVC = generateTimelineVC(query: query)
+            self.timelineVC = timelineVC
+            
+        case .user:
+            removeUserListVC()
+            let userListVC = generateUserListVC(query: query)
+            self.userListVC = userListVC
+            
+        case .moving:
+            break
+        }
+        
         self.query = query
     }
     
@@ -132,11 +145,25 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
         return viewController
     }
     
+    private func generateUserListVC(query: String) -> UserListViewController {
+        guard let viewController = getViewController(name: "user-list") as? UserListViewController
+        else { fatalError("Internal Error.") }
+        
+        viewController.setup(type: .search, query: query, withTopShadow: true)
+        viewController.view.frame = timelineView.frame
+        viewController.view.translatesAutoresizingMaskIntoConstraints = false
+        timelineView.addSubview(viewController.view)
+        setAutoLayout(to: viewController.view)
+        addChild(viewController)
+        
+        return viewController
+    }
+    
     private func getViewController(name: String) -> UIViewController {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let viewController = storyboard.instantiateViewController(withIdentifier: name)
         
-        guard let timelineViewController = viewController as? TimelineViewController else { return viewController }
+        guard let timelineViewController = viewController as? NoteDisplay else { return viewController }
         timelineViewController.homeViewController = homeViewController
         
         return timelineViewController
@@ -148,6 +175,15 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
         timelineVC.removeFromParent()
         timelineVC.view.removeFromSuperview()
         self.timelineVC = nil
+        query = nil
+    }
+    
+    private func removeUserListVC() {
+        guard let userListVC = userListVC else { return }
+        
+        userListVC.removeFromParent()
+        userListVC.view.removeFromSuperview()
+        self.userListVC = nil
         query = nil
     }
     
