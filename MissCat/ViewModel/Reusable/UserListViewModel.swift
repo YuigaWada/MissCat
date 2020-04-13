@@ -61,7 +61,7 @@ class UserListViewModel: ViewModelType {
     func setSkeltonCell() {
         guard !hasSkeltonCell else { return }
         
-        for _ in 0 ..< 5 {
+        for _ in 0 ..< 10 {
             let skeltonCellModel = UserCell.Model.fakeSkeltonCell()
             cellsModel.append(skeltonCellModel)
         }
@@ -72,7 +72,7 @@ class UserListViewModel: ViewModelType {
     
     private func removeSkeltonCell() {
         guard hasSkeltonCell else { return }
-        let removed = cellsModel.suffix(cellsModel.count - 5)
+        let removed = cellsModel.suffix(cellsModel.count - 10)
         cellsModel = Array(removed)
         
         updateUsers(new: cellsModel)

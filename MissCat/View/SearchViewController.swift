@@ -26,14 +26,13 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     // MARK: PolioPager
     
+    var cancelButton: UIButton!
     var searchBar: UIView!
     var searchTextField: UITextField! {
         didSet {
             searchTextField.delegate = self
         }
     }
-    
-    var cancelButton: UIButton!
     
     // MARK: Vars
     
@@ -47,6 +46,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupCancelButton()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -72,17 +72,19 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
             guard query != noteQuery else { return }
             
             removeTimelineVC()
-            let timelineVC = generateTimelineVC(query: query)
-            self.timelineVC = timelineVC
-            noteQuery = query
+            if let timelineVC = generateTimelineVC(query: query) {
+                self.timelineVC = timelineVC
+                noteQuery = query
+            }
             
         case .user:
             guard query != userQuery else { return }
             
             removeUserListVC()
-            let userListVC = generateUserListVC(query: query)
-            self.userListVC = userListVC
-            userQuery = query
+            if let userListVC = generateUserListVC(query: query) {
+                self.userListVC = userListVC
+                userQuery = query
+            }
             
         case .moving:
             break
@@ -143,18 +145,28 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
             nextTab.setTitleColor(.white, for: .normal)
             previousTab.setTitleColor(.lightGray, for: .normal)
             
-            if let preQuery = next == .note ? self.userQuery : self.noteQuery {
-                self.search(with: preQuery)
-            }
-            
+            let preQuery = next == .note ? self.userQuery : self.noteQuery
+            self.search(with: preQuery ?? "")
         })
+    }
+    
+    private func setupCancelButton() {
+        cancelButton.rx.tap.subscribe(onNext: { _ in
+            self.userQuery = nil
+            self.noteQuery = nil
+            self.searchTextField.text = nil
+            
+            self.removeTimelineVC()
+            self.removeUserListVC()
+        }).disposed(by: disposeBag)
     }
     
     // MARK: Utilities
     
-    private func generateTimelineVC(query: String) -> TimelineViewController {
-        guard let viewController = getViewController(name: "timeline") as? TimelineViewController
-        else { fatalError("Internal Error.") }
+    private func generateTimelineVC(query: String) -> TimelineViewController? {
+        guard !query.isEmpty,
+            let viewController = getViewController(name: "timeline") as? TimelineViewController
+        else { return nil }
         
         viewController.setup(type: .NoteSearch, query: query, withTopShadow: true)
         viewController.view.frame = timelineView.frame
@@ -166,9 +178,10 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
         return viewController
     }
     
-    private func generateUserListVC(query: String) -> UserListViewController {
-        guard let viewController = getViewController(name: "user-list") as? UserListViewController
-        else { fatalError("Internal Error.") }
+    private func generateUserListVC(query: String) -> UserListViewController? {
+        guard !query.isEmpty,
+            let viewController = getViewController(name: "user-list") as? UserListViewController
+        else { return nil }
         
         viewController.setup(type: .search, query: query, withTopShadow: true)
         viewController.view.frame = timelineView.frame
