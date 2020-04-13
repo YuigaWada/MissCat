@@ -26,11 +26,16 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     // MARK: PolioPager
     
-    var cancelButton: UIButton!
     var searchBar: UIView!
     var searchTextField: UITextField! {
         didSet {
             searchTextField.delegate = self
+        }
+    }
+    
+    var cancelButton: UIButton! {
+        didSet {
+            setupCancelButton()
         }
     }
     
@@ -46,7 +51,6 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupCancelButton()
     }
     
     override func viewDidAppear(_ animated: Bool) {
