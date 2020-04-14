@@ -94,10 +94,18 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     // MARK: Privates
     
     private func search(with query: String) {
+        var query = query
+        
+        if query.count > 0 {
+            let space = [" ", "　"]
+            if space.filter({ query.suffix(1) == $0 }).count > 0 { // 最末端の空白を取り除く
+                query = String(query.prefix(query.count - 1))
+            }
+        }
+        
         if query.isEmpty {
             animateTrend(trendIsHidden: false)
         }
-        
         switch selected {
         case .note:
             guard query != noteQuery else { return }
