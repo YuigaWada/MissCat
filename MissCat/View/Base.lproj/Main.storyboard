@@ -330,14 +330,14 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" scrollEnabled="NO" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="60X-Aq-y4s" customClass="MissCatTableView" customModule="MissCat" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="84.5" width="414" height="722.5"/>
+                                <rect key="frame" x="5" y="84.5" width="419" height="722.5"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="cell" id="ocB-eI-wkf">
-                                        <rect key="frame" x="0.0" y="28" width="414" height="44"/>
+                                        <rect key="frame" x="0.0" y="28" width="419" height="44"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="ocB-eI-wkf" id="k2q-VF-3wc">
-                                            <rect key="frame" x="0.0" y="0.0" width="414" height="44"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="419" height="44"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                         </tableViewCellContentView>
                                     </tableViewCell>
@@ -356,8 +356,8 @@
                             <constraint firstItem="ypH-vZ-5W6" firstAttribute="leading" secondItem="QbE-VX-9WG" secondAttribute="leading" constant="20" id="Mdb-TJ-mWk"/>
                             <constraint firstItem="QbE-VX-9WG" firstAttribute="bottom" secondItem="60X-Aq-y4s" secondAttribute="bottom" constant="55" id="Z3Y-MQ-wxL"/>
                             <constraint firstItem="ypH-vZ-5W6" firstAttribute="top" secondItem="QbE-VX-9WG" secondAttribute="top" id="fs1-th-qgl"/>
-                            <constraint firstItem="60X-Aq-y4s" firstAttribute="trailing" secondItem="QbE-VX-9WG" secondAttribute="trailing" id="omH-uf-dYZ"/>
-                            <constraint firstItem="60X-Aq-y4s" firstAttribute="leading" secondItem="QbE-VX-9WG" secondAttribute="leading" id="zi5-3j-iBf"/>
+                            <constraint firstItem="60X-Aq-y4s" firstAttribute="trailing" secondItem="QbE-VX-9WG" secondAttribute="trailing" constant="10" id="omH-uf-dYZ"/>
+                            <constraint firstItem="60X-Aq-y4s" firstAttribute="leading" secondItem="QbE-VX-9WG" secondAttribute="leading" constant="5" id="zi5-3j-iBf"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="QbE-VX-9WG"/>
                     </view>
