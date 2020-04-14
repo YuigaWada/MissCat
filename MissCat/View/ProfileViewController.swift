@@ -295,8 +295,9 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     }
     
     func tappedLink(text: String) {
-        let (linkType, value) = text.analyzeHyperLink()
+        navigationController?.popViewController(animated: true)
         
+        let (linkType, value) = text.analyzeHyperLink()
         switch linkType {
         case .url:
             homeViewController?.openUserPage(username: value)

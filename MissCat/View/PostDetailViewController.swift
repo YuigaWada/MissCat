@@ -155,6 +155,11 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     
     // MARK: Delegate
     
+    override func tappedLink(text: String) {
+        navigationController?.popViewController(animated: true)
+        super.tappedLink(text: text)
+    }
+    
     func tappedNotifications() {
         mainTableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
     }
