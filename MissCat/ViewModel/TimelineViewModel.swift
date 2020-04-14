@@ -232,7 +232,7 @@ class TimelineViewModel: ViewModelType {
                     self.cellsModel[targetIndex].myReaction = rawReaction
                 }
                 
-                self.cellsModel[targetIndex].shapedReactions = self.cellsModel[targetIndex].getReactions()
+                self.cellsModel[targetIndex].shapedReactions = self.cellsModel[targetIndex].getReactions(with: self.cellsModel[targetIndex].emojis)
                 
                 if needReloading {
                     self.updateNotes(new: self.cellsModel)
