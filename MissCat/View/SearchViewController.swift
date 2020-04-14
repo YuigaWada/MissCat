@@ -42,6 +42,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     // MARK: Vars
     
     var homeViewController: HomeViewController?
+    private var trendVC: TrendViewController?
     private var timelineVC: TimelineViewController?
     private var userListVC: UserListViewController?
     
@@ -52,40 +53,54 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTrends()
+        setupTab()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        setupTab()
     }
     
     private func setupTrends() {
-        let trendVC = getViewController(name: "trend")
+        guard let trendVC = getViewController(name: "trend") as? TrendViewController else { return }
         
-        trendVC.view.frame = timelineView.frame
+        trendVC.view.frame = view.frame
         trendVC.view.translatesAutoresizingMaskIntoConstraints = false
-        timelineView.addSubview(trendVC.view)
+        view.addSubview(trendVC.view)
         setAutoLayout(to: trendVC.view)
         addChild(trendVC)
+        
+        trendVC.tappedTable.subscribe(onNext: { tag in
+            self.animateTrend(trendIsHidden: true)
+            self.searchNote(with: tag)
+        }).disposed(by: disposeBag)
+        
+        self.trendVC = trendVC
     }
     
     // MARK: Publics
     
     func searchNote(with text: String) {
         selected = .note
-        animateTab(next: .note)
-        
-        searchTextField.text = text
-        search(with: text)
+        tabContainer.alpha = 1
+        trendVC?.view.alpha = 0
+        tabContainer.isHidden = false
+        trendVC?.view.isHidden = true
+        animateTab(next: .note) {
+            self.searchTextField.text = text
+            self.search(with: text)
+        }
     }
     
     // MARK: Privates
     
     private func search(with query: String) {
+        if query.isEmpty {
+            animateTrend(trendIsHidden: false)
+        }
+        
         switch selected {
         case .note:
             guard query != noteQuery else { return }
-            
             removeTimelineVC()
             if let timelineVC = generateTimelineVC(query: query) {
                 self.timelineVC = timelineVC
@@ -94,7 +109,6 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
             
         case .user:
             guard query != userQuery else { return }
-            
             removeUserListVC()
             if let userListVC = generateUserListVC(query: query) {
                 self.userListVC = userListVC
@@ -131,9 +145,12 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
         tabContainer.addSubview(tabIndicator)
         tabContainer.bringSubviewToFront(noteTab)
         tabContainer.bringSubviewToFront(userTab)
+        
+        tabContainer.isHidden = true
+        tabContainer.alpha = 0
     }
     
-    private func animateTab(next: Tab) {
+    private func animateTab(next: Tab, completion: (() -> Void)? = nil) {
         guard selected != .moving,
             let nextTab = next == .note ? noteTab : userTab,
             let previousTab = next == .note ? userTab : noteTab else { return }
@@ -160,8 +177,30 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
             nextTab.setTitleColor(.white, for: .normal)
             previousTab.setTitleColor(.lightGray, for: .normal)
             
-            let preQuery = next == .note ? self.userQuery : self.noteQuery
-            self.search(with: preQuery ?? "")
+            if let preQuery = next == .note ? self.userQuery : self.noteQuery {
+                self.search(with: preQuery)
+            }
+            
+            completion?()
+        })
+    }
+    
+    private func animateTrend(trendIsHidden: Bool, completion: (() -> Void)? = nil) {
+        guard let trendView = trendVC?.view else { return }
+        
+        if trendIsHidden, let currentTab = selected == .note ? noteTab : userTab {
+            tabIndicator.frame = currentTab.frame.insetBy(dx: -4, dy: 0)
+        }
+        view.bringSubviewToFront(tabContainer)
+        view.bringSubviewToFront(trendView)
+        UIView.animate(withDuration: 0.35, delay: 0, options: .curveEaseInOut, animations: {
+            self.tabContainer.alpha = trendIsHidden ? 1 : 0
+            trendView.alpha = trendIsHidden ? 0 : 1
+        }, completion: { fin in
+            guard fin else { return }
+            self.tabContainer.isHidden = !trendIsHidden
+            trendView.isHidden = trendIsHidden
+            completion?()
         })
     }
     
@@ -173,6 +212,12 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
             
             self.removeTimelineVC()
             self.removeUserListVC()
+            
+            self.tabContainer.alpha = 0
+            self.trendVC?.view.alpha = 1
+            
+            self.tabContainer.isHidden = true
+            self.trendVC?.view.isHidden = false
         }).disposed(by: disposeBag)
     }
     
@@ -274,9 +319,14 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     // MARK: Delegate
     
+    // フォーカスされる時
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        animateTrend(trendIsHidden: true)
+    }
+    
     // フォーカスが外れる前
     func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
-        guard let query = textField.text, !query.isEmpty else { removeTimelineVC(); return true }
+        guard let query = textField.text else { removeTimelineVC(); return true }
         
         search(with: query)
         return true

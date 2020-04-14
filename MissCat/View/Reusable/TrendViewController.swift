@@ -23,6 +23,8 @@ class TrendViewController: UIViewController, UITableViewDelegate, UITableViewDat
         return instance.prefix(1).uppercased() + instance.suffix(instance.count - 1)
     }
     
+    var tappedTable: PublishRelay<String> = .init()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         titleLabe.text = "\(instance)でのトレンド"
@@ -35,11 +37,17 @@ class TrendViewController: UIViewController, UITableViewDelegate, UITableViewDat
         
         MisskeyKit.search.trendHashtags { trends, error in
             guard let trends = trends, error == nil else { return }
-            self.tables = trends.compactMap { $0.tag }
+            self.tables = trends.compactMap { $0.tag }.map { "#\($0)" }
             DispatchQueue.main.async {
                 self.mainTableView.reloadData()
             }
         }
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let index = indexPath.row
+        tableView.deselectRow(at: indexPath, animated: true)
+        tappedTable.accept(tables[index])
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
