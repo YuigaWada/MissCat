@@ -33,6 +33,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     @IBOutlet weak var mainTableView: MissCatTableView!
     @IBOutlet weak var bottomConstraint: NSLayoutConstraint!
     
+    private var topShadow: CALayer?
+    
     private let disposeBag = DisposeBag()
     private var viewModel: TimelineViewModel?
     
@@ -43,6 +45,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     
     private var withNavBar: Bool = true
     private var scrollable: Bool = true
+    private var withTopShadow: Bool = false
     private var streamConnecting: Bool = false
     
     private lazy var dataSource = self.setupDataSource()
@@ -64,6 +67,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     ///   - onlyFiles: ファイルのみのタイムラインか
     ///   - userId: 注目するユーザーのuserId
     ///   - listId: 注目するリストのlistId
+    ///   - query: 検索クエリ
     ///   - withNavBar: NavBarが必要か
     ///   - scrollable: スクロール可能か
     ///   - loadLimit: 一度に読み込むnoteの量
@@ -73,8 +77,10 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                onlyFiles: Bool? = nil,
                userId: String? = nil,
                listId: String? = nil,
+               query: String? = nil,
                withNavBar: Bool = true,
                scrollable: Bool = true,
+               withTopShadow: Bool = false,
                loadLimit: Int = 40,
                xlTitle: IndicatorInfo? = nil) {
         let input = ViewModel.Input(dataSource: dataSource,
@@ -83,6 +89,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                                     onlyFiles: onlyFiles,
                                     userId: userId,
                                     listId: listId,
+                                    query: query,
                                     loadLimit: loadLimit)
         
         viewModel = ViewModel(with: input, and: disposeBag)
@@ -92,6 +99,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         self.withNavBar = withNavBar
         self.scrollable = scrollable
         self.loadLimit = loadLimit
+        self.withTopShadow = withTopShadow
     }
     
     override func viewDidLoad() {
@@ -104,6 +112,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         }
         
         binding(dataSource: dataSource)
+        setupTopShadow()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -306,6 +315,10 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         return indexPath
     }
     
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        topShadow?.isHidden = scrollView.contentOffset.y <= 0
+    }
+    
     // MARK: Utilities
     
     // 強制的にセルを更新する
@@ -319,6 +332,24 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         let viewController = storyboard.instantiateViewController(withIdentifier: name)
         
         return viewController
+    }
+    
+    private func setupTopShadow() {
+        guard withTopShadow,
+            let target = mainTableView else { return }
+        
+        let path = UIBezierPath(rect: CGRect(x: -5.0, y: -5.0, width: target.bounds.size.width + 5.0, height: 3.0))
+        let innerLayer = CALayer()
+        innerLayer.frame = target.bounds
+        innerLayer.masksToBounds = true
+        innerLayer.shadowColor = UIColor.black.cgColor
+        innerLayer.shadowOffset = CGSize(width: 2.5, height: 2.5)
+        innerLayer.shadowOpacity = 0.5
+        innerLayer.isHidden = true
+        innerLayer.shadowPath = path.cgPath
+        view.layer.addSublayer(innerLayer)
+        
+        topShadow = innerLayer
     }
     
     // MARK: FooterTabBar Delegate

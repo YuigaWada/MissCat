@@ -20,6 +20,14 @@
 		8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */; };
 		8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D16656823A0DB3100C03764 /* MFMEngine.swift */; };
 		8D2A7236242A49CC00F8827D /* MissCatTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2A7235242A49CC00F8827D /* MissCatTableView.swift */; };
+		8D2D52392442CA9700712F48 /* UserCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D2D52382442CA9700712F48 /* UserCell.xib */; };
+		8D2D523B2442CC9100712F48 /* UserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2D523A2442CC9100712F48 /* UserCell.swift */; };
+		8D2D523D2443BDDB00712F48 /* UserCellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2D523C2443BDDB00712F48 /* UserCellModel.swift */; };
+		8D2D523F2443BDFB00712F48 /* UserCellViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2D523E2443BDFB00712F48 /* UserCellViewModel.swift */; };
+		8D2D52412443D03500712F48 /* UserListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2D52402443D03500712F48 /* UserListViewController.swift */; };
+		8D2D52432443D2BD00712F48 /* UserListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2D52422443D2BD00712F48 /* UserListViewModel.swift */; };
+		8D2D52452443D4DD00712F48 /* UserListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2D52442443D4DD00712F48 /* UserListModel.swift */; };
+		8D2D52472443DA2A00712F48 /* UserModel+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2D52462443DA2A00712F48 /* UserModel+MissCat.swift */; };
 		8D3036F22385D5F100BA6D38 /* PostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3036F12385D5F100BA6D38 /* PostViewController.swift */; };
 		8D3036F62385DA8900BA6D38 /* PostViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3036F52385DA8900BA6D38 /* PostViewModel.swift */; };
 		8D3036F82385DAED00BA6D38 /* PostModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3036F72385DAED00BA6D38 /* PostModel.swift */; };
@@ -52,6 +60,7 @@
 		8D53741B23A32D03004523FC /* ViewModelType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D53741A23A32D03004523FC /* ViewModelType.swift */; };
 		8D57CA43243FDB9C005DCEB2 /* PromotionCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D57CA42243FDB9C005DCEB2 /* PromotionCell.xib */; };
 		8D57CA47243FDBC3005DCEB2 /* PromotionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D57CA46243FDBC3005DCEB2 /* PromotionCell.swift */; };
+		8D57CA4924412430005DCEB2 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D57CA4824412430005DCEB2 /* SearchViewController.swift */; };
 		8D61354F238A974400AB50C2 /* EmojiViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D61354E238A974400AB50C2 /* EmojiViewCell.xib */; };
 		8D613551238A978700AB50C2 /* EmojiViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D613550238A978700AB50C2 /* EmojiViewCell.swift */; };
 		8D613553238B6D4F00AB50C2 /* NavBar.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D613552238B6D4F00AB50C2 /* NavBar.xib */; };
@@ -101,6 +110,8 @@
 		8DAF30192419842D0041BB85 /* AboutMisskeyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAF30182419842C0041BB85 /* AboutMisskeyViewController.swift */; };
 		8DAF301B241B599B0041BB85 /* LicenseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAF301A241B599B0041BB85 /* LicenseViewController.swift */; };
 		8DBC7A45241245A800D8FEA5 /* AVKit+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DBC7A44241245A800D8FEA5 /* AVKit+MissCat.swift */; };
+		8DBDD58C244197840014E77F /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DBDD58B244197840014E77F /* SearchViewModel.swift */; };
+		8DBDD58E244198C90014E77F /* SearchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DBDD58D244198C90014E77F /* SearchModel.swift */; };
 		8DC16154238BBD0C007793B7 /* NoteModel+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC16153238BBD0C007793B7 /* NoteModel+MissCat.swift */; };
 		8DC27D96243BF2DF0037E610 /* UrlPreviewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC27D95243BF2DF0037E610 /* UrlPreviewer.xib */; };
 		8DC27D98243BF4FB0037E610 /* UrlPreviewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC27D97243BF4FA0037E610 /* UrlPreviewer.swift */; };
@@ -115,6 +126,7 @@
 		8DEB21C5243B0C1400E4D1EB /* Error+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */; };
 		8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEFF31B239BD45700142802 /* ProfileViewModel.swift */; };
 		8DEFF31E239BD4F200142802 /* ProfileModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEFF31D239BD4F200142802 /* ProfileModel.swift */; };
+		8DF49FA224445B0500C4D2B2 /* TrendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DF49FA124445B0500C4D2B2 /* TrendViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -147,6 +159,14 @@
 		8D1C150D2424C649004B1202 /* Bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Bridge.h; sourceTree = "<group>"; };
 		8D1C150E2424E3B6004B1202 /* MissCat.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MissCat.entitlements; sourceTree = "<group>"; };
 		8D2A7235242A49CC00F8827D /* MissCatTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatTableView.swift; sourceTree = "<group>"; };
+		8D2D52382442CA9700712F48 /* UserCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = UserCell.xib; sourceTree = "<group>"; };
+		8D2D523A2442CC9100712F48 /* UserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCell.swift; sourceTree = "<group>"; };
+		8D2D523C2443BDDB00712F48 /* UserCellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCellModel.swift; sourceTree = "<group>"; };
+		8D2D523E2443BDFB00712F48 /* UserCellViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCellViewModel.swift; sourceTree = "<group>"; };
+		8D2D52402443D03500712F48 /* UserListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserListViewController.swift; sourceTree = "<group>"; };
+		8D2D52422443D2BD00712F48 /* UserListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserListViewModel.swift; sourceTree = "<group>"; };
+		8D2D52442443D4DD00712F48 /* UserListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserListModel.swift; sourceTree = "<group>"; };
+		8D2D52462443DA2A00712F48 /* UserModel+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserModel+MissCat.swift"; sourceTree = "<group>"; };
 		8D3036F12385D5F100BA6D38 /* PostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostViewController.swift; sourceTree = "<group>"; };
 		8D3036F52385DA8900BA6D38 /* PostViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostViewModel.swift; sourceTree = "<group>"; };
 		8D3036F72385DAED00BA6D38 /* PostModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostModel.swift; sourceTree = "<group>"; };
@@ -184,6 +204,7 @@
 		8D5733E123F667DB002C17D2 /* Agrume.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Agrume.framework; path = Pods/_Prebuild/GeneratedFrameworks/Agrume/Agrume.framework; sourceTree = "<group>"; };
 		8D57CA42243FDB9C005DCEB2 /* PromotionCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PromotionCell.xib; sourceTree = "<group>"; };
 		8D57CA46243FDBC3005DCEB2 /* PromotionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromotionCell.swift; sourceTree = "<group>"; };
+		8D57CA4824412430005DCEB2 /* SearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewController.swift; sourceTree = "<group>"; };
 		8D61354E238A974400AB50C2 /* EmojiViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = EmojiViewCell.xib; sourceTree = "<group>"; };
 		8D613550238A978700AB50C2 /* EmojiViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiViewCell.swift; sourceTree = "<group>"; };
 		8D613552238B6D4F00AB50C2 /* NavBar.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NavBar.xib; sourceTree = "<group>"; };
@@ -234,6 +255,8 @@
 		8DAF30182419842C0041BB85 /* AboutMisskeyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutMisskeyViewController.swift; sourceTree = "<group>"; };
 		8DAF301A241B599B0041BB85 /* LicenseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseViewController.swift; sourceTree = "<group>"; };
 		8DBC7A44241245A800D8FEA5 /* AVKit+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AVKit+MissCat.swift"; sourceTree = "<group>"; };
+		8DBDD58B244197840014E77F /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
+		8DBDD58D244198C90014E77F /* SearchModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchModel.swift; sourceTree = "<group>"; };
 		8DC16153238BBD0C007793B7 /* NoteModel+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NoteModel+MissCat.swift"; sourceTree = "<group>"; };
 		8DC27D95243BF2DF0037E610 /* UrlPreviewer.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = UrlPreviewer.xib; sourceTree = "<group>"; };
 		8DC27D97243BF4FA0037E610 /* UrlPreviewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UrlPreviewer.swift; path = /Users/yuigawada/Desktop/Development/iOS/MissCat/MissCat/View/Reusable/NoteCell/UrlPreviewer.swift; sourceTree = "<absolute>"; };
@@ -248,6 +271,7 @@
 		8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Error+MissCat.swift"; sourceTree = "<group>"; };
 		8DEFF31B239BD45700142802 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		8DEFF31D239BD4F200142802 /* ProfileModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileModel.swift; sourceTree = "<group>"; };
+		8DF49FA124445B0500C4D2B2 /* TrendViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendViewController.swift; sourceTree = "<group>"; };
 		DF4146F7CC2C0143F19E0DF3 /* Pods-MissCat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCat.release.xcconfig"; path = "Target Support Files/Pods-MissCat/Pods-MissCat.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -295,6 +319,7 @@
 				8DAD2389240CE76000AB1F36 /* StartViewController.swift */,
 				8DABCD092414D52D00D9F054 /* AuthWebViewController.swift */,
 				8D47FAD7243388B100549A0B /* TosViewController.swift */,
+				8D57CA4824412430005DCEB2 /* SearchViewController.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -312,6 +337,7 @@
 				8D53741A23A32D03004523FC /* ViewModelType.swift */,
 				8D63BFC2242BBF03009C3ADE /* HomeViewModel.swift */,
 				8D31018E24397D5E004F8E55 /* ReactionSettingsViewModel.swift */,
+				8DBDD58B244197840014E77F /* SearchViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -326,6 +352,7 @@
 				8DEFF31D239BD4F200142802 /* ProfileModel.swift */,
 				8D63BFC4242BBF12009C3ADE /* HomeModel.swift */,
 				8D98C267242E0AD600BB8049 /* PostDetailModel.swift */,
+				8DBDD58D244198C90014E77F /* SearchModel.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -347,6 +374,9 @@
 				8DC95AF823B0BD450013CABC /* NotificationBanner.swift */,
 				8DAF3014241957510041BB85 /* ComponentType.swift */,
 				8D63BFC6242BC239009C3ADE /* NoteDisplay.swift */,
+				8D2D523A2442CC9100712F48 /* UserCell.swift */,
+				8D2D52402443D03500712F48 /* UserListViewController.swift */,
+				8DF49FA124445B0500C4D2B2 /* TrendViewController.swift */,
 			);
 			path = Reusable;
 			sourceTree = "<group>";
@@ -377,6 +407,7 @@
 				8D0D47A923A74EC80095361D /* UIViewController+PhotoEditor.swift */,
 				8DBC7A44241245A800D8FEA5 /* AVKit+MissCat.swift */,
 				8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */,
+				8D2D52462443DA2A00712F48 /* UserModel+MissCat.swift */,
 			);
 			path = Extension;
 			sourceTree = "<group>";
@@ -518,6 +549,7 @@
 				8D613552238B6D4F00AB50C2 /* NavBar.xib */,
 				8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */,
 				8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */,
+				8D2D52382442CA9700712F48 /* UserCell.xib */,
 			);
 			path = nib;
 			sourceTree = "<group>";
@@ -529,6 +561,8 @@
 				8DA06A13238A86B80093A718 /* NotificationCellViewModel.swift */,
 				8D61391B2427C1B3003B5BEF /* FileContainerViewModel.swift */,
 				8DC27D99243BF57A0037E610 /* UrlPreviewerViewModel.swift */,
+				8D2D523E2443BDFB00712F48 /* UserCellViewModel.swift */,
+				8D2D52422443D2BD00712F48 /* UserListViewModel.swift */,
 			);
 			path = Reusable;
 			sourceTree = "<group>";
@@ -536,10 +570,12 @@
 		8DAEA13B2382E80B0083AA69 /* Reusable */ = {
 			isa = PBXGroup;
 			children = (
+				8D2D523C2443BDDB00712F48 /* UserCellModel.swift */,
 				8DAEA1382382E6D00083AA69 /* ReactionGenModel.swift */,
 				8D8863AA2383F96C00A7A5A8 /* NoteCellModel.swift */,
 				8DA06A15238A86DC0093A718 /* NotificationCellModel.swift */,
 				8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */,
+				8D2D52442443D4DD00712F48 /* UserListModel.swift */,
 			);
 			path = Reusable;
 			sourceTree = "<group>";
@@ -650,6 +686,7 @@
 				8D0AC5BA237B5D0D00530508 /* Font Awesome 5 Free-Solid-900.otf in Resources */,
 				8D57CA43243FDB9C005DCEB2 /* PromotionCell.xib in Resources */,
 				8D4A2A22237437C000503685 /* LaunchScreen.storyboard in Resources */,
+				8D2D52392442CA9700712F48 /* UserCell.xib in Resources */,
 				8D4754F9240E21F800BAD410 /* PollView.xib in Resources */,
 				8DA06A092389E9820093A718 /* NotificationCell.xib in Resources */,
 				8D4A2A1F237437C000503685 /* Assets.xcassets in Resources */,
@@ -743,11 +780,13 @@
 				8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */,
 				8D3036F62385DA8900BA6D38 /* PostViewModel.swift in Sources */,
 				8D3037002388F71E00BA6D38 /* MisskeyTextView.swift in Sources */,
+				8DBDD58E244198C90014E77F /* SearchModel.swift in Sources */,
 				8D0F7D0F2398F21F009B45E1 /* ReactionGenPanel.swift in Sources */,
 				8DEFF31E239BD4F200142802 /* ProfileModel.swift in Sources */,
 				8D47FAD8243388B100549A0B /* TosViewController.swift in Sources */,
 				8DC27D9A243BF57A0037E610 /* UrlPreviewerViewModel.swift in Sources */,
 				8D63BFC3242BBF03009C3ADE /* HomeViewModel.swift in Sources */,
+				8D2D52472443DA2A00712F48 /* UserModel+MissCat.swift in Sources */,
 				8D065B1B237ACA68003DFB7C /* NoteCell.swift in Sources */,
 				8D8863AB2383F96C00A7A5A8 /* NoteCellModel.swift in Sources */,
 				8D3036FA2388733E00BA6D38 /* ImageManager.swift in Sources */,
@@ -755,11 +794,15 @@
 				8D79687F2404BE59004F87FA /* ReactionCollectionHeader.swift in Sources */,
 				8D31018D24397B45004F8E55 /* ReactionSettingsViewController.swift in Sources */,
 				8D0AC5C1237B865B00530508 /* TimelineModel.swift in Sources */,
+				8DF49FA224445B0500C4D2B2 /* TrendViewController.swift in Sources */,
 				8D3037022389018800BA6D38 /* Cache.swift in Sources */,
 				8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */,
 				8D84061F2393547800EED595 /* PostDetailViewController.swift in Sources */,
 				8D3036F82385DAED00BA6D38 /* PostModel.swift in Sources */,
 				8DAF30192419842D0041BB85 /* AboutMisskeyViewController.swift in Sources */,
+				8D2D52432443D2BD00712F48 /* UserListViewModel.swift in Sources */,
+				8D2D52412443D03500712F48 /* UserListViewController.swift in Sources */,
+				8D57CA4924412430005DCEB2 /* SearchViewController.swift in Sources */,
 				8DAD238A240CE76000AB1F36 /* StartViewController.swift in Sources */,
 				8D61391A2427B9B0003B5BEF /* FileContainer.swift in Sources */,
 				8D53741B23A32D03004523FC /* ViewModelType.swift in Sources */,
@@ -779,12 +822,15 @@
 				8DA06A0B2389E98D0093A718 /* NotificationCell.swift in Sources */,
 				8DAF3015241957510041BB85 /* ComponentType.swift in Sources */,
 				8DAF3017241975030041BB85 /* SettingsViewController.swift in Sources */,
+				8D2D523F2443BDFB00712F48 /* UserCellViewModel.swift in Sources */,
 				8DA36F862394B9D000512459 /* UIFont+MissCat.swift in Sources */,
 				8D8A50C1242355200065B1D2 /* AccountViewController.swift in Sources */,
 				8D4A2A16237437BE00503685 /* AppDelegate.swift in Sources */,
+				8D2D523D2443BDDB00712F48 /* UserCellModel.swift in Sources */,
 				8D31018F24397D5E004F8E55 /* ReactionSettingsViewModel.swift in Sources */,
 				8DE88825242764AE002CC9DE /* NoteCell.Model.swift in Sources */,
 				8DC95AF923B0BD450013CABC /* NotificationBanner.swift in Sources */,
+				8D2D52452443D4DD00712F48 /* UserListModel.swift in Sources */,
 				8D613555238B6D8B00AB50C2 /* NavBar.swift in Sources */,
 				8D8863B223848C0400A7A5A8 /* UIView+MissCat.swift in Sources */,
 				8D3EC23C237B43F000808727 /* String+MissCat.swift in Sources */,
@@ -802,6 +848,7 @@
 				8D98C268242E0AD600BB8049 /* PostDetailModel.swift in Sources */,
 				8DC27D9C243BF6DD0037E610 /* UrlPreviewerModel.swift in Sources */,
 				8D8863A92383F8A900A7A5A8 /* NoteCellViewModel.swift in Sources */,
+				8D2D523B2442CC9100712F48 /* UserCell.swift in Sources */,
 				8D310191243AE9AB004F8E55 /* MFMImageView.swift in Sources */,
 				8D0D47AA23A74EC80095361D /* UIViewController+PhotoEditor.swift in Sources */,
 				8D84061D238FFC5C00EED595 /* UIImage+MissCat.swift in Sources */,
@@ -813,6 +860,7 @@
 				8D6139202427CAED003B5BEF /* FileContainerCell.swift in Sources */,
 				8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */,
 				8DC27D98243BF4FB0037E610 /* UrlPreviewer.swift in Sources */,
+				8DBDD58C244197840014E77F /* SearchViewModel.swift in Sources */,
 				8DE8882724276512002CC9DE /* NoteCell.FileView.swift in Sources */,
 				8DA06A12238A58A20093A718 /* NSMutableAttributedString+MissCat.swift in Sources */,
 				8D502D58238024B700525A96 /* HomeViewController.swift in Sources */,
@@ -991,7 +1039,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.6;
+				CURRENT_PROJECT_VERSION = 1.0.7;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -1006,7 +1054,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.6;
+				MARKETING_VERSION = 1.0.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",
@@ -1070,7 +1118,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.6;
+				CURRENT_PROJECT_VERSION = 1.0.7;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -1085,7 +1133,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.6;
+				MARKETING_VERSION = 1.0.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",

@@ -175,7 +175,7 @@ class MFMEngine {
     ///   - needReplyMark: リプライマークがい必要か
     ///   - text: 任意の文字列
     ///   - emojis: 外インスタンスによるカスタム絵文字
-    private static func shapeString(needReplyMark: Bool, text: String, emojis: [EmojiModel?]?) -> MFMString {
+    static func shapeString(needReplyMark: Bool, text: String, emojis: [EmojiModel?]?) -> MFMString {
         let replyHeader: NSMutableAttributedString = needReplyMark ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
         let mfmString = text.mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
                                           externalEmojis: emojis,
@@ -192,7 +192,7 @@ class MFMEngine {
     
     /// 名前を整形
     /// - Parameter user: UserModel
-    private static func shapeDisplayName(user: UserModel?) -> MFMString? {
+    static func shapeDisplayName(user: UserModel?) -> MFMString? {
         guard let user = user else { return nil }
         return shapeDisplayName(name: user.name, username: user.username, emojis: user.emojis)
     }

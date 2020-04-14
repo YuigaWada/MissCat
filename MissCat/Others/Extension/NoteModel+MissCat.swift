@@ -46,7 +46,7 @@ extension NoteModel {
                                        poll: post.poll,
                                        cw: post.cw)
         
-        cellModel.shapedReactions = cellModel.getReactions()
+        cellModel.shapedReactions = cellModel.getReactions(with: emojis)
         cellModel.isReply = post.reply != nil
         return cellModel
     }

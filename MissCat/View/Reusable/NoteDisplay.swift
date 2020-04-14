@@ -11,7 +11,7 @@ import Foundation
 /// NoteCell上のタップ処理はすべてHomeViewControllerが行う。
 /// そこで、NoteCellを表示するViewControllerはすべて、このNoteDisplayを継承することで、
 /// それらのタップ処理は勝手にHomeViewControllerへと流れてくれる。
-class NoteDisplay: UIViewController, NoteCellDelegate {
+class NoteDisplay: UIViewController, NoteCellDelegate, UserCellDelegate {
     var homeViewController: HomeViewController?
     
     func tappedReply(note: NoteCell.Model) {
