@@ -122,9 +122,10 @@ extension String {
     }
     
     // HyperLinkを用途ごとに捌く
-    func analyzeHyperLink() -> (linkType: String, value: String) {
-        let magicHeaders = ["http://tapevents.misscat/": "User", "http://hashtags.misscat/": "Hashtag"]
-        var result = (linkType: "URL", value: self)
+    func analyzeHyperLink() -> (linkType: LinkType, value: String) {
+        let magicHeaders = ["http://tapevents.misscat/": LinkType.user,
+                            "http://hashtags.misscat/": LinkType.hashtag]
+        var result = (linkType: LinkType.url, value: removingPercentEncoding ?? self) // 日本語を含む場合を考慮してエンコードしておく
         
         magicHeaders.keys.forEach { magicHeader in
             guard let type = magicHeaders[magicHeader], self.count > magicHeader.count else { return }
@@ -134,7 +135,8 @@ extension String {
             
             // ヘッダーが一致するものをresultに返す
             guard header == magicHeader else { return }
-            result = (linkType: type, value: String(value))
+            let newValue = String(value)
+            result = (linkType: type, value: newValue.removingPercentEncoding ?? newValue)
         }
         
         // if header != magicHeader
@@ -156,5 +158,13 @@ extension String {
             _ = CC_SHA256(bytes.baseAddress, CC_LONG(self.count), &digest)
         }
         return digest.makeIterator().map { String(format: "%02x", $0) }.joined()
+    }
+}
+
+extension String {
+    enum LinkType {
+        case url
+        case user
+        case hashtag
     }
 }

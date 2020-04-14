@@ -247,14 +247,15 @@ extension NoteCell.Reaction.Section: AnimatableSectionModelType {
 
 extension NoteCell.Model {
     /// ReactionCountをNoteCell.Reactionに変換する
-    func getReactions() -> [NoteCell.Reaction] {
+    func getReactions(with externalEmojis: [EmojiModel?]?) -> [NoteCell.Reaction] {
         return reactions.map { reaction in
             guard let count = reaction.count, count != "0" else { return nil }
             
             let rawEmoji = reaction.name ?? ""
             let isMyReaction = rawEmoji == self.myReaction
             
-            guard rawEmoji != "", let convertedEmojiData = EmojiHandler.handler.convertEmoji(raw: rawEmoji) else {
+            guard rawEmoji != "",
+                let convertedEmojiData = EmojiHandler.handler.convertEmoji(raw: rawEmoji, external: externalEmojis) else {
                 // If being not converted
                 let reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
                                                       noteId: self.noteId ?? "",

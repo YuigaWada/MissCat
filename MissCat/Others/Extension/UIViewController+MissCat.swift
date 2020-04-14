@@ -88,7 +88,9 @@ extension UIViewController {
     // MARK: Utilities
     
     func openLink(url: String) {
-        guard let url = URL(string: url), let rootVC = UIApplication.shared.windows[0].rootViewController else { return }
+        // URLをデコードしておく
+        guard let url = URL(string: url.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? url),
+            let rootVC = UIApplication.shared.windows[0].rootViewController else { return }
         let safari = SFSafariViewController(url: url)
         
         // i dont know why but it seems that we must launch a safari VC from the root VC.
