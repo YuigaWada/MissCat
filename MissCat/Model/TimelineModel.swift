@@ -20,6 +20,8 @@ enum TimelineType {
     case UserList
     case OneUser
     
+    case NoteSearch
+    
     var needsStreaming: Bool {
         return self != .UserList && self != .OneUser
     }
@@ -47,6 +49,7 @@ class TimelineModel {
         let onlyFiles: Bool?
         let listId: String?
         let loadLimit: Int
+        let query: String?
         
         let isReload: Bool
         let lastNoteId: String?
@@ -218,6 +221,12 @@ class TimelineModel {
                                                      limit: option.loadLimit,
                                                      untilId: option.untilId ?? "",
                                                      completion: handleResult)
+            case .NoteSearch:
+                guard let query = option.query else { return dispose }
+                MisskeyKit.search.notes(query: query,
+                                        limit: option.loadLimit,
+                                        untilId: option.untilId ?? "",
+                                        result: handleResult)
             }
             
             return dispose
