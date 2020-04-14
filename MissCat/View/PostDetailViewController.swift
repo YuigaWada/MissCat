@@ -156,8 +156,17 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     // MARK: Delegate
     
     override func tappedLink(text: String) {
-        navigationController?.popViewController(animated: true)
-        super.tappedLink(text: text)
+        let (linkType, value) = text.analyzeHyperLink()
+        switch linkType {
+        case .url:
+            homeViewController?.openLink(url: value)
+        case .user:
+            homeViewController?.move2Profile(userId: value)
+        case .hashtag:
+            navigationController?.popViewController(animated: true)
+            homeViewController?.emulateFooterTabTap(tab: .home)
+            homeViewController?.searchHashtag(tag: value)
+        }
     }
     
     func tappedNotifications() {

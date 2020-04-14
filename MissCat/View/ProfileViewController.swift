@@ -295,15 +295,14 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     }
     
     func tappedLink(text: String) {
-        navigationController?.popViewController(animated: true)
-        
         let (linkType, value) = text.analyzeHyperLink()
         switch linkType {
         case .url:
-            homeViewController?.openUserPage(username: value)
+            homeViewController?.openLink(url: value)
         case .user:
             homeViewController?.move2Profile(userId: value)
         case .hashtag:
+            navigationController?.popViewController(animated: true)
             homeViewController?.emulateFooterTabTap(tab: .home)
             homeViewController?.searchHashtag(tag: value)
         }
