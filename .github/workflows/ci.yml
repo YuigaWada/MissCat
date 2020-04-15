@@ -1,0 +1,30 @@
+name: Swift
+
+on:
+  push:
+    branches: 
+    - develop
+    - feature/*
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Select Xcode version
+      run: sudo xcode-select -s '/Applications/Xcode_11.3.1.app/Contents/Developer'
+    - name: Cache CocoaPods files
+      uses: actions/cache@v2
+      with:
+        path: Pods
+        key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pods-
+    - name: Run pod install
+      run: pod install
+    - name: Build # On Simulator
+      run: xcodebuild -sdk iphonesimulator -configuration Debug build 
+    - name: Run tests
+      run: swift test -v
