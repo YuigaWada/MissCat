@@ -324,7 +324,11 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     // 強制的にセルを更新する
     private func updateForcibly(index: Int) {
         let row = IndexPath(row: index, section: 0)
-        DispatchQueue.main.async { self.mainTableView.reloadRows(at: [row], with: .none) }
+        DispatchQueue.main.async {
+            self.mainTableView.performBatchUpdates({ // スクロール位置を固定 (#MissCatTableView.performBatchUpdatesを参考に)
+                self.mainTableView.reloadRows(at: [row], with: .none)
+            })
+        }
     }
     
     private func getViewController(name: String) -> UIViewController {
