@@ -16,7 +16,7 @@ jobs:
     - name: Select Xcode version
       run: sudo xcode-select -s '/Applications/Xcode_11.3.1.app/Contents/Developer'
     - name: Cache CocoaPods files
-      uses: actions/cache@v2
+      uses: actions/cache@v1
       with:
         path: Pods
         key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
