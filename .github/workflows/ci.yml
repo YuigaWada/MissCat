@@ -34,6 +34,6 @@ jobs:
     - name: Run pod install
       run: pod install
     - name: Build # On Simulator
-      run: xcodebuild -sdk iphonesimulator -configuration Debug build 
+      run: xcodebuild -sdk iphonesimulator -workspace MissCat.xcworkspace -scheme MissCat -configuration Debug build
     - name: Run tests
       run: swift test -v
