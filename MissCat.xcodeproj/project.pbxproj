@@ -19,6 +19,7 @@
 		8D0F7D0F2398F21F009B45E1 /* ReactionGenPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */; };
 		8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */; };
 		8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D16656823A0DB3100C03764 /* MFMEngine.swift */; };
+		8D2279EE24468FD100FA87A2 /* MFMTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2279ED24468FD100FA87A2 /* MFMTests.swift */; };
 		8D2A7236242A49CC00F8827D /* MissCatTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2A7235242A49CC00F8827D /* MissCatTableView.swift */; };
 		8D2D52392442CA9700712F48 /* UserCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D2D52382442CA9700712F48 /* UserCell.xib */; };
 		8D2D523B2442CC9100712F48 /* UserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2D523A2442CC9100712F48 /* UserCell.swift */; };
@@ -158,6 +159,7 @@
 		8D16656823A0DB3100C03764 /* MFMEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MFMEngine.swift; sourceTree = "<group>"; };
 		8D1C150D2424C649004B1202 /* Bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Bridge.h; sourceTree = "<group>"; };
 		8D1C150E2424E3B6004B1202 /* MissCat.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MissCat.entitlements; sourceTree = "<group>"; };
+		8D2279ED24468FD100FA87A2 /* MFMTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MFMTests.swift; sourceTree = "<group>"; };
 		8D2A7235242A49CC00F8827D /* MissCatTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatTableView.swift; sourceTree = "<group>"; };
 		8D2D52382442CA9700712F48 /* UserCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = UserCell.xib; sourceTree = "<group>"; };
 		8D2D523A2442CC9100712F48 /* UserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCell.swift; sourceTree = "<group>"; };
@@ -520,6 +522,7 @@
 			children = (
 				8D4A2A2C237437C100503685 /* MissCatTests.swift */,
 				8D4A2A2E237437C100503685 /* Info.plist */,
+				8D2279ED24468FD100FA87A2 /* MFMTests.swift */,
 			);
 			path = MissCatTests;
 			sourceTree = "<group>";
@@ -879,6 +882,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8D2279EE24468FD100FA87A2 /* MFMTests.swift in Sources */,
 				8D4A2A2D237437C100503685 /* MissCatTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
