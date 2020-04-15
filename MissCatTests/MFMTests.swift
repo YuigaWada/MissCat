@@ -11,8 +11,7 @@ import UIKit
 import XCTest
 
 class MFMTests: XCTestCase {
-    override func setUp() {
-    }
+    override func setUp() {}
     
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
@@ -154,23 +153,23 @@ class MFMTests: XCTestCase {
     
     // MARK: CustomEmojis
     
-    func testCustomEmoji() {
-        let text = "test :ablobdundundun: test"
-        let pre = text.mfmPreTransform()
-        let attributed = pre.mfmTransform(font: .init()).attributed?.string
-        
-        XCTAssertNotNil(attributed)
-        XCTAssertEqual(attributed!.cleanup(), "test test")
-    }
-    
-    func testMultipleCustomEmojis() {
-        let text = "chrome::chrome:, aftereffects::aftereffects:,しゅいろ::syuilo:"
-        let pre = text.mfmPreTransform()
-        let attributed = pre.mfmTransform(font: .init()).attributed?.string
-        
-        XCTAssertNotNil(attributed)
-        XCTAssertEqual(attributed!.cleanup(), "chrome:, aftereffects:,しゅいろ:")
-    }
+//    func testCustomEmoji() {
+//        let text = "test :ablobdundundun: test"
+//        let pre = text.mfmPreTransform()
+//        let attributed = pre.mfmTransform(font: .init()).attributed?.string
+//
+//        XCTAssertNotNil(attributed)
+//        XCTAssertEqual(attributed!.cleanup(), "test test")
+//    }
+//
+//    func testMultipleCustomEmojis() {
+//        let text = "chrome::chrome:, aftereffects::aftereffects:,しゅいろ::syuilo:"
+//        let pre = text.mfmPreTransform()
+//        let attributed = pre.mfmTransform(font: .init()).attributed?.string
+//
+//        XCTAssertNotNil(attributed)
+//        XCTAssertEqual(attributed!.cleanup(), "chrome:, aftereffects:,しゅいろ:")
+//    }
 }
 
 private extension String {
