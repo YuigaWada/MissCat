@@ -22,6 +22,15 @@ jobs:
         key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
         restore-keys: |
           ${{ runner.os }}-pods-
+    - name: Cache gems
+      uses: actions/cache@preview
+      with:
+        path: vendor/bundle
+        key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-gem-
+    - name: Install cocoapods-binary
+      run: gem install cocoapods-binary
     - name: Run pod install
       run: pod install
     - name: Build # On Simulator
