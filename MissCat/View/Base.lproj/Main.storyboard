@@ -477,6 +477,31 @@
             </objects>
             <point key="canvasLocation" x="-810.14492753623199" y="920.75892857142856"/>
         </scene>
+        <!--Message List View Controller-->
+        <scene sceneID="qcx-Lq-s4S">
+            <objects>
+                <viewController storyboardIdentifier="messages" id="AXS-ok-pJd" customClass="MessageListViewController" customModule="MissCat" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="qRo-sH-SSY">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="03d-0o-HUv">
+                                <rect key="frame" x="20" y="44" width="240" height="128"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                            </tableView>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <viewLayoutGuide key="safeArea" id="USN-NQ-zhY"/>
+                    </view>
+                    <connections>
+                        <outlet property="tableView" destination="03d-0o-HUv" id="dcx-Ub-ezc"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="MNM-Ms-pqP" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-2799" y="1575"/>
+        </scene>
         <!--Auth Web View Controller-->
         <scene sceneID="Qpg-ie-gCN">
             <objects>

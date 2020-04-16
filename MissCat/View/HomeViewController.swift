@@ -203,7 +203,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     private func setupFavVC() {
         if favViewController == nil {
             guard let storyboard = self.storyboard else { return }
-            let favViewController = storyboard.instantiateViewController(withIdentifier: "404-page")
+            let favViewController = storyboard.instantiateViewController(withIdentifier: "messages")
             favViewController.view.isHidden = true
             //               favViewController.homeViewController = self
             self.favViewController = favViewController

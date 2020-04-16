@@ -25,4 +25,5 @@ pod 'XLPagerTabStrip', :binary => true
 pod 'APNGKit', '~> 1.0', :binary => true
 pod 'SwiftLinkPreview', '~> 3.1.0', :binary => true
 pod 'Cache', :binary => true
+pod 'MessageKit', :binary => true
 end 
