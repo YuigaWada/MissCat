@@ -45,13 +45,13 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     private var hasPreparedViews: Bool = false // NavBar, FooterTabをこのVCのview上に配置したか？
     
     // Status
-    private var nowPage: Page = .Main {
+    private var nowPage: Page = .main {
         willSet(page) {
             previousPage = nowPage
         }
     }
     
-    private var previousPage: Page = .Main
+    private var previousPage: Page = .main
     private var logined: Bool = false
     private var currentInstance: String = "misskey.io"
     private var io: Bool { return currentInstance == "misskey.io" }
@@ -210,8 +210,8 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
             favViewController.homeViewController = self
             self.favViewController = favViewController
             
-            navBar.barTitle = "Favorites"
-            navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
+            navBar.barTitle = "DirectMessages"
+            navBar.setButton(style: .Right, rightText: "plus", rightFont: UIFont.awesomeSolid(fontSize: 11))
             
             addChild(self.favViewController!)
             view.addSubview(self.favViewController!.view)
@@ -241,7 +241,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     }
     
     private func showProfileView(userId: String, isMe: Bool = false) {
-        nowPage = isMe ? .Profile : nowPage
+        nowPage = isMe ? .profile : nowPage
         if isMe, let myProfileViewController = myProfileViewController {
             myProfileViewController.view.isHidden = false
             return
@@ -292,10 +292,10 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     
     private func backNavBarStatus() {
         switch previousPage {
-        case .Main:
+        case .main:
             tappedHome()
             
-        case .Notifications:
+        case .notifications:
             tappedNotifications()
             
         default:
@@ -322,16 +322,16 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     private func hideView(without type: Page) {
         navBar.isHidden = true
         
-        if type != .Notifications {
+        if type != .notifications {
             notificationsViewController?.view.isHidden = true
         }
         
-        if type != .Profile {
+        if type != .profile {
             myProfileViewController?.view.isHidden = true
             currentProfileViewController?.view.isHidden = true
         }
         
-        if type != .Favorites {
+        if type != .messages {
             favViewController?.view.isHidden = true
         }
     }
@@ -459,9 +459,9 @@ extension HomeViewController: FooterTabBarDelegate {
     }
     
     func tappedHome() {
-        if nowPage != .Main {
-            nowPage = .Main
-            DispatchQueue.main.async { self.hideView(without: .Main) }
+        if nowPage != .main {
+            nowPage = .main
+            DispatchQueue.main.async { self.hideView(without: .main) }
         } else {
             home.tappedHome()
         }
@@ -470,12 +470,12 @@ extension HomeViewController: FooterTabBarDelegate {
     func tappedNotifications() {
         guard let notificationsViewController = notificationsViewController else { return }
         
-        if nowPage == .Notifications {
+        if nowPage == .notifications {
             guard let notificationsView = notificationsViewController as? FooterTabBarDelegate else { return }
             notificationsView.tappedNotifications()
         } else {
             DispatchQueue.main.async {
-                self.hideView(without: .Notifications)
+                self.hideView(without: .notifications)
                 self.showNotificationsView()
             }
         }
@@ -486,9 +486,9 @@ extension HomeViewController: FooterTabBarDelegate {
     }
     
     func tappedFav() {
-        if nowPage != .Favorites {
+        if nowPage != .messages {
             DispatchQueue.main.async {
-                self.hideView(without: .Favorites)
+                self.hideView(without: .messages)
                 self.showFavView()
             }
             showFavView()
@@ -496,12 +496,12 @@ extension HomeViewController: FooterTabBarDelegate {
     }
     
     func tappedProfile() {
-        guard nowPage != .Profile else { return }
+        guard nowPage != .profile else { return }
         
         Cache.shared.getMe { me in
             guard let me = me else { return }
             DispatchQueue.main.async {
-                self.hideView(without: .Profile)
+                self.hideView(without: .profile)
                 self.showProfileView(userId: me.id, isMe: true)
             }
         }
@@ -518,7 +518,7 @@ extension HomeViewController: FooterTabBarDelegate {
         navBar.barTitle = "Notifications"
         navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
         
-        nowPage = .Notifications
+        nowPage = .notifications
         notificationsViewController.view.isHidden = false
     }
     
@@ -526,10 +526,10 @@ extension HomeViewController: FooterTabBarDelegate {
         guard let favViewController = favViewController else { return }
         
         navBar.isHidden = false
-        navBar.barTitle = "Favorites"
-        navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
+        navBar.barTitle = "DirectMessages"
+        navBar.setButton(style: .Right, rightText: "plus", rightFont: UIFont.awesomeSolid(fontSize: 13))
         
-        nowPage = .Favorites
+        nowPage = .messages
         favViewController.view.isHidden = false
     }
 }
@@ -539,7 +539,10 @@ extension HomeViewController: NavBarDelegate {
     
     func tappedLeftNavButton() {}
     
-    func tappedRightNavButton() {}
+    func tappedRightNavButton() {
+        guard nowPage == .messages else { return }
+        // DM処理書く
+    }
 }
 
 // MARK: Timeline Delegate
@@ -614,9 +617,9 @@ extension HomeViewController: TimelineDelegate {
 extension HomeViewController {
     enum Page {
         // FooterTab
-        case Main
-        case Notifications
-        case Profile
-        case Favorites
+        case main
+        case notifications
+        case profile
+        case messages
     }
 }
