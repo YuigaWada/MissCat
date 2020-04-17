@@ -485,13 +485,18 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <tableView clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="03d-0o-HUv">
-                                <rect key="frame" x="20" y="44" width="240" height="128"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="03d-0o-HUv">
+                                <rect key="frame" x="0.0" y="44" width="414" height="763"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                             </tableView>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="USN-NQ-zhY" firstAttribute="bottom" secondItem="03d-0o-HUv" secondAttribute="bottom" constant="55" id="HnW-eY-yBP"/>
+                            <constraint firstItem="03d-0o-HUv" firstAttribute="leading" secondItem="USN-NQ-zhY" secondAttribute="leading" id="U9u-hg-0m6"/>
+                            <constraint firstItem="03d-0o-HUv" firstAttribute="top" secondItem="USN-NQ-zhY" secondAttribute="top" id="UKD-Eu-Rdw"/>
+                            <constraint firstItem="USN-NQ-zhY" firstAttribute="trailing" secondItem="03d-0o-HUv" secondAttribute="trailing" id="bY3-48-8T3"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="USN-NQ-zhY"/>
                     </view>
                     <connections>

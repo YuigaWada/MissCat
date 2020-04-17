@@ -22,12 +22,32 @@ class SenderCell: UITableViewCell, ComponentType {
     
     private var isSkelton: Bool = false
     
+    override func layoutSubviews() {
+        iconImage.layer.cornerRadius = iconImage.frame.width / 2
+        nameTextView.transformText()
+    }
+    
     func transform(isSkelton: Bool = false) -> SenderCell {
         self.isSkelton = isSkelton
         return self
     }
     
     func transform(with arg: SenderCell.Arg) -> SenderCell {
+        messageTextView.attributedText = MFMEngine.generatePlaneString(string: arg.latestMessage ?? "",
+                                                                       font: UIFont(name: "Helvetica", size: 11.0))
+        nameTextView.attributedText = arg.shapedName?.attributed
+        agoLabel.text = arg.createdAt?.calculateAgo()
+        
+        arg.icon?.toUIImage {
+            guard let image = $0 else { return }
+            DispatchQueue.main.async {
+                self.iconImage.image = image
+            }
+        }
+        
+        arg.shapedName?.mfmEngine.renderCustomEmojis(on: nameTextView)
+        nameTextView.renderViewStrings()
+        
         return self
     }
 }
@@ -44,10 +64,10 @@ extension SenderCell {
         let name: String?
         let username: String?
         let latestMessage: String?
-        let createdAt: Date?
+        let createdAt: String?
         
         var shapedName: MFMString?
-        init(isSkelton: Bool, userId: String?, icon: String?, name: String?, username: String?, latestMessage: String?, shapedName: MFMString? = nil, createdAt: Date?) {
+        init(isSkelton: Bool, userId: String?, icon: String?, name: String?, username: String?, latestMessage: String?, shapedName: MFMString? = nil, createdAt: String?) {
             self.isSkelton = isSkelton
             self.userId = userId
             self.icon = icon

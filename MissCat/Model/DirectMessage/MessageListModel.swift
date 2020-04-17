@@ -11,16 +11,20 @@ import RxCocoa
 import RxSwift
 
 class MessageListModel {
-    private func transformModel(with observer: AnyObserver<SenderCell.Model>, history: MessageModel) {
+    private func transformModel(with observer: AnyObserver<SenderCell.Model>, history: MessageHistoryModel) {
+        let myId = Cache.UserDefaults.shared.getCurrentLoginedUserId() ?? ""
+        let others = [history.recipient, history.user].compactMap { $0 }.filter { $0.id != myId } // チャット相手
+        let other = others.count > 0 ? others[0] : history.recipient
+        
         let sender: SenderCell.Model = .init(isSkelton: false,
-                                             userId: history.recipientId,
-                                             icon: history.recipient?.avatarUrl,
-                                             name: history.recipient?.name,
-                                             username: history.recipient?.username,
+                                             userId: other?.id,
+                                             icon: other?.avatarUrl,
+                                             name: other?.name,
+                                             username: other?.username,
                                              latestMessage: history.text,
                                              createdAt: history.createdAt)
         
-        sender.shapedName = MFMEngine.shapeDisplayName(user: history.recipient)
+        sender.shapedName = MFMEngine.shapeDisplayName(user: other)
         observer.onNext(sender)
     }
     
@@ -29,7 +33,7 @@ class MessageListModel {
         
         return Observable.create { [unowned self] observer in
             
-            let handleResult = { (lists: [MessageModel]?, error: MisskeyKitError?) in
+            let handleResult = { (lists: [MessageHistoryModel]?, error: MisskeyKitError?) in
                 guard let lists = lists, error == nil else {
                     if let error = error { observer.onError(error) }
                     print(error ?? "error is nil")
@@ -48,6 +52,4 @@ class MessageListModel {
             return dispose
         }
     }
-    
-    func transformModel() {}
 }

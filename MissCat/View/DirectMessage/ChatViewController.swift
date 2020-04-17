@@ -13,6 +13,12 @@ import RxSwift
 import UIKit
 
 class ChatViewController: MessagesViewController, MessagesDataSource {
+    var sendCompleted: Binder<Bool> {
+        return Binder(self) { vc, _ in
+            vc.endSendAnimation()
+        }
+    }
+    
     var messages: Binder<[DirectMessage]> { // こいつをDirectMessageViewControllerからbindするだけ
         return Binder(self) { vc, value in
             vc.messageList = value
@@ -20,6 +26,8 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
             vc.messagesCollectionView.scrollToBottom()
         }
     }
+    
+    var sendTrigger: PublishRelay<String> = .init()
     
     fileprivate var messageList: [DirectMessage] = []
     let refreshControl = UIRefreshControl()
@@ -51,9 +59,6 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     // MARK: For Overrides
     
     func loadFirstMessages() {
-        messageList = [.init(text: "test\((0 ... 2000).randomElement()?.description ?? "test")",
-                             user: .mock, messageId: UUID().uuidString, date: Date())]
-        
         messagesCollectionView.reloadData()
         messagesCollectionView.scrollToBottom()
     }
@@ -64,19 +69,8 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     
     // MARK: - Helpers
     
-    func insertMessage(_ message: DirectMessage) {
-        messageList.append(message)
-        // Reload last section to update header/footer labels and insert a new one
-        messagesCollectionView.performBatchUpdates({
-            messagesCollectionView.insertSections([messageList.count - 1])
-            if messageList.count >= 2 {
-                messagesCollectionView.reloadSections([messageList.count - 2])
-            }
-        }, completion: { [weak self] _ in
-            if self?.isLastSectionVisible() == true {
-                self?.messagesCollectionView.scrollToBottom(animated: true)
-            }
-        })
+    func sendMessage(text: String) {
+        sendTrigger.accept(text)
     }
     
     // MARK: Setup
@@ -111,7 +105,10 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     // MARK: - MessagesDataSource
     
     func currentSender() -> SenderType {
-        return DirectMessage.User.mock
+        let myId = Cache.UserDefaults.shared.getCurrentLoginedUserId() ?? ""
+        return DirectMessage.User(senderId: myId,
+                                  displayName: "",
+                                  iconUrl: "")
     }
     
     func numberOfSections(in messagesCollectionView: MessagesCollectionView) -> Int {
@@ -130,7 +127,7 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     }
     
     func cellBottomLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
-        return NSAttributedString(string: "Read", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 10), NSAttributedString.Key.foregroundColor: UIColor.darkGray])
+        return NSAttributedString(string: "Read", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 10), NSAttributedString.Key.foregroundColor: UIColor.systemBlue])
     }
     
     func messageTopLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
@@ -139,8 +136,16 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     }
     
     func messageBottomLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
-        let dateString = formatter.string(from: message.sentDate)
-        return NSAttributedString(string: dateString, attributes: [NSAttributedString.Key.font: UIFont.preferredFont(forTextStyle: .caption2)])
+        let ago = calculateAgo(message.sentDate)
+        return nil
+    }
+    
+    private func calculateAgo(_ date: Date) -> String {
+        let interval = Date().timeIntervalSince(date)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyy-MM-dd"
+        
+        return interval.toAgo() ?? formatter.string(from: date)
     }
 }
 
@@ -148,10 +153,24 @@ struct DirectMessage: MessageType {
     struct User: SenderType, Equatable {
         var senderId: String
         var displayName: String
+        var iconUrl: String
+        
+        func getAvatar(completion: @escaping (Avatar?) -> Void) {
+            iconUrl.toUIImage {
+                completion(Avatar(image: $0, initials: ""))
+            }
+        }
+        
+        static var me: User = {
+            let myId = Cache.UserDefaults.shared.getCurrentLoginedUserId() ?? UUID().uuidString
+            return .init(senderId: myId,
+                         displayName: "",
+                         iconUrl: "")
+        }()
         
         static var mock: User = {
             let id = (0 ... 2000).randomElement()?.description ?? "test"
-            return .init(senderId: id, displayName: "user\(id)")
+            return .init(senderId: id, displayName: "user\(id)", iconUrl: "")
         }()
     }
     
@@ -345,28 +364,23 @@ extension ChatViewController: InputBarAccessoryViewDelegate {
         // Send button activity animation
         messageInputBar.sendButton.startAnimating()
         messageInputBar.inputTextView.placeholder = "Sending..."
-        DispatchQueue.global(qos: .default).async {
-            // fake send request task
-            sleep(1)
-            DispatchQueue.main.async { [weak self] in
-                self?.messageInputBar.sendButton.stopAnimating()
-                self?.messageInputBar.inputTextView.placeholder = "Aa"
-                self?.insertMessages(components)
-                self?.messagesCollectionView.scrollToBottom(animated: true)
-            }
+        
+        sendMessages(components)
+    }
+    
+    private func endSendAnimation() {
+        DispatchQueue.main.async { [weak self] in
+            self?.messageInputBar.sendButton.stopAnimating()
+            self?.messageInputBar.inputTextView.placeholder = "Aa"
+            self?.messagesCollectionView.scrollToBottom(animated: true)
         }
     }
     
-    private func insertMessages(_ data: [Any]) {
+    private func sendMessages(_ data: [Any]) {
         for component in data {
-            let user = DirectMessage.User.mock
             if let str = component as? String {
-                let message = DirectMessage(text: str, user: user, messageId: UUID().uuidString, date: Date())
-                insertMessage(message)
-            } else if let img = component as? UIImage {
-                let message = DirectMessage(image: img, user: user, messageId: UUID().uuidString, date: Date())
-                insertMessage(message)
-            }
+                sendMessage(text: str)
+            } else if let img = component as? UIImage {}
         }
     }
 }
@@ -402,11 +416,16 @@ extension ChatViewController: MessagesDisplayDelegate {
         return .bubbleTail(tail, .curved)
     }
     
-    //    func configureAvatarView(_ avatarView: AvatarView, for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) {
-    //        let avatar = SampleData.shared.getAvatarFor(sender: message.sender)
-    //        avatarView.set(avatar: avatar)
-    //    }
-    //
+    func configureAvatarView(_ avatarView: AvatarView, for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) {
+        guard let sender = message.sender as? DirectMessage.User else { return }
+        sender.getAvatar { avatar in
+            guard let avatar = avatar else { return }
+            DispatchQueue.main.async {
+                avatarView.set(avatar: avatar)
+            }
+        }
+    }
+    
     //    // MARK: - Location Messages
     //
     //    func annotationViewForLocation(message: MessageType, at indexPath: IndexPath, in messageCollectionView: MessagesCollectionView) -> MKAnnotationView? {
@@ -448,6 +467,6 @@ extension ChatViewController: MessagesLayoutDelegate {
     }
     
     func messageBottomLabelHeight(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> CGFloat {
-        return 16
+        return 8
     }
 }

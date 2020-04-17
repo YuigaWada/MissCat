@@ -70,6 +70,8 @@
 		8D5D2C4224480E5700D15974 /* SenderCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D5D2C4124480E5700D15974 /* SenderCell.xib */; };
 		8D5D2C452448106000D15974 /* MessageListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5D2C442448106000D15974 /* MessageListViewModel.swift */; };
 		8D5D2C48244814AC00D15974 /* MessageListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5D2C47244814AC00D15974 /* MessageListModel.swift */; };
+		8D5D2C4A24487C6E00D15974 /* DirectMessageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5D2C4924487C6E00D15974 /* DirectMessageViewModel.swift */; };
+		8D5D2C4C24487CD100D15974 /* DirectMessageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5D2C4B24487CD100D15974 /* DirectMessageModel.swift */; };
 		8D61354F238A974400AB50C2 /* EmojiViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D61354E238A974400AB50C2 /* EmojiViewCell.xib */; };
 		8D613551238A978700AB50C2 /* EmojiViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D613550238A978700AB50C2 /* EmojiViewCell.swift */; };
 		8D613553238B6D4F00AB50C2 /* NavBar.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D613552238B6D4F00AB50C2 /* NavBar.xib */; };
@@ -222,6 +224,8 @@
 		8D5D2C4124480E5700D15974 /* SenderCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SenderCell.xib; sourceTree = "<group>"; };
 		8D5D2C442448106000D15974 /* MessageListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageListViewModel.swift; sourceTree = "<group>"; };
 		8D5D2C47244814AC00D15974 /* MessageListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageListModel.swift; sourceTree = "<group>"; };
+		8D5D2C4924487C6E00D15974 /* DirectMessageViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectMessageViewModel.swift; sourceTree = "<group>"; };
+		8D5D2C4B24487CD100D15974 /* DirectMessageModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectMessageModel.swift; sourceTree = "<group>"; };
 		8D61354E238A974400AB50C2 /* EmojiViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = EmojiViewCell.xib; sourceTree = "<group>"; };
 		8D613550238A978700AB50C2 /* EmojiViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiViewCell.swift; sourceTree = "<group>"; };
 		8D613552238B6D4F00AB50C2 /* NavBar.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NavBar.xib; sourceTree = "<group>"; };
@@ -581,6 +585,7 @@
 			isa = PBXGroup;
 			children = (
 				8D5D2C442448106000D15974 /* MessageListViewModel.swift */,
+				8D5D2C4924487C6E00D15974 /* DirectMessageViewModel.swift */,
 			);
 			path = DirectMessage;
 			sourceTree = "<group>";
@@ -589,6 +594,7 @@
 			isa = PBXGroup;
 			children = (
 				8D5D2C47244814AC00D15974 /* MessageListModel.swift */,
+				8D5D2C4B24487CD100D15974 /* DirectMessageModel.swift */,
 			);
 			path = DirectMessage;
 			sourceTree = "<group>";
@@ -853,6 +859,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */,
+				8D5D2C4A24487C6E00D15974 /* DirectMessageViewModel.swift in Sources */,
 				8D3036F62385DA8900BA6D38 /* PostViewModel.swift in Sources */,
 				8D3037002388F71E00BA6D38 /* MisskeyTextView.swift in Sources */,
 				8DBDD58E244198C90014E77F /* SearchModel.swift in Sources */,
@@ -948,6 +955,7 @@
 				8D42C3A623804B6200337DD2 /* UIViewController+MissCat.swift in Sources */,
 				8D2279F02446CD9700FA87A2 /* UrlPreviewer.swift in Sources */,
 				8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */,
+				8D5D2C4C24487CD100D15974 /* DirectMessageModel.swift in Sources */,
 				8DA536AE23AC8C47005EB1B5 /* AttachmentCell.swift in Sources */,
 				8D63BFC7242BC239009C3ADE /* NoteDisplay.swift in Sources */,
 				8D502D5A2380270A00525A96 /* TabBar.swift in Sources */,

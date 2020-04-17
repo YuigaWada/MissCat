@@ -15,7 +15,7 @@ typealias SenderDataSource = RxTableViewSectionedAnimatedDataSource<SenderCell.S
 class MessageListViewController: UIViewController, UITableViewDelegate {
     @IBOutlet weak var tableView: UITableView!
     
-    private var viewModel: MessageListViewModel?
+    private lazy var viewModel: MessageListViewModel = setupViewModel()
     private lazy var dataSource = self.setupDataSource()
     private let disposeBag: DisposeBag = .init()
     
@@ -26,24 +26,30 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
         setupTableView()
         
         binding(dataSource: dataSource)
-        viewModel?.setupInitialCell()
+        viewModel.setupInitialCell()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         view.deselectCell(on: tableView)
         
-        viewModel?.setSkeltonCell()
+        viewModel.setSkeltonCell()
     }
     
     private func binding(dataSource: SenderDataSource?) {
-        guard let viewModel = viewModel, let dataSource = dataSource else { return }
+        guard let dataSource = dataSource else { return }
         
         let output = viewModel.output
         output.users.bind(to: tableView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
     }
     
     // MARK: Setup
+    
+    private func setupViewModel() -> MessageListViewModel {
+        let input = MessageListViewModel.Input(dataSource: dataSource)
+        
+        return .init(with: input, and: disposeBag)
+    }
     
     private func setupTableView() {
         tableView.register(UINib(nibName: "SenderCell", bundle: nil), forCellReuseIdentifier: "SenderCell")
@@ -62,8 +68,6 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     }
     
     private func setupCell(_ dataSource: TableViewSectionedDataSource<SenderCell.Section>, _ tableView: UITableView, _ indexPath: IndexPath) -> UITableViewCell {
-        guard let viewModel = viewModel else { fatalError("Internal Error.") }
-        
         let index = indexPath.row
         let item = viewModel.cellsModel[index]
         
@@ -77,5 +81,24 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
         shapedCell.nameTextView.renderViewStrings()
         
         return shapedCell
+    }
+    
+    private func getDMViewController(with item: SenderCell.Model) -> DirectMessageViewController {
+        let dmViewController = DirectMessageViewController()
+        
+        dmViewController.setup(userId: item.userId ?? "", groupId: nil)
+        return dmViewController
+    }
+    
+    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
+        return UITableView.automaticDimension
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let index = indexPath.row
+        let item = viewModel.cellsModel[index]
+        
+        tableView.deselectRow(at: indexPath, animated: true)
+        navigationController?.pushViewController(getDMViewController(with: item), animated: true)
     }
 }

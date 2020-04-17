@@ -8,7 +8,6 @@
 
 import RxCocoa
 import RxSwift
-import SwiftLinkPreview
 
 class MessageListViewModel: ViewModelType {
     // MARK: I/O
@@ -46,7 +45,7 @@ class MessageListViewModel: ViewModelType {
     }
     
     func setupInitialCell() {
-        loadUsers().subscribe(onError: { error in
+        loadHistory().subscribe(onError: { error in
             print(error)
         }, onCompleted: {
             DispatchQueue.main.async {
@@ -90,7 +89,7 @@ class MessageListViewModel: ViewModelType {
 //        })
 //    }
     
-    func loadUsers(untilId: String? = nil) -> Observable<SenderCell.Model> {
+    func loadHistory(untilId: String? = nil) -> Observable<SenderCell.Model> {
         _isLoading = true
         return model.loadHistory().do(onNext: { cellModel in
             self.cellsModel.append(cellModel)
