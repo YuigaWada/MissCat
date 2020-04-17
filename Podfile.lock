@@ -20,7 +20,7 @@ PODS:
   - iOSPhotoEditor (1.0.0)
   - MessageKit (3.1.0):
     - InputBarAccessoryView (~> 4.3.0)
-  - MisskeyKit (2.0):
+  - MisskeyKit (2.1):
     - Starscream (= 3.1.1)
   - PolioPager (2.3)
   - RxCocoa (5.1.1):
@@ -116,7 +116,7 @@ SPEC CHECKSUMS:
   InputBarAccessoryView: 7985d418040a05fe894bd4b8328dd43ab35517c3
   iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
   MessageKit: 3beb578737a5aa2bba25cc27c7b6d6faa09af5a7
-  MisskeyKit: bfbabd7faa704814d27fd215f83f418423c81fe4
+  MisskeyKit: 3ee17a0d820a74a61939c04aab3056ffe39ed355
   PolioPager: d1d3ae9032bc4bbf5071b3aea5a748ac7c1337d1
   RxCocoa: 32065309a38d29b5b0db858819b5bf9ef038b601
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
