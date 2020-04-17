@@ -202,10 +202,12 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     
     private func setupFavVC() {
         if favViewController == nil {
-            guard let storyboard = self.storyboard else { return }
-            let favViewController = storyboard.instantiateViewController(withIdentifier: "messages")
+            guard let storyboard = self.storyboard,
+                let favViewController = storyboard.instantiateViewController(withIdentifier: "messages") as? MessageListViewController
+            else { return }
+            
             favViewController.view.isHidden = true
-            //               favViewController.homeViewController = self
+            favViewController.homeViewController = self
             self.favViewController = favViewController
             
             navBar.barTitle = "Favorites"

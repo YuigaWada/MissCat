@@ -11,6 +11,7 @@ import RxSwift
 import UIKit
 
 class DirectMessageViewController: ChatViewController {
+    var homeViewController: HomeViewController?
     private var viewModel: DirectMessageViewModel?
     private let disposeBag = DisposeBag()
     
@@ -28,6 +29,19 @@ class DirectMessageViewController: ChatViewController {
         let output = viewModel.output
         output.messages.bind(to: messages).disposed(by: disposeBag)
         output.sendCompleted.bind(to: sendCompleted).disposed(by: disposeBag)
+        
+        tapTrigger.subscribe(onNext: { link in
+            switch link.type {
+            case .url:
+                self.homeViewController?.openLink(url: link.value)
+            case .hashtag:
+                self.navigationController?.popViewController(animated: true)
+                self.homeViewController?.emulateFooterTabTap(tab: .home)
+                self.homeViewController?.searchHashtag(tag: link.value)
+            case .mention:
+                self.homeViewController?.openUserPage(username: link.value)
+            }
+        }).disposed(by: disposeBag)
     }
     
     override func viewWillAppear(_ animated: Bool) {

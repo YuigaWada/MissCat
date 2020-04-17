@@ -28,6 +28,7 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     }
     
     var sendTrigger: PublishRelay<String> = .init()
+    var tapTrigger: PublishRelay<HyperLink> = .init()
     
     fileprivate var messageList: [DirectMessage] = []
     let refreshControl = UIRefreshControl()
@@ -317,36 +318,30 @@ extension ChatViewController: MessageCellDelegate {
 // MARK: - MessageLabelDelegate
 
 extension ChatViewController: MessageLabelDelegate {
-    func didSelectAddress(_ addressComponents: [String: String]) {
-        print("Address Selected: \(addressComponents)")
-    }
-    
-    func didSelectDate(_ date: Date) {
-        print("Date Selected: \(date)")
-    }
-    
-    func didSelectPhoneNumber(_ phoneNumber: String) {
-        print("Phone Number Selected: \(phoneNumber)")
+    struct HyperLink {
+        let value: String
+        let type: Type
+        
+        enum `Type` {
+            case url
+            case hashtag
+            case mention
+        }
     }
     
     func didSelectURL(_ url: URL) {
-        print("URL Selected: \(url)")
-    }
-    
-    func didSelectTransitInformation(_ transitInformation: [String: String]) {
-        print("TransitInformation Selected: \(transitInformation)")
+        let link: HyperLink = .init(value: url.absoluteString, type: .url)
+        tapTrigger.accept(link)
     }
     
     func didSelectHashtag(_ hashtag: String) {
-        print("Hashtag selected: \(hashtag)")
+        let link: HyperLink = .init(value: hashtag, type: .hashtag)
+        tapTrigger.accept(link)
     }
     
     func didSelectMention(_ mention: String) {
-        print("Mention selected: \(mention)")
-    }
-    
-    func didSelectCustom(_ pattern: String, match: String?) {
-        print("Custom data detector patter selected: \(pattern)")
+        let link: HyperLink = .init(value: mention, type: .mention)
+        tapTrigger.accept(link)
     }
 }
 
@@ -403,13 +398,13 @@ extension ChatViewController: MessagesDisplayDelegate {
     
     func detectorAttributes(for detector: DetectorType, and message: MessageType, at indexPath: IndexPath) -> [NSAttributedString.Key: Any] {
         switch detector {
-        case .hashtag, .mention: return [.foregroundColor: UIColor.blue]
+        case .hashtag, .mention, .url: return [.underlineStyle: NSUnderlineStyle.single.rawValue]
         default: return MessageLabel.defaultAttributes
         }
     }
     
     func enabledDetectors(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> [DetectorType] {
-        return [.url, .address, .phoneNumber, .date, .transitInformation, .mention, .hashtag]
+        return [.url, .mention, .hashtag]
     }
     
     // MARK: - All Messages
