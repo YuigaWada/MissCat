@@ -127,7 +127,9 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     }
     
     func cellBottomLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
-        return NSAttributedString(string: "Read", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 10), NSAttributedString.Key.foregroundColor: UIColor.systemBlue])
+        guard let message = message as? DirectMessage else { return nil }
+        
+        return message.isRead ? NSAttributedString(string: "Read", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 10), NSAttributedString.Key.foregroundColor: UIColor.systemBlue]) : nil
     }
     
     func messageTopLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
@@ -149,7 +151,7 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     }
 }
 
-struct DirectMessage: MessageType {
+class DirectMessage: MessageType {
     struct User: SenderType, Equatable {
         var senderId: String
         var displayName: String
@@ -183,6 +185,7 @@ struct DirectMessage: MessageType {
     var kind: MessageKind
     
     var user: User
+    var isRead: Bool = false
     
     private init(kind: MessageKind, user: User, messageId: String, date: Date) {
         self.kind = kind
@@ -191,30 +194,34 @@ struct DirectMessage: MessageType {
         sentDate = date
     }
     
-    init(custom: Any?, user: User, messageId: String, date: Date) {
+    convenience init(custom: Any?, user: User, messageId: String, date: Date) {
         self.init(kind: .custom(custom), user: user, messageId: messageId, date: date)
     }
     
-    init(text: String, user: User, messageId: String, date: Date) {
+    convenience init(text: String, user: User, messageId: String, date: Date) {
         self.init(kind: .text(text), user: user, messageId: messageId, date: date)
     }
     
-    init(attributedText: NSAttributedString, user: User, messageId: String, date: Date) {
+    convenience init(attributedText: NSAttributedString, user: User, messageId: String, date: Date) {
         self.init(kind: .attributedText(attributedText), user: user, messageId: messageId, date: date)
     }
     
-    init(image: UIImage, user: User, messageId: String, date: Date) {
+    convenience init(image: UIImage, user: User, messageId: String, date: Date) {
         let mediaItem = ImageMediaItem(image: image)
         self.init(kind: .photo(mediaItem), user: user, messageId: messageId, date: date)
     }
     
-    init(thumbnail: UIImage, user: User, messageId: String, date: Date) {
+    convenience init(thumbnail: UIImage, user: User, messageId: String, date: Date) {
         let mediaItem = ImageMediaItem(image: thumbnail)
         self.init(kind: .video(mediaItem), user: user, messageId: messageId, date: date)
     }
     
-    init(emoji: String, user: User, messageId: String, date: Date) {
+    convenience init(emoji: String, user: User, messageId: String, date: Date) {
         self.init(kind: .emoji(emoji), user: user, messageId: messageId, date: date)
+    }
+    
+    func changeReadStatus(read: Bool) {
+        isRead = read
     }
 }
 

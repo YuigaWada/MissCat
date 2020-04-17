@@ -26,6 +26,7 @@ class DirectMessageModel {
                                                messageId: message.id ?? UUID().uuidString,
                                                date: message.createdAt?.date ?? .init())
         
+        transformed.changeReadStatus(read: message.isRead ?? false)
         observer.onNext(transformed)
     }
     
