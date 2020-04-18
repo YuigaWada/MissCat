@@ -328,21 +328,13 @@
 		8D065B13237AC376003DFB7C /* View */ = {
 			isa = PBXGroup;
 			children = (
+				8D4A2A1B237437BE00503685 /* Main.storyboard */,
+				8D72E514244AE98600B30C3A /* Main */,
+				8D72E515244AE98A00B30C3A /* Details */,
+				8D72E4FB244AE6BA00B30C3A /* Login */,
 				8D5D2C3B24480DC000D15974 /* DirectMessage */,
 				8DAF301C241B5C8D0041BB85 /* Settings */,
 				8D065B1F237ACD5D003DFB7C /* Reusable */,
-				8D4A2A19237437BE00503685 /* TimelineViewController.swift */,
-				8D4A2A1B237437BE00503685 /* Main.storyboard */,
-				8D502D57238024B700525A96 /* HomeViewController.swift */,
-				8D3036F12385D5F100BA6D38 /* PostViewController.swift */,
-				8DA06A062389E89A0093A718 /* NotificationsViewController.swift */,
-				8D84061E2393547800EED595 /* PostDetailViewController.swift */,
-				8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */,
-				8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */,
-				8DAD2389240CE76000AB1F36 /* StartViewController.swift */,
-				8DABCD092414D52D00D9F054 /* AuthWebViewController.swift */,
-				8D47FAD7243388B100549A0B /* TosViewController.swift */,
-				8D57CA4824412430005DCEB2 /* SearchViewController.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -350,18 +342,12 @@
 		8D065B14237AC381003DFB7C /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
-				8D5D2C432448105200D15974 /* DirectMessage */,
+				8D72E516244AE9E700B30C3A /* Main */,
+				8D72E517244AE9F800B30C3A /* Details */,
 				8DAEA13A2382E7FF0083AA69 /* Reusable */,
-				8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */,
-				8D3036F52385DA8900BA6D38 /* PostViewModel.swift */,
-				8DA06A0C2389EEC60093A718 /* NotificationsViewModel.swift */,
-				8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */,
-				8DAEA1312382E19A0083AA69 /* ReactionGenViewModel.swift */,
-				8DEFF31B239BD45700142802 /* ProfileViewModel.swift */,
-				8D53741A23A32D03004523FC /* ViewModelType.swift */,
-				8D63BFC2242BBF03009C3ADE /* HomeViewModel.swift */,
-				8D31018E24397D5E004F8E55 /* ReactionSettingsViewModel.swift */,
-				8DBDD58B244197840014E77F /* SearchViewModel.swift */,
+				8D5D2C432448105200D15974 /* DirectMessage */,
+				8D72E50D244AE8EE00B30C3A /* Settings */,
+				8D72E50E244AE8FA00B30C3A /* Others */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -369,15 +355,10 @@
 		8D065B15237AC387003DFB7C /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				8D72E519244AEA1A00B30C3A /* Details */,
+				8D72E518244AEA1500B30C3A /* Main */,
 				8D5D2C462448149D00D15974 /* DirectMessage */,
 				8DAEA13B2382E80B0083AA69 /* Reusable */,
-				8D0AC5C0237B865B00530508 /* TimelineModel.swift */,
-				8D3036F72385DAED00BA6D38 /* PostModel.swift */,
-				8DA06A0E2389F04E0093A718 /* NotificationModel.swift */,
-				8DEFF31D239BD4F200142802 /* ProfileModel.swift */,
-				8D63BFC4242BBF12009C3ADE /* HomeModel.swift */,
-				8D98C267242E0AD600BB8049 /* PostDetailModel.swift */,
-				8DBDD58D244198C90014E77F /* SearchModel.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -386,22 +367,14 @@
 			isa = PBXGroup;
 			children = (
 				8D4754F3240E1E4B00BAD410 /* NoteCell */,
-				8DAEA1332382E4C00083AA69 /* nib */,
-				8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */,
-				8D7779A524138120005764D9 /* PanelMenuViewController.swift */,
-				8D502D592380270A00525A96 /* TabBar.swift */,
-				8DAEA1362382E59A0083AA69 /* EmojiView.swift */,
-				8DA06A0A2389E98D0093A718 /* NotificationCell.swift */,
-				8D613550238A978700AB50C2 /* EmojiViewCell.swift */,
-				8D613554238B6D8B00AB50C2 /* NavBar.swift */,
-				8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */,
-				8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */,
-				8DC95AF823B0BD450013CABC /* NotificationBanner.swift */,
-				8DAF3014241957510041BB85 /* ComponentType.swift */,
-				8D63BFC6242BC239009C3ADE /* NoteDisplay.swift */,
-				8D2D523A2442CC9100712F48 /* UserCell.swift */,
-				8D2D52402443D03500712F48 /* UserListViewController.swift */,
-				8DF49FA124445B0500C4D2B2 /* TrendViewController.swift */,
+				8D72E504244AE81600B30C3A /* Notification */,
+				8D72E502244AE7EE00B30C3A /* Reaction */,
+				8D72E509244AE87700B30C3A /* Trend */,
+				8D72E508244AE84C00B30C3A /* Others */,
+				8D72E506244AE83200B30C3A /* Post */,
+				8D72E500244AE78D00B30C3A /* User */,
+				8D72E4FD244AE75300B30C3A /* Emoji */,
+				8D72E4FC244AE73F00B30C3A /* Tab */,
 			);
 			path = Reusable;
 			sourceTree = "<group>";
@@ -409,6 +382,8 @@
 		8D0AC5B4237B5AC700530508 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				8D4A2A1E237437C000503685 /* Assets.xcassets */,
+				8D4A2A20237437C000503685 /* LaunchScreen.storyboard */,
 				8D0AC5B5237B5AD900530508 /* Font Awesome 5 Brands-Regular-400.otf */,
 				8D0AC5B6237B5AD900530508 /* Font Awesome 5 Free-Regular-400.otf */,
 				8D0AC5B7237B5AD900530508 /* Font Awesome 5 Free-Solid-900.otf */,
@@ -452,6 +427,7 @@
 		8D3EC236237AE52800808727 /* Others */ = {
 			isa = PBXGroup;
 			children = (
+				8D72E51B244AEA6500B30C3A /* App */,
 				8D3037042389088600BA6D38 /* Utilities */,
 				8D3037032389086800BA6D38 /* Extension */,
 			);
@@ -524,19 +500,14 @@
 		8D4A2A14237437BE00503685 /* MissCat */ = {
 			isa = PBXGroup;
 			children = (
+				8D4A2A23237437C000503685 /* Info.plist */,
 				8D1C150E2424E3B6004B1202 /* MissCat.entitlements */,
+				8D065B13237AC376003DFB7C /* View */,
+				8D065B14237AC381003DFB7C /* ViewModel */,
+				8D065B15237AC387003DFB7C /* Model */,
 				8D4754F5240E1EA500BAD410 /* MFMEngine */,
 				8D0AC5B4237B5AC700530508 /* Resources */,
 				8D3EC236237AE52800808727 /* Others */,
-				8D065B15237AC387003DFB7C /* Model */,
-				8D065B14237AC381003DFB7C /* ViewModel */,
-				8D065B13237AC376003DFB7C /* View */,
-				8D4A2A15237437BE00503685 /* AppDelegate.swift */,
-				8D4A2A17237437BE00503685 /* SceneDelegate.swift */,
-				8D4A2A1E237437C000503685 /* Assets.xcassets */,
-				8D4A2A20237437C000503685 /* LaunchScreen.storyboard */,
-				8D4A2A23237437C000503685 /* Info.plist */,
-				8D1C150D2424C649004B1202 /* Bridge.h */,
 			);
 			path = MissCat;
 			sourceTree = "<group>";
@@ -602,32 +573,311 @@
 			path = DirectMessage;
 			sourceTree = "<group>";
 		};
-		8DAEA1332382E4C00083AA69 /* nib */ = {
+		8D72E4FB244AE6BA00B30C3A /* Login */ = {
 			isa = PBXGroup;
 			children = (
-				8D7968802404BE68004F87FA /* ReactionCollectionHeader.xib */,
-				8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */,
-				8D502D552380236900525A96 /* TabBar.xib */,
+				8D47FAD7243388B100549A0B /* TosViewController.swift */,
+				8DAD2389240CE76000AB1F36 /* StartViewController.swift */,
+				8DABCD092414D52D00D9F054 /* AuthWebViewController.swift */,
+			);
+			path = Login;
+			sourceTree = "<group>";
+		};
+		8D72E4FC244AE73F00B30C3A /* Tab */ = {
+			isa = PBXGroup;
+			children = (
+				8D72E4FF244AE78000B30C3A /* nib */,
+				8D613554238B6D8B00AB50C2 /* NavBar.swift */,
+				8D502D592380270A00525A96 /* TabBar.swift */,
+			);
+			path = Tab;
+			sourceTree = "<group>";
+		};
+		8D72E4FD244AE75300B30C3A /* Emoji */ = {
+			isa = PBXGroup;
+			children = (
+				8D72E4FE244AE77800B30C3A /* nib */,
+				8DAEA1362382E59A0083AA69 /* EmojiView.swift */,
+				8D613550238A978700AB50C2 /* EmojiViewCell.swift */,
+			);
+			path = Emoji;
+			sourceTree = "<group>";
+		};
+		8D72E4FE244AE77800B30C3A /* nib */ = {
+			isa = PBXGroup;
+			children = (
 				8DAEA1342382E4F00083AA69 /* EmojiView.xib */,
-				8DA06A082389E9820093A718 /* NotificationCell.xib */,
 				8D61354E238A974400AB50C2 /* EmojiViewCell.xib */,
+			);
+			path = nib;
+			sourceTree = "<group>";
+		};
+		8D72E4FF244AE78000B30C3A /* nib */ = {
+			isa = PBXGroup;
+			children = (
 				8D613552238B6D4F00AB50C2 /* NavBar.xib */,
-				8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */,
-				8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */,
+				8D502D552380236900525A96 /* TabBar.xib */,
+			);
+			path = nib;
+			sourceTree = "<group>";
+		};
+		8D72E500244AE78D00B30C3A /* User */ = {
+			isa = PBXGroup;
+			children = (
+				8D72E501244AE7AC00B30C3A /* nib */,
+				8D2D523A2442CC9100712F48 /* UserCell.swift */,
+				8D2D52402443D03500712F48 /* UserListViewController.swift */,
+			);
+			path = User;
+			sourceTree = "<group>";
+		};
+		8D72E501244AE7AC00B30C3A /* nib */ = {
+			isa = PBXGroup;
+			children = (
 				8D2D52382442CA9700712F48 /* UserCell.xib */,
 			);
 			path = nib;
 			sourceTree = "<group>";
 		};
+		8D72E502244AE7EE00B30C3A /* Reaction */ = {
+			isa = PBXGroup;
+			children = (
+				8D72E503244AE80200B30C3A /* nib */,
+				8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */,
+				8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */,
+				8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */,
+			);
+			path = Reaction;
+			sourceTree = "<group>";
+		};
+		8D72E503244AE80200B30C3A /* nib */ = {
+			isa = PBXGroup;
+			children = (
+				8D7968802404BE68004F87FA /* ReactionCollectionHeader.xib */,
+				8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */,
+			);
+			path = nib;
+			sourceTree = "<group>";
+		};
+		8D72E504244AE81600B30C3A /* Notification */ = {
+			isa = PBXGroup;
+			children = (
+				8DA06A0A2389E98D0093A718 /* NotificationCell.swift */,
+				8DC95AF823B0BD450013CABC /* NotificationBanner.swift */,
+				8D72E505244AE81F00B30C3A /* nib */,
+			);
+			path = Notification;
+			sourceTree = "<group>";
+		};
+		8D72E505244AE81F00B30C3A /* nib */ = {
+			isa = PBXGroup;
+			children = (
+				8DA06A082389E9820093A718 /* NotificationCell.xib */,
+				8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */,
+			);
+			path = nib;
+			sourceTree = "<group>";
+		};
+		8D72E506244AE83200B30C3A /* Post */ = {
+			isa = PBXGroup;
+			children = (
+				8D72E507244AE83E00B30C3A /* nib */,
+				8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */,
+			);
+			path = Post;
+			sourceTree = "<group>";
+		};
+		8D72E507244AE83E00B30C3A /* nib */ = {
+			isa = PBXGroup;
+			children = (
+				8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */,
+			);
+			path = nib;
+			sourceTree = "<group>";
+		};
+		8D72E508244AE84C00B30C3A /* Others */ = {
+			isa = PBXGroup;
+			children = (
+				8D7779A524138120005764D9 /* PanelMenuViewController.swift */,
+				8DAF3014241957510041BB85 /* ComponentType.swift */,
+				8D63BFC6242BC239009C3ADE /* NoteDisplay.swift */,
+			);
+			path = Others;
+			sourceTree = "<group>";
+		};
+		8D72E509244AE87700B30C3A /* Trend */ = {
+			isa = PBXGroup;
+			children = (
+				8DF49FA124445B0500C4D2B2 /* TrendViewController.swift */,
+			);
+			path = Trend;
+			sourceTree = "<group>";
+		};
+		8D72E50A244AE88900B30C3A /* NoteCell */ = {
+			isa = PBXGroup;
+			children = (
+				8DC27D99243BF57A0037E610 /* UrlPreviewerViewModel.swift */,
+				8D8863A82383F8A900A7A5A8 /* NoteCellViewModel.swift */,
+				8D61391B2427C1B3003B5BEF /* FileContainerViewModel.swift */,
+			);
+			path = NoteCell;
+			sourceTree = "<group>";
+		};
+		8D72E50B244AE89000B30C3A /* Notification */ = {
+			isa = PBXGroup;
+			children = (
+				8DA06A13238A86B80093A718 /* NotificationCellViewModel.swift */,
+			);
+			path = Notification;
+			sourceTree = "<group>";
+		};
+		8D72E50C244AE8BC00B30C3A /* User */ = {
+			isa = PBXGroup;
+			children = (
+				8D2D52422443D2BD00712F48 /* UserListViewModel.swift */,
+				8D2D523E2443BDFB00712F48 /* UserCellViewModel.swift */,
+			);
+			path = User;
+			sourceTree = "<group>";
+		};
+		8D72E50D244AE8EE00B30C3A /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				8D31018E24397D5E004F8E55 /* ReactionSettingsViewModel.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		8D72E50E244AE8FA00B30C3A /* Others */ = {
+			isa = PBXGroup;
+			children = (
+				8D53741A23A32D03004523FC /* ViewModelType.swift */,
+			);
+			path = Others;
+			sourceTree = "<group>";
+		};
+		8D72E50F244AE92100B30C3A /* User */ = {
+			isa = PBXGroup;
+			children = (
+				8D2D523C2443BDDB00712F48 /* UserCellModel.swift */,
+				8D2D52442443D4DD00712F48 /* UserListModel.swift */,
+			);
+			path = User;
+			sourceTree = "<group>";
+		};
+		8D72E510244AE92700B30C3A /* NoteCell */ = {
+			isa = PBXGroup;
+			children = (
+				8D8863AA2383F96C00A7A5A8 /* NoteCellModel.swift */,
+				8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */,
+			);
+			path = NoteCell;
+			sourceTree = "<group>";
+		};
+		8D72E511244AE92D00B30C3A /* Notification */ = {
+			isa = PBXGroup;
+			children = (
+				8DA06A15238A86DC0093A718 /* NotificationCellModel.swift */,
+			);
+			path = Notification;
+			sourceTree = "<group>";
+		};
+		8D72E512244AE94300B30C3A /* Reaction */ = {
+			isa = PBXGroup;
+			children = (
+				8DAEA1312382E19A0083AA69 /* ReactionGenViewModel.swift */,
+			);
+			path = Reaction;
+			sourceTree = "<group>";
+		};
+		8D72E513244AE94C00B30C3A /* Reaction */ = {
+			isa = PBXGroup;
+			children = (
+				8DAEA1382382E6D00083AA69 /* ReactionGenModel.swift */,
+			);
+			path = Reaction;
+			sourceTree = "<group>";
+		};
+		8D72E514244AE98600B30C3A /* Main */ = {
+			isa = PBXGroup;
+			children = (
+				8D4A2A19237437BE00503685 /* TimelineViewController.swift */,
+				8D502D57238024B700525A96 /* HomeViewController.swift */,
+				8DA06A062389E89A0093A718 /* NotificationsViewController.swift */,
+				8D3036F12385D5F100BA6D38 /* PostViewController.swift */,
+				8D57CA4824412430005DCEB2 /* SearchViewController.swift */,
+			);
+			path = Main;
+			sourceTree = "<group>";
+		};
+		8D72E515244AE98A00B30C3A /* Details */ = {
+			isa = PBXGroup;
+			children = (
+				8D84061E2393547800EED595 /* PostDetailViewController.swift */,
+				8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */,
+			);
+			path = Details;
+			sourceTree = "<group>";
+		};
+		8D72E516244AE9E700B30C3A /* Main */ = {
+			isa = PBXGroup;
+			children = (
+				8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */,
+				8D3036F52385DA8900BA6D38 /* PostViewModel.swift */,
+				8DA06A0C2389EEC60093A718 /* NotificationsViewModel.swift */,
+				8D63BFC2242BBF03009C3ADE /* HomeViewModel.swift */,
+				8DBDD58B244197840014E77F /* SearchViewModel.swift */,
+			);
+			path = Main;
+			sourceTree = "<group>";
+		};
+		8D72E517244AE9F800B30C3A /* Details */ = {
+			isa = PBXGroup;
+			children = (
+				8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */,
+				8DEFF31B239BD45700142802 /* ProfileViewModel.swift */,
+			);
+			path = Details;
+			sourceTree = "<group>";
+		};
+		8D72E518244AEA1500B30C3A /* Main */ = {
+			isa = PBXGroup;
+			children = (
+				8D63BFC4242BBF12009C3ADE /* HomeModel.swift */,
+				8D0AC5C0237B865B00530508 /* TimelineModel.swift */,
+				8DBDD58D244198C90014E77F /* SearchModel.swift */,
+				8DA06A0E2389F04E0093A718 /* NotificationModel.swift */,
+				8D3036F72385DAED00BA6D38 /* PostModel.swift */,
+			);
+			path = Main;
+			sourceTree = "<group>";
+		};
+		8D72E519244AEA1A00B30C3A /* Details */ = {
+			isa = PBXGroup;
+			children = (
+				8D98C267242E0AD600BB8049 /* PostDetailModel.swift */,
+				8DEFF31D239BD4F200142802 /* ProfileModel.swift */,
+			);
+			path = Details;
+			sourceTree = "<group>";
+		};
+		8D72E51B244AEA6500B30C3A /* App */ = {
+			isa = PBXGroup;
+			children = (
+				8D4A2A15237437BE00503685 /* AppDelegate.swift */,
+				8D4A2A17237437BE00503685 /* SceneDelegate.swift */,
+				8D1C150D2424C649004B1202 /* Bridge.h */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
 		8DAEA13A2382E7FF0083AA69 /* Reusable */ = {
 			isa = PBXGroup;
 			children = (
-				8D8863A82383F8A900A7A5A8 /* NoteCellViewModel.swift */,
-				8DA06A13238A86B80093A718 /* NotificationCellViewModel.swift */,
-				8D61391B2427C1B3003B5BEF /* FileContainerViewModel.swift */,
-				8DC27D99243BF57A0037E610 /* UrlPreviewerViewModel.swift */,
-				8D2D523E2443BDFB00712F48 /* UserCellViewModel.swift */,
-				8D2D52422443D2BD00712F48 /* UserListViewModel.swift */,
+				8D72E512244AE94300B30C3A /* Reaction */,
+				8D72E50C244AE8BC00B30C3A /* User */,
+				8D72E50B244AE89000B30C3A /* Notification */,
+				8D72E50A244AE88900B30C3A /* NoteCell */,
 			);
 			path = Reusable;
 			sourceTree = "<group>";
@@ -635,12 +885,10 @@
 		8DAEA13B2382E80B0083AA69 /* Reusable */ = {
 			isa = PBXGroup;
 			children = (
-				8D2D523C2443BDDB00712F48 /* UserCellModel.swift */,
-				8DAEA1382382E6D00083AA69 /* ReactionGenModel.swift */,
-				8D8863AA2383F96C00A7A5A8 /* NoteCellModel.swift */,
-				8DA06A15238A86DC0093A718 /* NotificationCellModel.swift */,
-				8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */,
-				8D2D52442443D4DD00712F48 /* UserListModel.swift */,
+				8D72E513244AE94C00B30C3A /* Reaction */,
+				8D72E511244AE92D00B30C3A /* Notification */,
+				8D72E510244AE92700B30C3A /* NoteCell */,
+				8D72E50F244AE92100B30C3A /* User */,
 			);
 			path = Reusable;
 			sourceTree = "<group>";
@@ -1198,7 +1446,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OBJC_BRIDGING_HEADER = ./MissCat/Bridge.h;
+				SWIFT_OBJC_BRIDGING_HEADER = ./MissCat/Others/App/Bridge.h;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -1277,7 +1525,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OBJC_BRIDGING_HEADER = ./MissCat/Bridge.h;
+				SWIFT_OBJC_BRIDGING_HEADER = ./MissCat/Others/App/Bridge.h;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
