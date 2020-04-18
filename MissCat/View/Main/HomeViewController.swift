@@ -113,6 +113,18 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         return true
     }
     
+    // たまにnavigationControllerが機能しなくなってフリーズするため、フリーズしないように
+    // 参考→　https://stackoverflow.com/a/36637556
+    func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
+        if navigationController.viewControllers.count > 1 {
+            self.navigationController?.interactivePopGestureRecognizer?.delegate = self
+            navigationController.interactivePopGestureRecognizer?.isEnabled = true
+        } else {
+            self.navigationController?.interactivePopGestureRecognizer?.delegate = nil
+            navigationController.interactivePopGestureRecognizer?.isEnabled = false
+        }
+    }
+    
     // MARK: Design
     
     private func setTheme() {
