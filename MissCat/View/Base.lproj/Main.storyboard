@@ -1035,7 +1035,10 @@
                                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                             </textView>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="8NI-ap-XjW">
-                                                <rect key="frame" x="20" y="44" width="85" height="30"/>
+                                                <rect key="frame" x="20" y="44" width="30" height="30"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" secondItem="8NI-ap-XjW" secondAttribute="height" multiplier="1:1" id="fII-uU-WzU"/>
+                                                </constraints>
                                                 <state key="normal" title="chevron-left"/>
                                             </button>
                                             <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="ZH5-kq-n9g">
@@ -1146,6 +1149,10 @@
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="q7w-bY-daS">
                                                 <rect key="frame" x="364" y="44" width="30" height="30"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" secondItem="q7w-bY-daS" secondAttribute="height" multiplier="1:1" id="CZ5-fa-7QR"/>
+                                                    <constraint firstAttribute="height" constant="30" id="Za4-0R-0ul"/>
+                                                </constraints>
                                                 <state key="normal" title="cog"/>
                                             </button>
                                         </subviews>
@@ -1157,6 +1164,7 @@
                                             <constraint firstAttribute="trailing" secondItem="Ck2-Ts-76E" secondAttribute="trailing" id="88T-xt-MOa"/>
                                             <constraint firstItem="o1r-bc-asi" firstAttribute="leading" secondItem="fb3-8M-JPG" secondAttribute="leading" id="Ad5-gx-SmM"/>
                                             <constraint firstItem="DKm-jx-5xf" firstAttribute="top" secondItem="ZH5-kq-n9g" secondAttribute="bottom" constant="10.5" id="D1Z-69-I0p"/>
+                                            <constraint firstItem="8NI-ap-XjW" firstAttribute="height" secondItem="q7w-bY-daS" secondAttribute="height" id="DbG-2J-NOn"/>
                                             <constraint firstAttribute="trailing" secondItem="o1r-bc-asi" secondAttribute="trailing" id="HwI-UE-ZXr"/>
                                             <constraint firstAttribute="trailing" secondItem="q7w-bY-daS" secondAttribute="trailing" constant="20" id="IbL-eJ-0ny"/>
                                             <constraint firstItem="BPw-nG-rsB" firstAttribute="bottom" secondItem="o1r-bc-asi" secondAttribute="bottom" id="Lck-cB-RVq"/>
