@@ -175,7 +175,7 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
     
     func tappedPost() {}
     
-    func tappedFav() {}
+    func tappedDM() {}
     
     func tappedProfile() {}
 }

@@ -76,7 +76,7 @@ extension NoteCell {
         
         // MARK: Meta
         
-        let emojis: [EmojiModel]?
+        var emojis: [EmojiModel]?
         let ago: String
         let replyCount: Int
         let renoteCount: Int

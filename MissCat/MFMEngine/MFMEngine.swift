@@ -290,6 +290,8 @@ class MFMEngine {
     
     /// MarkDownのため、文字列に修正を加える
     private static func markdown(_ text: String) -> String {
+        let text = disablingTags(text)
+        
         // bold
         let bold = text.replacingOccurrences(of: "\\*\\*([^\\*]+)\\*\\*",
                                              with: "<b>$1</b>",
@@ -309,7 +311,7 @@ class MFMEngine {
                                                   with: "<span style=\"background-color:#272823;color:white;\">$1</span>",
                                                   options: .regularExpression)
         
-        return disablingTags(code)
+        return code
     }
     
     /// 特定のタグを無効化していく

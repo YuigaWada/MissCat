@@ -83,8 +83,8 @@ class EmojiHandler {
         return raw == ":" + name + ":" || raw == name || raw.replacingOccurrences(of: ":", with: "") == name
     }
     
-    static func convert2EmojiModel(raw: String) -> EmojiView.EmojiModel {
-        guard let convertedEmojiData = EmojiHandler.handler.convertEmoji(raw: raw)
+    static func convert2EmojiModel(raw: String, external externalEmojis: [EmojiModel] = []) -> EmojiView.EmojiModel {
+        guard let convertedEmojiData = EmojiHandler.handler.convertEmoji(raw: raw, external: externalEmojis)
         else {
             return .init(rawEmoji: raw,
                          isDefault: true,

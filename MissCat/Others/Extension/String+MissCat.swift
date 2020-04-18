@@ -90,13 +90,17 @@ extension String {
         return number == 0
     }
     
-    // ISO 8601形式のdateを "○m", "◯s" 形式に変換する
-    func calculateAgo() -> String {
-        let date = self
-        
+    var date: Date {
         let iso8601formatter = ISO8601DateFormatter()
         iso8601formatter.formatOptions.insert(.withFractionalSeconds)
-        guard let formatedDate = iso8601formatter.date(from: date) else { return "0s" }
+        return iso8601formatter.date(from: self) ?? .init()
+    }
+    
+    // ISO 8601形式のdateを "○m", "◯s" 形式に変換する
+    func calculateAgo() -> String {
+        let iso8601formatter = ISO8601DateFormatter()
+        iso8601formatter.formatOptions.insert(.withFractionalSeconds)
+        guard let formatedDate = iso8601formatter.date(from: self) else { return "0s" }
         
         let interval = Date().timeIntervalSince(formatedDate)
         let formatter = DateFormatter()
