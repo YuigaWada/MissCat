@@ -60,6 +60,7 @@ class TimelineModel {
         let rawReaction: String?
         let isMyReaction: Bool
         let plus: Bool
+        let externalEmoji: EmojiModel?
     }
     
     struct Trigger {
@@ -295,7 +296,8 @@ class TimelineModel {
                     self.updateReaction(targetNoteId: updateContents.targetNoteId,
                                         reaction: updateContents.reaction,
                                         isMyReaction: isMyReaction,
-                                        plus: true)
+                                        plus: true,
+                                        external: updateContents.emoji)
                 }
                 
             case .pollVoted:
@@ -360,11 +362,12 @@ class TimelineModel {
     
     // MARK: Update Cell
     
-    private func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool, plus: Bool) {
+    private func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool, plus: Bool, external externalEmoji: EmojiModel? = nil) {
         let updateReaction = UpdateReaction(targetNoteId: targetNoteId,
                                             rawReaction: rawReaction,
                                             isMyReaction: isMyReaction,
-                                            plus: plus)
+                                            plus: plus,
+                                            externalEmoji: externalEmoji)
         
         updateReactionTrigger.onNext(updateReaction)
     }

@@ -112,14 +112,14 @@ class TimelineViewModel: ViewModelType {
     }
     
     /// UserIdがUserDefaulsに保存されてるかチェック→保存されてない場合は保存する
-     func checkUserId() {
-         if let currentUserId = Cache.UserDefaults.shared.getCurrentLoginedUserId(), !currentUserId.isEmpty {
-             Cache.shared.getMe { me in
-                 guard let me = me else { return }
-                 Cache.UserDefaults.shared.setCurrentLoginedUserId(me.id)
-             }
-         }
-     }
+    func checkUserId() {
+        if let currentUserId = Cache.UserDefaults.shared.getCurrentLoginedUserId(), !currentUserId.isEmpty {
+            Cache.shared.getMe { me in
+                guard let me = me else { return }
+                Cache.UserDefaults.shared.setCurrentLoginedUserId(me.id)
+            }
+        }
+    }
     
     func setSkeltonCell() {
         guard !hasSkeltonCell else { return }
@@ -196,7 +196,8 @@ class TimelineViewModel: ViewModelType {
             self.updateReaction(targetNoteId: info.targetNoteId,
                                 reaction: info.rawReaction,
                                 isMyReaction: info.isMyReaction,
-                                plus: info.plus)
+                                plus: info.plus,
+                                external: info.externalEmoji)
         })
             .disposed(by: disposeBag)
     }
@@ -211,11 +212,15 @@ class TimelineViewModel: ViewModelType {
         }
     }
     
-    func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool, plus: Bool, needReloading: Bool = true) {
+    func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool, plus: Bool, external externalEmoji: EmojiModel?, needReloading: Bool = true) {
         guard let targetNoteId = targetNoteId, let rawReaction = rawReaction else { return }
         
         DispatchQueue.global().async {
             self.findNoteIndex(noteId: targetNoteId).forEach { targetIndex in
+                
+                if let externalEmoji = externalEmoji {
+                    self.cellsModel[targetIndex].emojis?.append(externalEmoji)
+                }
                 
                 let existReactionCount = self.cellsModel[targetIndex].reactions.filter { $0.name == rawReaction }
                 let hasThisReaction = existReactionCount.count > 0

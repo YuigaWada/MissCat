@@ -386,6 +386,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                                       reaction: myReaction,
                                       isMyReaction: true,
                                       plus: false,
+                                      external: nil,
                                       needReloading: true)
             return
         }
@@ -404,6 +405,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                                            reaction: raw,
                                            isMyReaction: true,
                                            plus: true,
+                                           external: nil,
                                            needReloading: true)
         }).disposed(by: disposeBag)
     }
@@ -413,6 +415,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                                   reaction: rawReaction,
                                   isMyReaction: true,
                                   plus: plus,
+                                  external: nil,
                                   needReloading: false)
     }
     
