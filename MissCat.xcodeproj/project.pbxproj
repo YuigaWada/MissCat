@@ -1133,7 +1133,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.7;
+				CURRENT_PROJECT_VERSION = 1.0.9;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -1148,7 +1148,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.9;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",
@@ -1212,7 +1212,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.7;
+				CURRENT_PROJECT_VERSION = 1.0.9;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -1227,7 +1227,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.9;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",
