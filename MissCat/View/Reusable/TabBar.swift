@@ -11,7 +11,7 @@ import UIKit
 enum TabKind {
     case home
     case notifications
-    case fav
+    case messages
     case profile
 }
 
@@ -21,7 +21,7 @@ protocol FooterTabBarDelegate {
     func tappedHome()
     func tappedNotifications()
     func tappedPost()
-    func tappedFav()
+    func tappedDM()
     func tappedProfile()
     
     func present(_ viewControllerToPresent: UIViewController, animated flag: Bool, completion: (() -> Void)?)
@@ -110,8 +110,8 @@ class FooterTabBar: UIView {
     @IBAction func tappedFav(_ sender: Any) {
         guard let delegate = delegate else { return }
         
-        selected = .fav
-        delegate.tappedFav()
+        selected = .messages
+        delegate.tappedDM()
     }
     
     @IBAction func tappedUser(_ sender: Any) {
@@ -140,7 +140,7 @@ class FooterTabBar: UIView {
             homeButton.setTitleColor(color, for: .normal)
         case .notifications:
             notificationButton.setTitleColor(color, for: .normal)
-        case .fav:
+        case .messages:
             favButton.setTitleColor(color, for: .normal)
         case .profile:
             profileButton.setTitleColor(color, for: .normal)

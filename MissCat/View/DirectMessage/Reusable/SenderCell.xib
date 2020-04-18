@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15705" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="SenderCell" customModule="MissCat" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="414" height="211"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="XV5-YF-9hh">
+                    <rect key="frame" x="20" y="13" width="60.5" height="60.5"/>
+                    <constraints>
+                        <constraint firstAttribute="width" secondItem="XV5-YF-9hh" secondAttribute="height" multiplier="1:1" id="LXG-Jh-9ez"/>
+                    </constraints>
+                </imageView>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="ago" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hBG-c4-bnK">
+                    <rect key="frame" x="371" y="13" width="23" height="16"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                    <color key="textColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" editable="NO" text="Name" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="46A-20-mKd" userLabel="name" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
+                    <rect key="frame" x="90.5" y="13" width="260.5" height="35"/>
+                    <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="35" id="sKo-fM-mTH"/>
+                    </constraints>
+                    <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                </textView>
+                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" editable="NO" text="Name" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="AsC-V4-GhL" userLabel="name" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
+                    <rect key="frame" x="90.5" y="56" width="303.5" height="135"/>
+                    <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                    <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                </textView>
+            </subviews>
+            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstItem="AsC-V4-GhL" firstAttribute="top" secondItem="46A-20-mKd" secondAttribute="bottom" constant="8" id="1hD-kt-JZM"/>
+                <constraint firstAttribute="trailing" secondItem="hBG-c4-bnK" secondAttribute="trailing" constant="20" id="290-nK-3SR"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="AsC-V4-GhL" secondAttribute="trailing" constant="20" id="6Q2-4t-QSD"/>
+                <constraint firstItem="XV5-YF-9hh" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="13" id="6uq-XD-bh3"/>
+                <constraint firstItem="hBG-c4-bnK" firstAttribute="top" secondItem="XV5-YF-9hh" secondAttribute="top" id="9rp-7z-36t"/>
+                <constraint firstItem="XV5-YF-9hh" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="20" id="AdW-gJ-59P"/>
+                <constraint firstItem="hBG-c4-bnK" firstAttribute="leading" secondItem="46A-20-mKd" secondAttribute="trailing" constant="20" id="My0-tc-0WX"/>
+                <constraint firstItem="AsC-V4-GhL" firstAttribute="leading" secondItem="XV5-YF-9hh" secondAttribute="trailing" constant="10" id="i7H-Me-wMd"/>
+                <constraint firstItem="46A-20-mKd" firstAttribute="top" secondItem="XV5-YF-9hh" secondAttribute="top" id="idB-B0-C64"/>
+                <constraint firstItem="46A-20-mKd" firstAttribute="leading" secondItem="XV5-YF-9hh" secondAttribute="trailing" constant="10" id="itr-pX-emP"/>
+                <constraint firstItem="XV5-YF-9hh" firstAttribute="width" secondItem="iN0-l3-epB" secondAttribute="width" multiplier="0.17" constant="-10" id="le8-Cl-n32"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="AsC-V4-GhL" secondAttribute="bottom" constant="20" id="o5o-6d-Gl3"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
+            <connections>
+                <outlet property="agoLabel" destination="hBG-c4-bnK" id="pd1-cn-F6F"/>
+                <outlet property="iconImage" destination="XV5-YF-9hh" id="7pu-lQ-eI9"/>
+                <outlet property="messageTextView" destination="AsC-V4-GhL" id="j4O-qb-gOY"/>
+                <outlet property="nameTextView" destination="46A-20-mKd" id="Tph-Vf-rlb"/>
+            </connections>
+            <point key="canvasLocation" x="137.68115942028987" y="-108.81696428571428"/>
+        </view>
+    </objects>
+</document>

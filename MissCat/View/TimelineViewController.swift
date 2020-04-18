@@ -122,6 +122,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         if !loggedIn, hasApiKey {
             loggedIn = true
             viewModel?.setupInitialCell()
+            viewModel?.checkUserId()
         }
         viewModel?.setSkeltonCell()
         
@@ -324,7 +325,11 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     // 強制的にセルを更新する
     private func updateForcibly(index: Int) {
         let row = IndexPath(row: index, section: 0)
-        DispatchQueue.main.async { self.mainTableView.reloadRows(at: [row], with: .none) }
+        DispatchQueue.main.async {
+            self.mainTableView.performBatchUpdates({ // スクロール位置を固定 (#MissCatTableView.performBatchUpdatesを参考に)
+                self.mainTableView.reloadRows(at: [row], with: .none)
+            })
+        }
     }
     
     private func getViewController(name: String) -> UIViewController {
@@ -368,7 +373,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     
     func tappedPost() {}
     
-    func tappedFav() {}
+    func tappedDM() {}
     
     func tappedProfile() {}
     
@@ -381,6 +386,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                                       reaction: myReaction,
                                       isMyReaction: true,
                                       plus: false,
+                                      external: nil,
                                       needReloading: true)
             return
         }
@@ -399,6 +405,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                                            reaction: raw,
                                            isMyReaction: true,
                                            plus: true,
+                                           external: nil,
                                            needReloading: true)
         }).disposed(by: disposeBag)
     }
@@ -408,6 +415,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                                   reaction: rawReaction,
                                   isMyReaction: true,
                                   plus: plus,
+                                  external: nil,
                                   needReloading: false)
     }
     

@@ -1,0 +1,37 @@
+name: Swift
+
+on:
+  push:
+    branches: 
+    - develop
+    - feature/*
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Select Xcode version
+      run: sudo xcode-select -s '/Applications/Xcode_11.3.1.app/Contents/Developer'
+    - name: Cache CocoaPods files
+      uses: actions/cache@v1
+      with:
+        path: Pods
+        key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pods-
+    - name: Cache gems
+      uses: actions/cache@preview
+      with:
+        path: vendor/bundle
+        key: ${{ runner.os }}-gem-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-gem-
+    - name: Install cocoapods-binary
+      run: gem install cocoapods-binary
+    - name: Run pod install
+      run: pod install
+    - name: Build and Test # On Simulator
+      run: xcodebuild test -workspace MissCat.xcworkspace -scheme MissCat -destination "platform=iOS Simulator,OS=13.3,name=iPhone 11 Pro" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ONLY_ACTIVE_ARCH=NO
