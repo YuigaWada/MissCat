@@ -11,6 +11,12 @@ import UIKit
 
 class PlaceholderTableView: UITableView {
     private let disposeBag: DisposeBag = .init()
+    private lazy var placeholder = preparePlaceholder()
+    
+    override func draw(_ rect: CGRect) {
+        super.draw(rect)
+        showPlaceholder()
+    }
     
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -18,8 +24,7 @@ class PlaceholderTableView: UITableView {
     }
     
     private func showPlaceholder() {
-        guard numberOfSections > 0 else { return }
-        let placeholder = preparePlaceholder()
+        guard numberOfSections > 0 else { setPlaceholder(); return }
         
         let num = numberOfRows(inSection: 0)
         if num == 0 {
@@ -30,6 +35,13 @@ class PlaceholderTableView: UITableView {
         } else {
             placeholder.removeFromSuperview()
         }
+    }
+    
+    private func setPlaceholder() {
+        guard !contains(placeholder) else { return }
+        
+        backgroundView = placeholder
+        setAutoLayout(to: placeholder)
     }
     
     private func preparePlaceholder() -> UIView {
