@@ -33,8 +33,6 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         view.deselectCell(on: tableView)
-        
-        viewModel.setSkeltonCell()
     }
     
     private func binding(dataSource: SenderDataSource?) {

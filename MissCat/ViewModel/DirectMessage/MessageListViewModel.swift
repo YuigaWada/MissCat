@@ -34,7 +34,6 @@ class MessageListViewModel: ViewModelType {
     private let model: MessageListModel = .init()
     
     private let disposeBag: DisposeBag
-    private var hasSkeltonCell: Bool = false
     private var _isLoading: Bool = false
     
     // MARK: LifeCycle
@@ -50,29 +49,8 @@ class MessageListViewModel: ViewModelType {
         }, onCompleted: {
             DispatchQueue.main.async {
                 self.updateUsers(new: self.cellsModel)
-                self.removeSkeltonCell()
             }
         }, onDisposed: nil).disposed(by: disposeBag)
-    }
-    
-    func setSkeltonCell() {
-        guard !hasSkeltonCell else { return }
-        
-        for _ in 0 ..< 10 {
-            let skeltonCellModel = SenderCell.Model.fakeSkeltonCell()
-            cellsModel.append(skeltonCellModel)
-        }
-        
-        updateUsers(new: cellsModel)
-        hasSkeltonCell = true
-    }
-    
-    private func removeSkeltonCell() {
-        guard hasSkeltonCell else { return }
-        let removed = cellsModel.suffix(cellsModel.count - 10)
-        cellsModel = Array(removed)
-        
-        updateUsers(new: cellsModel)
     }
     
     // MARK: Load
