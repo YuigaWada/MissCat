@@ -454,8 +454,8 @@ extension HomeViewController: FooterTabBarDelegate {
         case .profile:
             tappedProfile()
             
-        case .fav:
-            tappedFav()
+        case .messages:
+            tappedDM()
         }
     }
     
@@ -486,7 +486,7 @@ extension HomeViewController: FooterTabBarDelegate {
         move2ViewController(identifier: "post")
     }
     
-    func tappedFav() {
+    func tappedDM() {
         if nowPage != .messages {
             DispatchQueue.main.async {
                 self.hideView(without: .messages)
