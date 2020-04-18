@@ -46,6 +46,7 @@ class NotificationsViewModel {
                 guard let cellModel = self.model.getModel(notification: notification) else { return }
                 
                 self.shapeModel(cellModel)
+                self.removeDuplicated(cellModel)
                 self.cellsModel.append(cellModel)
             }
             
@@ -70,6 +71,8 @@ class NotificationsViewModel {
         guard let channel = channel, channel == .main, let cellModel = model.getModel(type: type, target: response) else { return }
         
         shapeModel(cellModel)
+        
+        removeDuplicated(cellModel)
         cellsModel.insert(cellModel, at: 0)
         
         update(new: cellsModel)
@@ -82,6 +85,20 @@ class NotificationsViewModel {
         } else {
             MFMEngine.shapeModel(cellModel)
         }
+    }
+    
+    /// 何らかの理由で重複しておくられてくるモデルを炙り出してremoveする
+    private func removeDuplicated(_ cellModel: NotificationCell.Model) {
+        // 例えば、何度もリアクションを変更されたりすると重複して送られてくる
+        let duplicated = cellsModel.filter {
+            guard let fromUserId = $0.fromUser?.id, let myNoteId = $0.myNote?.noteId else { return false }
+            return fromUserId == cellModel.fromUser?.id && myNoteId == cellModel.myNote?.noteId
+        }
+        
+        // 新しいバージョンの通知のみ表示する
+        duplicated
+            .compactMap { cellsModel.firstIndex(of: $0) }
+            .forEach { cellsModel.remove(at: $0) }
     }
     
     private func update(new: [NotificationCell.Model]) {
