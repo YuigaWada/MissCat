@@ -42,6 +42,12 @@ class DirectMessageViewController: ChatViewController {
                 self.homeViewController?.openUserPage(username: link.value)
             }
         }).disposed(by: disposeBag)
+        
+        loadTrigger.subscribe(onNext: {
+            viewModel.load {
+                self.endRefreshing()
+            }
+        }).disposed(by: disposeBag)
     }
     
     override func viewWillAppear(_ animated: Bool) {

@@ -47,13 +47,15 @@ class DirectMessageViewModel: ViewModelType {
         }).disposed(by: disposeBag)
     }
     
-    func load(untilId: String? = nil) {
+    func load(completion: (() -> Void)? = nil) {
+        let untilId = messages.count > 0 ? messages[0].messageId : nil
         let option: DirectMessageModel.LoadOption = .init(userId: input.userId, untilId: untilId)
         
         model.load(with: option).subscribe(onNext: { loaded in
             self.messages.insert(loaded, at: 0)
         }, onCompleted: {
             self.output.messages.accept(self.messages)
+            completion?()
         }).disposed(by: disposeBag)
     }
     

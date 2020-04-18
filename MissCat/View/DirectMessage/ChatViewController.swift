@@ -21,12 +21,19 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     
     var messages: Binder<[DirectMessage]> { // こいつをDirectMessageViewControllerからbindするだけ
         return Binder(self) { vc, value in
+            let initialLoad = vc.messageList.count == 0
+            
             vc.messageList = value
-            vc.messagesCollectionView.reloadData()
-            vc.messagesCollectionView.scrollToBottom()
+            if initialLoad {
+                vc.messagesCollectionView.reloadData()
+                vc.messagesCollectionView.scrollToBottom()
+            } else {
+                vc.messagesCollectionView.reloadDataAndKeepOffset()
+            }
         }
     }
     
+    var loadTrigger: PublishRelay<Void> = .init()
     var sendTrigger: PublishRelay<String> = .init()
     var tapTrigger: PublishRelay<HyperLink> = .init()
     
@@ -59,13 +66,14 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     
     // MARK: For Overrides
     
-    func loadFirstMessages() {
-        messagesCollectionView.reloadData()
-        messagesCollectionView.scrollToBottom()
+    func endRefreshing() {
+        DispatchQueue.main.async {
+            self.refreshControl.endRefreshing()
+        }
     }
     
     @objc func loadMoreMessages() {
-        refreshControl.endRefreshing()
+        loadTrigger.accept(())
     }
     
     // MARK: - Helpers
