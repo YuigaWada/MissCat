@@ -177,7 +177,7 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     
     func tappedPost() {}
     
-    func tappedFav() {}
+    func tappedDM() {}
     
     func tappedProfile() {}
 }

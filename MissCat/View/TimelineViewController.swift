@@ -373,7 +373,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     
     func tappedPost() {}
     
-    func tappedFav() {}
+    func tappedDM() {}
     
     func tappedProfile() {}
     
