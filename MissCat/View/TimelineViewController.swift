@@ -122,6 +122,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         if !loggedIn, hasApiKey {
             loggedIn = true
             viewModel?.setupInitialCell()
+            viewModel?.checkUserId()
         }
         viewModel?.setSkeltonCell()
         

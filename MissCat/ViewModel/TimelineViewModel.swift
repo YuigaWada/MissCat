@@ -111,6 +111,16 @@ class TimelineViewModel: ViewModelType {
         }, onDisposed: nil).disposed(by: disposeBag)
     }
     
+    /// UserIdがUserDefaulsに保存されてるかチェック→保存されてない場合は保存する
+     func checkUserId() {
+         if let currentUserId = Cache.UserDefaults.shared.getCurrentLoginedUserId(), !currentUserId.isEmpty {
+             Cache.shared.getMe { me in
+                 guard let me = me else { return }
+                 Cache.UserDefaults.shared.setCurrentLoginedUserId(me.id)
+             }
+         }
+     }
+    
     func setSkeltonCell() {
         guard !hasSkeltonCell else { return }
         
