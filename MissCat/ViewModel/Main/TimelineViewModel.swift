@@ -88,6 +88,21 @@ class TimelineViewModel: ViewModelType {
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
         self.disposeBag = disposeBag
+        binding()
+    }
+    
+    private func binding() {
+        model.trigger.removeTargetTrigger.subscribe(onNext: { noteId in
+            self.removeNoteCell(noteId: noteId)
+        }).disposed(by: disposeBag)
+        
+        model.trigger.updateReactionTrigger.subscribe(onNext: { info in
+            self.updateReaction(targetNoteId: info.targetNoteId,
+                                reaction: info.rawReaction,
+                                isMyReaction: info.isMyReaction,
+                                plus: info.plus,
+                                external: info.externalEmoji)
+        }).disposed(by: disposeBag)
     }
     
     func setupInitialCell() {
@@ -184,22 +199,7 @@ class TimelineViewModel: ViewModelType {
                 self.reloadNotes {
                     self.connectStream(isReconnection: true) // リロード完了後にstreamingへ接続
                 }
-            })
-            .disposed(by: disposeBag)
-        
-        model.trigger.removeTargetTrigger.subscribe(onNext: { noteId in
-            self.removeNoteCell(noteId: noteId)
-        })
-            .disposed(by: disposeBag)
-        
-        model.trigger.updateReactionTrigger.subscribe(onNext: { info in
-            self.updateReaction(targetNoteId: info.targetNoteId,
-                                reaction: info.rawReaction,
-                                isMyReaction: info.isMyReaction,
-                                plus: info.plus,
-                                external: info.externalEmoji)
-        })
-            .disposed(by: disposeBag)
+            }).disposed(by: disposeBag)
     }
     
     // MARK: Remove / Update Cell
@@ -218,7 +218,7 @@ class TimelineViewModel: ViewModelType {
         findNoteIndex(noteId: targetNoteId).forEach { targetIndex in
             
             if let externalEmoji = externalEmoji {
-                self.cellsModel[targetIndex].emojis?.append(externalEmoji)
+                self.cellsModel[targetIndex].emojis?.append(externalEmoji) // 絵文字を追加しておく
             }
             
             let existReactionCount = self.cellsModel[targetIndex].reactions.filter { $0.name == rawReaction }
