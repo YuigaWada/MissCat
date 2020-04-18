@@ -492,7 +492,6 @@ extension HomeViewController: FooterTabBarDelegate {
                 self.hideView(without: .messages)
                 self.showFavView()
             }
-            showFavView()
         }
     }
     
