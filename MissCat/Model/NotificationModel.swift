@@ -82,12 +82,14 @@ class NotificationsModel {
             myNote = note.getNoteCellModel()
         }
         
+        let externalEmojis = getExternalEmojis(notification)
         let cellModel = NotificationCell.Model(notificationId: id,
                                                type: type,
                                                myNote: myNote,
                                                replyNote: replyNote,
                                                fromUser: user,
                                                reaction: notification.reaction,
+                                               emojis: externalEmojis,
                                                ago: notification.createdAt ?? "")
         
         return cellModel
@@ -120,12 +122,27 @@ class NotificationsModel {
             return nil
         }
         
+        let externalEmojis = getExternalEmojis(target)
         return NotificationCell.Model(notificationId: target.id ?? "",
                                       type: type,
                                       myNote: target.note?.getNoteCellModel(),
                                       replyNote: nil,
                                       fromUser: fromUser,
                                       reaction: target.reaction,
+                                      emojis: externalEmojis,
                                       ago: target.createdAt ?? "")
+    }
+    
+    /// 流れてきた他インスタンスの絵文字を取得
+    /// - Parameter notifications: NotificationModel
+    private func getExternalEmojis(_ notification: NotificationModel) -> [EmojiModel] {
+        // 仕様上、他インスタンスの絵文字情報はnoteに含まれるっぽい
+        return notification.note?.emojis?.compactMap { $0 } ?? []
+    }
+    
+    /// 流れてきた他インスタンスの絵文字を取得
+    /// - Parameter notifications: NotificationModel
+    private func getExternalEmojis(_ notification: StreamingModel) -> [EmojiModel] {
+        return notification.note?.emojis?.compactMap { $0 } ?? []
     }
 }

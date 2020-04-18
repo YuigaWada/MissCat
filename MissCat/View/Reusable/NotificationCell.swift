@@ -131,7 +131,7 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
             typeIconView.text = "fire-alt"
             typeIconView.textColor = reactionIconColor
             typeLabel.text = "Reaction"
-            emojiView.emoji = EmojiHandler.convert2EmojiModel(raw: reaction)
+            emojiView.emoji = EmojiHandler.convert2EmojiModel(raw: reaction, external: item.emojis)
         }
         
         // follow
@@ -196,7 +196,7 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
 
 extension NotificationCell {
     class Model: IdentifiableType, Equatable {
-        internal init(isMock: Bool = false, notificationId: String, type: ActionType = .reply, shapedDisplayName: MFMString? = nil, myNote: NoteCell.Model?, replyNote: NoteCell.Model?, fromUser: UserModel?, reaction: String?, ago: String) {
+        internal init(isMock: Bool = false, notificationId: String, type: ActionType = .reply, shapedDisplayName: MFMString? = nil, myNote: NoteCell.Model?, replyNote: NoteCell.Model?, fromUser: UserModel?, reaction: String?, emojis: [EmojiModel] = [], ago: String) {
             self.isMock = isMock
             self.notificationId = notificationId
             self.type = type
@@ -205,6 +205,7 @@ extension NotificationCell {
             self.replyNote = replyNote
             self.fromUser = fromUser
             self.reaction = reaction
+            self.emojis = emojis
             self.ago = ago
         }
         
@@ -225,6 +226,7 @@ extension NotificationCell {
         let fromUser: UserModel?
         
         let reaction: String?
+        var emojis: [EmojiModel]
         
         let ago: String
         
