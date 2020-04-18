@@ -16,6 +16,7 @@
 		8D0AC5BE237B714900530508 /* EmojiHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0AC5BD237B714900530508 /* EmojiHandler.swift */; };
 		8D0AC5C1237B865B00530508 /* TimelineModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0AC5C0237B865B00530508 /* TimelineModel.swift */; };
 		8D0D47AA23A74EC80095361D /* UIViewController+PhotoEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0D47A923A74EC80095361D /* UIViewController+PhotoEditor.swift */; };
+		8D0D6891244A9A6800725ABB /* PlaceholderTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0D6890244A9A6800725ABB /* PlaceholderTableView.swift */; };
 		8D0F7D0F2398F21F009B45E1 /* ReactionGenPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */; };
 		8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */; };
 		8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D16656823A0DB3100C03764 /* MFMEngine.swift */; };
@@ -163,6 +164,7 @@
 		8D0AC5BD237B714900530508 /* EmojiHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiHandler.swift; sourceTree = "<group>"; };
 		8D0AC5C0237B865B00530508 /* TimelineModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineModel.swift; sourceTree = "<group>"; };
 		8D0D47A923A74EC80095361D /* UIViewController+PhotoEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+PhotoEditor.swift"; sourceTree = "<group>"; };
+		8D0D6890244A9A6800725ABB /* PlaceholderTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderTableView.swift; sourceTree = "<group>"; };
 		8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenPanel.swift; sourceTree = "<group>"; };
 		8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		8D16656823A0DB3100C03764 /* MFMEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MFMEngine.swift; sourceTree = "<group>"; };
@@ -442,6 +444,7 @@
 				8D3037012389018800BA6D38 /* Cache.swift */,
 				8D4B02C0241FE5C90056605F /* Theme.swift */,
 				8D2A7235242A49CC00F8827D /* MissCatTableView.swift */,
+				8D0D6890244A9A6800725ABB /* PlaceholderTableView.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -885,6 +888,7 @@
 				8DAF30192419842D0041BB85 /* AboutMisskeyViewController.swift in Sources */,
 				8D2D52432443D2BD00712F48 /* UserListViewModel.swift in Sources */,
 				8D2D52412443D03500712F48 /* UserListViewController.swift in Sources */,
+				8D0D6891244A9A6800725ABB /* PlaceholderTableView.swift in Sources */,
 				8D57CA4924412430005DCEB2 /* SearchViewController.swift in Sources */,
 				8DAD238A240CE76000AB1F36 /* StartViewController.swift in Sources */,
 				8D61391A2427B9B0003B5BEF /* FileContainer.swift in Sources */,
