@@ -211,7 +211,8 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
             self.favViewController = favViewController
             
             navBar.barTitle = "DirectMessages"
-            navBar.setButton(style: .Right, rightText: "plus", rightFont: UIFont.awesomeSolid(fontSize: 11))
+//            navBar.setButton(style: .Right, rightText: "plus", rightFont: UIFont.awesomeSolid(fontSize: 11))
+            navBar.setButton(style: .None, rightText: nil, leftText: nil)
             
             addChild(self.favViewController!)
             view.addSubview(self.favViewController!.view)
@@ -527,7 +528,8 @@ extension HomeViewController: FooterTabBarDelegate {
         
         navBar.isHidden = false
         navBar.barTitle = "DirectMessages"
-        navBar.setButton(style: .Right, rightText: "plus", rightFont: UIFont.awesomeSolid(fontSize: 13))
+//        navBar.setButton(style: .Right, rightText: "plus", rightFont: UIFont.awesomeSolid(fontSize: 13))
+        navBar.setButton(style: .None, rightText: nil, leftText: nil)
         
         nowPage = .messages
         favViewController.view.isHidden = false
@@ -541,6 +543,7 @@ extension HomeViewController: NavBarDelegate {
     
     func tappedRightNavButton() {
         guard nowPage == .messages else { return }
+        
         // DM処理書く
     }
 }
