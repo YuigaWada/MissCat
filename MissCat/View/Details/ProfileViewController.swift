@@ -37,6 +37,9 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     @IBOutlet weak var settingsButton: UIButton!
     @IBOutlet weak var containerHeightContraint: NSLayoutConstraint!
     
+    @IBOutlet weak var catIcon: UIImageView!
+    @IBOutlet weak var catYConstraint: NSLayoutConstraint!
+    
     var homeViewController: HomeViewController?
     
     private var userId: String?
@@ -82,6 +85,9 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         backButton.layer.cornerRadius = backButton.frame.width / 2
         
         containerHeightContraint.constant = 2 * view.frame.height - (view.frame.height - containerScrollView.frame.origin.y)
+        
+        catYConstraint.constant = (-1) * catIcon.frame.width / 4 + 2
+        catYConstraint.constant -= sqrt(abs(pow(iconImageView.layer.cornerRadius, 2) - pow(catIcon.frame.width / 2, 2)))
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -177,6 +183,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         }).disposed(by: disposeBag)
         
         output.bannerImage.asDriver(onErrorDriveWith: Driver.empty()).drive(bannerImageView.rx.image).disposed(by: disposeBag)
+        output.isCat.asDriver(onErrorDriveWith: Driver.empty()).map { !$0 }.drive(catIcon.rx.isHidden).disposed(by: disposeBag)
         
         output.displayName.asDriver(onErrorDriveWith: Driver.empty()).drive(nameTextView.rx.attributedText).disposed(by: disposeBag)
         output.notesCount.asDriver(onErrorDriveWith: Driver.empty()).drive(notesCountButton.rx.title()).disposed(by: disposeBag)
