@@ -18,7 +18,7 @@ import WebKit
 protocol NoteCellDelegate {
     func tappedReply(note: NoteCell.Model)
     func tappedRenote(note: NoteCell.Model)
-    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?)
+    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?)
     func tappedOthers(note: NoteCell.Model)
     
     func move2PostDetail(item: NoteCell.Model)
@@ -92,6 +92,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     
     var noteId: String?
     var userId: String?
+    var hostInstance: String?
     var iconImageUrl: String?
     
     // MARK: Private Var
@@ -498,6 +499,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         // main
         self.noteId = item.noteId
         userId = item.userId
+        hostInstance = item.hostInstance
         iconImageUrl = item.iconImageUrl
         delegate = arg.delegate
         
@@ -525,6 +527,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         delegate = nil
         noteId = nil
         userId = nil
+        hostInstance = nil
         
         backgroundColor = .white
         separatorBorder.isHidden = false
@@ -668,6 +671,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
                                 iconUrl: iconImageUrl,
                                 displayName: viewModel.output.displayName,
                                 username: viewModel.output.username,
+                                hostInstance: hostInstance ?? "",
                                 note: noteView.attributedText,
                                 hasFile: false,
                                 hasMarked: false,

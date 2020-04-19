@@ -409,7 +409,7 @@ extension HomeViewController: NoteCellDelegate {
         presentWithSemiModal(panelMenu, animated: true, completion: nil)
     }
     
-    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {}
+    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {}
     
     func tappedOthers(note: NoteCell.Model) {}
     

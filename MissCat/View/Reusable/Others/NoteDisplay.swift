@@ -22,11 +22,12 @@ class NoteDisplay: UIViewController, NoteCellDelegate, UserCellDelegate {
         homeViewController?.tappedRenote(note: note)
     }
     
-    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {
+    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {
         _ = presentReactionGen(noteId: noteId,
                                iconUrl: iconUrl,
                                displayName: displayName,
                                username: username,
+                               hostInstance: hostInstance,
                                note: note,
                                hasFile: hasFile,
                                hasMarked: hasMarked)

@@ -45,6 +45,7 @@ extension NoteCell {
         
         let displayName: String
         let username: String
+        let hostInstance: String
         var shapedDisplayName: MFMString?
         
         // MARK: CW
@@ -81,7 +82,7 @@ extension NoteCell {
         let replyCount: Int
         let renoteCount: Int
         
-        init(isSkelton: Bool = false, isReactionGenCell: Bool = false, isRenoteeCell: Bool = false, isPromotionCell: Bool = false, renotee: String? = nil, baseNoteId: String? = nil, isReply: Bool = false, isReplyTarget: Bool = false, noteId: String? = nil, iconImageUrl: String? = nil, iconImage: UIImage? = nil, userId: String, displayName: String, username: String, note: String, ago: String, replyCount: Int, renoteCount: Int, reactions: [ReactionCount], shapedReactions: [NoteCell.Reaction], myReaction: String? = nil, files: [File], emojis: [EmojiModel]? = nil, commentRNTarget: NoteCell.Model? = nil, original: NoteModel? = nil, onOtherNote: Bool = false, poll: Poll? = nil, cw: String? = nil) {
+        init(isSkelton: Bool = false, isReactionGenCell: Bool = false, isRenoteeCell: Bool = false, isPromotionCell: Bool = false, renotee: String? = nil, baseNoteId: String? = nil, isReply: Bool = false, isReplyTarget: Bool = false, noteId: String? = nil, iconImageUrl: String? = nil, iconImage: UIImage? = nil, userId: String, displayName: String, username: String, hostInstance: String = "", note: String, ago: String, replyCount: Int, renoteCount: Int, reactions: [ReactionCount], shapedReactions: [NoteCell.Reaction], myReaction: String? = nil, files: [File], emojis: [EmojiModel]? = nil, commentRNTarget: NoteCell.Model? = nil, original: NoteModel? = nil, onOtherNote: Bool = false, poll: Poll? = nil, cw: String? = nil) {
             self.isSkelton = isSkelton
             self.isReactionGenCell = isReactionGenCell
             self.isRenoteeCell = isRenoteeCell
@@ -96,6 +97,7 @@ extension NoteCell {
             self.userId = userId
             self.displayName = displayName
             self.username = username
+            self.hostInstance = hostInstance
             self.note = note
             self.ago = ago
             self.replyCount = replyCount

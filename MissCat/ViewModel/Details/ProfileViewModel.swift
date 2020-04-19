@@ -89,7 +89,8 @@ class ProfileViewModel: ViewModelType {
         setRelation(targetUserId: user.id)
         
         // Icon Image
-        if let username = user.username, let cachediconImage = Cache.shared.getIcon(username: username) {
+        let host = user.host ?? ""
+        if let username = user.username, let cachediconImage = Cache.shared.getIcon(username: "\(username)@\(host)") {
             output.iconImage.accept(cachediconImage)
         } else if let iconImageUrl = user.avatarUrl {
             iconImageUrl.toUIImage { image in

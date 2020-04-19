@@ -87,7 +87,8 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
                                size: 11.0)
         
         // アイコン画像をset
-        if let image = Cache.shared.getIcon(username: username) {
+        let host = item.fromUser?.host ?? ""
+        if let image = Cache.shared.getIcon(username: "\(username)@\(host)") {
             iconImageView.image = image
         } else if let iconImageUrl = item.fromUser?.avatarUrl, let iconUrl = URL(string: iconImageUrl) {
             iconUrl.toUIImage { [weak self] image in

@@ -230,12 +230,12 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
     
     // MARK: Public Methods
     
-    func setTargetNote(noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
+    func setTargetNote(noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
         // noteId
         setTargetNoteId(noteId)
         
         // icon image
-        if let image = Cache.shared.getIcon(username: username) {
+        if let image = Cache.shared.getIcon(username: "\(username)@\(hostInstance)") {
             iconImageView.image = image
         } else if let iconUrl = iconUrl, let url = URL(string: iconUrl) {
             url.toUIImage { [weak self] image in

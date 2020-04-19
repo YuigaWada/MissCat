@@ -166,7 +166,7 @@ class PostViewModel: ViewModelType {
         guard let target = input.targetNote else { return }
         
         output.innerNote.accept(target.original?.text ?? "")
-        if let image = Cache.shared.getIcon(username: target.username) {
+        if let image = Cache.shared.getIcon(username: "\(target.username)@\(target.hostInstance)") {
             output.innerIcon.accept(image)
         } else if let iconImageUrl = target.iconImageUrl, let imageUrl = URL(string: iconImageUrl) {
             imageUrl.toUIImage { image in

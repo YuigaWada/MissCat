@@ -110,8 +110,8 @@ class NoteCellViewModel: ViewModelType {
         output.onOtherNote.accept(item.onOtherNote)
         output.poll.accept(item.poll)
         
-        setImage(to: output.iconImage, username: item.username, imageRawUrl: item.iconImageUrl)
-        setImage(to: output.innerIconImage, username: item.commentRNTarget?.username, imageRawUrl: item.commentRNTarget?.iconImageUrl)
+        setImage(to: output.iconImage, username: item.username, hostInstance: item.hostInstance, imageRawUrl: item.iconImageUrl)
+        setImage(to: output.innerIconImage, username: item.commentRNTarget?.username, hostInstance: item.hostInstance, imageRawUrl: item.commentRNTarget?.iconImageUrl)
         setFooter(from: item)
     }
     
@@ -147,10 +147,11 @@ class NoteCellViewModel: ViewModelType {
         target?.mfmEngine.renderCustomEmojis(on: input.noteYanagi)
     }
     
-    func setImage(to target: PublishRelay<UIImage>, username: String?, imageRawUrl: String?) {
+    func setImage(to target: PublishRelay<UIImage>, username: String?, hostInstance: String?, imageRawUrl: String?) {
         guard let username = username, let imageRawUrl = imageRawUrl else { return }
         
-        if let image = Cache.shared.getIcon(username: username) {
+        let host = hostInstance ?? ""
+        if let image = Cache.shared.getIcon(username: "\(username)@\(host)") {
             target.accept(image)
         } else if let imageUrl = URL(string: imageRawUrl) {
             imageUrl.toUIImage { image in
