@@ -230,8 +230,8 @@ class NoteCellViewModel: ViewModelType {
     
     private func setReactionCount(from item: NoteCell.Model, myReaction: String? = nil, startCount: Int = 0) {
         var reactionsCount: Int = startCount
-        item.reactions.forEach {
-            reactionsCount += Int($0.count ?? "0") ?? 0
+        item.shapedReactions.forEach {
+            reactionsCount += Int($0.count) ?? 0
         }
         
         // リアクション済みor自分の投稿ならばリアクションボタンを ＋ → − へ
@@ -258,6 +258,7 @@ class NoteCellViewModel: ViewModelType {
     
     func cancelReaction(noteId: String) {
         myReaction = nil // stateの変更
+        input.cellModel.myReaction = nil
         setReactionCount(from: input.cellModel, startCount: -1)
         model.cancelReaction(noteId: noteId)
     }

@@ -676,6 +676,10 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
                                 hasFile: false,
                                 hasMarked: false,
                                 myReaction: viewModel.state.myReaction)
+        
+        if viewModel.state.reactioned {
+            viewModel.cancelReaction(noteId: noteId)
+        }
     }
     
     @IBAction func tappedOthers(_ sender: Any) {
