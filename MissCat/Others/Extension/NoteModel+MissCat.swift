@@ -28,6 +28,7 @@ extension NoteModel {
         
         let cellModel = NoteCell.Model(noteId: post.id,
                                        iconImageUrl: user.avatarUrl,
+                                       isCat: user.isCat ?? false,
                                        userId: user.id,
                                        displayName: displayName ?? "",
                                        username: user.username ?? "",

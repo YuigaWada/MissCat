@@ -78,6 +78,9 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     
     @IBOutlet weak var mainStackView: UIStackView!
     
+    @IBOutlet weak var catIcon: UIImageView!
+    @IBOutlet weak var catYConstraint: NSLayoutConstraint!
+    
     // MARK: IBOutlet (Constraint)
     
     @IBOutlet weak var nameHeightConstraint: NSLayoutConstraint!
@@ -215,6 +218,9 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         innerNoteTextView.isUserInteractionEnabled = true
         
         skeltonCover.isUserInteractionEnabled = false
+        
+        catYConstraint.constant = (-1) * catIcon.frame.width / 4 + 2
+        catYConstraint.constant -= sqrt(abs(pow(iconView.layer.cornerRadius, 2) - pow(catIcon.frame.width / 2, 2)))
     }
     
     private func setupFileContainer() {
@@ -496,6 +502,9 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         initializeComponent(hasFile: hasFile) // Initialize because NoteCell is reused by TableView.
         
+        // Cat
+        catIcon.isHidden = !item.isCat
+        
         // main
         self.noteId = item.noteId
         userId = item.userId
@@ -561,6 +570,8 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         innerNoteTextView.attributedText = nil
         innerNoteTextView.resetViewString()
+        
+        catIcon.isHidden = true
     }
     
     // MARK: Privates
