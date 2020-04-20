@@ -98,7 +98,17 @@ class NotificationsViewModel {
         // 例えば、何度もリアクションを変更されたりすると重複して送られてくる
         let duplicated = array.filter {
             guard let fromUserId = $0.fromUser?.id, let myNoteId = $0.myNote?.noteId else { return false }
-            return fromUserId == cellModel.fromUser?.id && myNoteId == cellModel.myNote?.noteId && $0.type == cellModel.type
+            
+            let sameUser = fromUserId == cellModel.fromUser?.id
+            let sameMyNote = myNoteId == cellModel.myNote?.noteId
+            let sameType = $0.type == cellModel.type
+            
+            if let replyNote = $0.replyNote, let _replyNote = cellModel.replyNote {
+                let sameReplyNote = replyNote.noteId == _replyNote.noteId
+                return sameUser && sameMyNote && sameType && sameReplyNote
+            }
+            
+            return sameUser && sameMyNote && sameType
         }
         
         // 新しいバージョンの通知のみ表示する
