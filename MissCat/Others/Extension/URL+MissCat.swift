@@ -10,7 +10,7 @@ import SVGKit
 import UIKit
 
 extension URL {
-    func toUIImage(_ completion: @escaping (UIImage?) -> Void) {
+    func toUIImage(_ completion: @escaping (UIImage?) -> Void) -> URLSessionDataTask? {
         var request = URLRequest(url: self)
         request.timeoutInterval = 10
         
@@ -26,6 +26,7 @@ extension URL {
         }
         
         task.resume()
+        return task
     }
     
     func getData(_ completion: @escaping (Data?) -> Void) {

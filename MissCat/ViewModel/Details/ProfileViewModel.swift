@@ -22,6 +22,7 @@ class ProfileViewModel: ViewModelType {
         let displayName: PublishRelay<NSAttributedString> = .init()
         let iconImage: PublishRelay<UIImage> = .init()
         let intro: PublishRelay<NSAttributedString> = .init()
+        let isCat: PublishRelay<Bool> = .init()
         
         let notesCount: PublishRelay<String> = .init()
         let followCount: PublishRelay<String> = .init()
@@ -89,7 +90,8 @@ class ProfileViewModel: ViewModelType {
         setRelation(targetUserId: user.id)
         
         // Icon Image
-        if let username = user.username, let cachediconImage = Cache.shared.getIcon(username: username) {
+        let host = user.host ?? ""
+        if let username = user.username, let cachediconImage = Cache.shared.getIcon(username: "\(username)@\(host)") {
             output.iconImage.accept(cachediconImage)
         } else if let iconImageUrl = user.avatarUrl {
             iconImageUrl.toUIImage { image in
@@ -134,6 +136,8 @@ class ProfileViewModel: ViewModelType {
                 shaped.mfmEngine.renderCustomEmojis(on: self.input.nameYanagi)
             }
         }
+        
+        output.isCat.accept(user.isCat ?? false)
     }
     
     private func setRelation(targetUserId: String) {

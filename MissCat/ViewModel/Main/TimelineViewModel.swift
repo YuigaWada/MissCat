@@ -88,6 +88,21 @@ class TimelineViewModel: ViewModelType {
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
         self.disposeBag = disposeBag
+        binding()
+    }
+    
+    private func binding() {
+        model.trigger.removeTargetTrigger.subscribe(onNext: { noteId in
+            self.removeNoteCell(noteId: noteId)
+        }).disposed(by: disposeBag)
+        
+        model.trigger.updateReactionTrigger.subscribe(onNext: { info in
+            self.updateReaction(targetNoteId: info.targetNoteId,
+                                reaction: info.rawReaction,
+                                isMyReaction: info.isMyReaction,
+                                plus: info.plus,
+                                external: info.externalEmoji)
+        }).disposed(by: disposeBag)
     }
     
     func setupInitialCell() {
@@ -184,22 +199,7 @@ class TimelineViewModel: ViewModelType {
                 self.reloadNotes {
                     self.connectStream(isReconnection: true) // リロード完了後にstreamingへ接続
                 }
-            })
-            .disposed(by: disposeBag)
-        
-        model.trigger.removeTargetTrigger.subscribe(onNext: { noteId in
-            self.removeNoteCell(noteId: noteId)
-        })
-            .disposed(by: disposeBag)
-        
-        model.trigger.updateReactionTrigger.subscribe(onNext: { info in
-            self.updateReaction(targetNoteId: info.targetNoteId,
-                                reaction: info.rawReaction,
-                                isMyReaction: info.isMyReaction,
-                                plus: info.plus,
-                                external: info.externalEmoji)
-        })
-            .disposed(by: disposeBag)
+            }).disposed(by: disposeBag)
     }
     
     // MARK: Remove / Update Cell
@@ -215,44 +215,42 @@ class TimelineViewModel: ViewModelType {
     func updateReaction(targetNoteId: String?, reaction rawReaction: String?, isMyReaction: Bool, plus: Bool, external externalEmoji: EmojiModel?, needReloading: Bool = true) {
         guard let targetNoteId = targetNoteId, let rawReaction = rawReaction else { return }
         
-        DispatchQueue.global().async {
-            self.findNoteIndex(noteId: targetNoteId).forEach { targetIndex in
-                
-                if let externalEmoji = externalEmoji {
-                    self.cellsModel[targetIndex].emojis?.append(externalEmoji)
-                }
-                
-                let existReactionCount = self.cellsModel[targetIndex].reactions.filter { $0.name == rawReaction }
-                let hasThisReaction = existReactionCount.count > 0
-                
-                if hasThisReaction { // 別のユーザーがリアクションしていた場合
-                    self.cellsModel[targetIndex].reactions = self.cellsModel[targetIndex].reactions.map { counter in
-                        var newReactionCounter = counter
-                        if counter.name == rawReaction, let count = counter.count {
-                            let mustRemove = count == "1" && !plus
-                            
-                            guard !mustRemove else { return nil } // 1→0なのでmodel自体を削除
-                            newReactionCounter.count = plus ? count.increment() : count.decrement()
-                        }
+        findNoteIndex(noteId: targetNoteId).forEach { targetIndex in
+            
+            if let externalEmoji = externalEmoji {
+                self.cellsModel[targetIndex].emojis?.append(externalEmoji) // 絵文字を追加しておく
+            }
+            
+            let existReactionCount = self.cellsModel[targetIndex].reactions.filter { $0.name == rawReaction }
+            let hasThisReaction = existReactionCount.count > 0
+            
+            if hasThisReaction { // 別のユーザーがリアクションしていた場合
+                self.cellsModel[targetIndex].reactions = self.cellsModel[targetIndex].reactions.map { counter in
+                    var newReactionCounter = counter
+                    if counter.name == rawReaction, let count = counter.count {
+                        let mustRemove = count == "1" && !plus
                         
-                        return newReactionCounter
-                    }.compactMap { $0 }
-                } else {
-                    let newReaction = ReactionCount(name: rawReaction, count: "1")
-                    self.cellsModel[targetIndex].reactions.append(newReaction)
-                }
-                
-                // My reaction...?
-                if isMyReaction {
-                    self.cellsModel[targetIndex].myReaction = rawReaction
-                }
-                
-                self.cellsModel[targetIndex].shapedReactions = self.cellsModel[targetIndex].getReactions(with: self.cellsModel[targetIndex].emojis)
-                
-                if needReloading {
-                    self.updateNotes(new: self.cellsModel)
-                    self.updateNotesForcibly(index: targetIndex)
-                }
+                        guard !mustRemove else { return nil } // 1→0なのでmodel自体を削除
+                        newReactionCounter.count = plus ? count.increment() : count.decrement()
+                    }
+                    
+                    return newReactionCounter
+                }.compactMap { $0 }
+            } else {
+                let newReaction = ReactionCount(name: rawReaction, count: "1")
+                self.cellsModel[targetIndex].reactions.append(newReaction)
+            }
+            
+            // My reaction...?
+            if isMyReaction {
+                self.cellsModel[targetIndex].myReaction = rawReaction
+            }
+            
+            self.cellsModel[targetIndex].shapedReactions = self.cellsModel[targetIndex].getReactions(with: self.cellsModel[targetIndex].emojis)
+            
+            if needReloading {
+                self.updateNotes(new: self.cellsModel)
+                self.updateNotesForcibly(index: targetIndex)
             }
         }
     }

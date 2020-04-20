@@ -28,11 +28,19 @@ class UrlPreviewerViewModel: ViewModelType {
     
     private let model = UrlPreviewerModel()
     private let disposeBag: DisposeBag
+    private var imageSessionTasks: [URLSessionDataTask] = []
     
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
         self.disposeBag = disposeBag
         getPreview()
+    }
+    
+    func prepareForReuse() {
+        imageSessionTasks.forEach { task in
+            task.cancel()
+        }
+        imageSessionTasks.removeAll()
     }
     
     // MARK: Privates
@@ -65,10 +73,14 @@ class UrlPreviewerViewModel: ViewModelType {
             return
         }
         
-        url.toUIImage {
+        let task = url.toUIImage {
             guard let image = $0 else { return }
             self.output.image.accept(image)
             Cache.shared.saveUiImage(image, url: url)
+        }
+        
+        if let task = task {
+            imageSessionTasks.append(task)
         }
     }
 }

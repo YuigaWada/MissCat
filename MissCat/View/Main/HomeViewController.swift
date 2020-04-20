@@ -113,6 +113,18 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         return true
     }
     
+    // たまにnavigationControllerが機能しなくなってフリーズするため、フリーズしないように
+    // 参考→　https://stackoverflow.com/a/36637556
+    func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
+        if navigationController.viewControllers.count > 1 {
+            self.navigationController?.interactivePopGestureRecognizer?.delegate = self
+            navigationController.interactivePopGestureRecognizer?.isEnabled = true
+        } else {
+            self.navigationController?.interactivePopGestureRecognizer?.delegate = nil
+            navigationController.interactivePopGestureRecognizer?.isEnabled = false
+        }
+    }
+    
     // MARK: Design
     
     private func setTheme() {
@@ -210,7 +222,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
             favViewController.homeViewController = self
             self.favViewController = favViewController
             
-            navBar.barTitle = "DirectMessages"
+            navBar.barTitle = "Chat"
 //            navBar.setButton(style: .Right, rightText: "plus", rightFont: UIFont.awesomeSolid(fontSize: 11))
             navBar.setButton(style: .None, rightText: nil, leftText: nil)
             
@@ -397,7 +409,7 @@ extension HomeViewController: NoteCellDelegate {
         presentWithSemiModal(panelMenu, animated: true, completion: nil)
     }
     
-    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {}
+    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {}
     
     func tappedOthers(note: NoteCell.Model) {}
     
@@ -526,7 +538,7 @@ extension HomeViewController: FooterTabBarDelegate {
         guard let favViewController = favViewController else { return }
         
         navBar.isHidden = false
-        navBar.barTitle = "DirectMessages"
+        navBar.barTitle = "Chat"
 //        navBar.setButton(style: .Right, rightText: "plus", rightFont: UIFont.awesomeSolid(fontSize: 13))
         navBar.setButton(style: .None, rightText: nil, leftText: nil)
         

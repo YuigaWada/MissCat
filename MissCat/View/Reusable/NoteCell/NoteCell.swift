@@ -18,7 +18,7 @@ import WebKit
 protocol NoteCellDelegate {
     func tappedReply(note: NoteCell.Model)
     func tappedRenote(note: NoteCell.Model)
-    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?)
+    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?)
     func tappedOthers(note: NoteCell.Model)
     
     func move2PostDetail(item: NoteCell.Model)
@@ -78,6 +78,9 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     
     @IBOutlet weak var mainStackView: UIStackView!
     
+    @IBOutlet weak var catIcon: UIImageView!
+    @IBOutlet weak var catYConstraint: NSLayoutConstraint!
+    
     // MARK: IBOutlet (Constraint)
     
     @IBOutlet weak var nameHeightConstraint: NSLayoutConstraint!
@@ -92,6 +95,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     
     var noteId: String?
     var userId: String?
+    var hostInstance: String?
     var iconImageUrl: String?
     
     // MARK: Private Var
@@ -214,6 +218,9 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         innerNoteTextView.isUserInteractionEnabled = true
         
         skeltonCover.isUserInteractionEnabled = false
+        
+        catYConstraint.constant = (-1) * catIcon.frame.width / 4 + 2
+        catYConstraint.constant -= sqrt(abs(pow(iconView.layer.cornerRadius, 2) - pow(catIcon.frame.width / 2, 2)))
     }
     
     private func setupFileContainer() {
@@ -495,9 +502,13 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         initializeComponent(hasFile: hasFile) // Initialize because NoteCell is reused by TableView.
         
+        // Cat
+        catIcon.isHidden = !item.isCat
+        
         // main
         self.noteId = item.noteId
         userId = item.userId
+        hostInstance = item.hostInstance
         iconImageUrl = item.iconImageUrl
         delegate = arg.delegate
         
@@ -522,9 +533,11 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     }
     
     func initializeComponent(hasFile: Bool) {
+        viewModel?.prepareForReuse()
         delegate = nil
         noteId = nil
         userId = nil
+        hostInstance = nil
         
         backgroundColor = .white
         separatorBorder.isHidden = false
@@ -558,6 +571,8 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         innerNoteTextView.attributedText = nil
         innerNoteTextView.resetViewString()
+        
+        catIcon.isHidden = true
     }
     
     // MARK: Privates
@@ -668,10 +683,15 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
                                 iconUrl: iconImageUrl,
                                 displayName: viewModel.output.displayName,
                                 username: viewModel.output.username,
+                                hostInstance: hostInstance ?? "",
                                 note: noteView.attributedText,
                                 hasFile: false,
                                 hasMarked: false,
                                 myReaction: viewModel.state.myReaction)
+        
+        if viewModel.state.reactioned {
+            viewModel.cancelReaction(noteId: noteId)
+        }
     }
     
     @IBAction func tappedOthers(_ sender: Any) {

@@ -20,6 +20,7 @@ class UrlPreviewer: UIView, ComponentType {
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var previewTextView: UITextView!
     
+    private var viewModel: UrlPreviewerViewModel?
     private let disposeBag = DisposeBag()
     
     // MARK: Life Cycle
@@ -81,6 +82,8 @@ class UrlPreviewer: UIView, ComponentType {
     func transform(with arg: UrlPreviewer.Arg) -> UrlPreviewer {
         let viewModel = UrlPreviewerViewModel(with: .init(url: arg.url), and: disposeBag)
         binding(viewModel)
+        
+        self.viewModel = viewModel
         return self
     }
     
@@ -88,5 +91,6 @@ class UrlPreviewer: UIView, ComponentType {
         titleLabel.text = nil
         previewTextView.text = "Loading..."
         imageView.image = nil
+        viewModel?.prepareForReuse()
     }
 }

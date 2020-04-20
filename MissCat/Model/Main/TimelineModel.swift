@@ -151,44 +151,42 @@ class TimelineModel {
                     observer.onError(NotesLoadingError.NotesEmpty)
                 }
                 
-                DispatchQueue.global().async {
-                    if isReload {
-                        // timelineにすでに表示してある投稿を取得した場合、ロードを終了する
-                        var newPosts: [NoteModel] = []
-                        for index in 0 ..< posts.count {
-                            let post = posts[index]
-                            if !post.isRecommended { // ハイライトの投稿は無視する
-                                // 表示済みの投稿に当たったらbreak
-                                guard option.lastNoteId != post.id, option.lastNoteId != post.renoteId else { break }
-                                newPosts.append(post)
-                            }
+                if isReload {
+                    // timelineにすでに表示してある投稿を取得した場合、ロードを終了する
+                    var newPosts: [NoteModel] = []
+                    for index in 0 ..< posts.count {
+                        let post = posts[index]
+                        if !post.isRecommended { // ハイライトの投稿は無視する
+                            // 表示済みの投稿に当たったらbreak
+                            guard option.lastNoteId != post.id, option.lastNoteId != post.renoteId else { break }
+                            newPosts.append(post)
                         }
-                        
-                        newPosts.reverse() // 逆順に読み込む
-                        newPosts.forEach { post in
-                            self.transformNote(with: observer, post: post, reverse: true)
-                            if let noteId = post.id { self.initialNoteIds.append(noteId) }
-                        }
-                        
-                        observer.onCompleted()
-                        return
                     }
                     
-                    // if !isReload...
-                    
-                    posts.forEach { post in
-                        // 初期ロード: prのみ表示する / 二回目からはprとハイライトを無視
-                        let ignore = isInitalLoad ? post.isFeatured : post.isRecommended
-                        guard !ignore else { return }
-                        
-                        self.transformNote(with: observer, post: post, reverse: false)
-                        if let noteId = post.id {
-                            self.initialNoteIds.append(noteId) // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
-                        }
+                    newPosts.reverse() // 逆順に読み込む
+                    newPosts.forEach { post in
+                        self.transformNote(with: observer, post: post, reverse: true)
+                        if let noteId = post.id { self.initialNoteIds.append(noteId) }
                     }
                     
                     observer.onCompleted()
+                    return
                 }
+                
+                // if !isReload...
+                
+                posts.forEach { post in
+                    // 初期ロード: prのみ表示する / 二回目からはprとハイライトを無視
+                    let ignore = isInitalLoad ? post.isFeatured : post.isRecommended
+                    guard !ignore else { return }
+                    
+                    self.transformNote(with: observer, post: post, reverse: false)
+                    if let noteId = post.id {
+                        self.initialNoteIds.append(noteId) // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
+                    }
+                }
+                
+                observer.onCompleted()
             }
             
             switch option.type {
@@ -321,7 +319,9 @@ class TimelineModel {
         
         guard let post = response as? NoteModel else { return }
         
-        transformNote(with: observer, post: post, reverse: true)
+        DispatchQueue.main.async {
+            self.transformNote(with: observer, post: post, reverse: true)
+        }
         self.captureNote(noteId: post.id)
     }
     
