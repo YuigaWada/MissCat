@@ -17,14 +17,16 @@ class NotificationsViewModel {
     private var hasReactionGenCell: Bool = false
     var cellsModel: [NotificationCell.Model] = []
     
+    private var disposeBag: DisposeBag
     private lazy var model = NotificationsModel()
     
-    init(disposeBag: DisposeBag) {}
+    init(disposeBag: DisposeBag) {
+        self.disposeBag = disposeBag
+    }
     
     func initialLoad() {
         loadNotification {
             // 読み込み完了後、Viewに伝達 & Streamingに接続
-            self.update(new: self.cellsModel)
             self.connectStream()
         }
     }
@@ -33,49 +35,53 @@ class NotificationsViewModel {
         let untilId = cellsModel[cellsModel.count - 1].notificationId
         
         loadNotification(untilId: untilId) {
-            self.update(new: self.cellsModel)
-            if let completion = completion { completion() }
+            completion?()
         }
     }
     
-    func loadNotification(untilId: String? = nil, completion: (() -> Void)? = nil) {
-        model.loadNotification(untilId: untilId) { results in
-            guard let results = results else { return }
+    func loadNotification(untilId: String? = nil, lastNotifId: String? = nil, completion: (() -> Void)? = nil) {
+        let option: NotificationsModel.LoadOption = .init(limit: 20, untilId: untilId, lastNotifId: lastNotifId)
+        
+        var tempCells: [NotificationCell.Model] = []
+        model.loadNotification(with: option, reversed: true).subscribe(onNext: { notification in
+            guard let cellModel = self.model.getModel(notification: notification) else { return }
             
-            results.forEach { notification in
-                guard let cellModel = self.model.getModel(notification: notification) else { return }
-                
-                self.shapeModel(cellModel)
-                self.removeDuplicated(cellModel)
-                self.cellsModel.append(cellModel)
+            self.shapeModel(cellModel)
+            self.removeDuplicated(with: cellModel, array: &tempCells)
+            tempCells.insert(cellModel, at: 0)
+            
+        }, onCompleted: {
+            if untilId == nil {
+                self.cellsModel = tempCells + self.cellsModel
+            } else {
+                self.cellsModel += tempCells
             }
             
-            if let completion = completion { completion() }
-        }
+            self.update(new: self.cellsModel)
+            completion?()
+        }).disposed(by: disposeBag)
     }
     
     private func connectStream() {
         guard let apiKey = MisskeyKit.auth.getAPIKey() else { return }
-        
-        let streaming = MisskeyKit.Streaming()
-        _ = streaming.connect(apiKey: apiKey, channels: [.main], response: handleStream)
+        model.connectStream(apiKey: apiKey).subscribe(onNext: { cellModel in
+            self.shapeModel(cellModel)
+            self.removeDuplicated(with: cellModel, array: &self.cellsModel)
+            
+            self.cellsModel.insert(cellModel, at: 0)
+            self.update(new: self.cellsModel)
+        }, onError: { _ in
+            self.reloadNotes {
+                self.connectStream()
+            }
+        }).disposed(by: disposeBag)
     }
     
-    private func handleStream(response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) {
-        if let error = error {
-            print(error)
-            if error == .CannotConnectStream || error == .NoStreamConnection { connectStream() }
-            return
-        }
+    func reloadNotes(_ completion: (() -> Void)? = nil) {
+        guard cellsModel.count > 0 else { return }
         
-        guard let channel = channel, channel == .main, let cellModel = model.getModel(type: type, target: response) else { return }
-        
-        shapeModel(cellModel)
-        
-        removeDuplicated(cellModel)
-        cellsModel.insert(cellModel, at: 0)
-        
-        update(new: cellsModel)
+        let lastNotifId = cellsModel[0].notificationId
+        loadNotification(lastNotifId: lastNotifId, completion: completion)
     }
     
     private func shapeModel(_ cellModel: NotificationCell.Model) {
@@ -88,17 +94,17 @@ class NotificationsViewModel {
     }
     
     /// 何らかの理由で重複しておくられてくるモデルを炙り出してremoveする
-    private func removeDuplicated(_ cellModel: NotificationCell.Model) {
+    private func removeDuplicated(with cellModel: NotificationCell.Model, array: inout [NotificationCell.Model]) {
         // 例えば、何度もリアクションを変更されたりすると重複して送られてくる
-        let duplicated = cellsModel.filter {
+        let duplicated = array.filter {
             guard let fromUserId = $0.fromUser?.id, let myNoteId = $0.myNote?.noteId else { return false }
-            return fromUserId == cellModel.fromUser?.id && myNoteId == cellModel.myNote?.noteId
+            return fromUserId == cellModel.fromUser?.id && myNoteId == cellModel.myNote?.noteId && $0.type == cellModel.type
         }
         
         // 新しいバージョンの通知のみ表示する
         duplicated
-            .compactMap { cellsModel.firstIndex(of: $0) }
-            .forEach { cellsModel.remove(at: $0) }
+            .compactMap { array.firstIndex(of: $0) }
+            .forEach { array.remove(at: $0) }
     }
     
     private func update(new: [NotificationCell.Model]) {

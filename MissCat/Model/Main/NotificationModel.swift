@@ -7,20 +7,90 @@
 //
 
 import MisskeyKit
+import RxCocoa
+import RxSwift
 
 class NotificationsModel {
+    struct LoadOption {
+        var isReload: Bool {
+            return lastNotifId != nil
+        }
+        
+        let limit: Int
+        
+        let untilId: String?
+        let lastNotifId: String?
+    }
+    
     private let needMyNoteType = ["mention", "reply", "renote", "quote", "reaction"]
     
-    func loadNotification(untilId: String? = nil, completion: @escaping ([NotificationModel]?) -> Void) {
-        MisskeyKit.notifications.get(limit: 20, untilId: untilId ?? "", following: false) { results, error in
-            guard let results = results, results.count > 0, error == nil else { completion(nil); return }
-            
-            if let notificationId = results[0].id {
-                Cache.UserDefaults.shared.setLatestNotificationId(notificationId) // 最新の通知をsave
+    func loadNotification(with option: LoadOption, reversed: Bool = false) -> Observable<NotificationModel> {
+        let dispose = Disposables.create()
+        
+        return Observable.create { observer in
+            MisskeyKit.notifications.get(limit: option.limit, untilId: option.untilId ?? "", following: false) { results, error in
+                guard results != nil, results!.count > 0, error == nil else { return }
+                
+                var notifs = results!
+                if let notificationId = notifs[0].id {
+                    Cache.UserDefaults.shared.setLatestNotificationId(notificationId) // 最新の通知をsave
+                }
+                
+                if option.isReload {
+                    // timelineにすでに表示してある投稿を取得した場合、ロードを終了する
+                    var newNotif: [NotificationModel] = []
+                    for index in 0 ..< notifs.count {
+                        let notification = notifs[index]
+                        // 表示済みの投稿に当たったらbreak
+                        guard option.lastNotifId != notification.id else { break }
+                        newNotif.append(notification)
+                    }
+                    
+                    if !reversed { newNotif.reverse() } // 基本逆順に読み込む
+                    newNotif.forEach { observer.onNext($0) }
+                    
+                    observer.onCompleted()
+                    return
+                } else {
+                    if reversed {
+                        notifs.reverse()
+                    }
+                    notifs.forEach { observer.onNext($0) }
+                }
+                
+                observer.onCompleted()
             }
-            
-            completion(results)
+            return dispose
         }
+    }
+    
+    func connectStream(apiKey: String) -> Observable<NotificationCell.Model> {
+        let dispose = Disposables.create()
+        
+        return Observable.create { [unowned self] observer in
+            let streaming = MisskeyKit.Streaming()
+            _ = streaming.connect(apiKey: apiKey, channels: [.main], response: { (response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) in
+                self.handleStream(observer: observer,
+                                  response: response,
+                                  channel: channel,
+                                  type: type,
+                                  error: error)
+            })
+            return dispose
+        }
+    }
+    
+    private func handleStream(observer: AnyObserver<NotificationCell.Model>, response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) {
+        if let error = error {
+            print(error)
+            if error == .CannotConnectStream || error == .NoStreamConnection {
+                observer.onError(error)
+            }
+            return
+        }
+        
+        guard let channel = channel, channel == .main, let cellModel = getModel(type: type, target: response) else { return }
+        observer.onNext(cellModel)
     }
     
     func getModel(notification: NotificationModel) -> NotificationCell.Model? {
