@@ -35,6 +35,7 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
     
     private var emojiViewOnView: Bool = false
     private var disposeBag = DisposeBag()
+    private var imageSessionTasks: [URLSessionDataTask] = []
     
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -71,6 +72,14 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
         emojiView.initialize()
         
         followButton.isHidden = true
+        cancelImageSession()
+    }
+    
+    func cancelImageSession() {
+        imageSessionTasks.forEach { task in
+            task.cancel()
+        }
+        imageSessionTasks.removeAll()
     }
     
     func shapeCell(item: NotificationCell.Model) -> NotificationCell {
@@ -91,13 +100,17 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
         if let image = Cache.shared.getIcon(username: "\(username)@\(host)") {
             iconImageView.image = image
         } else if let iconImageUrl = item.fromUser?.avatarUrl, let iconUrl = URL(string: iconImageUrl) {
-            iconUrl.toUIImage { [weak self] image in
+            let task = iconUrl.toUIImage { [weak self] image in
                 guard let self = self, let image = image else { return }
                 
                 DispatchQueue.main.async {
                     Cache.shared.saveIcon(username: username, image: image) // CHACHE!
                     self.iconImageView.image = image
                 }
+            }
+            
+            if let task = task {
+                imageSessionTasks.append(task)
             }
         }
         
