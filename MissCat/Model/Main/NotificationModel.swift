@@ -46,7 +46,7 @@ class NotificationsModel {
                         newNotif.append(notification)
                     }
                     
-                    if !reversed { newNotif.reverse() } // 基本逆順に読み込む
+                    if reversed { newNotif.reverse() }
                     newNotif.forEach { observer.onNext($0) }
                     
                     observer.onCompleted()
