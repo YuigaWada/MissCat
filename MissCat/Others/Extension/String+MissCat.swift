@@ -40,10 +40,10 @@ extension String {
         return NSMutableAttributedString(string: self, attributes: attribute)
     }
     
-    func toUIImage(_ completion: @escaping (UIImage?) -> Void) {
-        guard let url = URL(string: self) else { completion(nil); return }
+    func toUIImage(_ completion: @escaping (UIImage?) -> Void) -> URLSessionDataTask? {
+        guard let url = URL(string: self) else { completion(nil); return nil }
         
-        url.toUIImage(completion)
+        return url.toUIImage(completion)
     }
     
     func getData(_ completion: @escaping (Data?) -> Void) {

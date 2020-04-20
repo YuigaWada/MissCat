@@ -79,6 +79,8 @@ class NoteCellViewModel: ViewModelType {
     private var model = NoteCellModel()
     private var disposeBag: DisposeBag
     
+    private var imageSessionTasks: [URLSessionDataTask] = []
+    
     private var properBackgroundColor: UIColor {
         return input.cellModel.isReplyTarget ? replyTargetColor : .white
     }
@@ -88,6 +90,13 @@ class NoteCellViewModel: ViewModelType {
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
         self.disposeBag = disposeBag
+    }
+    
+    func prepareForReuse() {
+        imageSessionTasks.forEach { task in
+            task.cancel()
+        }
+        imageSessionTasks.removeAll()
     }
     
     func setCell() {
@@ -154,10 +163,14 @@ class NoteCellViewModel: ViewModelType {
         if let image = Cache.shared.getIcon(username: "\(username)@\(host)") {
             target.accept(image)
         } else if let imageUrl = URL(string: imageRawUrl) {
-            imageUrl.toUIImage { image in
+            let task = imageUrl.toUIImage { image in
                 guard let image = image else { return }
                 Cache.shared.saveIcon(username: username, image: image) // CACHE!
                 target.accept(image)
+            }
+            
+            if let task = task {
+                imageSessionTasks.append(task)
             }
         }
     }

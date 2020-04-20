@@ -533,6 +533,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     }
     
     func initializeComponent(hasFile: Bool) {
+        viewModel?.prepareForReuse()
         delegate = nil
         noteId = nil
         userId = nil
