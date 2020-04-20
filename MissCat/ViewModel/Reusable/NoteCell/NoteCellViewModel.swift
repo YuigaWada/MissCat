@@ -79,6 +79,8 @@ class NoteCellViewModel: ViewModelType {
     private var model = NoteCellModel()
     private var disposeBag: DisposeBag
     
+    private var imageSessionTasks: [URLSessionDataTask] = []
+    
     private var properBackgroundColor: UIColor {
         return input.cellModel.isReplyTarget ? replyTargetColor : .white
     }
@@ -88,6 +90,13 @@ class NoteCellViewModel: ViewModelType {
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
         self.disposeBag = disposeBag
+    }
+    
+    func prepareForReuse() {
+        imageSessionTasks.forEach { task in
+            task.cancel()
+        }
+        imageSessionTasks.removeAll()
     }
     
     func setCell() {
@@ -110,8 +119,8 @@ class NoteCellViewModel: ViewModelType {
         output.onOtherNote.accept(item.onOtherNote)
         output.poll.accept(item.poll)
         
-        setImage(to: output.iconImage, username: item.username, imageRawUrl: item.iconImageUrl)
-        setImage(to: output.innerIconImage, username: item.commentRNTarget?.username, imageRawUrl: item.commentRNTarget?.iconImageUrl)
+        setImage(to: output.iconImage, username: item.username, hostInstance: item.hostInstance, imageRawUrl: item.iconImageUrl)
+        setImage(to: output.innerIconImage, username: item.commentRNTarget?.username, hostInstance: item.hostInstance, imageRawUrl: item.commentRNTarget?.iconImageUrl)
         setFooter(from: item)
     }
     
@@ -147,16 +156,21 @@ class NoteCellViewModel: ViewModelType {
         target?.mfmEngine.renderCustomEmojis(on: input.noteYanagi)
     }
     
-    func setImage(to target: PublishRelay<UIImage>, username: String?, imageRawUrl: String?) {
+    func setImage(to target: PublishRelay<UIImage>, username: String?, hostInstance: String?, imageRawUrl: String?) {
         guard let username = username, let imageRawUrl = imageRawUrl else { return }
         
-        if let image = Cache.shared.getIcon(username: username) {
+        let host = hostInstance ?? ""
+        if let image = Cache.shared.getIcon(username: "\(username)@\(host)") {
             target.accept(image)
         } else if let imageUrl = URL(string: imageRawUrl) {
-            imageUrl.toUIImage { image in
+            let task = imageUrl.toUIImage { image in
                 guard let image = image else { return }
                 Cache.shared.saveIcon(username: username, image: image) // CACHE!
                 target.accept(image)
+            }
+            
+            if let task = task {
+                imageSessionTasks.append(task)
             }
         }
     }
@@ -229,8 +243,8 @@ class NoteCellViewModel: ViewModelType {
     
     private func setReactionCount(from item: NoteCell.Model, myReaction: String? = nil, startCount: Int = 0) {
         var reactionsCount: Int = startCount
-        item.reactions.forEach {
-            reactionsCount += Int($0.count ?? "0") ?? 0
+        item.shapedReactions.forEach {
+            reactionsCount += Int($0.count) ?? 0
         }
         
         // リアクション済みor自分の投稿ならばリアクションボタンを ＋ → − へ
@@ -257,6 +271,7 @@ class NoteCellViewModel: ViewModelType {
     
     func cancelReaction(noteId: String) {
         myReaction = nil // stateの変更
+        input.cellModel.myReaction = nil
         setReactionCount(from: input.cellModel, startCount: -1)
         model.cancelReaction(noteId: noteId)
     }
