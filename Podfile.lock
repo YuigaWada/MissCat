@@ -12,6 +12,7 @@ PODS:
     - CocoaLumberjack/Core (= 3.6.1)
   - CocoaLumberjack/Core (3.6.1)
   - Differentiator (4.0.1)
+  - Eureka (5.2.1)
   - FloatingPanel (1.7.4)
   - Gifu (3.2.0)
   - InputBarAccessoryView (4.3.2):
@@ -22,7 +23,7 @@ PODS:
     - InputBarAccessoryView (~> 4.3.0)
   - MisskeyKit (2.2):
     - Starscream (= 3.1.1)
-  - PolioPager (2.3)
+  - PolioPager (2.4)
   - RxCocoa (5.1.1):
     - RxRelay (~> 5)
     - RxSwift (~> 5)
@@ -48,6 +49,7 @@ DEPENDENCIES:
   - AWSCognito
   - AWSSNS
   - Cache
+  - Eureka
   - FloatingPanel
   - Gifu
   - iOSPhotoEditor
@@ -74,6 +76,7 @@ SPEC REPOS:
     - Cache
     - CocoaLumberjack
     - Differentiator
+    - Eureka
     - FloatingPanel
     - Gifu
     - InputBarAccessoryView
@@ -111,13 +114,14 @@ SPEC CHECKSUMS:
   Cache: 807c5d86d01a177f06ede9865add3aea269bbfd4
   CocoaLumberjack: b17ae15142558d08bbacf69775fa10c4abbebcc9
   Differentiator: 886080237d9f87f322641dedbc5be257061b0602
+  Eureka: c883105488e05bc65539f583246ecf9657cabbfe
   FloatingPanel: 3c9d0e30fe350e1613157557769d2ec97f76b96b
   Gifu: 7bcb6427457d85e0b4dff5a84ec5947ac19a93ea
   InputBarAccessoryView: 7985d418040a05fe894bd4b8328dd43ab35517c3
   iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
   MessageKit: 3beb578737a5aa2bba25cc27c7b6d6faa09af5a7
   MisskeyKit: 40c24228b79e21c5d681199697a6402d57eedef6
-  PolioPager: d1d3ae9032bc4bbf5071b3aea5a748ac7c1337d1
+  PolioPager: 046d5ee2e4e4f699f308c63f2862832e87a45f35
   RxCocoa: 32065309a38d29b5b0db858819b5bf9ef038b601
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
   RxRelay: d77f7d771495f43c556cbc43eebd1bb54d01e8e9
@@ -130,6 +134,6 @@ SPEC CHECKSUMS:
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
 
-PODFILE CHECKSUM: 6a11c5d8e4f437bd52d84d093d30ba65d129d40a
+PODFILE CHECKSUM: f9140f6f889d61bb91e6535c324f0ecefd86d158
 
 COCOAPODS: 1.7.1
