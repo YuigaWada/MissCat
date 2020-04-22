@@ -15,14 +15,16 @@ class DesignSettingsViewController: FormViewController {
         title = "デザイン"
         
         let tabSettingsSection = getTabSettingsSection()
-        form +++ tabSettingsSection
+        let themeSettingsSection = getThemeSettingsSection()
+        
+        form +++ tabSettingsSection +++ themeSettingsSection
         
         tableView.backgroundColor = .white
     }
     
     private func getTabSettingsSection() -> MultivaluedSection {
         return MultivaluedSection(multivaluedOptions: [.Reorder, .Insert, .Delete],
-                                  header: "上タブ",
+                                  header: "上タブ設定",
                                   footer: "タップで表示名を変更することができます") {
             $0.tag = "textfields"
             
@@ -45,5 +47,11 @@ class DesignSettingsViewController: FormViewController {
                 $0.tabKind = .local
             }
         }
+    }
+    
+    private func getThemeSettingsSection() -> Section {
+        return Section("テーマ設定")
+            <<< SegmentedRow<String>() { $0.options = ["Light", "Dark"]; $0.value = "Light" }
+            <<< ColorPickerRow { $0.currentColor = .systemPink }
     }
 }

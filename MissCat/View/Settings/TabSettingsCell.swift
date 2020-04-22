@@ -81,7 +81,6 @@ extension TabSettingsCell {
 public final class TabSettingsRow: Row<TabSettingsCell>, RowType {
     public var tabKind: TabSettingsCell.Tab = .home {
         didSet {
-            guard let cell = cell as? TabSettingsCell else { return }
             cell.setKind(tabKind)
         }
     }
