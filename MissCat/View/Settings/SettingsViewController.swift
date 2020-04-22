@@ -12,6 +12,7 @@ class SettingsViewController: UITableViewController {
     // MARK: LifeCycle
     
     @IBOutlet weak var accountIcon: UILabel!
+    @IBOutlet weak var designIcon: UILabel!
     @IBOutlet weak var muteIcon: UILabel!
     @IBOutlet weak var reactionIcon: UILabel!
     @IBOutlet weak var fontIcon: UILabel!
@@ -33,7 +34,7 @@ class SettingsViewController: UITableViewController {
     // MARK: Privates
     
     private func setFont() {
-        for iconLabel in [accountIcon, muteIcon, reactionIcon, fontIcon, catIcon, licenseIcon] {
+        for iconLabel in [accountIcon, designIcon, muteIcon, reactionIcon, fontIcon, catIcon, licenseIcon] {
             iconLabel?.font = .awesomeSolid(fontSize: 23)
         }
     }
@@ -53,11 +54,9 @@ class SettingsViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let index = indexPath.row
-//
-//        if index == 1 {
-//            let viewController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "404-page")
-//
-//            navigationController?.pushViewController(viewController, animated: true)
-//        }
+        
+        if index == 1 {
+            navigationController?.pushViewController(DesignSettingsViewController(), animated: true)
+        }
     }
 }

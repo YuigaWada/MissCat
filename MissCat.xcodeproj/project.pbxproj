@@ -64,6 +64,9 @@
 		8D57CA43243FDB9C005DCEB2 /* PromotionCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D57CA42243FDB9C005DCEB2 /* PromotionCell.xib */; };
 		8D57CA47243FDBC3005DCEB2 /* PromotionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D57CA46243FDBC3005DCEB2 /* PromotionCell.swift */; };
 		8D57CA4924412430005DCEB2 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D57CA4824412430005DCEB2 /* SearchViewController.swift */; };
+		8D5889F5244FFAC200C6EBC2 /* DesignSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5889F4244FFAC200C6EBC2 /* DesignSettingsViewController.swift */; };
+		8D5889F7245019C200C6EBC2 /* TabSettingsCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D5889F6245019C200C6EBC2 /* TabSettingsCell.xib */; };
+		8D5889F9245019D300C6EBC2 /* TabSettingsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5889F8245019D300C6EBC2 /* TabSettingsCell.swift */; };
 		8D5D2C382447FC8800D15974 /* DirectMessageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5D2C372447FC8800D15974 /* DirectMessageViewController.swift */; };
 		8D5D2C3A24480C8500D15974 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5D2C3924480C8500D15974 /* ChatViewController.swift */; };
 		8D5D2C3D24480DE500D15974 /* MessageListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5D2C3C24480DE500D15974 /* MessageListViewController.swift */; };
@@ -219,6 +222,9 @@
 		8D57CA42243FDB9C005DCEB2 /* PromotionCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PromotionCell.xib; sourceTree = "<group>"; };
 		8D57CA46243FDBC3005DCEB2 /* PromotionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromotionCell.swift; sourceTree = "<group>"; };
 		8D57CA4824412430005DCEB2 /* SearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewController.swift; sourceTree = "<group>"; };
+		8D5889F4244FFAC200C6EBC2 /* DesignSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSettingsViewController.swift; sourceTree = "<group>"; };
+		8D5889F6245019C200C6EBC2 /* TabSettingsCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = TabSettingsCell.xib; sourceTree = "<group>"; };
+		8D5889F8245019D300C6EBC2 /* TabSettingsCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabSettingsCell.swift; sourceTree = "<group>"; };
 		8D5D2C372447FC8800D15974 /* DirectMessageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectMessageViewController.swift; sourceTree = "<group>"; };
 		8D5D2C3924480C8500D15974 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		8D5D2C3C24480DE500D15974 /* MessageListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageListViewController.swift; sourceTree = "<group>"; };
@@ -902,6 +908,9 @@
 				8D769D73241E7BDB0022D4D2 /* ThemeViewController.swift */,
 				8D8A50C0242355200065B1D2 /* AccountViewController.swift */,
 				8D31018C24397B45004F8E55 /* ReactionSettingsViewController.swift */,
+				8D5889F4244FFAC200C6EBC2 /* DesignSettingsViewController.swift */,
+				8D5889F6245019C200C6EBC2 /* TabSettingsCell.xib */,
+				8D5889F8245019D300C6EBC2 /* TabSettingsCell.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -992,6 +1001,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D0AC5B8237B5D0D00530508 /* Font Awesome 5 Brands-Regular-400.otf in Resources */,
+				8D5889F7245019C200C6EBC2 /* TabSettingsCell.xib in Resources */,
 				8D61354F238A974400AB50C2 /* EmojiViewCell.xib in Resources */,
 				8D9EF4C8238187A4005449EC /* ReactionGenCell.xib in Resources */,
 				8D0AC5B9237B5D0D00530508 /* Font Awesome 5 Free-Regular-400.otf in Resources */,
@@ -1128,6 +1138,7 @@
 				8D79687F2404BE59004F87FA /* ReactionCollectionHeader.swift in Sources */,
 				8D31018D24397B45004F8E55 /* ReactionSettingsViewController.swift in Sources */,
 				8D0AC5C1237B865B00530508 /* TimelineModel.swift in Sources */,
+				8D5889F5244FFAC200C6EBC2 /* DesignSettingsViewController.swift in Sources */,
 				8DF49FA224445B0500C4D2B2 /* TrendViewController.swift in Sources */,
 				8D3037022389018800BA6D38 /* Cache.swift in Sources */,
 				8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */,
@@ -1142,6 +1153,7 @@
 				8D61391A2427B9B0003B5BEF /* FileContainer.swift in Sources */,
 				8D5D2C3D24480DE500D15974 /* MessageListViewController.swift in Sources */,
 				8D53741B23A32D03004523FC /* ViewModelType.swift in Sources */,
+				8D5889F9245019D300C6EBC2 /* TabSettingsCell.swift in Sources */,
 				8D4B02C1241FE5C90056605F /* Theme.swift in Sources */,
 				8D5D2C48244814AC00D15974 /* MessageListModel.swift in Sources */,
 				8DEB21C5243B0C1400E4D1EB /* Error+MissCat.swift in Sources */,
