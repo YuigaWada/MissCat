@@ -13,7 +13,7 @@ public class TabSettingsCell: Cell<Bool>, CellType {
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var textFiled: UITextField!
     
-    private var tabKind: Tab?
+    var tabKind: Theme.TabKind?
     private var tabSelected: Bool {
         return tabKind != nil
     }
@@ -40,13 +40,13 @@ public class TabSettingsCell: Cell<Bool>, CellType {
         parentViewController?.present(alert, animated: true)
     }
     
-    private func addMenu(to alert: UIAlertController, title: String, kind: Tab) {
+    private func addMenu(to alert: UIAlertController, title: String, kind: Theme.TabKind) {
         alert.addAction(UIAlertAction(title: title, style: .default, handler: { _ in
             self.setKind(kind)
         }))
     }
     
-    func setKind(_ kind: Tab) {
+    func setKind(_ kind: Theme.TabKind) {
         tabKind = kind
         switch kind {
         case .home:
@@ -66,22 +66,22 @@ public class TabSettingsCell: Cell<Bool>, CellType {
             textFiled.placeholder = "List"
         }
     }
-}
-
-extension TabSettingsCell {
-    public enum Tab {
-        case home
-        case local
-        case global
-        case user
-        case list
+    
+    func setName(_ name: String) {
+        textFiled.text = name
     }
 }
 
 public final class TabSettingsRow: Row<TabSettingsCell>, RowType {
-    public var tabKind: TabSettingsCell.Tab = .home {
+    public var tabKind: Theme.TabKind = .home {
         didSet {
             cell.setKind(tabKind)
+        }
+    }
+    
+    public var currentName: String = "Home" {
+        didSet {
+            cell.setName(currentName)
         }
     }
     

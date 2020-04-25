@@ -90,7 +90,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             _ = EmojiHandler.handler
         }
         
-        _ = Theme.shared
+        if let currentUserId = Cache.UserDefaults.shared.getCurrentLoginedUserId() {
+            Theme.shared.set(userId: currentUserId)
+        }
     }
     
     private func setupCognito() {

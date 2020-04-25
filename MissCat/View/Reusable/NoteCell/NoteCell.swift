@@ -415,41 +415,41 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     }
     
     private func themeBinding() {
-        let theme = Theme.shared.theme
-        
-        theme.map { $0.general.main }.subscribe(onNext: {
-            self.tintColor = $0
-        }).disposed(by: disposeBag)
-        theme.map { $0.general.background }.bind(to: rx.backgroundColor).disposed(by: disposeBag)
-        theme.map { $0.post.text }.subscribe(onNext: {
-            for textView in [self.nameTextView, self.noteView] {
-                guard let text = textView?.attributedText, text.length > 0 else { return }
-                let mutableAttributed = NSMutableAttributedString(attributedString: text)
-                mutableAttributed.addAttribute(.foregroundColor,
-                                               value: $0,
-                                               range: NSMakeRange(0, mutableAttributed.length - 1))
-                textView?.attributedText = mutableAttributed
-            }
-            
-        }).disposed(by: disposeBag)
+//        let theme = Theme.shared.theme
+//
+//        theme.map { $0.general.main }.subscribe(onNext: {
+//            self.tintColor = $0
+//        }).disposed(by: disposeBag)
+//        theme.map { $0.general.background }.bind(to: rx.backgroundColor).disposed(by: disposeBag)
+//        theme.map { $0.post.text }.subscribe(onNext: {
+//            for textView in [self.nameTextView, self.noteView] {
+//                guard let text = textView?.attributedText, text.length > 0 else { return }
+//                let mutableAttributed = NSMutableAttributedString(attributedString: text)
+//                mutableAttributed.addAttribute(.foregroundColor,
+//                                               value: $0,
+//                                               range: NSMakeRange(0, mutableAttributed.length - 1))
+//                textView?.attributedText = mutableAttributed
+//            }
+//
+//        }).disposed(by: disposeBag)
         
         //        Theme.shared.complete()
     }
     
     private func reactionColorBinding(_ cell: ReactionCell) {
-        let theme = Theme.shared.theme
-        
-        theme.map { $0.post.reaction }.subscribe(onNext: {
-            cell.nonselectedBackGroundColor = $0
-        }).disposed(by: disposeBag)
-        theme.map { $0.post.myReaction }.subscribe(onNext: {
-            cell.selectedBackGroundColor = $0
-        }).disposed(by: disposeBag)
-        
-        let postTheme = Theme.shared.getCurrentTheme().post
-        
-        cell.nonselectedBackGroundColor = postTheme.reaction
-        cell.selectedBackGroundColor = postTheme.myReaction
+//        let theme = Theme.shared.theme
+//
+//        theme.map { $0.post.reaction }.subscribe(onNext: {
+//            cell.nonselectedBackGroundColor = $0
+//        }).disposed(by: disposeBag)
+//        theme.map { $0.post.myReaction }.subscribe(onNext: {
+//            cell.selectedBackGroundColor = $0
+//        }).disposed(by: disposeBag)
+//
+//        let postTheme = Theme.shared.getCurrentTheme().post
+//
+//        cell.nonselectedBackGroundColor = postTheme.reaction
+//        cell.selectedBackGroundColor = postTheme.myReaction
     }
     
     private func setupProfileGesture() {

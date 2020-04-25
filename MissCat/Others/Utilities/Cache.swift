@@ -177,12 +177,12 @@ extension Cache {
             Foundation.UserDefaults.standard.set(id, forKey: currentLoginedInstance)
         }
         
-        func getTheme() -> String? {
-            return Foundation.UserDefaults.standard.string(forKey: themeKey)
-        }
-        
-        func setTheme(_ rawJson: String) {
-            Foundation.UserDefaults.standard.set(rawJson, forKey: themeKey)
-        }
+//        func getTheme() -> String? {
+//            return Foundation.UserDefaults.standard.string(forKey: themeKey)
+//        }
+//
+//        func setTheme(_ rawJson: String) {
+//            Foundation.UserDefaults.standard.set(rawJson, forKey: themeKey)
+//        }
     }
 }

@@ -87,6 +87,7 @@
 		8D63BFC3242BBF03009C3ADE /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D63BFC2242BBF03009C3ADE /* HomeViewModel.swift */; };
 		8D63BFC5242BBF12009C3ADE /* HomeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D63BFC4242BBF12009C3ADE /* HomeModel.swift */; };
 		8D63BFC7242BC239009C3ADE /* NoteDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D63BFC6242BC239009C3ADE /* NoteDisplay.swift */; };
+		8D75EC7F2452E49100EAC2A8 /* ColorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D75EC7E2452E49100EAC2A8 /* ColorPicker.swift */; };
 		8D769D74241E7BDB0022D4D2 /* ThemeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D769D73241E7BDB0022D4D2 /* ThemeViewController.swift */; };
 		8D7779A624138120005764D9 /* PanelMenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D7779A524138120005764D9 /* PanelMenuViewController.swift */; };
 		8D79687F2404BE59004F87FA /* ReactionCollectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */; };
@@ -247,6 +248,7 @@
 		8D63BFC2242BBF03009C3ADE /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		8D63BFC4242BBF12009C3ADE /* HomeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeModel.swift; sourceTree = "<group>"; };
 		8D63BFC6242BC239009C3ADE /* NoteDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteDisplay.swift; sourceTree = "<group>"; };
+		8D75EC7E2452E49100EAC2A8 /* ColorPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPicker.swift; sourceTree = "<group>"; };
 		8D769D73241E7BDB0022D4D2 /* ThemeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeViewController.swift; sourceTree = "<group>"; };
 		8D7779A524138120005764D9 /* PanelMenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelMenuViewController.swift; sourceTree = "<group>"; };
 		8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionCollectionHeader.swift; sourceTree = "<group>"; };
@@ -917,6 +919,7 @@
 				8D5889F8245019D300C6EBC2 /* TabSettingsCell.swift */,
 				8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */,
 				8DDB52CE245032E500C97130 /* ColorPickerCell.xib */,
+				8D75EC7E2452E49100EAC2A8 /* ColorPicker.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1203,6 +1206,7 @@
 				8DA06A16238A86DC0093A718 /* NotificationCellModel.swift in Sources */,
 				8D613551238A978700AB50C2 /* EmojiViewCell.swift in Sources */,
 				8D8863B02384147100A7A5A8 /* UIColor+MissCat.swift in Sources */,
+				8D75EC7F2452E49100EAC2A8 /* ColorPicker.swift in Sources */,
 				8D42C3A8238076B600337DD2 /* Double+MissCat.swift in Sources */,
 				8D98C268242E0AD600BB8049 /* PostDetailModel.swift in Sources */,
 				8DC27D9C243BF6DD0037E610 /* UrlPreviewerModel.swift in Sources */,

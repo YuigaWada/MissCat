@@ -12,22 +12,29 @@ import UIKit
 class DesignSettingsViewController: FormViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupComponent()
+        setTable()
+    }
+    
+    private func setupComponent() {
         title = "デザイン"
-        
-        let tabSettingsSection = getTabSettingsSection()
-        let themeSettingsSection = getThemeSettingsSection()
-        
-        form +++ tabSettingsSection +++ themeSettingsSection
-        
         tableView.backgroundColor = .white
     }
     
-    private func getTabSettingsSection() -> MultivaluedSection {
-        return MultivaluedSection(multivaluedOptions: [.Reorder, .Insert, .Delete],
-                                  header: "上タブ設定",
-                                  footer: "タップで表示名を変更することができます") {
+    private func setTable() {
+        guard let theme = Theme.shared.currentModel else { return }
+        
+        let tabSettingsSection = getTabSettingsSection(with: theme)
+        let themeSettingsSection = getThemeSettingsSection(with: theme)
+        
+        form +++ tabSettingsSection +++ themeSettingsSection
+    }
+    
+    private func getTabSettingsSection(with theme: Theme.Model) -> MultivaluedSection {
+        var section = MultivaluedSection(multivaluedOptions: [.Reorder, .Insert, .Delete],
+                                         header: "上タブ設定",
+                                         footer: "タップで表示名を変更することができます") {
             $0.tag = "textfields"
-            
             $0.addButtonProvider = { _ in
                 ButtonRow {
                     $0.title = "タブを追加"
@@ -39,19 +46,23 @@ class DesignSettingsViewController: FormViewController {
             $0.multivaluedRowToInsertAt = { _ in
                 TabSettingsRow()
             }
-            
-            $0 <<< TabSettingsRow {
-                $0.tabKind = .home
-            }
-            $0 <<< TabSettingsRow {
-                $0.tabKind = .local
-            }
         }
+        
+        theme.tab.reversed().forEach { tab in
+            let row = TabSettingsRow {
+                $0.tabKind = tab.kind
+                $0.currentName = tab.name
+            }
+            section.insert(row, at: 0)
+        }
+        
+        return section
     }
     
-    private func getThemeSettingsSection() -> Section {
+    private func getThemeSettingsSection(with theme: Theme.Model) -> Section {
+        let currentColor = UIColor(hex: theme.mainColorHex)
         return Section("テーマ設定")
-            <<< SegmentedRow<String>() { $0.options = ["Light", "Dark"]; $0.value = "Light" }
-            <<< ColorPickerRow { $0.currentColor = .systemPink }
+            <<< SegmentedRow<String>() { $0.options = ["Light", "Dark"]; $0.value = theme.colorMode == .light ? "Light" : "Dark" }
+            <<< ColorPickerRow { $0.currentColor = currentColor }
     }
 }
