@@ -8,6 +8,7 @@ PODS:
   - AWSSNS (2.13.1):
     - AWSCore (= 2.13.1)
   - Cache (5.2.0)
+  - ChromaColorPicker (2.0.2)
   - CocoaLumberjack (3.6.1):
     - CocoaLumberjack/Core (= 3.6.1)
   - CocoaLumberjack/Core (3.6.1)
@@ -49,6 +50,7 @@ DEPENDENCIES:
   - AWSCognito
   - AWSSNS
   - Cache
+  - ChromaColorPicker
   - Eureka
   - FloatingPanel
   - Gifu
@@ -74,6 +76,7 @@ SPEC REPOS:
     - AWSCore
     - AWSSNS
     - Cache
+    - ChromaColorPicker
     - CocoaLumberjack
     - Differentiator
     - Eureka
@@ -112,6 +115,7 @@ SPEC CHECKSUMS:
   AWSCore: ec394695d054fa4136b20ccd22d8901faea5de04
   AWSSNS: e6b9b684aec01af0f161670d3e1ebfe445b80426
   Cache: 807c5d86d01a177f06ede9865add3aea269bbfd4
+  ChromaColorPicker: 307585f2dc23d4d72f24cad320c1e08825cb5c09
   CocoaLumberjack: b17ae15142558d08bbacf69775fa10c4abbebcc9
   Differentiator: 886080237d9f87f322641dedbc5be257061b0602
   Eureka: c883105488e05bc65539f583246ecf9657cabbfe
@@ -134,6 +138,6 @@ SPEC CHECKSUMS:
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
 
-PODFILE CHECKSUM: f9140f6f889d61bb91e6535c324f0ecefd86d158
+PODFILE CHECKSUM: 75ed6b0d0d0fa901221a312a98146bcba8142ed9
 
 COCOAPODS: 1.7.1
