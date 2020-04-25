@@ -360,6 +360,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     // MARK: FooterTabBar Delegate
     
     func tappedHome() {
+        guard let mainTableView = mainTableView else { return }
         let zeroIndexPath = IndexPath(row: 0, section: 0)
         
         // セルが存在しないと落ちるので制約をつける

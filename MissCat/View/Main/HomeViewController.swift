@@ -31,13 +31,10 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     private var myProfileViewController: ProfileViewController?
     private var currentProfileViewController: ProfileViewController?
     
-    // ioの場合はLTLではなくHomeを表示(Appleに怒られた)
-    private lazy var search = self.generateSearchVC()
-    private lazy var home = self.generateTimelineVC(type: .Home)
-    private lazy var local = io ? self.generateTimelineVC(type: .Home) : self.generateTimelineVC(type: .Local)
-    private lazy var global = self.generateTimelineVC(type: .Global)
-    
     // Tab
+    private lazy var search = self.generateSearchVC()
+    private var setViewControllers: [UIViewController] = []
+    
     private lazy var navBar: NavBar = NavBar()
     private lazy var footerTab = FooterTabBar()
     
@@ -58,6 +55,50 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     
     private var viewModel = HomeViewModel()
     private var disposeBag = DisposeBag()
+    
+    // MARK: PolioPager Overrides
+    
+    /// 上タブのアイテム
+    override func tabItems() -> [TabItem] {
+        let tabs = Theme.shared.currentModel?.tab ?? getDefaultTabs()
+        return tabs.map { tab in
+            TabItem(title: tab.name)
+        }
+    }
+    
+    /// 上タブのアイテムに対応したViewControllerを返す
+    override func viewControllers() -> [UIViewController] {
+        let tabs = Theme.shared.currentModel?.tab ?? getDefaultTabs()
+        setViewControllers = tabs.map { tab in // setされたviewControllerを記憶しておく
+            getViewController(type: tab.kind)
+        }
+        
+        return [search] + setViewControllers
+    }
+    
+    func getDefaultTabs() -> [Theme.Tab] {
+        return [.init(name: "Home", kind: .home, userId: nil, listId: nil),
+                .init(name: "Local", kind: .local, userId: nil, listId: nil),
+                .init(name: "Global", kind: .global, userId: nil, listId: nil)]
+    }
+    
+    /// Theme.TabKindからVCを生成
+    /// - Parameter type: Theme.TabKind
+    private func getViewController(type: Theme.TabKind) -> UIViewController {
+        switch type {
+        case .home:
+            return generateTimelineVC(type: .Home)
+        case .local:
+            // ioの場合はLTLではなくHomeを表示(Appleに怒られた)
+            return io ? generateTimelineVC(type: .Home) : generateTimelineVC(type: .Local)
+        case .global:
+            return generateTimelineVC(type: .Global)
+        case .user:
+            return .init()
+        case .list:
+            return .init()
+        }
+    }
     
     // MARK: Life Cycle
     
@@ -363,18 +404,6 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
             self.view.bringSubviewToFront(notificationBanner)
         }
     }
-    
-    // MARK: PolioPager Delegate
-    
-    override func tabItems() -> [TabItem] {
-        return [TabItem(title: "Home", backgroundColor: UIColor(hex: "ECECEC")),
-                TabItem(title: "Local", backgroundColor: UIColor(hex: "ECECEC")),
-                TabItem(title: "Global", backgroundColor: UIColor(hex: "ECECEC"))]
-    }
-    
-    override func viewControllers() -> [UIViewController] {
-        return [search, home, local, global]
-    }
 }
 
 // MARK: NoteCell Delegate
@@ -476,7 +505,10 @@ extension HomeViewController: FooterTabBarDelegate {
             nowPage = .main
             DispatchQueue.main.async { self.hideView(without: .main) }
         } else {
-            home.tappedHome()
+            // PolioPagerが管理しているvcにタップイベントを伝達させる
+            setViewControllers.compactMap { $0 as? FooterTabBarDelegate }.forEach {
+                $0.tappedHome()
+            }
         }
     }
     
