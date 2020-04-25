@@ -12,10 +12,14 @@ import RxSwift
 
 public class Theme {
     static var shared: Theme = .init()
-    var currentModel: Theme.Model?
     
+    var currentModel: Theme.Model?
     var theme: PublishRelay<Theme.Model> = .init()
     
+    private var currentUserId: String?
+    
+    /// userIdからcurrentModelをsetします
+    /// - Parameter userId: UserId
     func set(userId: String) {
         var currentModel = Model.get(userId: userId)
         
@@ -26,6 +30,23 @@ public class Theme {
         }
         
         self.currentModel = currentModel
+        currentUserId = userId
+    }
+    
+    /// 新しいモデルを保存します
+    /// - Parameter newModel: Theme.Model
+    func save(with newModel: Theme.Model) {
+        guard let currentUserId = currentUserId else { return }
+        
+        // 同じならばsaveしない
+        if let currentModel = currentModel, currentModel.isEqual(to: newModel) {
+            return
+        }
+        
+        Model.save(with: newModel, userId: currentUserId)
+        
+        currentModel = newModel
+        theme.accept(newModel)
     }
     
     enum ColerMode: String, Codable {
@@ -41,7 +62,7 @@ public class Theme {
         case list
     }
     
-    struct Tab: Codable {
+    public struct Tab: Codable, Equatable {
         var name: String
         var kind: TabKind
         
@@ -49,10 +70,40 @@ public class Theme {
         var listId: String?
     }
     
-    class Model: Codable {
-        let tab: [Tab]
-        let mainColorHex: String
-        let colorMode: ColerMode
+    public class Model: Codable {
+        var tab: [Tab]
+        var mainColorHex: String
+        var colorMode: ColerMode
+        
+        init(tab: [Theme.Tab], mainColorHex: String, colorMode: Theme.ColerMode) {
+            self.tab = tab
+            self.mainColorHex = mainColorHex
+            self.colorMode = colorMode
+        }
+        
+        // MARK: Utilities
+        
+        func isEqual(to old: Model) -> Bool {
+            let new = self
+            
+            guard new.mainColorHex == old.mainColorHex,
+                new.colorMode == old.colorMode,
+                new.tab.count == old.tab.count else { return false }
+            
+            for i in 0 ..< new.tab.count {
+                let newTab = new.tab[i]
+                let oldTab = old.tab[i]
+                
+                let sameKind = newTab.kind == oldTab.kind
+                let sameName = newTab.name == oldTab.name
+                let sameListId = newTab.listId == oldTab.listId
+                let sameUserId = newTab.userId == oldTab.userId
+                if !(sameKind && sameName && sameListId && sameUserId) {
+                    return false
+                }
+            }
+            return true
+        }
         
         // MARK: GET/SET
         

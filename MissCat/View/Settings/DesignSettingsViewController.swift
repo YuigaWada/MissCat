@@ -10,11 +10,20 @@ import Eureka
 import UIKit
 
 class DesignSettingsViewController: FormViewController {
+    // MARK: LifeCycle
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupComponent()
         setTable()
     }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        saveSettings()
+    }
+    
+    // MARK: Setup
     
     private func setupComponent() {
         title = "デザイン"
@@ -34,7 +43,7 @@ class DesignSettingsViewController: FormViewController {
         var section = MultivaluedSection(multivaluedOptions: [.Reorder, .Insert, .Delete],
                                          header: "上タブ設定",
                                          footer: "タップで表示名を変更することができます") {
-            $0.tag = "textfields"
+            $0.tag = "tab-settings"
             $0.addButtonProvider = { _ in
                 ButtonRow {
                     $0.title = "タブを追加"
@@ -50,8 +59,8 @@ class DesignSettingsViewController: FormViewController {
         
         theme.tab.reversed().forEach { tab in
             let row = TabSettingsRow {
-                $0.tabKind = tab.kind
-                $0.currentName = tab.name
+                $0.cell?.setName(tab.name)
+                $0.cell?.setKind(tab.kind)
             }
             section.insert(row, at: 0)
         }
@@ -62,7 +71,42 @@ class DesignSettingsViewController: FormViewController {
     private func getThemeSettingsSection(with theme: Theme.Model) -> Section {
         let currentColor = UIColor(hex: theme.mainColorHex)
         return Section("テーマ設定")
-            <<< SegmentedRow<String>() { $0.options = ["Light", "Dark"]; $0.value = theme.colorMode == .light ? "Light" : "Dark" }
-            <<< ColorPickerRow { $0.currentColor = currentColor }
+            <<< SegmentedRow<String>() { $0.tag = "color-mode"; $0.options = ["Light", "Dark"]; $0.value = theme.colorMode == .light ? "Light" : "Dark" }
+            <<< ColorPickerRow { $0.tag = "main-color"; $0.cell.setColor(currentColor) }
+    }
+    
+    // MARK: Update / Save
+    
+    private func saveSettings() {
+        let tab = getTabSettings()
+        let mainColorHex = getMainColorSettings()
+        let colorMode = getColorModeSettings()
+        
+        let newModel = Theme.Model(tab: tab, mainColorHex: mainColorHex, colorMode: colorMode)
+        Theme.shared.save(with: newModel)
+    }
+    
+    private func getTabSettings() -> [Theme.Tab] {
+        guard let tabSection = form.sectionBy(tag: "tab-settings") as? MultivaluedSection else { return [] }
+        
+        var tabs: [Theme.Tab] = []
+        tabSection.allRows.forEach { // なぜかcompactMapできない...
+            guard let row = $0 as? TabSettingsRow else { return }
+            tabs.append(row.tab)
+        }
+        
+        return tabs
+    }
+    
+    private func getColorModeSettings() -> Theme.ColerMode {
+        guard let colorModeRow = form.rowBy(tag: "color-mode") as? SegmentedRow<String>,
+            let colorMode = colorModeRow.value else { return .light }
+        
+        return colorMode == "Light" ? .light : .dark
+    }
+    
+    private func getMainColorSettings() -> String {
+        guard let colorRow = form.rowBy(tag: "main-color") as? ColorPickerRow else { return "2F7CF6" }
+        return colorRow.currentColorHex
     }
 }

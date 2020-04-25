@@ -11,12 +11,14 @@ import Eureka
 import RxSwift
 import UIKit
 
-public class ColorPickerCell: Cell<Bool>, CellType {
+public class ColorPickerCell: Cell<String>, CellType {
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var colorIndicator: UIView!
     
     private var currentColor: UIColor = .systemBlue
     private var disposeBag: DisposeBag = .init()
+    
+    var value: String { return currentColor.hex }
     
     public override func setup() {
         super.setup()
@@ -35,7 +37,6 @@ public class ColorPickerCell: Cell<Bool>, CellType {
     public func setColor(_ color: UIColor) {
         currentColor = color
         colorIndicator.backgroundColor = color
-        window?.tintColor = color
     }
     
     private func setupTapGesture() {
@@ -64,14 +65,28 @@ public class ColorPickerCell: Cell<Bool>, CellType {
 }
 
 public final class ColorPickerRow: Row<ColorPickerCell>, RowType {
-    public var currentColor: UIColor = .systemBlue {
-        didSet {
-            cell.setColor(currentColor)
-        }
+    public var currentColorHex: String {
+        return cell.value
     }
     
     public required init(tag: String?) {
         super.init(tag: tag)
         cellProvider = CellProvider<ColorPickerCell>(nibName: "ColorPickerCell")
+    }
+}
+
+extension UIColor {
+    var hex: String {
+        var r: CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var a: CGFloat = 0
+        getRed(&r, green: &g, blue: &b, alpha: &a)
+        return String(
+            format: "%02X%02X%02X",
+            Int(r * 0xFF),
+            Int(g * 0xFF),
+            Int(b * 0xFF)
+        )
     }
 }

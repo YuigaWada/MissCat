@@ -9,11 +9,23 @@
 import Eureka
 import UIKit
 
-public class TabSettingsCell: Cell<Bool>, CellType {
+public class TabSettingsCell: Cell<Theme.Tab>, CellType {
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var textFiled: UITextField!
     
     var tabKind: Theme.TabKind?
+    var value: Theme.Tab {
+        var name = textFiled.text ?? ""
+        if name.isEmpty {
+            name = textFiled.placeholder ?? ""
+        }
+        
+        return .init(name: name,
+                     kind: tabKind ?? .home,
+                     userId: nil,
+                     listId: nil)
+    }
+    
     private var tabSelected: Bool {
         return tabKind != nil
     }
@@ -73,16 +85,8 @@ public class TabSettingsCell: Cell<Bool>, CellType {
 }
 
 public final class TabSettingsRow: Row<TabSettingsCell>, RowType {
-    public var tabKind: Theme.TabKind = .home {
-        didSet {
-            cell.setKind(tabKind)
-        }
-    }
-    
-    public var currentName: String = "Home" {
-        didSet {
-            cell.setName(currentName)
-        }
+    public var tab: Theme.Tab {
+        return cell.value
     }
     
     public required init(tag: String?) {
