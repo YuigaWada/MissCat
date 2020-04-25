@@ -37,6 +37,7 @@ public class ColorPickerCell: Cell<String>, CellType {
     public func setColor(_ color: UIColor) {
         currentColor = color
         colorIndicator.backgroundColor = color
+        window?.tintColor = color
     }
     
     private func setupTapGesture() {

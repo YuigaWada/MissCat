@@ -116,7 +116,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
             sectionInset = .init(top: 2, left: 10, bottom: 0, right: 5)
         }
         
-        setTheme()
+        bindTheme()
         super.viewDidLoad()
     }
     
@@ -139,6 +139,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         
         setupFooterTab()
         loadingBanner()
+        setTheme()
         initialized = true
     }
     
@@ -168,7 +169,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     
     // MARK: Design
     
-    private func setTheme() {
+    private func bindTheme() {
         let theme = Theme.shared.theme
         
         theme.map { $0.tab }.subscribe(onNext: { _ in
@@ -176,8 +177,13 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         }).disposed(by: disposeBag)
         
 //        theme.map { $0.general.main }.bind(to: selectedBar.rx.backgroundColor).disposed(by: disposeBag)
-        
 //        theme.map { $0.general.background }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
+            view.window?.tintColor = UIColor(hex: mainColorHex)
+        }
     }
     
     // MARK: Auth
