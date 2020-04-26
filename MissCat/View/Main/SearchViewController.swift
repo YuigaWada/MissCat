@@ -48,16 +48,38 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     private var selected: Tab = .note
     
+    private var mainColor: UIColor = .systemBlue
     private let disposeBag: DisposeBag = .init()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        bindTheme()
+        setTheme()
+        
         setupTrends()
         setupTab()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+    }
+    
+    // MARK: Design
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { UIColor(hex: $0.mainColorHex) }.subscribe(onNext: { color in
+            self.tabIndicator.backgroundColor = color
+            self.mainColor = color
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
+            mainColor = UIColor(hex: mainColorHex)
+            tabIndicator.backgroundColor = mainColor
+        }
     }
     
     private func setupTrends() {
@@ -134,7 +156,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
         guard tabIndicator.frame == .zero else { return }
         
         tabIndicator.frame = noteTab.frame.insetBy(dx: -4, dy: 0)
-        tabIndicator.backgroundColor = .systemBlue
+        tabIndicator.backgroundColor = mainColor
         
         userTab.setTitleColor(.lightGray, for: .normal)
         noteTab.setTitleColor(.white, for: .normal)
