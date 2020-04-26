@@ -42,6 +42,8 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     var homeViewController: HomeViewController?
     
+    private var mainColor: UIColor = .systemBlue
+    
     private var userId: String?
     private var scrollBegining: CGFloat = 0
     private var tlScrollView: UIScrollView?
@@ -63,7 +65,8 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     override func viewDidLoad() {
         viewModel.setUserId(userId ?? "", isMe: isMe)
-        setupTabStyle()
+        setTheme()
+        bindTheme()
         
         super.viewDidLoad()
         setupComponent()
@@ -138,10 +141,34 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         followerCountButton.titleLabel?.text = nil
         followButton.titleLabel?.text = "..."
         followButton.backgroundColor = .white
-        followButton.layer.borderColor = UIColor.systemBlue.cgColor
         followButton.layer.borderWidth = 1
         
         introTextView.delegate = self
+    }
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { UIColor(hex: $0.mainColorHex) }.subscribe(onNext: { mainColor in
+//            self.settings.style.selectedBarBackgroundColor = mainColor
+            
+            // ↑のやつだとうまく変更できないのでworkaround
+            self.buttonBarView.selectedBar.backgroundColor = mainColor
+            self.followButton.layer.borderColor = mainColor.cgColor
+            self.followButton.setTitleColor(mainColor, for: .normal)
+            self.mainColor = mainColor
+            
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
+            mainColor = UIColor(hex: mainColorHex)
+            followButton.layer.borderColor = mainColor.cgColor
+            setupTabStyle(with: mainColor)
+        } else {
+            setupTabStyle(with: .systemBlue)
+        }
     }
     
     // MARK: Public Methods
@@ -153,11 +180,11 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     // MARK: Setup
     
-    private func setupTabStyle() {
+    private func setupTabStyle(with mainColor: UIColor) {
         settings.style.buttonBarBackgroundColor = .white
         settings.style.buttonBarItemBackgroundColor = .white
         settings.style.buttonBarItemTitleColor = .black
-        settings.style.selectedBarBackgroundColor = .systemBlue
+        settings.style.selectedBarBackgroundColor = mainColor
         
         settings.style.buttonBarItemFont = UIFont.systemFont(ofSize: 15)
         
@@ -203,12 +230,12 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             
             output.relation.asDriver(onErrorDriveWith: Driver.empty()).map {
                 let isFollowing = $0.isFollowing ?? false
-                return !isFollowing ? UIColor.systemBlue : UIColor.white
+                return !isFollowing ? self.mainColor : UIColor.white
             }.drive(followButton.rx.backgroundColor).disposed(by: disposeBag)
             
             output.relation.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: {
                 let isFollowing = $0.isFollowing ?? false
-                self.followButton.setTitleColor(isFollowing ? UIColor.systemBlue : UIColor.white, for: .normal)
+                self.followButton.setTitleColor(isFollowing ? self.mainColor : UIColor.white, for: .normal)
             }).disposed(by: disposeBag)
             
             followButton.rx.tap.subscribe(onNext: {
@@ -223,7 +250,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             }).disposed(by: disposeBag)
         } else { // 自分のプロフィール画面の場合
             followButton.setTitle("編集", for: .normal)
-            followButton.setTitleColor(.systemBlue, for: .normal)
+            followButton.setTitleColor(mainColor, for: .normal)
         }
         
         backButton.rx.tap.subscribe(onNext: {

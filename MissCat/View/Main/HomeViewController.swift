@@ -36,7 +36,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     private var setViewControllers: [UIViewController] = []
     
     private lazy var navBar: NavBar = NavBar()
-    private lazy var footerTab = FooterTabBar()
+    private lazy var footerTab = FooterTabBar(with: disposeBag)
     
     // Flag
     private var hasPreparedViews: Bool = false // NavBar, FooterTabをこのVCのview上に配置したか？
@@ -176,13 +176,15 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
             self.reloadPager() // タブをリロード
         }).disposed(by: disposeBag)
         
-//        theme.map { $0.general.main }.bind(to: selectedBar.rx.backgroundColor).disposed(by: disposeBag)
+        theme.map { UIColor(hex: $0.mainColorHex) }.bind(to: selectedBar.rx.backgroundColor).disposed(by: disposeBag)
 //        theme.map { $0.general.background }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
     }
     
     private func setTheme() {
         if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
-            view.window?.tintColor = UIColor(hex: mainColorHex)
+            let mainColor = UIColor(hex: mainColorHex)
+            view.window?.tintColor = mainColor
+            selectedBar.backgroundColor = mainColor
         }
     }
     

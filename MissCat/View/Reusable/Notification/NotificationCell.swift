@@ -36,6 +36,19 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
     private var emojiViewOnView: Bool = false
     private var disposeBag = DisposeBag()
     private var imageSessionTasks: [URLSessionDataTask] = []
+    private var mainColor: UIColor = .systemBlue
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        bindTheme()
+        setTheme()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        bindTheme()
+        setTheme()
+    }
     
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -56,6 +69,20 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
         guard !emojiViewOnView else { return }
         addSubview(emojiView)
         emojiViewOnView = true
+    }
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { UIColor(hex: $0.mainColorHex) }.subscribe(onNext: { color in
+            self.followButton.backgroundColor = color
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
+            mainColor = UIColor(hex: mainColorHex)
+        }
     }
     
     func initialize() {
@@ -151,7 +178,8 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
         // follow
         else if item.type == .follow {
             typeIconView.text = "user-friends"
-            typeIconView.textColor = .systemBlue
+            typeIconView.textColor = mainColor
+            followButton.backgroundColor = mainColor
             typeLabel.text = "Follow"
             emojiView.isHidden = true
             followButton.isHidden = false

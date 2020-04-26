@@ -29,6 +29,9 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         setupCollectionViewLayout()
         setupGesture()
         
+        bindTheme()
+        setTheme()
+        
         let viewModel = setupViewModel()
         viewModel.setEmojiModel()
     }
@@ -42,6 +45,25 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         
         if let viewModel = viewModel, !viewModel.state.saved {
             viewModel.save()
+        }
+    }
+    
+    // MARK: Design
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { UIColor(hex: $0.mainColorHex) }.subscribe(onNext: { color in
+            self.plusButton.setTitleColor(color, for: .normal)
+            self.minusButton.setTitleColor(color, for: .normal)
+         }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
+            let mainColor = UIColor(hex: mainColorHex)
+            plusButton.setTitleColor(mainColor, for: .normal)
+            minusButton.setTitleColor(mainColor, for: .normal)
         }
     }
     

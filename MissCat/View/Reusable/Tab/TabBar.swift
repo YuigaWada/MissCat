@@ -6,6 +6,8 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import RxCocoa
+import RxSwift
 import UIKit
 
 enum TabKind {
@@ -37,26 +39,44 @@ class FooterTabBar: UIView {
     
     @IBOutlet weak var postBottonFrame: UIView!
     
+    private var disposeBag: DisposeBag
+    private var offColor: UIColor = .lightGray
+    private var onColor: UIColor = .systemBlue
+    
     var delegate: FooterTabBarDelegate?
     var selected: TabKind = .home {
-        willSet(new) {
-            self.lightupButton(old: selected, new)
+        didSet {
+            self.changeSelectState(to: selected)
         }
     }
     
     // MARK: Life Cycle
     
+    convenience init(with disposeBag: DisposeBag) {
+        self.init()
+        self.disposeBag = disposeBag
+        setup()
+    }
+    
     override init(frame: CGRect) {
+        disposeBag = .init()
         super.init(frame: frame)
-        loadNib()
+        setup()
     }
     
     required init?(coder aDecoder: NSCoder) {
+        disposeBag = .init()
         super.init(coder: aDecoder)!
-        loadNib()
+        setup()
     }
     
-    func loadNib() {
+    private func setup() {
+        loadNib()
+        bindTheme()
+        setTheme()
+    }
+    
+    private func loadNib() {
         if let view = UINib(nibName: "TabBar", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
             addSubview(view)
@@ -83,6 +103,24 @@ class FooterTabBar: UIView {
         postButton.titleLabel?.font = .awesomeRegular(fontSize: fontSize)
         favButton.titleLabel?.font = .awesomeSolid(fontSize: fontSize)
         profileButton.titleLabel?.font = .awesomeSolid(fontSize: fontSize)
+    }
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { UIColor(hex: $0.mainColorHex) }.subscribe(onNext: { color in
+            self.onColor = color
+            self.postBottonFrame.backgroundColor = color
+            self.changeSelectState(to: self.selected)
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
+            let mainColor = UIColor(hex: mainColorHex)
+            onColor = mainColor
+            postBottonFrame.backgroundColor = mainColor
+        }
     }
     
     // MARK: IBAction
@@ -129,9 +167,23 @@ class FooterTabBar: UIView {
         delegate.dismiss(animated: true, completion: nil)
     }
     
-    private func lightupButton(old: TabKind, _ new: TabKind) {
-        changeButtonColor(target: old, color: .lightGray)
-        changeButtonColor(target: new, color: .systemBlue)
+    private func changeSelectState(to new: TabKind) {
+        changeButtonColor(target: new, color: onColor)
+        if new != .home {
+            changeButtonColor(target: .home, color: offColor)
+        }
+        
+        if new != .notifications {
+            changeButtonColor(target: .notifications, color: offColor)
+        }
+        
+        if new != .messages {
+            changeButtonColor(target: .messages, color: offColor)
+        }
+        
+        if new != .profile {
+            changeButtonColor(target: .profile, color: offColor)
+        }
     }
     
     private func changeButtonColor(target: TabKind, color: UIColor) {
