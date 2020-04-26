@@ -40,6 +40,7 @@ class TrendViewController: UIViewController, UITableViewDelegate, UITableViewDat
             self.tables = trends.compactMap { $0.tag }.map { "#\($0)" }
             DispatchQueue.main.async {
                 self.mainTableView.reloadData()
+                self.mainTableView.stopSpinner()
             }
         }
     }
