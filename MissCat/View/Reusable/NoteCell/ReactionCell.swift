@@ -22,7 +22,7 @@ class ReactionCell: UICollectionViewCell {
     
     private let disposeBag = DisposeBag()
     
-    var selectedBackGroundColor = UIColor(hex: "EE7258")
+    var selectedBackGroundColor = UIColor(hex: "DF785F")
     var nonselectedBackGroundColor = UIColor(hex: "C6C6C6")
     
     var selectedTextColor = UIColor.white
