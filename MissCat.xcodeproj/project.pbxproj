@@ -585,6 +585,17 @@
 			path = DirectMessage;
 			sourceTree = "<group>";
 		};
+		8D72D41C245592B100F964D4 /* Cell */ = {
+			isa = PBXGroup;
+			children = (
+				8D5889F6245019C200C6EBC2 /* TabSettingsCell.xib */,
+				8D5889F8245019D300C6EBC2 /* TabSettingsCell.swift */,
+				8DDB52CE245032E500C97130 /* ColorPickerCell.xib */,
+				8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */,
+			);
+			path = Cell;
+			sourceTree = "<group>";
+		};
 		8D72E4FB244AE6BA00B30C3A /* Login */ = {
 			isa = PBXGroup;
 			children = (
@@ -908,6 +919,7 @@
 		8DAF301C241B5C8D0041BB85 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				8D72D41C245592B100F964D4 /* Cell */,
 				8DAF30182419842C0041BB85 /* AboutMisskeyViewController.swift */,
 				8DAF301A241B599B0041BB85 /* LicenseViewController.swift */,
 				8DAF3016241975030041BB85 /* SettingsViewController.swift */,
@@ -915,10 +927,6 @@
 				8D8A50C0242355200065B1D2 /* AccountViewController.swift */,
 				8D31018C24397B45004F8E55 /* ReactionSettingsViewController.swift */,
 				8D5889F4244FFAC200C6EBC2 /* DesignSettingsViewController.swift */,
-				8D5889F6245019C200C6EBC2 /* TabSettingsCell.xib */,
-				8D5889F8245019D300C6EBC2 /* TabSettingsCell.swift */,
-				8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */,
-				8DDB52CE245032E500C97130 /* ColorPickerCell.xib */,
 				8D75EC7E2452E49100EAC2A8 /* ColorPicker.swift */,
 			);
 			path = Settings;
