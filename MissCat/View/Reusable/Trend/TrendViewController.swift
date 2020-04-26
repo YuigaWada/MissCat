@@ -39,10 +39,19 @@ class TrendViewController: UIViewController, UITableViewDelegate, UITableViewDat
             guard let trends = trends, error == nil else { return }
             self.tables = trends.compactMap { $0.tag }.map { "#\($0)" }
             DispatchQueue.main.async {
-                self.mainTableView.reloadData()
+                self.reloadTableView(diff: self.tables)
                 self.mainTableView.stopSpinner()
             }
         }
+    }
+    
+    private func reloadTableView(diff: [String]) {
+        mainTableView.beginUpdates()
+        for i in 0 ..< diff.count {
+            mainTableView.insertRows(at: [IndexPath(row: i, section: 0)],
+                                     with: .automatic)
+        }
+        mainTableView.endUpdates()
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
