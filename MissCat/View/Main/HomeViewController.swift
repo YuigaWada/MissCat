@@ -60,9 +60,12 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     
     /// 上タブのアイテム
     override func tabItems() -> [TabItem] {
+        let colorPattern = Theme.shared.currentModel?.colorPattern
         let tabs = Theme.shared.currentModel?.tab ?? getDefaultTabs()
         return tabs.map { tab in
-            TabItem(title: tab.name)
+            TabItem(title: tab.name,
+                    backgroundColor: colorPattern?.ui.base ?? .white,
+                    normalColor: colorPattern?.ui.text ?? .black)
         }
     }
     
@@ -103,20 +106,10 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     // MARK: Life Cycle
     
     override func viewDidLoad() {
-        needBorder = true
-        selectedBarHeight = 2
-        selectedBar.layer.cornerRadius = 2
-        selectedBarMargins.lower += 1
-        sectionInset = .init(top: 0, left: 20, bottom: 0, right: 5)
-        navBar.isHidden = true
-        
-        if !isXSeries {
-            selectedBarMargins.upper += 3
-            selectedBarMargins.lower += 1
-            sectionInset = .init(top: 2, left: 10, bottom: 0, right: 5)
-        }
-        
+        setupPolioPager()
         bindTheme()
+        setTheme()
+        
         super.viewDidLoad()
     }
     
@@ -169,6 +162,21 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     
     // MARK: Design
     
+    private func setupPolioPager() {
+        needBorder = true
+        selectedBarHeight = 2
+        selectedBar.layer.cornerRadius = 2
+        selectedBarMargins.lower += 1
+        sectionInset = .init(top: 0, left: 20, bottom: 0, right: 5)
+        navBar.isHidden = true
+        
+        if !isXSeries {
+            selectedBarMargins.upper += 3
+            selectedBarMargins.lower += 1
+            sectionInset = .init(top: 2, left: 10, bottom: 0, right: 5)
+        }
+    }
+    
     private func bindTheme() {
         let theme = Theme.shared.theme
         
@@ -177,7 +185,9 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         }).disposed(by: disposeBag)
         
         theme.map { UIColor(hex: $0.mainColorHex) }.bind(to: selectedBar.rx.backgroundColor).disposed(by: disposeBag)
-//        theme.map { $0.general.background }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
+        theme.map { $0.colorPattern.ui.base }.subscribe(onNext: { baseColor in
+            self.changeBackground(to: baseColor)
+        }).disposed(by: disposeBag)
     }
     
     private func setTheme() {
@@ -186,6 +196,16 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
             view.window?.tintColor = mainColor
             selectedBar.backgroundColor = mainColor
         }
+        
+        if let colorPattern = Theme.shared.currentModel?.colorPattern {
+            changeBackground(to: colorPattern.ui.base)
+        }
+    }
+    
+    private func changeBackground(to color: UIColor) {
+        view.backgroundColor = color
+        collectionView.backgroundColor = color
+        tabBackgroundColor = color
     }
     
     // MARK: Auth
@@ -363,6 +383,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         else { fatalError("Internal Error.") }
         
         viewController.homeViewController = self
+        viewController.view.backgroundColor = .clear
         return viewController
     }
     
@@ -371,6 +392,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         else { fatalError("Internal Error.") }
         
         viewController.setup(type: type)
+        viewController.view.backgroundColor = .clear
         return viewController
     }
     

@@ -70,7 +70,6 @@
                                     </constraints>
                                 </view>
                             </subviews>
-                            <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                             <constraints>
                                 <constraint firstItem="yEZ-I1-OzZ" firstAttribute="top" secondItem="R88-60-hph" secondAttribute="top" constant="5" id="RYD-YO-1sQ"/>
                                 <constraint firstItem="yEZ-I1-OzZ" firstAttribute="centerY" secondItem="R88-60-hph" secondAttribute="centerY" id="WbW-cs-Qfx"/>

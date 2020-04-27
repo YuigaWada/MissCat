@@ -168,7 +168,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         self.setupCollectionView()
         self.setupFileContainer()
         self.setupInnerRenoteDisplay()
-        self.themeBinding()
+//        self.bindTheme()
         return {}
     }()
     
@@ -373,6 +373,11 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             .drive(rx.backgroundColor)
             .disposed(by: disposeBag)
         
+        output.separatorBackgroundColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(separatorBorder.rx.backgroundColor)
+            .disposed(by: disposeBag)
+        
         // hidden
         Observable.combineLatest(output.isReplyTarget.asObservable(), output.onOtherNote.asObservable()) { $0 || $1 }
             .asDriver(onErrorDriveWith: Driver.empty())
@@ -412,44 +417,6 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             guard let previewdUrl = viewModel.state.previewedUrl else { return }
             self.delegate?.tappedLink(text: previewdUrl)
         }
-    }
-    
-    private func themeBinding() {
-//        let theme = Theme.shared.theme
-//
-//        theme.map { $0.general.main }.subscribe(onNext: {
-//            self.tintColor = $0
-//        }).disposed(by: disposeBag)
-//        theme.map { $0.general.background }.bind(to: rx.backgroundColor).disposed(by: disposeBag)
-//        theme.map { $0.post.text }.subscribe(onNext: {
-//            for textView in [self.nameTextView, self.noteView] {
-//                guard let text = textView?.attributedText, text.length > 0 else { return }
-//                let mutableAttributed = NSMutableAttributedString(attributedString: text)
-//                mutableAttributed.addAttribute(.foregroundColor,
-//                                               value: $0,
-//                                               range: NSMakeRange(0, mutableAttributed.length - 1))
-//                textView?.attributedText = mutableAttributed
-//            }
-//
-//        }).disposed(by: disposeBag)
-        
-        //        Theme.shared.complete()
-    }
-    
-    private func reactionColorBinding(_ cell: ReactionCell) {
-//        let theme = Theme.shared.theme
-//
-//        theme.map { $0.post.reaction }.subscribe(onNext: {
-//            cell.nonselectedBackGroundColor = $0
-//        }).disposed(by: disposeBag)
-//        theme.map { $0.post.myReaction }.subscribe(onNext: {
-//            cell.selectedBackGroundColor = $0
-//        }).disposed(by: disposeBag)
-//
-//        let postTheme = Theme.shared.getCurrentTheme().post
-//
-//        cell.nonselectedBackGroundColor = postTheme.reaction
-//        cell.selectedBackGroundColor = postTheme.myReaction
     }
     
     private func setupProfileGesture() {
@@ -591,7 +558,6 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             
             let shapedCell = viewModel.setReactionCell(with: item, to: cell)
             shapedCell.delegate = self
-            reactionColorBinding(shapedCell)
             
             return shapedCell
         }

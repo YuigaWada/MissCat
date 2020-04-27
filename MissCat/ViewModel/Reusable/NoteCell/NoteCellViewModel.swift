@@ -42,6 +42,7 @@ class NoteCellViewModel: ViewModelType {
         let isReplyTarget: PublishRelay<Bool> = .init()
         
         let backgroundColor: PublishRelay<UIColor> = .init()
+        let separatorBackgroundColor: PublishRelay<UIColor> = .init()
         
         let replyLabel: PublishRelay<String> = .init()
         let renoteLabel: PublishRelay<String> = .init()
@@ -71,7 +72,7 @@ class NoteCellViewModel: ViewModelType {
     private var isMe: Bool = false
     private var myReaction: String?
     
-    private let replyTargetColor = UIColor(hex: "f0f0f0")
+    private lazy var replyTargetColor = Theme.shared.currentModel?.colorPattern.ui.sub3 ?? UIColor(hex: "f0f0f0")
     private let usernameFont = UIFont.systemFont(ofSize: 11.0)
     
     private var dataSource: ReactionsDataSource?
@@ -82,7 +83,8 @@ class NoteCellViewModel: ViewModelType {
     private var imageSessionTasks: [URLSessionDataTask] = []
     
     private var properBackgroundColor: UIColor {
-        return input.cellModel.isReplyTarget ? replyTargetColor : .white
+        let baseColor = Theme.shared.currentModel?.colorPattern.ui.base ?? .white
+        return input.cellModel.isReplyTarget ? replyTargetColor : baseColor
     }
     
     // MARK: Life Cycle
@@ -103,11 +105,11 @@ class NoteCellViewModel: ViewModelType {
         let item = input.cellModel
         DispatchQueue.global(qos: .default).async {
             self.output.isReplyTarget.accept(item.isReplyTarget)
-            self.output.backgroundColor.accept(self.properBackgroundColor)
             self.output.ago.accept(item.ago.calculateAgo())
         }
         
         setNote()
+        setColor()
         
         output.defaultConstraintActive.accept(!input.isDetailMode)
         output.name.accept(input.cellModel.shapedDisplayName?.attributed)
@@ -142,6 +144,11 @@ class NoteCellViewModel: ViewModelType {
         }
         
         return reactionCell
+    }
+    
+    private func setColor() {
+        output.backgroundColor.accept(properBackgroundColor)
+        output.separatorBackgroundColor.accept(Theme.shared.currentModel?.colorPattern.ui.sub2 ?? .lightGray)
     }
     
     private func setNote() {

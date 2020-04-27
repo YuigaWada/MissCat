@@ -10,6 +10,8 @@ import Foundation
 import RxCocoa
 import RxSwift
 
+// MARK: Theme
+
 public class Theme {
     static var shared: Theme = .init()
     
@@ -48,7 +50,92 @@ public class Theme {
         currentModel = newModel
         theme.accept(newModel)
     }
+}
+
+// MARK: Theme Color
+
+protocol ColorPattern {
+    var ui: UIColorPattern { get }
+    var hex: HexColorPattern { get }
+}
+
+protocol UIColorPattern {
+    var base: UIColor { get }
+    var sub0: UIColor { get }
+    var sub1: UIColor { get }
+    var sub2: UIColor { get }
+    var sub3: UIColor { get }
     
+    var text: UIColor { get }
+}
+
+protocol HexColorPattern {
+    var base: String { get }
+    var sub0: String { get }
+    var sub1: String { get }
+    var sub2: String { get }
+    var sub3: String { get }
+    
+    var text: String { get }
+}
+
+extension Theme {
+    class Color {
+        struct Light: ColorPattern {
+            var ui: UIColorPattern = UI()
+            var hex: HexColorPattern = Hex()
+            
+            struct UI: UIColorPattern {
+                var base: UIColor = .white
+                var sub0: UIColor = .darkGray // 濃
+                var sub1: UIColor = UIColor(hex: "C6C6C6")
+                var sub2: UIColor = .lightGray // 淡
+                var sub3: UIColor = UIColor(hex: "f0f0f0")
+                
+                var text: UIColor = .black
+            }
+            
+            struct Hex: HexColorPattern {
+                var base: String = "ffffff"
+                var sub0: String = "555555"
+                var sub1: String = "C6C6C6"
+                var sub2: String = "D3D3D3"
+                var sub3: String = "f0f0f0"
+                
+                var text: String = "000000"
+            }
+        }
+        
+        struct Dark: ColorPattern {
+            var ui: UIColorPattern = UI()
+            var hex: HexColorPattern = Hex()
+            
+            struct UI: UIColorPattern {
+                var base: UIColor = UIColor(hex: "303030")
+                var sub0: UIColor = UIColor(hex: "e8e8e8") // 淡
+                var sub1: UIColor = UIColor(hex: "e8e8e8")
+                var sub2: UIColor = UIColor(hex: "adadad")
+                var sub3: UIColor = UIColor(hex: "adadad") // 濃 (Lightと逆なので注意)
+                
+                var text: UIColor = .white
+            }
+            
+            struct Hex: HexColorPattern {
+                var base: String = "303030"
+                var sub0: String = "e8e8e8"
+                var sub1: String = "e8e8e8"
+                var sub2: String = "adadad"
+                var sub3: String = "adadad"
+                
+                var text: String = "ffffff"
+            }
+        }
+    }
+}
+
+// MARK: Theme Model
+
+extension Theme {
     enum ColerMode: String, Codable {
         case light
         case dark
@@ -74,6 +161,10 @@ public class Theme {
         var tab: [Tab]
         var mainColorHex: String
         var colorMode: ColerMode
+        
+        var colorPattern: ColorPattern {
+            return colorMode == .light ? Theme.Color.Light() : Theme.Color.Dark()
+        }
         
         init(tab: [Theme.Tab], mainColorHex: String, colorMode: Theme.ColerMode) {
             self.tab = tab

@@ -113,6 +113,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         
         binding(dataSource: dataSource)
         setupTopShadow()
+        bindTheme()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -125,9 +126,25 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             viewModel?.checkUserId()
         }
         viewModel?.setSkeltonCell()
+        setTheme()
         
         if let bottomConstraint = bottomConstraint {
             bottomConstraint.isActive = withNavBar
+        }
+    }
+    
+    // MARK: Design
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        theme.map { $0.colorPattern.ui.base }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
+        theme.map { $0.colorPattern.ui.base }.bind(to: mainTableView.rx.backgroundColor).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let baseColor = Theme.shared.currentModel?.colorPattern.ui.base {
+            view.backgroundColor = baseColor
+            mainTableView.backgroundColor = baseColor
         }
     }
     

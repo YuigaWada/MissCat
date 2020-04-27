@@ -55,7 +55,6 @@ class FooterTabBar: UIView {
     convenience init(with disposeBag: DisposeBag) {
         self.init()
         self.disposeBag = disposeBag
-        setup()
     }
     
     override init(frame: CGRect) {
@@ -79,6 +78,7 @@ class FooterTabBar: UIView {
     private func loadNib() {
         if let view = UINib(nibName: "TabBar", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
+            view.backgroundColor = .clear
             addSubview(view)
         }
     }
@@ -120,6 +120,10 @@ class FooterTabBar: UIView {
             let mainColor = UIColor(hex: mainColorHex)
             onColor = mainColor
             postBottonFrame.backgroundColor = mainColor
+        }
+        
+        if let colorPattern = Theme.shared.currentModel?.colorPattern {
+            backgroundColor = colorPattern.ui.base
         }
     }
     
