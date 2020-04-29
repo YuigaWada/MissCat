@@ -56,7 +56,12 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         theme.map { UIColor(hex: $0.mainColorHex) }.subscribe(onNext: { color in
             self.plusButton.setTitleColor(color, for: .normal)
             self.minusButton.setTitleColor(color, for: .normal)
-         }).disposed(by: disposeBag)
+        }).disposed(by: disposeBag)
+        
+        theme.map { $0.colorPattern.ui }.subscribe(onNext: { colorPattern in
+            self.view.backgroundColor = colorPattern.base
+            self.emojiCollectionView.backgroundColor = colorPattern.base
+        }).disposed(by: disposeBag)
     }
     
     private func setTheme() {
@@ -64,6 +69,11 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
             let mainColor = UIColor(hex: mainColorHex)
             plusButton.setTitleColor(mainColor, for: .normal)
             minusButton.setTitleColor(mainColor, for: .normal)
+        }
+        
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            view.backgroundColor = colorPattern.base
+            emojiCollectionView.backgroundColor = colorPattern.base
         }
     }
     
@@ -182,7 +192,9 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ReactionCollectionHeader", for: indexPath) as? ReactionCollectionHeader else { fatalError("Internal Error.") }
             
             cell.contentMode = .left
+            cell.backgroundColor = .clear
             cell.setTitle(headerInfo.title)
+            
             return cell
         } else {
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as? EmojiViewCell else { fatalError("Internal Error.") }
@@ -191,6 +203,7 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
             
             cell.mainView.emoji = item
             cell.mainView.isFake = item.isFake
+            cell.backgroundColor = .clear
             cell.contentMode = .left
             
             return cell

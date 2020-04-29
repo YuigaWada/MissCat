@@ -9,6 +9,7 @@
 import Agrume
 import RxCocoa
 import RxSwift
+import SkeletonView
 import UIKit
 import XLPagerTabStrip
 
@@ -33,6 +34,10 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     @IBOutlet weak var followerCountButton: UIButton!
     @IBOutlet weak var followButton: UIButton!
     
+    @IBOutlet weak var notesCountLabel: UILabel!
+    @IBOutlet weak var followCountLabel: UILabel!
+    @IBOutlet weak var followerCountLabel: UILabel!
+    
     @IBOutlet weak var backButton: UIButton!
     @IBOutlet weak var settingsButton: UIButton!
     @IBOutlet weak var containerHeightContraint: NSLayoutConstraint!
@@ -49,7 +54,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     private var tlScrollView: UIScrollView?
     private var isMe: Bool = false
     
-    private lazy var animateBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
+    private lazy var animateBlurView = getAnimateBlurView()
     
     private lazy var viewModel: ProfileViewModel = self.getViewModel()
     
@@ -140,7 +145,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         followCountButton.titleLabel?.text = nil
         followerCountButton.titleLabel?.text = nil
         followButton.titleLabel?.text = "..."
-        followButton.backgroundColor = .white
+        followButton.backgroundColor = .clear
         followButton.layer.borderWidth = 1
         
         introTextView.delegate = self
@@ -159,16 +164,26 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             self.mainColor = mainColor
             
         }).disposed(by: disposeBag)
+        
+        theme.map { $0.colorPattern.ui.base }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
     }
     
     private func setTheme() {
-        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
-            mainColor = UIColor(hex: mainColorHex)
-            followButton.layer.borderColor = mainColor.cgColor
-            setupTabStyle(with: mainColor)
-        } else {
-            setupTabStyle(with: .systemBlue)
-        }
+        guard let theme = Theme.shared.currentModel else { setupTabStyle(main: .systemBlue, back: .white); return }
+        
+        let mainColorHex = theme.mainColorHex
+        let colorPattern = theme.colorPattern.ui
+        let backgroundColor = theme.colorMode == .light ? colorPattern.base : colorPattern.sub3
+        
+        mainColor = UIColor(hex: mainColorHex)
+        followButton.layer.borderColor = mainColor.cgColor
+        setupTabStyle(main: mainColor, back: backgroundColor)
+        
+        view.backgroundColor = backgroundColor
+        containerScrollView.backgroundColor = backgroundColor
+        notesCountLabel.textColor = colorPattern.text
+        followCountLabel.textColor = colorPattern.text
+        followerCountLabel.textColor = colorPattern.text
     }
     
     // MARK: Public Methods
@@ -180,10 +195,12 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     // MARK: Setup
     
-    private func setupTabStyle(with mainColor: UIColor) {
-        settings.style.buttonBarBackgroundColor = .white
-        settings.style.buttonBarItemBackgroundColor = .white
-        settings.style.buttonBarItemTitleColor = .black
+    private func setupTabStyle(main mainColor: UIColor, back backgroundColor: UIColor) {
+        let textColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
+        
+        settings.style.buttonBarBackgroundColor = backgroundColor
+        settings.style.buttonBarItemBackgroundColor = backgroundColor
+        settings.style.buttonBarItemTitleColor = textColor
         settings.style.selectedBarBackgroundColor = mainColor
         
         settings.style.buttonBarItemFont = UIFont.systemFont(ofSize: 15)
@@ -230,12 +247,12 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             
             output.relation.asDriver(onErrorDriveWith: Driver.empty()).map {
                 let isFollowing = $0.isFollowing ?? false
-                return !isFollowing ? self.mainColor : UIColor.white
+                return !isFollowing ? self.mainColor : UIColor.clear
             }.drive(followButton.rx.backgroundColor).disposed(by: disposeBag)
             
             output.relation.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: {
                 let isFollowing = $0.isFollowing ?? false
-                self.followButton.setTitleColor(isFollowing ? self.mainColor : UIColor.white, for: .normal)
+                self.followButton.setTitleColor(isFollowing ? self.mainColor : UIColor.clear, for: .normal)
             }).disposed(by: disposeBag)
             
             followButton.rx.tap.subscribe(onNext: {
@@ -294,6 +311,13 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             self.animateBlurView.alpha = 1
         }
         blurAnimator?.pausesOnCompletion = true // 別のVCに飛ぶとアニメーションが完了状態になってしまうため、stateを.activeで維持させる
+    }
+    
+    private func getAnimateBlurView() -> UIVisualEffectView {
+        let colorMode = Theme.shared.currentModel?.colorMode ?? .light
+        let style: UIBlurEffect.Style = colorMode == .light ? .light : .dark
+        
+        return UIVisualEffectView(effect: UIBlurEffect(style: style))
     }
     
     private func updateAnimateBlurHeight() {
@@ -470,8 +494,10 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     private func changeSkeltonState(on: Bool) {
         if on {
-            iconImageView.showAnimatedGradientSkeleton()
-            introTextView.showAnimatedGradientSkeleton()
+            let gradient = SkeletonGradient(baseColor: Theme.shared.currentModel?.colorPattern.ui.sub3 ?? .lightGray)
+            
+            iconImageView.showAnimatedGradientSkeleton(usingGradient: gradient)
+            introTextView.showAnimatedGradientSkeleton(usingGradient: gradient)
         } else {
             iconImageView.hideSkeleton()
             introTextView.hideSkeleton()

@@ -6,6 +6,7 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
+import RxSwift
 import UIKit
 
 class SettingsViewController: UITableViewController {
@@ -19,11 +20,23 @@ class SettingsViewController: UITableViewController {
     @IBOutlet weak var catIcon: UILabel!
     @IBOutlet weak var licenseIcon: UILabel!
     
+    @IBOutlet weak var accountLabel: UILabel!
+    @IBOutlet weak var designLabel: UILabel!
+    @IBOutlet weak var reactionLabel: UILabel!
+    @IBOutlet weak var aboutLabel: UILabel!
+    @IBOutlet weak var licenseLabel: UILabel!
+    
+    private var disposeBag: DisposeBag = .init()
+    private lazy var iconLabels = [accountIcon, designIcon, muteIcon, reactionIcon, fontIcon, catIcon, licenseIcon]
+    private lazy var labels = [accountLabel, designLabel, reactionLabel, aboutLabel, licenseLabel]
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         tableView.delegate = self
         setFont()
+        bindTheme()
+        setTheme()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -31,10 +44,32 @@ class SettingsViewController: UITableViewController {
         navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
+    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        cell.backgroundColor = .clear
+    }
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { $0.colorPattern.ui }.subscribe(onNext: { colorPattern in
+            self.view.backgroundColor = colorPattern.base
+            self.iconLabels.forEach { $0?.textColor = colorPattern.text }
+            self.labels.forEach { $0?.textColor = colorPattern.text }
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            view.backgroundColor = colorPattern.base
+            iconLabels.forEach { $0?.textColor = colorPattern.text }
+            labels.forEach { $0?.textColor = colorPattern.text }
+        }
+    }
+    
     // MARK: Privates
     
     private func setFont() {
-        for iconLabel in [accountIcon, designIcon, muteIcon, reactionIcon, fontIcon, catIcon, licenseIcon] {
+        for iconLabel in iconLabels {
             iconLabel?.font = .awesomeSolid(fontSize: 23)
         }
     }
@@ -50,6 +85,7 @@ class SettingsViewController: UITableViewController {
         
         guard let header = view as? UITableViewHeaderFooterView else { return }
         header.textLabel?.text = "MissCat"
+        header.textLabel?.textColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

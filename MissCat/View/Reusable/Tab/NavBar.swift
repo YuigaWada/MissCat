@@ -22,6 +22,7 @@ class NavBar: UIView {
     
     private let disposeBag = DisposeBag()
     
+    private var initialized: Bool = false
     var delegate: NavBarDelegate?
     var barTitle: String? {
         didSet {
@@ -44,6 +45,7 @@ class NavBar: UIView {
     func loadNib() {
         if let view = UINib(nibName: "NavBar", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
+            view.backgroundColor = .clear
             addSubview(view)
         }
     }
@@ -51,7 +53,30 @@ class NavBar: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         
+        guard !initialized else { return }
         setupGesture()
+        bindTheme()
+        setTheme()
+        
+        initialized = true
+    }
+    
+    // MARK: Design
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { $0.colorPattern.ui }.subscribe(onNext: { colorPattern in
+            self.backgroundColor = colorPattern.base
+            self.titleLabel.textColor = colorPattern.text
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            backgroundColor = colorPattern.base
+            titleLabel.textColor = colorPattern.text
+        }
     }
     
     // Public Methods

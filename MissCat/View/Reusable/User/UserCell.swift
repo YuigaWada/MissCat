@@ -9,6 +9,7 @@
 import RxCocoa
 import RxDataSources
 import RxSwift
+import SkeletonView
 import UIKit
 
 protocol UserCellDelegate {
@@ -30,6 +31,7 @@ class UserCell: UITableViewCell, ComponentType, UITextViewDelegate {
     @IBOutlet weak var iconView: UIImageView!
     @IBOutlet weak var nameTextView: MisskeyTextView!
     @IBOutlet weak var descriptionTextView: MisskeyTextView!
+    @IBOutlet weak var separatorView: UIView!
     
     // MARK: Vars
     
@@ -98,6 +100,16 @@ class UserCell: UITableViewCell, ComponentType, UITextViewDelegate {
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(descriptionTextView.rx.attributedText)
             .disposed(by: disposeBag)
+        
+        output.backgroundColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(rx.backgroundColor)
+            .disposed(by: disposeBag)
+        
+        output.separatorBackgroundColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(separatorView.rx.backgroundColor)
+            .disposed(by: disposeBag)
     }
     
     private func setupComponents() {
@@ -107,12 +119,18 @@ class UserCell: UITableViewCell, ComponentType, UITextViewDelegate {
     
     private func changeSkeltonState(on: Bool) {
         if on {
+            backgroundColor = Theme.shared.currentModel?.colorPattern.ui.base ?? .white
+            separatorView.backgroundColor = Theme.shared.currentModel?.colorPattern.ui.sub2 ?? .lightGray
+            
             nameTextView.text = nil
             descriptionTextView.text = nil
-            
             iconView.isSkeletonable = true
-            iconView.showAnimatedGradientSkeleton()
+            
+            let gradient = SkeletonGradient(baseColor: Theme.shared.currentModel?.colorPattern.ui.sub3 ?? .lightGray)
+            iconView.showAnimatedGradientSkeleton(usingGradient: gradient)
+            
             isUserInteractionEnabled = false // skelton表示されたセルはタップできないように
+            
         } else {
             iconView.hideSkeleton()
             isUserInteractionEnabled = true

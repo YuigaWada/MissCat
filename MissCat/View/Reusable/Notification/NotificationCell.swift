@@ -23,6 +23,7 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
     @IBOutlet weak var typeIconView: UILabel!
     @IBOutlet weak var typeLabel: UILabel!
     @IBOutlet weak var defaultNoteBottomConstraint: NSLayoutConstraint!
+    @IBOutlet weak var separatorView: UIView!
     
     var delegate: NoteCellDelegate?
     
@@ -41,17 +42,16 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         bindTheme()
-        setTheme()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         bindTheme()
-        setTheme()
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        setTheme()
         setupComponents()
         nameTextView.transformText()
         
@@ -82,6 +82,11 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
     private func setTheme() {
         if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
             mainColor = UIColor(hex: mainColorHex)
+        }
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            backgroundColor = colorPattern.base
+            typeLabel.textColor = colorPattern.text
+            separatorView.backgroundColor = colorPattern.sub2
         }
     }
     

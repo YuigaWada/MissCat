@@ -16,6 +16,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     @IBOutlet weak var timelineView: UIView!
     
+    @IBOutlet weak var searchLabel: UILabel!
     @IBOutlet weak var noteTab: UIButton!
     @IBOutlet weak var userTab: UIButton!
     @IBOutlet weak var tabContainer: UIView!
@@ -30,6 +31,8 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     var searchTextField: UITextField! {
         didSet {
             searchTextField.delegate = self
+            searchTextField.textColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
+            searchTextField.changePlaceholderColor(to: Theme.shared.currentModel?.colorPattern.ui.sub2 ?? .black)
         }
     }
     
@@ -73,12 +76,22 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
             self.tabIndicator.backgroundColor = color
             self.mainColor = color
         }).disposed(by: disposeBag)
+        
+        theme.map { $0.colorPattern.ui }.subscribe(onNext: { colorPattern in
+            self.searchLabel.textColor = colorPattern.text
+            self.searchTextField?.textColor = colorPattern.text
+            self.searchTextField?.changePlaceholderColor(to: colorPattern.sub2)
+        }).disposed(by: disposeBag)
     }
     
     private func setTheme() {
         if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
             mainColor = UIColor(hex: mainColorHex)
             tabIndicator.backgroundColor = mainColor
+        }
+        
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            searchLabel.textColor = colorPattern.text
         }
     }
     
@@ -374,5 +387,14 @@ extension SearchViewController {
         case note
         case user
         case moving
+    }
+}
+
+extension UITextField {
+    /// placeholderの色を変更する
+    /// - Parameter placeholderColor: UIColor
+    func changePlaceholderColor(to placeholderColor: UIColor) {
+        attributedPlaceholder = .init(string: placeholder ?? "",
+                                      attributes: [.foregroundColor: placeholderColor])
     }
 }

@@ -13,5 +13,6 @@ class ReactionCollectionHeader: UICollectionViewCell {
     
     func setTitle(_ name: String) {
         headerTitleLabel.text = name
+        headerTitleLabel.textColor = Theme.shared.currentModel?.colorPattern.ui.text
     }
 }

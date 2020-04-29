@@ -199,6 +199,8 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         
         if let colorPattern = Theme.shared.currentModel?.colorPattern {
             changeBackground(to: colorPattern.ui.base)
+            borderColor = colorPattern.ui.sub2
+            UINavigationBar.appearance().barTintColor = colorPattern.ui.base
         }
     }
     

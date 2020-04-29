@@ -17,11 +17,28 @@ class AccountViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setTheme()
+        bindTheme()
+        
         tableView.delegate = self
         
         logoutButton.rx.tap.subscribe(onNext: { _ in
             self.showLogoutAlert()
         }).disposed(by: disposeBag)
+    }
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { $0.colorPattern.ui }.subscribe(onNext: { colorPattern in
+            self.view.backgroundColor = colorPattern.base
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            view.backgroundColor = colorPattern.base
+        }
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -66,6 +83,11 @@ class AccountViewController: UITableViewController {
         
         guard let header = view as? UITableViewHeaderFooterView else { return }
         header.textLabel?.text = "アカウント管理"
+        header.textLabel?.textColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
+    }
+    
+    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        cell.backgroundColor = .clear
     }
     
     override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {

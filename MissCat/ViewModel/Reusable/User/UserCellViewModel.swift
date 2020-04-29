@@ -25,6 +25,9 @@ class UserCellViewModel: ViewModelType {
         let icon: PublishRelay<UIImage> = .init()
         let name: PublishRelay<NSAttributedString?> = .init()
         let description: PublishRelay<NSAttributedString?> = .init()
+        
+        let backgroundColor: PublishRelay<UIColor> = .init()
+        let separatorBackgroundColor: PublishRelay<UIColor> = .init()
     }
     
     struct State {}
@@ -55,5 +58,9 @@ class UserCellViewModel: ViewModelType {
         // description
         output.description.accept(input.shapedDescription?.attributed)
         input.shapedDescription?.mfmEngine.renderCustomEmojis(on: input.nameYanagi)
+        
+        // color
+        output.backgroundColor.accept(Theme.shared.currentModel?.colorPattern.ui.base ?? .white)
+        output.separatorBackgroundColor.accept(Theme.shared.currentModel?.colorPattern.ui.sub2 ?? .lightGray)
     }
 }

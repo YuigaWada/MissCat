@@ -41,8 +41,10 @@ class NoteCellViewModel: ViewModelType {
         let defaultConstraintActive: PublishRelay<Bool> = .init()
         let isReplyTarget: PublishRelay<Bool> = .init()
         
+        let mainColor: PublishRelay<UIColor> = .init()
         let backgroundColor: PublishRelay<UIColor> = .init()
         let separatorBackgroundColor: PublishRelay<UIColor> = .init()
+        let actionButtonColor: PublishRelay<UIColor> = .init()
         
         let replyLabel: PublishRelay<String> = .init()
         let renoteLabel: PublishRelay<String> = .init()
@@ -149,6 +151,16 @@ class NoteCellViewModel: ViewModelType {
     private func setColor() {
         output.backgroundColor.accept(properBackgroundColor)
         output.separatorBackgroundColor.accept(Theme.shared.currentModel?.colorPattern.ui.sub2 ?? .lightGray)
+        
+        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
+            output.mainColor.accept(UIColor(hex: mainColorHex))
+        }
+        
+        if let currentModel = Theme.shared.currentModel {
+            if currentModel.colorMode == .dark {
+                output.actionButtonColor.accept(currentModel.colorPattern.ui.sub1)
+            }
+        }
     }
     
     private func setNote() {

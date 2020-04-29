@@ -13,6 +13,8 @@ import RxSwift
 import UIKit
 
 class ChatViewController: MessagesViewController, MessagesDataSource {
+    // MARK: Input
+    
     var sendCompleted: Binder<Bool> {
         return Binder(self) { vc, _ in
             vc.endSendAnimation()
@@ -37,6 +39,9 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     var sendTrigger: PublishRelay<String> = .init()
     var tapTrigger: PublishRelay<HyperLink> = .init()
     
+    // MARK: Privates
+    
+    fileprivate lazy var mainColor = getMainColor()
     fileprivate var messageList: [DirectMessage] = []
     let refreshControl = UIRefreshControl()
     let formatter: DateFormatter = {
@@ -49,6 +54,7 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
         super.viewDidLoad()
         configureMessageCollectionView()
         configureMessageInputBar()
+        setupColor()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -62,6 +68,11 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
+    }
+    
+    private func getMainColor() -> UIColor {
+        guard let model = Theme.shared.currentModel else { return .systemBlue }
+        return UIColor(hex: model.mainColorHex)
     }
     
     // MARK: For Overrides
@@ -84,6 +95,16 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     
     // MARK: Setup
     
+    private func setupColor() {
+        guard let flowLayout = messagesCollectionView.collectionViewLayout as? MessagesCollectionViewFlowLayout,
+            let colorPattern = Theme.shared.currentModel?.colorPattern.ui else { return }
+        
+        flowLayout.collectionView?.backgroundColor = colorPattern.base
+        messageInputBar.inputTextView.textColor = colorPattern.sub0
+        messageInputBar.inputTextView.backgroundColor = colorPattern.sub2
+        messageInputBar.backgroundView.backgroundColor = colorPattern.sub2
+    }
+    
     func configureMessageCollectionView() {
         messagesCollectionView.messagesDataSource = self
         messagesCollectionView.messageCellDelegate = self
@@ -99,8 +120,8 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     
     func configureMessageInputBar() {
         messageInputBar.delegate = self
-        messageInputBar.inputTextView.tintColor = .systemBlue
-        messageInputBar.sendButton.setTitleColor(.systemBlue, for: .normal)
+        messageInputBar.inputTextView.tintColor = mainColor
+        messageInputBar.sendButton.setTitleColor(mainColor, for: .normal)
     }
     
     func isLastSectionVisible() -> Bool {
@@ -138,7 +159,7 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     func cellBottomLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
         guard let message = message as? DirectMessage else { return nil }
         
-        return message.isRead ? NSAttributedString(string: "Read", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 10), NSAttributedString.Key.foregroundColor: UIColor.systemBlue]) : nil
+        return message.isRead ? NSAttributedString(string: "Read", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 10), NSAttributedString.Key.foregroundColor: mainColor]) : nil
     }
     
     func messageTopLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
@@ -418,7 +439,7 @@ extension ChatViewController: MessagesDisplayDelegate {
     // MARK: - All Messages
     
     func backgroundColor(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> UIColor {
-        return isFromCurrentSender(message: message) ? .systemBlue : UIColor(red: 230 / 255, green: 230 / 255, blue: 230 / 255, alpha: 1)
+        return isFromCurrentSender(message: message) ? mainColor : UIColor(red: 230 / 255, green: 230 / 255, blue: 230 / 255, alpha: 1)
     }
     
     func messageStyle(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> MessageStyle {

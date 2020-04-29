@@ -16,6 +16,7 @@ class TrendViewController: UIViewController, UITableViewDelegate, UITableViewDat
     @IBOutlet weak var mainTableView: MissCatTableView!
     
     private var tables: [String] = []
+    private var disposeBag: DisposeBag = .init()
     private var instance: String {
         guard let instance = Cache.UserDefaults.shared.getCurrentLoginedInstance(),
             instance.count > 0 else { return "このインスタンス" }
@@ -28,7 +29,28 @@ class TrendViewController: UIViewController, UITableViewDelegate, UITableViewDat
     override func viewDidLoad() {
         super.viewDidLoad()
         titleLabe.text = "\(instance)でのトレンド"
+        setTheme()
+        bindTheme()
         setupTables()
+    }
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { $0.colorPattern.ui }.subscribe(onNext: { colorPattern in
+            self.view.backgroundColor = colorPattern.base
+            self.mainTableView.backgroundColor = colorPattern.base
+            self.titleLabe.textColor = colorPattern.text
+            self.mainTableView.reloadData()
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            view.backgroundColor = colorPattern.base
+            mainTableView.backgroundColor = colorPattern.base
+            titleLabe.textColor = colorPattern.text
+        }
     }
     
     private func setupTables() {
@@ -62,7 +84,11 @@ class TrendViewController: UIViewController, UITableViewDelegate, UITableViewDat
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        
         cell.textLabel?.text = tables[indexPath.row]
+        cell.textLabel?.textColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
+        cell.backgroundColor = Theme.shared.currentModel?.colorPattern.ui.base ?? .white
+        
         return cell
     }
     
@@ -79,6 +105,6 @@ class TrendViewController: UIViewController, UITableViewDelegate, UITableViewDat
     }
     
     func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
-        view.tintColor = .white
+        view.tintColor = Theme.shared.currentModel?.colorPattern.ui.base ?? .white
     }
 }

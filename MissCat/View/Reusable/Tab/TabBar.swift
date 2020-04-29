@@ -38,8 +38,9 @@ class FooterTabBar: UIView {
     @IBOutlet weak var profileButton: UIButton!
     
     @IBOutlet weak var postBottonFrame: UIView!
+    @IBOutlet weak var separatorView: UIView!
     
-    private var disposeBag: DisposeBag
+    private var disposeBag: DisposeBag = .init()
     private var offColor: UIColor = .lightGray
     private var onColor: UIColor = .systemBlue
     
@@ -58,13 +59,11 @@ class FooterTabBar: UIView {
     }
     
     override init(frame: CGRect) {
-        disposeBag = .init()
         super.init(frame: frame)
         setup()
     }
     
     required init?(coder aDecoder: NSCoder) {
-        disposeBag = .init()
         super.init(coder: aDecoder)!
         setup()
     }
@@ -113,6 +112,11 @@ class FooterTabBar: UIView {
             self.postBottonFrame.backgroundColor = color
             self.changeSelectState(to: self.selected)
         }).disposed(by: disposeBag)
+        
+        theme.map { $0.colorPattern }.subscribe(onNext: { colorPattern in
+            self.backgroundColor = colorPattern.ui.base
+            self.separatorView.backgroundColor = colorPattern.ui.sub2
+        }).disposed(by: disposeBag)
     }
     
     private func setTheme() {
@@ -124,6 +128,7 @@ class FooterTabBar: UIView {
         
         if let colorPattern = Theme.shared.currentModel?.colorPattern {
             backgroundColor = colorPattern.ui.base
+            separatorView.backgroundColor = colorPattern.ui.sub2
         }
     }
     

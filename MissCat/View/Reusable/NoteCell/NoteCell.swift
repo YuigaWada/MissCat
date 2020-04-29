@@ -157,9 +157,10 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         }
         
         if isSkelton {
+            let gradient = SkeletonGradient(baseColor: Theme.shared.currentModel?.colorPattern.ui.sub3 ?? .lightGray)
             // 以下２行を書くとskeltonViewが正常に表示される
             layoutIfNeeded()
-            skeltonCover.updateAnimatedGradientSkeleton()
+            skeltonCover.updateAnimatedGradientSkeleton(usingGradient: gradient)
         }
     }
     
@@ -368,14 +369,38 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             .disposed(by: disposeBag)
         
         // color
+        output.mainColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { self.innerRenoteDisplay.layer.borderColor = $0.cgColor })
+            .disposed(by: disposeBag)
+        
         output.backgroundColor
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(rx.backgroundColor)
             .disposed(by: disposeBag)
         
+        output.backgroundColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(innerRenoteDisplay.rx.backgroundColor)
+            .disposed(by: disposeBag)
+        
         output.separatorBackgroundColor
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(separatorBorder.rx.backgroundColor)
+            .disposed(by: disposeBag)
+        
+        output.separatorBackgroundColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { self.fileContainer.layer.borderColor = $0.cgColor })
+            .disposed(by: disposeBag)
+        
+        output.actionButtonColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { color in
+                [self.replyButton, self.renoteButton, self.reactionButton, self.othersButton].forEach {
+                    $0?.setTitleColor(color, for: .normal)
+                }
+            })
             .disposed(by: disposeBag)
         
         // hidden
@@ -506,7 +531,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         userId = nil
         hostInstance = nil
         
-        backgroundColor = .white
+        backgroundColor = Theme.shared.currentModel?.colorPattern.ui.base ?? .white
         separatorBorder.isHidden = false
         replyIndicator.isHidden = true
         
@@ -579,6 +604,8 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         reactionsCollectionView.isSkeletonable = true
         
         skeltonCover.isSkeletonable = true
+        backgroundColor = Theme.shared.currentModel?.colorPattern.ui.base ?? .white
+        separatorBorder.backgroundColor = Theme.shared.currentModel?.colorPattern.ui.sub2 ?? .lightGray
     }
     
     private func changeSkeltonState(on: Bool) {
@@ -586,16 +613,17 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             nameTextView.text = nil
             agoLabel.text = nil
             noteView.text = nil
-            
-            nameTextView.showAnimatedGradientSkeleton()
-            iconView.showAnimatedGradientSkeleton()
-            
             reactionsCollectionView.isHidden = true
             pollView.isHidden = true
             urlPreviewer.isHidden = true
             innerRenoteDisplay.isHidden = true
             
-            skeltonCover.showAnimatedGradientSkeleton()
+            let gradient = SkeletonGradient(baseColor: Theme.shared.currentModel?.colorPattern.ui.sub3 ?? .lightGray)
+            
+            nameTextView.showAnimatedGradientSkeleton(usingGradient: gradient)
+            iconView.showAnimatedGradientSkeleton(usingGradient: gradient)
+            skeltonCover.showAnimatedGradientSkeleton(usingGradient: gradient)
+            
             isUserInteractionEnabled = false // skelton表示されたセルはタップできないように
         } else {
             nameTextView.hideSkeleton()

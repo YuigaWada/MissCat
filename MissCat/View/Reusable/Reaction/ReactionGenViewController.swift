@@ -48,6 +48,8 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         super.viewDidLoad()
         setupComponents()
         setupCollectionViewLayout()
+        setTheme()
+        bindTheme()
         
         let viewModel = setupViewModel()
         setEmojiModel(viewModel: viewModel)
@@ -71,6 +73,50 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         super.viewWillDisappear(animated)
         
         viewDidAppeared = false
+    }
+    
+    // MARK: Design
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme
+            .map { $0.colorMode == .light ? $0.colorPattern.ui.base : $0.colorPattern.ui.sub3 }
+            .bind(to: view.rx.backgroundColor)
+            .disposed(by: disposeBag)
+        
+        theme
+            .map { $0.colorMode == .light ? $0.colorPattern.ui.base : $0.colorPattern.ui.sub3 }
+            .bind(to: emojiCollectionView.rx.backgroundColor)
+            .disposed(by: disposeBag)
+        
+        theme
+            .map { $0.colorPattern.ui.sub3 }.subscribe(onNext: { textColor in
+                self.displayNameLabel.textColor = textColor
+        }).disposed(by: disposeBag)
+        
+        theme.filter { $0.colorMode == .light }.subscribe(onNext: { _ in
+            self.searchBar.resetColor()
+        }).disposed(by: disposeBag)
+        
+        theme.filter { $0.colorMode == .dark }
+            .map { $0.colorPattern.ui }.subscribe(onNext: { colorPattern in
+                self.searchBar.changeColor(background: colorPattern.sub1, text: colorPattern.sub3, placeholder: colorPattern.sub3)
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        guard let theme = Theme.shared.currentModel else { return }
+        let colorPattern = theme.colorPattern
+        let backgroundColor = theme.colorMode == .light ? colorPattern.ui.base : colorPattern.ui.sub3
+        
+        view.backgroundColor = backgroundColor
+        emojiCollectionView.backgroundColor = backgroundColor
+        displayNameLabel.textColor = colorPattern.ui.text
+        
+        if theme.colorMode == .dark {
+            searchBar.changeColor(background: colorPattern.ui.sub1, text: colorPattern.ui.text, placeholder: colorPattern.ui.sub3)
+        }
     }
     
     // MARK: Setup
@@ -178,6 +224,7 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
             guard let headerInfo = item as? EmojiViewHeader,
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ReactionCollectionHeader", for: indexPath) as? ReactionCollectionHeader else { fatalError("Internal Error.") }
             
+            cell.backgroundColor = .clear
             cell.contentMode = .left
             cell.setTitle(headerInfo.title)
             return cell
@@ -189,6 +236,7 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
             cell.mainView.emoji = item
             cell.mainView.isFake = item.isFake
             cell.contentMode = .left
+            cell.backgroundColor = .clear
             setupTapGesture(to: cell, emojiModel: item)
             
             return cell
@@ -231,6 +279,9 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
     // MARK: Public Methods
     
     func setTargetNote(noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
+        let colorMode = Theme.shared.currentModel?.colorMode ?? .light
+        let isLightMode = colorMode == .light
+        
         // noteId
         setTargetNoteId(noteId)
         
@@ -253,7 +304,7 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         
         // note
         targetNoteTextView.attributedText = note // .changeColor(to: .lightGray)
-        targetNoteTextView.alpha = 0.5
+        targetNoteTextView.alpha = isLightMode ? 0.5 : 1
     }
     
     // MARK: TextField Delegate
@@ -266,5 +317,21 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchBar.endEditing(true)
+    }
+}
+
+extension UISearchBar {
+    func changeColor(background backgroundColor: UIColor, text textColor: UIColor, placeholder placeholderColor: UIColor) {
+        guard let textField = value(forKey: "searchField") as? UITextField else { return }
+//        textField.backgroundColor = backgroundColor
+        textField.textColor = textColor
+//        textField.attributedPlaceholder = .init(string: placeholder ?? "",
+//                                                attributes: [.foregroundColor: placeholderColor])
+    }
+    
+    func resetColor() {
+        guard let textField = value(forKey: "searchField") as? UITextField else { return }
+        textField.backgroundColor = nil
+        textField.attributedPlaceholder = nil
     }
 }

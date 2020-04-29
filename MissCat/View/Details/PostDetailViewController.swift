@@ -40,6 +40,8 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     override func loadView() {
         super.loadView()
         setupTableView()
+        setTheme()
+        bindTheme()
         
         self.viewModel = .init(disposeBag: disposeBag)
         
@@ -58,6 +60,21 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
         
         mainItem?.isReplyTarget = wasReplyTarget
         mainItem?.onOtherNote = wasOnOtherNote // 投稿モデルは参照渡しなので、viewWillDisappearで元に戻す
+    }
+    
+    // MARK: Design
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        theme.map { $0.colorPattern.ui.base }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
+        theme.map { $0.colorPattern.ui.base }.bind(to: mainTableView.rx.backgroundColor).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let baseColor = Theme.shared.currentModel?.colorPattern.ui.base {
+            view.backgroundColor = baseColor
+            mainTableView.backgroundColor = baseColor
+        }
     }
     
     // MARK: Setup TableView

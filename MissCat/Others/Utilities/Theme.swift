@@ -111,21 +111,21 @@ extension Theme {
             var hex: HexColorPattern = Hex()
             
             struct UI: UIColorPattern {
-                var base: UIColor = UIColor(hex: "303030")
-                var sub0: UIColor = UIColor(hex: "e8e8e8") // 淡
-                var sub1: UIColor = UIColor(hex: "e8e8e8")
-                var sub2: UIColor = UIColor(hex: "adadad")
-                var sub3: UIColor = UIColor(hex: "adadad") // 濃 (Lightと逆なので注意)
+                var base: UIColor = UIColor(hex: "1f1f1f")
+                var sub0: UIColor = UIColor(hex: "c5c5c5") // 淡
+                var sub1: UIColor = UIColor(hex: "adadad")
+                var sub2: UIColor = UIColor(hex: "555555")
+                var sub3: UIColor = UIColor(hex: "303030") // 濃 (Lightと逆なので注意)
                 
                 var text: UIColor = .white
             }
             
             struct Hex: HexColorPattern {
-                var base: String = "303030"
-                var sub0: String = "e8e8e8"
-                var sub1: String = "e8e8e8"
-                var sub2: String = "adadad"
-                var sub3: String = "adadad"
+                var base: String = "#1f1f1f"
+                var sub0: String = "c5c5c5"
+                var sub1: String = "adadad"
+                var sub2: String = "555555"
+                var sub3: String = "303030"
                 
                 var text: String = "ffffff"
             }

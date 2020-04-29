@@ -7,15 +7,20 @@
 //
 
 import Eureka
+import RxSwift
 import UIKit
 
 class DesignSettingsViewController: FormViewController {
+    private var disposeBag: DisposeBag = .init()
+    
     // MARK: LifeCycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupComponent()
         setTable()
+        bindTheme()
+        setTheme()
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -23,11 +28,25 @@ class DesignSettingsViewController: FormViewController {
         saveSettings()
     }
     
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { $0.colorPattern.ui }.subscribe(onNext: { colorPattern in
+            self.view.backgroundColor = colorPattern.base
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            view.backgroundColor = colorPattern.base
+            tableView.backgroundColor = colorPattern.base
+        }
+    }
+    
     // MARK: Setup
     
     private func setupComponent() {
         title = "デザイン"
-        tableView.backgroundColor = .white
     }
     
     private func setTable() {
