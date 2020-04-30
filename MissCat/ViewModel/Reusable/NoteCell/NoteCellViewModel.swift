@@ -24,35 +24,42 @@ class NoteCellViewModel: ViewModelType {
     }
     
     struct Output {
+        // Meta
+        let displayName: String
+        let username: String
+        
         let ago: PublishRelay<String> = .init()
         let name: PublishRelay<NSAttributedString?> = .init()
+        let iconImage: PublishRelay<UIImage> = .init()
         
+        // Note
         let shapedNote: PublishRelay<NSAttributedString?> = .init()
         let url: PublishRelay<String> = .init()
-        
-        let reactions: PublishSubject<[NoteCell.Reaction.Section]> = .init()
         let poll: PublishRelay<Poll?> = .init()
-        let commentRenoteTarget: PublishRelay<NoteCell.Model> = .init()
-        let onOtherNote: PublishRelay<Bool> = .init() // 引用RNはNoteCellの上にNoteCellが乗るという二重構造になっているので、内部のNoteCellかどうかを判別する
         
-        let iconImage: PublishRelay<UIImage> = .init()
+        // Innner Renote
+        let commentRenoteTarget: PublishRelay<NoteCell.Model> = .init()
         let innerIconImage: PublishRelay<UIImage> = .init()
         
+        // AutoLayout
         let defaultConstraintActive: PublishRelay<Bool> = .init()
-        let isReplyTarget: PublishRelay<Bool> = .init()
         
+        // Flag
+        let isReplyTarget: PublishRelay<Bool> = .init()
+        let onOtherNote: PublishRelay<Bool> = .init() // 内部のNoteCellかどうか
+        
+        // Color
         let mainColor: PublishRelay<UIColor> = .init()
         let backgroundColor: PublishRelay<UIColor> = .init()
         let selectedBackgroundColor: PublishRelay<UIColor> = .init()
         let separatorBackgroundColor: PublishRelay<UIColor> = .init()
         let actionButtonColor: PublishRelay<UIColor> = .init()
         
+        // Response
         let replyLabel: PublishRelay<String> = .init()
         let renoteLabel: PublishRelay<String> = .init()
         let reactionLabel: PublishRelay<String> = .init()
-        
-        let displayName: String
-        let username: String
+        let reactions: PublishSubject<[NoteCell.Reaction.Section]> = .init()
     }
     
     struct State {

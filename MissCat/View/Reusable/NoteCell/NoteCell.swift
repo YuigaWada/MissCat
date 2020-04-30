@@ -506,30 +506,34 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         catIcon.isHidden = !item.isCat
         
         // main
-        self.noteId = item.noteId
+        self.noteId = noteId
         userId = item.userId
         hostInstance = item.hostInstance
         iconImageUrl = item.iconImageUrl
         delegate = arg.delegate
         
-        //        // YanagiTextと一対一にキャッシュを保存できるように、idをYanagiTextに渡す
-        //        noteView.setId(noteId: item.noteId)
-        //        nameTextView.setId(userId: item.userId)
-        
+        // ViewModel
         let viewModel = getViewModel(item: item, isDetailMode: isDetailMode)
         self.viewModel = viewModel
         
         viewModel.setCell()
         
         // file
+        setFile(with: item,
+                hasFile: hasFile,
+                noteId: noteId,
+                delegate: arg.delegate)
+        
+        return self
+    }
+    
+    private func setFile(with item: NoteCell.Model, hasFile: Bool, noteId: String, delegate: NoteCellDelegate?) {
         if hasFile {
             _ = fileContainer.transform(with: FileContainer.Arg(files: item.files,
                                                                 noteId: noteId,
                                                                 fileVisible: item.fileVisible,
-                                                                delegate: arg.delegate))
+                                                                delegate: delegate))
         }
-        
-        return self
     }
     
     func initializeComponent(hasFile: Bool) {
