@@ -169,7 +169,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         self.setupCollectionView()
         self.setupFileContainer()
         self.setupInnerRenoteDisplay()
-//        self.bindTheme()
+        self.selectedBackgroundView = UIView()
         return {}
     }()
     
@@ -382,6 +382,14 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         output.backgroundColor
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(innerRenoteDisplay.rx.backgroundColor)
+            .disposed(by: disposeBag)
+        
+        output.selectedBackgroundColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { selectedBackgroundColor in
+                self.selectedBackgroundView?.backgroundColor = selectedBackgroundColor
+                self.contentView.backgroundColor = nil
+            })
             .disposed(by: disposeBag)
         
         output.separatorBackgroundColor

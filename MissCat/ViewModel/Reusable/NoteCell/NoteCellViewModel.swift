@@ -43,6 +43,7 @@ class NoteCellViewModel: ViewModelType {
         
         let mainColor: PublishRelay<UIColor> = .init()
         let backgroundColor: PublishRelay<UIColor> = .init()
+        let selectedBackgroundColor: PublishRelay<UIColor> = .init()
         let separatorBackgroundColor: PublishRelay<UIColor> = .init()
         let actionButtonColor: PublishRelay<UIColor> = .init()
         
@@ -159,6 +160,7 @@ class NoteCellViewModel: ViewModelType {
         if let currentModel = Theme.shared.currentModel {
             if currentModel.colorMode == .dark {
                 output.actionButtonColor.accept(currentModel.colorPattern.ui.sub1)
+                output.selectedBackgroundColor.accept(currentModel.colorPattern.ui.sub2)
             }
         }
     }
