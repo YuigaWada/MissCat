@@ -30,6 +30,7 @@ class NotificationCellViewModel: ViewModelType {
         // Color
         let mainColor: PublishRelay<UIColor> = .init()
         let backgroundColor: PublishRelay<UIColor> = .init()
+        let selectedBackgroundColor: PublishRelay<UIColor> = .init()
         let textColor: PublishRelay<UIColor> = .init()
         
         // Response
@@ -88,6 +89,7 @@ class NotificationCellViewModel: ViewModelType {
         
         setNote(item)
         setResponse(item)
+        setColor()
     }
     
     private func setImage(_ item: NotificationCell.Model) {
@@ -137,7 +139,7 @@ class NotificationCellViewModel: ViewModelType {
     private func setResponse(_ item: NotificationCell.Model) {
         let type = item.type
         output.type.accept(type)
-        output.mainColor.accept(mainColor)
+        
         // renote
         if type == .renote {
             output.typeIconString.accept("retweet")
@@ -161,6 +163,15 @@ class NotificationCellViewModel: ViewModelType {
             output.typeString.accept("Follow")
             output.typeIconColor.accept(mainColor)
             output.needEmoji.accept(false)
+        }
+    }
+    
+    private func setColor() {
+        output.mainColor.accept(mainColor)
+        if let currentModel = Theme.shared.currentModel {
+            if currentModel.colorMode == .dark {
+                output.selectedBackgroundColor.accept(currentModel.colorPattern.ui.sub2)
+            }
         }
     }
 }

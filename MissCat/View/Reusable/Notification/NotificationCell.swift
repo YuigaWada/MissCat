@@ -161,6 +161,15 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
             .drive(rx.backgroundColor)
             .disposed(by: disposeBag)
         
+        output.selectedBackgroundColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { selectedBackgroundColor in
+                self.selectedBackgroundView = UIView()
+                self.selectedBackgroundView?.backgroundColor = selectedBackgroundColor
+                self.contentView.backgroundColor = nil
+               })
+            .disposed(by: disposeBag)
+        
         // emoji
         output.needEmoji
             .map { !$0 }
