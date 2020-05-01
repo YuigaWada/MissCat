@@ -32,12 +32,29 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
     
     public override func setup() {
         super.setup()
+        setTheme()
     }
     
     public override func layoutSubviews() {
         super.layoutSubviews()
         showAlert()
     }
+    
+    // MARK: Design
+    
+    private func setTheme() {
+        guard let theme = Theme.shared.currentModel else { return }
+        let colorPattern = theme.colorPattern.ui
+        
+        nameLabel.textColor = colorPattern.text
+        textFiled.textColor = colorPattern.text
+        
+        let backView = UIView()
+        backView.backgroundColor = .clear
+        selectedBackgroundView = backView
+    }
+    
+    // MARK: Menu
     
     private func showAlert() {
         guard !tabSelected else { return }
@@ -59,6 +76,8 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
             self.setKind(kind)
         }))
     }
+    
+    // MARK: Utiliteis
     
     func setKind(_ kind: Theme.TabKind) {
         tabKind = kind

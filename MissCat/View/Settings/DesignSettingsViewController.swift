@@ -31,6 +31,8 @@ class DesignSettingsViewController: FormViewController {
         updateNavBarColor(with: model)
     }
     
+    // MARK: Design
+    
     private func bindTheme() {
         let theme = Theme.shared.theme
         
@@ -44,6 +46,11 @@ class DesignSettingsViewController: FormViewController {
             view.backgroundColor = colorPattern.base
             tableView.backgroundColor = colorPattern.base
         }
+    }
+    
+    private func getCellBackgroundColor() -> UIColor {
+        guard let theme = Theme.shared.currentModel else { return .white }
+        return theme.colorMode == .light ? theme.colorPattern.ui.base : theme.colorPattern.ui.sub2
     }
     
     // MARK: Setup
@@ -69,20 +76,25 @@ class DesignSettingsViewController: FormViewController {
             $0.addButtonProvider = { _ in
                 ButtonRow {
                     $0.title = "タブを追加"
+                    $0.baseCell.backgroundColor = self.getCellBackgroundColor()
                 }.cellUpdate { cell, _ in
                     cell.textLabel?.textAlignment = .left
                 }
             }
             
             $0.multivaluedRowToInsertAt = { _ in
-                TabSettingsRow()
+                TabSettingsRow {
+                    $0.baseCell.backgroundColor = self.getCellBackgroundColor()
+                }
             }
         }
         
+        // 保存されたテーマ情報からタブを再構築
         theme.tab.reversed().forEach { tab in
             let row = TabSettingsRow {
                 $0.cell?.setName(tab.name)
                 $0.cell?.setKind(tab.kind)
+                $0.baseCell.backgroundColor = self.getCellBackgroundColor()
             }
             section.insert(row, at: 0)
         }
@@ -93,8 +105,17 @@ class DesignSettingsViewController: FormViewController {
     private func getThemeSettingsSection(with theme: Theme.Model) -> Section {
         let currentColor = UIColor(hex: theme.mainColorHex)
         return Section("テーマ設定")
-            <<< SegmentedRow<String>() { $0.tag = "color-mode"; $0.options = ["Light", "Dark"]; $0.value = theme.colorMode == .light ? "Light" : "Dark" }
-            <<< ColorPickerRow { $0.tag = "main-color"; $0.cell.setColor(currentColor) }
+            <<< SegmentedRow<String>() {
+                $0.tag = "color-mode"
+                $0.options = ["Light", "Dark"]
+                $0.value = theme.colorMode == .light ? "Light" : "Dark"
+                $0.baseCell.backgroundColor = self.getCellBackgroundColor()
+            }
+            <<< ColorPickerRow {
+                $0.tag = "main-color"
+                $0.cell.setColor(currentColor)
+                $0.baseCell.backgroundColor = self.getCellBackgroundColor()
+            }
     }
     
     // MARK: Update / Save

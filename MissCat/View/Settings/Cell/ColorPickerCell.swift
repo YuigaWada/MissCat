@@ -23,6 +23,7 @@ public class ColorPickerCell: Cell<String>, CellType {
     public override func setup() {
         super.setup()
         setupTapGesture()
+        setTheme()
         
         colorIndicator.layer.borderWidth = 1
         colorIndicator.layer.borderColor = UIColor.lightGray.cgColor
@@ -34,11 +35,24 @@ public class ColorPickerCell: Cell<String>, CellType {
         colorIndicator.layer.cornerRadius = colorIndicator.frame.width / 2
     }
     
+    // MARK: Publics
+    
     public func setColor(_ color: UIColor) {
         currentColor = color
         colorIndicator.backgroundColor = color
         window?.tintColor = color
     }
+    
+    // MARK: Design
+    
+    private func setTheme() {
+        guard let theme = Theme.shared.currentModel else { return }
+        let colorPattern = theme.colorPattern.ui
+        
+        nameLabel.textColor = colorPattern.text
+    }
+    
+    // MARK: Setup
     
     private func setupTapGesture() {
         setTapGesture(disposeBag, closure: {
