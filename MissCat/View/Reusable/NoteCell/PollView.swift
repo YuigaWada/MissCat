@@ -39,17 +39,29 @@ class PollView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         loadNib()
+        setTheme()
     }
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)!
         loadNib()
+        setTheme()
     }
     
     func loadNib() {
         if let view = UINib(nibName: "PollView", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
+            view.backgroundColor = .clear
             addSubview(view)
+        }
+    }
+    
+    // MARK: Design
+    
+    private func setTheme() {
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            backgroundColor = colorPattern.base
+            totalPollLabel.textColor = colorPattern.text
         }
     }
     
