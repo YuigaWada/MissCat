@@ -99,6 +99,12 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
         mainTextView.textColor = placeholderColor
     }
     
+    /// ステータスバーの文字色
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        let currentColorMode = Theme.shared.currentModel?.colorMode ?? .light
+        return currentColorMode == .light ? UIStatusBarStyle.default : UIStatusBarStyle.lightContent
+    }
+    
     // MARK: Setup
     
     private func setupComponent(with viewModel: PostViewModel) {
