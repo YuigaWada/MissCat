@@ -124,6 +124,11 @@ class DesignSettingsViewController: FormViewController {
             tabs.append(row.tab)
         }
         
+        if tabs.count == 0 { // タブが0個の場合はデフォルトのtab情報を返す
+            guard let defaultModel = Theme.Model.getDefault(), defaultModel.tab.count > 0 else { fatalError() }
+            return defaultModel.tab
+        }
+        
         return tabs
     }
     
