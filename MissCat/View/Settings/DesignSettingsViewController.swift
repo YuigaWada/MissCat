@@ -26,7 +26,9 @@ class DesignSettingsViewController: FormViewController {
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        saveSettings()
+        
+        let model = saveSettings()
+        updateNavBarColor(with: model)
     }
     
     private func bindTheme() {
@@ -97,7 +99,7 @@ class DesignSettingsViewController: FormViewController {
     
     // MARK: Update / Save
     
-    private func saveSettings() {
+    private func saveSettings() -> Theme.Model {
         let tab = getTabSettings()
         let mainColorHex = getMainColorSettings()
         let colorMode = getColorModeSettings()
@@ -113,6 +115,12 @@ class DesignSettingsViewController: FormViewController {
         if needAllRelaunch {
             homeViewController?.relaunchView(start: .profile)
         }
+        
+        return newModel
+    }
+    
+    private func updateNavBarColor(with newModel: Theme.Model) {
+        UINavigationBar.changeColor(back: newModel.colorPattern.ui.base, text: newModel.colorPattern.ui.text) // ナビゲーションバーの色を変更
     }
     
     private func getTabSettings() -> [Theme.Tab] {
@@ -142,5 +150,13 @@ class DesignSettingsViewController: FormViewController {
     private func getMainColorSettings() -> String {
         guard let colorRow = form.rowBy(tag: "main-color") as? ColorPickerRow else { return "2F7CF6" }
         return colorRow.currentColorHex
+    }
+}
+
+extension UINavigationBar {
+    static func changeColor(back backgroundColor: UIColor, text textColor: UIColor) {
+        let appearance = UINavigationBar.appearance()
+        appearance.barTintColor = backgroundColor
+        appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: textColor]
     }
 }

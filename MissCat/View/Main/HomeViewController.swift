@@ -236,7 +236,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         let colorPattern = theme.colorPattern
         changeBackground(to: colorPattern.ui.base)
         borderColor = colorPattern.ui.sub2
-        UINavigationBar.appearance().barTintColor = colorPattern.ui.base
+        UINavigationBar.changeColor(back: colorPattern.ui.base, text: colorPattern.ui.text) // ナビゲーションバーの色を変更
         
         searchIconColor = theme.colorMode == .light ? .black : .white
     }
