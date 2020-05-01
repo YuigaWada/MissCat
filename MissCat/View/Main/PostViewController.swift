@@ -253,11 +253,10 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     }
     
     private func showNSFWSettings() {
-        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
+        let panelMenu = PanelMenuViewController()
         let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "投稿を閲覧注意にする", awesomeIcon: "sticky-note", order: 0),
                                                              .init(title: "画像を閲覧注意にする", awesomeIcon: "image", order: 1)]
         
-        panelMenu.setPanelTitle("NSFWの設定")
         panelMenu.setupMenu(items: menuItems)
         panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
             guard order >= 0 else { return }
@@ -270,7 +269,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
             }
         }).disposed(by: disposeBag)
         
-        presentWithSemiModal(panelMenu, animated: true, completion: nil)
+        present(panelMenu, animated: true, completion: nil)
     }
     
     private func showNSFWAlert() {

@@ -448,12 +448,10 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     }
     
     private func showReportPanel(_ note: NoteCell.Model) {
-        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
-        
+        let panelMenu = PanelMenuViewController()
         let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "ユーザーをブロック", awesomeIcon: "angry", order: 0),
                                                              .init(title: "投稿を通報する", awesomeIcon: "ban", order: 1)]
         
-        panelMenu.setPanelTitle("その他")
         panelMenu.setupMenu(items: menuItems)
         panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
             guard order >= 0 else { return }
@@ -469,15 +467,13 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             }
         }).disposed(by: disposeBag)
         
-        presentWithSemiModal(panelMenu, animated: true, completion: nil)
+        present(panelMenu, animated: true, completion: nil)
     }
     
     private func showDeletePanel(_ note: NoteCell.Model) {
-        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
-        
+        let panelMenu = PanelMenuViewController()
         let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "投稿を削除する", awesomeIcon: "trash-alt", order: 0)]
         
-        panelMenu.setPanelTitle("その他")
         panelMenu.setupMenu(items: menuItems)
         panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
             guard order >= 0 else { return }
@@ -491,7 +487,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             }
         }).disposed(by: disposeBag)
         
-        presentWithSemiModal(panelMenu, animated: true, completion: nil)
+        present(panelMenu, animated: true, completion: nil)
     }
     
     private func showBlockAlert(_ note: NoteCell.Model) {

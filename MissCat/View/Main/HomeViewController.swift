@@ -503,11 +503,10 @@ extension HomeViewController: NoteCellDelegate {
     }
     
     func tappedRenote(note: NoteCell.Model) {
-        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
+        let panelMenu = PanelMenuViewController()
         let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "Renote", awesomeIcon: "retweet", order: 0),
                                                              .init(title: "引用Renote", awesomeIcon: "quote-right", order: 1)]
         
-        panelMenu.setPanelTitle("Renote")
         panelMenu.setupMenu(items: menuItems)
         panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
             guard order >= 0 else { return }
@@ -524,7 +523,7 @@ extension HomeViewController: NoteCellDelegate {
             }
        }).disposed(by: disposeBag)
         
-        presentWithSemiModal(panelMenu, animated: true, completion: nil)
+        present(panelMenu, animated: true, completion: nil)
     }
     
     func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {}
