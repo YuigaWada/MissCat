@@ -24,7 +24,7 @@ PODS:
     - InputBarAccessoryView (~> 4.3.0)
   - MisskeyKit (2.2):
     - Starscream (= 3.1.1)
-  - PolioPager (2.4)
+  - PolioPager (2.5)
   - RxCocoa (5.1.1):
     - RxRelay (~> 5)
     - RxSwift (~> 5)
@@ -125,7 +125,7 @@ SPEC CHECKSUMS:
   iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
   MessageKit: 3beb578737a5aa2bba25cc27c7b6d6faa09af5a7
   MisskeyKit: 40c24228b79e21c5d681199697a6402d57eedef6
-  PolioPager: 046d5ee2e4e4f699f308c63f2862832e87a45f35
+  PolioPager: ccb4e382fef0c3c0ee52bdec3d9e9794eafa510a
   RxCocoa: 32065309a38d29b5b0db858819b5bf9ef038b601
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
   RxRelay: d77f7d771495f43c556cbc43eebd1bb54d01e8e9
