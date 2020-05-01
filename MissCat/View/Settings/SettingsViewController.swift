@@ -26,6 +26,7 @@ class SettingsViewController: UITableViewController {
     @IBOutlet weak var aboutLabel: UILabel!
     @IBOutlet weak var licenseLabel: UILabel!
     
+    var homeViewController: HomeViewController?
     private var disposeBag: DisposeBag = .init()
     private lazy var iconLabels = [accountIcon, designIcon, muteIcon, reactionIcon, fontIcon, catIcon, licenseIcon]
     private lazy var labels = [accountLabel, designLabel, reactionLabel, aboutLabel, licenseLabel]
@@ -92,7 +93,10 @@ class SettingsViewController: UITableViewController {
         let index = indexPath.row
         
         if index == 1 {
-            navigationController?.pushViewController(DesignSettingsViewController(), animated: true)
+            let designSettings = DesignSettingsViewController()
+            
+            designSettings.homeViewController = homeViewController
+            navigationController?.pushViewController(designSettings, animated: true)
         }
     }
 }

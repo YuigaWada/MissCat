@@ -35,6 +35,19 @@ public class Theme {
         currentUserId = userId
     }
     
+    /// viewの再launchが必要か
+    /// - Parameters:
+    ///   - model1: 比較対象1
+    ///   - model2: 比較対象2
+    static func needAllRelaunch(between model1: Theme.Model, and model2: Theme.Model) -> Bool {
+        if model1.isEqual(to: model2) {
+            return false
+        }
+        
+        let sameColorMode = model1.colorMode == model2.colorMode
+        return !sameColorMode
+    }
+    
     /// 新しいモデルを保存します
     /// - Parameter newModel: Theme.Model
     func save(with newModel: Theme.Model) {

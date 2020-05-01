@@ -144,6 +144,41 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         setupNavTab()
     }
     
+    /// Viewを総relaunchします。
+    /// アカウントの切り替えやデザインの変更時に用いる。
+    /// - Parameter startingPage: どのpageがrelaunch後、最初に表示されるか
+    func relaunchView(start startingPage: Page = .profile) {
+        // notif
+        notificationsViewController?.view.removeFromSuperview()
+        notificationsViewController?.removeFromParent()
+        notificationsViewController = nil
+        setupNotificationsVC()
+        
+        // fav
+        favViewController?.view.removeFromSuperview()
+        favViewController?.removeFromParent()
+        favViewController = nil
+        setupFavVC()
+        
+        // profile
+        myProfileViewController?.view.removeFromSuperview()
+        myProfileViewController?.removeFromParent()
+        myProfileViewController = nil
+        
+        nowPage = .main
+        switch startingPage {
+        case .main:
+            nowPage = .profile // fake
+            emulateFooterTabTap(tab: .home)
+        case .notifications:
+            emulateFooterTabTap(tab: .notifications)
+        case .profile:
+            emulateFooterTabTap(tab: .profile)
+        case .messages:
+            emulateFooterTabTap(tab: .messages)
+        }
+    }
+    
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
     }
@@ -661,6 +696,7 @@ extension HomeViewController: TimelineDelegate {
             let settingsViewController = storyboard.instantiateViewController(withIdentifier: "settings")
             as? SettingsViewController else { return }
         
+        settingsViewController.homeViewController = self
         navigationController?.pushViewController(settingsViewController, animated: true)
     }
     

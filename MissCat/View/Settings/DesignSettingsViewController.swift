@@ -11,6 +11,7 @@ import RxSwift
 import UIKit
 
 class DesignSettingsViewController: FormViewController {
+    var homeViewController: HomeViewController?
     private var disposeBag: DisposeBag = .init()
     
     // MARK: LifeCycle
@@ -101,8 +102,17 @@ class DesignSettingsViewController: FormViewController {
         let mainColorHex = getMainColorSettings()
         let colorMode = getColorModeSettings()
         
+        var needAllRelaunch: Bool = false
         let newModel = Theme.Model(tab: tab, mainColorHex: mainColorHex, colorMode: colorMode)
+        if let currentModel = Theme.shared.currentModel {
+            needAllRelaunch = Theme.needAllRelaunch(between: currentModel, and: newModel)
+        }
+        
         Theme.shared.save(with: newModel)
+        
+        if needAllRelaunch {
+            homeViewController?.relaunchView(start: .profile)
+        }
     }
     
     private func getTabSettings() -> [Theme.Tab] {
