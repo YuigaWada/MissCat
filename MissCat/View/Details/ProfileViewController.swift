@@ -258,7 +258,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             
             output.relation.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: {
                 let isFollowing = $0.isFollowing ?? false
-                self.followButton.setTitleColor(isFollowing ? self.mainColor : UIColor.clear, for: .normal)
+                self.followButton.setTitleColor(isFollowing ? self.mainColor : UIColor.white, for: .normal)
             }).disposed(by: disposeBag)
             
             followButton.rx.tap.subscribe(onNext: {
