@@ -43,6 +43,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     private let disposeBag = DisposeBag()
     
     private lazy var counter = UIBarButtonItem(title: "1500", style: .done, target: self, action: nil)
+    private lazy var placeholderColor: UIColor = Theme.shared.currentModel?.colorPattern.ui.sub2 ?? .lightGray
     
     // MARK: Life Cycle
     
@@ -55,6 +56,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
         
         viewModel.setInnerNote()
         setupComponent(with: viewModel)
+        setTheme()
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(keyboardWillShow(_:)),
                                                name: UIResponder.keyboardWillShowNotification,
@@ -86,6 +88,15 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     func setTargetNote(_ note: NoteCell.Model, type: PostType) {
         targetNote = note
         postType = type
+    }
+    
+    // MARK: Design
+    
+    private func setTheme() {
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            view.backgroundColor = colorPattern.base
+        }
+        mainTextView.textColor = placeholderColor
     }
     
     // MARK: Setup
@@ -441,16 +452,16 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     // MARK: Delegate
     
     func textViewDidBeginEditing(_ textView: UITextView) {
-        if mainTextView.textColor == .lightGray {
+        if mainTextView.textColor == placeholderColor {
             mainTextView.text = ""
-            mainTextView.textColor = .black
+            mainTextView.textColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
         }
     }
     
     func textViewDidEndEditing(_ textView: UITextView) {
         if mainTextView.text == "" {
             mainTextView.text = "What's happening?"
-            mainTextView.textColor = .lightGray
+            mainTextView.textColor = placeholderColor
         }
     }
     
