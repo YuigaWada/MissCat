@@ -25,6 +25,9 @@ class RenoteeCell: UITableViewCell {
     
     private func setupComponent() {
         renoteMarkLabel.font = .awesomeSolid(fontSize: 15.0)
+        backgroundColor = Theme.shared.currentModel?.colorPattern.ui.base ?? .white
+        renoteMarkLabel.textColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
+        renoteeLabel.textColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
     }
     
     func setRenotee(_ renotee: String?) {

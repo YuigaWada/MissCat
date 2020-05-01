@@ -42,6 +42,8 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
         super.viewDidLoad()
         setupTableView()
         setupTopShadow()
+        bindTheme()
+        setTheme()
         
         if viewModel == nil {
             setup(type: .search)
@@ -63,6 +65,19 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
         
         let output = viewModel.output
         output.users.bind(to: mainTableView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
+    }
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        theme.map { $0.colorPattern.ui.base }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
+        theme.map { $0.colorPattern.ui.base }.bind(to: mainTableView.rx.backgroundColor).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let baseColor = Theme.shared.currentModel?.colorPattern.ui.base {
+            view.backgroundColor = baseColor
+            mainTableView.backgroundColor = baseColor
+        }
     }
     
     // MARK: Setup

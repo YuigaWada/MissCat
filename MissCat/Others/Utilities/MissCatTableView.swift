@@ -36,6 +36,7 @@ class MissCatTableView: PlaceholderTableView {
         setupSpinner()
     }
     
+    /// このperformBatchUpdatesにラッピングされたメソッドはすべてスクロール位置を固定された状態で実行されます
     override func performBatchUpdates(_ updates: (() -> Void)?, completion: ((Bool) -> Void)? = nil) {
         #if !targetEnvironment(simulator)
             let bottomOffset = contentSize.height - contentOffset.y
@@ -84,5 +85,9 @@ class MissCatTableView: PlaceholderTableView {
                                multiplier: 1.0,
                                constant: 0)
         ])
+    }
+    
+    func stopSpinner() {
+        spinner.stopAnimating()
     }
 }

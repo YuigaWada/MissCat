@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */; };
 		8D065B17237AC3D0003DFB7C /* TimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */; };
 		8D065B19237AC826003DFB7C /* NoteCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D065B18237AC825003DFB7C /* NoteCell.xib */; };
 		8D065B1B237ACA68003DFB7C /* NoteCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D065B1A237ACA68003DFB7C /* NoteCell.swift */; };
@@ -64,6 +65,9 @@
 		8D57CA43243FDB9C005DCEB2 /* PromotionCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D57CA42243FDB9C005DCEB2 /* PromotionCell.xib */; };
 		8D57CA47243FDBC3005DCEB2 /* PromotionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D57CA46243FDBC3005DCEB2 /* PromotionCell.swift */; };
 		8D57CA4924412430005DCEB2 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D57CA4824412430005DCEB2 /* SearchViewController.swift */; };
+		8D5889F5244FFAC200C6EBC2 /* DesignSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5889F4244FFAC200C6EBC2 /* DesignSettingsViewController.swift */; };
+		8D5889F7245019C200C6EBC2 /* TabSettingsCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D5889F6245019C200C6EBC2 /* TabSettingsCell.xib */; };
+		8D5889F9245019D300C6EBC2 /* TabSettingsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5889F8245019D300C6EBC2 /* TabSettingsCell.swift */; };
 		8D5D2C382447FC8800D15974 /* DirectMessageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5D2C372447FC8800D15974 /* DirectMessageViewController.swift */; };
 		8D5D2C3A24480C8500D15974 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5D2C3924480C8500D15974 /* ChatViewController.swift */; };
 		8D5D2C3D24480DE500D15974 /* MessageListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5D2C3C24480DE500D15974 /* MessageListViewController.swift */; };
@@ -84,6 +88,7 @@
 		8D63BFC3242BBF03009C3ADE /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D63BFC2242BBF03009C3ADE /* HomeViewModel.swift */; };
 		8D63BFC5242BBF12009C3ADE /* HomeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D63BFC4242BBF12009C3ADE /* HomeModel.swift */; };
 		8D63BFC7242BC239009C3ADE /* NoteDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D63BFC6242BC239009C3ADE /* NoteDisplay.swift */; };
+		8D75EC7F2452E49100EAC2A8 /* ColorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D75EC7E2452E49100EAC2A8 /* ColorPicker.swift */; };
 		8D769D74241E7BDB0022D4D2 /* ThemeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D769D73241E7BDB0022D4D2 /* ThemeViewController.swift */; };
 		8D7779A624138120005764D9 /* PanelMenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D7779A524138120005764D9 /* PanelMenuViewController.swift */; };
 		8D79687F2404BE59004F87FA /* ReactionCollectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */; };
@@ -131,6 +136,8 @@
 		8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */; };
 		8DC95AF923B0BD450013CABC /* NotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC95AF823B0BD450013CABC /* NotificationBanner.swift */; };
 		8DD8898B23935CC400D22910 /* PostDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */; };
+		8DDB52CD245032DD00C97130 /* ColorPickerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */; };
+		8DDB52CF245032E500C97130 /* ColorPickerCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DDB52CE245032E500C97130 /* ColorPickerCell.xib */; };
 		8DE35E6B23F68FC300E10CB4 /* Pods_MissCat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49D674DA4870479FF355F58B /* Pods_MissCat.framework */; };
 		8DE88825242764AE002CC9DE /* NoteCell.Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE88824242764AD002CC9DE /* NoteCell.Model.swift */; };
 		8DE8882724276512002CC9DE /* NoteCell.FileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE8882624276512002CC9DE /* NoteCell.FileView.swift */; };
@@ -153,6 +160,7 @@
 /* Begin PBXFileReference section */
 		49D674DA4870479FF355F58B /* Pods_MissCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MissCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A9C2BEAFA1B2C51A77CF66B /* Pods-MissCat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCat.debug.xcconfig"; path = "Target Support Files/Pods-MissCat/Pods-MissCat.debug.xcconfig"; sourceTree = "<group>"; };
+		8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavigationController.swift; sourceTree = "<group>"; };
 		8D04919A237857AC000433CD /* MisskeyKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MisskeyKit.framework; path = Carthage/Build/iOS/MisskeyKit.framework; sourceTree = "<group>"; };
 		8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineViewModel.swift; sourceTree = "<group>"; };
 		8D065B18237AC825003DFB7C /* NoteCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NoteCell.xib; sourceTree = "<group>"; };
@@ -219,6 +227,9 @@
 		8D57CA42243FDB9C005DCEB2 /* PromotionCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PromotionCell.xib; sourceTree = "<group>"; };
 		8D57CA46243FDBC3005DCEB2 /* PromotionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromotionCell.swift; sourceTree = "<group>"; };
 		8D57CA4824412430005DCEB2 /* SearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewController.swift; sourceTree = "<group>"; };
+		8D5889F4244FFAC200C6EBC2 /* DesignSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSettingsViewController.swift; sourceTree = "<group>"; };
+		8D5889F6245019C200C6EBC2 /* TabSettingsCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = TabSettingsCell.xib; sourceTree = "<group>"; };
+		8D5889F8245019D300C6EBC2 /* TabSettingsCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabSettingsCell.swift; sourceTree = "<group>"; };
 		8D5D2C372447FC8800D15974 /* DirectMessageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectMessageViewController.swift; sourceTree = "<group>"; };
 		8D5D2C3924480C8500D15974 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		8D5D2C3C24480DE500D15974 /* MessageListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageListViewController.swift; sourceTree = "<group>"; };
@@ -239,6 +250,7 @@
 		8D63BFC2242BBF03009C3ADE /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		8D63BFC4242BBF12009C3ADE /* HomeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeModel.swift; sourceTree = "<group>"; };
 		8D63BFC6242BC239009C3ADE /* NoteDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteDisplay.swift; sourceTree = "<group>"; };
+		8D75EC7E2452E49100EAC2A8 /* ColorPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPicker.swift; sourceTree = "<group>"; };
 		8D769D73241E7BDB0022D4D2 /* ThemeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeViewController.swift; sourceTree = "<group>"; };
 		8D7779A524138120005764D9 /* PanelMenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelMenuViewController.swift; sourceTree = "<group>"; };
 		8D79687E2404BE59004F87FA /* ReactionCollectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionCollectionHeader.swift; sourceTree = "<group>"; };
@@ -288,6 +300,8 @@
 		8DC95AF823B0BD450013CABC /* NotificationBanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationBanner.swift; sourceTree = "<group>"; };
 		8DD0D80B23B47CA8003F02ED /* YanagiText.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = YanagiText.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailViewModel.swift; sourceTree = "<group>"; };
+		8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickerCell.swift; sourceTree = "<group>"; };
+		8DDB52CE245032E500C97130 /* ColorPickerCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ColorPickerCell.xib; sourceTree = "<group>"; };
 		8DE88824242764AD002CC9DE /* NoteCell.Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCell.Model.swift; sourceTree = "<group>"; };
 		8DE8882624276512002CC9DE /* NoteCell.FileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCell.FileView.swift; sourceTree = "<group>"; };
 		8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Error+MissCat.swift"; sourceTree = "<group>"; };
@@ -420,6 +434,7 @@
 				8D4B02C0241FE5C90056605F /* Theme.swift */,
 				8D2A7235242A49CC00F8827D /* MissCatTableView.swift */,
 				8D0D6890244A9A6800725ABB /* PlaceholderTableView.swift */,
+				8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -571,6 +586,17 @@
 				8D5D2C4B24487CD100D15974 /* DirectMessageModel.swift */,
 			);
 			path = DirectMessage;
+			sourceTree = "<group>";
+		};
+		8D72D41C245592B100F964D4 /* Cell */ = {
+			isa = PBXGroup;
+			children = (
+				8D5889F6245019C200C6EBC2 /* TabSettingsCell.xib */,
+				8D5889F8245019D300C6EBC2 /* TabSettingsCell.swift */,
+				8DDB52CE245032E500C97130 /* ColorPickerCell.xib */,
+				8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */,
+			);
+			path = Cell;
 			sourceTree = "<group>";
 		};
 		8D72E4FB244AE6BA00B30C3A /* Login */ = {
@@ -896,12 +922,15 @@
 		8DAF301C241B5C8D0041BB85 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				8D72D41C245592B100F964D4 /* Cell */,
 				8DAF30182419842C0041BB85 /* AboutMisskeyViewController.swift */,
 				8DAF301A241B599B0041BB85 /* LicenseViewController.swift */,
 				8DAF3016241975030041BB85 /* SettingsViewController.swift */,
 				8D769D73241E7BDB0022D4D2 /* ThemeViewController.swift */,
 				8D8A50C0242355200065B1D2 /* AccountViewController.swift */,
 				8D31018C24397B45004F8E55 /* ReactionSettingsViewController.swift */,
+				8D5889F4244FFAC200C6EBC2 /* DesignSettingsViewController.swift */,
+				8D75EC7E2452E49100EAC2A8 /* ColorPicker.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -992,6 +1021,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D0AC5B8237B5D0D00530508 /* Font Awesome 5 Brands-Regular-400.otf in Resources */,
+				8D5889F7245019C200C6EBC2 /* TabSettingsCell.xib in Resources */,
 				8D61354F238A974400AB50C2 /* EmojiViewCell.xib in Resources */,
 				8D9EF4C8238187A4005449EC /* ReactionGenCell.xib in Resources */,
 				8D0AC5B9237B5D0D00530508 /* Font Awesome 5 Free-Regular-400.otf in Resources */,
@@ -1013,6 +1043,7 @@
 				8DC27D96243BF2DF0037E610 /* UrlPreviewer.xib in Resources */,
 				8D8863B4238493FA00A7A5A8 /* RenoteeCell.xib in Resources */,
 				8D61391E2427CA0C003B5BEF /* FileContainerCell.xib in Resources */,
+				8DDB52CF245032E500C97130 /* ColorPickerCell.xib in Resources */,
 				8DAEA1352382E4F00083AA69 /* EmojiView.xib in Resources */,
 				8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */,
 			);
@@ -1128,6 +1159,7 @@
 				8D79687F2404BE59004F87FA /* ReactionCollectionHeader.swift in Sources */,
 				8D31018D24397B45004F8E55 /* ReactionSettingsViewController.swift in Sources */,
 				8D0AC5C1237B865B00530508 /* TimelineModel.swift in Sources */,
+				8D5889F5244FFAC200C6EBC2 /* DesignSettingsViewController.swift in Sources */,
 				8DF49FA224445B0500C4D2B2 /* TrendViewController.swift in Sources */,
 				8D3037022389018800BA6D38 /* Cache.swift in Sources */,
 				8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */,
@@ -1142,11 +1174,13 @@
 				8D61391A2427B9B0003B5BEF /* FileContainer.swift in Sources */,
 				8D5D2C3D24480DE500D15974 /* MessageListViewController.swift in Sources */,
 				8D53741B23A32D03004523FC /* ViewModelType.swift in Sources */,
+				8D5889F9245019D300C6EBC2 /* TabSettingsCell.swift in Sources */,
 				8D4B02C1241FE5C90056605F /* Theme.swift in Sources */,
 				8D5D2C48244814AC00D15974 /* MessageListModel.swift in Sources */,
 				8DEB21C5243B0C1400E4D1EB /* Error+MissCat.swift in Sources */,
 				8DA06A0F2389F04E0093A718 /* NotificationModel.swift in Sources */,
 				8DA06A0D2389EEC60093A718 /* NotificationsViewModel.swift in Sources */,
+				8DDB52CD245032DD00C97130 /* ColorPickerCell.swift in Sources */,
 				8D3EC23A237B2C5E00808727 /* URL+MissCat.swift in Sources */,
 				8D63BFC5242BBF12009C3ADE /* HomeModel.swift in Sources */,
 				8DAEA1322382E19A0083AA69 /* ReactionGenViewModel.swift in Sources */,
@@ -1177,12 +1211,14 @@
 				8D4754F7240E21B900BAD410 /* PollView.swift in Sources */,
 				8D769D74241E7BDB0022D4D2 /* ThemeViewController.swift in Sources */,
 				8DA06A072389E89A0093A718 /* NotificationsViewController.swift in Sources */,
+				8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */,
 				8D61391C2427C1B3003B5BEF /* FileContainerViewModel.swift in Sources */,
 				8D4A2A18237437BE00503685 /* SceneDelegate.swift in Sources */,
 				8DAF301B241B599B0041BB85 /* LicenseViewController.swift in Sources */,
 				8DA06A16238A86DC0093A718 /* NotificationCellModel.swift in Sources */,
 				8D613551238A978700AB50C2 /* EmojiViewCell.swift in Sources */,
 				8D8863B02384147100A7A5A8 /* UIColor+MissCat.swift in Sources */,
+				8D75EC7F2452E49100EAC2A8 /* ColorPicker.swift in Sources */,
 				8D42C3A8238076B600337DD2 /* Double+MissCat.swift in Sources */,
 				8D98C268242E0AD600BB8049 /* PostDetailModel.swift in Sources */,
 				8DC27D9C243BF6DD0037E610 /* UrlPreviewerModel.swift in Sources */,
@@ -1381,7 +1417,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.10;
+				CURRENT_PROJECT_VERSION = 1.0.11;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -1396,7 +1432,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.10;
+				MARKETING_VERSION = 1.0.11;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",
@@ -1460,7 +1496,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.10;
+				CURRENT_PROJECT_VERSION = 1.0.11;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -1475,7 +1511,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.10;
+				MARKETING_VERSION = 1.0.11;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",

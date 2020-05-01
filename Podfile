@@ -26,4 +26,9 @@ pod 'APNGKit', '~> 1.0', :binary => true
 pod 'SwiftLinkPreview', '~> 3.1.0', :binary => true
 pod 'Cache', :binary => true
 pod 'MessageKit', :binary => true
-end 
+pod 'Eureka', :binary => true
+pod 'ChromaColorPicker', :binary => true
+pod 'XLActionController', :binary => true
+pod 'XLActionController/Twitter'
+pod 'XLActionController/Tweetbot'
+end

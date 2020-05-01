@@ -30,7 +30,8 @@ class NoteDisplay: UIViewController, NoteCellDelegate, UserCellDelegate {
                                hostInstance: hostInstance,
                                note: note,
                                hasFile: hasFile,
-                               hasMarked: hasMarked)
+                               hasMarked: hasMarked,
+                               navigationController: nil)
     }
     
     func tappedOthers(note: NoteCell.Model) {

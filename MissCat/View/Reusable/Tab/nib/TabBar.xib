@@ -16,6 +16,7 @@
                 <outlet property="postBottonFrame" destination="yEZ-I1-OzZ" id="ER4-Tt-jir"/>
                 <outlet property="postButton" destination="Nqv-JI-BCi" id="Ukg-Br-pfQ"/>
                 <outlet property="profileButton" destination="e69-tD-LzT" id="tVI-rt-LdF"/>
+                <outlet property="separatorView" destination="3Lx-a5-D3Q" id="oMd-Dc-AFQ"/>
             </connections>
         </placeholder>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
@@ -70,7 +71,6 @@
                                     </constraints>
                                 </view>
                             </subviews>
-                            <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                             <constraints>
                                 <constraint firstItem="yEZ-I1-OzZ" firstAttribute="top" secondItem="R88-60-hph" secondAttribute="top" constant="5" id="RYD-YO-1sQ"/>
                                 <constraint firstItem="yEZ-I1-OzZ" firstAttribute="centerY" secondItem="R88-60-hph" secondAttribute="centerY" id="WbW-cs-Qfx"/>

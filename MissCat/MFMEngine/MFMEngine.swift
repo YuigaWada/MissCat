@@ -176,10 +176,14 @@ class MFMEngine {
     ///   - text: 任意の文字列
     ///   - emojis: 外インスタンスによるカスタム絵文字
     static func shapeString(needReplyMark: Bool, text: String, emojis: [EmojiModel?]?) -> MFMString {
+        var textHex = Theme.shared.currentModel?.colorPattern.hex.text ?? "000000"
+        textHex = "#\(textHex)"
+        
         let replyHeader: NSMutableAttributedString = needReplyMark ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
         let mfmString = text.mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
                                           externalEmojis: emojis,
-                                          lineHeight: 30)
+                                          lineHeight: 30,
+                                          textHex: textHex)
         
         return MFMString(mfmEngine: mfmString.mfmEngine, attributed: replyHeader + (mfmString.attributed ?? .init()))
     }
@@ -212,18 +216,21 @@ class MFMEngine {
                                  nameFont: UIFont? = nil,
                                  usernameFont _usernameFont: UIFont? = nil,
                                  nameHex: String? = nil,
-                                 usernameColor: UIColor = .darkGray) -> MFMString {
+                                 usernameColor: UIColor? = nil) -> MFMString {
         let displayName = name ?? ""
         let font = nameFont ?? UIFont(name: "Helvetica", size: 10.0) ?? .systemFont(ofSize: 10.0)
+        
+        var defaultTextHex = Theme.shared.currentModel?.colorPattern.hex.text ?? "000000"
+        defaultTextHex = "#\(defaultTextHex)"
         
         let mfmString = displayName.mfmTransform(font: font,
                                                  externalEmojis: emojis,
                                                  lineHeight: 25,
-                                                 textHex: nameHex)
+                                                 textHex: nameHex ?? defaultTextHex)
         
         let nameAttributed = mfmString.attributed ?? .init()
         let usernameAttributed = " @\(username ?? "")".getAttributedString(font: _usernameFont ?? usernameFont,
-                                                                           color: usernameColor)
+                                                                           color: usernameColor ?? Theme.shared.currentModel?.colorPattern.ui.sub0 ?? .darkGray)
         return MFMString(mfmEngine: mfmString.mfmEngine,
                          attributed: nameAttributed + usernameAttributed)
     }

@@ -22,8 +22,8 @@ class ReactionCell: UICollectionViewCell {
     
     private let disposeBag = DisposeBag()
     
-    var selectedBackGroundColor = UIColor(hex: "EE7258")
-    var nonselectedBackGroundColor = UIColor(hex: "C6C6C6")
+    var selectedBackGroundColor = UIColor(hex: "DF785F")
+    var nonselectedBackGroundColor: UIColor
     
     var selectedTextColor = UIColor.white
     var nonselectedTextColor = UIColor(hex: "666666")
@@ -35,6 +35,16 @@ class ReactionCell: UICollectionViewCell {
     var delegate: ReactionCellDelegate?
     
     // MARK: Life Cycle
+    
+    override init(frame: CGRect) {
+        nonselectedBackGroundColor = Theme.shared.currentModel?.colorPattern.ui.sub1 ?? UIColor(hex: "C6C6C6")
+        super.init(frame: frame)
+    }
+    
+    required init?(coder: NSCoder) {
+        nonselectedBackGroundColor = Theme.shared.currentModel?.colorPattern.ui.sub1 ?? UIColor(hex: "C6C6C6")
+        super.init(coder: coder)
+    }
     
     override func layoutSubviews() {
         super.layoutSubviews()

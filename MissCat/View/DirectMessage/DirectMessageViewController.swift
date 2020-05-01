@@ -50,8 +50,19 @@ class DirectMessageViewController: ChatViewController {
         }).disposed(by: disposeBag)
     }
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setTheme()
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+    
+    private func setTheme() {
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            view.backgroundColor = colorPattern.base
+        }
     }
 }

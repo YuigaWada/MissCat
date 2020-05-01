@@ -32,6 +32,8 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
     override func loadView() {
         super.loadView()
         setupTableView()
+        bindTheme()
+        setTheme()
         
         self.viewModel = .init(disposeBag: disposeBag)
         
@@ -47,6 +49,24 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
         if !loggedIn, hasApiKey {
             loggedIn = true
             viewModel?.initialLoad()
+        }
+    }
+    
+    // MARK: Design
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { $0.colorPattern.ui }.subscribe(onNext: { colorPattern in
+            self.view.backgroundColor = colorPattern.base
+            self.mainTableView.backgroundColor = colorPattern.base
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            view.backgroundColor = colorPattern.base
+            mainTableView.backgroundColor = colorPattern.base
         }
     }
     

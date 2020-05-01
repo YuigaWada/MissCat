@@ -54,22 +54,29 @@
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
                             <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                         </textView>
+                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="v9p-uk-NLW" customClass="UrlPreviewer" customModule="MissCat" customModuleProvider="target">
+                            <rect key="frame" x="0.0" y="1" width="314" height="80"/>
+                            <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="80" id="qAG-Yo-VuM"/>
+                            </constraints>
+                        </view>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="v72-g7-6Ca" customClass="FileContainer" customModule="MissCat" customModuleProvider="target">
-                            <rect key="frame" x="0.0" y="1" width="314" height="8"/>
+                            <rect key="frame" x="0.0" y="82" width="314" height="8"/>
                             <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                             <constraints>
                                 <constraint firstAttribute="height" priority="999" constant="130" id="cKX-Vb-WMJ"/>
                             </constraints>
                         </view>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="5Re-VE-aQE" customClass="PollView" customModule="MissCat" customModuleProvider="target">
-                            <rect key="frame" x="0.0" y="10" width="314" height="128"/>
+                            <rect key="frame" x="0.0" y="91" width="314" height="128"/>
                             <color key="backgroundColor" systemColor="systemBrownColor" red="0.63529411759999999" green="0.51764705879999995" blue="0.36862745099999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="128" id="fOI-Pu-5yW"/>
                             </constraints>
                         </view>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bh7-Dx-jOD">
-                            <rect key="frame" x="0.0" y="139" width="314" height="100"/>
+                            <rect key="frame" x="0.0" y="220" width="314" height="100"/>
                             <subviews>
                                 <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" editable="NO" text="Note" translatesAutoresizingMaskIntoConstraints="NO" id="ncX-Oa-Twn" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
                                     <rect key="frame" x="62.5" y="48" width="231.5" height="42"/>
@@ -119,13 +126,6 @@
                                 <constraint firstAttribute="trailing" secondItem="ncX-Oa-Twn" secondAttribute="trailing" constant="20" id="kG7-rd-Ra6"/>
                                 <constraint firstItem="Blq-vv-14B" firstAttribute="width" secondItem="bh7-Dx-jOD" secondAttribute="width" multiplier="0.101911" id="kRj-Oj-fe8"/>
                                 <constraint firstItem="UOQ-wI-ocg" firstAttribute="leading" secondItem="bh7-Dx-jOD" secondAttribute="leading" constant="20" id="mKM-aq-p4A"/>
-                            </constraints>
-                        </view>
-                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="v9p-uk-NLW" customClass="UrlPreviewer" customModule="MissCat" customModuleProvider="target">
-                            <rect key="frame" x="0.0" y="240" width="314" height="80"/>
-                            <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
-                            <constraints>
-                                <constraint firstAttribute="height" constant="80" id="qAG-Yo-VuM"/>
                             </constraints>
                         </view>
                         <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="KkD-L3-5tQ">
@@ -218,7 +218,7 @@
                     </userDefinedRuntimeAttributes>
                 </view>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="cHu-Gc-hbB">
-                    <rect key="frame" x="80" y="49" width="314" height="8"/>
+                    <rect key="frame" x="80" y="130" width="314" height="8"/>
                     <color key="backgroundColor" systemColor="systemGrayColor" red="0.5568627451" green="0.5568627451" blue="0.57647058819999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                 </view>
             </subviews>

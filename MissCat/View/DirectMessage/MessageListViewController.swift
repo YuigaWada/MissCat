@@ -31,6 +31,7 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTableView()
+        setTheme()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -49,6 +50,13 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
         
         let output = viewModel.output
         output.users.bind(to: tableView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            view.backgroundColor = colorPattern.base
+            tableView.backgroundColor = colorPattern.base
+        }
     }
     
     // MARK: Setup

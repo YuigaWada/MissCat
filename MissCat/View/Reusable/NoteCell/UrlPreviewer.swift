@@ -29,20 +29,36 @@ class UrlPreviewer: UIView, ComponentType {
         super.init(frame: frame)
         loadNib()
         setComponent()
+        setTheme()
     }
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)!
         loadNib()
         setComponent()
+        setTheme()
     }
     
     func loadNib() {
         if let view = UINib(nibName: "UrlPreviewer", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
+            view.backgroundColor = .clear
             addSubview(view)
         }
     }
+    
+    // MARK: Design
+    
+    private func setTheme() {
+        guard let theme = Theme.shared.currentModel else { return }
+        let colorPattern = theme.colorPattern.ui
+        
+        backgroundColor = colorPattern.sub2
+        titleLabel.textColor = colorPattern.text
+        previewTextView.textColor = colorPattern.sub0
+    }
+    
+    // MARK: Setup
     
     private func binding(_ viewModel: UrlPreviewerViewModel) {
         let output = viewModel.output
