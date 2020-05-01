@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */; };
 		8D065B17237AC3D0003DFB7C /* TimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */; };
 		8D065B19237AC826003DFB7C /* NoteCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D065B18237AC825003DFB7C /* NoteCell.xib */; };
 		8D065B1B237ACA68003DFB7C /* NoteCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D065B1A237ACA68003DFB7C /* NoteCell.swift */; };
@@ -159,6 +160,7 @@
 /* Begin PBXFileReference section */
 		49D674DA4870479FF355F58B /* Pods_MissCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MissCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A9C2BEAFA1B2C51A77CF66B /* Pods-MissCat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCat.debug.xcconfig"; path = "Target Support Files/Pods-MissCat/Pods-MissCat.debug.xcconfig"; sourceTree = "<group>"; };
+		8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavigationController.swift; sourceTree = "<group>"; };
 		8D04919A237857AC000433CD /* MisskeyKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MisskeyKit.framework; path = Carthage/Build/iOS/MisskeyKit.framework; sourceTree = "<group>"; };
 		8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineViewModel.swift; sourceTree = "<group>"; };
 		8D065B18237AC825003DFB7C /* NoteCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NoteCell.xib; sourceTree = "<group>"; };
@@ -432,6 +434,7 @@
 				8D4B02C0241FE5C90056605F /* Theme.swift */,
 				8D2A7235242A49CC00F8827D /* MissCatTableView.swift */,
 				8D0D6890244A9A6800725ABB /* PlaceholderTableView.swift */,
+				8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -1208,6 +1211,7 @@
 				8D4754F7240E21B900BAD410 /* PollView.swift in Sources */,
 				8D769D74241E7BDB0022D4D2 /* ThemeViewController.swift in Sources */,
 				8DA06A072389E89A0093A718 /* NotificationsViewController.swift in Sources */,
+				8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */,
 				8D61391C2427C1B3003B5BEF /* FileContainerViewModel.swift in Sources */,
 				8D4A2A18237437BE00503685 /* SceneDelegate.swift in Sources */,
 				8DAF301B241B599B0041BB85 /* LicenseViewController.swift in Sources */,

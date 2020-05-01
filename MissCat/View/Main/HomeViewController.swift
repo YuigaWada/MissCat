@@ -237,28 +237,41 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         theme.map { UIColor(hex: $0.mainColorHex) }.bind(to: selectedBar.rx.backgroundColor).disposed(by: disposeBag)
         theme.map { $0.colorPattern.ui.base }.subscribe(onNext: { baseColor in
             self.changeBackground(to: baseColor)
+            self.setNeedsStatusBarAppearanceUpdate() // ステータスバーの文字色を変更
         }).disposed(by: disposeBag)
     }
     
     private func setTheme() {
         guard let theme = Theme.shared.currentModel else { return }
+        
         let mainColorHex = theme.mainColorHex
         let mainColor = UIColor(hex: mainColorHex)
+        
+        // mainColor
         view.window?.tintColor = mainColor
         selectedBar.backgroundColor = mainColor
         
         let colorPattern = theme.colorPattern
+        
+        // colorPattern
         changeBackground(to: colorPattern.ui.base)
         borderColor = colorPattern.ui.sub2
+        searchIconColor = theme.colorMode == .light ? .black : .white // 検索アイコンの色を変更
         UINavigationBar.changeColor(back: colorPattern.ui.base, text: colorPattern.ui.text) // ナビゲーションバーの色を変更
         
-        searchIconColor = theme.colorMode == .light ? .black : .white
+        setNeedsStatusBarAppearanceUpdate() // ステータスバーの文字色を変更
     }
     
     private func changeBackground(to color: UIColor) {
         view.backgroundColor = color
         collectionView.backgroundColor = color
         tabBackgroundColor = color
+    }
+    
+    /// ステータスバーの文字色
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        let currentColorMode = Theme.shared.currentModel?.colorMode ?? .light
+        return currentColorMode == .light ? UIStatusBarStyle.default : UIStatusBarStyle.lightContent
     }
     
     // MARK: Auth

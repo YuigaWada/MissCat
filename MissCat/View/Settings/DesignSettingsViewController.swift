@@ -48,6 +48,12 @@ class DesignSettingsViewController: FormViewController {
         }
     }
     
+    /// ステータスバーの文字色
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        let currentColorMode = Theme.shared.currentModel?.colorMode ?? .light
+        return currentColorMode == .light ? UIStatusBarStyle.default : UIStatusBarStyle.lightContent
+    }
+    
     private func getCellBackgroundColor() -> UIColor {
         guard let theme = Theme.shared.currentModel else { return .white }
         return theme.colorMode == .light ? theme.colorPattern.ui.base : theme.colorPattern.ui.sub2
@@ -57,6 +63,7 @@ class DesignSettingsViewController: FormViewController {
     
     private func setupComponent() {
         title = "デザイン"
+        tableView.separatorStyle = .none
     }
     
     private func setTable() {

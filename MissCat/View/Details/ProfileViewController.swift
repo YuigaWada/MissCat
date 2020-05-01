@@ -186,6 +186,12 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         followerCountLabel.textColor = colorPattern.text
     }
     
+    /// ステータスバーの文字色
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        let currentColorMode = Theme.shared.currentModel?.colorMode ?? .light
+        return currentColorMode == .light ? UIStatusBarStyle.default : UIStatusBarStyle.lightContent
+    }
+    
     // MARK: Public Methods
     
     func setUserId(_ userId: String, isMe: Bool) {

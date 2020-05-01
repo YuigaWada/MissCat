@@ -77,6 +77,12 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
         }
     }
     
+    /// ステータスバーの文字色
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        let currentColorMode = Theme.shared.currentModel?.colorMode ?? .light
+        return currentColorMode == .light ? UIStatusBarStyle.default : UIStatusBarStyle.lightContent
+    }
+    
     // MARK: Setup TableView
     
     private func setupTableView() {
