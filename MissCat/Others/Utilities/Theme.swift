@@ -191,8 +191,14 @@ extension Theme {
             let new = self
             
             guard new.mainColorHex == old.mainColorHex,
-                new.colorMode == old.colorMode,
-                new.tab.count == old.tab.count else { return false }
+                new.colorMode == old.colorMode else { return false }
+            
+            return hasEqualTabs(to: old)
+        }
+        
+        func hasEqualTabs(to old: Model) -> Bool {
+            let new = self
+            guard new.tab.count == old.tab.count else { return false }
             
             for i in 0 ..< new.tab.count {
                 let newTab = new.tab[i]

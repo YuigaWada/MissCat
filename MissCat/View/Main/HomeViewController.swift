@@ -148,6 +148,9 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     /// アカウントの切り替えやデザインの変更時に用いる。
     /// - Parameter startingPage: どのpageがrelaunch後、最初に表示されるか
     func relaunchView(start startingPage: Page = .profile) {
+        // main
+        reloadPager()
+        
         // notif
         notificationsViewController?.view.removeFromSuperview()
         notificationsViewController?.removeFromParent()
@@ -214,10 +217,21 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     
     private func bindTheme() {
         let theme = Theme.shared.theme
+        var currentTheme = Theme.shared.currentModel
         
         theme.map { $0 }.subscribe(onNext: { theme in
             self.searchIconColor = theme.colorMode == .light ? .black : .white
-            self.reloadPager() // タブをリロード
+            
+            // タブ情報が更新されている場合のみタブをリロード
+            if let oldTheme = currentTheme {
+                if !theme.hasEqualTabs(to: oldTheme) {
+                    self.reloadPager()
+                }
+            } else {
+                self.reloadPager()
+            }
+            
+            currentTheme = theme // 更新しておく
         }).disposed(by: disposeBag)
         
         theme.map { UIColor(hex: $0.mainColorHex) }.bind(to: selectedBar.rx.backgroundColor).disposed(by: disposeBag)
