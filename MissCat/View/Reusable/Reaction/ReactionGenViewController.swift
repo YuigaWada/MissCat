@@ -29,6 +29,7 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
     @IBOutlet weak var borderOriginXConstraint: NSLayoutConstraint!
     
     var delegate: ReactionGenViewControllerDelegate?
+    var parentNavigationController: UINavigationController?
     var onPostViewController: Bool = false
     
     var selectedEmoji: PublishRelay<EmojiView.EmojiModel> = .init()
@@ -162,13 +163,20 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         settingsButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
         
         settingsButton.rx.tap.subscribe(onNext: { _ in
-            let alert = UIAlertController(title: "", message: "開発中です", preferredStyle: UIAlertController.Style.alert)
-            let cancelAction: UIAlertAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.cancel, handler: nil)
-            
-            alert.addAction(cancelAction)
-            
-            self.present(alert, animated: true, completion: nil)
+            // ReactionGenが閉じてから設定を開く
+            self.dismiss(animated: true, completion: {
+                guard let reactionSettings = self.getViewController(name: "reaction-settings")
+                    as? ReactionSettingsViewController else { return }
+                self.parentNavigationController?.pushViewController(reactionSettings, animated: true)
+            })
         }).disposed(by: disposeBag)
+    }
+    
+    private func getViewController(name: String) -> UIViewController {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let viewController = storyboard.instantiateViewController(withIdentifier: name)
+        
+        return viewController
     }
     
     private func setupCollectionViewLayout() {

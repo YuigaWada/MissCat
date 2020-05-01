@@ -416,7 +416,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                                              hostInstance: hostInstance,
                                              note: note,
                                              hasFile: hasFile,
-                                             hasMarked: hasMarked)
+                                             hasMarked: hasMarked,
+                                             navigationController: homeViewController?.navigationController)
         
         reactionGen?.selectedEmoji.subscribe(onNext: { emojiModel in
             guard let raw = emojiModel.isDefault ? emojiModel.defaultEmoji : ":" + emojiModel.rawEmoji + ":" else { return }
