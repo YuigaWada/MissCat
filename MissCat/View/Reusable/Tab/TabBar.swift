@@ -55,7 +55,7 @@ class FooterTabBar: UIView {
     
     convenience init(with disposeBag: DisposeBag) {
         self.init()
-        self.disposeBag = disposeBag
+//        self.disposeBag = disposeBag
     }
     
     override init(frame: CGRect) {
