@@ -29,4 +29,6 @@ pod 'MessageKit', :binary => true
 pod 'Eureka', :binary => true
 pod 'ChromaColorPicker', :binary => true
 pod 'XLActionController', :binary => true
+pod 'XLActionController/Twitter'
+pod 'XLActionController/Tweetbot'
 end
