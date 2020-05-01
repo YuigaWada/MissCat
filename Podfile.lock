@@ -42,6 +42,9 @@ PODS:
   - SwiftFormat/CLI (0.44.7)
   - SwiftLinkPreview (3.1.0)
   - SwiftyGif (5.2.0)
+  - XLActionController (5.0.2):
+    - XLActionController/Core (= 5.0.2)
+  - XLActionController/Core (5.0.2)
   - XLPagerTabStrip (9.0.0)
 
 DEPENDENCIES:
@@ -66,6 +69,7 @@ DEPENDENCIES:
   - SVGKit (from `https://github.com/SVGKit/SVGKit.git`, branch `3.x`)
   - SwiftFormat/CLI
   - SwiftLinkPreview (~> 3.1.0)
+  - XLActionController
   - XLPagerTabStrip
 
 SPEC REPOS:
@@ -96,6 +100,7 @@ SPEC REPOS:
     - SwiftFormat
     - SwiftLinkPreview
     - SwiftyGif
+    - XLActionController
     - XLPagerTabStrip
 
 EXTERNAL SOURCES:
@@ -136,8 +141,9 @@ SPEC CHECKSUMS:
   SwiftFormat: fd97e27b8de5a46c9d1988bf1db1dc92e79f86a3
   SwiftLinkPreview: 3d924eeaae8d17410a827a4b37675713af1a0a8a
   SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
+  XLActionController: f1f2226d2c6629db197d4a41f2da907085a4cb9d
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
 
-PODFILE CHECKSUM: 75ed6b0d0d0fa901221a312a98146bcba8142ed9
+PODFILE CHECKSUM: b6c79bdc73e66316654ab8c46858f9eaca12c86f
 
 COCOAPODS: 1.7.1

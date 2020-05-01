@@ -28,4 +28,5 @@ pod 'Cache', :binary => true
 pod 'MessageKit', :binary => true
 pod 'Eureka', :binary => true
 pod 'ChromaColorPicker', :binary => true
+pod 'XLActionController', :binary => true
 end
