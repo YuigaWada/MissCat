@@ -29,12 +29,16 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         setupCollectionViewLayout()
         setupGesture()
         
+        bindTheme()
+        setTheme()
+        
         let viewModel = setupViewModel()
         viewModel.setEmojiModel()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -43,6 +47,41 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         if let viewModel = viewModel, !viewModel.state.saved {
             viewModel.save()
         }
+    }
+    
+    // MARK: Design
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { UIColor(hex: $0.mainColorHex) }.subscribe(onNext: { color in
+            self.plusButton.setTitleColor(color, for: .normal)
+            self.minusButton.setTitleColor(color, for: .normal)
+        }).disposed(by: disposeBag)
+        
+        theme.map { $0.colorPattern.ui }.subscribe(onNext: { colorPattern in
+            self.view.backgroundColor = colorPattern.base
+            self.emojiCollectionView.backgroundColor = colorPattern.base
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
+            let mainColor = UIColor(hex: mainColorHex)
+            plusButton.setTitleColor(mainColor, for: .normal)
+            minusButton.setTitleColor(mainColor, for: .normal)
+        }
+        
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            view.backgroundColor = colorPattern.base
+            emojiCollectionView.backgroundColor = colorPattern.base
+        }
+    }
+    
+    /// ステータスバーの文字色
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        let currentColorMode = Theme.shared.currentModel?.colorMode ?? .light
+        return currentColorMode == .light ? UIStatusBarStyle.default : UIStatusBarStyle.lightContent
     }
     
     // MARK: Setup
@@ -160,7 +199,9 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ReactionCollectionHeader", for: indexPath) as? ReactionCollectionHeader else { fatalError("Internal Error.") }
             
             cell.contentMode = .left
+            cell.backgroundColor = .clear
             cell.setTitle(headerInfo.title)
+            
             return cell
         } else {
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as? EmojiViewCell else { fatalError("Internal Error.") }
@@ -169,6 +210,7 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
             
             cell.mainView.emoji = item
             cell.mainView.isFake = item.isFake
+            cell.backgroundColor = .clear
             cell.contentMode = .left
             
             return cell

@@ -31,15 +31,12 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     private var myProfileViewController: ProfileViewController?
     private var currentProfileViewController: ProfileViewController?
     
-    // ioの場合はLTLではなくHomeを表示(Appleに怒られた)
-    private lazy var search = self.generateSearchVC()
-    private lazy var home = self.generateTimelineVC(type: .Home)
-    private lazy var local = io ? self.generateTimelineVC(type: .Home) : self.generateTimelineVC(type: .Local)
-    private lazy var global = self.generateTimelineVC(type: .Global)
-    
     // Tab
+    private lazy var search = self.generateSearchVC()
+    private var setViewControllers: [UIViewController] = []
+    
     private lazy var navBar: NavBar = NavBar()
-    private lazy var footerTab = FooterTabBar()
+    private lazy var footerTab = FooterTabBar(with: disposeBag)
     
     // Flag
     private var hasPreparedViews: Bool = false // NavBar, FooterTabをこのVCのview上に配置したか？
@@ -59,23 +56,60 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     private var viewModel = HomeViewModel()
     private var disposeBag = DisposeBag()
     
+    // MARK: PolioPager Overrides
+    
+    /// 上タブのアイテム
+    override func tabItems() -> [TabItem] {
+        let colorPattern = Theme.shared.currentModel?.colorPattern
+        let tabs = Theme.shared.currentModel?.tab ?? getDefaultTabs()
+        return tabs.map { tab in
+            TabItem(title: tab.name,
+                    backgroundColor: colorPattern?.ui.base ?? .white,
+                    normalColor: colorPattern?.ui.text ?? .black)
+        }
+    }
+    
+    /// 上タブのアイテムに対応したViewControllerを返す
+    override func viewControllers() -> [UIViewController] {
+        let tabs = Theme.shared.currentModel?.tab ?? getDefaultTabs()
+        setViewControllers = tabs.map { tab in // setされたviewControllerを記憶しておく
+            getViewController(type: tab.kind)
+        }
+        
+        return [search] + setViewControllers
+    }
+    
+    func getDefaultTabs() -> [Theme.Tab] {
+        return [.init(name: "Home", kind: .home, userId: nil, listId: nil),
+                .init(name: "Local", kind: .local, userId: nil, listId: nil),
+                .init(name: "Global", kind: .global, userId: nil, listId: nil)]
+    }
+    
+    /// Theme.TabKindからVCを生成
+    /// - Parameter type: Theme.TabKind
+    private func getViewController(type: Theme.TabKind) -> UIViewController {
+        switch type {
+        case .home:
+            return generateTimelineVC(type: .Home)
+        case .local:
+            // ioの場合はLTLではなくHomeを表示(Appleに怒られた)
+            return io ? generateTimelineVC(type: .Home) : generateTimelineVC(type: .Local)
+        case .global:
+            return generateTimelineVC(type: .Global)
+        case .user:
+            return .init()
+        case .list:
+            return .init()
+        }
+    }
+    
     // MARK: Life Cycle
     
     override func viewDidLoad() {
-        needBorder = true
-        selectedBarHeight = 2
-        selectedBar.layer.cornerRadius = 2
-        selectedBarMargins.lower += 1
-        sectionInset = .init(top: 0, left: 20, bottom: 0, right: 5)
-        navBar.isHidden = true
-        
-        if !isXSeries {
-            selectedBarMargins.upper += 3
-            selectedBarMargins.lower += 1
-            sectionInset = .init(top: 2, left: 10, bottom: 0, right: 5)
-        }
-        
+        setupPolioPager()
+        bindTheme()
         setTheme()
+        
         super.viewDidLoad()
     }
     
@@ -98,6 +132,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         
         setupFooterTab()
         loadingBanner()
+        setTheme()
         initialized = true
     }
     
@@ -107,6 +142,44 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         setupNotificationsVC() // 先にNotificationsVCをロードしておく → 通知のロードを裏で行う
         setupFavVC()
         setupNavTab()
+    }
+    
+    /// Viewを総relaunchします。
+    /// アカウントの切り替えやデザインの変更時に用いる。
+    /// - Parameter startingPage: どのpageがrelaunch後、最初に表示されるか
+    func relaunchView(start startingPage: Page = .profile) {
+        // main
+        reloadPager()
+        
+        // notif
+        notificationsViewController?.view.removeFromSuperview()
+        notificationsViewController?.removeFromParent()
+        notificationsViewController = nil
+        setupNotificationsVC()
+        
+        // fav
+        favViewController?.view.removeFromSuperview()
+        favViewController?.removeFromParent()
+        favViewController = nil
+        setupFavVC()
+        
+        // profile
+        myProfileViewController?.view.removeFromSuperview()
+        myProfileViewController?.removeFromParent()
+        myProfileViewController = nil
+        
+        nowPage = .main
+        switch startingPage {
+        case .main:
+            nowPage = .profile // fake
+            emulateFooterTabTap(tab: .home)
+        case .notifications:
+            emulateFooterTabTap(tab: .notifications)
+        case .profile:
+            emulateFooterTabTap(tab: .profile)
+        case .messages:
+            emulateFooterTabTap(tab: .messages)
+        }
     }
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
@@ -127,23 +200,78 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     
     // MARK: Design
     
-    private func setTheme() {
+    private func setupPolioPager() {
+        needBorder = true
+        selectedBarHeight = 2
+        selectedBar.layer.cornerRadius = 2
+        selectedBarMargins.lower += 1
+        sectionInset = .init(top: 0, left: 20, bottom: 0, right: 5)
+        navBar.isHidden = true
+        
+        if !isXSeries {
+            selectedBarMargins.upper += 3
+            selectedBarMargins.lower += 1
+            sectionInset = .init(top: 2, left: 10, bottom: 0, right: 5)
+        }
+    }
+    
+    private func bindTheme() {
         let theme = Theme.shared.theme
+        var currentTheme = Theme.shared.currentModel
         
-        theme.map { $0.general.main }.bind(to: selectedBar.rx.backgroundColor).disposed(by: disposeBag)
-        theme.map { $0.general.background }.subscribe(onNext: { self.tabBackgroundColor = $0 }).disposed(by: disposeBag)
-        theme.map { $0.general.background }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
-        theme.map { $0.post.text }.subscribe(onNext: {
-            self.navBar.titleLabel.textColor = $0
-        }).disposed(by: disposeBag)
-        theme.map { $0.post.text }.subscribe(onNext: {
-            self.navBar.leftButton.setTitleColor($0, for: .normal)
-        }).disposed(by: disposeBag)
-        theme.map { $0.post.text }.subscribe(onNext: {
-            self.navBar.rightButton.setTitleColor($0, for: .normal)
+        theme.map { $0 }.subscribe(onNext: { theme in
+            self.searchIconColor = theme.colorMode == .light ? .black : .white
+            
+            // タブ情報が更新されている場合のみタブをリロード
+            if let oldTheme = currentTheme {
+                if !theme.hasEqualTabs(to: oldTheme) {
+                    self.reloadPager()
+                }
+            } else {
+                self.reloadPager()
+            }
+            
+            currentTheme = theme // 更新しておく
         }).disposed(by: disposeBag)
         
-        Theme.shared.complete()
+        theme.map { UIColor(hex: $0.mainColorHex) }.bind(to: selectedBar.rx.backgroundColor).disposed(by: disposeBag)
+        theme.map { $0.colorPattern.ui.base }.subscribe(onNext: { baseColor in
+            self.changeBackground(to: baseColor)
+            self.setNeedsStatusBarAppearanceUpdate() // ステータスバーの文字色を変更
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        guard let theme = Theme.shared.currentModel else { return }
+        
+        let mainColorHex = theme.mainColorHex
+        let mainColor = UIColor(hex: mainColorHex)
+        
+        // mainColor
+        view.window?.tintColor = mainColor
+        selectedBar.backgroundColor = mainColor
+        
+        let colorPattern = theme.colorPattern
+        
+        // colorPattern
+        changeBackground(to: colorPattern.ui.base)
+        borderColor = colorPattern.ui.sub2
+        searchIconColor = theme.colorMode == .light ? .black : .white // 検索アイコンの色を変更
+        UINavigationBar.changeColor(back: colorPattern.ui.base, text: colorPattern.ui.text) // ナビゲーションバーの色を変更
+        
+        setNeedsStatusBarAppearanceUpdate() // ステータスバーの文字色を変更
+    }
+    
+    private func changeBackground(to color: UIColor) {
+        view.backgroundColor = color
+        collectionView.backgroundColor = color
+        tabBackgroundColor = color
+    }
+    
+    /// ステータスバーの文字色
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        let currentColorMode = Theme.shared.currentModel?.colorMode ?? .light
+        return currentColorMode == .light ? UIStatusBarStyle.default : UIStatusBarStyle.lightContent
     }
     
     // MARK: Auth
@@ -321,6 +449,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         else { fatalError("Internal Error.") }
         
         viewController.homeViewController = self
+        viewController.view.backgroundColor = .clear
         return viewController
     }
     
@@ -329,6 +458,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
         else { fatalError("Internal Error.") }
         
         viewController.setup(type: type)
+        viewController.view.backgroundColor = .clear
         return viewController
     }
     
@@ -363,18 +493,6 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
             self.view.bringSubviewToFront(notificationBanner)
         }
     }
-    
-    // MARK: PolioPager Delegate
-    
-    override func tabItems() -> [TabItem] {
-        return [TabItem(title: "Home", backgroundColor: UIColor(hex: "ECECEC")),
-                TabItem(title: "Local", backgroundColor: UIColor(hex: "ECECEC")),
-                TabItem(title: "Global", backgroundColor: UIColor(hex: "ECECEC"))]
-    }
-    
-    override func viewControllers() -> [UIViewController] {
-        return [search, home, local, global]
-    }
 }
 
 // MARK: NoteCell Delegate
@@ -385,11 +503,10 @@ extension HomeViewController: NoteCellDelegate {
     }
     
     func tappedRenote(note: NoteCell.Model) {
-        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
+        let panelMenu = PanelMenuViewController()
         let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "Renote", awesomeIcon: "retweet", order: 0),
                                                              .init(title: "引用Renote", awesomeIcon: "quote-right", order: 1)]
         
-        panelMenu.setPanelTitle("Renote")
         panelMenu.setupMenu(items: menuItems)
         panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
             guard order >= 0 else { return }
@@ -406,7 +523,7 @@ extension HomeViewController: NoteCellDelegate {
             }
        }).disposed(by: disposeBag)
         
-        presentWithSemiModal(panelMenu, animated: true, completion: nil)
+        present(panelMenu, animated: true, completion: nil)
     }
     
     func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {}
@@ -476,7 +593,10 @@ extension HomeViewController: FooterTabBarDelegate {
             nowPage = .main
             DispatchQueue.main.async { self.hideView(without: .main) }
         } else {
-            home.tappedHome()
+            // PolioPagerが管理しているvcにタップイベントを伝達させる
+            setViewControllers.compactMap { $0 as? FooterTabBarDelegate }.forEach {
+                $0.tappedHome()
+            }
         }
     }
     
@@ -602,6 +722,7 @@ extension HomeViewController: TimelineDelegate {
             let settingsViewController = storyboard.instantiateViewController(withIdentifier: "settings")
             as? SettingsViewController else { return }
         
+        settingsViewController.homeViewController = self
         navigationController?.pushViewController(settingsViewController, animated: true)
     }
     

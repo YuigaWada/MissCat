@@ -9,6 +9,7 @@
 import Agrume
 import RxCocoa
 import RxSwift
+import SkeletonView
 import UIKit
 import XLPagerTabStrip
 
@@ -33,6 +34,10 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     @IBOutlet weak var followerCountButton: UIButton!
     @IBOutlet weak var followButton: UIButton!
     
+    @IBOutlet weak var notesCountLabel: UILabel!
+    @IBOutlet weak var followCountLabel: UILabel!
+    @IBOutlet weak var followerCountLabel: UILabel!
+    
     @IBOutlet weak var backButton: UIButton!
     @IBOutlet weak var settingsButton: UIButton!
     @IBOutlet weak var containerHeightContraint: NSLayoutConstraint!
@@ -42,12 +47,14 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     var homeViewController: HomeViewController?
     
+    private var mainColor: UIColor = .systemBlue
+    
     private var userId: String?
     private var scrollBegining: CGFloat = 0
     private var tlScrollView: UIScrollView?
     private var isMe: Bool = false
     
-    private lazy var animateBlurView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
+    private lazy var animateBlurView = getAnimateBlurView()
     
     private lazy var viewModel: ProfileViewModel = self.getViewModel()
     
@@ -63,7 +70,8 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     override func viewDidLoad() {
         viewModel.setUserId(userId ?? "", isMe: isMe)
-        setupTabStyle()
+        setTheme()
+        bindTheme()
         
         super.viewDidLoad()
         setupComponent()
@@ -137,11 +145,51 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         followCountButton.titleLabel?.text = nil
         followerCountButton.titleLabel?.text = nil
         followButton.titleLabel?.text = "..."
-        followButton.backgroundColor = .white
-        followButton.layer.borderColor = UIColor.systemBlue.cgColor
+        followButton.backgroundColor = .clear
         followButton.layer.borderWidth = 1
         
         introTextView.delegate = self
+    }
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { UIColor(hex: $0.mainColorHex) }.subscribe(onNext: { mainColor in
+//            self.settings.style.selectedBarBackgroundColor = mainColor
+            
+            // ↑のやつだとうまく変更できないのでworkaround
+            self.buttonBarView.selectedBar.backgroundColor = mainColor
+            self.followButton.layer.borderColor = mainColor.cgColor
+            self.followButton.setTitleColor(mainColor, for: .normal)
+            self.mainColor = mainColor
+            
+        }).disposed(by: disposeBag)
+        
+        theme.map { $0.colorPattern.ui.base }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        guard let theme = Theme.shared.currentModel else { setupTabStyle(main: .systemBlue, back: .white); return }
+        
+        let mainColorHex = theme.mainColorHex
+        let colorPattern = theme.colorPattern.ui
+        let backgroundColor = theme.colorMode == .light ? colorPattern.base : colorPattern.sub3
+        
+        mainColor = UIColor(hex: mainColorHex)
+        followButton.layer.borderColor = mainColor.cgColor
+        setupTabStyle(main: mainColor, back: backgroundColor)
+        
+        view.backgroundColor = backgroundColor
+        containerScrollView.backgroundColor = backgroundColor
+        notesCountLabel.textColor = colorPattern.text
+        followCountLabel.textColor = colorPattern.text
+        followerCountLabel.textColor = colorPattern.text
+    }
+    
+    /// ステータスバーの文字色
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        let currentColorMode = Theme.shared.currentModel?.colorMode ?? .light
+        return currentColorMode == .light ? UIStatusBarStyle.default : UIStatusBarStyle.lightContent
     }
     
     // MARK: Public Methods
@@ -153,11 +201,13 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     // MARK: Setup
     
-    private func setupTabStyle() {
-        settings.style.buttonBarBackgroundColor = .white
-        settings.style.buttonBarItemBackgroundColor = .white
-        settings.style.buttonBarItemTitleColor = .black
-        settings.style.selectedBarBackgroundColor = .systemBlue
+    private func setupTabStyle(main mainColor: UIColor, back backgroundColor: UIColor) {
+        let textColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
+        
+        settings.style.buttonBarBackgroundColor = backgroundColor
+        settings.style.buttonBarItemBackgroundColor = backgroundColor
+        settings.style.buttonBarItemTitleColor = textColor
+        settings.style.selectedBarBackgroundColor = mainColor
         
         settings.style.buttonBarItemFont = UIFont.systemFont(ofSize: 15)
         
@@ -203,12 +253,12 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             
             output.relation.asDriver(onErrorDriveWith: Driver.empty()).map {
                 let isFollowing = $0.isFollowing ?? false
-                return !isFollowing ? UIColor.systemBlue : UIColor.white
+                return !isFollowing ? self.mainColor : UIColor.clear
             }.drive(followButton.rx.backgroundColor).disposed(by: disposeBag)
             
             output.relation.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: {
                 let isFollowing = $0.isFollowing ?? false
-                self.followButton.setTitleColor(isFollowing ? UIColor.systemBlue : UIColor.white, for: .normal)
+                self.followButton.setTitleColor(isFollowing ? self.mainColor : UIColor.white, for: .normal)
             }).disposed(by: disposeBag)
             
             followButton.rx.tap.subscribe(onNext: {
@@ -223,7 +273,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             }).disposed(by: disposeBag)
         } else { // 自分のプロフィール画面の場合
             followButton.setTitle("編集", for: .normal)
-            followButton.setTitleColor(.systemBlue, for: .normal)
+            followButton.setTitleColor(mainColor, for: .normal)
         }
         
         backButton.rx.tap.subscribe(onNext: {
@@ -267,6 +317,13 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             self.animateBlurView.alpha = 1
         }
         blurAnimator?.pausesOnCompletion = true // 別のVCに飛ぶとアニメーションが完了状態になってしまうため、stateを.activeで維持させる
+    }
+    
+    private func getAnimateBlurView() -> UIVisualEffectView {
+        let colorMode = Theme.shared.currentModel?.colorMode ?? .light
+        let style: UIBlurEffect.Style = colorMode == .light ? .light : .dark
+        
+        return UIVisualEffectView(effect: UIBlurEffect(style: style))
     }
     
     private func updateAnimateBlurHeight() {
@@ -443,8 +500,10 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     private func changeSkeltonState(on: Bool) {
         if on {
-            iconImageView.showAnimatedGradientSkeleton()
-            introTextView.showAnimatedGradientSkeleton()
+            let gradient = SkeletonGradient(baseColor: Theme.shared.currentModel?.colorPattern.ui.sub3 ?? .lightGray)
+            
+            iconImageView.showAnimatedGradientSkeleton(usingGradient: gradient)
+            introTextView.showAnimatedGradientSkeleton(usingGradient: gradient)
         } else {
             iconImageView.hideSkeleton()
             introTextView.hideSkeleton()

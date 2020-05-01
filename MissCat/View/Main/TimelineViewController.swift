@@ -113,6 +113,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         
         binding(dataSource: dataSource)
         setupTopShadow()
+        bindTheme()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -125,9 +126,25 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             viewModel?.checkUserId()
         }
         viewModel?.setSkeltonCell()
+        setTheme()
         
         if let bottomConstraint = bottomConstraint {
             bottomConstraint.isActive = withNavBar
+        }
+    }
+    
+    // MARK: Design
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        theme.map { $0.colorPattern.ui.base }.bind(to: view.rx.backgroundColor).disposed(by: disposeBag)
+        theme.map { $0.colorPattern.ui.base }.bind(to: mainTableView.rx.backgroundColor).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let baseColor = Theme.shared.currentModel?.colorPattern.ui.base {
+            view.backgroundColor = baseColor
+            mainTableView.backgroundColor = baseColor
         }
     }
     
@@ -360,6 +377,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     // MARK: FooterTabBar Delegate
     
     func tappedHome() {
+        guard let mainTableView = mainTableView else { return }
         let zeroIndexPath = IndexPath(row: 0, section: 0)
         
         // セルが存在しないと落ちるので制約をつける
@@ -398,7 +416,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                                              hostInstance: hostInstance,
                                              note: note,
                                              hasFile: hasFile,
-                                             hasMarked: hasMarked)
+                                             hasMarked: hasMarked,
+                                             navigationController: homeViewController?.navigationController)
         
         reactionGen?.selectedEmoji.subscribe(onNext: { emojiModel in
             guard let raw = emojiModel.isDefault ? emojiModel.defaultEmoji : ":" + emojiModel.rawEmoji + ":" else { return }
@@ -430,12 +449,10 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     }
     
     private func showReportPanel(_ note: NoteCell.Model) {
-        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
-        
+        let panelMenu = PanelMenuViewController()
         let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "ユーザーをブロック", awesomeIcon: "angry", order: 0),
                                                              .init(title: "投稿を通報する", awesomeIcon: "ban", order: 1)]
         
-        panelMenu.setPanelTitle("その他")
         panelMenu.setupMenu(items: menuItems)
         panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
             guard order >= 0 else { return }
@@ -451,15 +468,13 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             }
         }).disposed(by: disposeBag)
         
-        presentWithSemiModal(panelMenu, animated: true, completion: nil)
+        present(panelMenu, animated: true, completion: nil)
     }
     
     private func showDeletePanel(_ note: NoteCell.Model) {
-        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
-        
+        let panelMenu = PanelMenuViewController()
         let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "投稿を削除する", awesomeIcon: "trash-alt", order: 0)]
         
-        panelMenu.setPanelTitle("その他")
         panelMenu.setupMenu(items: menuItems)
         panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
             guard order >= 0 else { return }
@@ -473,7 +488,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             }
         }).disposed(by: disposeBag)
         
-        presentWithSemiModal(panelMenu, animated: true, completion: nil)
+        present(panelMenu, animated: true, completion: nil)
     }
     
     private func showBlockAlert(_ note: NoteCell.Model) {

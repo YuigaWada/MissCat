@@ -21,11 +21,27 @@ class SenderCell: UITableViewCell, ComponentType {
     @IBOutlet weak var agoLabel: UILabel!
     
     private var isSkelton: Bool = false
+    private var initialized: Bool = false
     
     override func layoutSubviews() {
         iconImage.layer.cornerRadius = iconImage.frame.width / 2
         nameTextView.transformText()
+        
+        guard !initialized else { return }
+        setTheme()
+        initialized = true
     }
+    
+    // MARK: Design
+    
+    private func setTheme() {
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            backgroundColor = colorPattern.base
+            messageTextView.textColor = colorPattern.text
+        }
+    }
+    
+    // MARK: Publics
     
     func transform(isSkelton: Bool = false) -> SenderCell {
         self.isSkelton = isSkelton

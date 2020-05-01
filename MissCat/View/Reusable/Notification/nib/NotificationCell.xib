@@ -80,7 +80,6 @@
                 </button>
                 <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" text="Name" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="ed0-lQ-ZXA" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
                     <rect key="frame" x="77" y="23" width="286" height="35"/>
-                    <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                     <constraints>
                         <constraint firstAttribute="height" constant="35" id="CZX-mY-aMH"/>
                     </constraints>
@@ -121,6 +120,7 @@
                 <outlet property="iconImageView" destination="FT4-DB-FmT" id="vLO-7c-xDC"/>
                 <outlet property="nameTextView" destination="ed0-lQ-ZXA" id="XQP-kF-eDH"/>
                 <outlet property="noteView" destination="yGc-gb-yjT" id="dkN-2p-1Wn"/>
+                <outlet property="separatorView" destination="acT-dO-I9n" id="Tg7-Fa-nCO"/>
                 <outlet property="typeIconView" destination="4So-x3-0vZ" id="9Wa-pU-jk4"/>
                 <outlet property="typeLabel" destination="fse-Rg-Cb8" id="FOl-82-hfa"/>
             </connections>

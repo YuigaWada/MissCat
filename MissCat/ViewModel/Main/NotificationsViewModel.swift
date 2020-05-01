@@ -24,6 +24,8 @@ class NotificationsViewModel {
         self.disposeBag = disposeBag
     }
     
+    // MARK: Load
+    
     func initialLoad() {
         loadNotification {
             // 読み込み完了後、Viewに伝達 & Streamingに接続
@@ -62,6 +64,8 @@ class NotificationsViewModel {
         }).disposed(by: disposeBag)
     }
     
+    // MARK: Streaming
+    
     private func connectStream() {
         guard let apiKey = MisskeyKit.auth.getAPIKey() else { return }
         model.connectStream(apiKey: apiKey).subscribe(onNext: { cellModel in
@@ -83,6 +87,8 @@ class NotificationsViewModel {
         let lastNotifId = cellsModel[0].notificationId
         loadNotification(lastNotifId: lastNotifId, completion: completion)
     }
+    
+    // MARK: Utilities
     
     private func shapeModel(_ cellModel: NotificationCell.Model) {
         if cellModel.type == .mention || cellModel.type == .reply || cellModel.type == .quote,

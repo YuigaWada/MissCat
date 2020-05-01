@@ -7,6 +7,7 @@
 //
 
 import MisskeyKit
+import RxCocoa
 import RxDataSources
 import RxSwift
 import UIKit
@@ -23,27 +24,36 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
     @IBOutlet weak var typeIconView: UILabel!
     @IBOutlet weak var typeLabel: UILabel!
     @IBOutlet weak var defaultNoteBottomConstraint: NSLayoutConstraint!
+    @IBOutlet weak var separatorView: UIView!
     
     var delegate: NoteCellDelegate?
     
-    private let viewModel = NotificationCellViewModel()
+    private var viewModel: NotificationCellViewModel?
     private lazy var emojiView = self.generateEmojiView()
-    
-    //    private let defaultIconColor =
-    private lazy var reactionIconColor = UIColor(red: 231 / 255, green: 76 / 255, blue: 60 / 255, alpha: 1)
-    private lazy var renoteIconColor = UIColor(red: 46 / 255, green: 204 / 255, blue: 113 / 255, alpha: 1)
     
     private var emojiViewOnView: Bool = false
     private var disposeBag = DisposeBag()
     private var imageSessionTasks: [URLSessionDataTask] = []
+    private var mainColor: UIColor = .systemBlue
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        bindTheme()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        bindTheme()
+    }
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        setTheme()
         setupComponents()
         nameTextView.transformText()
         
         // MEMO: MisskeyApiの "i/notifications"はfromUserの自己紹介を流してくれないので、対応するまで非表示にする
-//        noteView.transformText()
+        //        noteView.transformText()
     }
     
     private func setupComponents() {
@@ -56,6 +66,25 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
         guard !emojiViewOnView else { return }
         addSubview(emojiView)
         emojiViewOnView = true
+    }
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
+        
+        theme.map { UIColor(hex: $0.mainColorHex) }.subscribe(onNext: { color in
+            self.followButton.backgroundColor = color
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
+            mainColor = UIColor(hex: mainColorHex)
+        }
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            backgroundColor = colorPattern.base
+            typeLabel.textColor = colorPattern.text
+            separatorView.backgroundColor = colorPattern.sub2
+        }
     }
     
     func initialize() {
@@ -72,94 +101,120 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
         emojiView.initialize()
         
         followButton.isHidden = true
-        cancelImageSession()
+        viewModel?.prepareForReuse()
     }
     
-    func cancelImageSession() {
-        imageSessionTasks.forEach { task in
-            task.cancel()
-        }
-        imageSessionTasks.removeAll()
+    private func getViewModel(with item: NotificationCell.Model) -> NotificationCellViewModel {
+        let input: NotificationCellViewModel.Input = .init(item: item)
+        let viewModel = NotificationCellViewModel(with: input, and: disposeBag)
+        
+        binding(with: viewModel)
+        return viewModel
+    }
+    
+    private func binding(with viewModel: NotificationCellViewModel) {
+        let output = viewModel.output
+        
+        // meta
+        output.name
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { nameMfmString in
+                self.nameTextView.attributedText = nameMfmString.attributed
+                nameMfmString.mfmEngine.renderCustomEmojis(on: self.nameTextView)
+            }).disposed(by: disposeBag)
+        
+        output.note
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { noteMfmString in
+                self.noteView.attributedText = noteMfmString.attributed
+                noteMfmString.mfmEngine.renderCustomEmojis(on: self.noteView)
+            }).disposed(by: disposeBag)
+        
+        output.iconImage
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(iconImageView.rx.image)
+            .disposed(by: disposeBag)
+        
+        output.ago
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(agoLabel.rx.text)
+            .disposed(by: disposeBag)
+        
+        // color
+        output.mainColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(followButton.rx.backgroundColor)
+            .disposed(by: disposeBag)
+        
+        output.textColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { self.followButton.setTitleColor($0, for: .normal) })
+            .disposed(by: disposeBag)
+        
+        output.textColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { self.typeLabel.textColor = $0 })
+            .disposed(by: disposeBag)
+        
+        output.backgroundColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(rx.backgroundColor)
+            .disposed(by: disposeBag)
+        
+        output.selectedBackgroundColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { selectedBackgroundColor in
+                self.selectedBackgroundView = UIView()
+                self.selectedBackgroundView?.backgroundColor = selectedBackgroundColor
+                self.contentView.backgroundColor = nil
+               })
+            .disposed(by: disposeBag)
+        
+        // emoji
+        output.needEmoji
+            .map { !$0 }
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(emojiView.rx.isHidden)
+            .disposed(by: disposeBag)
+        
+        output.emoji
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { self.emojiView.emoji = $0 })
+            .disposed(by: disposeBag)
+        
+        // response
+        output.typeString
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(typeLabel.rx.text)
+            .disposed(by: disposeBag)
+        
+        output.typeIconColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { self.typeIconView.textColor = $0 })
+            .disposed(by: disposeBag)
+        
+        output.typeIconString
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(typeIconView.rx.text)
+            .disposed(by: disposeBag)
+        
+        output.type
+            .map { $0 != .follow }
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(followButton.rx.isHidden)
+            .disposed(by: disposeBag)
     }
     
     func shapeCell(item: NotificationCell.Model) -> NotificationCell {
-        if !item.isMock, item.fromUser?.username == nil {
-            return self
-        }
-        
-        let username = item.fromUser?.username ?? ""
-        
         initialize() // セルの再利用のために各パーツを初期化しておく
         
         // font
         noteView.font = UIFont(name: "Helvetica",
                                size: 11.0)
         
-        // アイコン画像をset
-        let host = item.fromUser?.host ?? ""
-        if let image = Cache.shared.getIcon(username: "\(username)@\(host)") {
-            iconImageView.image = image
-        } else if let iconImageUrl = item.fromUser?.avatarUrl, let iconUrl = URL(string: iconImageUrl) {
-            let task = iconUrl.toUIImage { [weak self] image in
-                guard let self = self, let image = image else { return }
-                
-                DispatchQueue.main.async {
-                    Cache.shared.saveIcon(username: username, image: image) // CHACHE!
-                    self.iconImageView.image = image
-                }
-            }
-            
-            if let task = task {
-                imageSessionTasks.append(task)
-            }
-        }
-        
-        // general
-        
-        nameTextView.attributedText = item.shapedDisplayName?.attributed
-        item.shapedDisplayName?.mfmEngine.renderCustomEmojis(on: nameTextView)
-        
-        agoLabel.text = item.ago.calculateAgo()
-        
-        if let myNote = item.myNote {
-            // note
-            noteView.attributedText = item.myNote?.shapedNote?.attributed
-            
-            // file
-            let fileCount = myNote.files.count
-            if fileCount > 0 {
-                noteView.attributedText = noteView.attributedText + NSAttributedString(string: "\n> \(fileCount)個のファイル ")
-            }
-        }
-        
-        // renote
-        if item.type == .renote {
-            typeIconView.text = "retweet"
-            typeIconView.textColor = renoteIconColor
-            typeLabel.text = "Renote"
-            emojiView.isHidden = true
-        }
-        
-        // reaction
-        else if let reaction = item.reaction {
-            typeIconView.text = "fire-alt"
-            typeIconView.textColor = reactionIconColor
-            typeLabel.text = "Reaction"
-            emojiView.emoji = EmojiHandler.convert2EmojiModel(raw: reaction, external: item.emojis)
-        }
-        
-        // follow
-        else if item.type == .follow {
-            typeIconView.text = "user-friends"
-            typeIconView.textColor = .systemBlue
-            typeLabel.text = "Follow"
-            emojiView.isHidden = true
-            followButton.isHidden = false
-            // MEMO: MisskeyApiの "i/notifications"はfromUserの自己紹介を流してくれないので、対応するまで非表示にする
-            
-//            noteView.attributedText = item.shapedDescritpion?.attributed
-//            item.shapedDescritpion?.mfmEngine.renderCustomEmojis(on: noteView)
-        }
+        let viewModel = getViewModel(with: item)
+        viewModel.setCell()
+        self.viewModel = viewModel
         
         setupGesture(item: item)
         

@@ -35,16 +35,19 @@ class EmojiView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         loadNib()
+        backgroundColor = .clear
     }
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)!
         loadNib()
+        backgroundColor = .clear
     }
     
     func loadNib() {
         if let view = UINib(nibName: "EmojiView", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
+            view.backgroundColor = .clear
             addSubview(view)
         }
     }

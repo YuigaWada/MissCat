@@ -64,6 +64,7 @@
                 <outlet property="descriptionTextView" destination="2Ub-e8-85o" id="H5e-SI-j5G"/>
                 <outlet property="iconView" destination="3M2-tT-IDL" id="bg4-5Z-D6n"/>
                 <outlet property="nameTextView" destination="SfV-fE-pUJ" id="ca9-ab-9kY"/>
+                <outlet property="separatorView" destination="8S3-Ev-eOU" id="ixr-sV-FNa"/>
             </connections>
             <point key="canvasLocation" x="131.8840579710145" y="-64.955357142857139"/>
         </view>

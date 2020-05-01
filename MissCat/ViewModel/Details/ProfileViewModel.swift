@@ -102,9 +102,11 @@ class ProfileViewModel: ViewModelType {
         
         // Description
         if let description = user.description {
+            let textHex = Theme.shared.currentModel?.colorPattern.hex.text
             DispatchQueue.main.async {
                 let shaped = description.mfmPreTransform().mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
-                                                                        externalEmojis: user.emojis)
+                                                                        externalEmojis: user.emojis,
+                                                                        textHex: textHex)
                 
                 self.output.intro.accept(shaped.attributed ?? .init())
                 shaped.mfmEngine.renderCustomEmojis(on: self.input.introYanagi)

@@ -43,6 +43,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     private let disposeBag = DisposeBag()
     
     private lazy var counter = UIBarButtonItem(title: "1500", style: .done, target: self, action: nil)
+    private lazy var placeholderColor: UIColor = Theme.shared.currentModel?.colorPattern.ui.sub2 ?? .lightGray
     
     // MARK: Life Cycle
     
@@ -55,6 +56,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
         
         viewModel.setInnerNote()
         setupComponent(with: viewModel)
+        setTheme()
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(keyboardWillShow(_:)),
                                                name: UIResponder.keyboardWillShowNotification,
@@ -86,6 +88,21 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     func setTargetNote(_ note: NoteCell.Model, type: PostType) {
         targetNote = note
         postType = type
+    }
+    
+    // MARK: Design
+    
+    private func setTheme() {
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            view.backgroundColor = colorPattern.base
+        }
+        mainTextView.textColor = placeholderColor
+    }
+    
+    /// ステータスバーの文字色
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        let currentColorMode = Theme.shared.currentModel?.colorMode ?? .light
+        return currentColorMode == .light ? UIStatusBarStyle.default : UIStatusBarStyle.lightContent
     }
     
     // MARK: Setup
@@ -253,11 +270,10 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     }
     
     private func showNSFWSettings() {
-        guard let panelMenu = getViewController(name: "panel-menu") as? PanelMenuViewController else { return }
+        let panelMenu = PanelMenuViewController()
         let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "投稿を閲覧注意にする", awesomeIcon: "sticky-note", order: 0),
                                                              .init(title: "画像を閲覧注意にする", awesomeIcon: "image", order: 1)]
         
-        panelMenu.setPanelTitle("NSFWの設定")
         panelMenu.setupMenu(items: menuItems)
         panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
             guard order >= 0 else { return }
@@ -270,7 +286,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
             }
         }).disposed(by: disposeBag)
         
-        presentWithSemiModal(panelMenu, animated: true, completion: nil)
+        present(panelMenu, animated: true, completion: nil)
     }
     
     private func showNSFWAlert() {
@@ -442,16 +458,16 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     // MARK: Delegate
     
     func textViewDidBeginEditing(_ textView: UITextView) {
-        if mainTextView.textColor == .lightGray {
+        if mainTextView.textColor == placeholderColor {
             mainTextView.text = ""
-            mainTextView.textColor = .black
+            mainTextView.textColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
         }
     }
     
     func textViewDidEndEditing(_ textView: UITextView) {
         if mainTextView.text == "" {
             mainTextView.text = "What's happening?"
-            mainTextView.textColor = .lightGray
+            mainTextView.textColor = placeholderColor
         }
     }
     
