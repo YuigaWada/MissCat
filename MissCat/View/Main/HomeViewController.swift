@@ -180,7 +180,8 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     private func bindTheme() {
         let theme = Theme.shared.theme
         
-        theme.map { $0.tab }.subscribe(onNext: { _ in
+        theme.map { $0 }.subscribe(onNext: { theme in
+            self.searchIconColor = theme.colorMode == .light ? .black : .white
             self.reloadPager() // タブをリロード
         }).disposed(by: disposeBag)
         
@@ -191,17 +192,18 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate,
     }
     
     private func setTheme() {
-        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
-            let mainColor = UIColor(hex: mainColorHex)
-            view.window?.tintColor = mainColor
-            selectedBar.backgroundColor = mainColor
-        }
+        guard let theme = Theme.shared.currentModel else { return }
+        let mainColorHex = theme.mainColorHex
+        let mainColor = UIColor(hex: mainColorHex)
+        view.window?.tintColor = mainColor
+        selectedBar.backgroundColor = mainColor
         
-        if let colorPattern = Theme.shared.currentModel?.colorPattern {
-            changeBackground(to: colorPattern.ui.base)
-            borderColor = colorPattern.ui.sub2
-            UINavigationBar.appearance().barTintColor = colorPattern.ui.base
-        }
+        let colorPattern = theme.colorPattern
+        changeBackground(to: colorPattern.ui.base)
+        borderColor = colorPattern.ui.sub2
+        UINavigationBar.appearance().barTintColor = colorPattern.ui.base
+        
+        searchIconColor = theme.colorMode == .light ? .black : .white
     }
     
     private func changeBackground(to color: UIColor) {
