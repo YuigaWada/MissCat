@@ -18,21 +18,16 @@ public class Theme {
     var currentModel: Theme.Model?
     var theme: PublishRelay<Theme.Model> = .init()
     
-    private var currentUserId: String?
-    
-    /// userIdからcurrentModelをsetします
-    /// - Parameter userId: UserId
-    func set(userId: String) {
-        var currentModel = Model.get(userId: userId)
-        
+    /// currentModelをsetします
+    func set() {
+        var currentModel = Model.get()
         if currentModel == nil {
             guard let defaultModel = Model.getDefault() else { return }
-            Model.save(with: defaultModel, userId: userId) // 存在しない場合はデフォルトの設定を保存しておく
+            Model.save(with: defaultModel) // 存在しない場合はデフォルトの設定を保存しておく
             currentModel = defaultModel
         }
         
         self.currentModel = currentModel
-        currentUserId = userId
     }
     
     /// viewの再launchが必要か
@@ -51,14 +46,12 @@ public class Theme {
     /// 新しいモデルを保存します
     /// - Parameter newModel: Theme.Model
     func save(with newModel: Theme.Model) {
-        guard let currentUserId = currentUserId else { return }
-        
         // 同じならばsaveしない
         if let currentModel = currentModel, currentModel.isEqual(to: newModel) {
             return
         }
         
-        Model.save(with: newModel, userId: currentUserId)
+        Model.save(with: newModel)
         
         currentModel = newModel
         theme.accept(newModel)
@@ -217,20 +210,20 @@ extension Theme {
         
         // MARK: GET/SET
         
-        static func get(userId: String) -> Model? {
-            let key = getKey(userId)
+        static func get() -> Model? {
+            let key = getKey()
             guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
             return try? JSONDecoder().decode(Model.self, from: data)
         }
         
-        static func save(with target: Model, userId: String) {
-            let key = getKey(userId)
+        static func save(with target: Model) {
+            let key = getKey()
             let data = try? JSONEncoder().encode(target)
             UserDefaults.standard.set(data, forKey: key)
         }
         
-        private static func getKey(_ userId: String) -> String {
-            return "\(userId)-theme"
+        private static func getKey() -> String {
+            return "theme-key"
         }
         
         static func getDefault() -> Model? {
