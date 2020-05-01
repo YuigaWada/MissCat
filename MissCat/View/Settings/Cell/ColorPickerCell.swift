@@ -8,6 +8,7 @@
 
 import ChromaColorPicker
 import Eureka
+import RxCocoa
 import RxSwift
 import UIKit
 
@@ -56,10 +57,14 @@ public class ColorPickerCell: Cell<String>, CellType {
     
     private func setupTapGesture() {
         setTapGesture(disposeBag, closure: {
-            let picker = self.prepareColorPicker()
-            UIView.animate(withDuration: 0.15, delay: 0, options: .curveEaseInOut, animations: {
-                picker?.alpha = 1
-            })
+            self.showMenu()
+        })
+    }
+    
+    private func showColorPicker() {
+        let picker = prepareColorPicker()
+        UIView.animate(withDuration: 0.15, delay: 0, options: .curveEaseInOut, animations: {
+            picker?.alpha = 1
         })
     }
     
@@ -76,6 +81,30 @@ public class ColorPickerCell: Cell<String>, CellType {
         }).disposed(by: disposeBag)
         
         return picker
+    }
+    
+    private func showMenu() {
+        guard let parent = parentViewController else { return }
+        let panelMenu = PanelMenuViewController()
+        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "デフォルトに戻す", awesomeIcon: "", order: 0),
+                                                             .init(title: "カスタムカラーを設定", awesomeIcon: "", order: 1)]
+        
+        panelMenu.setupMenu(items: menuItems)
+        panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
+            guard order >= 0 else { return }
+            panelMenu.dismiss(animated: true, completion: nil)
+            
+            switch order {
+            case 0: // Default
+                self.setColor(.systemBlue)
+            case 1: // Custom
+                self.showColorPicker()
+            default:
+                break
+            }
+        }).disposed(by: disposeBag)
+        
+        parent.present(panelMenu, animated: true, completion: nil)
     }
 }
 
