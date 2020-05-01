@@ -46,8 +46,10 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
         addMenu(to: alert, title: "ホーム", kind: .home)
         addMenu(to: alert, title: "ローカル", kind: .local)
         addMenu(to: alert, title: "グローバル", kind: .global)
-        addMenu(to: alert, title: "ユーザー", kind: .user)
-        addMenu(to: alert, title: "リスト", kind: .list)
+        
+        // 以下２つは別のアップデートで実装する
+//        addMenu(to: alert, title: "ユーザー", kind: .user)
+//        addMenu(to: alert, title: "リスト", kind: .list)
         
         parentViewController?.present(alert, animated: true)
     }
