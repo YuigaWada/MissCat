@@ -48,11 +48,16 @@ class ColorPicker: UIView, ChromaColorPickerDelegate {
     }
     
     private func setupBlur() {
-        let effect = UIBlurEffect(style: .extraLight)
-        let blurView = UIVisualEffectView(effect: effect)
-        
+        let blurView = getBlurView()
         blurView.frame = frame
         addSubview(blurView)
+    }
+    
+    private func getBlurView() -> UIVisualEffectView {
+        let colorMode = Theme.shared.currentModel?.colorMode ?? .light
+        let style: UIBlurEffect.Style = colorMode == .light ? .light : .dark
+        
+        return UIVisualEffectView(effect: UIBlurEffect(style: style))
     }
     
     private func setupColorPicker(with initialColor: UIColor) {
