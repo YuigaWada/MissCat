@@ -59,11 +59,16 @@ class DesignSettingsViewController: FormViewController {
         return theme.colorMode == .light ? theme.colorPattern.ui.base : theme.colorPattern.ui.sub2
     }
     
+    private func changeSeparatorStyle() {
+        let currentColorMode = Theme.shared.currentModel?.colorMode ?? .light
+        tableView.separatorStyle = currentColorMode == .light ? .singleLine : .none
+    }
+    
     // MARK: Setup
     
     private func setupComponent() {
         title = "デザイン"
-        tableView.separatorStyle = .none
+        changeSeparatorStyle()
     }
     
     private func setTable() {
