@@ -103,6 +103,9 @@ class SettingsViewController: UITableViewController {
             
             designSettings.homeViewController = homeViewController
             navigationController?.pushViewController(designSettings, animated: true)
+        } else if index == 3 {
+            let licenseTable = LicenseTableViewController()
+            navigationController?.pushViewController(licenseTable, animated: true)
         }
     }
 }
