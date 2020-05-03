@@ -136,26 +136,6 @@ class NoteCellViewModel: ViewModelType {
         setFooter(from: item)
     }
     
-    func setReactionCell(with item: NoteCell.Reaction, to reactionCell: ReactionCell) -> ReactionCell {
-        guard let rawEmoji = item.rawEmoji else { return reactionCell }
-        
-        if let customEmojiUrl = item.url {
-            reactionCell.setup(noteId: item.noteId,
-                               count: item.count,
-                               customEmoji: customEmojiUrl,
-                               isMyReaction: item.isMyReaction,
-                               rawReaction: rawEmoji)
-        } else {
-            reactionCell.setup(noteId: item.noteId,
-                               count: item.count,
-                               rawDefaultEmoji: rawEmoji,
-                               isMyReaction: item.isMyReaction,
-                               rawReaction: rawEmoji)
-        }
-        
-        return reactionCell
-    }
-    
     private func setColor() {
         output.backgroundColor.accept(properBackgroundColor)
         output.separatorBackgroundColor.accept(Theme.shared.currentModel?.colorPattern.ui.sub2 ?? .lightGray)

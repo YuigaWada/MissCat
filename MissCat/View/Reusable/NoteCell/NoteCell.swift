@@ -593,7 +593,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         if index < reactionsModel.count {
             let item = reactionsModel[index]
             
-            let shapedCell = viewModel.setReactionCell(with: item, to: cell)
+            let shapedCell = cell.transform(with: item)
             shapedCell.delegate = self
             
             return shapedCell
