@@ -23,6 +23,7 @@ class TimelineViewModel: ViewModelType {
         let userId: String?
         let listId: String?
         let query: String?
+        let lockScroll: Bool
         let loadLimit: Int
     }
     
@@ -112,6 +113,7 @@ class TimelineViewModel: ViewModelType {
             
             print(error)
         }, onCompleted: {
+            self.output.lockTableScroll.accept(self.input.lockScroll) // ロックの初期状態を決める
             DispatchQueue.main.async {
                 self.output.finishedLoading.accept(true)
                 
@@ -285,8 +287,10 @@ class TimelineViewModel: ViewModelType {
         }
         
         return loadNotes(untilId: untilId).do(onCompleted: {
-            self.output.lockTableScroll.accept(false) // スクロールのロックを解除
-            self.output.reserveLockTrigger.accept(())
+            if self.input.lockScroll {
+                self.output.lockTableScroll.accept(false) // スクロールのロックを解除
+                self.output.reserveLockTrigger.accept(())
+            }
             self.updateNotes(new: self.cellsModel)
         })
     }
