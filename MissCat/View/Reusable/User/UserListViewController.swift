@@ -34,7 +34,7 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
         let viewModel: UserListViewModel = .init(with: input, and: disposeBag)
         self.viewModel = viewModel
         self.withTopShadow = withTopShadow
-        mainTableView.lockScroll?.accept(lockScroll)
+        mainTableView.lockScroll = Observable.of(lockScroll)
     }
     
     // MARK: LifeCycle

@@ -199,7 +199,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             self.mainTableView.reserveLock() // 次にセルがupdateされた時にスクロールを固定し直す
         }).disposed(by: disposeBag)
         
-        mainTableView.lockScroll = output.lockTableScroll
+        mainTableView.lockScroll = output.lockTableScroll.asObservable()
     }
     
     // MARK: Gesture

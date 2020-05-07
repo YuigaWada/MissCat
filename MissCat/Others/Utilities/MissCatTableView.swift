@@ -15,7 +15,7 @@ import UIKit
 class MissCatTableView: PlaceholderTableView {
     private var _lockScroll: Bool = true
     private var hasReseverd: Bool = false
-    var lockScroll: PublishRelay<Bool>? {
+    var lockScroll: Observable<Bool>? {
         didSet {
             lockScroll?.subscribe(onNext: { self._lockScroll = $0 }).disposed(by: disposeBag)
         }
