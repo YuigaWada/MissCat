@@ -13,8 +13,8 @@ import UIKit
 /// スクロール位置を固定するTableView
 /// Qiitaに記事書いた→ https://qiita.com/yuwd/items/bc152a0c9c4ce7754003
 class MissCatTableView: PlaceholderTableView {
-    var _lockScroll: Bool = true
-    var hasReseverd: Bool = false
+    private var _lockScroll: Bool = true
+    private var hasReseverd: Bool = false
     var lockScroll: PublishRelay<Bool>? {
         didSet {
             lockScroll?.subscribe(onNext: { self._lockScroll = $0 }).disposed(by: disposeBag)
