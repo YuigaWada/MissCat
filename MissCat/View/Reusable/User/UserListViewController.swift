@@ -24,7 +24,7 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
     
     // MARK: I/O
     
-    func setup(type: UserListType, userId: String? = nil, query: String? = nil, listId: String? = nil, withTopShadow: Bool = false) {
+    func setup(type: UserListType, userId: String? = nil, query: String? = nil, lockScroll: Bool = true, listId: String? = nil, withTopShadow: Bool = false) {
         let input = UserListViewModel.Input(dataSource: dataSource,
                                             type: type,
                                             userId: userId,
@@ -34,6 +34,7 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
         let viewModel: UserListViewModel = .init(with: input, and: disposeBag)
         self.viewModel = viewModel
         self.withTopShadow = withTopShadow
+        mainTableView.lockScroll?.accept(lockScroll)
     }
     
     // MARK: LifeCycle
