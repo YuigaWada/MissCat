@@ -192,6 +192,10 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             homeViewController.changedStreamState(success: success)
         }).disposed(by: disposeBag)
         
+        output.reserveLockTrigger.subscribe(onNext: { _ in
+            self.mainTableView.reserveLock() // 次にセルがupdateされた時にスクロールを固定し直す
+        }).disposed(by: disposeBag)
+        
         mainTableView.lockScroll = output.lockTableScroll
     }
     
@@ -221,11 +225,6 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         
         let index = indexPath.row
         let item = viewModel.cellsModel[index]
-        
-        if item.identity == viewModel.state.reloadTopModelId { // untilLoadが完了した場合
-            viewModel.state.reloadTopModelId = nil
-            mainTableView.lockScroll?.accept(true) // スクロールを固定し直す
-        }
         
         // View側で NoteCell / RenoteeCell / PromotionCell を区別する
         if item.isPromotionCell {
