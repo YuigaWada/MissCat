@@ -14,7 +14,7 @@ import UIKit
 
 typealias NotificationDataSource = RxTableViewSectionedAnimatedDataSource<NotificationCell.Section>
 class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDelegate {
-    @IBOutlet weak var mainTableView: UITableView!
+    @IBOutlet weak var mainTableView: MissCatTableView!
     
     private var viewModel: NotificationsViewModel?
     private let disposeBag = DisposeBag()
@@ -77,6 +77,7 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
         mainTableView.register(UINib(nibName: "NoteCell", bundle: nil), forCellReuseIdentifier: "NoteCell")
         
         mainTableView.rx.setDelegate(self).disposed(by: disposeBag)
+        mainTableView.lockScroll = Observable.of(false)
     }
     
     private func setupDataSource() -> NotificationDataSource {
