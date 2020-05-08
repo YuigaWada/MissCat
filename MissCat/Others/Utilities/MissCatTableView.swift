@@ -21,6 +21,7 @@ class MissCatTableView: PlaceholderTableView {
         }
     }
     
+    var spinnerHeight: CGFloat = 0
     private lazy var spinner = UIActivityIndicatorView(style: .gray)
     private var disposeBag = DisposeBag()
     private var onTop: Bool {
@@ -105,6 +106,9 @@ class MissCatTableView: PlaceholderTableView {
                                multiplier: 1.0,
                                constant: 0)
         ])
+        
+        parentView.layoutIfNeeded()
+        spinnerHeight = parentView.frame.height
     }
     
     func stopSpinner() {

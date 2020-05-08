@@ -60,7 +60,8 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     private var childVCs: [TimelineViewController] = []
     
-    private var maxScroll: CGFloat {
+    // containerScrollView ← ContainerView(XLPagerTabStrip) ← tlScrollView の順で入れ子にScrollViewが載っている
+    private var containerMaxScroll: CGFloat {
         updateAnimateBlurHeight() // 自己紹介文の高さが変更されるので、Blurの高さも変更する
         pagerTab.layoutIfNeeded()
         return pagerTab.frame.origin.y - getSafeAreaSize().height - 10 // 10 = 微調整
@@ -455,11 +456,12 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         var needContainerScroll: Bool = true
         // tlScrollViewをスクロール
         if scroll > 0 {
-            if containerScrollView.contentOffset.y >= maxScroll {
+            if containerScrollView.contentOffset.y >= containerMaxScroll {
                 tlScrollView.contentOffset.y += scroll
                 needContainerScroll = false
                 
-                if tlScrollView.contentOffset.y >= tlScrollView.contentSize.height - containerView.frame.height { // スクロールの上限
+                let tlMaxScroll = tlScrollView.contentSize.height - containerView.frame.height + pagerTab.frame.height + tlScrollView.spinnerHeight
+                if tlScrollView.contentOffset.y >= tlMaxScroll { // スクロールの上限
                     tlScrollView.contentOffset.y -= scroll
                 }
             }
@@ -476,7 +478,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             scrollView.contentOffset.y = scrollBegining
         } else {
             // スクロールがmaxScrollの半分を超えたあたりから、fractionComplete: 0→1と動かしてanimateさせる
-            let blurProportion = containerScrollView.contentOffset.y * 2 / maxScroll - 1
+            let blurProportion = containerScrollView.contentOffset.y * 2 / containerMaxScroll - 1
             scrollBegining = scrollView.contentOffset.y
             
             // ブラーアニメーションをかける
