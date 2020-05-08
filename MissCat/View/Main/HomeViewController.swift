@@ -6,6 +6,7 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import Agrume
 import AVKit
 import MisskeyKit
 import PolioPager
@@ -554,6 +555,11 @@ extension HomeViewController: NoteCellDelegate {
     func vote(choice: Int, to noteId: String) {
         // TODO: modelの変更 / api処理
         viewModel.vote(choice: choice, to: noteId)
+    }
+    
+    func showImage(_ urls: [URL], start startIndex: Int) {
+        let agrume = Agrume(urls: urls, startIndex: startIndex)
+        agrume.show(from: self) // 画像を表示
     }
     
     func playVideo(url: String) {

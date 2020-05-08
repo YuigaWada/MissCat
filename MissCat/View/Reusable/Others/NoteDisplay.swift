@@ -60,6 +60,10 @@ class NoteDisplay: UIViewController, NoteCellDelegate, UserCellDelegate {
         homeViewController?.vote(choice: choice, to: noteId)
     }
     
+    func showImage(_ urls: [URL], start startIndex: Int) {
+        homeViewController?.showImage(urls, start: startIndex)
+    }
+    
     func playVideo(url: String) {
         homeViewController?.playVideo(url: url)
     }

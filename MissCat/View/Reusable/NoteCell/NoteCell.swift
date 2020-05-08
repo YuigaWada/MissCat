@@ -29,6 +29,7 @@ protocol NoteCellDelegate {
     func tappedLink(text: String)
     func move2Profile(userId: String)
     
+    func showImage(_ urls: [URL], start startIndex: Int)
     func playVideo(url: String)
 }
 
