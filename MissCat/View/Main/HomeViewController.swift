@@ -553,7 +553,6 @@ extension HomeViewController: NoteCellDelegate {
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}
     
     func vote(choice: [Int], to noteId: String) {
-        // TODO: modelの変更 / api処理
         viewModel.vote(choice: choice, to: noteId)
     }
     

@@ -15,7 +15,7 @@ class NoteCellViewModel: ViewModelType {
     // MARK: I/O
     
     struct Input {
-        let cellModel: NoteCell.Model
+        var cellModel: NoteCell.Model
         let isDetailMode: Bool
         
         // Modelに渡さなければならないので看過
@@ -282,6 +282,19 @@ class NoteCellViewModel: ViewModelType {
         input.cellModel.myReaction = nil
         setReactionCount(from: input.cellModel, startCount: -1)
         model.cancelReaction(noteId: noteId)
+    }
+    
+    func updateVote(choices: [Int]) {
+        guard let poll = input.cellModel.poll,
+            let currentChoices = poll.choices else { return }
+        
+        choices.forEach { choiceIndex in
+            guard choiceIndex >= 0, choiceIndex < currentChoices.count else { return }
+            let currentVotes = currentChoices[choiceIndex]?.votes ?? 0
+            
+            input.cellModel.poll?.choices?[choiceIndex]?.votes = currentVotes + 1
+            input.cellModel.poll?.choices?[choiceIndex]?.isVoted = true
+        }
     }
     
     private func updateReactions(new: [NoteCell.Reaction]) {

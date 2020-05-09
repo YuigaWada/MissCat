@@ -35,6 +35,7 @@ class PollView: UIView {
     private var pollBars: [PollBar] = []
     private var selectedId: [Int] = []
     private var allowedMultiple: Bool = false // 複数選択可かどうか
+    private var finishVoting: Bool = false
     private let disposeBag = DisposeBag()
     
     // MARK: Life Cycle
@@ -82,7 +83,8 @@ class PollView: UIView {
         pollButton.contentEdgeInsets = .init(top: 5, left: 10, bottom: 5, right: 10)
         
         pollButton.rx.tap.subscribe(onNext: { _ in
-            guard self.selectedId.count > 0 else { return }
+            guard self.selectedId.count > 0, !self.finishVoting else { return }
+            self.finishVoting = true
             self.updatePoll(tapped: self.selectedId)
             self.disablePollButton()
             self.voteTriggar.accept(self.selectedId)
@@ -98,7 +100,7 @@ class PollView: UIView {
         votesCountSum = choices.map { Float($0.votes ?? 0) }.reduce(0) { x, y in x + y }
         pollBarCount = choices.count
         
-        let canSeeRate: Bool = choices.map { $0.isVoted ?? false }.reduce(false) { x, y in x || y } // 一度でも自分は投票したか？
+        let finishVoting: Bool = choices.map { $0.isVoted ?? false }.reduce(false) { x, y in x || y } // 一度でも自分は投票したか？
         
         for id in 0 ..< choices.count { // 実際にvoteする際に、何番目の選択肢なのかサーバーに送信するのでforで回す
             let choice = choices[id]
@@ -109,23 +111,25 @@ class PollView: UIView {
                                   name: choice.text ?? "",
                                   voteCount: count,
                                   rate: votesCountSum == 0 ? 0 : Float(count) / votesCountSum,
-                                  canSeeRate: canSeeRate,
-                                  isVoted: choice.isVoted ?? false)
+                                  finishVoting: finishVoting,
+                                  myVoted: choice.isVoted ?? false)
             
-            setupPollBarTapGesture(with: pollBar)
+            setupPollBarTapGesture(with: pollBar, finishVoting)
             pollBars.append(pollBar)
             stackView.addArrangedSubview(pollBar)
         }
         
-        if canSeeRate {
+        if finishVoting {
             pollButton.setTitle("投票済", for: .normal)
         }
         
         allowedMultiple = pollModel.multiple ?? false
+        self.finishVoting = finishVoting
     }
     
     func initialize() {
         pollBars.removeAll()
+        selectedId.removeAll()
         stackView.arrangedSubviews.forEach {
             $0.removeFromSuperview()
         }
@@ -135,9 +139,11 @@ class PollView: UIView {
     
     // MARK: Privates
     
-    private func setupPollBarTapGesture(with pollBar: PollBar) {
+    private func setupPollBarTapGesture(with pollBar: PollBar, _ cannotVote: Bool) {
+        guard !cannotVote else { return }
+        
         pollBar.setTapGesture(disposeBag, closure: {
-            if self.selectedId.count > 0, !self.allowedMultiple {
+            if self.selectedId.count > 0, !self.allowedMultiple { // 選択は一つまでの時
                 self.pollBars
                     .filter { self.selectedId.contains($0.id) }
                     .forEach { $0.changeRadioState() } // 既存の選択を解除する
@@ -190,7 +196,7 @@ extension PollView {
         var idOfTapped: Observable<Int>? // PollBarのidを流す
         
         private lazy var style: Style = getStyle()
-        private var canSeeRate: Bool = false
+        private var finishVoting: Bool = false
         
         private var nameLabel: UILabel = .init()
         private var rateLabel: UILabel = .init()
@@ -208,18 +214,18 @@ extension PollView {
         
         // MARK: LifeCycle
         
-        init(frame: CGRect, id: Int, name: String, voteCount: Int, rate: Float, canSeeRate: Bool, isVoted: Bool, style: Style? = nil) {
+        init(frame: CGRect, id: Int, name: String, voteCount: Int, rate: Float, finishVoting: Bool, myVoted: Bool, style: Style? = nil) {
             super.init(frame: frame)
             self.frame = frame
             self.style = style ?? self.style
             self.id = id
-            self.canSeeRate = canSeeRate
+            self.finishVoting = finishVoting
             self.voteCount = voteCount
             
-            let progressView = setupProgressView(rate: rate, canSeeRate: canSeeRate, style: self.style)
-            let radioButton = setupRadioButton(isVoted: isVoted)
-            let nameLabel = setupNameLabel(name: name, isVoted: isVoted, style: self.style, radioButton: radioButton)
-            let rateLabel = setupRateLabel(rate: rate, canSeeRate: canSeeRate, style: self.style)
+            let progressView = setupProgressView(rate: rate, canSeeRate: finishVoting, style: self.style)
+            let radioButton = setupRadioButton(finishVoting: finishVoting)
+            let nameLabel = setupNameLabel(name: name, finishVoting: finishVoting, style: self.style, radioButton: radioButton)
+            let rateLabel = setupRateLabel(rate: rate, canSeeRate: finishVoting, style: self.style)
             
             changeStyle(with: self.style)
             
@@ -227,6 +233,8 @@ extension PollView {
             self.radioButton = radioButton
             self.nameLabel = nameLabel
             self.rateLabel = rateLabel
+            
+            isUserInteractionEnabled = !finishVoting
         }
         
         required init?(coder: NSCoder) {
@@ -283,7 +291,7 @@ extension PollView {
             self.progressConstraint = newProgressConstraint
             
             UIView.animate(withDuration: 0.5, delay: 0, options: .curveEaseInOut, animations: {
-                if !self.canSeeRate {
+                if !self.finishVoting {
                     self.progressView.alpha = 1
                     self.rateLabel.alpha = 1
                 }
@@ -291,7 +299,7 @@ extension PollView {
                 self.radioButton?.alpha = 0
                 self.layoutIfNeeded() // AutoLayout更新
             }, completion: { _ in
-                self.canSeeRate = true
+                self.finishVoting = true
             })
         }
         
@@ -358,7 +366,6 @@ extension PollView {
                                    constant: 0)
             ])
             
-            setVoteGesture()
             progressView.alpha = canSeeRate ? 1 : 0 // 表示OKなら表示
             self.progressConstraint = progressConstraint
             
@@ -366,7 +373,7 @@ extension PollView {
         }
         
         // 選択肢のラベルを設定
-        private func setupNameLabel(name: String, isVoted: Bool, style: Style, radioButton: UIView) -> UILabel {
+        private func setupNameLabel(name: String, finishVoting: Bool, style: Style, radioButton: UIView) -> UILabel {
             let pollNameLabel = UILabel()
             pollNameLabel.numberOfLines = 0
             pollNameLabel.lineBreakMode = NSLineBreakMode.byWordWrapping
@@ -384,13 +391,25 @@ extension PollView {
             pollNameLabel.translatesAutoresizingMaskIntoConstraints = false
             addSubview(pollNameLabel)
             
-            let pollNameConstraint = NSLayoutConstraint(item: pollNameLabel,
+            var pollNameConstraint: NSLayoutConstraint
+            if finishVoting {
+                pollNameConstraint = NSLayoutConstraint(item: pollNameLabel,
+                                                        attribute: .left,
+                                                        relatedBy: .equal,
+                                                        toItem: self,
+                                                        attribute: .left,
+                                                        multiplier: 1.0,
+                                                        constant: 10)
+            } else {
+                pollNameConstraint = NSLayoutConstraint(item: pollNameLabel,
                                                         attribute: .left,
                                                         relatedBy: .equal,
                                                         toItem: radioButton,
                                                         attribute: .right,
                                                         multiplier: 1.0,
                                                         constant: 10)
+            }
+            
             // AutoLayout
             addConstraints([
                 pollNameConstraint,
@@ -449,7 +468,7 @@ extension PollView {
             return pollRateLabel
         }
         
-        private func setupRadioButton(isVoted: Bool) -> RadioButton {
+        private func setupRadioButton(finishVoting: Bool) -> RadioButton {
             // color
             let theme = Theme.shared.currentModel
             
@@ -457,10 +476,6 @@ extension PollView {
                                     normalColor: theme?.colorPattern.ui.sub2 ?? .black,
                                     selectedColor: theme?.colorPattern.ui.sub2 ?? .black) // getMainColor())
             radio.layer.borderColor = theme?.colorPattern.ui.sub2.cgColor ?? UIColor.lightGray.cgColor
-            
-            if isVoted {
-                radio.change(state: .on)
-            }
             
             // autolayout
             radio.translatesAutoresizingMaskIntoConstraints = false
@@ -498,6 +513,8 @@ extension PollView {
                                    multiplier: 0.7,
                                    constant: 0)
             ])
+            
+            radio.alpha = finishVoting ? 0 : 1
             return radio
         }
         
@@ -511,26 +528,6 @@ extension PollView {
             rateLabel.textColor = style.textColor
         }
         
-        // Voteジェスチャー(タップジェスチャー)を設定
-        private func setVoteGesture() {
-            let tapGesture = UITapGestureRecognizer()
-//            tapGesture.rx.event.subscribe(onNext: { _ in
-//                self.changeRadioState()
-//            }).disposed(by: disposeBag)
-            
-            isUserInteractionEnabled = !canSeeRate
-            addGestureRecognizer(tapGesture)
-            setupVisualizePollTrigger(with: tapGesture.rx.event.asObservable())
-        }
-        
-        // 使用者が投票したら、投票率と投票数を表示する
-        private func setupVisualizePollTrigger(with observable: Observable<UITapGestureRecognizer>) {
-//            observable.subscribe(onNext: { _ in
-//                guard !self.canSeeRate else { return }
-//                self.visualizePoll()
-//            }).disposed(by: disposeBag)
-        }
-        
         // 未投票時は見えなくなっているものを見えるようにする
         private func visualizePoll() {
             UIView.animate(withDuration: 0.5, delay: 0, options: .curveEaseInOut, animations: {
@@ -538,7 +535,7 @@ extension PollView {
                 self.rateLabel.alpha = 1
                 
             }, completion: { _ in
-                self.canSeeRate = true
+                self.finishVoting = true
             })
         }
         

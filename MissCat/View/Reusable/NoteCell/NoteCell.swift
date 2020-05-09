@@ -170,6 +170,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         self.setupCollectionView()
         self.setupFileContainer()
         self.setupInnerRenoteDisplay()
+        self.setupPoll()
         self.selectedBackgroundView = UIView()
         return {}
     }()
@@ -241,6 +242,14 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             guard let renoteTarget = self.renoteTarget else { return }
             self.delegate?.move2PostDetail(item: renoteTarget)
         }
+    }
+    
+    private func setupPoll() {
+        pollView.voteTriggar.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { ids in
+            guard let noteId = self.noteId else { return }
+            self.viewModel?.updateVote(choices: ids)
+            self.delegate?.vote(choice: ids, to: noteId)
+        }).disposed(by: disposeBag)
     }
     
     private func binding(viewModel: ViewModel, noteId: String) {
@@ -326,10 +335,6 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
                 self.pollView.isHidden = false
                 self.pollView.setPoll(with: poll)
                 self.pollViewHeightConstraint.constant = self.pollView.height
-                
-                self.pollView.voteTriggar.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { ids in
-                    self.delegate?.vote(choice: ids, to: noteId)
-                }).disposed(by: self.disposeBag)
             }).disposed(by: disposeBag)
         
         // general
