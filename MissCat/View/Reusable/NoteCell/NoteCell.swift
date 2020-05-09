@@ -24,7 +24,7 @@ protocol NoteCellDelegate {
     func move2PostDetail(item: NoteCell.Model)
     
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool)
-    func vote(choice: Int, to noteId: String)
+    func vote(choice: [Int], to noteId: String)
     
     func tappedLink(text: String)
     func move2Profile(userId: String)
@@ -327,8 +327,8 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
                 self.pollView.setPoll(with: poll)
                 self.pollViewHeightConstraint.constant = self.pollView.height
                 
-                self.pollView.voteTriggar?.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { id in
-                    self.delegate?.vote(choice: id, to: noteId)
+                self.pollView.voteTriggar.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { ids in
+                    self.delegate?.vote(choice: ids, to: noteId)
                 }).disposed(by: self.disposeBag)
             }).disposed(by: disposeBag)
         

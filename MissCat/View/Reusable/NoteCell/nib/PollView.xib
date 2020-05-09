@@ -10,6 +10,7 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="PollView" customModule="MissCat" customModuleProvider="target">
             <connections>
+                <outlet property="pollButton" destination="OZI-eT-iPn" id="KwL-48-h9f"/>
                 <outlet property="stackView" destination="TgV-RA-iiy" id="CRc-lK-gbR"/>
                 <outlet property="totalPollLabel" destination="afw-bD-Suz" id="eAl-tQ-ezt"/>
             </connections>
@@ -22,21 +23,27 @@
                 <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillEqually" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="TgV-RA-iiy">
                     <rect key="frame" x="0.0" y="18" width="414" height="318"/>
                 </stackView>
-                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="計: n票" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="afw-bD-Suz">
-                    <rect key="frame" x="0.0" y="356" width="47.5" height="18"/>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="n票" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="afw-bD-Suz">
+                    <rect key="frame" x="390" y="341" width="24" height="18"/>
                     <fontDescription key="fontDescription" type="system" pointSize="15"/>
                     <nil key="textColor"/>
                     <nil key="highlightedColor"/>
                 </label>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OZI-eT-iPn">
+                    <rect key="frame" x="0.0" y="341" width="30" height="30"/>
+                    <state key="normal" title="Poll"/>
+                </button>
             </subviews>
             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
             <constraints>
-                <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="afw-bD-Suz" secondAttribute="bottom" id="2gs-bl-keq"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="OZI-eT-iPn" secondAttribute="bottom" constant="3" id="06Z-ij-ooB"/>
                 <constraint firstItem="TgV-RA-iiy" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="2kv-vA-TUy"/>
                 <constraint firstItem="TgV-RA-iiy" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="18" id="PXe-Do-4fN"/>
-                <constraint firstItem="afw-bD-Suz" firstAttribute="top" secondItem="TgV-RA-iiy" secondAttribute="bottom" constant="20" id="ai6-2S-tkY"/>
-                <constraint firstItem="afw-bD-Suz" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="c9C-jE-L25"/>
+                <constraint firstItem="afw-bD-Suz" firstAttribute="top" secondItem="TgV-RA-iiy" secondAttribute="bottom" constant="5" id="ai6-2S-tkY"/>
+                <constraint firstItem="afw-bD-Suz" firstAttribute="trailing" secondItem="vUN-kp-3ea" secondAttribute="trailing" id="c9C-jE-L25"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="TgV-RA-iiy" secondAttribute="trailing" id="f4O-V0-RzS"/>
+                <constraint firstItem="OZI-eT-iPn" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="u7G-sr-YHG"/>
+                <constraint firstItem="OZI-eT-iPn" firstAttribute="top" secondItem="TgV-RA-iiy" secondAttribute="bottom" constant="5" id="uDh-pY-YyS"/>
             </constraints>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>

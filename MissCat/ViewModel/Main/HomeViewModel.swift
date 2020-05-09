@@ -15,7 +15,7 @@ class HomeViewModel: ViewModelType {
     
     private let model = HomeModel()
     
-    func vote(choice: Int, to noteId: String) {
+    func vote(choice: [Int], to noteId: String) {
         model.vote(choice: choice, to: noteId)
     }
     

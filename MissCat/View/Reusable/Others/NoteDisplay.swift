@@ -56,7 +56,7 @@ class NoteDisplay: UIViewController, NoteCellDelegate, UserCellDelegate {
     
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}
     
-    func vote(choice: Int, to noteId: String) {
+    func vote(choice: [Int], to noteId: String) {
         homeViewController?.vote(choice: choice, to: noteId)
     }
     
