@@ -8,7 +8,7 @@ exports.generateContents = function(rawJson, lang) {
   if (json.type != "notification") { return null; }
 
   const type = body.type;
-  const fromUser = body.user.username // + "@" + body.user.host;
+  const fromUser = body.user.name != null ? body.user.name : body.user.username;
 
   // cf. https://github.com/YuigaWada/MissCat/blob/develop/MissCat/Model/Main/NotificationModel.swift
   if (type == "reaction") {
@@ -17,13 +17,24 @@ exports.generateContents = function(rawJson, lang) {
 
     var title = fromUser + "さんがリアクション\"" + reaction+ "\"を送信しました";
     var message = myNote;
-
     return [title,message];
   }
   else if (type == "follow") {
     var title = "";
-    var message = fromUser + "さんが" + "フォローしました";
+    var message = body.user.username + "@" + body.user.host + "さんに" + "フォローされました";
+    return [title,message];
+  }
+  else if (type == "reply") {
+    var title = fromUser + "さんの返信:";
+    var message = body.note.text;
+    return [title,message];
+  }
+  else if (type == "renote" || type == "quote") {
+    const justRenote = body.note.text == null; // 引用RNでなければ body.note.text == null
+    var renoteKind = justRenote ? "" : "引用";
 
+    var title = fromUser + "さんが" + renoteKind + "Renoteしました";
+    var message = justRenote ? body.note.renote.text : body.note.text;
     return [title,message];
   }
 
