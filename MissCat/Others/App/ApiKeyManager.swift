@@ -9,5 +9,5 @@
 import Foundation
 
 struct ApiKeyManager: ApiKeyManagerProtocol {
-    var baseUrl = ""
+    var baseUrl = "https://compact-cell-276016.an.r.appspot.com"
 }
