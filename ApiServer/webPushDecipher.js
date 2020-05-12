@@ -123,11 +123,9 @@ exports.decrypt = function (body64, receiverKey, verbose) {
   log(verbose, "decrypted: ", result.toString("UTF-8"));
 
   // remove padding and GCM auth tag
-  var pad_length = 0;
-  if (result.length >= 3 && result[2] == 0) {
-    pad_length = 2 + result.readUInt16BE(0);
+  while (result.slice(result.length-1,result.length) != "}") { // jsonの末端が見えるまで一文字ずつ消していく
+    result = result.slice(0,result.length-1);
   }
-  result = result.slice(pad_length, result.length - 16);
 
   log(verbose, "shaped:", result.toString("UTF-8"));
   return result.toString("UTF-8");
