@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 /// NoteCell上のタップ処理はすべてHomeViewControllerが行う。
 /// そこで、NoteCellを表示するViewControllerはすべて、このNoteDisplayを継承することで、
