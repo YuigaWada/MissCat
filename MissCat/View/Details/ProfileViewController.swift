@@ -122,7 +122,11 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     }
     
     private func getViewModel() -> ViewModel {
-        let input = ViewModel.Input(nameYanagi: nameTextView, introYanagi: introTextView)
+        let input = ViewModel.Input(nameYanagi: nameTextView,
+                                    introYanagi: introTextView,
+                                    followButtonTapped: followButton.rx.tap,
+                                    backButtonTapped: backButton.rx.tap,
+                                    settingsButtonTapped: settingsButton.rx.tap)
         return .init(with: input, and: disposeBag)
     }
     
@@ -262,27 +266,27 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
                 self.followButton.setTitleColor(isFollowing ? self.mainColor : UIColor.white, for: .normal)
             }).disposed(by: disposeBag)
             
-            followButton.rx.tap.subscribe(onNext: {
-                guard let isFollowing = self.viewModel.state.isFollowing else { return }
-                
-                if isFollowing { // try フォロー解除
-                    self.showUnfollowAlert()
-                } else {
-                    self.viewModel.follow()
-                }
-                
-            }).disposed(by: disposeBag)
         } else { // 自分のプロフィール画面の場合
             followButton.setTitle("編集", for: .normal)
             followButton.setTitleColor(mainColor, for: .normal)
         }
         
-        backButton.rx.tap.subscribe(onNext: {
-            _ = self.navigationController?.popViewController(animated: true)
+        // trigger
+        
+        output.openSettingsTrigger.subscribe(onNext: {
+            self.homeViewController?.openSettings()
         }).disposed(by: disposeBag)
         
-        settingsButton.rx.tap.subscribe(onNext: {
-            self.homeViewController?.openSettings()
+        output.showUnfollowAlertTrigger.subscribe(onNext: {
+            self.showUnfollowAlert()
+        }).disposed(by: disposeBag)
+        
+        output.showProfileSettingsTrigger.subscribe(onNext: {
+            self.showProfileSettings()
+        }).disposed(by: disposeBag)
+        
+        output.popViewControllerTrigger.subscribe(onNext: {
+            _ = self.navigationController?.popViewController(animated: true)
         }).disposed(by: disposeBag)
         
         backButton.isHidden = output.isMe

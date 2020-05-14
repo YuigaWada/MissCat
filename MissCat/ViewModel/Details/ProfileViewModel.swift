@@ -15,6 +15,10 @@ class ProfileViewModel: ViewModelType {
     struct Input {
         let nameYanagi: YanagiText
         let introYanagi: YanagiText
+        
+        let followButtonTapped: ControlEvent<Void>
+        let backButtonTapped: ControlEvent<Void>
+        let settingsButtonTapped: ControlEvent<Void>
     }
     
     struct Output {
@@ -29,6 +33,11 @@ class ProfileViewModel: ViewModelType {
         let followerCount: PublishRelay<String> = .init()
         let relation: PublishRelay<UserRelationship> = .init()
         
+        let showUnfollowAlertTrigger: PublishRelay<Void> = .init()
+        let showProfileSettingsTrigger: PublishRelay<Void> = .init()
+        let openSettingsTrigger: PublishRelay<Void> = .init()
+        let popViewControllerTrigger: PublishRelay<Void> = .init()
+        
         var isMe: Bool = false
     }
     
@@ -42,10 +51,12 @@ class ProfileViewModel: ViewModelType {
     
     private var userId: String?
     private var relation: UserRelationship?
+    private var disposeBag: DisposeBag
     private lazy var model = ProfileModel()
     
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
+        self.disposeBag = disposeBag
     }
     
     func setUserId(_ userId: String, isMe: Bool) {
@@ -140,6 +151,27 @@ class ProfileViewModel: ViewModelType {
         }
         
         output.isCat.accept(user.isCat ?? false)
+        
+        // tapped event
+        input.followButtonTapped.subscribe(onNext: { _ in
+            if !self.output.isMe {
+                if self.state.isFollowing ?? true { // try フォロー解除
+                    self.output.showUnfollowAlertTrigger.accept(())
+                } else {
+                    self.follow()
+                }
+            } else { // 自分のプロフィールの場合
+                self.output.showProfileSettingsTrigger.accept(())
+            }
+        }).disposed(by: disposeBag)
+        
+        input.backButtonTapped.subscribe(onNext: { _ in
+            self.output.popViewControllerTrigger.accept(())
+        }).disposed(by: disposeBag)
+        
+        input.settingsButtonTapped.subscribe(onNext: { _ in
+            self.output.openSettingsTrigger.accept(())
+        }).disposed(by: disposeBag)
     }
     
     private func setRelation(targetUserId: String) {
