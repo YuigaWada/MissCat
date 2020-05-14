@@ -34,7 +34,7 @@ class ProfileViewModel: ViewModelType {
         let relation: PublishRelay<UserRelationship> = .init()
         
         let showUnfollowAlertTrigger: PublishRelay<Void> = .init()
-        let showProfileSettingsTrigger: PublishRelay<Void> = .init()
+        let showProfileSettingsTrigger: PublishRelay<UserModel> = .init()
         let openSettingsTrigger: PublishRelay<Void> = .init()
         let popViewControllerTrigger: PublishRelay<Void> = .init()
         
@@ -161,7 +161,7 @@ class ProfileViewModel: ViewModelType {
                     self.follow()
                 }
             } else { // 自分のプロフィールの場合
-                self.output.showProfileSettingsTrigger.accept(())
+                self.output.showProfileSettingsTrigger.accept(user)
             }
         }).disposed(by: disposeBag)
         

@@ -7,6 +7,7 @@
 //
 
 import Agrume
+import MisskeyKit
 import RxCocoa
 import RxSwift
 import SkeletonView
@@ -281,8 +282,8 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             self.showUnfollowAlert()
         }).disposed(by: disposeBag)
         
-        output.showProfileSettingsTrigger.subscribe(onNext: {
-            self.showProfileSettings()
+        output.showProfileSettingsTrigger.subscribe(onNext: { user in
+            self.showProfileSettings(of: user)
         }).disposed(by: disposeBag)
         
         output.popViewControllerTrigger.subscribe(onNext: {
@@ -356,9 +357,16 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         present(alert, animated: true, completion: nil)
     }
     
-    private func showProfileSettings() {
+    private func showProfileSettings(of user: UserModel) {
         let settings = ProfileSettingsViewController()
         settings.homeViewController = homeViewController
+        settings.setup(banner: bannerImageView.image,
+                       bannerUrl: user.bannerUrl ?? "",
+                       icon: iconImageView.image,
+                       iconUrl: user.avatarUrl ?? "",
+                       name: user.name ?? "",
+                       description: user.description ?? "",
+                       isCat: user.isCat ?? false)
         
         navigationController?.pushViewController(settings, animated: true)
     }

@@ -138,6 +138,8 @@
 		8DC95AF923B0BD450013CABC /* NotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC95AF823B0BD450013CABC /* NotificationBanner.swift */; };
 		8DCCF8E5246A97C50001A21C /* MisscatApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCCF8E4246A97C50001A21C /* MisscatApi.swift */; };
 		8DCCF8E7246AB1090001A21C /* ApiKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCCF8E6246AB1090001A21C /* ApiKeyManager.swift */; };
+		8DD2F9C5246D5DA100562E85 /* ProfileSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD2F9C4246D5DA100562E85 /* ProfileSettingsViewController.swift */; };
+		8DD2F9C7246D8EA900562E85 /* ProfileSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD2F9C6246D8EA900562E85 /* ProfileSettingsViewModel.swift */; };
 		8DD8898B23935CC400D22910 /* PostDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */; };
 		8DDB52CD245032DD00C97130 /* ColorPickerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */; };
 		8DDB52CF245032E500C97130 /* ColorPickerCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DDB52CE245032E500C97130 /* ColorPickerCell.xib */; };
@@ -305,6 +307,8 @@
 		8DCCF8E4246A97C50001A21C /* MisscatApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MisscatApi.swift; sourceTree = "<group>"; };
 		8DCCF8E6246AB1090001A21C /* ApiKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiKeyManager.swift; sourceTree = "<group>"; };
 		8DD0D80B23B47CA8003F02ED /* YanagiText.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = YanagiText.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DD2F9C4246D5DA100562E85 /* ProfileSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsViewController.swift; sourceTree = "<group>"; };
+		8DD2F9C6246D8EA900562E85 /* ProfileSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsViewModel.swift; sourceTree = "<group>"; };
 		8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailViewModel.swift; sourceTree = "<group>"; };
 		8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickerCell.swift; sourceTree = "<group>"; };
 		8DDB52CE245032E500C97130 /* ColorPickerCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ColorPickerCell.xib; sourceTree = "<group>"; };
@@ -777,6 +781,7 @@
 			isa = PBXGroup;
 			children = (
 				8D31018E24397D5E004F8E55 /* ReactionSettingsViewModel.swift */,
+				8DD2F9C6246D8EA900562E85 /* ProfileSettingsViewModel.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -940,6 +945,7 @@
 				8D31018C24397B45004F8E55 /* ReactionSettingsViewController.swift */,
 				8D5889F4244FFAC200C6EBC2 /* DesignSettingsViewController.swift */,
 				8D75EC7E2452E49100EAC2A8 /* ColorPicker.swift */,
+				8DD2F9C4246D5DA100562E85 /* ProfileSettingsViewController.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1226,6 +1232,7 @@
 				8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */,
 				8D61391C2427C1B3003B5BEF /* FileContainerViewModel.swift in Sources */,
 				8D4A2A18237437BE00503685 /* SceneDelegate.swift in Sources */,
+				8DD2F9C7246D8EA900562E85 /* ProfileSettingsViewModel.swift in Sources */,
 				8DAF301B241B599B0041BB85 /* LicenseViewController.swift in Sources */,
 				8DA06A16238A86DC0093A718 /* NotificationCellModel.swift in Sources */,
 				8D613551238A978700AB50C2 /* EmojiViewCell.swift in Sources */,
@@ -1237,6 +1244,7 @@
 				8D8863A92383F8A900A7A5A8 /* NoteCellViewModel.swift in Sources */,
 				8D2D523B2442CC9100712F48 /* UserCell.swift in Sources */,
 				8D310191243AE9AB004F8E55 /* MFMImageView.swift in Sources */,
+				8DD2F9C5246D5DA100562E85 /* ProfileSettingsViewController.swift in Sources */,
 				8D0D47AA23A74EC80095361D /* UIViewController+PhotoEditor.swift in Sources */,
 				8D84061D238FFC5C00EED595 /* UIImage+MissCat.swift in Sources */,
 				8DBC7A45241245A800D8FEA5 /* AVKit+MissCat.swift in Sources */,
