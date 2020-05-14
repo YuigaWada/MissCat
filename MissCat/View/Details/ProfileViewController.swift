@@ -352,6 +352,13 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         present(alert, animated: true, completion: nil)
     }
     
+    private func showProfileSettings() {
+        let settings = ProfileSettingsViewController()
+        settings.homeViewController = homeViewController
+        
+        navigationController?.pushViewController(settings, animated: true)
+    }
+    
     // MARK: UITextViewDelegate
     
     func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
