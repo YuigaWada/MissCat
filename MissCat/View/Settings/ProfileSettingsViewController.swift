@@ -13,6 +13,11 @@ import UIKit
 
 class ProfileSettingsViewController: FormViewController {
     var homeViewController: HomeViewController?
+    
+    private var catSwitch: SwitchRow?
+    private var bioTextArea: TextAreaRow?
+    private var nameTextArea: TextRow?
+    
     private var disposeBag: DisposeBag = .init()
     
     private lazy var bannerImage: UIImageView = .init()
@@ -44,6 +49,8 @@ class ProfileSettingsViewController: FormViewController {
         setHeader()
         setTheme()
         bindTheme()
+        
+        viewModel?.transform()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -110,23 +117,21 @@ class ProfileSettingsViewController: FormViewController {
             .name
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(onNext: { name in
-                self.form.rowBy(tag: "name-text")?.baseCell.textLabel?.text = name
+                self.nameTextArea?.value = name
             }).disposed(by: disposeBag)
         
         viewModel.output
             .description
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(onNext: { description in
-                guard let bioTextArea = self.form.rowBy(tag: "bio-text-area") as? TextAreaRow else { return }
-                bioTextArea.cell.textView.text = description
+                self.bioTextArea?.value = description
             }).disposed(by: disposeBag)
         
         viewModel.output
             .isCat
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(onNext: { isCat in
-                guard let catSwitch = self.form.rowBy(tag: "cat-switch") as? SwitchRow else { return }
-                catSwitch.cell.isSelected = isCat
+                self.catSwitch?.value = isCat
             }).disposed(by: disposeBag)
     }
     
@@ -151,10 +156,6 @@ class ProfileSettingsViewController: FormViewController {
         form +++ nameSection +++ descSection +++ miscSection
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
-//        tableView.frame = .init(x: tableView.frame.origin.x,
-//                                y: tableView.frame.origin.y + headerHeight,
-//                                width: tableView.frame.width,
-//                                height: tableView.frame.height - headerHeight)
     }
     
     private func setHeader() {
@@ -273,40 +274,46 @@ class ProfileSettingsViewController: FormViewController {
     }
     
     private func getNameSection(with theme: Theme.Model) -> Section {
-        return Section("Name")
-            <<< TextRow { row in
-                row.tag = "name-text"
-                row.title = "名前"
-            }.cellUpdate { cell, _ in
-                cell.backgroundColor = self.getCellBackgroundColor()
-                cell.textLabel?.textColor = theme.colorPattern.ui.text
-                cell.textField?.textColor = theme.colorPattern.ui.text
-            }
+        let nameTextArea = TextRow { row in
+            row.tag = "name-text"
+            row.title = "名前"
+        }.cellUpdate { cell, _ in
+            cell.backgroundColor = self.getCellBackgroundColor()
+            cell.textLabel?.textColor = theme.colorPattern.ui.text
+            cell.textField?.textColor = theme.colorPattern.ui.text
+        }
+        
+        self.nameTextArea = nameTextArea
+        return Section("Name") <<< nameTextArea
     }
     
     private func getDescSection(with theme: Theme.Model) -> Section {
-        return Section("Bio")
-            <<< TextAreaRow { row in
-                row.tag = "bio-text-area"
-                row.placeholder = "自分について..."
-            }.cellSetup { cell, _ in
-                cell.height = { 120 }
-            }.cellUpdate { cell, _ in
-                cell.backgroundColor = self.getCellBackgroundColor()
-                cell.textLabel?.textColor = theme.colorPattern.ui.text
-                cell.placeholderLabel?.textColor = .lightGray
-                cell.textView?.textColor = theme.colorPattern.ui.text
-            }
+        let bioTextArea = TextAreaRow { row in
+            row.tag = "bio-text-area"
+            row.placeholder = "自分について..."
+        }.cellSetup { cell, _ in
+            cell.height = { 220 }
+        }.cellUpdate { cell, _ in
+            cell.backgroundColor = self.getCellBackgroundColor()
+            cell.textLabel?.textColor = theme.colorPattern.ui.text
+            cell.placeholderLabel?.textColor = .lightGray
+            cell.textView?.textColor = theme.colorPattern.ui.text
+        }
+        
+        self.bioTextArea = bioTextArea
+        return Section("Bio") <<< bioTextArea
     }
     
     private func getMiscSection(with theme: Theme.Model) -> Section {
-        return Section("Cat")
-            <<< SwitchRow { row in
-                row.tag = "cat-switch"
-                row.title = "Catとして設定"
-            }.cellUpdate { cell, _ in
-                cell.backgroundColor = self.getCellBackgroundColor()
-                cell.textLabel?.textColor = theme.colorPattern.ui.text
-            }
+        let catSwitch = SwitchRow { row in
+            row.tag = "cat-switch"
+            row.title = "Catとして設定"
+        }.cellUpdate { cell, _ in
+            cell.backgroundColor = self.getCellBackgroundColor()
+            cell.textLabel?.textColor = theme.colorPattern.ui.text
+        }
+        
+        self.catSwitch = catSwitch
+        return Section("Cat") <<< catSwitch
     }
 }

@@ -41,11 +41,9 @@ class ProfileSettingsViewModel: ViewModelType {
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
         self.disposeBag = disposeBag
-        
-        binding()
     }
     
-    private func binding() {
+    func transform() {
         // image
         _ = input.iconUrl?.toUIImage { image in
             guard let image = image else { return }
