@@ -80,6 +80,10 @@ class ProfileSettingsViewController: FormViewController {
             view.backgroundColor = colorPattern.base
             tableView.backgroundColor = colorPattern.base
         }
+        
+        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
+            catSwitch?.cell.switchControl.onTintColor = UIColor(hex: mainColorHex)
+        }
     }
     
     /// ステータスバーの文字色
@@ -156,6 +160,7 @@ class ProfileSettingsViewController: FormViewController {
         form +++ nameSection +++ descSection +++ miscSection
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.isScrollEnabled = false
     }
     
     private func setHeader() {
