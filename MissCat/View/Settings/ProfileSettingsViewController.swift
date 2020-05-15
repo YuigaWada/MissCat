@@ -20,6 +20,7 @@ class ProfileSettingsViewController: FormViewController {
     
     private var disposeBag: DisposeBag = .init()
     
+    private lazy var bannerCover: UIView = .init()
     private lazy var bannerImage: UIImageView = .init()
     private lazy var iconImage: UIImageView = .init()
     private var headerHeight: CGFloat = 150
@@ -44,12 +45,17 @@ class ProfileSettingsViewController: FormViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        // ui
         setupComponent()
         setTable()
         setHeader()
+        setIconCover()
+        
+        // theme
         setTheme()
         bindTheme()
         
+        // viewModel
         viewModel?.transform()
     }
     
@@ -146,6 +152,8 @@ class ProfileSettingsViewController: FormViewController {
         changeSeparatorStyle()
         bannerImage.clipsToBounds = true
         iconImage.clipsToBounds = true
+        bannerImage.backgroundColor = .lightGray
+        iconImage.backgroundColor = .lightGray
         
         bannerImage.contentMode = .scaleAspectFill
     }
@@ -277,6 +285,83 @@ class ProfileSettingsViewController: FormViewController {
         iconImage.layoutIfNeeded()
         iconImage.layer.cornerRadius = iconImage.frame.height / 2
     }
+    
+    private func setIconCover() {
+        setCover(on: iconImage, fontSize: 15)
+        setCover(on: bannerImage, fontSize: 22)
+    }
+    
+    private func setCover(on parentView: UIView, fontSize: CGFloat) {
+        let bannerCover = UIView()
+        let editableIcon = UILabel()
+        
+        editableIcon.font = .awesomeSolid(fontSize: fontSize)
+        editableIcon.text = "camera"
+        editableIcon.textColor = .white
+        
+        bannerCover.backgroundColor = .black
+        bannerCover.alpha = 0.35
+        
+        bannerCover.translatesAutoresizingMaskIntoConstraints = false
+        editableIcon.translatesAutoresizingMaskIntoConstraints = false
+        
+        parentView.addSubview(bannerCover)
+        parentView.addSubview(editableIcon)
+        
+        parentView.addConstraints([
+            NSLayoutConstraint(item: bannerCover,
+                               attribute: .leading,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .leading,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: bannerCover,
+                               attribute: .top,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .top,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: bannerCover,
+                               attribute: .trailing,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .trailing,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: bannerCover,
+                               attribute: .bottom,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .bottom,
+                               multiplier: 1.0,
+                               constant: 0)
+        ])
+        
+        parentView.addConstraints([
+            NSLayoutConstraint(item: editableIcon,
+                               attribute: .centerX,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .centerX,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: editableIcon,
+                               attribute: .centerY,
+                               relatedBy: .equal,
+                               toItem: parentView,
+                               attribute: .centerY,
+                               multiplier: 1.0,
+                               constant: 0)
+        ])
+    }
+    
+    // MARK: Section
     
     private func getNameSection(with theme: Theme.Model) -> Section {
         let nameTextArea = TextRow { row in
