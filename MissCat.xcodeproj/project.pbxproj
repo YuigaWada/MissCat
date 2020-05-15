@@ -117,6 +117,7 @@
 		8DA36F862394B9D000512459 /* UIFont+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA36F852394B9D000512459 /* UIFont+MissCat.swift */; };
 		8DA536AC23AC8B70005EB1B5 /* AttachmentCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */; };
 		8DA536AE23AC8C47005EB1B5 /* AttachmentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */; };
+		8DA83FA9246E6024006F3880 /* ProfileSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA83FA8246E6024006F3880 /* ProfileSettingsModel.swift */; };
 		8DABCD0A2414D52D00D9F054 /* AuthWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DABCD092414D52D00D9F054 /* AuthWebViewController.swift */; };
 		8DAD238A240CE76000AB1F36 /* StartViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAD2389240CE76000AB1F36 /* StartViewController.swift */; };
 		8DAEA1322382E19A0083AA69 /* ReactionGenViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEA1312382E19A0083AA69 /* ReactionGenViewModel.swift */; };
@@ -285,6 +286,7 @@
 		8DA37093242F6F52004BCA5D /* AWSCognito.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AWSCognito.framework; path = Pods/_Prebuild/GeneratedFrameworks/AWSCognito/AWSCognito.framework; sourceTree = "<group>"; };
 		8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AttachmentCell.xib; sourceTree = "<group>"; };
 		8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentCell.swift; sourceTree = "<group>"; };
+		8DA83FA8246E6024006F3880 /* ProfileSettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsModel.swift; sourceTree = "<group>"; };
 		8DABCD092414D52D00D9F054 /* AuthWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthWebViewController.swift; sourceTree = "<group>"; };
 		8DAD2389240CE76000AB1F36 /* StartViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartViewController.swift; sourceTree = "<group>"; };
 		8DAEA1312382E19A0083AA69 /* ReactionGenViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenViewModel.swift; sourceTree = "<group>"; };
@@ -379,6 +381,7 @@
 		8D065B15237AC387003DFB7C /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				8DA83FA7246E601A006F3880 /* Settings */,
 				8D72E519244AEA1A00B30C3A /* Details */,
 				8D72E518244AEA1500B30C3A /* Main */,
 				8D5D2C462448149D00D15974 /* DirectMessage */,
@@ -911,6 +914,14 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		8DA83FA7246E601A006F3880 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				8DA83FA8246E6024006F3880 /* ProfileSettingsModel.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
 		8DAEA13A2382E7FF0083AA69 /* Reusable */ = {
 			isa = PBXGroup;
 			children = (
@@ -1256,6 +1267,7 @@
 				8D6139202427CAED003B5BEF /* FileContainerCell.swift in Sources */,
 				8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */,
 				8DBDD58C244197840014E77F /* SearchViewModel.swift in Sources */,
+				8DA83FA9246E6024006F3880 /* ProfileSettingsModel.swift in Sources */,
 				8DE8882724276512002CC9DE /* NoteCell.FileView.swift in Sources */,
 				8DA06A12238A58A20093A718 /* NSMutableAttributedString+MissCat.swift in Sources */,
 				8D502D58238024B700525A96 /* HomeViewController.swift in Sources */,

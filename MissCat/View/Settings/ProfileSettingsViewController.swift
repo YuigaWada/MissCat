@@ -23,8 +23,11 @@ class ProfileSettingsViewController: FormViewController {
     private lazy var bannerCover: UIView = .init()
     private lazy var bannerImage: UIImageView = .init()
     private lazy var iconImage: UIImageView = .init()
+    
+    private let saveButtonItem = UIBarButtonItem(title: "保存", style: .plain, target: nil, action: nil)
     private var headerHeight: CGFloat = 150
     
+    private let selectedImage: PublishRelay<(ProfileSettingsViewModel.ImageTarget, UIImage)> = .init()
     private var viewModel: ProfileSettingsViewModel?
     
     // MARK: LifeCycle
@@ -36,11 +39,24 @@ class ProfileSettingsViewController: FormViewController {
         let iconUrl = icon == nil ? iconUrl : nil
         let bannerUrl = banner == nil ? bannerUrl : nil
         
-        let input: ProfileSettingsViewModel.Input = .init(iconUrl: iconUrl, bannerUrl: bannerUrl, name: name, description: description, isCat: isCat)
-        let viewModel = ProfileSettingsViewModel(with: input, and: disposeBag)
-        
-        binding(with: viewModel)
+        let viewModel = getViewModel(bannerUrl: bannerUrl, iconUrl: iconUrl, name: name, description: description, isCat: isCat)
         self.viewModel = viewModel
+    }
+    
+    private func getViewModel(bannerUrl: String?, iconUrl: String?, name: String, description: String, isCat: Bool) -> ProfileSettingsViewModel {
+        let input: ProfileSettingsViewModel.Input = .init(iconUrl: iconUrl,
+                                                          bannerUrl: bannerUrl,
+                                                          name: name,
+                                                          description: description,
+                                                          isCat: isCat,
+                                                          rightNavButtonTapped: saveButtonItem.rx.tap,
+                                                          iconTapped: iconImage.rxTap,
+                                                          bannerTapped: bannerImage.rxTap,
+                                                          selectedImage: selectedImage.asObservable())
+        let viewModel = ProfileSettingsViewModel(with: input, and: disposeBag)
+        binding(with: viewModel)
+        
+        return viewModel
     }
     
     override func viewDidLoad() {
@@ -50,6 +66,7 @@ class ProfileSettingsViewController: FormViewController {
         setTable()
         setHeader()
         setIconCover()
+        setupNavBar()
         
         // theme
         setTheme()
@@ -143,9 +160,21 @@ class ProfileSettingsViewController: FormViewController {
             .drive(onNext: { isCat in
                 self.catSwitch?.value = isCat
             }).disposed(by: disposeBag)
+        
+        // trigger
+        viewModel.output
+            .showImagePickerTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { target in
+                self.selectedImage.accept((target, UIImage()))
+            }).disposed(by: disposeBag)
     }
     
     // MARK: Setup
+    
+    private func setupNavBar() {
+        navigationItem.rightBarButtonItem = saveButtonItem
+    }
     
     private func setupComponent() {
         title = "プロフィールの編集"
