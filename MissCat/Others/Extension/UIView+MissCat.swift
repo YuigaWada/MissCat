@@ -6,10 +6,19 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import RxCocoa
 import RxSwift
 import UIKit
 
 extension UIView {
+    var rxTap: ControlEvent<UITapGestureRecognizer> {
+        let tapGesture = UITapGestureRecognizer()
+        
+        isUserInteractionEnabled = true
+        addGestureRecognizer(tapGesture)
+        return tapGesture.rx.event
+    }
+    
     func setTapGesture(_ disposeBag: DisposeBag, closure: @escaping () -> Void) {
         let tapGesture = UITapGestureRecognizer()
         
