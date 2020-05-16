@@ -6,8 +6,35 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
+import MisskeyKit
 import RxSwift
 
 class ProfileSettingsModel {
-    func save(diff: ProfileSettingsViewModel.Changed) {}
+    func save(diff: ProfileSettingsViewModel.Changed) {
+        guard diff.hasChanged else { return }
+        uploadImage(diff.banner) { avatarId in
+            self.uploadImage(diff.icon) { iconId in
+                self.updateProfile(with: diff, avatarId: avatarId, iconId: iconId)
+            }
+        }
+    }
+    
+    private func updateProfile(with diff: ProfileSettingsViewModel.Changed, avatarId: String?, iconId: String?) {
+        // nilはMisskeyKitが弾いてくれるのでそのまま渡してOK
+        MisskeyKit.users.updateMyAccount(name: diff.name ?? "", description: diff.description ?? "", isCat: diff.isCat ?? nil) { res, error in
+            guard let res = res, error == nil else { return }
+            print(res)
+        }
+    }
+    
+    private func uploadImage(_ image: UIImage?, completion: @escaping (String?) -> Void) {
+        guard let image = image,
+            let resizedImage = image.resized(widthUnder: 1024),
+            let targetImage = resizedImage.jpegData(compressionQuality: 0.5) else { completion(nil); return }
+        
+        MisskeyKit.drive.createFile(fileData: targetImage, fileType: "image/jpeg", name: UUID().uuidString + ".jpeg", force: false) { result, error in
+            guard let result = result, error == nil else { return }
+            completion(result.id)
+        }
+    }
 }

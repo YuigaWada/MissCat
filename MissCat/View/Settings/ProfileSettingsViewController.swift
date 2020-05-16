@@ -14,10 +14,6 @@ import UIKit
 class ProfileSettingsViewController: FormViewController {
     var homeViewController: HomeViewController?
     
-    private var catSwitch: SwitchRow?
-    private var bioTextArea: TextAreaRow?
-    private var nameTextArea: TextRow?
-    
     private var disposeBag: DisposeBag = .init()
     
     private lazy var bannerCover: UIView = .init()
@@ -28,7 +24,39 @@ class ProfileSettingsViewController: FormViewController {
     private var headerHeight: CGFloat = 150
     
     private let selectedImage: PublishRelay<UIImage> = .init()
+    private let resetImage: PublishRelay<Void> = .init()
     private var viewModel: ProfileSettingsViewModel?
+    
+    // MARK: Row
+    
+    private lazy var catSwitch: SwitchRow = SwitchRow { row in
+        row.tag = "cat-switch"
+        row.title = "Catとして設定"
+    }.cellUpdate { cell, _ in
+        cell.backgroundColor = self.getCellBackgroundColor()
+        cell.textLabel?.textColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
+    }
+    
+    private lazy var bioTextArea = TextAreaRow { row in
+        row.tag = "bio-text-area"
+        row.placeholder = "自分について..."
+    }.cellSetup { cell, _ in
+        cell.height = { 220 }
+    }.cellUpdate { cell, _ in
+        cell.backgroundColor = self.getCellBackgroundColor()
+        cell.textLabel?.textColor = Theme.shared.currentModel?.colorPattern.ui.text
+        cell.placeholderLabel?.textColor = .lightGray
+        cell.textView?.textColor = Theme.shared.currentModel?.colorPattern.ui.text
+    }
+    
+    private lazy var nameTextArea = TextRow { row in
+        row.tag = "name-text"
+        row.title = "名前"
+    }.cellUpdate { cell, _ in
+        cell.backgroundColor = self.getCellBackgroundColor()
+        cell.textLabel?.textColor = Theme.shared.currentModel?.colorPattern.ui.text
+        cell.textField?.textColor = Theme.shared.currentModel?.colorPattern.ui.text
+    }
     
     // MARK: LifeCycle
     
@@ -36,23 +64,38 @@ class ProfileSettingsViewController: FormViewController {
         bannerImage.image = banner
         iconImage.image = icon
         
-        let iconUrl = icon == nil ? iconUrl : nil
-        let bannerUrl = banner == nil ? bannerUrl : nil
+        let loadIcon = icon == nil
+        let loadBanner = banner == nil
         
-        let viewModel = getViewModel(bannerUrl: bannerUrl, iconUrl: iconUrl, name: name, description: description, isCat: isCat)
+        nameTextArea.value = name
+        bioTextArea.value = description
+        catSwitch.value = isCat
+        let viewModel = getViewModel(loadIcon: loadIcon,
+                                     loadBanner: loadBanner,
+                                     bannerUrl: bannerUrl,
+                                     iconUrl: iconUrl,
+                                     name: name,
+                                     description: description,
+                                     isCat: isCat)
         self.viewModel = viewModel
     }
     
-    private func getViewModel(bannerUrl: String?, iconUrl: String?, name: String, description: String, isCat: Bool) -> ProfileSettingsViewModel {
-        let input: ProfileSettingsViewModel.Input = .init(iconUrl: iconUrl,
+    private func getViewModel(loadIcon: Bool, loadBanner: Bool, bannerUrl: String?, iconUrl: String?, name: String, description: String, isCat: Bool) -> ProfileSettingsViewModel {
+        let input: ProfileSettingsViewModel.Input = .init(loadIcon: loadIcon,
+                                                          loadBanner: loadBanner,
+                                                          iconUrl: iconUrl,
                                                           bannerUrl: bannerUrl,
                                                           name: name,
                                                           description: description,
                                                           isCat: isCat,
+                                                          rxName: nameTextArea.rx.value,
+                                                          rxDesc: bioTextArea.rx.value,
+                                                          rxCat: catSwitch.rx.value,
                                                           rightNavButtonTapped: saveButtonItem.rx.tap,
                                                           iconTapped: iconImage.rxTap,
                                                           bannerTapped: bannerImage.rxTap,
-                                                          selectedImage: selectedImage.asObservable())
+                                                          selectedImage: selectedImage.asObservable(),
+                                                          resetImage: resetImage.asObservable())
         let viewModel = ProfileSettingsViewModel(with: input, and: disposeBag)
         binding(with: viewModel)
         
@@ -105,7 +148,7 @@ class ProfileSettingsViewController: FormViewController {
         }
         
         if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
-            catSwitch?.cell.switchControl.onTintColor = UIColor(hex: mainColorHex)
+            catSwitch.cell.switchControl.onTintColor = UIColor(hex: mainColorHex)
         }
     }
     
@@ -144,29 +187,36 @@ class ProfileSettingsViewController: FormViewController {
             .name
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(onNext: { name in
-                self.nameTextArea?.value = name
+                self.nameTextArea.value = name
             }).disposed(by: disposeBag)
         
         viewModel.output
             .description
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(onNext: { description in
-                self.bioTextArea?.value = description
+                self.bioTextArea.value = description
             }).disposed(by: disposeBag)
         
         viewModel.output
             .isCat
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(onNext: { isCat in
-                self.catSwitch?.value = isCat
+                self.catSwitch.value = isCat
             }).disposed(by: disposeBag)
         
         // trigger
         viewModel.output
             .pickImageTrigger
             .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { hasChanged in
+                self.showImageMenu(hasChanged)
+            }).disposed(by: disposeBag)
+        
+        viewModel.output
+            .popViewControllerTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
             .drive(onNext: { _ in
-                self.showImageMenu()
+                self.navigationController?.popViewController(animated: true)
             }).disposed(by: disposeBag)
     }
     
@@ -188,11 +238,9 @@ class ProfileSettingsViewController: FormViewController {
     }
     
     private func setTable() {
-        guard let theme = Theme.shared.currentModel else { return }
-        
-        let nameSection = getNameSection(with: theme)
-        let descSection = getDescSection(with: theme)
-        let miscSection = getMiscSection(with: theme)
+        let nameSection = getNameSection()
+        let descSection = getDescSection()
+        let miscSection = getMiscSection()
         
         form +++ nameSection +++ descSection +++ miscSection
         
@@ -392,56 +440,28 @@ class ProfileSettingsViewController: FormViewController {
     
     // MARK: Section
     
-    private func getNameSection(with theme: Theme.Model) -> Section {
-        let nameTextArea = TextRow { row in
-            row.tag = "name-text"
-            row.title = "名前"
-        }.cellUpdate { cell, _ in
-            cell.backgroundColor = self.getCellBackgroundColor()
-            cell.textLabel?.textColor = theme.colorPattern.ui.text
-            cell.textField?.textColor = theme.colorPattern.ui.text
-        }
-        
-        self.nameTextArea = nameTextArea
+    private func getNameSection() -> Section {
         return Section("Name") <<< nameTextArea
     }
     
-    private func getDescSection(with theme: Theme.Model) -> Section {
-        let bioTextArea = TextAreaRow { row in
-            row.tag = "bio-text-area"
-            row.placeholder = "自分について..."
-        }.cellSetup { cell, _ in
-            cell.height = { 220 }
-        }.cellUpdate { cell, _ in
-            cell.backgroundColor = self.getCellBackgroundColor()
-            cell.textLabel?.textColor = theme.colorPattern.ui.text
-            cell.placeholderLabel?.textColor = .lightGray
-            cell.textView?.textColor = theme.colorPattern.ui.text
-        }
-        
-        self.bioTextArea = bioTextArea
+    private func getDescSection() -> Section {
         return Section("Bio") <<< bioTextArea
     }
     
-    private func getMiscSection(with theme: Theme.Model) -> Section {
-        let catSwitch = SwitchRow { row in
-            row.tag = "cat-switch"
-            row.title = "Catとして設定"
-        }.cellUpdate { cell, _ in
-            cell.backgroundColor = self.getCellBackgroundColor()
-            cell.textLabel?.textColor = theme.colorPattern.ui.text
-        }
-        
-        self.catSwitch = catSwitch
+    private func getMiscSection() -> Section {
         return Section("Cat") <<< catSwitch
     }
     
     // MARK: Alert
     
-    private func showImageMenu() {
+    private func showImageMenu(_ hasChanged: Bool) {
         let panelMenu = PanelMenuViewController()
-        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "カメラから", awesomeIcon: "", order: 0),
+        var menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "カメラから", awesomeIcon: "", order: 0),
                                                              .init(title: "アルバムから", awesomeIcon: "", order: 1)]
+        
+        if hasChanged {
+            menuItems.append(.init(title: "元に戻す", awesomeIcon: "", order: 2))
+        }
         
         panelMenu.setupMenu(items: menuItems)
         panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
@@ -453,6 +473,9 @@ class ProfileSettingsViewController: FormViewController {
                 self.pickImage(type: .camera)
             case 1: // albam
                 self.pickImage(type: .photoLibrary)
+            case 2:
+                guard hasChanged else { return }
+                self.resetImage.accept(())
             default:
                 break
             }

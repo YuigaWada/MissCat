@@ -6,6 +6,7 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
+import Eureka
 import Foundation
 import RxCocoa
 import RxSwift
@@ -18,6 +19,9 @@ class ProfileSettingsViewModel: ViewModelType {
     }
     
     struct Input {
+        let loadIcon: Bool
+        let loadBanner: Bool
+        
         let iconUrl: String?
         let bannerUrl: String?
         
@@ -25,10 +29,15 @@ class ProfileSettingsViewModel: ViewModelType {
         let description: String
         let isCat: Bool
         
+        let rxName: ControlProperty<String?>
+        let rxDesc: ControlProperty<String?>
+        let rxCat: ControlProperty<Bool?>
+        
         let rightNavButtonTapped: ControlEvent<Void>
         let iconTapped: ControlEvent<UITapGestureRecognizer>
         let bannerTapped: ControlEvent<UITapGestureRecognizer>
         let selectedImage: Observable<UIImage>
+        let resetImage: Observable<Void>
     }
     
     struct Output {
@@ -40,12 +49,14 @@ class ProfileSettingsViewModel: ViewModelType {
         let isCat: PublishRelay<Bool> = .init()
         
         let showSaveAlertTrigger: PublishRelay<Void> = .init()
-        let pickImageTrigger: PublishRelay<Void> = .init()
+        let pickImageTrigger: PublishRelay<Bool> = .init() // Bool: hasChanged
+        let popViewControllerTrigger: PublishRelay<Void> = .init()
     }
     
     class State {
         var hasEdited: Bool = false
         var currentTarget: ImageTarget?
+        var changed: Changed = .init()
     }
     
     class Changed {
@@ -70,7 +81,6 @@ class ProfileSettingsViewModel: ViewModelType {
     private let input: Input
     let output: Output = .init()
     let state: State = .init()
-    private let changed: Changed = .init()
     
     private let disposeBag: DisposeBag
     
@@ -81,50 +91,99 @@ class ProfileSettingsViewModel: ViewModelType {
     
     func transform() {
         // image
-        _ = input.iconUrl?.toUIImage { image in
-            guard let image = image else { return }
-            self.output.icon.accept(image)
+        
+        if input.loadIcon {
+            setDefaultIcon()
         }
         
-        _ = input.bannerUrl?.toUIImage { image in
-            guard let image = image else { return }
-            self.output.banner.accept(image)
+        if input.loadBanner {
+            setDefaultBanner()
         }
         
-        // text
-        output.name.accept(input.name)
-        output.description.accept(input.description)
+        // input
+        input.rxName.subscribe(onNext: { name in
+            if name == self.input.name {
+                self.state.changed.name = nil
+            } else {
+                self.state.changed.name = name
+            }
+        }).disposed(by: disposeBag)
         
-        // bool
-        output.isCat.accept(input.isCat)
+        input.rxDesc.subscribe(onNext: { desc in
+            if desc == self.input.description {
+                self.state.changed.description = nil
+            } else {
+                self.state.changed.description = desc
+            }
+        }).disposed(by: disposeBag)
+        
+        input.rxCat.subscribe(onNext: { isCat in
+            if isCat == self.input.isCat {
+                self.state.changed.isCat = nil
+            } else {
+                self.state.changed.isCat = isCat
+            }
+        }).disposed(by: disposeBag)
         
         // tap event
         input.rightNavButtonTapped.subscribe(onNext: { _ in
-            self.model.save(diff: self.changed)
+            self.model.save(diff: self.state.changed)
+            self.output.popViewControllerTrigger.accept(())
         }).disposed(by: disposeBag)
         
         input.iconTapped.subscribe(onNext: { _ in
             self.state.currentTarget = .icon
-            self.output.pickImageTrigger.accept(())
+            let hasChanged = self.state.changed.icon != nil
+            self.output.pickImageTrigger.accept(hasChanged)
         }).disposed(by: disposeBag)
         
         input.bannerTapped.subscribe(onNext: { _ in
             self.state.currentTarget = .banner
-            self.output.pickImageTrigger.accept(())
+            let hasChanged = self.state.changed.banner != nil
+            self.output.pickImageTrigger.accept(hasChanged)
         }).disposed(by: disposeBag)
         
+        // trigger
         input.selectedImage.subscribe(onNext: { image in
             guard let target = self.state.currentTarget else { return }
             switch target {
             case .icon:
                 self.output.icon.accept(image)
-                self.changed.icon = image
+                self.state.changed.icon = image
             case .banner:
                 self.output.banner.accept(image)
-                self.changed.banner = image
+                self.state.changed.banner = image
             }
             
             self.state.currentTarget = nil
         }).disposed(by: disposeBag)
+        
+        input.resetImage.subscribe(onNext: { _ in
+            guard let target = self.state.currentTarget else { return }
+            switch target {
+            case .icon:
+                self.setDefaultIcon()
+                self.state.changed.icon = nil
+            case .banner:
+                self.setDefaultBanner()
+                self.state.changed.banner = nil
+            }
+            
+            self.state.currentTarget = nil
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setDefaultBanner() {
+        _ = input.bannerUrl?.toUIImage { image in
+            guard let image = image else { return }
+            self.output.banner.accept(image)
+        }
+    }
+    
+    private func setDefaultIcon() {
+        _ = input.iconUrl?.toUIImage { image in
+            guard let image = image else { return }
+            self.output.icon.accept(image)
+        }
     }
 }
