@@ -20,8 +20,9 @@ exports.generateContents = function(rawJson, lang) {
     return [title,message];
   }
   else if (type == "follow") {
+    const hostLabel = body.user.host != null ? "@" + body.user.host : ""; // 自インスタンスの場合 host == nullになる
     var title = "";
-    var message = body.user.username + "@" + body.user.host + "さんに" + "フォローされました";
+    var message = "@" + body.user.username + hostLabel + "さんに" + "フォローされました";
     return [title,message];
   }
   else if (type == "reply") {
