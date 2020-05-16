@@ -95,6 +95,8 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     private func setTheme() {
         if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
             view.backgroundColor = colorPattern.base
+            markLabel.textColor = colorPattern.text
+            innerNoteLabel.textColor = colorPattern.sub0
         }
         mainTextView.textColor = placeholderColor
     }
