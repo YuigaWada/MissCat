@@ -108,7 +108,7 @@ class TimelineViewModel: ViewModelType {
         // タイムラインをロードする
         loadNotes().subscribe(onError: { error in
             if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty, self.input.type == .Home {
-                self.initialPost()
+                self.initialFollow()
             }
             
             print(error)
@@ -156,25 +156,10 @@ class TimelineViewModel: ViewModelType {
         updateNotes(new: cellsModel)
     }
     
-    private func initialPost() {
-        guard initialNoteCount < 2 else { return }
-        MisskeyKit.notes.createNote(text: "MissCatからアカウントを作成しました。") { note, error in
-            guard note != nil, error == nil else { // 失敗した場合は何回か再帰
-                self.initialNoteCount += 1
-                self.initialPost()
-                return
-            }
-            DispatchQueue.main.async {
-                self.initialNoteCount = 0
-                self.initialFollow() // 次にユーザーをフォローしておく
-            }
-        }
-    }
-    
     private func initialFollow() {
         guard initialNoteCount < 2 else { return }
-        MisskeyKit.users.follow(userId: "7ze0f2goa7") { user, error in
-            guard user != nil, error == nil else { // 失敗した場合は何回か再帰
+        MisskeyKit.users.follow(userId: "7ze0f2goa7") { _, error in
+            guard error == nil else { // 失敗した場合は何回か再帰
                 self.initialNoteCount += 1
                 self.initialFollow()
                 return
