@@ -12,6 +12,24 @@ import RxCocoa
 import RxSwift
 import UIKit
 
+class ChangedProfile {
+    var icon: UIImage?
+    var banner: UIImage?
+    
+    var name: String?
+    var description: String?
+    var isCat: Bool?
+    
+    var hasChanged: Bool {
+        let emptyIcon = icon == nil
+        let emptyBanner = banner == nil
+        let emptyName = name == nil
+        let emptyDesc = description == nil
+        let emptyCat = isCat == nil
+        return !(emptyIcon && emptyBanner && emptyName && emptyDesc && emptyCat)
+    }
+}
+
 class ProfileSettingsViewModel: ViewModelType {
     enum ImageTarget {
         case icon
@@ -38,6 +56,7 @@ class ProfileSettingsViewModel: ViewModelType {
         let bannerTapped: ControlEvent<UITapGestureRecognizer>
         let selectedImage: Observable<UIImage>
         let resetImage: Observable<Void>
+        let overrideInfoTrigger: PublishRelay<ChangedProfile>
     }
     
     struct Output {
@@ -56,25 +75,7 @@ class ProfileSettingsViewModel: ViewModelType {
     class State {
         var hasEdited: Bool = false
         var currentTarget: ImageTarget?
-        var changed: Changed = .init()
-    }
-    
-    class Changed {
-        var icon: UIImage?
-        var banner: UIImage?
-        
-        var name: String?
-        var description: String?
-        var isCat: Bool?
-        
-        var hasChanged: Bool {
-            let emptyIcon = icon == nil
-            let emptyBanner = banner == nil
-            let emptyName = name == nil
-            let emptyDesc = description == nil
-            let emptyCat = isCat == nil
-            return !(emptyIcon && emptyBanner && emptyName && emptyDesc && emptyCat)
-        }
+        var changed: ChangedProfile = .init()
     }
     
     private let model = ProfileSettingsModel()
@@ -129,6 +130,10 @@ class ProfileSettingsViewModel: ViewModelType {
         input.rightNavButtonTapped.subscribe(onNext: { _ in
             self.model.save(diff: self.state.changed)
             self.output.popViewControllerTrigger.accept(())
+            
+            if self.state.changed.hasChanged {
+                self.input.overrideInfoTrigger.accept(self.state.changed)
+            }
         }).disposed(by: disposeBag)
         
         input.iconTapped.subscribe(onNext: { _ in

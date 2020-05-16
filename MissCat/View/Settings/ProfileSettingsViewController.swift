@@ -13,6 +13,7 @@ import UIKit
 
 class ProfileSettingsViewController: FormViewController {
     var homeViewController: HomeViewController?
+    var overrideInfoTrigger: PublishRelay<ChangedProfile> = .init()
     
     private var disposeBag: DisposeBag = .init()
     
@@ -95,7 +96,8 @@ class ProfileSettingsViewController: FormViewController {
                                                           iconTapped: iconImage.rxTap,
                                                           bannerTapped: bannerImage.rxTap,
                                                           selectedImage: selectedImage.asObservable(),
-                                                          resetImage: resetImage.asObservable())
+                                                          resetImage: resetImage.asObservable(),
+                                                          overrideInfoTrigger: overrideInfoTrigger)
         let viewModel = ProfileSettingsViewModel(with: input, and: disposeBag)
         binding(with: viewModel)
         

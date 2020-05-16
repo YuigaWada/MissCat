@@ -282,8 +282,8 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             self.showUnfollowAlert()
         }).disposed(by: disposeBag)
         
-        output.showProfileSettingsTrigger.subscribe(onNext: { user in
-            self.showProfileSettings(of: user)
+        output.showProfileSettingsTrigger.subscribe(onNext: { profile in
+            self.showProfileSettings(of: profile)
         }).disposed(by: disposeBag)
         
         output.popViewControllerTrigger.subscribe(onNext: {
@@ -357,16 +357,23 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         present(alert, animated: true, completion: nil)
     }
     
-    private func showProfileSettings(of user: UserModel) {
+    /// プロフィール編集画面へと遷移する
+    /// - Parameter profile: ProfileViewModel.Profile
+    private func showProfileSettings(of profile: ProfileViewModel.Profile) {
         let settings = ProfileSettingsViewController()
         settings.homeViewController = homeViewController
         settings.setup(banner: bannerImageView.image,
-                       bannerUrl: user.bannerUrl ?? "",
+                       bannerUrl: profile.bannerUrl,
                        icon: iconImageView.image,
-                       iconUrl: user.avatarUrl ?? "",
-                       name: user.name ?? "",
-                       description: user.description ?? "",
-                       isCat: user.isCat ?? false)
+                       iconUrl: profile.iconUrl,
+                       name: profile.name,
+                       description: profile.description,
+                       isCat: profile.isCat)
+        
+        // プロフィールの書き換え命令が出たら書き換える
+        settings.overrideInfoTrigger.subscribe(onNext: { diff in
+            self.viewModel.overrideInfo(diff)
+        }).disposed(by: disposeBag)
         
         navigationController?.pushViewController(settings, animated: true)
     }
