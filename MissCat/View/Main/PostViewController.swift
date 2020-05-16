@@ -14,7 +14,7 @@ import RxSwift
 import UIKit
 
 typealias AttachmentsDataSource = RxCollectionViewSectionedReloadDataSource<PostViewController.AttachmentsSection>
-class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UICollectionViewDelegate {
+class PostViewController: UIViewController, UITextViewDelegate, UICollectionViewDelegate {
     @IBOutlet weak var attachmentCollectionView: UICollectionView!
     
     @IBOutlet weak var cancelButton: UIButton!
@@ -443,18 +443,6 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
         }
     }
     
-    private func pickImage(type: UIImagePickerController.SourceType) {
-        if UIImagePickerController.isSourceTypeAvailable(.savedPhotosAlbum) {
-            let picker = UIImagePickerController()
-            picker.sourceType = type
-            picker.mediaTypes = UIImagePickerController.availableMediaTypes(for: type) ?? []
-            picker.videoQuality = .typeHigh
-            picker.delegate = self
-            
-            presentOnFullScreen(picker, animated: true, completion: nil)
-        }
-    }
-    
     // MARK: Delegate
     
     func textViewDidBeginEditing(_ textView: UITextView) {
@@ -472,25 +460,12 @@ class PostViewController: UIViewController, UITextViewDelegate, UIImagePickerCon
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-        picker.dismiss(animated: true, completion: nil)
-        
-        let isImage = info[UIImagePickerController.InfoKey.originalImage] is UIImage
-        
-        if isImage {
-            guard let originalImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else { return }
-            
-            showPhotoEditor(with: originalImage).subscribe(onNext: { editedImage in // 画像エディタを表示
-                guard let editedImage = editedImage else { return }
+        transformAttachment(disposeBag: disposeBag, picker: picker, didFinishPickingMediaWithInfo: info) { originalImage, editedImage, videoUrl in
+            if let originalImage = originalImage, let editedImage = editedImage {
                 self.viewModel?.stackFile(original: originalImage, edited: editedImage)
-            }).disposed(by: disposeBag)
-            
-            return
-        }
-        // is Video
-        guard let url = info[UIImagePickerController.InfoKey.mediaURL] as? NSURL else { return }
-        AVAsset.convert2Mp4(videoUrl: url) { session in // 動画のデフォルトがmovなのでmp4に変換する
-            guard session.status == .completed, let filePath = session.outputURL else { return }
-            self.viewModel?.stackFile(videoUrl: filePath)
+            } else if let videoUrl = videoUrl {
+                self.viewModel?.stackFile(videoUrl: videoUrl)
+            }
         }
     }
     
