@@ -170,6 +170,11 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(innerNoteLabel.rx.text)
             .disposed(by: disposeBag)
+        
+        output.mark
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(markLabel.rx.text)
+            .disposed(by: disposeBag)
     }
     
     private func setupCollectionView() {
