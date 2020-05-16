@@ -50,7 +50,8 @@ exports.send = function (token, title, body) {
 
      notification: {
          title: title,
-         body: body
+         body: body,
+         badge: "1"
      }
   };
 
