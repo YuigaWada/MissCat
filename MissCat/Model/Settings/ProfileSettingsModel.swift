@@ -12,16 +12,15 @@ import RxSwift
 class ProfileSettingsModel {
     func save(diff: ProfileSettingsViewModel.Changed) {
         guard diff.hasChanged else { return }
-        uploadImage(diff.banner) { avatarId in
-            self.uploadImage(diff.icon) { iconId in
-                self.updateProfile(with: diff, avatarId: avatarId, iconId: iconId)
+        uploadImage(diff.banner) { bannerId in
+            self.uploadImage(diff.icon) { avatarId in
+                self.updateProfile(with: diff, avatarId: avatarId, bannerId: bannerId)
             }
         }
     }
     
-    private func updateProfile(with diff: ProfileSettingsViewModel.Changed, avatarId: String?, iconId: String?) {
-        // nilはMisskeyKitが弾いてくれるのでそのまま渡してOK
-        MisskeyKit.users.updateMyAccount(name: diff.name ?? "", description: diff.description ?? "", isCat: diff.isCat ?? nil) { res, error in
+    private func updateProfile(with diff: ProfileSettingsViewModel.Changed, avatarId: String?, bannerId: String?) {
+        MisskeyKit.users.updateMyAccount(name: diff.name ?? "", description: diff.description ?? "", avatarId: avatarId ?? "", bannerId: bannerId ?? "", isCat: diff.isCat ?? nil) { res, error in
             guard let res = res, error == nil else { return }
             print(res)
         }
