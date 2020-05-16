@@ -12,6 +12,7 @@ import RxCocoa
 import RxSwift
 import UIKit
 
+// プロフィールの差分を表す
 class ChangedProfile {
     var icon: UIImage?
     var banner: UIImage?
@@ -37,15 +38,15 @@ class ProfileSettingsViewModel: ViewModelType {
     }
     
     struct Input {
-        let loadIcon: Bool
-        let loadBanner: Bool
+        let needLoadIcon: Bool
+        let needLoadBanner: Bool
         
         let iconUrl: String?
         let bannerUrl: String?
         
-        let name: String
-        let description: String
-        let isCat: Bool
+        let currentName: String
+        let currentDescription: String
+        let currentCatState: Bool
         
         let rxName: ControlProperty<String?>
         let rxDesc: ControlProperty<String?>
@@ -92,38 +93,24 @@ class ProfileSettingsViewModel: ViewModelType {
     
     func transform() {
         // image
+        if input.needLoadIcon { setDefaultIcon() }
         
-        if input.loadIcon {
-            setDefaultIcon()
-        }
-        
-        if input.loadBanner {
-            setDefaultBanner()
-        }
+        if input.needLoadBanner { setDefaultBanner() }
         
         // input
         input.rxName.subscribe(onNext: { name in
-            if name == self.input.name {
-                self.state.changed.name = nil
-            } else {
-                self.state.changed.name = name
-            }
+            let hasChanged = name != self.input.currentName
+            self.state.changed.name = hasChanged ? name : nil
         }).disposed(by: disposeBag)
         
         input.rxDesc.subscribe(onNext: { desc in
-            if desc == self.input.description {
-                self.state.changed.description = nil
-            } else {
-                self.state.changed.description = desc
-            }
+            let hasChanged = desc != self.input.currentDescription
+            self.state.changed.description = hasChanged ? desc : nil
         }).disposed(by: disposeBag)
         
         input.rxCat.subscribe(onNext: { isCat in
-            if isCat == self.input.isCat {
-                self.state.changed.isCat = nil
-            } else {
-                self.state.changed.isCat = isCat
-            }
+            let hasChanged = isCat != self.input.currentCatState
+            self.state.changed.isCat = hasChanged ? isCat : nil
         }).disposed(by: disposeBag)
         
         // tap event

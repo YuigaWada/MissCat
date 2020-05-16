@@ -82,13 +82,13 @@ class ProfileSettingsViewController: FormViewController {
     }
     
     private func getViewModel(loadIcon: Bool, loadBanner: Bool, bannerUrl: String?, iconUrl: String?, name: String, description: String, isCat: Bool) -> ProfileSettingsViewModel {
-        let input: ProfileSettingsViewModel.Input = .init(loadIcon: loadIcon,
-                                                          loadBanner: loadBanner,
+        let input: ProfileSettingsViewModel.Input = .init(needLoadIcon: loadIcon,
+                                                          needLoadBanner: loadBanner,
                                                           iconUrl: iconUrl,
                                                           bannerUrl: bannerUrl,
-                                                          name: name,
-                                                          description: description,
-                                                          isCat: isCat,
+                                                          currentName: name,
+                                                          currentDescription: description,
+                                                          currentCatState: isCat,
                                                           rxName: nameTextArea.rx.value,
                                                           rxDesc: bioTextArea.rx.value,
                                                           rxCat: catSwitch.rx.value,
