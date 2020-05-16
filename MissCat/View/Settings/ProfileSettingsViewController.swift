@@ -27,7 +27,7 @@ class ProfileSettingsViewController: FormViewController {
     private let saveButtonItem = UIBarButtonItem(title: "保存", style: .plain, target: nil, action: nil)
     private var headerHeight: CGFloat = 150
     
-    private let selectedImage: PublishRelay<(ProfileSettingsViewModel.ImageTarget, UIImage)> = .init()
+    private let selectedImage: PublishRelay<UIImage> = .init()
     private var viewModel: ProfileSettingsViewModel?
     
     // MARK: LifeCycle
@@ -163,10 +163,10 @@ class ProfileSettingsViewController: FormViewController {
         
         // trigger
         viewModel.output
-            .showImagePickerTrigger
+            .pickImageTrigger
             .asDriver(onErrorDriveWith: Driver.empty())
-            .drive(onNext: { target in
-                self.selectedImage.accept((target, UIImage()))
+            .drive(onNext: { _ in
+                self.showImageMenu()
             }).disposed(by: disposeBag)
     }
     
@@ -434,5 +434,39 @@ class ProfileSettingsViewController: FormViewController {
         
         self.catSwitch = catSwitch
         return Section("Cat") <<< catSwitch
+    }
+    
+    // MARK: Alert
+    
+    private func showImageMenu() {
+        let panelMenu = PanelMenuViewController()
+        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "カメラから", awesomeIcon: "", order: 0),
+                                                             .init(title: "アルバムから", awesomeIcon: "", order: 1)]
+        
+        panelMenu.setupMenu(items: menuItems)
+        panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
+            guard order >= 0 else { return }
+            panelMenu.dismiss(animated: true, completion: nil)
+            
+            switch order {
+            case 0: // camera
+                self.pickImage(type: .camera)
+            case 1: // albam
+                self.pickImage(type: .photoLibrary)
+            default:
+                break
+            }
+        }).disposed(by: disposeBag)
+        
+        present(panelMenu, animated: true, completion: nil)
+    }
+    
+    // MARK: Delegate
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+        transformAttachment(disposeBag: disposeBag, picker: picker, didFinishPickingMediaWithInfo: info) { _, editedImage, _ in
+            guard let editedImage = editedImage else { return }
+            self.selectedImage.accept(editedImage)
+        }
     }
 }

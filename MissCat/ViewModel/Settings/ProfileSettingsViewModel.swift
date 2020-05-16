@@ -28,7 +28,7 @@ class ProfileSettingsViewModel: ViewModelType {
         let rightNavButtonTapped: ControlEvent<Void>
         let iconTapped: ControlEvent<UITapGestureRecognizer>
         let bannerTapped: ControlEvent<UITapGestureRecognizer>
-        let selectedImage: Observable<(ImageTarget, UIImage)>
+        let selectedImage: Observable<UIImage>
     }
     
     struct Output {
@@ -40,11 +40,12 @@ class ProfileSettingsViewModel: ViewModelType {
         let isCat: PublishRelay<Bool> = .init()
         
         let showSaveAlertTrigger: PublishRelay<Void> = .init()
-        let showImagePickerTrigger: PublishRelay<ImageTarget> = .init()
+        let pickImageTrigger: PublishRelay<Void> = .init()
     }
     
-    struct State {
+    class State {
         var hasEdited: Bool = false
+        var currentTarget: ImageTarget?
     }
     
     class Changed {
@@ -103,14 +104,17 @@ class ProfileSettingsViewModel: ViewModelType {
         }).disposed(by: disposeBag)
         
         input.iconTapped.subscribe(onNext: { _ in
-            self.output.showImagePickerTrigger.accept(.icon)
+            self.state.currentTarget = .icon
+            self.output.pickImageTrigger.accept(())
         }).disposed(by: disposeBag)
         
         input.bannerTapped.subscribe(onNext: { _ in
-            self.output.showImagePickerTrigger.accept(.banner)
+            self.state.currentTarget = .banner
+            self.output.pickImageTrigger.accept(())
         }).disposed(by: disposeBag)
         
-        input.selectedImage.subscribe(onNext: { target, image in
+        input.selectedImage.subscribe(onNext: { image in
+            guard let target = self.state.currentTarget else { return }
             switch target {
             case .icon:
                 self.output.icon.accept(image)
@@ -119,6 +123,8 @@ class ProfileSettingsViewModel: ViewModelType {
                 self.output.banner.accept(image)
                 self.changed.banner = image
             }
+            
+            self.state.currentTarget = nil
         }).disposed(by: disposeBag)
     }
 }
