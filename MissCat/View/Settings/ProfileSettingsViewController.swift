@@ -451,7 +451,7 @@ class ProfileSettingsViewController: FormViewController {
     }
     
     private func getMiscSection() -> Section {
-        return Section("Cat") <<< catSwitch
+        return Section(header: "Cat", footer: "ONにすると自分の投稿がネコ語に翻訳されます") <<< catSwitch
     }
     
     // MARK: Alert
