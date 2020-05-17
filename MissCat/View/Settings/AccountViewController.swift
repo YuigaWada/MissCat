@@ -75,6 +75,7 @@ class AccountViewController: UITableViewController {
         Cache.UserDefaults.shared.setCurrentLoginedApiKey("")
         Cache.UserDefaults.shared.setCurrentLoginedInstance("")
         Cache.UserDefaults.shared.setCurrentLoginedUserId("")
+        Cache.shared.resetMyCache()
         
         MisskeyKit.auth.setAPIKey("")
         
