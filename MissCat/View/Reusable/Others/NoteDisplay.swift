@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 /// NoteCell上のタップ処理はすべてHomeViewControllerが行う。
 /// そこで、NoteCellを表示するViewControllerはすべて、このNoteDisplayを継承することで、
@@ -56,8 +57,12 @@ class NoteDisplay: UIViewController, NoteCellDelegate, UserCellDelegate {
     
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}
     
-    func vote(choice: Int, to noteId: String) {
+    func vote(choice: [Int], to noteId: String) {
         homeViewController?.vote(choice: choice, to: noteId)
+    }
+    
+    func showImage(_ urls: [URL], start startIndex: Int) {
+        homeViewController?.showImage(urls, start: startIndex)
     }
     
     func playVideo(url: String) {

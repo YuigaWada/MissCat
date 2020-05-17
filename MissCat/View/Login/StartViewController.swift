@@ -23,6 +23,7 @@ class StartViewController: UIViewController {
     @IBOutlet weak var changeInstanceButton: UIButton!
     
     private var appSecret: String?
+    private var afterLogout: Bool = false // ログアウト直後かどうか
     private var ioAppSecret: String = "0fRSNkKKl9hcZTGrUSyZOb19n8UUVkxw" // misskey.ioの場合はappSecret固定
     private var misskeyInstance: String = "misskey.io" {
         didSet {
@@ -62,6 +63,10 @@ class StartViewController: UIViewController {
     
     // MARK: LifeCycle
     
+    func setup(afterLogout: Bool = false) {
+        self.afterLogout = afterLogout
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setGradientLayer()
@@ -97,12 +102,14 @@ class StartViewController: UIViewController {
     
     private func binding() {
         signupButton.rx.tap.subscribe(onNext: { _ in
+            guard !self.afterLogout else { self.signup(); return } // ログアウト直後なら普通にMisskeyのトップページを表示する
             guard let tos = self.getViewController(name: "tos") as? TosViewController else { return }
             tos.agreed = self.signup
             self.navigationController?.pushViewController(tos, animated: true)
         }).disposed(by: disposeBag)
         
         loginButton.rx.tap.subscribe(onNext: { _ in
+            guard !self.afterLogout else { self.login(); return } // ログアウト直後なら普通にログインする
             guard let tos = self.getViewController(name: "tos") as? TosViewController else { return }
             tos.agreed = self.login
             self.navigationController?.pushViewController(tos, animated: true)
@@ -180,9 +187,16 @@ class StartViewController: UIViewController {
         Cache.UserDefaults.shared.setCurrentLoginedInstance(misskeyInstance)
         
         _ = EmojiHandler.handler // カスタム絵文字を読み込む
+        registerSw() // 通知を登録する
         
         DispatchQueue.main.async {
-            self.navigationController?.popViewController(animated: true)
+            if self.afterLogout { // 設定画面からのログイン
+                MisskeyKit.changeInstance(instance: self.misskeyInstance)
+                MisskeyKit.auth.setAPIKey(apiKey)
+                self.dismiss(animated: true)
+            } else { // 初期画面からのログイン
+                self.navigationController?.popViewController(animated: true)
+            }
         }
     }
     
@@ -204,6 +218,18 @@ class StartViewController: UIViewController {
         removeList.forEach { shaped = shaped.remove(of: $0) }
         
         return shaped
+    }
+    
+    // MARK: SW
+    
+    private func registerSw() {
+        #if targetEnvironment(simulator)
+            let misscatApi = MisscatApi(apiKeyManager: MockApiKeyManager())
+            misscatApi.registerSw()
+        #else
+            let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager())
+            misscatApi.registerSw()
+        #endif
     }
     
     // MARK: Alert

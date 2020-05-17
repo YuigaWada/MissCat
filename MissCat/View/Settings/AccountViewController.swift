@@ -6,6 +6,7 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
+import MisskeyKit
 import RxCocoa
 import RxSwift
 import UIKit
@@ -13,6 +14,7 @@ import UIKit
 class AccountViewController: UITableViewController {
     @IBOutlet weak var logoutButton: UIButton!
     
+    var homeViewController: HomeViewController?
     private var disposeBag = DisposeBag()
     
     override func viewDidLoad() {
@@ -68,13 +70,19 @@ class AccountViewController: UITableViewController {
     }
     
     private func logout() {
-        let viewController = getViewController(name: "start")
+        guard let startViewController = getViewController(name: "start") as? StartViewController else { return }
         
         Cache.UserDefaults.shared.setCurrentLoginedApiKey("")
         Cache.UserDefaults.shared.setCurrentLoginedInstance("")
         Cache.UserDefaults.shared.setCurrentLoginedUserId("")
+        Cache.shared.resetMyCache()
         
-        navigationController?.pushViewController(viewController, animated: true)
+        MisskeyKit.auth.setAPIKey("")
+        
+        startViewController.setup(afterLogout: true)
+        presentOnFullScreen(startViewController, animated: true) {
+            self.homeViewController?.relaunchView(start: .main) // すべてのviewをrelaunchする
+        }
     }
     
     private func getViewController(name: String) -> UIViewController {

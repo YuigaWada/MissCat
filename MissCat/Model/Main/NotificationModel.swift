@@ -182,12 +182,14 @@ class NotificationsModel {
         guard let target = target as? StreamingModel, let fromUser = target.user else { return nil }
         
         var type: ActionType
+        var targetNote: NoteModel? = target.note
         if target.reaction != nil {
             type = .reaction
         } else if target.type == "follow" {
             type = .follow
         } else if target.type == "renote" {
             type = .renote
+            targetNote = target.note?.renote // renoteの場合は相手の投稿(=target.note)のrenote内に自分の投稿が含まれている
         } else {
             return nil
         }
@@ -195,7 +197,7 @@ class NotificationsModel {
         let externalEmojis = getExternalEmojis(target)
         return NotificationCell.Model(notificationId: target.id ?? "",
                                       type: type,
-                                      myNote: target.note?.getNoteCellModel(),
+                                      myNote: targetNote?.getNoteCellModel(),
                                       replyNote: nil,
                                       fromUser: fromUser,
                                       reaction: target.reaction,

@@ -70,6 +70,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     ///   - query: 検索クエリ
     ///   - withNavBar: NavBarが必要か
     ///   - scrollable: スクロール可能か
+    ///   - lockScroll: スクロールを固定するかどうか
     ///   - loadLimit: 一度に読み込むnoteの量
     ///   - xlTitle: タブに表示する名前
     func setup(type: TimelineType,
@@ -80,6 +81,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                query: String? = nil,
                withNavBar: Bool = true,
                scrollable: Bool = true,
+               lockScroll: Bool = true,
                withTopShadow: Bool = false,
                loadLimit: Int = 40,
                xlTitle: IndicatorInfo? = nil) {
@@ -90,6 +92,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                                     userId: userId,
                                     listId: listId,
                                     query: query,
+                                    lockScroll: lockScroll,
                                     loadLimit: loadLimit)
         
         viewModel = ViewModel(with: input, and: disposeBag)
@@ -192,7 +195,11 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             homeViewController.changedStreamState(success: success)
         }).disposed(by: disposeBag)
         
-        mainTableView.lockScroll = output.lockTableScroll
+        output.reserveLockTrigger.subscribe(onNext: { _ in
+            self.mainTableView.reserveLock() // 次にセルがupdateされた時にスクロールを固定し直す
+        }).disposed(by: disposeBag)
+        
+        mainTableView.lockScroll = output.lockTableScroll.asObservable()
     }
     
     // MARK: Gesture
@@ -221,11 +228,6 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         
         let index = indexPath.row
         let item = viewModel.cellsModel[index]
-        
-        if item.identity == viewModel.state.reloadTopModelId { // untilLoadが完了した場合
-            viewModel.state.reloadTopModelId = nil
-            mainTableView.lockScroll?.accept(true) // スクロールを固定し直す
-        }
         
         // View側で NoteCell / RenoteeCell / PromotionCell を区別する
         if item.isPromotionCell {

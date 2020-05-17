@@ -28,7 +28,7 @@ class UserCell: UITableViewCell, ComponentType, UITextViewDelegate {
     
     // MARK: Views
     
-    @IBOutlet weak var iconView: UIImageView!
+    @IBOutlet weak var iconView: MissCatImageView!
     @IBOutlet weak var nameTextView: MisskeyTextView!
     @IBOutlet weak var descriptionTextView: MisskeyTextView!
     @IBOutlet weak var separatorView: UIView!
@@ -113,7 +113,7 @@ class UserCell: UITableViewCell, ComponentType, UITextViewDelegate {
     }
     
     private func setupComponents() {
-        iconView.layer.cornerRadius = iconView.frame.height / 2
+        iconView.maskCircle()
         descriptionTextView.delegate = self
     }
     

@@ -6,6 +6,7 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import Agrume
 import AVKit
 import MisskeyKit
 import PolioPager
@@ -18,7 +19,7 @@ import UIKit
 // 上タブ管理はBGで動いている親クラスのPolioPagerが行い、下タブ管理はHomeViewControllerが自前で行う。
 // 一時的なキャッシュ管理についてはsingletonのCacheクラスを使用
 
-class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate, UINavigationControllerDelegate {
+class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate {
     private var isXSeries = UIScreen.main.bounds.size.height > 811
     private let footerTabHeight: CGFloat = 55
     private var initialized: Bool = false
@@ -551,9 +552,13 @@ extension HomeViewController: NoteCellDelegate {
     
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}
     
-    func vote(choice: Int, to noteId: String) {
-        // TODO: modelの変更 / api処理
+    func vote(choice: [Int], to noteId: String) {
         viewModel.vote(choice: choice, to: noteId)
+    }
+    
+    func showImage(_ urls: [URL], start startIndex: Int) {
+        let agrume = Agrume(urls: urls, startIndex: startIndex)
+        agrume.show(from: self) // 画像を表示
     }
     
     func playVideo(url: String) {

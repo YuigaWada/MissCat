@@ -6,7 +6,6 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
-import Agrume
 import MisskeyKit
 import RxCocoa
 import RxDataSources
@@ -106,15 +105,12 @@ class FileContainer: UICollectionView, UICollectionViewDelegate, ComponentType {
         if item.isVideo {
             noteCellDelegate?.playVideo(url: item.originalUrl)
         } else {
-            showImage(url: item.originalUrl)
+            guard let url = URL(string: item.originalUrl) else { return }
+            let urls = fileModel.compactMap { $0.originalUrl }.compactMap { URL(string: $0) }
+            
+            let startIndex = urls.firstIndex(of: url) ?? 0
+            noteCellDelegate?.showImage(urls, start: startIndex)
         }
-    }
-    
-    private func showImage(url: String) {
-        guard let url = URL(string: url), let delegate = noteCellDelegate as? UIViewController else { return }
-        
-        let agrume = Agrume(url: url)
-        agrume.show(from: delegate) // 画像を表示
     }
 }
 

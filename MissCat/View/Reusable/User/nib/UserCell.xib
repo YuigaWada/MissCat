@@ -23,7 +23,7 @@
                     <fontDescription key="fontDescription" type="system" pointSize="14"/>
                     <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                 </textView>
-                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="3M2-tT-IDL">
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="3M2-tT-IDL" customClass="MissCatImageView" customModule="MissCat" customModuleProvider="target">
                     <rect key="frame" x="20" y="13" width="49.5" height="50"/>
                     <color key="backgroundColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                 </imageView>
@@ -62,7 +62,7 @@
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
             <connections>
                 <outlet property="descriptionTextView" destination="2Ub-e8-85o" id="H5e-SI-j5G"/>
-                <outlet property="iconView" destination="3M2-tT-IDL" id="bg4-5Z-D6n"/>
+                <outlet property="iconView" destination="3M2-tT-IDL" id="qzr-LN-1hQ"/>
                 <outlet property="nameTextView" destination="SfV-fE-pUJ" id="ca9-ab-9kY"/>
                 <outlet property="separatorView" destination="8S3-Ev-eOU" id="ixr-sV-FNa"/>
             </connections>

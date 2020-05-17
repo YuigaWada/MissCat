@@ -19,12 +19,13 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
     private lazy var dataSource = self.setupDataSource()
     private let disposeBag: DisposeBag = .init()
     
+    private var lockScroll: Bool = true
     private var withTopShadow: Bool = false
     private var topShadow: CALayer?
     
     // MARK: I/O
     
-    func setup(type: UserListType, userId: String? = nil, query: String? = nil, listId: String? = nil, withTopShadow: Bool = false) {
+    func setup(type: UserListType, userId: String? = nil, query: String? = nil, lockScroll: Bool = true, listId: String? = nil, withTopShadow: Bool = false) {
         let input = UserListViewModel.Input(dataSource: dataSource,
                                             type: type,
                                             userId: userId,
@@ -34,6 +35,7 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
         let viewModel: UserListViewModel = .init(with: input, and: disposeBag)
         self.viewModel = viewModel
         self.withTopShadow = withTopShadow
+        self.lockScroll = lockScroll
     }
     
     // MARK: LifeCycle
@@ -65,6 +67,7 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
         
         let output = viewModel.output
         output.users.bind(to: mainTableView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
+        mainTableView.lockScroll = Observable.of(lockScroll)
     }
     
     private func bindTheme() {

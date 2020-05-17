@@ -271,7 +271,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
             let viewController = getViewController(name: "timeline") as? TimelineViewController
         else { return nil }
         
-        viewController.setup(type: .NoteSearch, query: query, withTopShadow: true)
+        viewController.setup(type: .NoteSearch, query: query, lockScroll: false, withTopShadow: true)
         viewController.view.frame = timelineView.frame
         viewController.view.translatesAutoresizingMaskIntoConstraints = false
         timelineView.addSubview(viewController.view)
@@ -286,7 +286,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
             let viewController = getViewController(name: "user-list") as? UserListViewController
         else { return nil }
         
-        viewController.setup(type: .search, query: query, withTopShadow: true)
+        viewController.setup(type: .search, query: query, lockScroll: false, withTopShadow: true)
         viewController.view.frame = timelineView.frame
         viewController.view.translatesAutoresizingMaskIntoConstraints = false
         timelineView.addSubview(viewController.view)

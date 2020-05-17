@@ -28,6 +28,12 @@ class Cache {
     
     private lazy var applicationSupportDir = CreateApplicationSupportDir()
     
+    // MARK: Reset
+    
+    func resetMyCache() {
+        me = nil
+    }
+    
     // MARK: Save
     
     func saveIcon(username: String, image: UIImage) {
