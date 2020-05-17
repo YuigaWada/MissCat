@@ -31,9 +31,11 @@ class MisscatApi {
     
     /// 適切なendpointを生成し、sw/registerを叩く
     func registerSw() {
-        guard !baseApiUrl.isEmpty,
-            let userId = Cache.UserDefaults.shared.getCurrentLoginedUserId(),
-            let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey() else { return }
+        guard let userId = Cache.UserDefaults.shared.getCurrentLoginedUserId(),
+            let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey(),
+            !baseApiUrl.isEmpty,
+            !apiKey.isEmpty,
+            !userId.isEmpty else { return }
         
         MisskeyKit.auth.setAPIKey(apiKey)
         InstanceID.instanceID().instanceID { result, error in
