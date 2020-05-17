@@ -138,6 +138,7 @@
 		8DC27D9C243BF6DD0037E610 /* UrlPreviewerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */; };
 		8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */; };
 		8DC95AF923B0BD450013CABC /* NotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC95AF823B0BD450013CABC /* NotificationBanner.swift */; };
+		8DCBFBD624711B510028A5E6 /* MissCatImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCBFBD524711B510028A5E6 /* MissCatImageView.swift */; };
 		8DCCF8E5246A97C50001A21C /* MisscatApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCCF8E4246A97C50001A21C /* MisscatApi.swift */; };
 		8DCCF8E7246AB1090001A21C /* ApiKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCCF8E6246AB1090001A21C /* ApiKeyManager.swift */; };
 		8DD2F9C5246D5DA100562E85 /* ProfileSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD2F9C4246D5DA100562E85 /* ProfileSettingsViewController.swift */; };
@@ -308,6 +309,7 @@
 		8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UrlPreviewerModel.swift; sourceTree = "<group>"; };
 		8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = NotificationBanner.xib; sourceTree = "<group>"; };
 		8DC95AF823B0BD450013CABC /* NotificationBanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationBanner.swift; sourceTree = "<group>"; };
+		8DCBFBD524711B510028A5E6 /* MissCatImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatImageView.swift; sourceTree = "<group>"; };
 		8DCCF8E4246A97C50001A21C /* MisscatApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MisscatApi.swift; sourceTree = "<group>"; };
 		8DCCF8E6246AB1090001A21C /* ApiKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiKeyManager.swift; sourceTree = "<group>"; };
 		8DD0D80B23B47CA8003F02ED /* YanagiText.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = YanagiText.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -451,6 +453,7 @@
 				8D0D6890244A9A6800725ABB /* PlaceholderTableView.swift */,
 				8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */,
 				8D560353246F9E8500DD41BE /* RxEureka.swift */,
+				8DCBFBD524711B510028A5E6 /* MissCatImageView.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -1189,6 +1192,7 @@
 				8D2A7236242A49CC00F8827D /* MissCatTableView.swift in Sources */,
 				8D79687F2404BE59004F87FA /* ReactionCollectionHeader.swift in Sources */,
 				8D31018D24397B45004F8E55 /* ReactionSettingsViewController.swift in Sources */,
+				8DCBFBD624711B510028A5E6 /* MissCatImageView.swift in Sources */,
 				8D0AC5C1237B865B00530508 /* TimelineModel.swift in Sources */,
 				8D5889F5244FFAC200C6EBC2 /* DesignSettingsViewController.swift in Sources */,
 				8DF49FA224445B0500C4D2B2 /* TrendViewController.swift in Sources */,
