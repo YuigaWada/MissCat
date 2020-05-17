@@ -95,8 +95,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
     
     private func registerSw() {
-        let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager())
-        misscatApi.registerSw()
+        #if targetEnvironment(simulator)
+            let misscatApi = MisscatApi(apiKeyManager: MockApiKeyManager())
+            misscatApi.registerSw()
+        #else
+            let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager())
+            misscatApi.registerSw()
+        #endif
     }
     
     // MARK: Notifications
