@@ -255,6 +255,9 @@ class ProfileSettingsViewController: FormViewController {
     
     // MARK: Toolbar
     
+    
+    /// targetに対してToolBarを生成する
+    /// - Parameter target: Target
     private func getToolBar(for target: UITextInput) -> UIToolbar {
         let toolBar = UIToolbar()
         let flexibleItem = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
@@ -272,6 +275,9 @@ class ProfileSettingsViewController: FormViewController {
         return toolBar
     }
     
+    
+    /// ReactionGen(絵文字ピッカー)を表示する
+    /// - Parameter viewWithText: UITextInput
     private func showReactionGen(target viewWithText: UITextInput) {
         guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
         
@@ -284,6 +290,9 @@ class ProfileSettingsViewController: FormViewController {
         presentWithSemiModal(reactionGen, animated: true, completion: nil)
     }
     
+    
+    /// StoryBoardからVCを生成する
+    /// - Parameter name: name
     private func getViewController(name: String) -> UIViewController {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let viewController = storyboard.instantiateViewController(withIdentifier: name)
@@ -291,6 +300,11 @@ class ProfileSettingsViewController: FormViewController {
         return viewController
     }
     
+    
+    /// TextView, TextFiledに対して、現時点でのカーソル位置に絵文字を挿入する
+    /// - Parameters:
+    ///   - emojiModel: EmojiView.EmojiModel
+    ///   - viewWithText: TextView, TextFiled...etc
     private func insertCustomEmoji(with emojiModel: EmojiView.EmojiModel, to viewWithText: UITextInput) {
         if let selectedTextRange = viewWithText.selectedTextRange {
             guard let emoji = emojiModel.isDefault ? emojiModel.defaultEmoji : ":\(emojiModel.rawEmoji):" else { return }
@@ -319,7 +333,7 @@ class ProfileSettingsViewController: FormViewController {
         iconImage.translatesAutoresizingMaskIntoConstraints = false
         bannerImage.addSubview(iconImage)
         
-        //        // AutoLayout
+        // AutoLayout
         bannerImage.addConstraints([
             NSLayoutConstraint(item: iconImage,
                                attribute: .leading,
@@ -440,7 +454,7 @@ class ProfileSettingsViewController: FormViewController {
         var menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "カメラから", awesomeIcon: "", order: 0),
                                                              .init(title: "アルバムから", awesomeIcon: "", order: 1)]
         
-        if hasChanged {
+        if hasChanged { // イメージが一度でも変更されたら、もとに戻すオプションを追加する
             menuItems.append(.init(title: "元に戻す", awesomeIcon: "", order: 2))
         }
         
