@@ -75,7 +75,7 @@ PODS:
   - iOSPhotoEditor (1.0.0)
   - MessageKit (3.1.0):
     - InputBarAccessoryView (~> 4.3.0)
-  - MisskeyKit (2.6):
+  - MisskeyKit (2.6.1):
     - Starscream (= 3.1.1)
   - nanopb (0.3.9011):
     - nanopb/decode (= 0.3.9011)
@@ -213,7 +213,7 @@ SPEC CHECKSUMS:
   InputBarAccessoryView: 7985d418040a05fe894bd4b8328dd43ab35517c3
   iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
   MessageKit: 3beb578737a5aa2bba25cc27c7b6d6faa09af5a7
-  MisskeyKit: 9fa48798e022abc8a54cba9f37e0ac4123ad4df1
+  MisskeyKit: ac0f495360000dde777e5e66c67b786abdcda71f
   nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
   PolioPager: ccb4e382fef0c3c0ee52bdec3d9e9794eafa510a
   PromisesObjC: c119f3cd559f50b7ae681fa59dc1acd19173b7e6
