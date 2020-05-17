@@ -828,7 +828,7 @@
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="7LQ-Y2-MF5">
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="7LQ-Y2-MF5" customClass="MissCatImageView" customModule="MissCat" customModuleProvider="target">
                                         <rect key="frame" x="20" y="12" width="47" height="45"/>
                                         <color key="backgroundColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         <constraints>
@@ -936,7 +936,7 @@
                         <outlet property="borderOriginXConstraint" destination="2cF-Wq-vdb" id="0eU-q2-cto"/>
                         <outlet property="displayNameLabel" destination="Y77-CL-VDH" id="aCm-hg-mY7"/>
                         <outlet property="emojiCollectionView" destination="OgS-1x-Vgm" id="IxT-K8-B8P"/>
-                        <outlet property="iconImageView" destination="7LQ-Y2-MF5" id="g1c-N9-5NX"/>
+                        <outlet property="iconImageView" destination="7LQ-Y2-MF5" id="0lT-gx-TTE"/>
                         <outlet property="searchBar" destination="hLc-bQ-WPg" id="Erg-Rc-gHq"/>
                         <outlet property="settingsButton" destination="REl-1x-M7t" id="UPb-c8-5ld"/>
                         <outlet property="targetNoteDisplayView" destination="ld0-RN-wpl" id="iUa-Tm-J6T"/>
