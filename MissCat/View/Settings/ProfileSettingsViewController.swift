@@ -236,7 +236,7 @@ class ProfileSettingsViewController: FormViewController {
             section.header = {
                 var header = HeaderFooterView<UIView>(.callback {
                     self.getHeader()
-                  })
+                    })
                 header.height = { self.headerHeight }
                 return header
             }()
@@ -248,13 +248,27 @@ class ProfileSettingsViewController: FormViewController {
         
         form +++ headerSection +++ nameSection +++ descSection +++ miscSection
         tableView.isScrollEnabled = false
+    // MARK: Section
+    
+    private func getNameSection() -> Section {
+        return Section("Name") <<< nameTextArea
     }
+    
+    private func getDescSection() -> Section {
+        return Section("Bio") <<< bioTextArea
+    }
+    
+    private func getMiscSection() -> Section {
+        return Section(header: "Cat", footer: "ONにすると自分の投稿がネコ語に翻訳されます") <<< catSwitch
+    }
+    
+    // MARK: Header
     
     private func getHeader() -> UIView {
         iconImage.translatesAutoresizingMaskIntoConstraints = false
         bannerImage.addSubview(iconImage)
         
-//        // AutoLayout
+        //        // AutoLayout
         bannerImage.addConstraints([
             NSLayoutConstraint(item: iconImage,
                                attribute: .leading,
@@ -366,20 +380,6 @@ class ProfileSettingsViewController: FormViewController {
                                multiplier: 1.0,
                                constant: 0)
         ])
-    }
-    
-    // MARK: Section
-    
-    private func getNameSection() -> Section {
-        return Section("Name") <<< nameTextArea
-    }
-    
-    private func getDescSection() -> Section {
-        return Section("Bio") <<< bioTextArea
-    }
-    
-    private func getMiscSection() -> Section {
-        return Section(header: "Cat", footer: "ONにすると自分の投稿がネコ語に翻訳されます") <<< catSwitch
     }
     
     // MARK: Alert
