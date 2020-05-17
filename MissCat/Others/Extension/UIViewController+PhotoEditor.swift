@@ -6,6 +6,7 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import AVKit
 import iOSPhotoEditor
 import RxSwift
 import UIKit
@@ -49,6 +50,44 @@ extension UIViewController {
             guard let observer = observer else { return }
             observer.onNext(originalImage)
             observer.onCompleted()
+        }
+    }
+}
+
+extension UIViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func pickImage(type: UIImagePickerController.SourceType, delegate: (UIImagePickerControllerDelegate & UINavigationControllerDelegate)? = nil) {
+        if UIImagePickerController.isSourceTypeAvailable(.savedPhotosAlbum) {
+            let picker = UIImagePickerController()
+            picker.sourceType = type
+            picker.mediaTypes = UIImagePickerController.availableMediaTypes(for: type) ?? []
+            picker.videoQuality = .typeHigh
+            picker.delegate = delegate ?? self
+            
+            presentOnFullScreen(picker, animated: true, completion: nil)
+        }
+    }
+    
+    func transformAttachment(disposeBag: DisposeBag, picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any], completion: @escaping (UIImage?, UIImage?, URL?) -> Void) {
+        picker.dismiss(animated: true, completion: nil)
+        
+        let isImage = info[UIImagePickerController.InfoKey.originalImage] is UIImage
+        
+        if isImage {
+            guard let originalImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else { return }
+            
+            showPhotoEditor(with: originalImage).subscribe(onNext: { editedImage in // 画像エディタを表示
+                guard let editedImage = editedImage else { return }
+                completion(originalImage, editedImage, nil)
+              }).disposed(by: disposeBag)
+            
+            return
+        }
+        // is Video
+        guard let url = info[UIImagePickerController.InfoKey.mediaURL] as? NSURL else { return }
+        AVAsset.convert2Mp4(videoUrl: url) { session in // 動画のデフォルトがmovなのでmp4に変換する
+            guard session.status == .completed, let filePath = session.outputURL else { return }
+            
+            completion(nil, nil, filePath)
         }
     }
 }

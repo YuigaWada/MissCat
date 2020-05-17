@@ -14,7 +14,10 @@ protocol ReactionCellDelegate {
     func tappedReaction(noteId: String, reaction: String, isRegister: Bool) // isRegister: リアクションを「登録」するのか「取り消す」のか
 }
 
-class ReactionCell: UICollectionViewCell {
+class ReactionCell: UICollectionViewCell, ComponentType {
+    typealias Arg = NoteCell.Reaction
+    typealias Transformed = ReactionCell
+    
     @IBOutlet weak var reactionCounterLabel: UILabel!
     @IBOutlet weak var defaultEmojiLabel: UILabel!
     
@@ -51,33 +54,32 @@ class ReactionCell: UICollectionViewCell {
         changeColor(isMyReaction: isMyReaction)
     }
     
-    // MARK: Setup
+    // MARK: Publics
     
-    private func addTapGesture(to view: UIView) {
-        let tapGesture = UITapGestureRecognizer()
+    func transform(with arg: NoteCell.Reaction) -> ReactionCell {
+        let item = arg
+        guard let rawEmoji = item.rawEmoji else { return self }
         
-        // 各々のEmojiViewに対してtap gestureを付加する
-        tapGesture.rx.event.bind { _ in
-            self.isMyReaction = !self.isMyReaction
-            
-            UIView.animate(withDuration: 0.3,
-                           animations: {
-                               self.changeColor(isMyReaction: self.isMyReaction)
-                               self.changeCounter(plus: self.isMyReaction)
-                           }, completion: { _ in
-                               guard let delegate = self.delegate,
-                                   let noteId = self.noteId,
-                                   let rawReaction = self.rawReaction else { return }
-                               
-                               delegate.tappedReaction(noteId: noteId, reaction: rawReaction, isRegister: self.isMyReaction)
-                               
-            })
-        }.disposed(by: disposeBag)
+        if let customEmojiUrl = item.url {
+            setup(noteId: item.noteId,
+                  count: item.count,
+                  customEmoji: customEmojiUrl,
+                  isMyReaction: item.isMyReaction,
+                  rawReaction: rawEmoji)
+        } else {
+            setup(noteId: item.noteId,
+                  count: item.count,
+                  rawDefaultEmoji: rawEmoji,
+                  isMyReaction: item.isMyReaction,
+                  rawReaction: rawEmoji)
+        }
         
-        view.addGestureRecognizer(tapGesture)
+        return self
     }
     
-    func setup(noteId: String?, count: String, defaultEmoji: String? = nil, customEmoji: String? = nil, rawDefaultEmoji: String? = nil, isMyReaction: Bool, rawReaction: String) {
+    // MARK: Setup
+    
+    private func setup(noteId: String?, count: String, defaultEmoji: String? = nil, customEmoji: String? = nil, rawDefaultEmoji: String? = nil, isMyReaction: Bool, rawReaction: String) {
         self.isMyReaction = isMyReaction
         self.rawReaction = rawReaction
         self.noteId = noteId ?? ""
@@ -103,6 +105,30 @@ class ReactionCell: UICollectionViewCell {
             
             defaultEmojiLabel.text = rawDefaultEmoji
         }
+    }
+    
+    private func addTapGesture(to view: UIView) {
+        let tapGesture = UITapGestureRecognizer()
+        
+        // 各々のEmojiViewに対してtap gestureを付加する
+        tapGesture.rx.event.bind { _ in
+            self.isMyReaction = !self.isMyReaction
+            
+            UIView.animate(withDuration: 0.3,
+                           animations: {
+                               self.changeColor(isMyReaction: self.isMyReaction)
+                               self.changeCounter(plus: self.isMyReaction)
+                           }, completion: { _ in
+                               guard let delegate = self.delegate,
+                                   let noteId = self.noteId,
+                                   let rawReaction = self.rawReaction else { return }
+                               
+                               delegate.tappedReaction(noteId: noteId, reaction: rawReaction, isRegister: self.isMyReaction)
+                               
+            })
+        }.disposed(by: disposeBag)
+        
+        view.addGestureRecognizer(tapGesture)
     }
     
     func setGradation(view: UIView) {

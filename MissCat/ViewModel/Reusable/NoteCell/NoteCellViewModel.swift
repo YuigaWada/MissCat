@@ -15,7 +15,7 @@ class NoteCellViewModel: ViewModelType {
     // MARK: I/O
     
     struct Input {
-        let cellModel: NoteCell.Model
+        var cellModel: NoteCell.Model
         let isDetailMode: Bool
         
         // Modelに渡さなければならないので看過
@@ -134,26 +134,6 @@ class NoteCellViewModel: ViewModelType {
         setImage(to: output.iconImage, username: item.username, hostInstance: item.hostInstance, imageRawUrl: item.iconImageUrl)
         setImage(to: output.innerIconImage, username: item.commentRNTarget?.username, hostInstance: item.hostInstance, imageRawUrl: item.commentRNTarget?.iconImageUrl)
         setFooter(from: item)
-    }
-    
-    func setReactionCell(with item: NoteCell.Reaction, to reactionCell: ReactionCell) -> ReactionCell {
-        guard let rawEmoji = item.rawEmoji else { return reactionCell }
-        
-        if let customEmojiUrl = item.url {
-            reactionCell.setup(noteId: item.noteId,
-                               count: item.count,
-                               customEmoji: customEmojiUrl,
-                               isMyReaction: item.isMyReaction,
-                               rawReaction: rawEmoji)
-        } else {
-            reactionCell.setup(noteId: item.noteId,
-                               count: item.count,
-                               rawDefaultEmoji: rawEmoji,
-                               isMyReaction: item.isMyReaction,
-                               rawReaction: rawEmoji)
-        }
-        
-        return reactionCell
     }
     
     private func setColor() {
@@ -302,6 +282,19 @@ class NoteCellViewModel: ViewModelType {
         input.cellModel.myReaction = nil
         setReactionCount(from: input.cellModel, startCount: -1)
         model.cancelReaction(noteId: noteId)
+    }
+    
+    func updateVote(choices: [Int]) {
+        guard let poll = input.cellModel.poll,
+            let currentChoices = poll.choices else { return }
+        
+        choices.forEach { choiceIndex in
+            guard choiceIndex >= 0, choiceIndex < currentChoices.count else { return }
+            let currentVotes = currentChoices[choiceIndex]?.votes ?? 0
+            
+            input.cellModel.poll?.choices?[choiceIndex]?.votes = currentVotes + 1
+            input.cellModel.poll?.choices?[choiceIndex]?.isVoted = true
+        }
     }
     
     private func updateReactions(new: [NoteCell.Reaction]) {

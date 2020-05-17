@@ -9,10 +9,12 @@
 import MisskeyKit
 
 class HomeModel {
-    func vote(choice: Int, to noteId: String) {
-        MisskeyKit.notes.vote(noteId: noteId, choice: choice, result: { _, _ in
-            //            print(error)
-        })
+    func vote(choice: [Int], to noteId: String) {
+        choice.forEach {
+            MisskeyKit.notes.vote(noteId: noteId, choice: $0, result: { _, _ in
+                //            print(error)
+            })
+        }
     }
     
     func renote(noteId: String) {

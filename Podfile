@@ -10,8 +10,7 @@ pod 'PolioPager'
 pod 'SwiftFormat/CLI'
 pod 'Starscream','3.1.1'
 
-pod 'AWSSNS', :binary => true
-pod 'AWSCognito', :binary => true
+pod 'Firebase/Messaging', :binary => true
 pod 'RxSwift', '~> 5', :binary => true
 pod 'RxCocoa', '~> 5', :binary => true
 pod 'RxDataSources', :binary => true

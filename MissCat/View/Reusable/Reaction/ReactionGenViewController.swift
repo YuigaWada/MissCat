@@ -19,7 +19,7 @@ private typealias ViewModel = ReactionGenViewModel
 typealias EmojisDataSource = RxCollectionViewSectionedReloadDataSource<ReactionGenViewController.EmojisSection>
 class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScrollViewDelegate, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     @IBOutlet weak var searchBar: UISearchBar!
-    @IBOutlet weak var iconImageView: UIImageView!
+    @IBOutlet weak var iconImageView: MissCatImageView!
     @IBOutlet weak var displayNameLabel: UILabel!
     @IBOutlet weak var targetNoteTextView: UITextView!
     @IBOutlet weak var targetNoteDisplayView: UIView!
@@ -61,7 +61,6 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         
         targetNoteDisplayView.isHidden = onPostViewController
         borderOriginXConstraint.isActive = !onPostViewController
-        iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -150,18 +149,25 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
     }
     
     private func setupComponents() {
+        // icon
+        iconImageView.maskCircle()
+        
+        // collectionView
         emojiCollectionView.register(UINib(nibName: "ReactionCollectionHeader", bundle: nil), forCellWithReuseIdentifier: "ReactionCollectionHeader")
         emojiCollectionView.register(UINib(nibName: "EmojiViewCell", bundle: nil), forCellWithReuseIdentifier: "EmojiCell")
         emojiCollectionView.rx.setDelegate(self).disposed(by: disposeBag)
+        
+        // searchBar
         searchBar.delegate = self
         searchBar.autocorrectionType = .no
         searchBar.keyboardType = .emailAddress
         
+        // targetNote
         targetNoteTextView.textContainer.lineBreakMode = .byTruncatingTail
         targetNoteTextView.textContainer.maximumNumberOfLines = 2
         
+        // button
         settingsButton.titleLabel?.font = .awesomeSolid(fontSize: 15.0)
-        
         settingsButton.rx.tap.subscribe(onNext: { _ in
             // ReactionGenが閉じてから設定を開く
             self.dismiss(animated: true, completion: {

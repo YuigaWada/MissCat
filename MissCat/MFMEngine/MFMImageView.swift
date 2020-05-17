@@ -11,7 +11,7 @@ import Gifu
 import SVGKit
 import UIKit
 
-class MFMImageView: UIImageView {
+class MFMImageView: MissCatImageView {
     // MARK: Views
     
     private var apngView: APNGImageView?

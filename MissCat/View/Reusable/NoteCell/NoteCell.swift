@@ -24,11 +24,12 @@ protocol NoteCellDelegate {
     func move2PostDetail(item: NoteCell.Model)
     
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool)
-    func vote(choice: Int, to noteId: String)
+    func vote(choice: [Int], to noteId: String)
     
     func tappedLink(text: String)
     func move2Profile(userId: String)
     
+    func showImage(_ urls: [URL], start startIndex: Int)
     func playVideo(url: String)
 }
 
@@ -169,6 +170,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         self.setupCollectionView()
         self.setupFileContainer()
         self.setupInnerRenoteDisplay()
+        self.setupPoll()
         self.selectedBackgroundView = UIView()
         return {}
     }()
@@ -240,6 +242,14 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             guard let renoteTarget = self.renoteTarget else { return }
             self.delegate?.move2PostDetail(item: renoteTarget)
         }
+    }
+    
+    private func setupPoll() {
+        pollView.voteTriggar.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { ids in
+            guard let noteId = self.noteId else { return }
+            self.viewModel?.updateVote(choices: ids)
+            self.delegate?.vote(choice: ids, to: noteId)
+        }).disposed(by: disposeBag)
     }
     
     private func binding(viewModel: ViewModel, noteId: String) {
@@ -325,10 +335,6 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
                 self.pollView.isHidden = false
                 self.pollView.setPoll(with: poll)
                 self.pollViewHeightConstraint.constant = self.pollView.height
-                
-                self.pollView.voteTriggar?.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { id in
-                    self.delegate?.vote(choice: id, to: noteId)
-                }).disposed(by: self.disposeBag)
             }).disposed(by: disposeBag)
         
         // general
@@ -593,7 +599,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         if index < reactionsModel.count {
             let item = reactionsModel[index]
             
-            let shapedCell = viewModel.setReactionCell(with: item, to: cell)
+            let shapedCell = cell.transform(with: item)
             shapedCell.delegate = self
             
             return shapedCell

@@ -97,12 +97,26 @@ class SettingsViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let index = indexPath.row
-        
-        if index == 1 {
+        if index == 0 {
+            guard let accountSettings = getViewController(name: "accounts-settings") as? AccountViewController else { return }
+            
+            accountSettings.homeViewController = homeViewController
+            navigationController?.pushViewController(accountSettings, animated: true)
+        } else if index == 1 {
             let designSettings = DesignSettingsViewController()
             
             designSettings.homeViewController = homeViewController
             navigationController?.pushViewController(designSettings, animated: true)
+        } else if index == 3 {
+            let licenseTable = LicenseTableViewController()
+            navigationController?.pushViewController(licenseTable, animated: true)
         }
+    }
+    
+    private func getViewController(name: String) -> UIViewController {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let viewController = storyboard.instantiateViewController(withIdentifier: name)
+        
+        return viewController
     }
 }

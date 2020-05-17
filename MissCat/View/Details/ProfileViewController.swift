@@ -7,6 +7,7 @@
 //
 
 import Agrume
+import MisskeyKit
 import RxCocoa
 import RxSwift
 import SkeletonView
@@ -60,7 +61,8 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     private var childVCs: [TimelineViewController] = []
     
-    private var maxScroll: CGFloat {
+    // containerScrollView ← ContainerView(XLPagerTabStrip) ← tlScrollView の順で入れ子にScrollViewが載っている
+    private var containerMaxScroll: CGFloat {
         updateAnimateBlurHeight() // 自己紹介文の高さが変更されるので、Blurの高さも変更する
         pagerTab.layoutIfNeeded()
         return pagerTab.frame.origin.y - getSafeAreaSize().height - 10 // 10 = 微調整
@@ -121,7 +123,11 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     }
     
     private func getViewModel() -> ViewModel {
-        let input = ViewModel.Input(nameYanagi: nameTextView, introYanagi: introTextView)
+        let input = ViewModel.Input(nameYanagi: nameTextView,
+                                    introYanagi: introTextView,
+                                    followButtonTapped: followButton.rx.tap,
+                                    backButtonTapped: backButton.rx.tap,
+                                    settingsButtonTapped: settingsButton.rx.tap)
         return .init(with: input, and: disposeBag)
     }
     
@@ -261,27 +267,27 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
                 self.followButton.setTitleColor(isFollowing ? self.mainColor : UIColor.white, for: .normal)
             }).disposed(by: disposeBag)
             
-            followButton.rx.tap.subscribe(onNext: {
-                guard let isFollowing = self.viewModel.state.isFollowing else { return }
-                
-                if isFollowing { // try フォロー解除
-                    self.showUnfollowAlert()
-                } else {
-                    self.viewModel.follow()
-                }
-                
-            }).disposed(by: disposeBag)
         } else { // 自分のプロフィール画面の場合
             followButton.setTitle("編集", for: .normal)
             followButton.setTitleColor(mainColor, for: .normal)
         }
         
-        backButton.rx.tap.subscribe(onNext: {
-            _ = self.navigationController?.popViewController(animated: true)
+        // trigger
+        
+        output.openSettingsTrigger.subscribe(onNext: {
+            self.homeViewController?.openSettings()
         }).disposed(by: disposeBag)
         
-        settingsButton.rx.tap.subscribe(onNext: {
-            self.homeViewController?.openSettings()
+        output.showUnfollowAlertTrigger.subscribe(onNext: {
+            self.showUnfollowAlert()
+        }).disposed(by: disposeBag)
+        
+        output.showProfileSettingsTrigger.subscribe(onNext: { profile in
+            self.showProfileSettings(of: profile)
+        }).disposed(by: disposeBag)
+        
+        output.popViewControllerTrigger.subscribe(onNext: {
+            _ = self.navigationController?.popViewController(animated: true)
         }).disposed(by: disposeBag)
         
         backButton.isHidden = output.isMe
@@ -349,6 +355,27 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         alert.addAction(defaultAction)
         
         present(alert, animated: true, completion: nil)
+    }
+    
+    /// プロフィール編集画面へと遷移する
+    /// - Parameter profile: ProfileViewModel.Profile
+    private func showProfileSettings(of profile: ProfileViewModel.Profile) {
+        let settings = ProfileSettingsViewController()
+        settings.homeViewController = homeViewController
+        settings.setup(banner: bannerImageView.image,
+                       bannerUrl: profile.bannerUrl,
+                       icon: iconImageView.image,
+                       iconUrl: profile.iconUrl,
+                       name: profile.name,
+                       description: profile.description,
+                       isCat: profile.isCat)
+        
+        // プロフィールの書き換え命令が出たら書き換える
+        settings.overrideInfoTrigger.subscribe(onNext: { diff in
+            self.viewModel.overrideInfo(diff)
+        }).disposed(by: disposeBag)
+        
+        navigationController?.pushViewController(settings, animated: true)
     }
     
     // MARK: UITextViewDelegate
@@ -455,11 +482,12 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         var needContainerScroll: Bool = true
         // tlScrollViewをスクロール
         if scroll > 0 {
-            if containerScrollView.contentOffset.y >= maxScroll {
+            if containerScrollView.contentOffset.y >= containerMaxScroll {
                 tlScrollView.contentOffset.y += scroll
                 needContainerScroll = false
                 
-                if tlScrollView.contentOffset.y >= tlScrollView.contentSize.height - containerView.frame.height { // スクロールの上限
+                let tlMaxScroll = tlScrollView.contentSize.height - containerView.frame.height + pagerTab.frame.height + tlScrollView.spinnerHeight
+                if tlScrollView.contentOffset.y >= tlMaxScroll { // スクロールの上限
                     tlScrollView.contentOffset.y -= scroll
                 }
             }
@@ -476,7 +504,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
             scrollView.contentOffset.y = scrollBegining
         } else {
             // スクロールがmaxScrollの半分を超えたあたりから、fractionComplete: 0→1と動かしてanimateさせる
-            let blurProportion = containerScrollView.contentOffset.y * 2 / maxScroll - 1
+            let blurProportion = containerScrollView.contentOffset.y * 2 / containerMaxScroll - 1
             scrollBegining = scrollView.contentOffset.y
             
             // ブラーアニメーションをかける

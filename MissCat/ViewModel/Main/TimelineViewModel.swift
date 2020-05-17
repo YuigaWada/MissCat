@@ -23,6 +23,7 @@ class TimelineViewModel: ViewModelType {
         let userId: String?
         let listId: String?
         let query: String?
+        let lockScroll: Bool
         let loadLimit: Int
     }
     
@@ -34,6 +35,8 @@ class TimelineViewModel: ViewModelType {
         
         let finishedLoading: PublishRelay<Bool> = .init()
         let connectedStream: PublishRelay<Bool> = .init()
+        
+        let reserveLockTrigger: PublishRelay<Void> = .init()
     }
     
     class State {
@@ -41,32 +44,28 @@ class TimelineViewModel: ViewModelType {
         var cellCount: Int
         var renoteeCellCount: Int
         var isLoading: Bool
-        var reloadTopModelId: String? // untilLoadした分のセルのうち、最上端にある投稿のid
         
         var cellCompleted: Bool { // 準備した分のセルがすべて表示されたかどうか
             return (cellCount - renoteeCellCount) % loadLimit == 0
         }
         
-        init(cellCount: Int, renoteeCellCount: Int, isLoading: Bool, loadLimit: Int, reloadTopModelId: String? = nil) {
+        init(cellCount: Int, renoteeCellCount: Int, isLoading: Bool, loadLimit: Int) {
             self.cellCount = cellCount
             self.renoteeCellCount = renoteeCellCount
             self.isLoading = isLoading
             self.loadLimit = loadLimit
-            self.reloadTopModelId = reloadTopModelId
         }
     }
     
     private let input: Input
     let output: Output = .init()
     
-    private var reloadTopModelId: String?
     private var _isLoading: Bool = false
     var state: State {
         return .init(cellCount: { cellsModel.count }(),
                      renoteeCellCount: { cellsModel.filter { $0.isRenoteeCell }.count }(),
                      isLoading: _isLoading,
-                     loadLimit: input.loadLimit,
-                     reloadTopModelId: reloadTopModelId)
+                     loadLimit: input.loadLimit)
     }
     
     // MARK: PublishSubject
@@ -109,11 +108,12 @@ class TimelineViewModel: ViewModelType {
         // タイムラインをロードする
         loadNotes().subscribe(onError: { error in
             if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty, self.input.type == .Home {
-                self.initialPost()
+                self.initialFollow()
             }
             
             print(error)
         }, onCompleted: {
+            self.output.lockTableScroll.accept(self.input.lockScroll) // ロックの初期状態を決める
             DispatchQueue.main.async {
                 self.output.finishedLoading.accept(true)
                 
@@ -156,25 +156,10 @@ class TimelineViewModel: ViewModelType {
         updateNotes(new: cellsModel)
     }
     
-    private func initialPost() {
-        guard initialNoteCount < 2 else { return }
-        MisskeyKit.notes.createNote(text: "MissCatからアカウントを作成しました。") { note, error in
-            guard note != nil, error == nil else { // 失敗した場合は何回か再帰
-                self.initialNoteCount += 1
-                self.initialPost()
-                return
-            }
-            DispatchQueue.main.async {
-                self.initialNoteCount = 0
-                self.initialFollow() // 次にユーザーをフォローしておく
-            }
-        }
-    }
-    
     private func initialFollow() {
         guard initialNoteCount < 2 else { return }
-        MisskeyKit.users.follow(userId: "7ze0f2goa7") { user, error in
-            guard user != nil, error == nil else { // 失敗した場合は何回か再帰
+        MisskeyKit.users.follow(userId: "7ze0f2goa7") { _, error in
+            guard error == nil else { // 失敗した場合は何回か再帰
                 self.initialNoteCount += 1
                 self.initialFollow()
                 return
@@ -287,7 +272,10 @@ class TimelineViewModel: ViewModelType {
         }
         
         return loadNotes(untilId: untilId).do(onCompleted: {
-            self.output.lockTableScroll.accept(false) // スクロールのロックを解除
+            if self.input.lockScroll {
+                self.output.lockTableScroll.accept(false) // スクロールのロックを解除
+                self.output.reserveLockTrigger.accept(())
+            }
             self.updateNotes(new: self.cellsModel)
         })
     }
@@ -308,9 +296,6 @@ class TimelineViewModel: ViewModelType {
         
         return model.loadNotes(with: option).do(onNext: { cellModel in
             self.cellsModel.append(cellModel)
-            if untilId != nil, self.reloadTopModelId == nil { // reloadTopModelIdを記憶
-                self.reloadTopModelId = cellModel.identity
-            }
         }, onCompleted: {
             self.initialNoteIds = self.model.initialNoteIds
             self._isLoading = false

@@ -49,6 +49,7 @@ class EmojiView: UIView {
             view.frame = bounds
             view.backgroundColor = .clear
             addSubview(view)
+            adjustFontSize()
         }
     }
     
@@ -81,7 +82,6 @@ class EmojiView: UIView {
         if emoji.isDefault {
             emojiLabel.text = emoji.defaultEmoji
             emojiLabel.backgroundColor = .clear
-            adjustFontSize()
         } else {
             guard let customEmojiUrl = emoji.customEmojiUrl else { return }
             emojiImageView.setImage(url: customEmojiUrl, cachedToStorage: true) // イメージをset
@@ -90,23 +90,10 @@ class EmojiView: UIView {
     
     // MARK: Others
     
-    // 最適なwidthとなるフォントサイズを探索する
+    // 最適なフォントサイズに変更する
     private func adjustFontSize() {
-        guard let emoji = emoji, emoji.isDefault, let defaultEmoji = emoji.defaultEmoji else { return }
-        
-        var labelWidth: CGFloat = 0
-        var font: UIFont = emojiLabel.font ?? UIFont.systemFont(ofSize: 20.0)
-        
-        var previousLabelWidth: CGFloat = 0
-        while font.pointSize < 50, frame.width - labelWidth >= 2 { // フォントサイズは高々50程度だろう
-            font = font.withSize(font.pointSize + 1)
-            labelWidth = getLabelWidth(text: defaultEmoji, font: font)
-            
-            if previousLabelWidth > 0, previousLabelWidth == labelWidth { break } // widthが更新されなくなったらbreak
-            previousLabelWidth = labelWidth
-        }
-        
-        emojiLabel.font = font
+        let font: UIFont = emojiLabel.font ?? UIFont.systemFont(ofSize: 50.0)
+        emojiLabel.font = font.withSize(50) // 多分shrinkが効いていい感じのサイズになる
     }
 }
 

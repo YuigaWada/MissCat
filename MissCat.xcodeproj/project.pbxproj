@@ -62,6 +62,7 @@
 		8D502D58238024B700525A96 /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D502D57238024B700525A96 /* HomeViewController.swift */; };
 		8D502D5A2380270A00525A96 /* TabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D502D592380270A00525A96 /* TabBar.swift */; };
 		8D53741B23A32D03004523FC /* ViewModelType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D53741A23A32D03004523FC /* ViewModelType.swift */; };
+		8D560354246F9E8500DD41BE /* RxEureka.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D560353246F9E8500DD41BE /* RxEureka.swift */; };
 		8D57CA43243FDB9C005DCEB2 /* PromotionCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D57CA42243FDB9C005DCEB2 /* PromotionCell.xib */; };
 		8D57CA47243FDBC3005DCEB2 /* PromotionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D57CA46243FDBC3005DCEB2 /* PromotionCell.swift */; };
 		8D57CA4924412430005DCEB2 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D57CA4824412430005DCEB2 /* SearchViewController.swift */; };
@@ -102,6 +103,7 @@
 		8D8863B4238493FA00A7A5A8 /* RenoteeCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D8863B3238493FA00A7A5A8 /* RenoteeCell.xib */; };
 		8D8863B62384951300A7A5A8 /* RenoteeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8863B52384951200A7A5A8 /* RenoteeCell.swift */; };
 		8D8A50C1242355200065B1D2 /* AccountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8A50C0242355200065B1D2 /* AccountViewController.swift */; };
+		8D905644246A7120006D0F50 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8D905643246A7120006D0F50 /* GoogleService-Info.plist */; };
 		8D98C268242E0AD600BB8049 /* PostDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D98C267242E0AD600BB8049 /* PostDetailModel.swift */; };
 		8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */; };
 		8D9EF4C8238187A4005449EC /* ReactionGenCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */; };
@@ -116,6 +118,7 @@
 		8DA36F862394B9D000512459 /* UIFont+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA36F852394B9D000512459 /* UIFont+MissCat.swift */; };
 		8DA536AC23AC8B70005EB1B5 /* AttachmentCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */; };
 		8DA536AE23AC8C47005EB1B5 /* AttachmentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */; };
+		8DA83FA9246E6024006F3880 /* ProfileSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA83FA8246E6024006F3880 /* ProfileSettingsModel.swift */; };
 		8DABCD0A2414D52D00D9F054 /* AuthWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DABCD092414D52D00D9F054 /* AuthWebViewController.swift */; };
 		8DAD238A240CE76000AB1F36 /* StartViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAD2389240CE76000AB1F36 /* StartViewController.swift */; };
 		8DAEA1322382E19A0083AA69 /* ReactionGenViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEA1312382E19A0083AA69 /* ReactionGenViewModel.swift */; };
@@ -135,6 +138,11 @@
 		8DC27D9C243BF6DD0037E610 /* UrlPreviewerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */; };
 		8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */; };
 		8DC95AF923B0BD450013CABC /* NotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC95AF823B0BD450013CABC /* NotificationBanner.swift */; };
+		8DCBFBD624711B510028A5E6 /* MissCatImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCBFBD524711B510028A5E6 /* MissCatImageView.swift */; };
+		8DCCF8E5246A97C50001A21C /* MisscatApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCCF8E4246A97C50001A21C /* MisscatApi.swift */; };
+		8DCCF8E7246AB1090001A21C /* ApiKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCCF8E6246AB1090001A21C /* ApiKeyManager.swift */; };
+		8DD2F9C5246D5DA100562E85 /* ProfileSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD2F9C4246D5DA100562E85 /* ProfileSettingsViewController.swift */; };
+		8DD2F9C7246D8EA900562E85 /* ProfileSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD2F9C6246D8EA900562E85 /* ProfileSettingsViewModel.swift */; };
 		8DD8898B23935CC400D22910 /* PostDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */; };
 		8DDB52CD245032DD00C97130 /* ColorPickerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */; };
 		8DDB52CF245032E500C97130 /* ColorPickerCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DDB52CE245032E500C97130 /* ColorPickerCell.xib */; };
@@ -223,6 +231,7 @@
 		8D502D57238024B700525A96 /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
 		8D502D592380270A00525A96 /* TabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBar.swift; sourceTree = "<group>"; };
 		8D53741A23A32D03004523FC /* ViewModelType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModelType.swift; sourceTree = "<group>"; };
+		8D560353246F9E8500DD41BE /* RxEureka.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RxEureka.swift; sourceTree = "<group>"; };
 		8D5733E123F667DB002C17D2 /* Agrume.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Agrume.framework; path = Pods/_Prebuild/GeneratedFrameworks/Agrume/Agrume.framework; sourceTree = "<group>"; };
 		8D57CA42243FDB9C005DCEB2 /* PromotionCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PromotionCell.xib; sourceTree = "<group>"; };
 		8D57CA46243FDBC3005DCEB2 /* PromotionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromotionCell.swift; sourceTree = "<group>"; };
@@ -264,6 +273,7 @@
 		8D8863B3238493FA00A7A5A8 /* RenoteeCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RenoteeCell.xib; sourceTree = "<group>"; };
 		8D8863B52384951200A7A5A8 /* RenoteeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenoteeCell.swift; sourceTree = "<group>"; };
 		8D8A50C0242355200065B1D2 /* AccountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewController.swift; sourceTree = "<group>"; };
+		8D905643246A7120006D0F50 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		8D98C267242E0AD600BB8049 /* PostDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailModel.swift; sourceTree = "<group>"; };
 		8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenViewController.swift; sourceTree = "<group>"; };
 		8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReactionGenCell.xib; sourceTree = "<group>"; };
@@ -279,6 +289,7 @@
 		8DA37093242F6F52004BCA5D /* AWSCognito.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AWSCognito.framework; path = Pods/_Prebuild/GeneratedFrameworks/AWSCognito/AWSCognito.framework; sourceTree = "<group>"; };
 		8DA536AB23AC8B70005EB1B5 /* AttachmentCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AttachmentCell.xib; sourceTree = "<group>"; };
 		8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentCell.swift; sourceTree = "<group>"; };
+		8DA83FA8246E6024006F3880 /* ProfileSettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsModel.swift; sourceTree = "<group>"; };
 		8DABCD092414D52D00D9F054 /* AuthWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthWebViewController.swift; sourceTree = "<group>"; };
 		8DAD2389240CE76000AB1F36 /* StartViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartViewController.swift; sourceTree = "<group>"; };
 		8DAEA1312382E19A0083AA69 /* ReactionGenViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenViewModel.swift; sourceTree = "<group>"; };
@@ -298,7 +309,12 @@
 		8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UrlPreviewerModel.swift; sourceTree = "<group>"; };
 		8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = NotificationBanner.xib; sourceTree = "<group>"; };
 		8DC95AF823B0BD450013CABC /* NotificationBanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationBanner.swift; sourceTree = "<group>"; };
+		8DCBFBD524711B510028A5E6 /* MissCatImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatImageView.swift; sourceTree = "<group>"; };
+		8DCCF8E4246A97C50001A21C /* MisscatApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MisscatApi.swift; sourceTree = "<group>"; };
+		8DCCF8E6246AB1090001A21C /* ApiKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiKeyManager.swift; sourceTree = "<group>"; };
 		8DD0D80B23B47CA8003F02ED /* YanagiText.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = YanagiText.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DD2F9C4246D5DA100562E85 /* ProfileSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsViewController.swift; sourceTree = "<group>"; };
+		8DD2F9C6246D8EA900562E85 /* ProfileSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsViewModel.swift; sourceTree = "<group>"; };
 		8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailViewModel.swift; sourceTree = "<group>"; };
 		8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickerCell.swift; sourceTree = "<group>"; };
 		8DDB52CE245032E500C97130 /* ColorPickerCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ColorPickerCell.xib; sourceTree = "<group>"; };
@@ -369,6 +385,7 @@
 		8D065B15237AC387003DFB7C /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				8DA83FA7246E601A006F3880 /* Settings */,
 				8D72E519244AEA1A00B30C3A /* Details */,
 				8D72E518244AEA1500B30C3A /* Main */,
 				8D5D2C462448149D00D15974 /* DirectMessage */,
@@ -435,6 +452,8 @@
 				8D2A7235242A49CC00F8827D /* MissCatTableView.swift */,
 				8D0D6890244A9A6800725ABB /* PlaceholderTableView.swift */,
 				8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */,
+				8D560353246F9E8500DD41BE /* RxEureka.swift */,
+				8DCBFBD524711B510028A5E6 /* MissCatImageView.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -517,6 +536,7 @@
 			children = (
 				8D4A2A23237437C000503685 /* Info.plist */,
 				8D1C150E2424E3B6004B1202 /* MissCat.entitlements */,
+				8D905643246A7120006D0F50 /* GoogleService-Info.plist */,
 				8D065B13237AC376003DFB7C /* View */,
 				8D065B14237AC381003DFB7C /* ViewModel */,
 				8D065B15237AC387003DFB7C /* Model */,
@@ -770,6 +790,7 @@
 			isa = PBXGroup;
 			children = (
 				8D31018E24397D5E004F8E55 /* ReactionSettingsViewModel.swift */,
+				8DD2F9C6246D8EA900562E85 /* ProfileSettingsViewModel.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -893,8 +914,18 @@
 				8D4A2A15237437BE00503685 /* AppDelegate.swift */,
 				8D4A2A17237437BE00503685 /* SceneDelegate.swift */,
 				8D1C150D2424C649004B1202 /* Bridge.h */,
+				8DCCF8E4246A97C50001A21C /* MisscatApi.swift */,
+				8DCCF8E6246AB1090001A21C /* ApiKeyManager.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		8DA83FA7246E601A006F3880 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				8DA83FA8246E6024006F3880 /* ProfileSettingsModel.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		8DAEA13A2382E7FF0083AA69 /* Reusable */ = {
@@ -931,6 +962,7 @@
 				8D31018C24397B45004F8E55 /* ReactionSettingsViewController.swift */,
 				8D5889F4244FFAC200C6EBC2 /* DesignSettingsViewController.swift */,
 				8D75EC7E2452E49100EAC2A8 /* ColorPicker.swift */,
+				8DD2F9C4246D5DA100562E85 /* ProfileSettingsViewController.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1031,6 +1063,7 @@
 				8D57CA43243FDB9C005DCEB2 /* PromotionCell.xib in Resources */,
 				8D5D2C4224480E5700D15974 /* SenderCell.xib in Resources */,
 				8D4A2A22237437C000503685 /* LaunchScreen.storyboard in Resources */,
+				8D905644246A7120006D0F50 /* GoogleService-Info.plist in Resources */,
 				8D2D52392442CA9700712F48 /* UserCell.xib in Resources */,
 				8D4754F9240E21F800BAD410 /* PollView.xib in Resources */,
 				8DA06A092389E9820093A718 /* NotificationCell.xib in Resources */,
@@ -1145,6 +1178,7 @@
 				8D3036F62385DA8900BA6D38 /* PostViewModel.swift in Sources */,
 				8D3037002388F71E00BA6D38 /* MisskeyTextView.swift in Sources */,
 				8DBDD58E244198C90014E77F /* SearchModel.swift in Sources */,
+				8DCCF8E5246A97C50001A21C /* MisscatApi.swift in Sources */,
 				8D0F7D0F2398F21F009B45E1 /* ReactionGenPanel.swift in Sources */,
 				8D5D2C4024480E4E00D15974 /* SenderCell.swift in Sources */,
 				8DEFF31E239BD4F200142802 /* ProfileModel.swift in Sources */,
@@ -1158,12 +1192,14 @@
 				8D2A7236242A49CC00F8827D /* MissCatTableView.swift in Sources */,
 				8D79687F2404BE59004F87FA /* ReactionCollectionHeader.swift in Sources */,
 				8D31018D24397B45004F8E55 /* ReactionSettingsViewController.swift in Sources */,
+				8DCBFBD624711B510028A5E6 /* MissCatImageView.swift in Sources */,
 				8D0AC5C1237B865B00530508 /* TimelineModel.swift in Sources */,
 				8D5889F5244FFAC200C6EBC2 /* DesignSettingsViewController.swift in Sources */,
 				8DF49FA224445B0500C4D2B2 /* TrendViewController.swift in Sources */,
 				8D3037022389018800BA6D38 /* Cache.swift in Sources */,
 				8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */,
 				8D84061F2393547800EED595 /* PostDetailViewController.swift in Sources */,
+				8D560354246F9E8500DD41BE /* RxEureka.swift in Sources */,
 				8D3036F82385DAED00BA6D38 /* PostModel.swift in Sources */,
 				8DAF30192419842D0041BB85 /* AboutMisskeyViewController.swift in Sources */,
 				8D2D52432443D2BD00712F48 /* UserListViewModel.swift in Sources */,
@@ -1201,6 +1237,7 @@
 				8D2D523D2443BDDB00712F48 /* UserCellModel.swift in Sources */,
 				8D31018F24397D5E004F8E55 /* ReactionSettingsViewModel.swift in Sources */,
 				8DE88825242764AE002CC9DE /* NoteCell.Model.swift in Sources */,
+				8DCCF8E7246AB1090001A21C /* ApiKeyManager.swift in Sources */,
 				8DC95AF923B0BD450013CABC /* NotificationBanner.swift in Sources */,
 				8D2D52452443D4DD00712F48 /* UserListModel.swift in Sources */,
 				8D613555238B6D8B00AB50C2 /* NavBar.swift in Sources */,
@@ -1214,6 +1251,7 @@
 				8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */,
 				8D61391C2427C1B3003B5BEF /* FileContainerViewModel.swift in Sources */,
 				8D4A2A18237437BE00503685 /* SceneDelegate.swift in Sources */,
+				8DD2F9C7246D8EA900562E85 /* ProfileSettingsViewModel.swift in Sources */,
 				8DAF301B241B599B0041BB85 /* LicenseViewController.swift in Sources */,
 				8DA06A16238A86DC0093A718 /* NotificationCellModel.swift in Sources */,
 				8D613551238A978700AB50C2 /* EmojiViewCell.swift in Sources */,
@@ -1225,6 +1263,7 @@
 				8D8863A92383F8A900A7A5A8 /* NoteCellViewModel.swift in Sources */,
 				8D2D523B2442CC9100712F48 /* UserCell.swift in Sources */,
 				8D310191243AE9AB004F8E55 /* MFMImageView.swift in Sources */,
+				8DD2F9C5246D5DA100562E85 /* ProfileSettingsViewController.swift in Sources */,
 				8D0D47AA23A74EC80095361D /* UIViewController+PhotoEditor.swift in Sources */,
 				8D84061D238FFC5C00EED595 /* UIImage+MissCat.swift in Sources */,
 				8DBC7A45241245A800D8FEA5 /* AVKit+MissCat.swift in Sources */,
@@ -1236,6 +1275,7 @@
 				8D6139202427CAED003B5BEF /* FileContainerCell.swift in Sources */,
 				8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */,
 				8DBDD58C244197840014E77F /* SearchViewModel.swift in Sources */,
+				8DA83FA9246E6024006F3880 /* ProfileSettingsModel.swift in Sources */,
 				8DE8882724276512002CC9DE /* NoteCell.FileView.swift in Sources */,
 				8DA06A12238A58A20093A718 /* NSMutableAttributedString+MissCat.swift in Sources */,
 				8D502D58238024B700525A96 /* HomeViewController.swift in Sources */,
@@ -1417,7 +1457,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.11;
+				CURRENT_PROJECT_VERSION = 1.1.0;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -1432,7 +1472,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.11;
+				MARKETING_VERSION = 1.1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",
@@ -1496,7 +1536,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.0.11;
+				CURRENT_PROJECT_VERSION = 1.1.0;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -1511,7 +1551,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.11;
+				MARKETING_VERSION = 1.1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",

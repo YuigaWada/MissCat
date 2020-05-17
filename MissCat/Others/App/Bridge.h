@@ -6,5 +6,4 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
-#import <AWSCore/AWSCore.h>
-#import <AWSCognito/AWSCognito.h>
+

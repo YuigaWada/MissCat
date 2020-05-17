@@ -85,110 +85,16 @@ class TimelineModel {
     private let handleTargetType: [String] = ["note", "CapturedNoteUpdated"]
     private lazy var streaming = MisskeyKit.Streaming()
     
-    // MARK: Shape NoteModel
-    
-    private func transformNote(with observer: AnyObserver<NoteCell.Model>, post: NoteModel, reverse: Bool) {
-        let noteType = checkNoteType(post)
-        if noteType == .Renote {
-            guard let renoteId = post.renoteId,
-                let user = post.user,
-                let renote = post.renote,
-                let renoteModel = renote.getNoteCellModel(withRN: checkNoteType(renote) == .CommentRenote) else { return }
-            
-            let renoteeModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "",
-                                                              renoteeUserName: user.username ?? "",
-                                                              baseNoteId: renoteId)
-            
-            var cellModels = [renoteeModel, renoteModel]
-            if reverse { cellModels.reverse() }
-            
-            for cellModel in cellModels {
-                MFMEngine.shapeModel(cellModel)
-                observer.onNext(cellModel)
-            }
-        } else if noteType == .Promotion {
-            guard let noteId = post.id,
-                let cellModel = post.getNoteCellModel(withRN: checkNoteType(post) == .CommentRenote) else { return }
-            
-            let prModel = NoteCell.Model.fakePromotioncell(baseNoteId: noteId)
-            var cellModels = [prModel, cellModel]
-            
-            if reverse { cellModels.reverse() }
-            
-            for cellModel in cellModels {
-                MFMEngine.shapeModel(cellModel)
-                observer.onNext(cellModel)
-            }
-        } else { // just a note or a note with commentRN
-            var newCellsModel = getCellsModel(post, withRN: noteType == .CommentRenote)
-            guard newCellsModel != nil else { return }
-            
-            if reverse { newCellsModel!.reverse() } // reverseしてからinsert (streamingの場合)
-            newCellsModel!.forEach {
-                MFMEngine.shapeModel($0)
-                observer.onNext($0)
-            }
-        }
-    }
-    
     // MARK: REST API
     
+    /// 投稿を読み込む
+    /// - Parameter option: LoadOption
     func loadNotes(with option: LoadOption) -> Observable<NoteCell.Model> {
         let dispose = Disposables.create()
-        let isInitalLoad = option.untilId == nil
-        let isReload = option.isReload && (option.lastNoteId != nil)
         
         return Observable.create { [unowned self] observer in
             
-            let handleResult = { (posts: [NoteModel]?, error: MisskeyKitError?) in
-                guard let posts = posts, error == nil else {
-                    if let error = error { observer.onError(error) }
-                    print(error ?? "error is nil")
-                    return
-                }
-                
-                if posts.count == 0 { // 新規登録された場合はpostsが空集合
-                    observer.onError(NotesLoadingError.NotesEmpty)
-                }
-                
-                if isReload {
-                    // timelineにすでに表示してある投稿を取得した場合、ロードを終了する
-                    var newPosts: [NoteModel] = []
-                    for index in 0 ..< posts.count {
-                        let post = posts[index]
-                        if !post.isRecommended { // ハイライトの投稿は無視する
-                            // 表示済みの投稿に当たったらbreak
-                            guard option.lastNoteId != post.id, option.lastNoteId != post.renoteId else { break }
-                            newPosts.append(post)
-                        }
-                    }
-                    
-                    newPosts.reverse() // 逆順に読み込む
-                    newPosts.forEach { post in
-                        self.transformNote(with: observer, post: post, reverse: true)
-                        if let noteId = post.id { self.initialNoteIds.append(noteId) }
-                    }
-                    
-                    observer.onCompleted()
-                    return
-                }
-                
-                // if !isReload...
-                
-                posts.forEach { post in
-                    // 初期ロード: prのみ表示する / 二回目からはprとハイライトを無視
-                    let ignore = isInitalLoad ? post.isFeatured : post.isRecommended
-                    guard !ignore else { return }
-                    
-                    self.transformNote(with: observer, post: post, reverse: false)
-                    if let noteId = post.id {
-                        self.initialNoteIds.append(noteId) // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
-                    }
-                }
-                
-                observer.onCompleted()
-            }
-            
+            let handleResult = self.getNotesHandler(with: option, and: observer)
             switch option.type {
             case .Home:
                 MisskeyKit.notes.getTimeline(limit: option.loadLimit,
@@ -247,8 +153,126 @@ class TimelineModel {
         }
     }
     
+    // MARK: Handler (REST API)
+    
+    /// handleNotes()をパラメータを補ってNotesCallBackとして返す
+    /// - Parameters:
+    ///   - option: LoadOption
+    ///   - observer: AnyObserver<NoteCell.Model>
+    private func getNotesHandler(with option: LoadOption, and observer: AnyObserver<NoteCell.Model>) -> NotesCallBack {
+        return { (posts: [NoteModel]?, error: MisskeyKitError?) in
+            self.handleNotes(option: option, observer: observer, posts: posts, error: error)
+        }
+    }
+    
+    /// MisskeyKitから流れてきた投稿データを適切にobserverへと流していく
+    private func handleNotes(option: LoadOption, observer: AnyObserver<NoteCell.Model>, posts: [NoteModel]?, error: MisskeyKitError?) {
+        let isInitalLoad = option.untilId == nil
+        let isReload = option.isReload && (option.lastNoteId != nil)
+        
+        guard let posts = posts, error == nil else {
+            if let error = error { observer.onError(error) }
+            print(error ?? "error is nil")
+            return
+        }
+        
+        if posts.count == 0 { // 新規登録された場合はpostsが空集合
+            observer.onError(NotesLoadingError.NotesEmpty)
+        }
+        
+        if isReload {
+            // timelineにすでに表示してある投稿を取得した場合、ロードを終了する
+            var newPosts: [NoteModel] = []
+            for index in 0 ..< posts.count {
+                let post = posts[index]
+                if !post.isRecommended { // ハイライトの投稿は無視する
+                    // 表示済みの投稿に当たったらbreak
+                    guard option.lastNoteId != post.id, option.lastNoteId != post.renoteId else { break }
+                    newPosts.append(post)
+                }
+            }
+            
+            newPosts.reverse() // 逆順に読み込む
+            newPosts.forEach { post in
+                self.transformNote(with: observer, post: post, reverse: true)
+                if let noteId = post.id { self.initialNoteIds.append(noteId) }
+            }
+            
+            observer.onCompleted()
+            return
+        }
+        
+        // if !isReload...
+        
+        posts.forEach { post in
+            // 初期ロード: prのみ表示する / 二回目からはprとハイライトを無視
+            let ignore = isInitalLoad ? post.isFeatured : post.isRecommended
+            guard !ignore else { return }
+            
+            self.transformNote(with: observer, post: post, reverse: false)
+            if let noteId = post.id {
+                self.initialNoteIds.append(noteId) // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
+            }
+        }
+        
+        observer.onCompleted()
+    }
+    
+    /// MisskeyKit.NoteModelをNoteCell.Modelへ変換してobserverへ送る
+    /// - Parameters:
+    ///   - observer: AnyObserver<NoteCell.Model>
+    ///   - post: NoteModel
+    ///   - reverse: 逆順に送るかどうか
+    private func transformNote(with observer: AnyObserver<NoteCell.Model>, post: NoteModel, reverse: Bool) {
+        let noteType = checkNoteType(post)
+        if noteType == .Renote { // renoteの場合 ヘッダーとなるrenoteecellとnotecell、２つのモデルを送る
+            guard let renoteId = post.renoteId,
+                let user = post.user,
+                let renote = post.renote,
+                let renoteModel = renote.getNoteCellModel(withRN: checkNoteType(renote) == .CommentRenote) else { return }
+            
+            let renoteeModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "",
+                                                              renoteeUserName: user.username ?? "",
+                                                              baseNoteId: renoteId)
+            
+            var cellModels = [renoteeModel, renoteModel]
+            if reverse { cellModels.reverse() }
+            
+            for cellModel in cellModels {
+                MFMEngine.shapeModel(cellModel)
+                observer.onNext(cellModel)
+            }
+        } else if noteType == .Promotion { // PR投稿
+            guard let noteId = post.id,
+                let cellModel = post.getNoteCellModel(withRN: checkNoteType(post) == .CommentRenote) else { return }
+            
+            let prModel = NoteCell.Model.fakePromotioncell(baseNoteId: noteId)
+            var cellModels = [prModel, cellModel]
+            
+            if reverse { cellModels.reverse() }
+            
+            for cellModel in cellModels {
+                MFMEngine.shapeModel(cellModel)
+                observer.onNext(cellModel)
+            }
+        } else { // just a note or a note with commentRN
+            var newCellsModel = getCellsModel(post, withRN: noteType == .CommentRenote)
+            guard newCellsModel != nil else { return }
+            
+            if reverse { newCellsModel!.reverse() } // reverseしてからinsert (streamingの場合)
+            newCellsModel!.forEach {
+                MFMEngine.shapeModel($0)
+                observer.onNext($0)
+            }
+        }
+    }
+    
     // MARK: Streaming API
     
+    /// Streamingへと接続する
+    /// - Parameters:
+    ///   - type: TimelineType
+    ///   - reconnect: 再接続かどうか
     func connectStream(type: TimelineType, isReconnection reconnect: Bool = false) -> Observable<NoteCell.Model> { // streamingのresponseを捌くのはhandleStreamで行う
         let dipose = Disposables.create()
         var isReconnection = reconnect
@@ -270,19 +294,21 @@ class TimelineModel {
         }
     }
     
+    /// Streamingで流れてきたデータを適切にobserverへと流す
     private func handleStream(response: Any?, channel: SentStreamModel.Channel?, typeString: String?, error: MisskeyKitError?, observer: AnyObserver<NoteCell.Model>) {
         if let error = error {
             print(error)
-            if error == .CannotConnectStream || error == .NoStreamConnection {
+            if error == .CannotConnectStream || error == .NoStreamConnection { // streaming関連のエラーのみ流す
                 observer.onError(error)
             }
             return
         }
         
-        guard let _ = channel, let typeString = typeString, self.handleTargetType.contains(typeString) else {
-            return
-        }
+        guard let _ = channel,
+            let typeString = typeString,
+            self.handleTargetType.contains(typeString) else { return }
         
+        // captureした投稿に対して更新が行われた場合
         if typeString == "CapturedNoteUpdated" {
             guard let updateContents = response as? NoteUpdatedModel, let updateType = updateContents.type else { return }
             
@@ -317,12 +343,13 @@ class TimelineModel {
             }
         }
         
-        guard let post = response as? NoteModel else { return }
-        
-        DispatchQueue.main.async {
-            self.transformNote(with: observer, post: post, reverse: true)
+        // 通常の投稿
+        if let post = response as? NoteModel {
+            DispatchQueue.main.async {
+                self.transformNote(with: observer, post: post, reverse: true)
+            }
+            self.captureNote(noteId: post.id)
         }
-        self.captureNote(noteId: post.id)
     }
     
     // MARK: Capture

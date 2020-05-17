@@ -23,6 +23,7 @@ class PostViewModel: ViewModelType {
         
         let innerIcon: PublishRelay<UIImage> = .init()
         let innerNote: PublishRelay<String> = .init()
+        let mark: PublishRelay<String> = .init()
         
         let attachments: PublishSubject<[PostViewController.AttachmentsSection]>
     }
@@ -165,7 +166,11 @@ class PostViewModel: ViewModelType {
     func setInnerNote() {
         guard let target = input.targetNote else { return }
         
+        // text
+        setMark(type: input.type)
         output.innerNote.accept(target.original?.text ?? "")
+        
+        // image
         if let image = Cache.shared.getIcon(username: "\(target.username)@\(target.hostInstance)") {
             output.innerIcon.accept(image)
         } else if let iconImageUrl = target.iconImageUrl, let imageUrl = URL(string: iconImageUrl) {
@@ -174,6 +179,17 @@ class PostViewModel: ViewModelType {
                 Cache.shared.saveIcon(username: target.username, image: image) // CACHE!
                 self.output.innerIcon.accept(image)
             }
+        }
+    }
+    
+    private func setMark(type: PostViewController.PostType) {
+        switch type {
+        case .Reply:
+            output.mark.accept("chevron-right")
+        case .CommentRenote:
+            output.mark.accept("retweet")
+        default:
+            break
         }
     }
     
