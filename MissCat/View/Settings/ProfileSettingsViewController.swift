@@ -18,8 +18,8 @@ class ProfileSettingsViewController: FormViewController {
     private var disposeBag: DisposeBag = .init()
     
     private lazy var bannerCover: UIView = .init()
-    private lazy var bannerImage: UIImageView = .init()
-    private lazy var iconImage: UIImageView = .init()
+    private lazy var bannerImage: MissCatImageView = .init()
+    private lazy var iconImage: MissCatImageView = .init()
     
     private let saveButtonItem = UIBarButtonItem(title: "保存", style: .plain, target: nil, action: nil)
     private var headerHeight: CGFloat = 150
@@ -109,7 +109,6 @@ class ProfileSettingsViewController: FormViewController {
         // ui
         setupComponent()
         setTable()
-        setHeader()
         setIconCover()
         setupNavBar()
         
@@ -124,13 +123,6 @@ class ProfileSettingsViewController: FormViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
-    }
-    
-    override func viewWillLayoutSubviews() {
-        super.viewWillLayoutSubviews()
-        
-        iconImage.layoutIfNeeded()
-        iconImage.layer.cornerRadius = iconImage.frame.height / 2
     }
     
     // MARK: Design
@@ -240,63 +232,34 @@ class ProfileSettingsViewController: FormViewController {
     }
     
     private func setTable() {
+        let headerSection = Section { section in // バナーimageをHeaderとしてEurekaに埋め込む
+            section.header = {
+                var header = HeaderFooterView<UIView>(.callback {
+                    self.getHeader()
+                  })
+                header.height = { self.headerHeight }
+                return header
+            }()
+        }
+        
         let nameSection = getNameSection()
         let descSection = getDescSection()
         let miscSection = getMiscSection()
         
-        form +++ nameSection +++ descSection +++ miscSection
-        
-        tableView.translatesAutoresizingMaskIntoConstraints = false
+        form +++ headerSection +++ nameSection +++ descSection +++ miscSection
         tableView.isScrollEnabled = false
     }
     
-    private func setHeader() {
-        bannerImage.translatesAutoresizingMaskIntoConstraints = false
+    private func getHeader() -> UIView {
         iconImage.translatesAutoresizingMaskIntoConstraints = false
+        bannerImage.addSubview(iconImage)
         
-        view.addSubview(bannerImage)
-        view.addSubview(iconImage)
-        
-        // AutoLayout
-        view.addConstraints([
-            NSLayoutConstraint(item: bannerImage,
-                               attribute: .leading,
-                               relatedBy: .equal,
-                               toItem: view,
-                               attribute: .leading,
-                               multiplier: 1.0,
-                               constant: 0),
-            
-            NSLayoutConstraint(item: bannerImage,
-                               attribute: .height,
-                               relatedBy: .equal,
-                               toItem: view,
-                               attribute: .height,
-                               multiplier: 0,
-                               constant: headerHeight),
-            
-            NSLayoutConstraint(item: bannerImage,
-                               attribute: .trailing,
-                               relatedBy: .equal,
-                               toItem: view,
-                               attribute: .trailing,
-                               multiplier: 1.0,
-                               constant: 0),
-            
-            NSLayoutConstraint(item: bannerImage,
-                               attribute: .top,
-                               relatedBy: .equal,
-                               toItem: view.safeAreaLayoutGuide,
-                               attribute: .top,
-                               multiplier: 1.0,
-                               constant: 0)
-        ])
-        
-        view.addConstraints([
+//        // AutoLayout
+        bannerImage.addConstraints([
             NSLayoutConstraint(item: iconImage,
                                attribute: .leading,
                                relatedBy: .equal,
-                               toItem: view,
+                               toItem: bannerImage,
                                attribute: .leading,
                                multiplier: 1.0,
                                constant: 20),
@@ -304,17 +267,17 @@ class ProfileSettingsViewController: FormViewController {
             NSLayoutConstraint(item: iconImage,
                                attribute: .height,
                                relatedBy: .equal,
-                               toItem: view,
-                               attribute: .height,
-                               multiplier: 0.08,
+                               toItem: iconImage,
+                               attribute: .width,
+                               multiplier: 1.0,
                                constant: 0),
             
             NSLayoutConstraint(item: iconImage,
                                attribute: .width,
                                relatedBy: .equal,
-                               toItem: view,
+                               toItem: bannerImage,
                                attribute: .height,
-                               multiplier: 0.08,
+                               multiplier: 0.45,
                                constant: 0),
             
             NSLayoutConstraint(item: iconImage,
@@ -326,43 +289,8 @@ class ProfileSettingsViewController: FormViewController {
                                constant: 0)
         ])
         
-        guard let tableView = tableView else { return }
-        view.addConstraints([
-            NSLayoutConstraint(item: tableView,
-                               attribute: .leading,
-                               relatedBy: .equal,
-                               toItem: view,
-                               attribute: .leading,
-                               multiplier: 1.0,
-                               constant: 0),
-            
-            NSLayoutConstraint(item: tableView,
-                               attribute: .top,
-                               relatedBy: .equal,
-                               toItem: bannerImage,
-                               attribute: .bottom,
-                               multiplier: 1.0,
-                               constant: 0),
-            
-            NSLayoutConstraint(item: tableView,
-                               attribute: .trailing,
-                               relatedBy: .equal,
-                               toItem: view,
-                               attribute: .trailing,
-                               multiplier: 1.0,
-                               constant: 0),
-            
-            NSLayoutConstraint(item: tableView,
-                               attribute: .bottom,
-                               relatedBy: .equal,
-                               toItem: view,
-                               attribute: .bottom,
-                               multiplier: 1.0,
-                               constant: 0)
-        ])
-        
-        iconImage.layoutIfNeeded()
-        iconImage.layer.cornerRadius = iconImage.frame.height / 2
+        iconImage.maskCircle()
+        return bannerImage
     }
     
     private func setIconCover() {
