@@ -180,6 +180,7 @@ class StartViewController: UIViewController {
         Cache.UserDefaults.shared.setCurrentLoginedInstance(misskeyInstance)
         
         _ = EmojiHandler.handler // カスタム絵文字を読み込む
+        registerSw() // 通知を登録する
         
         DispatchQueue.main.async {
             self.navigationController?.popViewController(animated: true)
@@ -204,6 +205,18 @@ class StartViewController: UIViewController {
         removeList.forEach { shaped = shaped.remove(of: $0) }
         
         return shaped
+    }
+    
+    // MARK: SW
+    
+    private func registerSw() {
+        #if targetEnvironment(simulator)
+            let misscatApi = MisscatApi(apiKeyManager: MockApiKeyManager())
+            misscatApi.registerSw()
+        #else
+            let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager())
+            misscatApi.registerSw()
+        #endif
     }
     
     // MARK: Alert
