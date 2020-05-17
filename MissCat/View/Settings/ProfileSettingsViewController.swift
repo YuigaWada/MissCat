@@ -248,6 +248,57 @@ class ProfileSettingsViewController: FormViewController {
         
         form +++ headerSection +++ nameSection +++ descSection +++ miscSection
         tableView.isScrollEnabled = false
+        
+        bioTextArea.cell.textView.inputAccessoryView = getToolBar(for: bioTextArea.cell.textView)
+        nameTextArea.cell.textField.inputAccessoryView = getToolBar(for: nameTextArea.cell.textField)
+    }
+    
+    // MARK: Toolbar
+    
+    private func getToolBar(for target: UITextInput) -> UIToolbar {
+        let toolBar = UIToolbar()
+        let flexibleItem = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        
+        let emojiButton = UIBarButtonItem(title: "laugh-squint", style: .plain, target: self, action: nil)
+        emojiButton.rx.tap.subscribe { _ in self.showReactionGen(target: target) }.disposed(by: disposeBag)
+        toolBar.setItems([flexibleItem, flexibleItem,
+                          flexibleItem,
+                          flexibleItem, flexibleItem,
+                          emojiButton], animated: true)
+        toolBar.sizeToFit()
+        
+        emojiButton.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.awesomeSolid(fontSize: 17.0)!], for: .normal)
+        emojiButton.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.awesomeSolid(fontSize: 17.0)!], for: .selected)
+        return toolBar
+    }
+    
+    private func showReactionGen(target viewWithText: UITextInput) {
+        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+        
+        reactionGen.onPostViewController = true
+        reactionGen.selectedEmoji.subscribe(onNext: { emojiModel in // ReactionGenで絵文字が選択されたらに送られてくる
+            self.insertCustomEmoji(with: emojiModel, to: viewWithText)
+            reactionGen.dismiss(animated: true, completion: nil)
+        }).disposed(by: disposeBag)
+        
+        presentWithSemiModal(reactionGen, animated: true, completion: nil)
+    }
+    
+    private func getViewController(name: String) -> UIViewController {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let viewController = storyboard.instantiateViewController(withIdentifier: name)
+        
+        return viewController
+    }
+    
+    private func insertCustomEmoji(with emojiModel: EmojiView.EmojiModel, to viewWithText: UITextInput) {
+        if let selectedTextRange = viewWithText.selectedTextRange {
+            guard let emoji = emojiModel.isDefault ? emojiModel.defaultEmoji : ":\(emojiModel.rawEmoji):" else { return }
+            viewWithText.replace(selectedTextRange,
+                                 withText: emoji)
+        }
+    }
+    
     // MARK: Section
     
     private func getNameSection() -> Section {
