@@ -41,8 +41,7 @@ class ProfileSettingsViewController: FormViewController {
     private lazy var bioTextArea = TextAreaRow { row in
         row.tag = "bio-text-area"
         row.placeholder = "自分について..."
-    }.cellSetup { cell, _ in
-        cell.height = { 220 }
+        row.textAreaHeight = .dynamic(initialTextViewHeight: 220)
     }.cellUpdate { cell, _ in
         cell.backgroundColor = self.getCellBackgroundColor()
         cell.textLabel?.textColor = Theme.shared.currentModel?.colorPattern.ui.text
@@ -247,14 +246,12 @@ class ProfileSettingsViewController: FormViewController {
         let miscSection = getMiscSection()
         
         form +++ headerSection +++ nameSection +++ descSection +++ miscSection
-        tableView.isScrollEnabled = false
         
         bioTextArea.cell.textView.inputAccessoryView = getToolBar(for: bioTextArea.cell.textView)
         nameTextArea.cell.textField.inputAccessoryView = getToolBar(for: nameTextArea.cell.textField)
     }
     
     // MARK: Toolbar
-    
     
     /// targetに対してToolBarを生成する
     /// - Parameter target: Target
@@ -263,18 +260,19 @@ class ProfileSettingsViewController: FormViewController {
         let flexibleItem = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         
         let emojiButton = UIBarButtonItem(title: "laugh-squint", style: .plain, target: self, action: nil)
+        let doneButton = UIBarButtonItem(title: "Done", style: .done, target: self, action: nil)
         emojiButton.rx.tap.subscribe { _ in self.showReactionGen(target: target) }.disposed(by: disposeBag)
+        doneButton.rx.tap.subscribe { _ in self.view.endEditing(true) }.disposed(by: disposeBag)
         toolBar.setItems([flexibleItem, flexibleItem,
                           flexibleItem,
                           flexibleItem, flexibleItem,
-                          emojiButton], animated: true)
+                          emojiButton, doneButton], animated: true)
         toolBar.sizeToFit()
         
         emojiButton.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.awesomeSolid(fontSize: 17.0)!], for: .normal)
         emojiButton.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.awesomeSolid(fontSize: 17.0)!], for: .selected)
         return toolBar
     }
-    
     
     /// ReactionGen(絵文字ピッカー)を表示する
     /// - Parameter viewWithText: UITextInput
@@ -290,7 +288,6 @@ class ProfileSettingsViewController: FormViewController {
         presentWithSemiModal(reactionGen, animated: true, completion: nil)
     }
     
-    
     /// StoryBoardからVCを生成する
     /// - Parameter name: name
     private func getViewController(name: String) -> UIViewController {
@@ -299,7 +296,6 @@ class ProfileSettingsViewController: FormViewController {
         
         return viewController
     }
-    
     
     /// TextView, TextFiledに対して、現時点でのカーソル位置に絵文字を挿入する
     /// - Parameters:
