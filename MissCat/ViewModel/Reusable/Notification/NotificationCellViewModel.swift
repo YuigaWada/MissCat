@@ -150,7 +150,7 @@ class NotificationCellViewModel: ViewModelType {
         
         // reaction
         else if let reaction = item.reaction {
-            output.typeIconString.accept("fire-alt")
+            output.typeIconString.accept("heart")
             output.typeString.accept("Reaction")
             output.needEmoji.accept(true)
             output.typeIconColor.accept(reactionIconColor)
