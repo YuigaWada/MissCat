@@ -5,48 +5,46 @@ const fcm = new fcmNode(serverKey);
 exports.generateContents = function(rawJson, lang) {
   const json = JSON.parse(rawJson);
   const body = json.body;
-  if (json.type != "notification") { return null; }
+  if (json.type != "notification") { return [null,null]; }
 
   const type = body.type;
   const fromUser = body.user.name != null ? body.user.name : body.user.username;
 
+  var title;
+  var messages;
   // cf. https://github.com/YuigaWada/MissCat/blob/develop/MissCat/Model/Main/NotificationModel.swift
   if (type == "reaction") {
     const reaction = body.reaction;
     const myNote = body.note.text;
 
-    var title = fromUser + "さんがリアクション\"" + reaction+ "\"を送信しました";
-    var message = myNote;
-    return [title,message];
+    title = fromUser + "さんがリアクション: \"" + reaction+ "\"";
+    message = myNote;
   }
   else if (type == "follow") {
     const hostLabel = body.user.host != null ? "@" + body.user.host : ""; // 自インスタンスの場合 host == nullになる
-    var title = "";
-    var message = "@" + body.user.username + hostLabel + "さんに" + "フォローされました";
-    return [title,message];
+    title = "";
+    message = "@" + body.user.username + hostLabel + "さんに" + "フォローされました";
   }
   else if (type == "reply") {
-    var title = fromUser + "さんの返信:";
-    var message = body.note.text;
-    return [title,message];
+    title = fromUser + "さんの返信:";
+    message = body.note.text;
   }
   else if (type == "renote" || type == "quote") {
     const justRenote = body.note.text == null; // 引用RNでなければ body.note.text == null
     var renoteKind = justRenote ? "" : "引用";
 
-    var title = fromUser + "さんが" + renoteKind + "Renoteしました";
-    var message = justRenote ? body.note.renote.text : body.note.text;
-    return [title,message];
+    title = fromUser + "さんが" + renoteKind + "Renoteしました";
+    message = justRenote ? body.note.renote.text : body.note.text;
   }
+  else { return [null,null]; }
 
-  return [null,null]
+  return [title,message];
 }
 
 
 exports.send = function (token, title, body) {
   var message = {
      to: token,
-     // collapse_key: key,
 
      notification: {
          title: title,
