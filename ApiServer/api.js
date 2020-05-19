@@ -41,7 +41,7 @@ app.use(function(req, res, next){
 
 
 app.post("/api/:version/push/:lang/:userId/:deviceToken", function(req, res){
-    if (req.params.version != "v1") { res.status(410).send('Invalid Version.').end(); }
+    if (req.params.version != "v1") { res.status(410).send('Invalid Version.').end(); return; }
 
     const rawBody = req.body;
     if (!rawBody) { res.status(200).send('Invalid Body.').end(); }
@@ -50,13 +50,13 @@ app.post("/api/:version/push/:lang/:userId/:deviceToken", function(req, res){
     const userId = req.params.userId;
     const deviceToken = req.params.deviceToken;
     const lang = req.params.lang;
-    if (!rawJson||!userId||!deviceToken||!lang) { res.status(410).send('Invalid Url.').end(); }
+    if (!rawJson||!userId||!deviceToken||!lang) { res.status(410).send('Invalid Url.').end(); return; }
 
     console.log(rawJson)
     const contents = notification.generateContents(rawJson,lang);
     const title = contents[0];
     const body = contents[1];
-    if (!title) { res.status(200).send('Invalid Json.').end(); }
+    if (!title) { res.status(200).send('Invalid Json.').end(); return; }
 
     // console.log("deviceToken",deviceToken);
     notification.send(deviceToken, title, body); // send!
