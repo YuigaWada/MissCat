@@ -25,7 +25,7 @@ exports.generateContents = function(rawJson, lang) {
     title = "";
     message = "@" + body.user.username + hostLabel + "さんに" + "フォローされました";
   }
-  else if (type == "reply") {
+  else if (type == "reply" || type == "mention") {
     title = fromUser + "さんの返信:";
     message = body.note.text;
   }
