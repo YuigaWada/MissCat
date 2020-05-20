@@ -28,11 +28,11 @@ MissCatの目標は以下の<u>5つ</u>です。
 
 
 
-- iOSネイティブアプリの提供・通知, 拡張機能の実装
-- スワイプやタップ、半モーダルによる直感的な操作と画面遷移
+- iOSネイティブアプリの提供・通知機能や拡張機能の実装
+- スワイプやタップ、半モーダルによる直感的な操作と快適な画面遷移
 - めいすきー等のサポート
-- 奇抜なデザインを用いず、iOSらしいデザイン設計を行う
-- 新規登録画面までの動線を張る
+- 奇抜なデザインを用いない、iOSらしいデザイン設計
+- 新規登録画面までの動線
 
 <br><br>
 ## Technical Aspects
@@ -61,15 +61,15 @@ MissCatでは、Foundationの[NSAttributedString](https://developer.apple.com/do
 <br><br>
 
 ### 通知
+MissCatはWeb版のMisskeyと同じように、WebPushと呼ばれる技術を利用して通知システムを構築しています。
 
-Web版Misskeyの通知システムを支えているのはWebPushと呼ばれる技術です。
-WebPushを用いることで、ユーザーの許可を得たwebサービスは、スマホのようにブラウザに通知をPushすることができます。
+<br>
 
-Web版Misskeyは[`'sw/register'`](https://misskey.io/api-doc#operation/sw/register)というエンドポイントを叩き、イベントが発生した際に通知がPushされるよう通知を購読します。
+Web版Misskeyは[`'sw/register'`](https://misskey.io/api-doc#operation/sw/register)というエンドポイントを叩き、イベントが発生した際に通知がブラウザにPushされるよう登録します。
 
-そこで、MissCatはWeb版Misskeyと同じように[`'sw/register'`](https://misskey.io/api-doc#operation/sw/register)を叩き、通知イベントをサーバーに送るよう登録します。サーバー側は贈られてきた通知メッセージをFirebaseへと投げるようになっています。
+MissCatでは、この仕組みを利用して、Misskey側で発火した通知イベントを、そのままサーバーへ送るよう[`'sw/register'`](https://misskey.io/api-doc#operation/sw/register)へ登録します。サーバー側は暗号化された通知メッセージを受け取ると、メッセージを復号して、適切なフォーマットに変換し、Firebaseへ投げることで各端末に通知を届けます。
 
-また、WebPushはprime256v1と言う楕円曲線暗号を元にメッセージが暗号化されているため、通知の実装にあたり、サーバー側で通知メッセージを復号化するモジュールを作りました。[webPushDecipher.js](https://github.com/YuigaWada/MissCat/blob/develop/ApiServer/webPushDecipher.js)
+※WebPushはprime256v1と言う楕円曲線暗号を元にメッセージが暗号化されているため、サーバーで通知メッセージを受け取った後、適切なカタチで復号してあげる必要があります。そこで、通知の実装にあたり、サーバー側で通知メッセージを復号するモジュールを作りました。[webPushDecipher.js](https://github.com/YuigaWada/MissCat/blob/develop/ApiServer/webPushDecipher.js)
 
 <br><br>
 
