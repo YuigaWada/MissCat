@@ -15,6 +15,7 @@ class PostViewModel: ViewModelType {
     struct Input {
         let type: PostViewController.PostType
         let targetNote: NoteCell.Model?
+        let rxCwText: ControlProperty<String?>
     }
     
     struct Output {
@@ -26,14 +27,21 @@ class PostViewModel: ViewModelType {
         let mark: PublishRelay<String> = .init()
         
         let attachments: PublishSubject<[PostViewController.AttachmentsSection]>
+        
+        let addCwTextViewTrigger: PublishRelay<Void> = .init()
+        let removeCwTextViewTrigger: PublishRelay<Void> = .init()
     }
     
-    struct State {}
+    struct State {
+        var hasCw: Bool = false
+    }
     
     private var input: Input
     lazy var output: Output = .init(iconImage: self.iconImage.asDriver(onErrorJustReturn: UIImage()),
                                     isSuccess: self.isSuccess.asDriver(onErrorJustReturn: false),
                                     attachments: self.attachments)
+    
+    private var state: State = .init()
     
     private class AttachmentFile {
         fileprivate let id: String = UUID().uuidString
@@ -155,6 +163,16 @@ class PostViewModel: ViewModelType {
         attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
     }
     
+    func changeCwState() {
+        defer { state.hasCw = !state.hasCw }
+        
+        if state.hasCw {
+            output.removeCwTextViewTrigger.accept(())
+        } else {
+            output.addCwTextViewTrigger.accept(())
+        }
+    }
+    
     func changeImageNsfwState() {
         let currentState = isNsfw
         attachmentFiles = attachmentFiles.map { $0.changeNsfwState(!currentState) }
@@ -174,7 +192,7 @@ class PostViewModel: ViewModelType {
         if let image = Cache.shared.getIcon(username: "\(target.username)@\(target.hostInstance)") {
             output.innerIcon.accept(image)
         } else if let iconImageUrl = target.iconImageUrl, let imageUrl = URL(string: iconImageUrl) {
-            imageUrl.toUIImage { image in
+            _ = imageUrl.toUIImage { image in
                 guard let image = image else { return }
                 Cache.shared.saveIcon(username: target.username, image: image) // CACHE!
                 self.output.innerIcon.accept(image)

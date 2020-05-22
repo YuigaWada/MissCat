@@ -26,12 +26,15 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     @IBOutlet weak var innerIconView: UIImageView!
     @IBOutlet weak var innerNoteLabel: UILabel!
     
+    @IBOutlet weak var mainStackView: UIStackView!
     @IBOutlet weak var mainTextView: UITextView!
     @IBOutlet weak var bottomConstraint: NSLayoutConstraint!
     
     @IBOutlet weak var bottomStackView: UIStackView!
     
     @IBOutlet weak var addLocationButon: UIButton!
+    
+    private let cwTextView = UITextView()
     
     var homeViewController: HomeViewController?
     
@@ -50,7 +53,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let viewModel = PostViewModel(with: .init(type: postType, targetNote: targetNote), and: disposeBag)
+        let viewModel = PostViewModel(with: .init(type: postType, targetNote: targetNote, rxCwText: cwTextView.rx.text), and: disposeBag)
         let dataSource = setupDataSource()
         binding(viewModel, dataSource)
         
@@ -117,6 +120,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         innerNoteCell.isHidden = targetNote == nil
         attachmentCollectionView.isHidden = true
         markLabel.font = .awesomeSolid(fontSize: 11.0)
+        mainTextView.isScrollEnabled = false // mainTextViewの高さが可変になる
     }
     
     private func setupDataSource() -> AttachmentsDataSource {
@@ -174,6 +178,16 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         output.mark
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(markLabel.rx.text)
+            .disposed(by: disposeBag)
+        
+        output.addCwTextViewTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { _ in self.addCwTextView() })
+            .disposed(by: disposeBag)
+        
+        output.removeCwTextViewTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { _ in self.removeCwTextView() })
             .disposed(by: disposeBag)
     }
     
@@ -278,7 +292,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     
     private func showNSFWSettings() {
         let panelMenu = PanelMenuViewController()
-        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "投稿を閲覧注意にする", awesomeIcon: "sticky-note", order: 0),
+        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "投稿に注釈をつける", awesomeIcon: "sticky-note", order: 0),
                                                              .init(title: "画像を閲覧注意にする", awesomeIcon: "image", order: 1)]
         
         panelMenu.setupMenu(items: menuItems)
@@ -287,7 +301,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
             panelMenu.dismiss(animated: true, completion: nil)
             
             if order == 0 {
-                self.showNSFWAlert()
+                self.viewModel?.changeCwState()
             } else {
                 self.viewModel?.changeImageNsfwState()
             }
@@ -296,12 +310,13 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         present(panelMenu, animated: true, completion: nil)
     }
     
-    private func showNSFWAlert() {
-        let alert = UIAlertController(title: "投稿NSFWの設定", message: "開発中です。", preferredStyle: UIAlertController.Style.alert)
-        let cancelAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.cancel, handler: nil)
-        
-        alert.addAction(cancelAction)
-        present(alert, animated: true, completion: nil)
+    private func addCwTextView() {
+        cwTextView.isScrollEnabled = false // 高さを可変に
+        mainStackView.insertArrangedSubview(cwTextView, at: 0)
+    }
+    
+    private func removeCwTextView() {
+        cwTextView.removeFromSuperview()
     }
     
     private func setImageNSFW(to parentView: UIView) {

@@ -59,12 +59,6 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" text="What's happening?" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="EU5-Xs-Hwc">
-                                <rect key="frame" x="60.5" y="98" width="333.5" height="545"/>
-                                <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
-                            </textView>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Csp-qU-w8d">
                                 <rect key="frame" x="20" y="98" width="32.5" height="32.5"/>
                                 <color key="backgroundColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -167,21 +161,46 @@
                                     <constraint firstAttribute="trailing" secondItem="IOM-RT-9Xq" secondAttribute="trailing" id="hID-Cl-4wp"/>
                                 </constraints>
                             </stackView>
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="3PT-CM-9Y0">
+                                <rect key="frame" x="60.5" y="98" width="333.5" height="545"/>
+                                <subviews>
+                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" translatesAutoresizingMaskIntoConstraints="NO" id="m9e-gU-YcL">
+                                        <rect key="frame" x="0.0" y="0.0" width="333.5" height="396"/>
+                                        <subviews>
+                                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" text="What's happening?" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="EU5-Xs-Hwc">
+                                                <rect key="frame" x="0.0" y="0.0" width="333.5" height="396"/>
+                                                <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                            </textView>
+                                        </subviews>
+                                    </stackView>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstAttribute="bottom" secondItem="m9e-gU-YcL" secondAttribute="bottom" id="EVd-LM-S45"/>
+                                    <constraint firstItem="m9e-gU-YcL" firstAttribute="trailing" secondItem="WtH-60-ogd" secondAttribute="trailing" id="SlP-hd-5Gj"/>
+                                    <constraint firstAttribute="trailing" secondItem="m9e-gU-YcL" secondAttribute="trailing" id="cOs-jI-EBc"/>
+                                    <constraint firstItem="m9e-gU-YcL" firstAttribute="top" secondItem="3PT-CM-9Y0" secondAttribute="top" id="h0L-dA-REV"/>
+                                    <constraint firstItem="m9e-gU-YcL" firstAttribute="leading" secondItem="3PT-CM-9Y0" secondAttribute="leading" id="lpX-rp-ojv"/>
+                                </constraints>
+                                <viewLayoutGuide key="contentLayoutGuide" id="nOB-P4-VlS"/>
+                                <viewLayoutGuide key="frameLayoutGuide" id="WtH-60-ogd"/>
+                            </scrollView>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
                             <constraint firstItem="xxL-hS-Ifh" firstAttribute="trailing" secondItem="tzh-uX-1vt" secondAttribute="trailing" constant="20" id="036-iI-ExV"/>
+                            <constraint firstItem="3PT-CM-9Y0" firstAttribute="top" secondItem="jE1-Xj-0I9" secondAttribute="bottom" constant="15" id="0W4-0A-Sww"/>
                             <constraint firstItem="jE1-Xj-0I9" firstAttribute="trailing" secondItem="xxL-hS-Ifh" secondAttribute="trailing" id="14S-KG-Jn3"/>
-                            <constraint firstItem="EU5-Xs-Hwc" firstAttribute="top" secondItem="jE1-Xj-0I9" secondAttribute="bottom" constant="15" id="471-Pa-BV5"/>
-                            <constraint firstItem="EU5-Xs-Hwc" firstAttribute="leading" secondItem="Csp-qU-w8d" secondAttribute="trailing" constant="8" id="AHp-GZ-KK8"/>
+                            <constraint firstItem="xxL-hS-Ifh" firstAttribute="trailing" secondItem="3PT-CM-9Y0" secondAttribute="trailing" constant="20" id="5sR-6X-L8m"/>
+                            <constraint firstItem="tzh-uX-1vt" firstAttribute="top" secondItem="3PT-CM-9Y0" secondAttribute="bottom" constant="5" id="FTg-kw-rgb"/>
                             <constraint firstItem="Csp-qU-w8d" firstAttribute="height" secondItem="fFf-eE-SeL" secondAttribute="height" multiplier="0.0363616" id="JA6-AR-08y"/>
                             <constraint firstItem="Csp-qU-w8d" firstAttribute="top" secondItem="jE1-Xj-0I9" secondAttribute="bottom" constant="15" id="JaJ-YJ-9Jd"/>
                             <constraint firstItem="jE1-Xj-0I9" firstAttribute="top" secondItem="fFf-eE-SeL" secondAttribute="top" id="NKX-3M-UkZ"/>
                             <constraint firstItem="tzh-uX-1vt" firstAttribute="leading" secondItem="xxL-hS-Ifh" secondAttribute="leading" constant="20" id="Qo5-b5-48K"/>
+                            <constraint firstItem="3PT-CM-9Y0" firstAttribute="leading" secondItem="Csp-qU-w8d" secondAttribute="trailing" constant="8" id="aWY-Ja-DSy"/>
                             <constraint firstItem="IOM-RT-9Xq" firstAttribute="height" secondItem="fFf-eE-SeL" secondAttribute="height" multiplier="0.142857" id="bgo-Lb-4vj"/>
                             <constraint firstItem="Csp-qU-w8d" firstAttribute="leading" secondItem="xxL-hS-Ifh" secondAttribute="leading" constant="20" id="cRb-F4-DQc"/>
-                            <constraint firstItem="xxL-hS-Ifh" firstAttribute="trailing" secondItem="EU5-Xs-Hwc" secondAttribute="trailing" constant="20" id="d9g-ed-VGF"/>
-                            <constraint firstItem="tzh-uX-1vt" firstAttribute="top" secondItem="EU5-Xs-Hwc" secondAttribute="bottom" constant="5" id="fPW-Zk-FMc"/>
                             <constraint firstItem="jE1-Xj-0I9" firstAttribute="leading" secondItem="xxL-hS-Ifh" secondAttribute="leading" id="ff0-Xy-3Oq"/>
                             <constraint firstItem="xxL-hS-Ifh" firstAttribute="bottom" secondItem="tzh-uX-1vt" secondAttribute="bottom" id="ggO-iS-dbr"/>
                             <constraint firstItem="jE1-Xj-0I9" firstAttribute="height" secondItem="fFf-eE-SeL" secondAttribute="height" multiplier="0.0926339" id="i46-Wq-oZO"/>
@@ -198,6 +217,7 @@
                         <outlet property="innerIconView" destination="dMO-dA-QM0" id="w6u-Fk-cS6"/>
                         <outlet property="innerNoteCell" destination="Xr7-JV-f30" id="n57-57-Ceq"/>
                         <outlet property="innerNoteLabel" destination="Izf-jI-LTK" id="7XB-so-TX2"/>
+                        <outlet property="mainStackView" destination="m9e-gU-YcL" id="uc0-aZ-EzK"/>
                         <outlet property="mainTextView" destination="EU5-Xs-Hwc" id="Da9-uM-miV"/>
                         <outlet property="markLabel" destination="zCb-5a-luU" id="1nh-gX-VZi"/>
                         <outlet property="submitButton" destination="E5P-wX-4mM" id="kHB-mM-lhF"/>
