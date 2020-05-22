@@ -20,14 +20,14 @@ class PostModel {
         Cache.shared.getMe { me in
             guard let me = me, let iconUrl = me.avatarUrl else { completion(nil); return }
             
-            iconUrl.toUIImage { image in
+            _ = iconUrl.toUIImage { image in
                 self.iconImage = image
                 completion(image)
             }
         }
     }
     
-    func submitNote(_ note: String?, fileIds: [String]? = nil, replyId: String? = nil, renoteId: String? = nil, completion: @escaping (Bool) -> Void) {
+    func submitNote(_ note: String?, cw: String? = nil, fileIds: [String]? = nil, replyId: String? = nil, renoteId: String? = nil, completion: @escaping (Bool) -> Void) {
         guard let note = note else { return }
         
         if let renoteId = renoteId { // 引用RN
@@ -36,7 +36,7 @@ class PostModel {
                 completion(isSuccess)
             }
         } else { // 通常の投稿
-            MisskeyKit.notes.createNote(text: note, fileIds: fileIds ?? [], replyId: replyId ?? "") { post, error in
+            MisskeyKit.notes.createNote(text: note, cw: cw ?? "", fileIds: fileIds ?? [], replyId: replyId ?? "") { post, error in
                 let isSuccess = post != nil && error == nil
                 completion(isSuccess)
             }

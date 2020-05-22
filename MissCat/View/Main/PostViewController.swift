@@ -27,14 +27,14 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     @IBOutlet weak var innerNoteLabel: UILabel!
     
     @IBOutlet weak var mainStackView: UIStackView!
-    @IBOutlet weak var mainTextView: UITextView!
+    @IBOutlet weak var mainTextView: PostTextView!
     @IBOutlet weak var bottomConstraint: NSLayoutConstraint!
     
     @IBOutlet weak var bottomStackView: UIStackView!
     
     @IBOutlet weak var addLocationButon: UIButton!
     
-    private let cwTextView = UITextView()
+    private let cwTextView = PostTextView()
     
     var homeViewController: HomeViewController?
     
@@ -46,7 +46,6 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     private let disposeBag = DisposeBag()
     
     private lazy var counter = UIBarButtonItem(title: "1500", style: .done, target: self, action: nil)
-    private lazy var placeholderColor: UIColor = Theme.shared.currentModel?.colorPattern.ui.sub2 ?? .lightGray
     
     // MARK: Life Cycle
     
@@ -111,7 +110,6 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
             markLabel.textColor = colorPattern.text
             innerNoteLabel.textColor = colorPattern.sub0
         }
-        mainTextView.textColor = placeholderColor
     }
     
     /// ステータスバーの文字色
@@ -130,7 +128,10 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         innerNoteCell.isHidden = targetNote == nil
         attachmentCollectionView.isHidden = true
         markLabel.font = .awesomeSolid(fontSize: 11.0)
-        mainTextView.isScrollEnabled = false // mainTextViewの高さが可変になる
+        
+        view.setTapGesture(disposeBag, closure: {
+            self.mainTextView.becomeFirstResponder()
+        })
     }
     
     private func setupDataSource() -> AttachmentsDataSource {
@@ -213,11 +214,23 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     }
     
     private func setupTextView(_ viewModel: PostViewModel) {
-        // miscs
-        mainTextView.rx.setDelegate(self).disposed(by: disposeBag)
-        mainTextView.textColor = .lightGray
-        
         // above toolbar
+        setupToolBar(with: viewModel)
+        
+        // text & color
+        let normalTextColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
+        let placeholderColor = Theme.shared.currentModel?.colorPattern.ui.sub2 ?? .lightGray
+        
+        mainTextView.setPlaceholder("What's happening?")
+        mainTextView.setColor(normalText: normalTextColor,
+                              placeholder: placeholderColor)
+        
+        cwTextView.setPlaceholder("-注釈をここに書く-")
+        cwTextView.setColor(normalText: normalTextColor,
+                            placeholder: placeholderColor)
+    }
+    
+    private func setupToolBar(with viewModel: PostViewModel) {
         let flexibleItem = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         
         let cameraButton = UIBarButtonItem(title: "camera", style: .plain, target: self, action: nil)
@@ -472,20 +485,6 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     
     // MARK: Delegate
     
-    func textViewDidBeginEditing(_ textView: UITextView) {
-        if mainTextView.textColor == placeholderColor {
-            mainTextView.text = ""
-            mainTextView.textColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
-        }
-    }
-    
-    func textViewDidEndEditing(_ textView: UITextView) {
-        if mainTextView.text == "" {
-            mainTextView.text = "What's happening?"
-            mainTextView.textColor = placeholderColor
-        }
-    }
-    
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
         transformAttachment(disposeBag: disposeBag, picker: picker, didFinishPickingMediaWithInfo: info) { originalImage, editedImage, videoUrl in
             if let originalImage = originalImage, let editedImage = editedImage {
@@ -551,5 +550,59 @@ extension PostViewController.AttachmentsSection: SectionModelType {
     init(original: PostViewController.AttachmentsSection, items: [Item]) {
         self = original
         self.items = items
+    }
+}
+
+class PostTextView: UITextView, UITextViewDelegate {
+    private var placeholder: String?
+    private var placeholderColor: UIColor?
+    private var normalTextColor: UIColor?
+    
+    // MARK: LifeCycle
+    
+    override init(frame: CGRect, textContainer: NSTextContainer?) {
+        super.init(frame: frame, textContainer: textContainer)
+        setup()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+    
+    private func setup() {
+        delegate = self
+        isScrollEnabled = false // 高さが可変になる
+        backgroundColor = .clear
+        font = .systemFont(ofSize: 17.0)
+    }
+    
+    // MARK: Set
+    
+    func setPlaceholder(_ text: String) {
+        placeholder = text
+        self.text = placeholder
+    }
+    
+    func setColor(normalText: UIColor, placeholder: UIColor) {
+        normalTextColor = normalText
+        placeholderColor = placeholder
+        textColor = placeholder
+    }
+    
+    // MARK: Delegate
+    
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        if textColor == placeholderColor {
+            text = ""
+            textColor = normalTextColor ?? .black
+        }
+    }
+    
+    func textViewDidEndEditing(_ textView: UITextView) {
+        if text == "" {
+            text = placeholder
+            textColor = placeholderColor ?? .white
+        }
     }
 }

@@ -167,7 +167,7 @@
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" translatesAutoresizingMaskIntoConstraints="NO" id="m9e-gU-YcL">
                                         <rect key="frame" x="0.0" y="0.0" width="333.5" height="396"/>
                                         <subviews>
-                                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" text="What's happening?" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="EU5-Xs-Hwc">
+                                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" text="What's happening?" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="EU5-Xs-Hwc" customClass="PostTextView" customModule="MissCat" customModuleProvider="target">
                                                 <rect key="frame" x="0.0" y="0.0" width="333.5" height="396"/>
                                                 <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
@@ -218,7 +218,7 @@
                         <outlet property="innerNoteCell" destination="Xr7-JV-f30" id="n57-57-Ceq"/>
                         <outlet property="innerNoteLabel" destination="Izf-jI-LTK" id="7XB-so-TX2"/>
                         <outlet property="mainStackView" destination="m9e-gU-YcL" id="uc0-aZ-EzK"/>
-                        <outlet property="mainTextView" destination="EU5-Xs-Hwc" id="Da9-uM-miV"/>
+                        <outlet property="mainTextView" destination="EU5-Xs-Hwc" id="y7u-co-3Ga"/>
                         <outlet property="markLabel" destination="zCb-5a-luU" id="1nh-gX-VZi"/>
                         <outlet property="submitButton" destination="E5P-wX-4mM" id="kHB-mM-lhF"/>
                     </connections>

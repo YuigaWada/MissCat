@@ -49,6 +49,7 @@ class PostViewModel: ViewModelType {
     
     private var state: State = .init()
     private var currentNote: String = ""
+    private var currentCw: String?
     
     private class AttachmentFile {
         fileprivate let id: String = UUID().uuidString
@@ -105,7 +106,7 @@ class PostViewModel: ViewModelType {
         }
     }
     
-    // MARK: Publics
+    // MARK: General
     
     func transform() {
         // binding
@@ -113,6 +114,13 @@ class PostViewModel: ViewModelType {
             .asObservable()
             .subscribe(onNext: {
                 self.currentNote = $0 ?? ""
+            })
+            .disposed(by: disposeBag)
+        
+        input.rxCwText
+            .asObservable()
+            .subscribe(onNext: {
+                self.currentCw = $0
             })
             .disposed(by: disposeBag)
         
@@ -139,16 +147,17 @@ class PostViewModel: ViewModelType {
     
     private func submitNote() {
         let note = currentNote
+        let cw = currentCw
         let renoteId = input.type == .CommentRenote ? input.targetNote?.noteId : nil
         let replyId = input.type == .Reply ? input.targetNote?.noteId : nil
         
         guard attachmentFiles.count > 0 else {
-            model.submitNote(note, fileIds: nil, replyId: replyId, renoteId: renoteId) { self.isSuccess.onNext($0) }
+            model.submitNote(note, cw: cw, fileIds: nil, replyId: replyId, renoteId: renoteId) { self.isSuccess.onNext($0) }
             return
         }
         
         uploadFiles { fileIds in
-            self.model.submitNote(note, fileIds: fileIds, replyId: replyId, renoteId: renoteId) { self.isSuccess.onNext($0) }
+            self.model.submitNote(note, cw: cw, fileIds: fileIds, replyId: replyId, renoteId: renoteId) { self.isSuccess.onNext($0) }
         }
     }
     
@@ -199,6 +208,7 @@ class PostViewModel: ViewModelType {
         
         if state.hasCw {
             output.removeCwTextViewTrigger.accept(())
+            currentCw = nil
         } else {
             output.addCwTextViewTrigger.accept(())
         }
