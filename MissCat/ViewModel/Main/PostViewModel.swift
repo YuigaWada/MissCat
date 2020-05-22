@@ -20,6 +20,7 @@ class PostViewModel: ViewModelType {
         
         let cancelTrigger: Observable<Void>
         let submitTrigger: Observable<Void>
+        let addNowPlayingInfoTrigger: Observable<Void>
     }
     
     struct Output {
@@ -30,6 +31,7 @@ class PostViewModel: ViewModelType {
         let innerNote: PublishRelay<String> = .init()
         let mark: PublishRelay<String> = .init()
         let counter: PublishRelay<String> = .init()
+        let nowPlaying: PublishRelay<Bool> = .init()
         
         let attachments: PublishSubject<[PostViewController.AttachmentsSection]>
         
@@ -81,6 +83,7 @@ class PostViewModel: ViewModelType {
         }
     }
     
+    private var nowPlaying: PostModel.NowPlaying?
     private var iconImage: PublishSubject<UIImage> = .init()
     private var isSuccess: PublishSubject<Bool> = .init()
     
@@ -120,6 +123,7 @@ class PostViewModel: ViewModelType {
         input.rxCwText
             .asObservable()
             .subscribe(onNext: {
+                guard self.state.hasCw else { return }
                 self.currentCw = $0
             })
             .disposed(by: disposeBag)
@@ -142,7 +146,18 @@ class PostViewModel: ViewModelType {
             self.output.dismissTrigger.accept(())
         }).disposed(by: disposeBag)
         
+        input.addNowPlayingInfoTrigger.asObservable().subscribe(onNext: {
+            guard let nowPlaying = self.nowPlaying else { return }
+            
+            let text = self.getNowPlayingText(from: nowPlaying)
+            self.input.rxMainText.onNext(text)
+            if let artwork = nowPlaying.artwork {
+                self.stackFile(original: artwork, edited: artwork)
+            }
+        }).disposed(by: disposeBag)
+        
         setInnerNote()
+        checkMusic()
     }
     
     private func submitNote() {
@@ -167,6 +182,16 @@ class PostViewModel: ViewModelType {
         } else {
             uploadImages(completion: completion)
         }
+    }
+    
+    private func checkMusic() {
+        nowPlaying = model.getNowPlayingInfo()
+        output.nowPlaying.accept(nowPlaying != nil)
+    }
+    
+    private func getNowPlayingText(from nowPlaying: PostModel.NowPlaying) -> String {
+        guard let artist = nowPlaying.artist else { return nowPlaying.title + " #nowplaying" }
+        return "\(artist) - \(nowPlaying.title) #nowplaying"
     }
     
     // MARK: Inner Note

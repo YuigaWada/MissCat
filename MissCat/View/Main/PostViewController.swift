@@ -38,6 +38,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     private let cwTextView = PostTextView()
     private lazy var toolBar = UIToolbar()
     private lazy var counter = UIBarButtonItem(title: "1500", style: .done, target: self, action: nil)
+    private lazy var musicButton = UIBarButtonItem(title: "headphones-alt", style: .plain, target: self, action: nil)
     
     // MARK: Vars
     
@@ -75,7 +76,8 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
                                                rxCwText: cwTextView.rx.text,
                                                rxMainText: mainTextView.rx.text,
                                                cancelTrigger: cancelButton.rx.tap.asObservable(),
-                                               submitTrigger: submitButton.rx.tap.asObservable())
+                                               submitTrigger: submitButton.rx.tap.asObservable(),
+                                               addNowPlayingInfoTrigger: musicButton.rx.tap.asObservable())
         let viewModel = PostViewModel(with: input, and: disposeBag)
         return viewModel
     }
@@ -200,6 +202,11 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
                 self.dismiss(animated: true, completion: nil)
             })
             .disposed(by: disposeBag)
+        
+        output.nowPlaying
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(musicButton.rx.isEnabled)
+            .disposed(by: disposeBag)
     }
     
     private func setupCollectionView() {
@@ -255,12 +262,12 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         toolBar.setItems([cameraButton, imageButton,
                           // 次アップデートで機能追加する
                           // pollButton, locationButton,
-                          nsfwButton,
+                          nsfwButton, musicButton,
                           flexibleItem, flexibleItem,
                           emojiButton, counter], animated: true)
         toolBar.sizeToFit()
         
-        change2AwesomeFont(buttons: [cameraButton, imageButton, pollButton, nsfwButton, emojiButton])
+        change2AwesomeFont(buttons: [cameraButton, imageButton, pollButton, musicButton, nsfwButton, emojiButton])
         mainTextView.inputAccessoryView = toolBar
     }
     
@@ -483,6 +490,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         buttons.forEach { button in
             button.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.awesomeSolid(fontSize: 17.0)!], for: .normal)
             button.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.awesomeSolid(fontSize: 17.0)!], for: .selected)
+            button.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.awesomeSolid(fontSize: 17.0)!], for: .disabled)
         }
     }
     
@@ -555,7 +563,6 @@ extension PostViewController.AttachmentsSection: SectionModelType {
         self.items = items
     }
 }
-
 
 /// 高さ可変でPlaceholderを持つTextView
 class PostTextView: UITextView, UITextViewDelegate {

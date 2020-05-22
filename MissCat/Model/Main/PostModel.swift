@@ -6,6 +6,7 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import MediaPlayer
 import MisskeyKit
 
 class PostModel {
@@ -60,4 +61,22 @@ class PostModel {
             completion(result.id)
         }
     }
+    
+    func getNowPlayingInfo() -> NowPlaying? {
+        guard let nowPlayingItem = MPMusicPlayerController.systemMusicPlayer.nowPlayingItem else { return nil }
+        
+        let artwork = nowPlayingItem.artwork?.image(at: CGSize(width: 200, height: 200))
+        return .init(artist: nowPlayingItem.artist,
+                     title: nowPlayingItem.title ?? "",
+                     artwork: artwork)
+    }
 }
+
+extension PostModel {
+    struct NowPlaying {
+        let artist: String?
+        let title: String
+        let artwork: UIImage?
+    }
+}
+ 
