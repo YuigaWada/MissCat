@@ -15,6 +15,8 @@ import UIKit
 
 typealias AttachmentsDataSource = RxCollectionViewSectionedReloadDataSource<PostViewController.AttachmentsSection>
 class PostViewController: UIViewController, UITextViewDelegate, UICollectionViewDelegate {
+    // MARK: View
+    
     @IBOutlet weak var attachmentCollectionView: UICollectionView!
     
     @IBOutlet weak var cancelButton: UIButton!
@@ -31,10 +33,13 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     @IBOutlet weak var bottomConstraint: NSLayoutConstraint!
     
     @IBOutlet weak var bottomStackView: UIStackView!
-    
     @IBOutlet weak var addLocationButon: UIButton!
     
     private let cwTextView = PostTextView()
+    private lazy var toolBar = UIToolbar()
+    private lazy var counter = UIBarButtonItem(title: "1500", style: .done, target: self, action: nil)
+    
+    // MARK: Vars
     
     var homeViewController: HomeViewController?
     
@@ -42,10 +47,8 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     private var targetNote: NoteCell.Model?
     
     private var viewModel: PostViewModel?
-    private lazy var toolBar = UIToolbar()
-    private let disposeBag = DisposeBag()
     
-    private lazy var counter = UIBarButtonItem(title: "1500", style: .done, target: self, action: nil)
+    private let disposeBag = DisposeBag()
     
     // MARK: Life Cycle
     
@@ -553,6 +556,8 @@ extension PostViewController.AttachmentsSection: SectionModelType {
     }
 }
 
+
+/// 高さ可変でPlaceholderを持つTextView
 class PostTextView: UITextView, UITextViewDelegate {
     private var placeholder: String?
     private var placeholderColor: UIColor?
