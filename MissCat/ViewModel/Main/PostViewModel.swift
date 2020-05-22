@@ -16,6 +16,10 @@ class PostViewModel: ViewModelType {
         let type: PostViewController.PostType
         let targetNote: NoteCell.Model?
         let rxCwText: ControlProperty<String?>
+        let rxMainText: ControlProperty<String?>
+        
+        let cancelTrigger: Observable<Void>
+        let submitTrigger: Observable<Void>
     }
     
     struct Output {
@@ -25,11 +29,13 @@ class PostViewModel: ViewModelType {
         let innerIcon: PublishRelay<UIImage> = .init()
         let innerNote: PublishRelay<String> = .init()
         let mark: PublishRelay<String> = .init()
+        let counter: PublishRelay<String> = .init()
         
         let attachments: PublishSubject<[PostViewController.AttachmentsSection]>
         
         let addCwTextViewTrigger: PublishRelay<Void> = .init()
         let removeCwTextViewTrigger: PublishRelay<Void> = .init()
+        let dismissTrigger: PublishRelay<Void> = .init()
     }
     
     struct State {
@@ -42,6 +48,7 @@ class PostViewModel: ViewModelType {
                                     attachments: self.attachments)
     
     private var state: State = .init()
+    private var currentNote: String = ""
     
     private class AttachmentFile {
         fileprivate let id: String = UUID().uuidString
@@ -100,7 +107,38 @@ class PostViewModel: ViewModelType {
     
     // MARK: Publics
     
-    func submitNote(_ note: String) {
+    func transform() {
+        // binding
+        input.rxMainText
+            .asObservable()
+            .subscribe(onNext: {
+                self.currentNote = $0 ?? ""
+            })
+            .disposed(by: disposeBag)
+        
+        input.rxMainText
+            .asObservable()
+            .map {
+                guard let text = $0 else { return $0 ?? "" }
+                return String(1500 - text.count)
+            }
+            .bind(to: output.counter)
+            .disposed(by: disposeBag)
+        
+        input.cancelTrigger.asObservable().subscribe(onNext: {
+            self.output.dismissTrigger.accept(())
+        }).disposed(by: disposeBag)
+        
+        input.submitTrigger.asObservable().subscribe(onNext: {
+            self.submitNote()
+            self.output.dismissTrigger.accept(())
+        }).disposed(by: disposeBag)
+        
+        setInnerNote()
+    }
+    
+    private func submitNote() {
+        let note = currentNote
         let renoteId = input.type == .CommentRenote ? input.targetNote?.noteId : nil
         let replyId = input.type == .Reply ? input.targetNote?.noteId : nil
         
@@ -114,15 +152,67 @@ class PostViewModel: ViewModelType {
         }
     }
     
-    func getLocation() {}
-    
-    func uploadFiles(completion: @escaping ([String]) -> Void) {
+    private func uploadFiles(completion: @escaping ([String]) -> Void) {
         if hasVideoAttachment {
             uploadVideo(completion: completion)
         } else {
             uploadImages(completion: completion)
         }
     }
+    
+    // MARK: Inner Note
+    
+    private func setInnerNote() {
+        guard let target = input.targetNote else { return }
+        
+        // text
+        setMark(type: input.type)
+        output.innerNote.accept(target.original?.text ?? "")
+        
+        // image
+        if let image = Cache.shared.getIcon(username: "\(target.username)@\(target.hostInstance)") {
+            output.innerIcon.accept(image)
+        } else if let iconImageUrl = target.iconImageUrl, let imageUrl = URL(string: iconImageUrl) {
+            _ = imageUrl.toUIImage { image in
+                guard let image = image else { return }
+                Cache.shared.saveIcon(username: target.username, image: image) // CACHE!
+                self.output.innerIcon.accept(image)
+            }
+        }
+    }
+    
+    private func setMark(type: PostViewController.PostType) {
+        switch type {
+        case .Reply:
+            output.mark.accept("chevron-right")
+        case .CommentRenote:
+            output.mark.accept("retweet")
+        default:
+            break
+        }
+    }
+    
+    // MARK: CW/NSFW
+    
+    func changeCwState() {
+        defer { state.hasCw = !state.hasCw }
+        
+        if state.hasCw {
+            output.removeCwTextViewTrigger.accept(())
+        } else {
+            output.addCwTextViewTrigger.accept(())
+        }
+    }
+    
+    func changeImageNsfwState() {
+        let currentState = isNsfw
+        attachmentFiles = attachmentFiles.map { $0.changeNsfwState(!currentState) }
+        attachmentsLists = attachmentsLists.map { $0.changeNsfwState(!currentState) }
+        
+        attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
+    }
+    
+    // MARK: Attachments
     
     // 画像をスタックさせておいて、アップロードは直前に
     func stackFile(original: UIImage, edited: UIImage) {
@@ -162,56 +252,6 @@ class PostViewModel: ViewModelType {
         
         attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
     }
-    
-    func changeCwState() {
-        defer { state.hasCw = !state.hasCw }
-        
-        if state.hasCw {
-            output.removeCwTextViewTrigger.accept(())
-        } else {
-            output.addCwTextViewTrigger.accept(())
-        }
-    }
-    
-    func changeImageNsfwState() {
-        let currentState = isNsfw
-        attachmentFiles = attachmentFiles.map { $0.changeNsfwState(!currentState) }
-        attachmentsLists = attachmentsLists.map { $0.changeNsfwState(!currentState) }
-        
-        attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
-    }
-    
-    func setInnerNote() {
-        guard let target = input.targetNote else { return }
-        
-        // text
-        setMark(type: input.type)
-        output.innerNote.accept(target.original?.text ?? "")
-        
-        // image
-        if let image = Cache.shared.getIcon(username: "\(target.username)@\(target.hostInstance)") {
-            output.innerIcon.accept(image)
-        } else if let iconImageUrl = target.iconImageUrl, let imageUrl = URL(string: iconImageUrl) {
-            _ = imageUrl.toUIImage { image in
-                guard let image = image else { return }
-                Cache.shared.saveIcon(username: target.username, image: image) // CACHE!
-                self.output.innerIcon.accept(image)
-            }
-        }
-    }
-    
-    private func setMark(type: PostViewController.PostType) {
-        switch type {
-        case .Reply:
-            output.mark.accept("chevron-right")
-        case .CommentRenote:
-            output.mark.accept("retweet")
-        default:
-            break
-        }
-    }
-    
-    // MARK: Privates
     
     private func uploadImages(completion: @escaping ([String]) -> Void) {
         var fileIds: [String] = []

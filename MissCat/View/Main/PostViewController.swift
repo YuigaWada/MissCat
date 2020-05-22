@@ -53,11 +53,9 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let viewModel = PostViewModel(with: .init(type: postType, targetNote: targetNote, rxCwText: cwTextView.rx.text), and: disposeBag)
+        let viewModel = getViewModel()
         let dataSource = setupDataSource()
         binding(viewModel, dataSource)
-        
-        viewModel.setInnerNote()
         setupComponent(with: viewModel)
         setTheme()
         NotificationCenter.default.addObserver(self,
@@ -65,7 +63,19 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
                                                name: UIResponder.keyboardWillShowNotification,
                                                object: nil)
         
+        viewModel.transform()
         self.viewModel = viewModel
+    }
+    
+    private func getViewModel() -> PostViewModel {
+        let input: PostViewModel.Input = .init(type: postType,
+                                               targetNote: targetNote,
+                                               rxCwText: cwTextView.rx.text,
+                                               rxMainText: mainTextView.rx.text,
+                                               cancelTrigger: cancelButton.rx.tap.asObservable(),
+                                               submitTrigger: submitButton.rx.tap.asObservable())
+        let viewModel = PostViewModel(with: input, and: disposeBag)
+        return viewModel
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -137,24 +147,11 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         let output = viewModel.output
         
         output.iconImage.drive(iconImageView.rx.image).disposed(by: disposeBag)
-        //        output.isSuccess.subscribe { _ in
-        //
-        //        }.disposed(by: disposeBag)
         
-        cancelButton.rx.tap.asObservable().subscribe { _ in
-            self.mainTextView.resignFirstResponder()
-            self.dismiss(animated: true, completion: nil)
-        }.disposed(by: disposeBag)
-        
-        submitButton.rx.tap.asObservable().subscribe { _ in
-            viewModel.submitNote(self.mainTextView.text)
-            DispatchQueue.main.async { self.dismiss(animated: true, completion: nil) }
-        }.disposed(by: disposeBag)
-        
-        mainTextView.rx.text.asObservable().map {
-            guard let text = $0 else { return $0 ?? "" }
-            return String(1500 - text.count)
-        }.bind(to: counter.rx.title).disposed(by: disposeBag)
+        output.counter
+            .asObservable()
+            .bind(to: counter.rx.title)
+            .disposed(by: disposeBag)
         
         output.attachments.map {
             guard $0.count == 1 else { return true }
@@ -180,6 +177,8 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
             .drive(markLabel.rx.text)
             .disposed(by: disposeBag)
         
+        // trigger
+        
         output.addCwTextViewTrigger
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(onNext: { _ in self.addCwTextView() })
@@ -188,6 +187,14 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         output.removeCwTextViewTrigger
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(onNext: { _ in self.removeCwTextView() })
+            .disposed(by: disposeBag)
+        
+        output.dismissTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: {
+                self.mainTextView.resignFirstResponder()
+                self.dismiss(animated: true, completion: nil)
+            })
             .disposed(by: disposeBag)
     }
     
@@ -216,7 +223,6 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         let cameraButton = UIBarButtonItem(title: "camera", style: .plain, target: self, action: nil)
         let imageButton = UIBarButtonItem(title: "images", style: .plain, target: self, action: nil)
         let pollButton = UIBarButtonItem(title: "poll", style: .plain, target: self, action: nil)
-        let locationButton = UIBarButtonItem(title: "map-marker-alt", style: .plain, target: self, action: nil)
         let nsfwButton = UIBarButtonItem(title: "eye", style: .plain, target: self, action: nil)
         let emojiButton = UIBarButtonItem(title: "laugh-squint", style: .plain, target: self, action: nil)
         
@@ -226,7 +232,6 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         cameraButton.rx.tap.subscribe { _ in self.pickImage(type: .camera) }.disposed(by: disposeBag)
         imageButton.rx.tap.subscribe { _ in self.pickImage(type: .photoLibrary) }.disposed(by: disposeBag)
         pollButton.rx.tap.subscribe { _ in }.disposed(by: disposeBag)
-        locationButton.rx.tap.subscribe { _ in viewModel.getLocation() }.disposed(by: disposeBag)
         nsfwButton.rx.tap.subscribe { _ in self.showNSFWSettings() }.disposed(by: disposeBag)
         emojiButton.rx.tap.subscribe { _ in self.showReactionGen() }.disposed(by: disposeBag)
         
@@ -239,7 +244,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
                           emojiButton, counter], animated: true)
         toolBar.sizeToFit()
         
-        change2AwesomeFont(buttons: [cameraButton, imageButton, pollButton, locationButton, nsfwButton, emojiButton])
+        change2AwesomeFont(buttons: [cameraButton, imageButton, pollButton, nsfwButton, emojiButton])
         mainTextView.inputAccessoryView = toolBar
     }
     
