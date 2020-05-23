@@ -43,6 +43,23 @@ extension UIViewController {
         presentOnFullScreen(target, animated: true, completion: nil)
     }
     
+    func presentDropdownMenu(with menus: [DropdownMenu], size: CGSize, sourceRect: CGRect) -> Observable<Int>? {
+        let dropdownMenu = DropdownMenuViewController(with: menus, size: size)
+        
+        dropdownMenu.modalPresentationStyle = .popover
+        dropdownMenu.preferredContentSize = size
+        
+        guard let popOver = dropdownMenu.popoverPresentationController else { return nil }
+        
+        popOver.sourceView = view
+        popOver.sourceRect = sourceRect
+        popOver.permittedArrowDirections = .any
+        popOver.delegate = self
+        
+        present(dropdownMenu, animated: true, completion: nil)
+        return dropdownMenu.selected.asObservable()
+    }
+    
     func presentReactionGen(noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, navigationController: UINavigationController?) -> ReactionGenViewController? {
         guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return nil }
         
@@ -131,5 +148,12 @@ extension UIViewController: FloatingPanelControllerDelegate {
         guard targetPosition == .tip else { return }
         
         fpc.dismiss(animated: true, completion: nil)
+    }
+}
+
+extension UIViewController: UIPopoverPresentationControllerDelegate {
+    // For presentDropdownMenu()
+    public func adaptivePresentationStyle(for controller: UIPresentationController, traitCollection: UITraitCollection) -> UIModalPresentationStyle {
+        return .none
     }
 }
