@@ -21,6 +21,7 @@ class PostViewModel: ViewModelType {
         let cancelTrigger: Observable<Void>
         let submitTrigger: Observable<Void>
         let addNowPlayingInfoTrigger: Observable<Void>
+        let visibilitySettingTrigger: Observable<Void>
     }
     
     struct Output {
@@ -32,12 +33,14 @@ class PostViewModel: ViewModelType {
         let mark: PublishRelay<String> = .init()
         let counter: PublishRelay<String> = .init()
         let nowPlaying: PublishRelay<Bool> = .init()
+        let visibilityText: PublishRelay<String> = .init()
         
         let attachments: PublishSubject<[PostViewController.AttachmentsSection]>
         
         let addCwTextViewTrigger: PublishRelay<Void> = .init()
         let removeCwTextViewTrigger: PublishRelay<Void> = .init()
         let dismissTrigger: PublishRelay<Void> = .init()
+        let presentVisibilityMenuTrigger: PublishRelay<Void> = .init()
     }
     
     struct State {
@@ -86,12 +89,14 @@ class PostViewModel: ViewModelType {
     private var nowPlaying: PostModel.NowPlaying?
     private var iconImage: PublishSubject<UIImage> = .init()
     private var isSuccess: PublishSubject<Bool> = .init()
+    private var currentVisibility: Visibility = .public
     
     private var attachmentsLists: [PostViewController.Attachments] = []
     private let attachments: PublishSubject<[PostViewController.AttachmentsSection]> = .init()
     
     private let model = PostModel()
     private var disposeBag: DisposeBag
+    
     private var attachmentFiles: [AttachmentFile] = []
     private var hasVideoAttachment: Bool = false // 写真と動画は共存させないようにする。尚、写真は4枚まで追加可能だが動画は一つのみとする。
     private var isNsfw: Bool {
@@ -156,7 +161,12 @@ class PostViewModel: ViewModelType {
             }
         }).disposed(by: disposeBag)
         
+        input.visibilitySettingTrigger.asObservable().subscribe(onNext: {
+            self.output.presentVisibilityMenuTrigger.accept(())
+        }).disposed(by: disposeBag)
+        
         setInnerNote()
+        setSavedVisibility()
         checkMusic()
     }
     
@@ -167,12 +177,22 @@ class PostViewModel: ViewModelType {
         let replyId = input.type == .Reply ? input.targetNote?.noteId : nil
         
         guard attachmentFiles.count > 0 else {
-            model.submitNote(note, cw: cw, fileIds: nil, replyId: replyId, renoteId: renoteId) { self.isSuccess.onNext($0) }
+            model.submitNote(note,
+                             cw: cw,
+                             fileIds: nil,
+                             replyId: replyId,
+                             renoteId: renoteId,
+                             visibility: currentVisibility) { self.isSuccess.onNext($0) }
             return
         }
         
         uploadFiles { fileIds in
-            self.model.submitNote(note, cw: cw, fileIds: fileIds, replyId: replyId, renoteId: renoteId) { self.isSuccess.onNext($0) }
+            self.model.submitNote(note,
+                                  cw: cw,
+                                  fileIds: fileIds,
+                                  replyId: replyId,
+                                  renoteId: renoteId,
+                                  visibility: self.currentVisibility) { self.isSuccess.onNext($0) }
         }
     }
     
@@ -245,6 +265,29 @@ class PostViewModel: ViewModelType {
         attachmentsLists = attachmentsLists.map { $0.changeNsfwState(!currentState) }
         
         attachments.onNext([PostViewController.AttachmentsSection(items: attachmentsLists)])
+    }
+    
+    // MARK: Visibility
+    
+    func changeVisibility(to visibility: Visibility) {
+        switch visibility {
+        case .public:
+            output.visibilityText.accept("globe")
+        case .home:
+            output.visibilityText.accept("home")
+        case .followers:
+            output.visibilityText.accept("lock")
+        default:
+            break
+        }
+        
+        currentVisibility = visibility
+        model.savedVisibility(visibility)
+    }
+    
+    func setSavedVisibility() {
+        let visibility = model.getSavedVisibility()
+        changeVisibility(to: visibility)
     }
     
     // MARK: Attachments

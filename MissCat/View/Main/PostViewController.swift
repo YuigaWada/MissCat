@@ -21,6 +21,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     
     @IBOutlet weak var cancelButton: UIButton!
     @IBOutlet weak var submitButton: UIButton!
+    @IBOutlet weak var visibilityButton: UIButton!
     @IBOutlet weak var iconImageView: UIImageView!
     
     @IBOutlet weak var innerNoteCell: UIView!
@@ -35,7 +36,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     @IBOutlet weak var bottomStackView: UIStackView!
     @IBOutlet weak var addLocationButon: UIButton!
     
-    private let cwTextView = PostTextView()
+    private lazy var cwTextView = self.generateCwTextView()
     private lazy var toolBar = UIToolbar()
     private lazy var counter = UIBarButtonItem(title: "1500", style: .done, target: self, action: nil)
     private lazy var musicButton = UIBarButtonItem(title: "headphones-alt", style: .plain, target: self, action: nil)
@@ -77,7 +78,8 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
                                                rxMainText: mainTextView.rx.text,
                                                cancelTrigger: cancelButton.rx.tap.asObservable(),
                                                submitTrigger: submitButton.rx.tap.asObservable(),
-                                               addNowPlayingInfoTrigger: musicButton.rx.tap.asObservable())
+                                               addNowPlayingInfoTrigger: musicButton.rx.tap.asObservable(),
+                                               visibilitySettingTrigger: visibilityButton.rx.tap.asObservable())
         let viewModel = PostViewModel(with: input, and: disposeBag)
         return viewModel
     }
@@ -121,6 +123,59 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     override var preferredStatusBarStyle: UIStatusBarStyle {
         let currentColorMode = Theme.shared.currentModel?.colorMode ?? .light
         return currentColorMode == .light ? UIStatusBarStyle.default : UIStatusBarStyle.lightContent
+    }
+    
+    private func generateCwTextView() -> PostTextView {
+        let cwTextView: PostTextView = .init()
+//        let separator: UIView = .init()
+//
+//        separator.translatesAutoresizingMaskIntoConstraints = false
+//        cwTextView.addSubview(separator)
+//
+//        // AutoLayout
+//        self.view.addConstraint([ NSLayoutConstraint(item: separator,
+//                                  attribute: .width,
+//                                  relatedBy: .equal,
+//                                  toItem: cwTextView,
+//                                  attribute: .width,
+//                                  multiplier: 1.0,
+//                                  constant: 0)])
+//
+//        cwTextView.addConstraints([
+//            NSLayoutConstraint(item: separator,
+//                               attribute: .width,
+//                               relatedBy: .equal,
+//                               toItem: cwTextView,
+//                               attribute: .width,
+//                               multiplier: 1.0,
+//                               constant: 0),
+//
+//            NSLayoutConstraint(item: separator,
+//                               attribute: .height,
+//                               relatedBy: .equal,
+//                               toItem: cwTextView,
+//                               attribute: .height,
+//                               multiplier: 0,
+//                               constant: 1),
+//
+//            NSLayoutConstraint(item: separator,
+//                               attribute: .centerX,
+//                               relatedBy: .equal,
+//                               toItem: cwTextView,
+//                               attribute: .centerX,
+//                               multiplier: 1.0,
+//                               constant: 0),
+//
+//            NSLayoutConstraint(item: separator,
+//                               attribute: .leading,
+//                               relatedBy: .equal,
+//                               toItem: cwTextView,
+//                               attribute: .leading,
+//                               multiplier: 1.0,
+//                               constant: 0)
+//        ])
+        
+        return cwTextView
     }
     
     // MARK: Setup
@@ -183,6 +238,11 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
             .drive(markLabel.rx.text)
             .disposed(by: disposeBag)
         
+        output.visibilityText
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(visibilityButton.rx.title(for: .normal))
+            .disposed(by: disposeBag)
+        
         // trigger
         
         output.addCwTextViewTrigger
@@ -200,6 +260,13 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
             .drive(onNext: {
                 self.mainTextView.resignFirstResponder()
                 self.dismiss(animated: true, completion: nil)
+            })
+            .disposed(by: disposeBag)
+        
+        output.presentVisibilityMenuTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: {
+                self.presentVisibilityMenu()
             })
             .disposed(by: disposeBag)
         
@@ -276,6 +343,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         
         cancelButton.titleLabel?.font = .awesomeSolid(fontSize: fontSize)
         submitButton.titleLabel?.font = .awesomeSolid(fontSize: fontSize)
+        visibilityButton.titleLabel?.font = .awesomeSolid(fontSize: fontSize)
     }
     
     private func setupCell(_ dataSource: CollectionViewSectionedDataSource<PostViewController.AttachmentsSection>, _ collectionView: UICollectionView, _ indexPath: IndexPath) -> UICollectionViewCell {
@@ -482,6 +550,29 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     private func fitToKeyboard(keyboardHeight: CGFloat) {
         layoutIfNeeded(to: [bottomStackView, toolBar])
         bottomConstraint.constant = keyboardHeight
+    }
+    
+    // MARK: Visibility
+    
+    private func presentVisibilityMenu() {
+        let frameSize = CGSize(width: view.frame.width / 3, height: 50 * 3)
+        let menus: [DropdownMenu] = [.init(awesomeIcon: "globe", title: "パブリック"),
+                                     .init(awesomeIcon: "home", title: "ホーム"),
+                                     .init(awesomeIcon: "lock", title: "フォロワー")]
+        let selected = presentDropdownMenu(with: menus, size: frameSize, sourceRect: visibilityButton.frame)
+        
+        selected?.subscribe(onNext: { selectedIndex in
+            switch selectedIndex {
+            case 0:
+                self.viewModel?.changeVisibility(to: .public)
+            case 1:
+                self.viewModel?.changeVisibility(to: .home)
+            case 2:
+                self.viewModel?.changeVisibility(to: .followers)
+            default:
+                break
+            }
+        }).disposed(by: disposeBag)
     }
     
     // MARK: Utilities

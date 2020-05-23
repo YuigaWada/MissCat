@@ -77,12 +77,19 @@
                                         <rect key="frame" x="364" y="50" width="30" height="30"/>
                                         <state key="normal" title="edit"/>
                                     </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VTP-Kv-2iY">
+                                        <rect key="frame" x="300" y="50" width="39" height="30"/>
+                                        <state key="normal" title="globe"/>
+                                    </button>
                                 </subviews>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstAttribute="trailing" secondItem="E5P-wX-4mM" secondAttribute="trailing" constant="20" id="0My-AV-ofe"/>
+                                    <constraint firstItem="VTP-Kv-2iY" firstAttribute="top" secondItem="E5P-wX-4mM" secondAttribute="top" id="129-rM-HHs"/>
                                     <constraint firstAttribute="bottom" secondItem="2pz-eD-46J" secondAttribute="bottom" constant="3" id="9jF-3Z-Dht"/>
+                                    <constraint firstItem="E5P-wX-4mM" firstAttribute="leading" secondItem="VTP-Kv-2iY" secondAttribute="trailing" constant="25" id="Je5-oE-WF0"/>
                                     <constraint firstItem="2pz-eD-46J" firstAttribute="leading" secondItem="jE1-Xj-0I9" secondAttribute="leading" constant="20" id="YiA-vp-aFu"/>
+                                    <constraint firstItem="VTP-Kv-2iY" firstAttribute="bottom" secondItem="E5P-wX-4mM" secondAttribute="bottom" id="Zkg-Za-ML7"/>
                                     <constraint firstAttribute="bottom" secondItem="E5P-wX-4mM" secondAttribute="bottom" constant="3" id="mvg-MI-Fw9"/>
                                 </constraints>
                             </view>
@@ -221,6 +228,7 @@
                         <outlet property="mainTextView" destination="EU5-Xs-Hwc" id="y7u-co-3Ga"/>
                         <outlet property="markLabel" destination="zCb-5a-luU" id="1nh-gX-VZi"/>
                         <outlet property="submitButton" destination="E5P-wX-4mM" id="kHB-mM-lhF"/>
+                        <outlet property="visibilityButton" destination="VTP-Kv-2iY" id="70p-4a-3RH"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="yQs-aT-fCb" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>

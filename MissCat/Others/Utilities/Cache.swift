@@ -149,6 +149,7 @@ extension Cache {
         private let currentLoginedApiKey = "current-logined-ApiKey"
         private let currentLoginedUserId = "current-logined-UserId"
         private let currentLoginedInstance = "current-logined-instance"
+        private let currentVisibilityKey = "current-visibility"
         private let themeKey = "theme"
         
         func getLatestNotificationId() -> String? {
@@ -181,6 +182,15 @@ extension Cache {
         
         func setCurrentLoginedInstance(_ id: String) {
             Foundation.UserDefaults.standard.set(id, forKey: currentLoginedInstance)
+        }
+        
+        func getCurrentVisibility() -> Visibility? {
+            guard let raw = Foundation.UserDefaults.standard.string(forKey: currentVisibilityKey) else { return nil }
+            return Visibility(rawValue: raw)
+        }
+        
+        func setCurrentVisibility(_ visibility: Visibility) {
+            Foundation.UserDefaults.standard.set(visibility.rawValue, forKey: currentVisibilityKey)
         }
         
 //        func getTheme() -> String? {
