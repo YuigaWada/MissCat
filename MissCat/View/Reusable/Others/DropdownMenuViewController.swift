@@ -25,7 +25,7 @@ struct DropdownMenu {
             .font: UIFont.awesomeSolid(fontSize: 13.0)!
         ])
         
-        let space = NSAttributedString(string: "　")
+        let space = NSAttributedString(string: "  ")
         return awesomeString + space + titleAttributed
     }
 }
@@ -77,6 +77,7 @@ class DropdownMenuViewController: UIViewController, UITableViewDelegate, UITable
         iconColor = UIColor(hex: mainColorHex)
         textColorHex = theme.colorPattern.hex.text
         view.backgroundColor = backgroundColor
+        popoverPresentationController?.backgroundColor = backgroundColor
     }
     
     // MARK: Setup
@@ -89,6 +90,7 @@ class DropdownMenuViewController: UIViewController, UITableViewDelegate, UITable
         tableView.bounces = false
         tableView.showsVerticalScrollIndicator = false
         tableView.backgroundColor = .clear
+        tableView.separatorStyle = .none
         
         tableView.delegate = self
         tableView.dataSource = self
