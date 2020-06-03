@@ -321,14 +321,13 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         
         cameraButton.rx.tap.subscribe { _ in self.pickImage(type: .camera) }.disposed(by: disposeBag)
         imageButton.rx.tap.subscribe { _ in self.pickImage(type: .photoLibrary) }.disposed(by: disposeBag)
-        pollButton.rx.tap.subscribe { _ in }.disposed(by: disposeBag)
+        pollButton.rx.tap.subscribe { _ in self.addEditablePoll() }.disposed(by: disposeBag)
         nsfwButton.rx.tap.subscribe { _ in self.showNSFWSettings() }.disposed(by: disposeBag)
         emojiButton.rx.tap.subscribe { _ in self.showReactionGen() }.disposed(by: disposeBag)
         
         addLocationButon.isHidden = true // 次アップデートで機能追加する
         toolBar.setItems([cameraButton, imageButton,
-                          // 次アップデートで機能追加する
-                          // pollButton, locationButton,
+                          pollButton,
                           nsfwButton, musicButton,
                           flexibleItem, flexibleItem,
                           emojiButton, counter], animated: true)
@@ -404,6 +403,20 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         }).disposed(by: disposeBag)
         
         present(panelMenu, animated: true, completion: nil)
+    }
+    
+    private func addEditablePoll() {
+        let editablePoll = EditablePollView()
+        editablePoll.translatesAutoresizingMaskIntoConstraints = false
+        
+        mainStackView.addArrangedSubview(editablePoll)
+        view.addConstraint(NSLayoutConstraint(item: editablePoll,
+                                              attribute: .height,
+                                              relatedBy: .equal,
+                                              toItem: editablePoll,
+                                              attribute: .height,
+                                              multiplier: 0,
+                                              constant: editablePoll.height))
     }
     
     private func addCwTextView() {

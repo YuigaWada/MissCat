@@ -16,6 +16,7 @@ class PollView: UIView {
     @IBOutlet weak var totalPollLabel: UILabel!
     @IBOutlet weak var pollButton: UIButton!
     
+    let disposeBag = DisposeBag()
     var voteTriggar: PublishRelay<[Int]> = .init() // タップされるとvote対象のidを流す
     var height: CGFloat { // NoteCellがこれを使ってAutoLayoutを設定する
         guard pollBarCount > 0 else { return 0 }
@@ -42,7 +43,6 @@ class PollView: UIView {
     private var selectedId: [Int] = []
     private var allowedMultiple: Bool = false // 複数選択可かどうか
     private var finishVoting: Bool = false
-    private let disposeBag = DisposeBag()
     
     // MARK: Life Cycle
     
@@ -82,7 +82,7 @@ class PollView: UIView {
         }
     }
     
-    private func setupComponent() {
+    func setupComponent() {
         pollButton.layer.borderWidth = 1
         pollButton.layer.cornerRadius = 5
         pollButton.setTitle("投票", for: .normal)

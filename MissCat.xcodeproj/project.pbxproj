@@ -20,6 +20,7 @@
 		8D0D6891244A9A6800725ABB /* PlaceholderTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0D6890244A9A6800725ABB /* PlaceholderTableView.swift */; };
 		8D0F7D0F2398F21F009B45E1 /* ReactionGenPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */; };
 		8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */; };
+		8D127987247BA3EE003BA9CD /* EditablePollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D127986247BA3EE003BA9CD /* EditablePollView.swift */; };
 		8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D16656823A0DB3100C03764 /* MFMEngine.swift */; };
 		8D2279EE24468FD100FA87A2 /* MFMTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2279ED24468FD100FA87A2 /* MFMTests.swift */; };
 		8D2279F02446CD9700FA87A2 /* UrlPreviewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2279EF2446CD9700FA87A2 /* UrlPreviewer.swift */; };
@@ -184,6 +185,7 @@
 		8D0D6890244A9A6800725ABB /* PlaceholderTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderTableView.swift; sourceTree = "<group>"; };
 		8D0F7D0E2398F21F009B45E1 /* ReactionGenPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenPanel.swift; sourceTree = "<group>"; };
 		8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
+		8D127986247BA3EE003BA9CD /* EditablePollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditablePollView.swift; sourceTree = "<group>"; };
 		8D16656823A0DB3100C03764 /* MFMEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MFMEngine.swift; sourceTree = "<group>"; };
 		8D1C150D2424C649004B1202 /* Bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Bridge.h; sourceTree = "<group>"; };
 		8D1C150E2424E3B6004B1202 /* MissCat.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MissCat.entitlements; sourceTree = "<group>"; };
@@ -731,6 +733,7 @@
 			children = (
 				8D72E507244AE83E00B30C3A /* nib */,
 				8DA536AD23AC8C47005EB1B5 /* AttachmentCell.swift */,
+				8D127986247BA3EE003BA9CD /* EditablePollView.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -1185,6 +1188,7 @@
 				8D0F7D0F2398F21F009B45E1 /* ReactionGenPanel.swift in Sources */,
 				8D5D2C4024480E4E00D15974 /* SenderCell.swift in Sources */,
 				8DEFF31E239BD4F200142802 /* ProfileModel.swift in Sources */,
+				8D127987247BA3EE003BA9CD /* EditablePollView.swift in Sources */,
 				8D47FAD8243388B100549A0B /* TosViewController.swift in Sources */,
 				8DC27D9A243BF57A0037E610 /* UrlPreviewerViewModel.swift in Sources */,
 				8D63BFC3242BBF03009C3ADE /* HomeViewModel.swift in Sources */,
