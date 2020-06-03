@@ -54,6 +54,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     private var scrollBegining: CGFloat = 0
     private var tlScrollView: UIScrollView?
     private var isMe: Bool = false
+    private var owner: SecureUser?
     
     private lazy var animateBlurView = getAnimateBlurView()
     
@@ -200,9 +201,9 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     // MARK: Public Methods
     
-    func setUserId(_ userId: String, isMe: Bool) {
+    func setUserId(_ userId: String, owner: SecureUser) {
         self.userId = userId
-        self.isMe = isMe
+        self.owner = owner
     }
     
     // MARK: Setup
@@ -386,12 +387,14 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     }
     
     func tappedLink(text: String) {
+        guard let owner = owner else { return }
+        
         let (linkType, value) = text.analyzeHyperLink()
         switch linkType {
         case .url:
             homeViewController?.openLink(url: value)
         case .user:
-            homeViewController?.move2Profile(userId: value)
+            homeViewController?.move2Profile(userId: value, owner: owner)
         case .hashtag:
             navigationController?.popViewController(animated: true)
             homeViewController?.emulateFooterTabTap(tab: .home)
@@ -441,9 +444,11 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     }
     
     private func generateTimelineVC(xlTitle: IndicatorInfo, userId: String, includeReplies: Bool, onlyFiles: Bool, scrollable: Bool, loadLimit: Int) -> TimelineViewController {
-        guard let viewController = getViewController(name: "timeline") as? TimelineViewController else { fatalError("Internal Error.") }
+        guard let viewController = getViewController(name: "timeline") as? TimelineViewController,
+            let owner = owner else { fatalError("Internal Error.") }
         
-        viewController.setup(type: .OneUser,
+        viewController.setup(owner: owner,
+                             type: .OneUser,
                              includeReplies: includeReplies,
                              onlyFiles: onlyFiles,
                              userId: userId,

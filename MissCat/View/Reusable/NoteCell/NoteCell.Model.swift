@@ -28,6 +28,7 @@ extension NoteCell {
         var isReplyTarget: Bool = false // リプライ先の投稿であるかどうか
         var fileVisible: Bool = true // ファイルを表示するか
         var onOtherNote: Bool = false // 引用RNはNoteCellの上にNoteCellが乗るという二重構造になっているので、内部のNoteCellかどうかを判別する
+        var owner: SecureUser?
         
         // MARK: Id
         

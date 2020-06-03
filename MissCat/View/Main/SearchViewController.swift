@@ -268,10 +268,10 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     private func generateTimelineVC(query: String) -> TimelineViewController? {
         guard !query.isEmpty,
-            let viewController = getViewController(name: "timeline") as? TimelineViewController
-        else { return nil }
+            let viewController = getViewController(name: "timeline") as? TimelineViewController,
+            let owner = Cache.UserDefaults.shared.getCurrentUser() else { return nil }
         
-        viewController.setup(type: .NoteSearch, query: query, lockScroll: false, withTopShadow: true)
+        viewController.setup(owner: owner, type: .NoteSearch, query: query, lockScroll: false, withTopShadow: true)
         viewController.view.frame = timelineView.frame
         viewController.view.translatesAutoresizingMaskIntoConstraints = false
         timelineView.addSubview(viewController.view)

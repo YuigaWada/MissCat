@@ -17,6 +17,7 @@ class NoteCellViewModel: ViewModelType {
     struct Input {
         var cellModel: NoteCell.Model
         let isDetailMode: Bool
+        let owner: SecureUser
         
         // Modelに渡さなければならないので看過
         let noteYanagi: MisskeyTextView
@@ -256,7 +257,7 @@ class NoteCellViewModel: ViewModelType {
         }
         
         // リアクション済みor自分の投稿ならばリアクションボタンを ＋ → − へ
-        item.userId.isMe { me in
+        item.userId.isMe(owner: input.owner) { me in
             let reactioned = myReaction != nil
             let minusShape = me || reactioned
             

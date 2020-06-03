@@ -10,9 +10,11 @@ import MisskeyKit
 import RxSwift
 
 class NotificationsViewModel {
+    
     let notes: PublishSubject<[NotificationCell.Section]> = .init()
     var dataSource: NotificationDataSource?
     var cellCount: Int { return cellsModel.count }
+    var owner: SecureUser?
     
     private var hasReactionGenCell: Bool = false
     var cellsModel: [NotificationCell.Model] = []
@@ -22,6 +24,7 @@ class NotificationsViewModel {
     
     init(disposeBag: DisposeBag) {
         self.disposeBag = disposeBag
+        self.owner = Cache.UserDefaults.shared.getCurrentUser()
     }
     
     // MARK: Load

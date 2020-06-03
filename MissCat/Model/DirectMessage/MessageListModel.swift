@@ -12,7 +12,7 @@ import RxSwift
 
 class MessageListModel {
     private func transformModel(with observer: AnyObserver<SenderCell.Model>, history: MessageHistoryModel) {
-        let myId = Cache.UserDefaults.shared.getCurrentLoginedUserId() ?? ""
+        let myId = Cache.UserDefaults.shared.getCurrentUser()?.userId ?? ""
         let others = [history.recipient, history.user].compactMap { $0 }.filter { $0.id != myId } // チャット相手
         let other = others.count > 0 ? others[0] : history.recipient
         

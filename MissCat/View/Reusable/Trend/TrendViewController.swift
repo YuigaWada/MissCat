@@ -18,7 +18,7 @@ class TrendViewController: UIViewController, UITableViewDelegate, UITableViewDat
     private var tables: [String] = []
     private var disposeBag: DisposeBag = .init()
     private var instance: String {
-        guard let instance = Cache.UserDefaults.shared.getCurrentLoginedInstance(),
+        guard let instance = Cache.UserDefaults.shared.getCurrentUser()?.instance,
             instance.count > 0 else { return "このインスタンス" }
         
         return instance.prefix(1).uppercased() + instance.suffix(instance.count - 1)

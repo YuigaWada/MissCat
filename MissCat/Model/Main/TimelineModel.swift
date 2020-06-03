@@ -89,12 +89,12 @@ class TimelineModel {
     
     /// 投稿を読み込む
     /// - Parameter option: LoadOption
-    func loadNotes(with option: LoadOption) -> Observable<NoteCell.Model> {
+    func loadNotes(with option: LoadOption, from owner: SecureUser) -> Observable<NoteCell.Model> {
         let dispose = Disposables.create()
         
         return Observable.create { [unowned self] observer in
             
-            let handleResult = self.getNotesHandler(with: option, and: observer)
+            let handleResult = self.getNotesHandler(with: option, and: observer, owner: owner)
             switch option.type {
             case .Home:
                 MisskeyKit.notes.getTimeline(limit: option.loadLimit,
@@ -159,14 +159,14 @@ class TimelineModel {
     /// - Parameters:
     ///   - option: LoadOption
     ///   - observer: AnyObserver<NoteCell.Model>
-    private func getNotesHandler(with option: LoadOption, and observer: AnyObserver<NoteCell.Model>) -> NotesCallBack {
+    private func getNotesHandler(with option: LoadOption, and observer: AnyObserver<NoteCell.Model>, owner: SecureUser) -> NotesCallBack {
         return { (posts: [NoteModel]?, error: MisskeyKitError?) in
-            self.handleNotes(option: option, observer: observer, posts: posts, error: error)
+            self.handleNotes(option: option, observer: observer, posts: posts, owner: owner, error: error)
         }
     }
     
     /// MisskeyKitから流れてきた投稿データを適切にobserverへと流していく
-    private func handleNotes(option: LoadOption, observer: AnyObserver<NoteCell.Model>, posts: [NoteModel]?, error: MisskeyKitError?) {
+    private func handleNotes(option: LoadOption, observer: AnyObserver<NoteCell.Model>, posts: [NoteModel]?, owner: SecureUser, error: MisskeyKitError?) {
         let isInitalLoad = option.untilId == nil
         let isReload = option.isReload && (option.lastNoteId != nil)
         
@@ -194,7 +194,7 @@ class TimelineModel {
             
             newPosts.reverse() // 逆順に読み込む
             newPosts.forEach { post in
-                self.transformNote(with: observer, post: post, reverse: true)
+                self.transformNote(with: observer, post: post, owner: owner,reverse: true)
                 if let noteId = post.id { self.initialNoteIds.append(noteId) }
             }
             
@@ -209,7 +209,7 @@ class TimelineModel {
             let ignore = isInitalLoad ? post.isFeatured : post.isRecommended
             guard !ignore else { return }
             
-            self.transformNote(with: observer, post: post, reverse: false)
+            self.transformNote(with: observer, post: post, owner: owner,reverse: false)
             if let noteId = post.id {
                 self.initialNoteIds.append(noteId) // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
             }
@@ -223,7 +223,7 @@ class TimelineModel {
     ///   - observer: AnyObserver<NoteCell.Model>
     ///   - post: NoteModel
     ///   - reverse: 逆順に送るかどうか
-    private func transformNote(with observer: AnyObserver<NoteCell.Model>, post: NoteModel, reverse: Bool) {
+    private func transformNote(with observer: AnyObserver<NoteCell.Model>, post: NoteModel, owner: SecureUser, reverse: Bool) {
         let noteType = checkNoteType(post)
         if noteType == .Renote { // renoteの場合 ヘッダーとなるrenoteecellとnotecell、２つのモデルを送る
             guard let renoteId = post.renoteId,
@@ -240,6 +240,7 @@ class TimelineModel {
             
             for cellModel in cellModels {
                 MFMEngine.shapeModel(cellModel)
+                cellModel.owner = owner // 紐付けられたアカウントを詰める
                 observer.onNext(cellModel)
             }
         } else if noteType == .Promotion { // PR投稿
@@ -253,6 +254,7 @@ class TimelineModel {
             
             for cellModel in cellModels {
                 MFMEngine.shapeModel(cellModel)
+                cellModel.owner = owner // 紐付けられたアカウントを詰める
                 observer.onNext(cellModel)
             }
         } else { // just a note or a note with commentRN
@@ -262,6 +264,7 @@ class TimelineModel {
             if reverse { newCellsModel!.reverse() } // reverseしてからinsert (streamingの場合)
             newCellsModel!.forEach {
                 MFMEngine.shapeModel($0)
+                $0.owner = owner // 紐付けられたアカウントを詰める
                 observer.onNext($0)
             }
         }
@@ -273,7 +276,7 @@ class TimelineModel {
     /// - Parameters:
     ///   - type: TimelineType
     ///   - reconnect: 再接続かどうか
-    func connectStream(type: TimelineType, isReconnection reconnect: Bool = false) -> Observable<NoteCell.Model> { // streamingのresponseを捌くのはhandleStreamで行う
+    func connectStream(owner: SecureUser, type: TimelineType, isReconnection reconnect: Bool = false) -> Observable<NoteCell.Model> { // streamingのresponseを捌くのはhandleStreamで行う
         let dipose = Disposables.create()
         var isReconnection = reconnect
         self.type = type
@@ -283,7 +286,8 @@ class TimelineModel {
             
             _ = self.streaming.connect(apiKey: apiKey, channels: [channel]) { (response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) in
                 self.captureNote(&isReconnection)
-                self.handleStream(response: response,
+                self.handleStream(owner:owner,
+                                  response: response,
                                   channel: channel,
                                   typeString: type,
                                   error: error,
@@ -295,7 +299,7 @@ class TimelineModel {
     }
     
     /// Streamingで流れてきたデータを適切にobserverへと流す
-    private func handleStream(response: Any?, channel: SentStreamModel.Channel?, typeString: String?, error: MisskeyKitError?, observer: AnyObserver<NoteCell.Model>) {
+    private func handleStream(owner: SecureUser, response: Any?, channel: SentStreamModel.Channel?, typeString: String?, error: MisskeyKitError?, observer: AnyObserver<NoteCell.Model>) {
         if let error = error {
             print(error)
             if error == .CannotConnectStream || error == .NoStreamConnection { // streaming関連のエラーのみ流す
@@ -315,7 +319,7 @@ class TimelineModel {
             switch updateType {
             case .reacted:
                 guard let userId = updateContents.userId else { return }
-                userId.isMe { isMyReaction in // 自分のリアクションかどうかチェックする
+                userId.isMe(owner: owner) { isMyReaction in // 自分のリアクションかどうかチェックする
                     guard !isMyReaction else { return } // 自分のリアクションはcaptureしない
                     self.updateReaction(targetNoteId: updateContents.targetNoteId,
                                         reaction: updateContents.reaction,
@@ -329,7 +333,7 @@ class TimelineModel {
                 
             case .unreacted:
                 guard let userId = updateContents.userId else { return }
-                userId.isMe { isMyReaction in
+                userId.isMe(owner: owner) { isMyReaction in
                     guard !isMyReaction else { return } // 自分のリアクションはcaptureしない
                     self.updateReaction(targetNoteId: updateContents.targetNoteId,
                                         reaction: updateContents.reaction,
@@ -346,7 +350,7 @@ class TimelineModel {
         // 通常の投稿
         if let post = response as? NoteModel {
             DispatchQueue.main.async {
-                self.transformNote(with: observer, post: post, reverse: true)
+                self.transformNote(with: observer, post: post,owner: owner, reverse: true)
             }
             self.captureNote(noteId: post.id)
         }

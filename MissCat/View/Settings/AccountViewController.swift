@@ -70,11 +70,11 @@ class AccountViewController: UITableViewController {
     }
     
     private func logout() {
-        guard let startViewController = getViewController(name: "start") as? StartViewController else { return }
+        guard let startViewController = getViewController(name: "start") as? StartViewController,
+            let currentUserId = Cache.UserDefaults.shared.getCurrentUserId() else { return }
         
-        Cache.UserDefaults.shared.setCurrentLoginedApiKey("")
-        Cache.UserDefaults.shared.setCurrentLoginedInstance("")
-        Cache.UserDefaults.shared.setCurrentLoginedUserId("")
+        
+        Cache.UserDefaults.shared.removeUser(userId: currentUserId)
         Cache.shared.resetMyCache()
         
         MisskeyKit.auth.setAPIKey("")

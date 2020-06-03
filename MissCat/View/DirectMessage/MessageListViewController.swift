@@ -21,10 +21,7 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     private let disposeBag: DisposeBag = .init()
     
     private var loggedIn: Bool = false
-    private var hasApiKey: Bool {
-        guard let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey() else { return false }
-        return !apiKey.isEmpty
-    }
+
     
     // MARK: LifeCycle
     
@@ -38,11 +35,11 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
         super.viewWillAppear(animated)
         view.deselectCell(on: tableView)
         
-        if !loggedIn, hasApiKey {
-            loggedIn = true
-            binding(dataSource: dataSource)
-            viewModel.setupInitialCell()
-        }
+//        if !loggedIn, hasApiKey {
+//            loggedIn = true
+//            binding(dataSource: dataSource)
+//            viewModel.setupInitialCell()
+//        }
     }
     
     private func binding(dataSource: SenderDataSource?) {

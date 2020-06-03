@@ -43,16 +43,16 @@ class NoteDisplay: UIViewController, NoteCellDelegate, UserCellDelegate {
         homeViewController?.tappedCell(item: item)
     }
     
-    func tappedLink(text: String) {
-        homeViewController?.tappedLink(text: text)
+    func tappedLink(text: String, owner: SecureUser) {
+        homeViewController?.tappedLink(text: text, owner: owner)
     }
     
-    func openUser(username: String) {
-        homeViewController?.openUserPage(username: username)
+    func openUser(username: String, owner: SecureUser) {
+        homeViewController?.openUserPage(username: username, owner: owner)
     }
     
-    func move2Profile(userId: String) {
-        homeViewController?.move2Profile(userId: userId)
+    func move2Profile(userId: String, owner: SecureUser) {
+        homeViewController?.move2Profile(userId: userId, owner: owner)
     }
     
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}

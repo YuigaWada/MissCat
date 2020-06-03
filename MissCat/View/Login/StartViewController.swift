@@ -182,20 +182,32 @@ class StartViewController: UIViewController {
         return viewController
     }
     
+    private func saveUserData(with apiKey: String, completion: @escaping ()->()) {
+        MisskeyKit.changeInstance(instance: misskeyInstance)
+        MisskeyKit.auth.setAPIKey(apiKey)
+        MisskeyKit.users.i{ user, error in
+            guard let user = user else { return }
+            let secureUser = SecureUser(userId: user.id, instance: self.misskeyInstance, apiKey: apiKey)
+            
+            Cache.UserDefaults.shared.saveUser(secureUser)
+            Cache.UserDefaults.shared.changeCurrentUser(userId: user.id)
+            completion()
+        }
+    }
+    
     private func loginCompleted(_ apiKey: String) {
-        Cache.UserDefaults.shared.setCurrentLoginedApiKey(apiKey)
-        Cache.UserDefaults.shared.setCurrentLoginedInstance(misskeyInstance)
-        
-        _ = EmojiHandler.handler // カスタム絵文字を読み込む
-        registerSw() // 通知を登録する
-        
-        DispatchQueue.main.async {
-            if self.afterLogout { // 設定画面からのログイン
-                MisskeyKit.changeInstance(instance: self.misskeyInstance)
-                MisskeyKit.auth.setAPIKey(apiKey)
-                self.dismiss(animated: true)
-            } else { // 初期画面からのログイン
-                self.navigationController?.popViewController(animated: true)
+        saveUserData(with: apiKey) {
+            _ = EmojiHandler.handler // カスタム絵文字を読み込む
+            self.registerSw() // 通知を登録する
+            
+            DispatchQueue.main.async {
+                if self.afterLogout { // 設定画面からのログイン
+                    MisskeyKit.changeInstance(instance: self.misskeyInstance)
+                    MisskeyKit.auth.setAPIKey(apiKey)
+                    self.dismiss(animated: true)
+                } else { // 初期画面からのログイン
+                    self.navigationController?.popViewController(animated: true)
+                }
             }
         }
     }

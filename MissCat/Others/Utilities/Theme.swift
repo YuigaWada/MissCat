@@ -212,8 +212,23 @@ extension Theme {
         
         static func get() -> Model? {
             let key = getKey()
-            guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
-            return try? JSONDecoder().decode(Model.self, from: data)
+            guard let data = UserDefaults.standard.data(forKey: key),
+            let model = try? JSONDecoder().decode(Model.self, from: data) else { return nil }
+            
+            // userIdが存在しなかったら現在ログイン中のアカウントのuserIdを詰める
+            let currentUser = Cache.UserDefaults.shared.getCurrentUser()
+            var hasNonUserTab: Bool = false
+            
+            model.tab = model.tab.map {
+                hasNonUserTab = ($0.userId == nil) || hasNonUserTab // userIdを持たないタブが存在したら記録しておく
+                return .init(name: $0.name, kind: $0.kind, userId: $0.userId ?? currentUser?.userId, listId: $0.listId)
+            }
+            
+            if hasNonUserTab {
+                save(with: model)
+            }
+            
+            return model
         }
         
         static func save(with target: Model) {

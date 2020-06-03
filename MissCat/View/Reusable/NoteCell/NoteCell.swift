@@ -26,7 +26,7 @@ protocol NoteCellDelegate {
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool)
     func vote(choice: [Int], to noteId: String)
     
-    func tappedLink(text: String)
+    func tappedLink(text: String, owner: SecureUser)
     func move2Profile(userId: String)
     
     func showImage(_ urls: [URL], start startIndex: Int)
@@ -41,6 +41,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         var item: NoteCell.Model
         var isDetailMode: Bool = false
         var delegate: NoteCellDelegate?
+        var owner: SecureUser
     }
     
     typealias Transformed = NoteCell
@@ -98,6 +99,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     var userId: String?
     var hostInstance: String?
     var iconImageUrl: String?
+    var owner: SecureUser?
     
     // MARK: Private Var
     
@@ -110,9 +112,10 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     private var onOtherNote: Bool = false
     private var isSkelton: Bool = false
     
-    private func getViewModel(item: NoteCell.Model, isDetailMode: Bool) -> ViewModel {
+    private func getViewModel(item: NoteCell.Model, isDetailMode: Bool, owner: SecureUser) -> ViewModel {
         let input: ViewModel.Input = .init(cellModel: item,
                                            isDetailMode: isDetailMode,
+                                           owner: owner,
                                            noteYanagi: noteView,
                                            nameYanagi: nameTextView)
         
@@ -453,8 +456,9 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             .disposed(by: disposeBag)
         
         urlPreviewer.setTapGesture(disposeBag) {
-            guard let previewdUrl = viewModel.state.previewedUrl else { return }
-            self.delegate?.tappedLink(text: previewdUrl)
+            guard let previewdUrl = viewModel.state.previewedUrl,
+                let owner = self.owner else { return }
+            self.delegate?.tappedLink(text: previewdUrl, owner: owner)
         }
     }
     
@@ -513,13 +517,14 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         // main
         self.noteId = noteId
+        self.owner = arg.owner
         userId = item.userId
         hostInstance = item.hostInstance
         iconImageUrl = item.iconImageUrl
         delegate = arg.delegate
         
         // ViewModel
-        let viewModel = getViewModel(item: item, isDetailMode: isDetailMode)
+        let viewModel = getViewModel(item: item, isDetailMode: isDetailMode, owner: arg.owner)
         self.viewModel = viewModel
         
         viewModel.setCell()
@@ -548,6 +553,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         noteId = nil
         userId = nil
         hostInstance = nil
+        owner = nil
         
         backgroundColor = Theme.shared.currentModel?.colorPattern.ui.base ?? .white
         separatorBorder.isHidden = false
@@ -656,8 +662,8 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     // MARK: DELEGATE
     
     func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-        if let delegate = delegate {
-            delegate.tappedLink(text: URL.absoluteString)
+        if let delegate = delegate, let owner = owner {
+            delegate.tappedLink(text: URL.absoluteString, owner: owner)
         }
         
         return false

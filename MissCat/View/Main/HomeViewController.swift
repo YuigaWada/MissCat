@@ -19,6 +19,19 @@ import UIKit
 // 上タブ管理はBGで動いている親クラスのPolioPagerが行い、下タブ管理はHomeViewControllerが自前で行う。
 // 一時的なキャッシュ管理についてはsingletonのCacheクラスを使用
 
+extension HomeViewController {
+    struct Tab {
+        var name: String
+        var kind: Theme.TabKind
+        
+        var userId: String?
+        var listId: String?
+        
+        let owner: SecureUser
+    }
+}
+
+
 class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate {
     private var isXSeries = UIScreen.main.bounds.size.height > 811
     private let footerTabHeight: CGFloat = 55
@@ -57,12 +70,23 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     private var viewModel = HomeViewModel()
     private var disposeBag = DisposeBag()
     
+    private lazy var tabs: [Tab] = {
+        guard let tabs = Theme.shared.currentModel?.tab else { return [] }
+
+        // タブに紐付けられたユーザーの情報を詰めていく
+        return tabs.compactMap {
+            guard let userId = $0.userId ?? Cache.UserDefaults.shared.getCurrentUserId(),
+                let owner = Cache.UserDefaults.shared.getUser(userId: userId) else { return nil }
+            return Tab(name: $0.name, kind: $0.kind, userId: $0.userId, listId: $0.listId, owner: owner)
+        }
+    }()
+    
+    
     // MARK: PolioPager Overrides
     
     /// 上タブのアイテム
     override func tabItems() -> [TabItem] {
         let colorPattern = Theme.shared.currentModel?.colorPattern
-        let tabs = Theme.shared.currentModel?.tab ?? getDefaultTabs()
         return tabs.map { tab in
             TabItem(title: tab.name,
                     backgroundColor: colorPattern?.ui.base ?? .white,
@@ -72,31 +96,26 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     
     /// 上タブのアイテムに対応したViewControllerを返す
     override func viewControllers() -> [UIViewController] {
-        let tabs = Theme.shared.currentModel?.tab ?? getDefaultTabs()
         setViewControllers = tabs.map { tab in // setされたviewControllerを記憶しておく
-            getViewController(type: tab.kind)
+            getViewController(type: tab.kind, owner: tab.owner)
         }
         
         return [search] + setViewControllers
     }
     
-    func getDefaultTabs() -> [Theme.Tab] {
-        return [.init(name: "Home", kind: .home, userId: nil, listId: nil),
-                .init(name: "Local", kind: .local, userId: nil, listId: nil),
-                .init(name: "Global", kind: .global, userId: nil, listId: nil)]
-    }
+
     
     /// Theme.TabKindからVCを生成
     /// - Parameter type: Theme.TabKind
-    private func getViewController(type: Theme.TabKind) -> UIViewController {
+    private func getViewController(type: Theme.TabKind, owner user: SecureUser) -> UIViewController {
         switch type {
         case .home:
-            return generateTimelineVC(type: .Home)
+            return generateTimelineVC(type: .Home, of: user)
         case .local:
             // ioの場合はLTLではなくHomeを表示(Appleに怒られた)
-            return io ? generateTimelineVC(type: .Home) : generateTimelineVC(type: .Local)
+            return io ? generateTimelineVC(type: .Home, of: user) : generateTimelineVC(type: .Local, of: user)
         case .global:
-            return generateTimelineVC(type: .Global)
+            return generateTimelineVC(type: .Global, of: user)
         case .user:
             return .init()
         case .list:
@@ -278,18 +297,18 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     // MARK: Auth
     
     private func userAuth() {
-        guard let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey(),
-            let currentInstance = Cache.UserDefaults.shared.getCurrentLoginedInstance(),
+        guard let currentUser = Cache.UserDefaults.shared.getCurrentUser(),
+            let apiKey = currentUser.apiKey,
             !apiKey.isEmpty else {
             showStartingViewController() // ApiKeyが確認できない場合はStartViewControllerへ
             return
         }
         
-        MisskeyKit.changeInstance(instance: currentInstance)
+        MisskeyKit.changeInstance(instance: currentUser.instance)
         MisskeyKit.auth.setAPIKey(apiKey)
         
         logined = true
-        self.currentInstance = currentInstance
+        self.currentInstance = currentUser.instance
     }
     
     private func showStartingViewController() {
@@ -367,11 +386,12 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     // MARK: Pages
     
     private func showPostDetailView(item: NoteCell.Model) {
-        guard let storyboard = self.storyboard else { return }
+        guard let storyboard = self.storyboard, let owner = item.owner else { return }
         guard let detailViewController = storyboard.instantiateViewController(withIdentifier: "post-detail") as? PostDetailViewController else { return }
         
         detailViewController.view.frame = getDisplayRect()
         detailViewController.mainItem = item
+        detailViewController.owner = owner
         detailViewController.homeViewController = self
         
         navigationController?.pushViewController(detailViewController, animated: true)
@@ -382,7 +402,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         self.detailViewController = detailViewController
     }
     
-    private func showProfileView(userId: String, isMe: Bool = false) {
+    private func showProfileView(userId: String, owner: SecureUser) {
         nowPage = isMe ? .profile : nowPage
         if isMe, let myProfileViewController = myProfileViewController {
             myProfileViewController.view.isHidden = false
@@ -454,11 +474,11 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         return viewController
     }
     
-    private func generateTimelineVC(type: TimelineType) -> TimelineViewController {
+    private func generateTimelineVC(type: TimelineType, of user: SecureUser) -> TimelineViewController {
         guard let viewController = getViewController(name: "timeline") as? TimelineViewController
         else { fatalError("Internal Error.") }
         
-        viewController.setup(type: type)
+        viewController.setup(owner: user, type: type)
         viewController.view.backgroundColor = .clear
         return viewController
     }
@@ -535,14 +555,14 @@ extension HomeViewController: NoteCellDelegate {
         tappedCell(item: item)
     }
     
-    func tappedLink(text: String) {
+    func tappedLink(text: String, owner: SecureUser) {
         let (linkType, value) = text.analyzeHyperLink()
         
         switch linkType {
         case .url:
             openLink(url: value)
         case .user:
-            openUserPage(username: value)
+            openUserPage(username: value, owner: owner)
         case .hashtag:
             searchHashtag(tag: value)
         default:
@@ -635,12 +655,10 @@ extension HomeViewController: FooterTabBarDelegate {
     func tappedProfile() {
         guard nowPage != .profile else { return }
         
-        Cache.shared.getMe { me in
-            guard let me = me else { return }
-            DispatchQueue.main.async {
-                self.hideView(without: .profile)
-                self.showProfileView(userId: me.id, isMe: true)
-            }
+        DispatchQueue.main.async {
+            self.hideView(without: .profile)
+//            self.showProfileView(userId: me.id, isMe: true)
+            // TODO: ここでアカウント選択画面を出す
         }
     }
     
@@ -691,11 +709,11 @@ extension HomeViewController: TimelineDelegate {
         showPostDetailView(item: item)
     }
     
-    func move2Profile(userId: String) {
-        showProfileView(userId: userId)
+    func move2Profile(userId: String, owner: SecureUser) {
+        showProfileView(userId: userId, owner:owner)
     }
     
-    func openUserPage(username: String) {
+    func openUserPage(username: String, owner: SecureUser) {
         // usernameから真のusernameとhostを切り離す
         let decomp = username.components(separatedBy: "@").filter { $0 != "" }
         
@@ -712,7 +730,7 @@ extension HomeViewController: TimelineDelegate {
         MisskeyKit.users.showUser(username: _username, host: host) { user, error in
             guard error == nil, let user = user else { return }
             DispatchQueue.main.async {
-                self.showProfileView(userId: user.id)
+                self.showProfileView(userId: user.id, owner:owner)
             }
         }
     }

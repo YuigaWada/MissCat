@@ -31,17 +31,17 @@ class MisscatApi {
     
     /// 適切なendpointを生成し、sw/registerを叩く
     func registerSw() {
-        guard let userId = Cache.UserDefaults.shared.getCurrentLoginedUserId(),
-            let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey(),
+        guard let currentUser = Cache.UserDefaults.shared.getCurrentUser(),
+            let apiKey = currentUser.apiKey,
             !baseApiUrl.isEmpty,
             !apiKey.isEmpty,
-            !userId.isEmpty else { return }
+            !currentUser.userId.isEmpty else { return }
         
         MisskeyKit.auth.setAPIKey(apiKey)
         InstanceID.instanceID().instanceID { result, error in
             guard error == nil else { print("Error fetching remote instance ID: \(error!)"); return }
             if let token = result?.token {
-                self.registerSw(userId: userId, token: token)
+                self.registerSw(userId: currentUser.userId, token: token)
             }
         }
     }

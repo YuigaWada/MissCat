@@ -22,6 +22,8 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     private var wasReplyTarget: Bool = false
     private var wasOnOtherNote: Bool = false
     
+    var owner: SecureUser?
+    
     var mainItem: NoteCell.Model? {
         didSet {
             guard let item = mainItem else { return }
@@ -113,7 +115,7 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     // MARK: Setup Cell
     
     private func setupCell(_ dataSource: TableViewSectionedDataSource<NoteCell.Section>, _ tableView: UITableView, _ indexPath: IndexPath) -> UITableViewCell {
-        guard let viewModel = viewModel else { return UITableViewCell() }
+        guard let viewModel = viewModel, let owner = owner else { return UITableViewCell() }
         
         let index = indexPath.row
         let item = viewModel.cellsModel[index]
@@ -122,7 +124,7 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
         guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell
         else { return NoteCell() }
         
-        let shapedCell = noteCell.transform(with: .init(item: item, isDetailMode: isDetailMode, delegate: self))
+        let shapedCell = noteCell.transform(with: .init(item: item, isDetailMode: isDetailMode, delegate: self, owner: owner))
         
         shapedCell.nameTextView.renderViewStrings()
         shapedCell.noteView.renderViewStrings()
@@ -184,7 +186,8 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
         case .url:
             homeViewController?.openLink(url: value)
         case .user:
-            homeViewController?.move2Profile(userId: value)
+            guard let owner = owner else { return }
+            homeViewController?.move2Profile(userId: value, owner: owner)
         case .hashtag:
             navigationController?.popViewController(animated: true)
             homeViewController?.emulateFooterTabTap(tab: .home)
