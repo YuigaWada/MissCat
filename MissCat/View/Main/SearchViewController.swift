@@ -283,10 +283,10 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     private func generateUserListVC(query: String) -> UserListViewController? {
         guard !query.isEmpty,
-            let viewController = getViewController(name: "user-list") as? UserListViewController
-        else { return nil }
+            let viewController = getViewController(name: "user-list") as? UserListViewController,
+            let owner = Cache.UserDefaults.shared.getCurrentUser() else { return nil }
         
-        viewController.setup(type: .search, query: query, lockScroll: false, withTopShadow: true)
+        viewController.setup(type: .search, owner: owner, query: query, lockScroll: false, withTopShadow: true)
         viewController.view.frame = timelineView.frame
         viewController.view.translatesAutoresizingMaskIntoConstraints = false
         timelineView.addSubview(viewController.view)

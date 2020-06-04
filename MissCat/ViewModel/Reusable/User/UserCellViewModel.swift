@@ -14,6 +14,7 @@ class UserCellViewModel: ViewModelType {
     // MARK: I/O
     
     struct Input {
+        let owner: SecureUser
         let icon: String?
         let shapedName: MFMString?
         let shapedDescription: MFMString?
@@ -30,10 +31,13 @@ class UserCellViewModel: ViewModelType {
         let separatorBackgroundColor: PublishRelay<UIColor> = .init()
     }
     
-    struct State {}
+    struct State {
+        var owner: SecureUser
+    }
     
     private let input: Input
     let output: Output = .init()
+    var state: State { return .init(owner: input.owner) }
     
     private let disposeBag: DisposeBag
     

@@ -21,7 +21,6 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     private let disposeBag: DisposeBag = .init()
     
     private var loggedIn: Bool = false
-
     
     // MARK: LifeCycle
     
@@ -97,10 +96,11 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     }
     
     private func getDMViewController(with item: SenderCell.Model) -> DirectMessageViewController {
+        guard let owner = Cache.UserDefaults.shared.getCurrentUser() else { return DirectMessageViewController() }
         let dmViewController = DirectMessageViewController()
         
         dmViewController.homeViewController = homeViewController
-        dmViewController.setup(userId: item.userId ?? "", groupId: nil)
+        dmViewController.setup(userId: item.userId ?? "", groupId: nil, owner: owner)
         return dmViewController
     }
     

@@ -25,8 +25,9 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
     
     // MARK: I/O
     
-    func setup(type: UserListType, userId: String? = nil, query: String? = nil, lockScroll: Bool = true, listId: String? = nil, withTopShadow: Bool = false) {
-        let input = UserListViewModel.Input(dataSource: dataSource,
+    func setup(type: UserListType, owner: SecureUser, userId: String? = nil, query: String? = nil, lockScroll: Bool = true, listId: String? = nil, withTopShadow: Bool = false) {
+        let input = UserListViewModel.Input(owner: owner,
+                                            dataSource: dataSource,
                                             type: type,
                                             userId: userId,
                                             query: query,
@@ -46,10 +47,6 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
         setupTopShadow()
         bindTheme()
         setTheme()
-        
-        if viewModel == nil {
-            setup(type: .search)
-        }
         
         binding(dataSource: dataSource)
         viewModel?.setupInitialCell()
@@ -131,7 +128,8 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
             return itemCell.transform(isSkelton: true)
         }
         
-        let shapedCell = itemCell.transform(with: .init(icon: item.icon,
+        let shapedCell = itemCell.transform(with: .init(owner: viewModel.state.owner,
+                                                        icon: item.icon,
                                                         shapedName: item.shapedName,
                                                         shapedDescription: item.shapedDescritpion))
         
@@ -170,7 +168,7 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
         let item = viewModel.cellsModel[index]
         
         if let userId = item.userId {
-            move2Profile(userId: userId)
+            move2Profile(userId: userId, owner: viewModel.state.owner)
         }
     }
 }

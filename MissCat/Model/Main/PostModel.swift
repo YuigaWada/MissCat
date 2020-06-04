@@ -19,7 +19,7 @@ class PostModel {
             return
         }
         
-        Cache.shared.getMe { me in
+        MisskeyKit.users.i { me, _ in
             guard let me = me, let iconUrl = me.avatarUrl else { completion(nil); return }
             
             _ = iconUrl.toUIImage { image in

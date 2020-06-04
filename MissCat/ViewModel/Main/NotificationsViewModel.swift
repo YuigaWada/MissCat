@@ -10,7 +10,6 @@ import MisskeyKit
 import RxSwift
 
 class NotificationsViewModel {
-    
     let notes: PublishSubject<[NotificationCell.Section]> = .init()
     var dataSource: NotificationDataSource?
     var cellCount: Int { return cellsModel.count }
@@ -24,7 +23,7 @@ class NotificationsViewModel {
     
     init(disposeBag: DisposeBag) {
         self.disposeBag = disposeBag
-        self.owner = Cache.UserDefaults.shared.getCurrentUser()
+        owner = Cache.UserDefaults.shared.getCurrentUser()
     }
     
     // MARK: Load
@@ -99,6 +98,10 @@ class NotificationsViewModel {
             MFMEngine.shapeModel(replyNote)
         } else {
             MFMEngine.shapeModel(cellModel)
+        }
+        
+        if let owner = owner {
+            cellModel.owner = owner
         }
     }
     

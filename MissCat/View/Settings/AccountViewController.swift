@@ -73,7 +73,6 @@ class AccountViewController: UITableViewController {
         guard let startViewController = getViewController(name: "start") as? StartViewController,
             let currentUserId = Cache.UserDefaults.shared.getCurrentUserId() else { return }
         
-        
         Cache.UserDefaults.shared.removeUser(userId: currentUserId)
         Cache.shared.resetMyCache()
         

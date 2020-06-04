@@ -239,7 +239,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             renoteeCell.setRenotee(item.renotee ?? "")
             
             renoteeCell.setTapGesture(disposeBag) {
-                self.openUser(username: item.username)
+                self.openUser(username: item.username, owner: viewModel.state.owner)
             }
             
             return renoteeCell

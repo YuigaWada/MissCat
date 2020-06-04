@@ -31,7 +31,6 @@ extension HomeViewController {
     }
 }
 
-
 class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate {
     private var isXSeries = UIScreen.main.bounds.size.height > 811
     private let footerTabHeight: CGFloat = 55
@@ -72,7 +71,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     
     private lazy var tabs: [Tab] = {
         guard let tabs = Theme.shared.currentModel?.tab else { return [] }
-
+        
         // タブに紐付けられたユーザーの情報を詰めていく
         return tabs.compactMap {
             guard let userId = $0.userId ?? Cache.UserDefaults.shared.getCurrentUserId(),
@@ -80,7 +79,6 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
             return Tab(name: $0.name, kind: $0.kind, userId: $0.userId, listId: $0.listId, owner: owner)
         }
     }()
-    
     
     // MARK: PolioPager Overrides
     
@@ -102,8 +100,6 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         
         return [search] + setViewControllers
     }
-    
-
     
     /// Theme.TabKindからVCを生成
     /// - Parameter type: Theme.TabKind
@@ -308,7 +304,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         MisskeyKit.auth.setAPIKey(apiKey)
         
         logined = true
-        self.currentInstance = currentUser.instance
+        currentInstance = currentUser.instance
     }
     
     private func showStartingViewController() {
@@ -403,28 +399,28 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     }
     
     private func showProfileView(userId: String, owner: SecureUser) {
-        nowPage = isMe ? .profile : nowPage
-        if isMe, let myProfileViewController = myProfileViewController {
-            myProfileViewController.view.isHidden = false
-            return
-        }
+//        nowPage = isMe ? .profile : nowPage
+//        if isMe, let myProfileViewController = myProfileViewController {
+//            myProfileViewController.view.isHidden = false
+//            return
+//        }
         
         // If myProfileViewController, currentProfileViewController is nil...
         guard let storyboard = self.storyboard,
             let profileViewController = storyboard.instantiateViewController(withIdentifier: "profile") as? ProfileViewController else { return }
         
-        profileViewController.setUserId(userId, isMe: isMe)
+        profileViewController.setUserId(userId, owner: owner)
         profileViewController.view.frame = getDisplayRect(needNavBar: false)
         profileViewController.homeViewController = self
-        
-        if isMe {
-            profileViewController.view.layoutIfNeeded()
-            addChild(profileViewController)
-            view.addSubview(profileViewController.view)
-            myProfileViewController = profileViewController
-        } else {
-            navigationController?.pushViewController(profileViewController, animated: true)
-        }
+//
+//        if isMe {
+//            profileViewController.view.layoutIfNeeded()
+//            addChild(profileViewController)
+//            view.addSubview(profileViewController.view)
+//            myProfileViewController = profileViewController
+//        } else {
+        navigationController?.pushViewController(profileViewController, animated: true)
+//        }
     }
     
     // MARK: Utilities
@@ -710,7 +706,7 @@ extension HomeViewController: TimelineDelegate {
     }
     
     func move2Profile(userId: String, owner: SecureUser) {
-        showProfileView(userId: userId, owner:owner)
+        showProfileView(userId: userId, owner: owner)
     }
     
     func openUserPage(username: String, owner: SecureUser) {
@@ -730,7 +726,7 @@ extension HomeViewController: TimelineDelegate {
         MisskeyKit.users.showUser(username: _username, host: host) { user, error in
             guard error == nil, let user = user else { return }
             DispatchQueue.main.async {
-                self.showProfileView(userId: user.id, owner:owner)
+                self.showProfileView(userId: user.id, owner: owner)
             }
         }
     }

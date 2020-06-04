@@ -182,10 +182,10 @@ class StartViewController: UIViewController {
         return viewController
     }
     
-    private func saveUserData(with apiKey: String, completion: @escaping ()->()) {
+    private func saveUserData(with apiKey: String, completion: @escaping () -> Void) {
         MisskeyKit.changeInstance(instance: misskeyInstance)
         MisskeyKit.auth.setAPIKey(apiKey)
-        MisskeyKit.users.i{ user, error in
+        MisskeyKit.users.i { user, _ in
             guard let user = user else { return }
             let secureUser = SecureUser(userId: user.id, instance: self.misskeyInstance, apiKey: apiKey)
             

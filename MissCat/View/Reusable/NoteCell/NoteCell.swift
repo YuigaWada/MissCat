@@ -27,7 +27,7 @@ protocol NoteCellDelegate {
     func vote(choice: [Int], to noteId: String)
     
     func tappedLink(text: String, owner: SecureUser)
-    func move2Profile(userId: String)
+    func move2Profile(userId: String, owner: SecureUser)
     
     func showImage(_ urls: [URL], start startIndex: Int)
     func playVideo(url: String)
@@ -468,8 +468,10 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         gestureTargets.forEach {
             guard let view = $0 else { return }
             view.setTapGesture(disposeBag) {
-                guard let delegate = self.delegate, let userId = self.userId else { return }
-                delegate.move2Profile(userId: userId)
+                guard let delegate = self.delegate,
+                    let userId = self.userId,
+                    let owner = self.owner else { return }
+                delegate.move2Profile(userId: userId, owner: owner)
             }
         }
     }
@@ -517,7 +519,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         // main
         self.noteId = noteId
-        self.owner = arg.owner
+        owner = arg.owner
         userId = item.userId
         hostInstance = item.hostInstance
         iconImageUrl = item.iconImageUrl

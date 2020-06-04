@@ -180,13 +180,12 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     
     // MARK: Delegate
     
-    override func tappedLink(text: String) {
+    override func tappedLink(text: String, owner: SecureUser) {
         let (linkType, value) = text.analyzeHyperLink()
         switch linkType {
         case .url:
             homeViewController?.openLink(url: value)
         case .user:
-            guard let owner = owner else { return }
             homeViewController?.move2Profile(userId: value, owner: owner)
         case .hashtag:
             navigationController?.popViewController(animated: true)

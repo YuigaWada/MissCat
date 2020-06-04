@@ -12,6 +12,7 @@ class UserListViewModel: ViewModelType {
     // MARK: I/O
     
     struct Input {
+        let owner: SecureUser
         let dataSource: UsersDataSource
         let type: UserListType
         let userId: String?
@@ -25,12 +26,13 @@ class UserListViewModel: ViewModelType {
     
     struct State {
         var isLoading: Bool
+        var owner: SecureUser
     }
     
     private let input: Input
     let output: Output = .init()
     var state: State {
-        return .init(isLoading: _isLoading)
+        return .init(isLoading: _isLoading, owner: input.owner)
     }
     
     var cellsModel: [UserCell.Model] = []

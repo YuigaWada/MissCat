@@ -93,11 +93,10 @@ class TimelineViewModel: ViewModelType {
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
         self.disposeBag = disposeBag
-        self.owner = input.owner
+        owner = input.owner
         
         binding()
     }
-
     
     private func binding() {
         model.trigger.removeTargetTrigger.subscribe(onNext: { noteId in
@@ -134,7 +133,6 @@ class TimelineViewModel: ViewModelType {
             }
         }, onDisposed: nil).disposed(by: disposeBag)
     }
-    
     
     func setSkeltonCell() {
         guard !hasSkeltonCell else { return }

@@ -14,6 +14,7 @@ class DirectMessageViewModel: ViewModelType {
     // MARK: I/O
     
     struct Input {
+        let owner: SecureUser
         var userId: String
         var sendTrigger: PublishRelay<String>
     }
@@ -23,10 +24,13 @@ class DirectMessageViewModel: ViewModelType {
         let sendCompleted: PublishRelay<Bool> = .init()
     }
     
-    struct State {}
+    struct State {
+        let owner: SecureUser
+    }
     
     private let input: Input
     let output: Output = .init()
+    var state: State { return .init(owner: input.owner) }
     
     private var messages: [DirectMessage] = []
     private let model: DirectMessageModel = .init()

@@ -230,8 +230,8 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
         // リアクションした者のプロフィールを表示
         for aboutReactee in [nameTextView, iconImageView, emojiView, followButton] {
             aboutReactee?.setTapGesture(disposeBag, closure: {
-                guard let userId = item.fromUser?.id else { return }
-                self.delegate?.move2Profile(userId: userId)
+                guard let userId = item.fromUser?.id, let owner = item.owner else { return }
+                self.delegate?.move2Profile(userId: userId, owner: owner)
             })
         }
     }
@@ -283,6 +283,7 @@ extension NotificationCell {
         
         var isMock: Bool = false
         
+        var owner: SecureUser?
         var notificationId: String
         var type: ActionType = .reply
         

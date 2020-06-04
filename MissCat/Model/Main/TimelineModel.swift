@@ -194,7 +194,7 @@ class TimelineModel {
             
             newPosts.reverse() // 逆順に読み込む
             newPosts.forEach { post in
-                self.transformNote(with: observer, post: post, owner: owner,reverse: true)
+                self.transformNote(with: observer, post: post, owner: owner, reverse: true)
                 if let noteId = post.id { self.initialNoteIds.append(noteId) }
             }
             
@@ -209,7 +209,7 @@ class TimelineModel {
             let ignore = isInitalLoad ? post.isFeatured : post.isRecommended
             guard !ignore else { return }
             
-            self.transformNote(with: observer, post: post, owner: owner,reverse: false)
+            self.transformNote(with: observer, post: post, owner: owner, reverse: false)
             if let noteId = post.id {
                 self.initialNoteIds.append(noteId) // ここでcaptureしようとしてもwebsocketとの接続が未確定なのでcapture不確実
             }
@@ -286,7 +286,7 @@ class TimelineModel {
             
             _ = self.streaming.connect(apiKey: apiKey, channels: [channel]) { (response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) in
                 self.captureNote(&isReconnection)
-                self.handleStream(owner:owner,
+                self.handleStream(owner: owner,
                                   response: response,
                                   channel: channel,
                                   typeString: type,
@@ -350,7 +350,7 @@ class TimelineModel {
         // 通常の投稿
         if let post = response as? NoteModel {
             DispatchQueue.main.async {
-                self.transformNote(with: observer, post: post,owner: owner, reverse: true)
+                self.transformNote(with: observer, post: post, owner: owner, reverse: true)
             }
             self.captureNote(noteId: post.id)
         }

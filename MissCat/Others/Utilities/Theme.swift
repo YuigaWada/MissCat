@@ -213,7 +213,7 @@ extension Theme {
         static func get() -> Model? {
             let key = getKey()
             guard let data = UserDefaults.standard.data(forKey: key),
-            let model = try? JSONDecoder().decode(Model.self, from: data) else { return nil }
+                let model = try? JSONDecoder().decode(Model.self, from: data) else { return nil }
             
             // userIdが存在しなかったら現在ログイン中のアカウントのuserIdを詰める
             let currentUser = Cache.UserDefaults.shared.getCurrentUser()
