@@ -76,7 +76,7 @@ PODS:
   - KeychainAccess (4.2.0)
   - MessageKit (3.1.0):
     - InputBarAccessoryView (~> 4.3.0)
-  - MisskeyKit (2.6.1):
+  - MisskeyKit (3.0.0):
     - Starscream (= 3.1.1)
   - nanopb (0.3.9011):
     - nanopb/decode (= 0.3.9011)
@@ -217,7 +217,7 @@ SPEC CHECKSUMS:
   iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
   KeychainAccess: 3f760109aa99b05d0f231e28b22642da7153e38a
   MessageKit: 3beb578737a5aa2bba25cc27c7b6d6faa09af5a7
-  MisskeyKit: ac0f495360000dde777e5e66c67b786abdcda71f
+  MisskeyKit: 24b5f3521c482ef743070b9ae4ba4307be4fc157
   nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
   PolioPager: ccb4e382fef0c3c0ee52bdec3d9e9794eafa510a
   PromisesObjC: c119f3cd559f50b7ae681fa59dc1acd19173b7e6
