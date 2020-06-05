@@ -18,13 +18,19 @@ class NotificationsViewModel {
     private var hasReactionGenCell: Bool = false
     var cellsModel: [NotificationCell.Model] = []
     
+
     private var disposeBag: DisposeBag
-    private lazy var model = NotificationsModel()
+    private lazy var misskey: MisskeyKit? = {
+        guard let owner = owner else { return nil }
+        return MisskeyKit(from: owner)
+    }()
+    private lazy var model = NotificationsModel(from: misskey)
     
     init(disposeBag: DisposeBag) {
         self.disposeBag = disposeBag
         owner = Cache.UserDefaults.shared.getCurrentUser()
     }
+    
     
     // MARK: Load
     
@@ -69,7 +75,7 @@ class NotificationsViewModel {
     // MARK: Streaming
     
     private func connectStream() {
-        guard let apiKey = MisskeyKit.auth.getAPIKey() else { return }
+        guard let apiKey = misskey?.auth.getAPIKey() else { return }
         model.connectStream(apiKey: apiKey).subscribe(onNext: { cellModel in
             self.shapeModel(cellModel)
             self.removeDuplicated(with: cellModel, array: &self.cellsModel)

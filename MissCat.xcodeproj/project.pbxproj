@@ -122,6 +122,7 @@
 		8DA83FA9246E6024006F3880 /* ProfileSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA83FA8246E6024006F3880 /* ProfileSettingsModel.swift */; };
 		8DABCD0A2414D52D00D9F054 /* AuthWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DABCD092414D52D00D9F054 /* AuthWebViewController.swift */; };
 		8DAD238A240CE76000AB1F36 /* StartViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAD2389240CE76000AB1F36 /* StartViewController.swift */; };
+		8DAE90CA248A257E008391A3 /* MisskeyKit+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAE90C9248A257E008391A3 /* MisskeyKit+MissCat.swift */; };
 		8DAEA1322382E19A0083AA69 /* ReactionGenViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEA1312382E19A0083AA69 /* ReactionGenViewModel.swift */; };
 		8DAEA1352382E4F00083AA69 /* EmojiView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DAEA1342382E4F00083AA69 /* EmojiView.xib */; };
 		8DAEA1372382E59A0083AA69 /* EmojiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAEA1362382E59A0083AA69 /* EmojiView.swift */; };
@@ -295,6 +296,7 @@
 		8DA83FA8246E6024006F3880 /* ProfileSettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsModel.swift; sourceTree = "<group>"; };
 		8DABCD092414D52D00D9F054 /* AuthWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthWebViewController.swift; sourceTree = "<group>"; };
 		8DAD2389240CE76000AB1F36 /* StartViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartViewController.swift; sourceTree = "<group>"; };
+		8DAE90C9248A257E008391A3 /* MisskeyKit+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MisskeyKit+MissCat.swift"; sourceTree = "<group>"; };
 		8DAEA1312382E19A0083AA69 /* ReactionGenViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenViewModel.swift; sourceTree = "<group>"; };
 		8DAEA1342382E4F00083AA69 /* EmojiView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = EmojiView.xib; sourceTree = "<group>"; };
 		8DAEA1362382E59A0083AA69 /* EmojiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiView.swift; sourceTree = "<group>"; };
@@ -443,6 +445,7 @@
 				8DBC7A44241245A800D8FEA5 /* AVKit+MissCat.swift */,
 				8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */,
 				8D2D52462443DA2A00712F48 /* UserModel+MissCat.swift */,
+				8DAE90C9248A257E008391A3 /* MisskeyKit+MissCat.swift */,
 			);
 			path = Extension;
 			sourceTree = "<group>";
@@ -1295,6 +1298,7 @@
 				8DA536AE23AC8C47005EB1B5 /* AttachmentCell.swift in Sources */,
 				8D63BFC7242BC239009C3ADE /* NoteDisplay.swift in Sources */,
 				8D502D5A2380270A00525A96 /* TabBar.swift in Sources */,
+				8DAE90CA248A257E008391A3 /* MisskeyKit+MissCat.swift in Sources */,
 				8DD8898B23935CC400D22910 /* PostDetailViewModel.swift in Sources */,
 				8DABCD0A2414D52D00D9F054 /* AuthWebViewController.swift in Sources */,
 			);

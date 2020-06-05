@@ -13,6 +13,7 @@ import RxSwift
 
 class PostViewModel: ViewModelType {
     struct Input {
+        let owner: SecureUser
         let type: PostViewController.PostType
         let targetNote: NoteCell.Model?
         let rxCwText: ControlProperty<String?>
@@ -94,7 +95,8 @@ class PostViewModel: ViewModelType {
     private var attachmentsLists: [PostViewController.Attachments] = []
     private let attachments: PublishSubject<[PostViewController.AttachmentsSection]> = .init()
     
-    private let model = PostModel()
+    private lazy var misskey: MisskeyKit? = MisskeyKit(from: input.owner)
+    private lazy var model = PostModel(from: misskey)
     private var disposeBag: DisposeBag
     
     private var attachmentFiles: [AttachmentFile] = []

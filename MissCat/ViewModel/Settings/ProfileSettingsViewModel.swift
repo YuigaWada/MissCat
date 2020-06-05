@@ -11,6 +11,7 @@ import Foundation
 import RxCocoa
 import RxSwift
 import UIKit
+import MisskeyKit
 
 // プロフィールの差分を表す
 class ChangedProfile {
@@ -38,6 +39,7 @@ class ProfileSettingsViewModel: ViewModelType {
     }
     
     struct Input {
+        let owner: SecureUser
         let needLoadIcon: Bool
         let needLoadBanner: Bool
         
@@ -79,7 +81,8 @@ class ProfileSettingsViewModel: ViewModelType {
         var changed: ChangedProfile = .init()
     }
     
-    private let model = ProfileSettingsModel()
+    private lazy var misskey: MisskeyKit? = MisskeyKit(from: input.owner)
+    private lazy var model = ProfileSettingsModel(from: misskey)
     private let input: Input
     let output: Output = .init()
     let state: State = .init()

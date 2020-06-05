@@ -31,8 +31,8 @@ class EmojiHandler {
     static let handler = EmojiHandler() // Singleton
     
     init() { // 先に絵文字情報をダウンロードしておく
-        MisskeyKit.Emojis.getDefault { self.defaultEmojis = $0 }
-        MisskeyKit.Emojis.getCustom { self.customEmojis = $0 }
+        MisskeyKit.shared.emojis.getDefault { self.defaultEmojis = $0 }
+        MisskeyKit.shared.emojis.getCustom { self.customEmojis = $0 }
     }
     
     /// 自インスタンス・他インスタンスに拘らず、絵文字をデフォルト絵文字かカスタム絵文字のurlに変換する

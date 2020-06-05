@@ -300,8 +300,8 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
             return
         }
         
-        MisskeyKit.changeInstance(instance: currentUser.instance)
-        MisskeyKit.auth.setAPIKey(apiKey)
+//        MisskeyKit.changeInstance(instance: currentUser.instance)
+//        MisskeyKit.auth.setAPIKey(apiKey)
         
         logined = true
         currentInstance = currentUser.instance
@@ -723,7 +723,8 @@ extension HomeViewController: TimelineDelegate {
             _username = decomp[0]
         } else { return }
         
-        MisskeyKit.users.showUser(username: _username, host: host) { user, error in
+        let misskey = MisskeyKit(from: owner)
+        misskey?.users.showUser(username: _username, host: host) { user, error in
             guard error == nil, let user = user else { return }
             DispatchQueue.main.async {
                 self.showProfileView(userId: user.id, owner: owner)

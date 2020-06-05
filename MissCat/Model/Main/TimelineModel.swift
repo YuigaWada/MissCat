@@ -83,7 +83,12 @@ class TimelineModel {
     
     private var type: TimelineType = .Home
     private let handleTargetType: [String] = ["note", "CapturedNoteUpdated"]
-    private lazy var streaming = MisskeyKit.Streaming()
+    private lazy var streaming = misskey?.streaming
+    
+    private let misskey: MisskeyKit?
+    init(from misskey: MisskeyKit?) {
+        self.misskey = misskey
+    }
     
     // MARK: REST API
     
@@ -97,23 +102,23 @@ class TimelineModel {
             let handleResult = self.getNotesHandler(with: option, and: observer, owner: owner)
             switch option.type {
             case .Home:
-                MisskeyKit.notes.getTimeline(limit: option.loadLimit,
+                self.misskey?.notes.getTimeline(limit: option.loadLimit,
                                              untilId: option.untilId ?? "",
                                              completion: handleResult)
                 
             case .Local:
-                MisskeyKit.notes.getLocalTimeline(limit: option.loadLimit,
+                self.misskey?.notes.getLocalTimeline(limit: option.loadLimit,
                                                   untilId: option.untilId ?? "",
                                                   completion: handleResult)
                 
             case .Global:
-                MisskeyKit.notes.getGlobalTimeline(limit: option.loadLimit,
+                self.misskey?.notes.getGlobalTimeline(limit: option.loadLimit,
                                                    untilId: option.untilId ?? "",
                                                    completion: handleResult)
                 
             case .OneUser:
                 guard let userId = option.userId else { return dispose }
-                MisskeyKit.notes.getUserNotes(includeReplies: option.includeReplies ?? true,
+                self.misskey?.notes.getUserNotes(includeReplies: option.includeReplies ?? true,
                                               userId: userId,
                                               withFiles: option.onlyFiles ?? false,
                                               limit: option.loadLimit,
@@ -122,13 +127,13 @@ class TimelineModel {
                 
             case .UserList:
                 guard let listId = option.listId else { return dispose }
-                MisskeyKit.notes.getUserListTimeline(listId: listId,
+                self.misskey?.notes.getUserListTimeline(listId: listId,
                                                      limit: option.loadLimit,
                                                      untilId: option.untilId ?? "",
                                                      completion: handleResult)
             case .NoteSearch:
                 guard let query = option.query else { return dispose }
-                MisskeyKit.search.notes(query: query,
+                self.misskey?.search.notes(query: query,
                                         limit: option.loadLimit,
                                         untilId: option.untilId ?? "",
                                         result: handleResult)
@@ -139,17 +144,17 @@ class TimelineModel {
     }
     
     func report(message: String, userId: String) {
-        MisskeyKit.users.reportAsAbuse(userId: userId, comment: message) { _, _ in
+        self.misskey?.users.reportAsAbuse(userId: userId, comment: message) { _, _ in
         }
     }
     
     func block(_ userId: String) {
-        MisskeyKit.users.block(userId: userId) { _, _ in
+        self.misskey?.users.block(userId: userId) { _, _ in
         }
     }
     
     func deleteMyNote(_ noteId: String) {
-        MisskeyKit.notes.deletePost(noteId: noteId) { _, _ in
+        self.misskey?.notes.deletePost(noteId: noteId) { _, _ in
         }
     }
     
@@ -218,7 +223,7 @@ class TimelineModel {
         observer.onCompleted()
     }
     
-    /// MisskeyKit.NoteModelをNoteCell.Modelへ変換してobserverへ送る
+    /// self.misskey?.NoteModelをNoteCell.Modelへ変換してobserverへ送る
     /// - Parameters:
     ///   - observer: AnyObserver<NoteCell.Model>
     ///   - post: NoteModel
@@ -282,9 +287,9 @@ class TimelineModel {
         self.type = type
         
         return Observable.create { [unowned self] observer in
-            guard let apiKey = MisskeyKit.auth.getAPIKey(), let channel = type.convert2Channel() else { return dipose }
+            guard let apiKey = self.misskey?.auth.getAPIKey(), let channel = type.convert2Channel() else { return dipose }
             
-            _ = self.streaming.connect(apiKey: apiKey, channels: [channel]) { (response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) in
+            _ = self.streaming?.connect(apiKey: apiKey, channels: [channel]) { (response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) in
                 self.captureNote(&isReconnection)
                 self.handleStream(owner: owner,
                                   response: response,
@@ -380,7 +385,7 @@ class TimelineModel {
     private func captureNotes(_ noteIds: [String], _ isReconnection: Bool = false) {
         noteIds.forEach { id in
             do {
-                try streaming.captureNote(noteId: id)
+                try streaming?.captureNote(noteId: id)
             } catch {
                 /* Ignore :P */
             }
@@ -425,13 +430,13 @@ class TimelineModel {
     }
     
     func vote(choice: Int, to noteId: String) {
-        MisskeyKit.notes.vote(noteId: noteId, choice: choice, result: { _, _ in
+        self.misskey?.notes.vote(noteId: noteId, choice: choice, result: { _, _ in
             //            print(error)
         })
     }
     
     func renote(noteId: String) {
-        MisskeyKit.notes.renote(renoteId: noteId) { _, _ in
+        self.misskey?.notes.renote(renoteId: noteId) { _, _ in
             //            print(error)
         }
     }

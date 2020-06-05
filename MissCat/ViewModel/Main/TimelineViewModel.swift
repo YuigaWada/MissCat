@@ -80,7 +80,8 @@ class TimelineViewModel: ViewModelType {
     private var hasSkeltonCell: Bool = false
     private let usernameFont = UIFont.systemFont(ofSize: 11.0)
     
-    private lazy var model = TimelineModel()
+    private lazy var misskey = MisskeyKit(from: input.owner)
+    private lazy var model = TimelineModel(from: misskey)
     
     private var owner: SecureUser?
     private var dataSource: NotesDataSource?
@@ -156,7 +157,7 @@ class TimelineViewModel: ViewModelType {
     
     private func initialFollow() {
         guard initialNoteCount < 2 else { return }
-        MisskeyKit.users.follow(userId: "7ze0f2goa7") { _, error in
+        misskey?.users.follow(userId: "7ze0f2goa7") { _, error in
             guard error == nil else { // 失敗した場合は何回か再帰
                 self.initialNoteCount += 1
                 self.initialFollow()

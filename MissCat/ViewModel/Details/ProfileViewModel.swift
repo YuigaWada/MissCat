@@ -22,6 +22,7 @@ class ProfileViewModel: ViewModelType {
     }
     
     struct Input {
+        let owner: SecureUser
         let nameYanagi: YanagiText
         let introYanagi: YanagiText
         
@@ -64,7 +65,8 @@ class ProfileViewModel: ViewModelType {
     private var profile: Profile?
     
     private var disposeBag: DisposeBag
-    private lazy var model = ProfileModel()
+    private lazy var misskey: MisskeyKit? = MisskeyKit(from: input.owner)
+    private lazy var model = ProfileModel(from: misskey)
     
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
@@ -243,7 +245,7 @@ class ProfileViewModel: ViewModelType {
     }
     
     private func setRelation(targetUserId: String) {
-        MisskeyKit.users.getUserRelationship(userId: targetUserId) { relation, error in
+        self.misskey?.users.getUserRelationship(userId: targetUserId) { relation, error in
             guard let relation = relation, error == nil else { return }
             self.output.relation.accept(relation)
             self.state.isFollowing = relation.isFollowing

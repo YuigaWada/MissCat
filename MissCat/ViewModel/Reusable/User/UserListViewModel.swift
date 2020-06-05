@@ -7,6 +7,7 @@
 //
 
 import RxSwift
+import MisskeyKit
 
 class UserListViewModel: ViewModelType {
     // MARK: I/O
@@ -35,8 +36,11 @@ class UserListViewModel: ViewModelType {
         return .init(isLoading: _isLoading, owner: input.owner)
     }
     
+    private lazy var misskey: MisskeyKit? = MisskeyKit(from: input.owner)
+       
+    
     var cellsModel: [UserCell.Model] = []
-    private let model: UserListModel = .init()
+    private lazy var model: UserListModel = .init(from: misskey)
     
     private let disposeBag: DisposeBag
     private var hasSkeltonCell: Bool = false

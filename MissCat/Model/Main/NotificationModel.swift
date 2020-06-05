@@ -22,13 +22,20 @@ class NotificationsModel {
         let lastNotifId: String?
     }
     
+    private let misskey: MisskeyKit?
+    init(from misskey: MisskeyKit?) {
+        self.misskey = misskey
+    }
+    
+    
+    
     private let needMyNoteType = ["mention", "reply", "renote", "quote", "reaction"]
     
     func loadNotification(with option: LoadOption, reversed: Bool = false) -> Observable<NotificationModel> {
         let dispose = Disposables.create()
         
         return Observable.create { observer in
-            MisskeyKit.notifications.get(limit: option.limit, untilId: option.untilId ?? "", following: false) { results, error in
+            self.misskey?.notifications.get(limit: option.limit, untilId: option.untilId ?? "", following: false) { results, error in
                 guard results != nil, results!.count > 0, error == nil else { return }
                 
                 var notifs = results!
@@ -68,8 +75,8 @@ class NotificationsModel {
         let dispose = Disposables.create()
         
         return Observable.create { [unowned self] observer in
-            let streaming = MisskeyKit.Streaming()
-            _ = streaming.connect(apiKey: apiKey, channels: [.main], response: { (response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) in
+            let streaming = self.misskey?.streaming
+            _ = streaming?.connect(apiKey: apiKey, channels: [.main], response: { (response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) in
                 self.handleStream(observer: observer,
                                   response: response,
                                   channel: channel,

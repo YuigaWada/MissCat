@@ -12,10 +12,16 @@ class PostDetailModel {
     private var backReplies: [NoteCell.Model] = []
     private var replies: [NoteCell.Model] = []
     
+    
+    private let misskey: MisskeyKit?
+    init(from misskey: MisskeyKit?) {
+        self.misskey = misskey
+    }
+    
     /// リプライを遡る
     /// - Parameter note: モデル
     func goBackReplies(id: String, completion: @escaping ([NoteCell.Model]) -> Void) {
-        MisskeyKit.notes.showNote(noteId: id) { note, error in
+        self.misskey?.notes.showNote(noteId: id) { note, error in
             guard error == nil,
                 let note = note,
                 let shaped = note.getNoteCellModel() else { completion(self.backReplies); return }
@@ -35,7 +41,7 @@ class PostDetailModel {
     /// リプライを探す
     /// - Parameter id: noteId
     func getReplies(id: String, completion: @escaping ([NoteCell.Model]) -> Void) {
-        MisskeyKit.notes.getChildren(noteId: id) { notes, error in
+        self.misskey?.notes.getChildren(noteId: id) { notes, error in
             guard let notes = notes, error == nil else { return }
             DispatchQueue.global().async {
                 self.replies = self.convertReplies(notes)

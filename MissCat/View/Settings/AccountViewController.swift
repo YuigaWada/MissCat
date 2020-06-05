@@ -76,8 +76,6 @@ class AccountViewController: UITableViewController {
         Cache.UserDefaults.shared.removeUser(userId: currentUserId)
         Cache.shared.resetMyCache()
         
-        MisskeyKit.auth.setAPIKey("")
-        
         startViewController.setup(afterLogout: true)
         presentOnFullScreen(startViewController, animated: true) {
             self.homeViewController?.relaunchView(start: .main) // すべてのviewをrelaunchする

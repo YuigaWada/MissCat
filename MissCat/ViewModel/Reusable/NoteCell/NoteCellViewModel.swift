@@ -88,7 +88,11 @@ class NoteCellViewModel: ViewModelType {
     
     private var dataSource: ReactionsDataSource?
     var reactionsModel: [NoteCell.Reaction] = []
-    private var model = NoteCellModel()
+    
+    
+    private lazy var misskey: MisskeyKit? = MisskeyKit(from: input.owner)
+    
+    private lazy var model = NoteCellModel(from: self.misskey)
     private var disposeBag: DisposeBag
     
     private var imageSessionTasks: [URLSessionDataTask] = []

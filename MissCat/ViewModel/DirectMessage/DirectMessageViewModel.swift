@@ -9,6 +9,7 @@
 import RxCocoa
 import RxSwift
 import SwiftLinkPreview
+import MisskeyKit
 
 class DirectMessageViewModel: ViewModelType {
     // MARK: I/O
@@ -33,7 +34,8 @@ class DirectMessageViewModel: ViewModelType {
     var state: State { return .init(owner: input.owner) }
     
     private var messages: [DirectMessage] = []
-    private let model: DirectMessageModel = .init()
+    private lazy var misskey = MisskeyKit(from: input.owner)
+    private lazy var model: DirectMessageModel = .init(from: misskey)
     
     private let disposeBag: DisposeBag
     

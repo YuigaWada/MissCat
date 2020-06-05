@@ -11,6 +11,11 @@ import MisskeyKit
 
 class PostModel {
     private var iconImage: UIImage?
+
+    private let misskey: MisskeyKit?
+    init(from misskey: MisskeyKit?) {
+        self.misskey = misskey
+    }
     
     /// 自分のアイコンを取得する
     func getIconImage(completion: @escaping (UIImage?) -> Void) {
@@ -19,7 +24,7 @@ class PostModel {
             return
         }
         
-        MisskeyKit.users.i { me, _ in
+        self.misskey?.users.i { me, _ in
             guard let me = me, let iconUrl = me.avatarUrl else { completion(nil); return }
             
             _ = iconUrl.toUIImage { image in
@@ -34,12 +39,12 @@ class PostModel {
         guard let note = note else { return }
         
         if let renoteId = renoteId { // 引用RN
-            MisskeyKit.notes.renote(renoteId: renoteId, quote: note, visibility: visibility) { post, error in
+            self.misskey?.notes.renote(renoteId: renoteId, quote: note, visibility: visibility) { post, error in
                 let isSuccess = post != nil && error == nil
                 completion(isSuccess)
             }
         } else { // 通常の投稿
-            MisskeyKit.notes.createNote(visibility: visibility, text: note, cw: cw ?? "", fileIds: fileIds ?? [], replyId: replyId ?? "") { post, error in
+            self.misskey?.notes.createNote(visibility: visibility, text: note, cw: cw ?? "", fileIds: fileIds ?? [], replyId: replyId ?? "") { post, error in
                 let isSuccess = post != nil && error == nil
                 completion(isSuccess)
             }
@@ -50,7 +55,7 @@ class PostModel {
     func uploadFile(_ image: UIImage, nsfw: Bool, completion: @escaping (String?) -> Void) {
         guard let resizedImage = image.resized(widthUnder: 1024), let targetImage = resizedImage.jpegData(compressionQuality: 0.5) else { return }
         
-        MisskeyKit.drive.createFile(fileData: targetImage, fileType: "image/jpeg", name: UUID().uuidString + ".jpeg", isSensitive: nsfw, force: false) { result, error in
+        self.misskey?.drive.createFile(fileData: targetImage, fileType: "image/jpeg", name: UUID().uuidString + ".jpeg", isSensitive: nsfw, force: false) { result, error in
             guard let result = result, error == nil else { return }
             
             completion(result.id)
@@ -59,7 +64,7 @@ class PostModel {
     
     /// 動画ファイルをアップロードする
     func uploadFile(_ videoData: Data, nsfw: Bool, completion: @escaping (String?) -> Void) {
-        MisskeyKit.drive.createFile(fileData: videoData, fileType: "video/mp4", name: UUID().uuidString + ".mp4", isSensitive: nsfw, force: false) { result, error in
+        self.misskey?.drive.createFile(fileData: videoData, fileType: "video/mp4", name: UUID().uuidString + ".mp4", isSensitive: nsfw, force: false) { result, error in
             guard let result = result, error == nil else { return }
             
             completion(result.id)

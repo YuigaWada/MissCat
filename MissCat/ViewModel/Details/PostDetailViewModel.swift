@@ -7,17 +7,23 @@
 //
 
 import RxSwift
+import MisskeyKit
 
 class PostDetailViewModel {
     let notes: PublishSubject<[NoteCell.Section]> = .init()
     let forceUpdateIndex: PublishSubject<Int> = .init()
     var dataSource: NotesDataSource?
     var cellCount: Int { return cellsModel.count }
+    var owner: SecureUser?
     
     private var hasReactionGenCell: Bool = false
     var cellsModel: [NoteCell.Model] = [] // TODO: エラー再発しないか意識しておく
     
-    private let model = PostDetailModel()
+    private lazy var misskey: MisskeyKit? = {
+        guard let owner = owner else { return nil }
+        return MisskeyKit(from: owner)
+    }()
+    private lazy var model = PostDetailModel(from: misskey)
     
     //    private lazy var model = PostDetailModel()
     

@@ -14,7 +14,7 @@ private typealias EmojiModel = EmojiView.EmojiModel
 class ReactionGenModel {
     // MARK: EMOJIS
     
-    static let fileShared: ReactionGenModel = .init(isFileShared: true) // 事前に詠み込んだ絵文字データを半永続化
+//    static let fileShared: ReactionGenModel = .init(isFileShared: true) // 事前に詠み込んだ絵文字データを半永続化
     fileprivate class Emojis {
         var currentIndex: Int = 0
         var isLoading: Bool = false
@@ -36,7 +36,12 @@ class ReactionGenModel {
     
     // MARK: Life Cycle
     
-    init(isFileShared: Bool = false) {}
+    private let misskey: MisskeyKit?
+    init(from misskey: MisskeyKit?) {
+        self.misskey = misskey
+    }
+    
+    
     
     // MARK: Public Methods
     
@@ -91,13 +96,13 @@ class ReactionGenModel {
     
     func registerReaction(noteId: String, reaction: String, emojiModel: EmojiView.EmojiModel, completion: @escaping (Bool) -> Void) {
         saveHistory(emojiModel) // リアクションの履歴を保存
-        MisskeyKit.notes.createReaction(noteId: noteId, reaction: reaction) { result, _ in
+        self.misskey?.notes.createReaction(noteId: noteId, reaction: reaction) { result, _ in
             completion(result)
         }
     }
     
     func cancelReaction(noteId: String, completion: @escaping (Bool) -> Void) {
-        MisskeyKit.notes.deleteReaction(noteId: noteId) { result, _ in
+        self.misskey?.notes.deleteReaction(noteId: noteId) { result, _ in
             completion(result)
         }
     }

@@ -11,6 +11,13 @@ import RxCocoa
 import RxSwift
 
 class MessageListModel {
+    
+    private let misskey: MisskeyKit?
+     init(from misskey: MisskeyKit?) {
+         self.misskey = misskey
+     }
+    
+    
     private func transformModel(with observer: AnyObserver<SenderCell.Model>, history: MessageHistoryModel) {
         let myId = Cache.UserDefaults.shared.getCurrentUser()?.userId ?? ""
         let others = [history.recipient, history.user].compactMap { $0 }.filter { $0.id != myId } // チャット相手
@@ -48,7 +55,7 @@ class MessageListModel {
                 }
             }
             
-            MisskeyKit.messaging.getHistory(result: handleResult)
+            self.misskey?.messaging.getHistory(result: handleResult)
             return dispose
         }
     }

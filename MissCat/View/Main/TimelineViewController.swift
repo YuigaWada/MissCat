@@ -124,7 +124,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
 //            viewModel?.setupInitialCell()
 //            viewModel?.checkUserId()
 //        }
-        viewModel?.setupInitialCell()
+        viewModel?.setupInitialCell() // TODO: ここで多重に購読してしまうので対策する
         viewModel?.setSkeltonCell()
         setTheme()
         

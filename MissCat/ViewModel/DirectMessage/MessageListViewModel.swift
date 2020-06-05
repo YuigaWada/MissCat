@@ -8,11 +8,13 @@
 
 import RxCocoa
 import RxSwift
+import MisskeyKit
 
 class MessageListViewModel: ViewModelType {
     // MARK: I/O
     
     struct Input {
+        let owner: SecureUser
         let dataSource: SenderDataSource
     }
     
@@ -31,7 +33,8 @@ class MessageListViewModel: ViewModelType {
     }
     
     var cellsModel: [SenderCell.Model] = []
-    private let model: MessageListModel = .init()
+    private lazy var misskey = MisskeyKit(from: input.owner)
+    private lazy var model: MessageListModel = .init(from: misskey)
     
     private let disposeBag: DisposeBag
     private var _isLoading: Bool = false

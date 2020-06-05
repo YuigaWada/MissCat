@@ -27,7 +27,7 @@ class StartViewController: UIViewController {
     private var ioAppSecret: String = "0fRSNkKKl9hcZTGrUSyZOb19n8UUVkxw" // misskey.ioの場合はappSecret固定
     private var misskeyInstance: String = "misskey.io" {
         didSet {
-            MisskeyKit.changeInstance(instance: misskeyInstance) // インスタンスを変更
+            MisskeyKit.shared.changeInstance(instance: misskeyInstance) // インスタンスを変更
         }
     }
     
@@ -72,7 +72,7 @@ class StartViewController: UIViewController {
         setGradientLayer()
         binding()
         
-        MisskeyKit.changeInstance(instance: misskeyInstance) // インスタンスを変更
+        MisskeyKit.shared.changeInstance(instance: misskeyInstance) // インスタンスを変更
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -143,7 +143,7 @@ class StartViewController: UIViewController {
             completion(ioAppSecret); return
         }
         
-        MisskeyKit.app.create(name: "MissCat", description: "MissCat is an flexible Misskey client for iOS!", permission: appPermissions, callbackUrl: "https://misscat.dev") { data, error in
+        MisskeyKit.shared.app.create(name: "MissCat", description: "MissCat is an flexible Misskey client for iOS!", permission: appPermissions, callbackUrl: "https://misscat.dev") { data, error in
             guard let data = data, error == nil, let secret = data.secret else {
                 if error == .some(.FailedToCommunicateWithServer) {
                     self.invalidUrlError()
@@ -182,28 +182,28 @@ class StartViewController: UIViewController {
         return viewController
     }
     
-    private func saveUserData(with apiKey: String, completion: @escaping () -> Void) {
-        MisskeyKit.changeInstance(instance: misskeyInstance)
-        MisskeyKit.auth.setAPIKey(apiKey)
-        MisskeyKit.users.i { user, _ in
+    private func saveUserData(with apiKey: String, completion: @escaping (SecureUser) -> Void) {
+        MisskeyKit.shared.changeInstance(instance: misskeyInstance)
+        MisskeyKit.shared.auth.setAPIKey(apiKey)
+        MisskeyKit.shared.users.i { user, _ in
             guard let user = user else { return }
             let secureUser = SecureUser(userId: user.id, instance: self.misskeyInstance, apiKey: apiKey)
             
             Cache.UserDefaults.shared.saveUser(secureUser)
             Cache.UserDefaults.shared.changeCurrentUser(userId: user.id)
-            completion()
+            completion(secureUser)
         }
     }
     
     private func loginCompleted(_ apiKey: String) {
-        saveUserData(with: apiKey) {
+        saveUserData(with: apiKey) { user in
             _ = EmojiHandler.handler // カスタム絵文字を読み込む
-            self.registerSw() // 通知を登録する
+            self.registerSw(of: user) // 通知を登録する
             
             DispatchQueue.main.async {
                 if self.afterLogout { // 設定画面からのログイン
-                    MisskeyKit.changeInstance(instance: self.misskeyInstance)
-                    MisskeyKit.auth.setAPIKey(apiKey)
+//                    MisskeyKit.changeInstance(instance: self.misskeyInstance)
+//                    MisskeyKit.auth.setAPIKey(apiKey)
                     self.dismiss(animated: true)
                 } else { // 初期画面からのログイン
                     self.navigationController?.popViewController(animated: true)
@@ -234,12 +234,12 @@ class StartViewController: UIViewController {
     
     // MARK: SW
     
-    private func registerSw() {
+    private func registerSw(of user: SecureUser) {
         #if targetEnvironment(simulator)
-            let misscatApi = MisscatApi(apiKeyManager: MockApiKeyManager())
+        let misscatApi = MisscatApi(apiKeyManager: MockApiKeyManager(), and: user)
             misscatApi.registerSw()
         #else
-            let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager())
+            let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager(), and: user)
             misscatApi.registerSw()
         #endif
     }
