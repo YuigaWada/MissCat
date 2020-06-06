@@ -636,7 +636,11 @@ extension HomeViewController: FooterTabBarDelegate {
     }
     
     func tappedPost() {
-        move2ViewController(identifier: "post")
+        guard let postViewController = storyboard?.instantiateViewController(withIdentifier: "post") as? PostViewController,
+            let owner = Cache.UserDefaults.shared.getCurrentUser() else { return }
+        
+        postViewController.setup(owner: owner)
+        presentOnFullScreen(postViewController, animated: true, completion: nil)
     }
     
     func tappedDM() {

@@ -66,6 +66,10 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         postType = type
     }
     
+    func setup(owner: SecureUser) {
+        self.owner = owner
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
