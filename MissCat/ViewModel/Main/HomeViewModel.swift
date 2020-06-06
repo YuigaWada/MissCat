@@ -15,11 +15,11 @@ class HomeViewModel: ViewModelType {
     
     private let model = HomeModel()
     
-    func vote(choice: [Int], to noteId: String) {
-        model.vote(choice: choice, to: noteId)
+    func vote(choice: [Int], to noteId: String, owner: SecureUser) {
+        model.vote(choice: choice, to: noteId, owner: owner)
     }
     
-    func renote(noteId: String) {
-        model.renote(noteId: noteId)
+    func renote(noteId: String, owner: SecureUser) {
+        model.renote(noteId: noteId, owner: owner)
     }
 }

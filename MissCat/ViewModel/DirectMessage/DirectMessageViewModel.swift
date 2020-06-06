@@ -6,10 +6,10 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
+import MisskeyKit
 import RxCocoa
 import RxSwift
 import SwiftLinkPreview
-import MisskeyKit
 
 class DirectMessageViewModel: ViewModelType {
     // MARK: I/O

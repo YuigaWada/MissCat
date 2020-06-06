@@ -24,7 +24,7 @@ protocol NoteCellDelegate {
     func move2PostDetail(item: NoteCell.Model)
     
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool)
-    func vote(choice: [Int], to noteId: String)
+    func vote(choice: [Int], to noteId: String, owner: SecureUser)
     
     func tappedLink(text: String, owner: SecureUser)
     func move2Profile(userId: String, owner: SecureUser)
@@ -249,9 +249,9 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     
     private func setupPoll() {
         pollView.voteTriggar.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { ids in
-            guard let noteId = self.noteId else { return }
+            guard let noteId = self.noteId, let owner = self.owner else { return }
             self.viewModel?.updateVote(choices: ids)
-            self.delegate?.vote(choice: ids, to: noteId)
+            self.delegate?.vote(choice: ids, to: noteId, owner: owner)
         }).disposed(by: disposeBag)
     }
     

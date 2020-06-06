@@ -57,8 +57,8 @@ class NoteDisplay: UIViewController, NoteCellDelegate, UserCellDelegate {
     
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}
     
-    func vote(choice: [Int], to noteId: String) {
-        homeViewController?.vote(choice: choice, to: noteId)
+    func vote(choice: [Int], to noteId: String, owner: SecureUser) {
+        homeViewController?.vote(choice: choice, to: noteId, owner: owner)
     }
     
     func showImage(_ urls: [URL], start startIndex: Int) {

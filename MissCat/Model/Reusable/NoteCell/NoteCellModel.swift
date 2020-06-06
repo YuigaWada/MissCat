@@ -10,7 +10,6 @@ import Foundation
 import MisskeyKit
 
 class NoteCellModel {
-    
     private let misskey: MisskeyKit?
     init(from misskey: MisskeyKit?) {
         self.misskey = misskey

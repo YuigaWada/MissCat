@@ -103,40 +103,40 @@ class TimelineModel {
             switch option.type {
             case .Home:
                 self.misskey?.notes.getTimeline(limit: option.loadLimit,
-                                             untilId: option.untilId ?? "",
-                                             completion: handleResult)
+                                                untilId: option.untilId ?? "",
+                                                completion: handleResult)
                 
             case .Local:
                 self.misskey?.notes.getLocalTimeline(limit: option.loadLimit,
-                                                  untilId: option.untilId ?? "",
-                                                  completion: handleResult)
+                                                     untilId: option.untilId ?? "",
+                                                     completion: handleResult)
                 
             case .Global:
                 self.misskey?.notes.getGlobalTimeline(limit: option.loadLimit,
-                                                   untilId: option.untilId ?? "",
-                                                   completion: handleResult)
+                                                      untilId: option.untilId ?? "",
+                                                      completion: handleResult)
                 
             case .OneUser:
                 guard let userId = option.userId else { return dispose }
                 self.misskey?.notes.getUserNotes(includeReplies: option.includeReplies ?? true,
-                                              userId: userId,
-                                              withFiles: option.onlyFiles ?? false,
-                                              limit: option.loadLimit,
-                                              untilId: option.untilId ?? "",
-                                              completion: handleResult)
+                                                 userId: userId,
+                                                 withFiles: option.onlyFiles ?? false,
+                                                 limit: option.loadLimit,
+                                                 untilId: option.untilId ?? "",
+                                                 completion: handleResult)
                 
             case .UserList:
                 guard let listId = option.listId else { return dispose }
                 self.misskey?.notes.getUserListTimeline(listId: listId,
-                                                     limit: option.loadLimit,
-                                                     untilId: option.untilId ?? "",
-                                                     completion: handleResult)
+                                                        limit: option.loadLimit,
+                                                        untilId: option.untilId ?? "",
+                                                        completion: handleResult)
             case .NoteSearch:
                 guard let query = option.query else { return dispose }
                 self.misskey?.search.notes(query: query,
-                                        limit: option.loadLimit,
-                                        untilId: option.untilId ?? "",
-                                        result: handleResult)
+                                           limit: option.loadLimit,
+                                           untilId: option.untilId ?? "",
+                                           result: handleResult)
             }
             
             return dispose
@@ -144,17 +144,17 @@ class TimelineModel {
     }
     
     func report(message: String, userId: String) {
-        self.misskey?.users.reportAsAbuse(userId: userId, comment: message) { _, _ in
+        misskey?.users.reportAsAbuse(userId: userId, comment: message) { _, _ in
         }
     }
     
     func block(_ userId: String) {
-        self.misskey?.users.block(userId: userId) { _, _ in
+        misskey?.users.block(userId: userId) { _, _ in
         }
     }
     
     func deleteMyNote(_ noteId: String) {
-        self.misskey?.notes.deletePost(noteId: noteId) { _, _ in
+        misskey?.notes.deletePost(noteId: noteId) { _, _ in
         }
     }
     
@@ -430,13 +430,13 @@ class TimelineModel {
     }
     
     func vote(choice: Int, to noteId: String) {
-        self.misskey?.notes.vote(noteId: noteId, choice: choice, result: { _, _ in
+        misskey?.notes.vote(noteId: noteId, choice: choice, result: { _, _ in
             //            print(error)
         })
     }
     
     func renote(noteId: String) {
-        self.misskey?.notes.renote(renoteId: noteId) { _, _ in
+        misskey?.notes.renote(renoteId: noteId) { _, _ in
             //            print(error)
         }
     }

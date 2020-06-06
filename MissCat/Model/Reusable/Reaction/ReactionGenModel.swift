@@ -12,7 +12,6 @@ import RxSwift
 
 private typealias Repository = EmojiRepository
 class EmojiRepository {
-    
     enum Kind {
         case history
         case favs
@@ -20,33 +19,33 @@ class EmojiRepository {
     
     struct UserEmojis {
         let owner: SecureUser
-        var favs: [ EmojiView.EmojiModel]
-        var history: [ EmojiView.EmojiModel]
+        var favs: [EmojiView.EmojiModel]
+        var history: [EmojiView.EmojiModel]
     }
-
+    
     static var shared: EmojiRepository = .init()
     
-     var userEmojis: [UserEmojis] = []
+    var userEmojis: [UserEmojis] = []
     
-     func getUserEmojis(of kind: Kind, owner: SecureUser)-> [ EmojiView.EmojiModel] {
+    func getUserEmojis(of kind: Kind, owner: SecureUser) -> [EmojiView.EmojiModel] {
         let emojiList = userEmojis.filter { $0.owner.userId == owner.userId }
-
+        
         guard emojiList.count > 0 else { return [] }
         
-        var emojis: [ EmojiView.EmojiModel]
+        var emojis: [EmojiView.EmojiModel]
         switch kind {
         case .favs:
             emojis = emojiList[0].favs
         case .history:
-            guard  EmojiView.EmojiModel.hasHistory else { return [] }
-             emojis = emojiList[0].history
+            guard EmojiView.EmojiModel.hasHistory else { return [] }
+            emojis = emojiList[0].history
         }
         
         return emojis
     }
-
-     func updateUserEmojis(to kind: Kind, owner: SecureUser, new emojis: [ EmojiView.EmojiModel]) {
-        for i in 0..<userEmojis.count {
+    
+    func updateUserEmojis(to kind: Kind, owner: SecureUser, new emojis: [EmojiView.EmojiModel]) {
+        for i in 0 ..< userEmojis.count {
             guard userEmojis[i].owner.userId == owner.userId else { break }
             switch kind {
             case .favs:
@@ -57,13 +56,10 @@ class EmojiRepository {
             return
         }
     }
-    
 }
-
 
 class ReactionGenModel {
     private typealias EmojiModel = EmojiView.EmojiModel
-    
     
     fileprivate class Emojis {
         var currentIndex: Int = 0
@@ -73,7 +69,6 @@ class ReactionGenModel {
         lazy var categorizedDefault = EmojiHandler.handler.categorizedDefaultEmojis
         lazy var categorizedCustom = EmojiHandler.handler.categorizedCustomEmojis
     }
-    
     
     // MARK: Private Vars
     
@@ -90,8 +85,6 @@ class ReactionGenModel {
         self.misskey = misskey
         self.owner = owner
     }
-    
-    
     
     // MARK: Public Methods
     
@@ -118,7 +111,6 @@ class ReactionGenModel {
         if emojiModels.count > 0 {
             fakeCellPadding(array: &emojiModels, count: emojiModels.count)
         }
-        
         
         return emojiModels
     }
@@ -153,13 +145,13 @@ class ReactionGenModel {
     
     func registerReaction(noteId: String, reaction: String, emojiModel: EmojiView.EmojiModel, completion: @escaping (Bool) -> Void) {
         saveHistory(emojiModel) // リアクションの履歴を保存
-        self.misskey?.notes.createReaction(noteId: noteId, reaction: reaction) { result, _ in
+        misskey?.notes.createReaction(noteId: noteId, reaction: reaction) { result, _ in
             completion(result)
         }
     }
     
     func cancelReaction(noteId: String, completion: @escaping (Bool) -> Void) {
-        self.misskey?.notes.deleteReaction(noteId: noteId) { result, _ in
+        misskey?.notes.deleteReaction(noteId: noteId) { result, _ in
             completion(result)
         }
     }

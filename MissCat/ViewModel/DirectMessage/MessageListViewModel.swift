@@ -6,9 +6,9 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
+import MisskeyKit
 import RxCocoa
 import RxSwift
-import MisskeyKit
 
 class MessageListViewModel: ViewModelType {
     // MARK: I/O

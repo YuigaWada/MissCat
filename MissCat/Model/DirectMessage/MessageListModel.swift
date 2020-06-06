@@ -11,12 +11,10 @@ import RxCocoa
 import RxSwift
 
 class MessageListModel {
-    
     private let misskey: MisskeyKit?
-     init(from misskey: MisskeyKit?) {
-         self.misskey = misskey
-     }
-    
+    init(from misskey: MisskeyKit?) {
+        self.misskey = misskey
+    }
     
     private func transformModel(with observer: AnyObserver<SenderCell.Model>, history: MessageHistoryModel) {
         let myId = Cache.UserDefaults.shared.getCurrentUser()?.userId ?? ""

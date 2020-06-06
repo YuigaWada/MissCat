@@ -6,8 +6,8 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
-import RxSwift
 import MisskeyKit
+import RxSwift
 
 class UserListViewModel: ViewModelType {
     // MARK: I/O
@@ -37,7 +37,6 @@ class UserListViewModel: ViewModelType {
     }
     
     private lazy var misskey: MisskeyKit? = MisskeyKit(from: input.owner)
-       
     
     var cellsModel: [UserCell.Model] = []
     private lazy var model: UserListModel = .init(from: misskey)

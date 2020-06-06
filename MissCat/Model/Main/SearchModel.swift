@@ -10,13 +10,10 @@ import MisskeyKit
 import RxSwift
 
 class SearchModel {
-    
-    
     private let misskey: MisskeyKit?
     init(from misskey: MisskeyKit?) {
         self.misskey = misskey
     }
-    
     
     func searchUser(with query: String, sinceId: String = "", untilId: String = "") -> Observable<[UserModel]> {
         return Observable.create { observer in

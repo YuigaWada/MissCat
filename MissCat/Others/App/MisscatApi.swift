@@ -28,7 +28,7 @@ class MisscatApi {
     
     init(apiKeyManager: ApiKeyManagerProtocol, and user: SecureUser) {
         self.apiKeyManager = apiKeyManager
-        self.misskey = MisskeyKit(from: user)
+        misskey = MisskeyKit(from: user)
     }
     
     /// 適切なendpointを生成し、sw/registerを叩く

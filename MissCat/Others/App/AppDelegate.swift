@@ -98,14 +98,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let savedUser = Cache.UserDefaults.shared.getUsers()
         savedUser.forEach { user in
             #if targetEnvironment(simulator)
-            let misscatApi = MisscatApi(apiKeyManager: MockApiKeyManager(), and: user)
-            misscatApi.registerSw()
+                let misscatApi = MisscatApi(apiKeyManager: MockApiKeyManager(), and: user)
+                misscatApi.registerSw()
             #else
-            let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager(), and: user)
-            misscatApi.registerSw()
+                let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager(), and: user)
+                misscatApi.registerSw()
             #endif
         }
-        
     }
     
     // MARK: Notifications

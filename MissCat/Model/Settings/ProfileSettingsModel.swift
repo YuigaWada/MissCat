@@ -10,7 +10,6 @@ import MisskeyKit
 import RxSwift
 
 class ProfileSettingsModel {
-    
     private let misskey: MisskeyKit?
     init(from misskey: MisskeyKit?) {
         self.misskey = misskey

@@ -54,7 +54,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     private let disposeBag = DisposeBag()
     
     // MARK: Life Cycle
-        
+    
     /// 引用RN / リプライの場合に、対象ノートのモデルを受け渡す
     /// - Parameters:
     ///   - note: note model
@@ -62,10 +62,9 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     
     func setup(owner: SecureUser, note: NoteCell.Model?, type: PostType) {
         self.owner = owner
-        self.targetNote = note
-        self.postType = type
+        targetNote = note
+        postType = type
     }
-    
     
     override func viewDidLoad() {
         super.viewDidLoad()

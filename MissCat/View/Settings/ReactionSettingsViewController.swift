@@ -21,7 +21,7 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     private var viewModel: ReactionSettingsViewModel?
     private let disposeBag = DisposeBag()
     
-        var owner: SecureUser? = Cache.UserDefaults.shared.getCurrentUser()
+    var owner: SecureUser? = Cache.UserDefaults.shared.getCurrentUser()
     
     // MARK: LifeCycle
     

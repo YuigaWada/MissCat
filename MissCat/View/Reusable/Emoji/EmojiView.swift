@@ -150,8 +150,8 @@ extension EmojiView {
             UserDefaults.standard.set(targetRawData, forKey: key)
             UserDefaults.standard.synchronize()
         }
-
-        private static func getKey(type: EmojiType, owner: SecureUser)-> String {
+        
+        private static func getKey(type: EmojiType, owner: SecureUser) -> String {
             return "\(type.rawValue)-\(owner.userId)-\(owner.instance)"
         }
         

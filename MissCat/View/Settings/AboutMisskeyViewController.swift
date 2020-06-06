@@ -156,7 +156,7 @@ class AboutMisskeyViewController: UIViewController {
         // Misskey Icon
         misskeyAccountImageView.layer.cornerRadius = misskeyAccountImageView.frame.width / 2
         
-        self.misskey?.users.showUser(username: "wada", host: "misskey.io") { user, error in
+        misskey?.users.showUser(username: "wada", host: "misskey.io") { user, error in
             guard let user = user, let avatarUrl = user.avatarUrl, error == nil else { return }
             
             _ = avatarUrl.toUIImage { image in

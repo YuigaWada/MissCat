@@ -236,7 +236,7 @@ class StartViewController: UIViewController {
     
     private func registerSw(of user: SecureUser) {
         #if targetEnvironment(simulator)
-        let misscatApi = MisscatApi(apiKeyManager: MockApiKeyManager(), and: user)
+            let misscatApi = MisscatApi(apiKeyManager: MockApiKeyManager(), and: user)
             misscatApi.registerSw()
         #else
             let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager(), and: user)

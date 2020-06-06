@@ -17,6 +17,7 @@ class ReactionSettingsViewModel: ViewModelType {
     struct Input {
         let owner: SecureUser
     }
+    
     struct Output {
         let favs: PublishSubject<[ReactionGenViewController.EmojisSection]> = .init()
     }

@@ -531,8 +531,8 @@ extension HomeViewController: NoteCellDelegate {
             
             switch order {
             case 0: // RN
-                guard let noteId = note.noteId else { return }
-                self.viewModel.renote(noteId: noteId)
+                guard let noteId = note.noteId, let owner = note.owner else { return }
+                self.viewModel.renote(noteId: noteId, owner: owner)
             case 1: // 引用RN
                 self.openPost(item: note, type: .CommentRenote)
             default:
@@ -568,8 +568,8 @@ extension HomeViewController: NoteCellDelegate {
     
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}
     
-    func vote(choice: [Int], to noteId: String) {
-        viewModel.vote(choice: choice, to: noteId)
+    func vote(choice: [Int], to noteId: String, owner: SecureUser) {
+        viewModel.vote(choice: choice, to: noteId, owner: owner)
     }
     
     func showImage(_ urls: [URL], start startIndex: Int) {
@@ -747,7 +747,8 @@ extension HomeViewController: TimelineDelegate {
     }
     
     func openPost(item: NoteCell.Model, type: PostViewController.PostType) {
-        guard let postViewController = storyboard?.instantiateViewController(withIdentifier: "post") as? PostViewController else { return }
+        guard let postViewController = storyboard?.instantiateViewController(withIdentifier: "post") as? PostViewController,
+            let owner = item.owner else { return }
         
         postViewController.setup(owner: owner, note: item, type: type)
         presentOnFullScreen(postViewController, animated: true, completion: nil)

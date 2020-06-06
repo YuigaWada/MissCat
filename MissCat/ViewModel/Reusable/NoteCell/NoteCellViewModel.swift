@@ -89,7 +89,6 @@ class NoteCellViewModel: ViewModelType {
     private var dataSource: ReactionsDataSource?
     var reactionsModel: [NoteCell.Reaction] = []
     
-    
     private lazy var misskey: MisskeyKit? = MisskeyKit(from: input.owner)
     
     private lazy var model = NoteCellModel(from: self.misskey)

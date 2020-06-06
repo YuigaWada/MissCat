@@ -18,12 +18,12 @@ class TrendViewController: UIViewController, UITableViewDelegate, UITableViewDat
     private var tables: [String] = []
     private var disposeBag: DisposeBag = .init()
     
-    
-    private lazy var misskey: MisskeyKit? =  {
+    private lazy var misskey: MisskeyKit? = {
         guard let owner = owner else { return nil }
         let misskey = MisskeyKit(from: owner)
         return misskey
     }()
+    
     private lazy var owner: SecureUser? = Cache.UserDefaults.shared.getCurrentUser()
     private var instance: String {
         guard let instance = owner?.instance,
@@ -64,7 +64,6 @@ class TrendViewController: UIViewController, UITableViewDelegate, UITableViewDat
     private func setupTables() {
         mainTableView.delegate = self
         mainTableView.dataSource = self
-        
         
         misskey?.search.trendHashtags { trends, error in
             guard let trends = trends, error == nil else { return }

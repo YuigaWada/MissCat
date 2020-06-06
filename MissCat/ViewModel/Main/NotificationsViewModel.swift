@@ -18,19 +18,18 @@ class NotificationsViewModel {
     private var hasReactionGenCell: Bool = false
     var cellsModel: [NotificationCell.Model] = []
     
-
     private var disposeBag: DisposeBag
     private lazy var misskey: MisskeyKit? = {
         guard let owner = owner else { return nil }
         return MisskeyKit(from: owner)
     }()
+    
     private lazy var model = NotificationsModel(from: misskey)
     
     init(disposeBag: DisposeBag) {
         self.disposeBag = disposeBag
         owner = Cache.UserDefaults.shared.getCurrentUser()
     }
-    
     
     // MARK: Load
     

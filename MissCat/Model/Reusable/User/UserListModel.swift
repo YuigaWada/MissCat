@@ -27,13 +27,10 @@ class UserListModel {
         let loadLimit: Int = 40
     }
     
-    
     private let misskey: MisskeyKit?
     init(from misskey: MisskeyKit?) {
         self.misskey = misskey
     }
-
-    
     
     private func transformUser(with observer: AnyObserver<UserCell.Model>, user: UserModel, reverse: Bool) {
         let userModel = user.getUserCellModel()
@@ -70,10 +67,10 @@ class UserListModel {
             case .search:
                 guard let query = option.query else { return dispose }
                 self.misskey?.search.user(query: query,
-                                       limit: option.loadLimit,
-                                       untilId: option.untilId ?? "", // TODO: ここOffsetにすべき
-                                       localOnly: false,
-                                       result: handleResult)
+                                          limit: option.loadLimit,
+                                          untilId: option.untilId ?? "", // TODO: ここOffsetにすべき
+                                          localOnly: false,
+                                          result: handleResult)
             default:
                 break
             }

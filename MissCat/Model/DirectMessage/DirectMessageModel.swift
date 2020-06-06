@@ -15,12 +15,11 @@ class DirectMessageModel {
         let userId: String
         let untilId: String?
     }
-
+    
     private let misskey: MisskeyKit?
     init(from misskey: MisskeyKit?) {
         self.misskey = misskey
     }
-    
     
     private func transformModel(with observer: AnyObserver<DirectMessage>, message: MessageModel) {
         let user: DirectMessage.User = .init(senderId: message.userId ?? "",
@@ -57,9 +56,9 @@ class DirectMessageModel {
             }
             
             self.misskey?.messaging.getMessageWithUser(userId: option.userId,
-                                                    limit: 40,
-                                                    untilId: option.untilId ?? "",
-                                                    markAsRead: true, result: handleResult)
+                                                       limit: 40,
+                                                       untilId: option.untilId ?? "",
+                                                       markAsRead: true, result: handleResult)
             return dispose
         }
     }

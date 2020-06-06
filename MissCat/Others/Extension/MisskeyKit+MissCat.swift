@@ -11,15 +11,12 @@ import MisskeyKit
 extension MisskeyKit {
     convenience init(instance: String, apiKey: String) {
         self.init()
-        self.changeInstance(instance: instance)
-        self.auth.setAPIKey(apiKey)
+        changeInstance(instance: instance)
+        auth.setAPIKey(apiKey)
     }
     
     convenience init?(from user: SecureUser) {
         guard let apiKey = user.apiKey else { return nil }
         self.init(instance: user.instance, apiKey: apiKey)
     }
-    
-    
-    
 }

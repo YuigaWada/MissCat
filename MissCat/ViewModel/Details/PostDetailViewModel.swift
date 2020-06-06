@@ -6,8 +6,8 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import RxSwift
 import MisskeyKit
+import RxSwift
 
 class PostDetailViewModel {
     let notes: PublishSubject<[NoteCell.Section]> = .init()
@@ -23,6 +23,7 @@ class PostDetailViewModel {
         guard let owner = owner else { return nil }
         return MisskeyKit(from: owner)
     }()
+    
     private lazy var model = PostDetailModel(from: misskey)
     
     //    private lazy var model = PostDetailModel()

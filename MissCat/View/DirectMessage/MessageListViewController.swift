@@ -24,10 +24,6 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     
     private var loggedIn: Bool = false
     
-    
-    
-    
-    
     // MARK: LifeCycle
     
     override func viewDidLoad() {
@@ -64,7 +60,7 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     // MARK: Setup
     
     private func setupViewModel() -> MessageListViewModel {
-        let input = MessageListViewModel.Input(owner: owner!,dataSource: dataSource)
+        let input = MessageListViewModel.Input(owner: owner!, dataSource: dataSource)
         
         return .init(with: input, and: disposeBag)
     }

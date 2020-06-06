@@ -99,6 +99,7 @@ class PostViewModel: ViewModelType {
         guard let owner = self.input.owner else { return nil }
         return MisskeyKit(from: owner)
     }()
+    
     private lazy var model = PostModel(from: misskey)
     private var disposeBag: DisposeBag
     

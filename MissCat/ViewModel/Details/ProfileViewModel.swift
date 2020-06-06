@@ -69,6 +69,7 @@ class ProfileViewModel: ViewModelType {
         guard let owner = input.owner else { return nil }
         return MisskeyKit(from: owner)
     }()
+    
     private lazy var model = ProfileModel(from: misskey)
     
     init(with input: Input, and disposeBag: DisposeBag) {
@@ -248,7 +249,7 @@ class ProfileViewModel: ViewModelType {
     }
     
     private func setRelation(targetUserId: String) {
-        self.misskey?.users.getUserRelationship(userId: targetUserId) { relation, error in
+        misskey?.users.getUserRelationship(userId: targetUserId) { relation, error in
             guard let relation = relation, error == nil else { return }
             self.output.relation.accept(relation)
             self.state.isFollowing = relation.isFollowing

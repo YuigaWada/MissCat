@@ -15,7 +15,6 @@ class ProfileModel {
         self.misskey = misskey
     }
     
-    
     func getUser(userId: String, completion: @escaping (UserModel?) -> Void) {
         misskey?.users.showUser(userId: userId) { user, error in
             guard error == nil else { completion(nil); return }

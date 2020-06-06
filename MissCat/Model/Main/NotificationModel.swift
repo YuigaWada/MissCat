@@ -27,8 +27,6 @@ class NotificationsModel {
         self.misskey = misskey
     }
     
-    
-    
     private let needMyNoteType = ["mention", "reply", "renote", "quote", "reaction"]
     
     func loadNotification(with option: LoadOption, reversed: Bool = false) -> Observable<NotificationModel> {
