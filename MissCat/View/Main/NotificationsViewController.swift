@@ -42,11 +42,9 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
         super.viewWillAppear(animated)
         view.deselectCell(on: mainTableView)
         
-//        if !loggedIn, hasApiKey {
-//            loggedIn = true
-//            viewModel?.initialLoad()
-//        }
-        viewModel?.initialLoad()
+        if let viewModel = viewModel, viewModel.state.hasAccounts, !viewModel.state.hasPrepared {
+            viewModel.initialLoad()
+        }
     }
     
     // MARK: Design

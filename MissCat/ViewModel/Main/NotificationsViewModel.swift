@@ -15,6 +15,15 @@ class NotificationsViewModel {
     var cellCount: Int { return cellsModel.count }
     var owner: SecureUser?
     
+    struct State {
+        var hasPrepared: Bool = false
+        var hasAccounts: Bool {
+            return Cache.UserDefaults.shared.getUsers().count > 0
+        }
+    }
+    
+    var state: State = .init()
+    
     private var hasReactionGenCell: Bool = false
     var cellsModel: [NotificationCell.Model] = []
     
@@ -34,6 +43,7 @@ class NotificationsViewModel {
     // MARK: Load
     
     func initialLoad() {
+        state.hasPrepared = true
         loadNotification {
             // 読み込み完了後、Viewに伝達 & Streamingに接続
             self.connectStream()
