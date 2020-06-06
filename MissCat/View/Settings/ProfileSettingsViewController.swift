@@ -280,8 +280,10 @@ class ProfileSettingsViewController: FormViewController {
     /// ReactionGen(絵文字ピッカー)を表示する
     /// - Parameter viewWithText: UITextInput
     private func showReactionGen(target viewWithText: UITextInput) {
-        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController,
+            let owner = owner else { return }
         
+        reactionGen.setOwner(owner)
         reactionGen.onPostViewController = true
         reactionGen.selectedEmoji.subscribe(onNext: { emojiModel in // ReactionGenで絵文字が選択されたらに送られてくる
             self.insertCustomEmoji(with: emojiModel, to: viewWithText)

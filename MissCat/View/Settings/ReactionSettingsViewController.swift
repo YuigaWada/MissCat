@@ -240,8 +240,10 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     }
     
     private func showReactionGen() {
-        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController,
+            let owner = owner else { return }
         
+        reactionGen.setOwner(owner)
         reactionGen.onPostViewController = true
         reactionGen.selectedEmoji.subscribe(onNext: { emojiModel in // ReactionGenで絵文字が選択されたらに送られてくる
             self.viewModel?.addEmoji(emojiModel)

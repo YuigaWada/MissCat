@@ -397,7 +397,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     
     // MARK: NoteCell Delegate
     
-    override func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {
+    override func tappedReaction(owner: SecureUser, reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {
         if reactioned { // リアクションを取り消す
             guard let myReaction = myReaction else { return }
             viewModel?.updateReaction(targetNoteId: noteId,
@@ -409,7 +409,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             return
         }
         
-        let reactionGen = presentReactionGen(noteId: noteId,
+        let reactionGen = presentReactionGen(owner: owner,
+                                             noteId: noteId,
                                              iconUrl: iconUrl,
                                              displayName: displayName,
                                              username: username,

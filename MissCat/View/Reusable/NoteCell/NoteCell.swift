@@ -18,7 +18,7 @@ import WebKit
 protocol NoteCellDelegate {
     func tappedReply(note: NoteCell.Model)
     func tappedRenote(note: NoteCell.Model)
-    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?)
+    func tappedReaction(owner: SecureUser, reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?)
     func tappedOthers(note: NoteCell.Model)
     
     func move2PostDetail(item: NoteCell.Model)
@@ -696,9 +696,14 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     }
     
     @IBAction func tappedReaction(_ sender: Any) {
-        guard let delegate = delegate, let noteId = self.noteId, let viewModel = viewModel, !viewModel.state.isMe else { return }
+        guard let delegate = delegate,
+            let owner = owner,
+            let noteId = self.noteId,
+            let viewModel = viewModel,
+            !viewModel.state.isMe else { return }
         
-        delegate.tappedReaction(reactioned: viewModel.state.reactioned,
+        delegate.tappedReaction(owner: owner,
+                                reactioned: viewModel.state.reactioned,
                                 noteId: noteId,
                                 iconUrl: iconImageUrl,
                                 displayName: viewModel.output.displayName,

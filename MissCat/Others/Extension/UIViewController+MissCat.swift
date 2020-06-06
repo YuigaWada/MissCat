@@ -60,9 +60,10 @@ extension UIViewController {
         return dropdownMenu.selected.asObservable()
     }
     
-    func presentReactionGen(noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, navigationController: UINavigationController?) -> ReactionGenViewController? {
+    func presentReactionGen(owner: SecureUser, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, navigationController: UINavigationController?) -> ReactionGenViewController? {
         guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return nil }
         
+        reactionGen.setOwner(owner)
         presentWithSemiModal(reactionGen, animated: true, completion: nil)
         
         reactionGen.parentNavigationController = navigationController

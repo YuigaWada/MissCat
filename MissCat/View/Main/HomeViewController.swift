@@ -543,7 +543,7 @@ extension HomeViewController: NoteCellDelegate {
         present(panelMenu, animated: true, completion: nil)
     }
     
-    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {}
+    func tappedReaction(owner: SecureUser, reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {}
     
     func tappedOthers(note: NoteCell.Model) {}
     

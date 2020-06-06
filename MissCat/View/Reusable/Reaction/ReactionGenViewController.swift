@@ -294,6 +294,10 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
     
     // MARK: Public Methods
     
+    func setOwner(_ owner: SecureUser) {
+        self.owner = owner
+    }
+    
     func setTargetNote(noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
         let colorMode = Theme.shared.currentModel?.colorMode ?? .light
         let isLightMode = colorMode == .light
@@ -305,7 +309,7 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         if let image = Cache.shared.getIcon(username: "\(username)@\(hostInstance)") {
             iconImageView.image = image
         } else if let iconUrl = iconUrl, let url = URL(string: iconUrl) {
-            url.toUIImage { [weak self] image in
+            _ = url.toUIImage { [weak self] image in
                 guard let self = self, let image = image else { return }
                 
                 DispatchQueue.main.async {
