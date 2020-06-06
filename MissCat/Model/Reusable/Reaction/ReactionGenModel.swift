@@ -25,33 +25,41 @@ class EmojiRepository {
     
     static var shared: EmojiRepository = .init()
     
-    var userEmojis: [UserEmojis] = []
+    var userEmojisList: [UserEmojis] = []
     
     func getUserEmojis(of kind: Kind, owner: SecureUser) -> [EmojiView.EmojiModel] {
-        let emojiList = userEmojis.filter { $0.owner.userId == owner.userId }
+        let userEmojisOption = userEmojisList.filter { $0.owner.userId == owner.userId }
         
-        guard emojiList.count > 0 else { return [] }
+        var userEmojis: UserEmojis
+        if userEmojisOption.count > 0 {
+            userEmojis = userEmojisOption[0]
+        } else {
+            let favs = EmojiView.EmojiModel.getEmojis(type: .favs, owner: owner) ?? []
+            let history = EmojiView.EmojiModel.getEmojis(type: .history, owner: owner) ?? []
+            userEmojis = .init(owner: owner, favs: favs, history: history)
+            userEmojisList.append(userEmojis)
+        }
         
         var emojis: [EmojiView.EmojiModel]
         switch kind {
         case .favs:
-            emojis = emojiList[0].favs
+            emojis = userEmojis.favs
         case .history:
-            guard EmojiView.EmojiModel.hasHistory else { return [] }
-            emojis = emojiList[0].history
+            guard EmojiView.EmojiModel.checkHavingEmojis(type: .history, owner: owner) else { return [] }
+            emojis = userEmojis.history
         }
         
         return emojis
     }
     
     func updateUserEmojis(to kind: Kind, owner: SecureUser, new emojis: [EmojiView.EmojiModel]) {
-        for i in 0 ..< userEmojis.count {
-            guard userEmojis[i].owner.userId == owner.userId else { break }
+        for i in 0 ..< userEmojisList.count {
+            guard userEmojisList[i].owner.userId == owner.userId else { break }
             switch kind {
             case .favs:
-                userEmojis[i].favs = emojis
+                userEmojisList[i].favs = emojis
             case .history:
-                userEmojis[i].history = emojis
+                userEmojisList[i].history = emojis
             }
             return
         }
@@ -90,7 +98,7 @@ class ReactionGenModel {
     
     func getFavEmojis() -> [EmojiView.EmojiModel] {
         guard let owner = owner else { return [] }
-        guard EmojiModel.hasFavEmojis else { // UserDefaultsが存在しないならUserDefaultsセットしておく
+        guard EmojiModel.checkHavingEmojis(type: .favs, owner: owner) else { // UserDefaultsが存在しないならUserDefaultsセットしておく
             var emojiModels: [EmojiModel] = []
             defaultPreset.forEach { char in
                 emojiModels.append(EmojiModel(rawEmoji: char,
@@ -99,6 +107,7 @@ class ReactionGenModel {
                                               customEmojiUrl: nil))
             }
             
+            Repository.shared.updateUserEmojis(to: .favs, owner: owner, new: emojiModels)
             EmojiModel.saveEmojis(with: emojiModels, type: .favs, owner: owner)
             fakeCellPadding(array: &emojiModels, count: defaultPreset.count)
             

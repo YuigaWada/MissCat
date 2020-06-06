@@ -151,16 +151,13 @@ extension EmojiView {
             UserDefaults.standard.synchronize()
         }
         
+        static func checkHavingEmojis(type: EmojiType, owner: SecureUser) -> Bool {
+            let key = getKey(type: type, owner: owner)
+            return UserDefaults.standard.object(forKey: key) != nil
+        }
+        
         private static func getKey(type: EmojiType, owner: SecureUser) -> String {
             return "\(type.rawValue)-\(owner.userId)-\(owner.instance)"
-        }
-        
-        static var hasFavEmojis: Bool { // UserDefaultsに保存されてるかcheck
-            return UserDefaults.standard.object(forKey: EmojiType.favs.rawValue) != nil
-        }
-        
-        static var hasHistory: Bool { // UserDefaultsに保存されてるかcheck
-            return UserDefaults.standard.object(forKey: EmojiType.history.rawValue) != nil
         }
     }
 }
