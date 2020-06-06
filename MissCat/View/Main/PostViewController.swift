@@ -45,6 +45,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     
     var homeViewController: HomeViewController?
     
+    private var owner: SecureUser?
     private var postType: PostType = .Post
     private var targetNote: NoteCell.Model?
     
@@ -53,6 +54,18 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     private let disposeBag = DisposeBag()
     
     // MARK: Life Cycle
+        
+    /// 引用RN / リプライの場合に、対象ノートのモデルを受け渡す
+    /// - Parameters:
+    ///   - note: note model
+    ///   - type: PostType
+    
+    func setup(owner: SecureUser, note: NoteCell.Model?, type: PostType) {
+        self.owner = owner
+        self.targetNote = note
+        self.postType = type
+    }
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -72,7 +85,8 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     }
     
     private func getViewModel() -> PostViewModel {
-        let input: PostViewModel.Input = .init(type: postType,
+        let input: PostViewModel.Input = .init(owner: owner,
+                                               type: postType,
                                                targetNote: targetNote,
                                                rxCwText: cwTextView.rx.text,
                                                rxMainText: mainTextView.rx.text,
@@ -98,15 +112,6 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
         innerIconView.layer.cornerRadius = innerIconView.frame.width / 2
-    }
-    
-    /// 引用RN / リプライの場合に、対象ノートのモデルを受け渡す
-    /// - Parameters:
-    ///   - note: note model
-    ///   - type: PostType
-    func setTargetNote(_ note: NoteCell.Model, type: PostType) {
-        targetNote = note
-        postType = type
     }
     
     // MARK: Design

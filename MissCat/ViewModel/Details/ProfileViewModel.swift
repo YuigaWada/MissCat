@@ -22,7 +22,7 @@ class ProfileViewModel: ViewModelType {
     }
     
     struct Input {
-        let owner: SecureUser
+        let owner: SecureUser?
         let nameYanagi: YanagiText
         let introYanagi: YanagiText
         
@@ -65,7 +65,10 @@ class ProfileViewModel: ViewModelType {
     private var profile: Profile?
     
     private var disposeBag: DisposeBag
-    private lazy var misskey: MisskeyKit? = MisskeyKit(from: input.owner)
+    private lazy var misskey: MisskeyKit? = {
+        guard let owner = input.owner else { return nil }
+        return MisskeyKit(from: owner)
+    }()
     private lazy var model = ProfileModel(from: misskey)
     
     init(with input: Input, and disposeBag: DisposeBag) {

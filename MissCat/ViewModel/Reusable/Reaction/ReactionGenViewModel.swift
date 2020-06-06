@@ -47,7 +47,7 @@ class ReactionGenViewModel: ViewModelType {
     private var myReaction: String?
     
     private lazy var misskey: MisskeyKit? = MisskeyKit(from: input.owner)
-    private lazy var model = ReactionGenModel(from: misskey)
+    private lazy var model = ReactionGenModel(from: misskey, owner: input.owner)
     private let disposeBag: DisposeBag
     
     init(with input: Input, and disposeBag: DisposeBag) {

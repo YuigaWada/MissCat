@@ -14,7 +14,9 @@ private typealias EmojiModel = EmojiView.EmojiModel
 class ReactionSettingsViewModel: ViewModelType {
     // MARK: I/O
     
-    struct Input {}
+    struct Input {
+        let owner: SecureUser
+    }
     struct Output {
         let favs: PublishSubject<[ReactionGenViewController.EmojisSection]> = .init()
     }
@@ -24,13 +26,15 @@ class ReactionSettingsViewModel: ViewModelType {
         var saved: Bool = true
     }
     
+    private let input: Input
     var output = Output()
     var state = State()
     
     private var disposeBag: DisposeBag
     private var emojis: [EmojiView.EmojiModel] = []
     
-    init(_ disposeBag: DisposeBag) {
+    init(with input: Input, and disposeBag: DisposeBag) {
+        self.input = input
         self.disposeBag = disposeBag
     }
     
@@ -44,7 +48,7 @@ class ReactionSettingsViewModel: ViewModelType {
     
     /// UserDefaultsからお気に入り絵文字を取得する
     func setEmojiModel() {
-        emojis = EmojiModel.getEmojis(type: .favs) ?? []
+        emojis = EmojiModel.getEmojis(type: .favs, owner: input.owner) ?? []
         updateEmojis(emojis)
     }
     
@@ -76,8 +80,8 @@ class ReactionSettingsViewModel: ViewModelType {
     
     /// お気に入り絵文字を保存する
     func save() {
-        EmojiView.EmojiModel.saveEmojis(with: emojis, type: .favs)
-        ReactionGenModel.fileShared.favEmojiModels = emojis
+        EmojiView.EmojiModel.saveEmojis(with: emojis, type: .favs, owner: input.owner)
+        EmojiRepository.shared.updateUserEmojis(to: .favs, owner: input.owner, new: emojis)
         state.saved = true
     }
     

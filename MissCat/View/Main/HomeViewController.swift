@@ -749,7 +749,7 @@ extension HomeViewController: TimelineDelegate {
     func openPost(item: NoteCell.Model, type: PostViewController.PostType) {
         guard let postViewController = storyboard?.instantiateViewController(withIdentifier: "post") as? PostViewController else { return }
         
-        postViewController.setTargetNote(item, type: type)
+        postViewController.setup(owner: owner, note: item, type: type)
         presentOnFullScreen(postViewController, animated: true, completion: nil)
     }
     

@@ -27,6 +27,7 @@ class ProfileSettingsViewController: FormViewController {
     private let selectedImage: PublishRelay<UIImage> = .init()
     private let resetImage: PublishRelay<Void> = .init()
     private var viewModel: ProfileSettingsViewModel?
+    private var owner: SecureUser?
     
     // MARK: Row
     
@@ -60,7 +61,7 @@ class ProfileSettingsViewController: FormViewController {
     
     // MARK: LifeCycle
     
-    func setup(banner: UIImage? = nil, bannerUrl: String, icon: UIImage? = nil, iconUrl: String, name: String, description: String, isCat: Bool) {
+    func setup(owner: SecureUser, banner: UIImage? = nil, bannerUrl: String, icon: UIImage? = nil, iconUrl: String, name: String, description: String, isCat: Bool) {
         bannerImage.image = banner
         iconImage.image = icon
         
@@ -78,10 +79,12 @@ class ProfileSettingsViewController: FormViewController {
                                      description: description,
                                      isCat: isCat)
         self.viewModel = viewModel
+        self.owner = owner
     }
     
     private func getViewModel(loadIcon: Bool, loadBanner: Bool, bannerUrl: String?, iconUrl: String?, name: String, description: String, isCat: Bool) -> ProfileSettingsViewModel {
-        let input: ProfileSettingsViewModel.Input = .init(needLoadIcon: loadIcon,
+        let input: ProfileSettingsViewModel.Input = .init(owner: owner,
+                                                          needLoadIcon: loadIcon,
                                                           needLoadBanner: loadBanner,
                                                           iconUrl: iconUrl,
                                                           bannerUrl: bannerUrl,

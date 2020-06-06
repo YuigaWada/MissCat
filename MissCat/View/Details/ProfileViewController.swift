@@ -124,7 +124,8 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     }
     
     private func getViewModel() -> ViewModel {
-        let input = ViewModel.Input(nameYanagi: nameTextView,
+        let input = ViewModel.Input(owner: owner,
+                                    nameYanagi: nameTextView,
                                     introYanagi: introTextView,
                                     followButtonTapped: followButton.rx.tap,
                                     backButtonTapped: backButton.rx.tap,
@@ -361,9 +362,11 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     /// プロフィール編集画面へと遷移する
     /// - Parameter profile: ProfileViewModel.Profile
     private func showProfileSettings(of profile: ProfileViewModel.Profile) {
+        guard let owner = owner else { return }
         let settings = ProfileSettingsViewController()
         settings.homeViewController = homeViewController
-        settings.setup(banner: bannerImageView.image,
+        settings.setup(owner: owner,
+                       banner: bannerImageView.image,
                        bannerUrl: profile.bannerUrl,
                        icon: iconImageView.image,
                        iconUrl: profile.iconUrl,

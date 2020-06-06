@@ -39,7 +39,7 @@ class ProfileSettingsViewModel: ViewModelType {
     }
     
     struct Input {
-        let owner: SecureUser
+        let owner: SecureUser?
         let needLoadIcon: Bool
         let needLoadBanner: Bool
         
@@ -81,7 +81,10 @@ class ProfileSettingsViewModel: ViewModelType {
         var changed: ChangedProfile = .init()
     }
     
-    private lazy var misskey: MisskeyKit? = MisskeyKit(from: input.owner)
+    private lazy var misskey: MisskeyKit? = {
+          guard let owner = input.owner else { return nil }
+          return MisskeyKit(from: owner)
+      }()
     private lazy var model = ProfileSettingsModel(from: misskey)
     private let input: Input
     let output: Output = .init()

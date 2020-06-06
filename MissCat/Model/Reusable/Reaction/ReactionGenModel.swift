@@ -10,11 +10,61 @@ import MisskeyKit
 import RxDataSources
 import RxSwift
 
-private typealias EmojiModel = EmojiView.EmojiModel
-class ReactionGenModel {
-    // MARK: EMOJIS
+private typealias Repository = EmojiRepository
+class EmojiRepository {
     
-//    static let fileShared: ReactionGenModel = .init(isFileShared: true) // 事前に詠み込んだ絵文字データを半永続化
+    enum Kind {
+        case history
+        case favs
+    }
+    
+    struct UserEmojis {
+        let owner: SecureUser
+        var favs: [ EmojiView.EmojiModel]
+        var history: [ EmojiView.EmojiModel]
+    }
+
+    static var shared: EmojiRepository = .init()
+    
+     var userEmojis: [UserEmojis] = []
+    
+     func getUserEmojis(of kind: Kind, owner: SecureUser)-> [ EmojiView.EmojiModel] {
+        let emojiList = userEmojis.filter { $0.owner.userId == owner.userId }
+
+        guard emojiList.count > 0 else { return [] }
+        
+        var emojis: [ EmojiView.EmojiModel]
+        switch kind {
+        case .favs:
+            emojis = emojiList[0].favs
+        case .history:
+            guard  EmojiView.EmojiModel.hasHistory else { return [] }
+             emojis = emojiList[0].history
+        }
+        
+        return emojis
+    }
+
+     func updateUserEmojis(to kind: Kind, owner: SecureUser, new emojis: [ EmojiView.EmojiModel]) {
+        for i in 0..<userEmojis.count {
+            guard userEmojis[i].owner.userId == owner.userId else { break }
+            switch kind {
+            case .favs:
+                userEmojis[i].favs = emojis
+            case .history:
+                userEmojis[i].history = emojis
+            }
+            return
+        }
+    }
+    
+}
+
+
+class ReactionGenModel {
+    private typealias EmojiModel = EmojiView.EmojiModel
+    
+    
     fileprivate class Emojis {
         var currentIndex: Int = 0
         var isLoading: Bool = false
@@ -24,8 +74,6 @@ class ReactionGenModel {
         lazy var categorizedCustom = EmojiHandler.handler.categorizedCustomEmojis
     }
     
-    lazy var favEmojiModels = EmojiModel.getEmojis(type: .favs)
-    lazy var historyEmojis = EmojiModel.getEmojis(type: .history)
     
     // MARK: Private Vars
     
@@ -37,8 +85,10 @@ class ReactionGenModel {
     // MARK: Life Cycle
     
     private let misskey: MisskeyKit?
-    init(from misskey: MisskeyKit?) {
+    private let owner: SecureUser?
+    init(from misskey: MisskeyKit?, owner: SecureUser?) {
         self.misskey = misskey
+        self.owner = owner
     }
     
     
@@ -46,6 +96,7 @@ class ReactionGenModel {
     // MARK: Public Methods
     
     func getFavEmojis() -> [EmojiView.EmojiModel] {
+        guard let owner = owner else { return [] }
         guard EmojiModel.hasFavEmojis else { // UserDefaultsが存在しないならUserDefaultsセットしておく
             var emojiModels: [EmojiModel] = []
             defaultPreset.forEach { char in
@@ -55,26 +106,32 @@ class ReactionGenModel {
                                               customEmojiUrl: nil))
             }
             
-            EmojiModel.saveEmojis(with: emojiModels, type: .favs)
+            EmojiModel.saveEmojis(with: emojiModels, type: .favs, owner: owner)
             fakeCellPadding(array: &emojiModels, count: defaultPreset.count)
             
             return emojiModels
         }
         
         // UserDefaultsが存在したら...
-        guard ReactionGenModel.fileShared.favEmojiModels != nil else { return [] }
+        var emojiModels = Repository.shared.getUserEmojis(of: .favs, owner: owner)
         
-        var emojiModels = ReactionGenModel.fileShared.favEmojiModels!
-        fakeCellPadding(array: &emojiModels, count: emojiModels.count)
+        if emojiModels.count > 0 {
+            fakeCellPadding(array: &emojiModels, count: emojiModels.count)
+        }
+        
+        
         return emojiModels
     }
     
     func getHistoryEmojis() -> [EmojiView.EmojiModel] {
-        guard EmojiModel.hasHistory, ReactionGenModel.fileShared.historyEmojis != nil else { return [] }
+        guard let owner = owner else { return [] }
+        var emojiModels = Repository.shared.getUserEmojis(of: .history, owner: owner)
         
-        var historyEmojis = ReactionGenModel.fileShared.historyEmojis!
-        fakeCellPadding(array: &historyEmojis, count: historyEmojis.count)
-        return historyEmojis
+        if emojiModels.count > 0 {
+            fakeCellPadding(array: &emojiModels, count: emojiModels.count)
+        }
+        
+        return emojiModels
     }
     
     func getEmojiModel() -> Observable<EmojiView.EmojiModel> {
@@ -144,22 +201,25 @@ class ReactionGenModel {
     /// リアクションの履歴を保存
     /// - Parameter emojiModel: EmojiView.EmojiModel
     private func saveHistory(_ emojiModel: EmojiView.EmojiModel) {
-        guard ReactionGenModel.fileShared.historyEmojis != nil else {
-            let history = [emojiModel]
-            ReactionGenModel.fileShared.historyEmojis = history
-            EmojiModel.saveEmojis(with: history, type: .history)
+        guard let owner = owner else { return }
+        
+        var history = Repository.shared.getUserEmojis(of: .history, owner: owner)
+        if history.count == 0 {
+            let newHistory = [emojiModel]
+            Repository.shared.updateUserEmojis(to: .history, owner: owner, new: newHistory)
+            EmojiModel.saveEmojis(with: newHistory, type: .history, owner: owner)
             return
         }
         
         // 重複する分とpaddingのためのフェイクは除く
-        var history = ReactionGenModel.fileShared.historyEmojis!.filter { !$0.isFake && $0.rawEmoji != emojiModel.rawEmoji }
+        history = history.filter { !$0.isFake && $0.rawEmoji != emojiModel.rawEmoji }
         if history.count >= 7 * 2 { // 2行分だけ表示させる
             history.removeLast()
         }
         
         history.insert(emojiModel, at: 0)
-        EmojiModel.saveEmojis(with: history, type: .history)
-        ReactionGenModel.fileShared.historyEmojis = history
+        EmojiModel.saveEmojis(with: history, type: .history, owner: owner)
+        Repository.shared.updateUserEmojis(to: .history, owner: owner, new: history)
     }
 }
 

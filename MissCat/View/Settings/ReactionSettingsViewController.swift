@@ -21,6 +21,8 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     private var viewModel: ReactionSettingsViewModel?
     private let disposeBag = DisposeBag()
     
+        var owner: SecureUser? = Cache.UserDefaults.shared.getCurrentUser()
+    
     // MARK: LifeCycle
     
     override func viewDidLoad() {
@@ -87,7 +89,8 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     // MARK: Setup
     
     private func setupViewModel() -> ReactionSettingsViewModel {
-        let viewModel = ReactionSettingsViewModel(disposeBag)
+        let input: ReactionSettingsViewModel.Input = .init(owner: owner!)
+        let viewModel = ReactionSettingsViewModel(with: input, and: disposeBag)
         let dataSource = setupDataSource()
         
         binding(dataSource: dataSource, viewModel: viewModel)

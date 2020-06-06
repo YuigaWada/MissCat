@@ -16,11 +16,17 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     @IBOutlet weak var tableView: UITableView!
     
     var homeViewController: HomeViewController?
+    var owner: SecureUser? = Cache.UserDefaults.shared.getCurrentUser()
+    
     private lazy var viewModel: MessageListViewModel = setupViewModel()
     private lazy var dataSource = self.setupDataSource()
     private let disposeBag: DisposeBag = .init()
     
     private var loggedIn: Bool = false
+    
+    
+    
+    
     
     // MARK: LifeCycle
     
@@ -58,7 +64,7 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     // MARK: Setup
     
     private func setupViewModel() -> MessageListViewModel {
-        let input = MessageListViewModel.Input(dataSource: dataSource)
+        let input = MessageListViewModel.Input(owner: owner!,dataSource: dataSource)
         
         return .init(with: input, and: disposeBag)
     }

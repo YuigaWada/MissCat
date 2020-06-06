@@ -137,15 +137,22 @@ extension EmojiView {
         
         // MARK: GET/SET
         
-        static func getEmojis(type: EmojiType) -> [EmojiModel]? {
-            guard let array = UserDefaults.standard.data(forKey: type.rawValue) else { return nil }
+        static func getEmojis(type: EmojiType, owner: SecureUser) -> [EmojiModel]? {
+            let key = getKey(type: type, owner: owner)
+            guard let array = UserDefaults.standard.data(forKey: key) else { return nil }
             return NSKeyedUnarchiver.unarchiveObject(with: array) as? [EmojiModel] // nil許容なのでOK
         }
         
-        static func saveEmojis(with target: [EmojiModel], type: EmojiType) {
+        static func saveEmojis(with target: [EmojiModel], type: EmojiType, owner: SecureUser) {
+            let key = getKey(type: type, owner: owner)
             let targetRawData = NSKeyedArchiver.archivedData(withRootObject: target)
-            UserDefaults.standard.set(targetRawData, forKey: type.rawValue)
+            
+            UserDefaults.standard.set(targetRawData, forKey: key)
             UserDefaults.standard.synchronize()
+        }
+
+        private static func getKey(type: EmojiType, owner: SecureUser)-> String {
+            return "\(type.rawValue)-\(owner.userId)-\(owner.instance)"
         }
         
         static var hasFavEmojis: Bool { // UserDefaultsに保存されてるかcheck

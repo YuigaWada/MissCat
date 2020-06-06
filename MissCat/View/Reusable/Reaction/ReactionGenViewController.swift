@@ -31,6 +31,7 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
     var delegate: ReactionGenViewControllerDelegate?
     var parentNavigationController: UINavigationController?
     var onPostViewController: Bool = false
+    var owner: SecureUser?
     
     var selectedEmoji: PublishRelay<EmojiView.EmojiModel> = .init()
     
@@ -122,7 +123,8 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
     // MARK: Setup
     
     private func setupViewModel() -> ReactionGenViewModel {
-        let viewModel = ReactionGenViewModel(with: .init(searchTrigger: getSearchTrigger()),
+        guard let owner = owner else { fatalError("MUST SET OWNER!") }
+        let viewModel = ReactionGenViewModel(with: .init(owner: owner, searchTrigger: getSearchTrigger()),
                                              and: disposeBag)
         let dataSource = setupDataSource()
         
