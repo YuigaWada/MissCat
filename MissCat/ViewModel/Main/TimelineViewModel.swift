@@ -45,17 +45,24 @@ class TimelineViewModel: ViewModelType {
         var cellCount: Int
         var renoteeCellCount: Int
         var isLoading: Bool
+        
+        var hasSkeltonCell: Bool
         var owner: SecureUser
         
         var cellCompleted: Bool { // 準備した分のセルがすべて表示されたかどうか
             return (cellCount - renoteeCellCount) % loadLimit == 0
         }
         
-        init(cellCount: Int, renoteeCellCount: Int, isLoading: Bool, loadLimit: Int, owner: SecureUser) {
+        var hasAccounts: Bool {
+            return Cache.UserDefaults.shared.getUsers().count > 0
+        }
+        
+        init(cellCount: Int, renoteeCellCount: Int, isLoading: Bool, loadLimit: Int, hasSkeltonCell: Bool, owner: SecureUser) {
             self.cellCount = cellCount
             self.renoteeCellCount = renoteeCellCount
             self.isLoading = isLoading
             self.loadLimit = loadLimit
+            self.hasSkeltonCell = hasSkeltonCell
             self.owner = owner
         }
     }
@@ -69,6 +76,7 @@ class TimelineViewModel: ViewModelType {
                      renoteeCellCount: { cellsModel.filter { $0.isRenoteeCell }.count }(),
                      isLoading: _isLoading,
                      loadLimit: input.loadLimit,
+                     hasSkeltonCell: hasSkeltonCell,
                      owner: input.owner)
     }
     

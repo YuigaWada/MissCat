@@ -52,8 +52,6 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     
     var xlTitle: IndicatorInfo? // XLPagerTabStripで用いるtitle
     
-    private var loggedIn: Bool = false
-    
     // MARK: Life Cycle
     
     /// 外部からTimelineViewContollerのインスタンスを生成する場合、このメソッドを通じて適切なパラメータをセットしていく
@@ -119,13 +117,11 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         super.viewWillAppear(animated)
         view.deselectCell(on: mainTableView)
         
-//        if !loggedIn, hasApiKey {
-//            loggedIn = true
-//            viewModel?.setupInitialCell()
-//            viewModel?.checkUserId()
-//        }
-        viewModel?.setupInitialCell() // TODO: ここで多重に購読してしまうので対策する
-        viewModel?.setSkeltonCell()
+        if let viewModel = viewModel, viewModel.state.hasAccounts, !viewModel.state.hasSkeltonCell {
+            viewModel.setupInitialCell()
+            viewModel.setSkeltonCell()
+        }
+        
         setTheme()
         
         if let bottomConstraint = bottomConstraint {
