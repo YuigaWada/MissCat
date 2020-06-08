@@ -71,7 +71,8 @@ class ProfileSettingsViewController: FormViewController {
         nameTextArea.value = name
         bioTextArea.value = description
         catSwitch.value = isCat
-        let viewModel = getViewModel(loadIcon: loadIcon,
+        let viewModel = getViewModel(owner: owner,
+                                     loadIcon: loadIcon,
                                      loadBanner: loadBanner,
                                      bannerUrl: bannerUrl,
                                      iconUrl: iconUrl,
@@ -82,7 +83,7 @@ class ProfileSettingsViewController: FormViewController {
         self.owner = owner
     }
     
-    private func getViewModel(loadIcon: Bool, loadBanner: Bool, bannerUrl: String?, iconUrl: String?, name: String, description: String, isCat: Bool) -> ProfileSettingsViewModel {
+    private func getViewModel(owner: SecureUser, loadIcon: Bool, loadBanner: Bool, bannerUrl: String?, iconUrl: String?, name: String, description: String, isCat: Bool) -> ProfileSettingsViewModel {
         let input: ProfileSettingsViewModel.Input = .init(owner: owner,
                                                           needLoadIcon: loadIcon,
                                                           needLoadBanner: loadBanner,
