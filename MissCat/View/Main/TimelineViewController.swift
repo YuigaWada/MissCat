@@ -514,26 +514,6 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         }
     }
     
-    private func showAlert(title: String, message: String, yesOption: String? = nil, action: @escaping (Bool) -> Void) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertController.Style.alert)
-        let cancelAction: UIAlertAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.cancel, handler: {
-            (_: UIAlertAction!) -> Void in
-            action(yesOption == nil)
-        })
-        
-        alert.addAction(cancelAction)
-        
-        if let yesOption = yesOption {
-            let defaultAction: UIAlertAction = UIAlertAction(title: yesOption, style: UIAlertAction.Style.destructive, handler: {
-                (_: UIAlertAction!) -> Void in
-                action(true)
-            })
-            alert.addAction(defaultAction)
-        }
-        
-        present(alert, animated: true, completion: nil)
-    }
-    
     private func showTextAlert(title: String, placeholder: String, handler: @escaping (String) -> Void) {
         let alert = UIAlertController(title: title, message: "", preferredStyle: .alert)
         let okAction = UIAlertAction(title: "決定", style: .default) { (_: UIAlertAction) in
