@@ -205,6 +205,8 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     func setUserId(_ userId: String, owner: SecureUser) {
         self.userId = userId
         self.owner = owner
+        
+        isMe = userId == owner.userId
     }
     
     // MARK: Setup
@@ -291,8 +293,6 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         output.popViewControllerTrigger.subscribe(onNext: {
             _ = self.navigationController?.popViewController(animated: true)
         }).disposed(by: disposeBag)
-        
-        backButton.isHidden = output.isMe
     }
     
     private func setBannerBlur() {

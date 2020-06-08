@@ -105,6 +105,13 @@
 		8D8863B62384951300A7A5A8 /* RenoteeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8863B52384951200A7A5A8 /* RenoteeCell.swift */; };
 		8D8A50C1242355200065B1D2 /* AccountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8A50C0242355200065B1D2 /* AccountViewController.swift */; };
 		8D905644246A7120006D0F50 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8D905643246A7120006D0F50 /* GoogleService-Info.plist */; };
+		8D9702C8248DF63E0000524A /* AccountsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9702C7248DF63E0000524A /* AccountsListViewController.swift */; };
+		8D9702CB248DF66D0000524A /* AccountCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9702CA248DF66D0000524A /* AccountCell.swift */; };
+		8D9702CE248DF69C0000524A /* AccountCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D9702CD248DF69C0000524A /* AccountCell.xib */; };
+		8D9702D1248DF86B0000524A /* AccountCellViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9702D0248DF86B0000524A /* AccountCellViewModel.swift */; };
+		8D9702D4248DF8EA0000524A /* AccountCellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9702D3248DF8EA0000524A /* AccountCellModel.swift */; };
+		8D9702D6248E48A50000524A /* AccountsListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9702D5248E48A50000524A /* AccountsListViewModel.swift */; };
+		8D9702D8248E49140000524A /* AccountsListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9702D7248E49140000524A /* AccountsListModel.swift */; };
 		8D98C268242E0AD600BB8049 /* PostDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D98C267242E0AD600BB8049 /* PostDetailModel.swift */; };
 		8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */; };
 		8D9EF4C8238187A4005449EC /* ReactionGenCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */; };
@@ -278,6 +285,13 @@
 		8D8863B52384951200A7A5A8 /* RenoteeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenoteeCell.swift; sourceTree = "<group>"; };
 		8D8A50C0242355200065B1D2 /* AccountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewController.swift; sourceTree = "<group>"; };
 		8D905643246A7120006D0F50 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		8D9702C7248DF63E0000524A /* AccountsListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsListViewController.swift; sourceTree = "<group>"; };
+		8D9702CA248DF66D0000524A /* AccountCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCell.swift; sourceTree = "<group>"; };
+		8D9702CD248DF69C0000524A /* AccountCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AccountCell.xib; sourceTree = "<group>"; };
+		8D9702D0248DF86B0000524A /* AccountCellViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCellViewModel.swift; sourceTree = "<group>"; };
+		8D9702D3248DF8EA0000524A /* AccountCellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCellModel.swift; sourceTree = "<group>"; };
+		8D9702D5248E48A50000524A /* AccountsListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsListViewModel.swift; sourceTree = "<group>"; };
+		8D9702D7248E49140000524A /* AccountsListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsListModel.swift; sourceTree = "<group>"; };
 		8D98C267242E0AD600BB8049 /* PostDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailModel.swift; sourceTree = "<group>"; };
 		8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenViewController.swift; sourceTree = "<group>"; };
 		8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReactionGenCell.xib; sourceTree = "<group>"; };
@@ -403,6 +417,7 @@
 		8D065B1F237ACD5D003DFB7C /* Reusable */ = {
 			isa = PBXGroup;
 			children = (
+				8D9702C9248DF6420000524A /* Accounts */,
 				8D4754F3240E1E4B00BAD410 /* NoteCell */,
 				8D72E504244AE81600B30C3A /* Notification */,
 				8D72E502244AE7EE00B30C3A /* Reaction */,
@@ -862,6 +877,7 @@
 				8DA06A062389E89A0093A718 /* NotificationsViewController.swift */,
 				8D3036F12385D5F100BA6D38 /* PostViewController.swift */,
 				8D57CA4824412430005DCEB2 /* SearchViewController.swift */,
+				8D9702C7248DF63E0000524A /* AccountsListViewController.swift */,
 			);
 			path = Main;
 			sourceTree = "<group>";
@@ -883,6 +899,7 @@
 				8DA06A0C2389EEC60093A718 /* NotificationsViewModel.swift */,
 				8D63BFC2242BBF03009C3ADE /* HomeViewModel.swift */,
 				8DBDD58B244197840014E77F /* SearchViewModel.swift */,
+				8D9702D5248E48A50000524A /* AccountsListViewModel.swift */,
 			);
 			path = Main;
 			sourceTree = "<group>";
@@ -904,6 +921,7 @@
 				8DBDD58D244198C90014E77F /* SearchModel.swift */,
 				8DA06A0E2389F04E0093A718 /* NotificationModel.swift */,
 				8D3036F72385DAED00BA6D38 /* PostModel.swift */,
+				8D9702D7248E49140000524A /* AccountsListModel.swift */,
 			);
 			path = Main;
 			sourceTree = "<group>";
@@ -929,6 +947,39 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		8D9702C9248DF6420000524A /* Accounts */ = {
+			isa = PBXGroup;
+			children = (
+				8D9702CC248DF6910000524A /* nib */,
+				8D9702CA248DF66D0000524A /* AccountCell.swift */,
+			);
+			path = Accounts;
+			sourceTree = "<group>";
+		};
+		8D9702CC248DF6910000524A /* nib */ = {
+			isa = PBXGroup;
+			children = (
+				8D9702CD248DF69C0000524A /* AccountCell.xib */,
+			);
+			path = nib;
+			sourceTree = "<group>";
+		};
+		8D9702CF248DF8600000524A /* Accounts */ = {
+			isa = PBXGroup;
+			children = (
+				8D9702D0248DF86B0000524A /* AccountCellViewModel.swift */,
+			);
+			path = Accounts;
+			sourceTree = "<group>";
+		};
+		8D9702D2248DF8E20000524A /* Accounts */ = {
+			isa = PBXGroup;
+			children = (
+				8D9702D3248DF8EA0000524A /* AccountCellModel.swift */,
+			);
+			path = Accounts;
+			sourceTree = "<group>";
+		};
 		8DA83FA7246E601A006F3880 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
@@ -940,6 +991,7 @@
 		8DAEA13A2382E7FF0083AA69 /* Reusable */ = {
 			isa = PBXGroup;
 			children = (
+				8D9702CF248DF8600000524A /* Accounts */,
 				8D72E512244AE94300B30C3A /* Reaction */,
 				8D72E50C244AE8BC00B30C3A /* User */,
 				8D72E50B244AE89000B30C3A /* Notification */,
@@ -951,6 +1003,7 @@
 		8DAEA13B2382E80B0083AA69 /* Reusable */ = {
 			isa = PBXGroup;
 			children = (
+				8D9702D2248DF8E20000524A /* Accounts */,
 				8D72E513244AE94C00B30C3A /* Reaction */,
 				8D72E511244AE92D00B30C3A /* Notification */,
 				8D72E510244AE92700B30C3A /* NoteCell */,
@@ -1086,6 +1139,7 @@
 				8D8863B4238493FA00A7A5A8 /* RenoteeCell.xib in Resources */,
 				8D61391E2427CA0C003B5BEF /* FileContainerCell.xib in Resources */,
 				8DDB52CF245032E500C97130 /* ColorPickerCell.xib in Resources */,
+				8D9702CE248DF69C0000524A /* AccountCell.xib in Resources */,
 				8DAEA1352382E4F00083AA69 /* EmojiView.xib in Resources */,
 				8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */,
 			);
@@ -1184,6 +1238,7 @@
 			files = (
 				8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */,
 				8D5D2C4A24487C6E00D15974 /* DirectMessageViewModel.swift in Sources */,
+				8D9702D1248DF86B0000524A /* AccountCellViewModel.swift in Sources */,
 				8D3036F62385DA8900BA6D38 /* PostViewModel.swift in Sources */,
 				8D3037002388F71E00BA6D38 /* MisskeyTextView.swift in Sources */,
 				8DBDD58E244198C90014E77F /* SearchModel.swift in Sources */,
@@ -1202,6 +1257,7 @@
 				8D2A7236242A49CC00F8827D /* MissCatTableView.swift in Sources */,
 				8D79687F2404BE59004F87FA /* ReactionCollectionHeader.swift in Sources */,
 				8D31018D24397B45004F8E55 /* ReactionSettingsViewController.swift in Sources */,
+				8D9702CB248DF66D0000524A /* AccountCell.swift in Sources */,
 				8DCBFBD624711B510028A5E6 /* MissCatImageView.swift in Sources */,
 				8D0AC5C1237B865B00530508 /* TimelineModel.swift in Sources */,
 				8D5889F5244FFAC200C6EBC2 /* DesignSettingsViewController.swift in Sources */,
@@ -1228,6 +1284,7 @@
 				8DA06A0D2389EEC60093A718 /* NotificationsViewModel.swift in Sources */,
 				8DDB52CD245032DD00C97130 /* ColorPickerCell.swift in Sources */,
 				8D3EC23A237B2C5E00808727 /* URL+MissCat.swift in Sources */,
+				8D9702D4248DF8EA0000524A /* AccountCellModel.swift in Sources */,
 				8D63BFC5242BBF12009C3ADE /* HomeModel.swift in Sources */,
 				8DAEA1322382E19A0083AA69 /* ReactionGenViewModel.swift in Sources */,
 				8DAEA1392382E6D00083AA69 /* ReactionGenModel.swift in Sources */,
@@ -1261,6 +1318,7 @@
 				8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */,
 				8D61391C2427C1B3003B5BEF /* FileContainerViewModel.swift in Sources */,
 				8D4A2A18237437BE00503685 /* SceneDelegate.swift in Sources */,
+				8D9702D6248E48A50000524A /* AccountsListViewModel.swift in Sources */,
 				8DD2F9C7246D8EA900562E85 /* ProfileSettingsViewModel.swift in Sources */,
 				8DAF301B241B599B0041BB85 /* LicenseViewController.swift in Sources */,
 				8DA06A16238A86DC0093A718 /* NotificationCellModel.swift in Sources */,
@@ -1275,6 +1333,7 @@
 				8D2D523B2442CC9100712F48 /* UserCell.swift in Sources */,
 				8D310191243AE9AB004F8E55 /* MFMImageView.swift in Sources */,
 				8DD2F9C5246D5DA100562E85 /* ProfileSettingsViewController.swift in Sources */,
+				8D9702C8248DF63E0000524A /* AccountsListViewController.swift in Sources */,
 				8D0D47AA23A74EC80095361D /* UIViewController+PhotoEditor.swift in Sources */,
 				8D84061D238FFC5C00EED595 /* UIImage+MissCat.swift in Sources */,
 				8DBC7A45241245A800D8FEA5 /* AVKit+MissCat.swift in Sources */,
@@ -1284,6 +1343,7 @@
 				8D8863B62384951300A7A5A8 /* RenoteeCell.swift in Sources */,
 				8D57CA47243FDBC3005DCEB2 /* PromotionCell.swift in Sources */,
 				8D6139202427CAED003B5BEF /* FileContainerCell.swift in Sources */,
+				8D9702D8248E49140000524A /* AccountsListModel.swift in Sources */,
 				8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */,
 				8DBDD58C244197840014E77F /* SearchViewModel.swift in Sources */,
 				8DA83FA9246E6024006F3880 /* ProfileSettingsModel.swift in Sources */,

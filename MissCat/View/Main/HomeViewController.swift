@@ -41,8 +41,9 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     private var detailViewController: UIViewController?
     private var favViewController: UIViewController?
     
-    private var myProfileViewController: ProfileViewController?
+//    private var myProfileViewController: ProfileViewController?
     private var currentProfileViewController: ProfileViewController?
+    private var accountsListViewController: AccountsListViewController?
     
     // Tab
     private lazy var search = self.generateSearchVC()
@@ -180,9 +181,13 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         setupFavVC()
         
         // profile
-        myProfileViewController?.view.removeFromSuperview()
-        myProfileViewController?.removeFromParent()
-        myProfileViewController = nil
+//        myProfileViewController?.view.removeFromSuperview()
+//        myProfileViewController?.removeFromParent()
+//        myProfileViewController = nil
+        
+        accountsListViewController?.view.removeFromSuperview()
+        accountsListViewController?.removeFromParent()
+        accountsListViewController = nil
         
         nowPage = .main
         switch startingPage {
@@ -379,6 +384,25 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         favViewController!.view.frame = getDisplayRect()
     }
     
+    private func showAccountListView() {
+        showNavBar(title: "Accounts", page: .profile)
+        if let accountsListViewController = accountsListViewController {
+            accountsListViewController.view.isHidden = false
+            return
+        }
+        
+        guard let storyboard = self.storyboard,
+            let accountsListViewController = storyboard.instantiateViewController(withIdentifier: "accounts-list") as? AccountsListViewController else { return }
+        
+        accountsListViewController.view.frame = getDisplayRect(needNavBar: true)
+        accountsListViewController.homeViewController = self
+        accountsListViewController.view.layoutIfNeeded()
+        addChild(accountsListViewController)
+        view.addSubview(accountsListViewController.view)
+        
+        self.accountsListViewController = accountsListViewController
+    }
+    
     // MARK: Pages
     
     private func showPostDetailView(item: NoteCell.Model) {
@@ -399,28 +423,14 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     }
     
     private func showProfileView(userId: String, owner: SecureUser) {
-//        nowPage = isMe ? .profile : nowPage
-//        if isMe, let myProfileViewController = myProfileViewController {
-//            myProfileViewController.view.isHidden = false
-//            return
-//        }
-        
-        // If myProfileViewController, currentProfileViewController is nil...
         guard let storyboard = self.storyboard,
             let profileViewController = storyboard.instantiateViewController(withIdentifier: "profile") as? ProfileViewController else { return }
         
         profileViewController.setUserId(userId, owner: owner)
         profileViewController.view.frame = getDisplayRect(needNavBar: false)
         profileViewController.homeViewController = self
-//
-//        if isMe {
-//            profileViewController.view.layoutIfNeeded()
-//            addChild(profileViewController)
-//            view.addSubview(profileViewController.view)
-//            myProfileViewController = profileViewController
-//        } else {
+        
         navigationController?.pushViewController(profileViewController, animated: true)
-//        }
     }
     
     // MARK: Utilities
@@ -487,7 +497,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         }
         
         if type != .profile {
-            myProfileViewController?.view.isHidden = true
+            accountsListViewController?.view.isHidden = true
             currentProfileViewController?.view.isHidden = true
         }
         
@@ -657,7 +667,7 @@ extension HomeViewController: FooterTabBarDelegate {
         
         DispatchQueue.main.async {
             self.hideView(without: .profile)
-//            self.showProfileView(userId: me.id, isMe: true)
+            self.showAccountListView()
             // TODO: ここでアカウント選択画面を出す
         }
     }
@@ -669,24 +679,24 @@ extension HomeViewController: FooterTabBarDelegate {
     private func showNotificationsView() {
         guard let notificationsViewController = notificationsViewController else { return }
         
-        navBar.isHidden = false
-        navBar.barTitle = "Notifications"
-        navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
-        
-        nowPage = .notifications
+        showNavBar(title: "Notifications", page: .notifications)
         notificationsViewController.view.isHidden = false
     }
     
     func showFavView() {
         guard let favViewController = favViewController else { return }
         
+        showNavBar(title: "Chat", page: .messages)
+        favViewController.view.isHidden = false
+    }
+    
+    private func showNavBar(title: String, page: Page) {
         navBar.isHidden = false
-        navBar.barTitle = "Chat"
-//        navBar.setButton(style: .Right, rightText: "plus", rightFont: UIFont.awesomeSolid(fontSize: 13))
+        navBar.barTitle = title
+        //        navBar.setButton(style: .Right, rightText: "plus", rightFont: UIFont.awesomeSolid(fontSize: 13))
         navBar.setButton(style: .None, rightText: nil, leftText: nil)
         
-        nowPage = .messages
-        favViewController.view.isHidden = false
+        nowPage = page
     }
 }
 
