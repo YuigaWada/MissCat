@@ -22,8 +22,8 @@ class StartViewController: UIViewController {
     
     @IBOutlet weak var changeInstanceButton: UIButton!
     
+    var reloadListTrigger: PublishRelay<Void> = .init()
     private var appSecret: String?
-    private var afterLogout: Bool = false // ログアウト直後かどうか
     private var ioAppSecret: String = "0fRSNkKKl9hcZTGrUSyZOb19n8UUVkxw" // misskey.ioの場合はappSecret固定
     private var misskeyInstance: String = "misskey.io" {
         didSet {
@@ -63,15 +63,12 @@ class StartViewController: UIViewController {
     
     // MARK: LifeCycle
     
-    func setup(afterLogout: Bool = false) {
-        self.afterLogout = afterLogout
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         setGradientLayer()
         binding()
         
+        MisskeyKit.shared.auth.setAPIKey("")
         MisskeyKit.shared.changeInstance(instance: misskeyInstance) // インスタンスを変更
     }
     
@@ -102,14 +99,12 @@ class StartViewController: UIViewController {
     
     private func binding() {
         signupButton.rx.tap.subscribe(onNext: { _ in
-            guard !self.afterLogout else { self.signup(); return } // ログアウト直後なら普通にMisskeyのトップページを表示する
             guard let tos = self.getViewController(name: "tos") as? TosViewController else { return }
             tos.agreed = self.signup
             self.navigationController?.pushViewController(tos, animated: true)
         }).disposed(by: disposeBag)
         
         loginButton.rx.tap.subscribe(onNext: { _ in
-            guard !self.afterLogout else { self.login(); return } // ログアウト直後なら普通にログインする
             guard let tos = self.getViewController(name: "tos") as? TosViewController else { return }
             tos.agreed = self.login
             self.navigationController?.pushViewController(tos, animated: true)
@@ -143,7 +138,7 @@ class StartViewController: UIViewController {
             completion(ioAppSecret); return
         }
         
-        MisskeyKit.shared.app.create(name: "MissCat", description: "MissCat is an flexible Misskey client for iOS!", permission: appPermissions, callbackUrl: "https://misscat.dev") { data, error in
+        MisskeyKit.shared.app.create(name: "MissCat", description: "MissCat is a flexible Misskey client for iOS!", permission: appPermissions, callbackUrl: "https://misscat.dev") { data, error in
             guard let data = data, error == nil, let secret = data.secret else {
                 if error == .some(.FailedToCommunicateWithServer) {
                     self.invalidUrlError()
@@ -188,11 +183,16 @@ class StartViewController: UIViewController {
         MisskeyKit.shared.users.i { user, _ in
             guard let user = user else { return }
             let secureUser = SecureUser(userId: user.id, instance: self.misskeyInstance, apiKey: apiKey)
+            let success = Cache.UserDefaults.shared.saveUser(secureUser)
             
-            Cache.UserDefaults.shared.saveUser(secureUser)
+            guard success else { self.showAlert(); return }
             Cache.UserDefaults.shared.changeCurrentUser(userId: user.id)
             completion(secureUser)
         }
+    }
+    
+    private func showAlert() {
+        showAlert(title: "エラー", message: "このアカウントはすでに登録されています") { _ in }
     }
     
     private func loginCompleted(_ apiKey: String) {
@@ -201,13 +201,8 @@ class StartViewController: UIViewController {
             self.registerSw(of: user) // 通知を登録する
             
             DispatchQueue.main.async {
-                if self.afterLogout { // 設定画面からのログイン
-//                    MisskeyKit.changeInstance(instance: self.misskeyInstance)
-//                    MisskeyKit.auth.setAPIKey(apiKey)
-                    self.dismiss(animated: true)
-                } else { // 初期画面からのログイン
-                    self.navigationController?.popViewController(animated: true)
-                }
+                self.reloadListTrigger.accept(()) // AccountsListViewControllerのリロードを促す
+                self.navigationController?.popViewController(animated: true)
             }
         }
     }

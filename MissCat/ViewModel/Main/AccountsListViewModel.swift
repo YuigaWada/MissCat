@@ -12,10 +12,15 @@ import RxSwift
 import UIKit
 
 class AccountsListViewModel: ViewModelType {
-    struct Input {}
+    struct Input {
+        let loginTrigger: Observable<Void>
+        let editTrigger: Observable<Void>
+    }
     
     struct Output {
         let accounts: PublishRelay<[AccountCell.Section]> = .init()
+        let showLoginViewTrigger: PublishRelay<Void> = .init()
+        let changeEditableTrigger: PublishRelay<Void> = .init()
     }
     
     struct State {
@@ -25,7 +30,7 @@ class AccountsListViewModel: ViewModelType {
         }
     }
     
-    private let input: Input?
+    private let input: Input
     var output: Output = .init()
     var state: State = .init()
     var dataSource: AccountsListDataSource?
@@ -34,12 +39,13 @@ class AccountsListViewModel: ViewModelType {
     private let disposeBag: DisposeBag
     private lazy var model = AccountsListModel()
     
-    init(with input: Input?, and disposeBag: DisposeBag) {
+    init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
         self.disposeBag = disposeBag
+        transform()
     }
     
-    func initialLoad() {
+    func load() {
         let users = model.getUsers()
         
         state.hasPrepared = true
@@ -48,8 +54,19 @@ class AccountsListViewModel: ViewModelType {
             let accountSection = AccountCell.Section(items: [account])
             
             accounts.append(accountSection)
-            self.update(self.accounts)
         }
+        
+        update(accounts)
+    }
+    
+    private func transform() {
+        input.editTrigger.subscribe(onNext: {
+            self.output.changeEditableTrigger.accept(())
+        }).disposed(by: disposeBag)
+        
+        input.loginTrigger.subscribe(onNext: {
+            self.output.showLoginViewTrigger.accept(())
+        }).disposed(by: disposeBag)
     }
     
     private func update(_ accounts: [AccountCell.Section]) {

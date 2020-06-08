@@ -14,6 +14,8 @@ import UIKit
 typealias AccountsListDataSource = RxTableViewSectionedAnimatedDataSource<AccountCell.Section>
 class AccountsListViewController: UIViewController, UITableViewDelegate {
     @IBOutlet weak var mainTableView: UITableView!
+    @IBOutlet weak var loginButton: UIButton!
+    @IBOutlet weak var editButton: UIButton!
     
     var homeViewController: HomeViewController?
     private var viewModel: AccountsListViewModel?
@@ -27,7 +29,9 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
         bindTheme()
         setTheme()
         
-        self.viewModel = .init(with: nil, and: disposeBag)
+        let input = AccountsListViewModel.Input(loginTrigger: loginButton.rx.tap.asObservable(),
+                                                editTrigger: editButton.rx.tap.asObservable())
+        self.viewModel = AccountsListViewModel(with: input, and: disposeBag)
         
         guard let viewModel = viewModel else { return }
         viewModel.dataSource = setupDataSource()
@@ -39,7 +43,7 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
         view.deselectCell(on: mainTableView)
         
         if let viewModel = viewModel, viewModel.state.hasAccounts, !viewModel.state.hasPrepared {
-            viewModel.initialLoad()
+            viewModel.load()
         }
     }
     
@@ -84,9 +88,38 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
     private func binding(dataSource: AccountsListDataSource?) {
         guard let dataSource = dataSource, let output = viewModel?.output else { return }
         
-        output.accounts.asDriver(onErrorDriveWith: Driver.empty())
+        output.accounts
+            .asDriver(onErrorDriveWith: Driver.empty())
             .drive(mainTableView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)
+        
+        output.showLoginViewTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: {
+                self.showLoginView()
+            })
+            .disposed(by: disposeBag)
+        
+        output.changeEditableTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: {})
+            .disposed(by: disposeBag)
+    }
+    
+    private func showLoginView() {
+        guard let startViewController = getViewController(name: "start") as? StartViewController else { return }
+        
+        startViewController.reloadListTrigger.subscribe(onNext: {
+            self.viewModel?.load()
+            }).disposed(by: disposeBag)
+        navigationController?.pushViewController(startViewController, animated: true)
+    }
+    
+    private func getViewController(name: String) -> UIViewController {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let viewController = storyboard.instantiateViewController(withIdentifier: name)
+        
+        return viewController
     }
     
     // MARK: Setup Cell
@@ -94,7 +127,7 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
     private func setupCell(_ dataSource: TableViewSectionedDataSource<AccountCell.Section>, _ tableView: UITableView, _ indexPath: IndexPath) -> UITableViewCell {
         guard let viewModel = viewModel else { return AccountCell() }
         
-        let index = indexPath.row
+        let index = indexPath.section
         let item = viewModel.accounts[index].items[0]
         
         guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "AccountCell", for: indexPath) as? AccountCell
@@ -110,7 +143,7 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let index = indexPath.row
+        let index = indexPath.section
         guard let user = viewModel?.accounts[index].items[0].owner else { return }
         
         homeViewController?.move2Profile(userId: user.userId, owner: user)

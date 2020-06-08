@@ -176,13 +176,19 @@ extension Cache {
         }
         
         /// ユーザーを保存する
-        func saveUser(_ user: SecureUser) {
-            let savedUser = getUsers() + [user]
-            guard let usersData = try? JSONEncoder().encode(savedUser) else { return }
+        func saveUser(_ user: SecureUser) -> Bool {
+            let savedUsers = getUsers()
+            if savedUsers.filter({ $0.userId == user.userId }).count > 0 { // アカウントがすでにログインされてたら
+                return false
+            }
+            
+            let users = savedUsers + [user]
+            guard let usersData = try? JSONEncoder().encode(users) else { return false }
             
             keychain[user.userId] = user.apiKey // apiKeyはキーチェーンに保存
             user.apiKey = nil // apikeyは隠蔽する
             Foundation.UserDefaults.standard.set(usersData, forKey: savedUserKey) // instance情報とuserIdはそのままUserDefaultsへ
+            return true
         }
         
         /// 保存されている全てのユーザー情報を取得する

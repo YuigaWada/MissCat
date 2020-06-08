@@ -385,7 +385,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     }
     
     private func showAccountListView() {
-        showNavBar(title: "Accounts", page: .profile)
+        showNavBar(title: "Accounts", page: .profile, style: .Right, rightText: "cog")
         if let accountsListViewController = accountsListViewController {
             accountsListViewController.view.isHidden = false
             return
@@ -690,11 +690,13 @@ extension HomeViewController: FooterTabBarDelegate {
         favViewController.view.isHidden = false
     }
     
-    private func showNavBar(title: String, page: Page) {
+    private func showNavBar(title: String, page: Page, style: NavBar.Button = .None, rightText: String? = nil, rightFont: UIFont? = nil) {
         navBar.isHidden = false
         navBar.barTitle = title
-        //        navBar.setButton(style: .Right, rightText: "plus", rightFont: UIFont.awesomeSolid(fontSize: 13))
-        navBar.setButton(style: .None, rightText: nil, leftText: nil)
+        navBar.setButton(style: style,
+                         rightText: rightText,
+                         leftText: nil,
+                         rightFont: rightFont ?? UIFont.awesomeSolid(fontSize: 16))
         
         nowPage = page
     }
