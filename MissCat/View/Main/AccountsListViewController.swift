@@ -117,7 +117,7 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return 30
+        return section != 0 ? 30 : 0 // 先頭のヘッダー(余白)は表示しない
     }
     
     // ヘッダーを透明にして空白を作る
