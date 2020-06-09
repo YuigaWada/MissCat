@@ -33,6 +33,7 @@ class PostDetailViewModel {
     init(disposeBag: DisposeBag) {}
     
     func setItem(_ item: NoteCell.Model) {
+        owner = item.owner
         cellsModel.append(item)
         updateNotes(new: cellsModel)
         

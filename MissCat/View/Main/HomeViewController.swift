@@ -406,12 +406,11 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     // MARK: Pages
     
     private func showPostDetailView(item: NoteCell.Model) {
-        guard let storyboard = self.storyboard, let owner = item.owner else { return }
+        guard let storyboard = self.storyboard else { return }
         guard let detailViewController = storyboard.instantiateViewController(withIdentifier: "post-detail") as? PostDetailViewController else { return }
         
         detailViewController.view.frame = getDisplayRect()
         detailViewController.mainItem = item
-        detailViewController.owner = owner
         detailViewController.homeViewController = self
         
         navigationController?.pushViewController(detailViewController, animated: true)

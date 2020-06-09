@@ -22,8 +22,6 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     private var wasReplyTarget: Bool = false
     private var wasOnOtherNote: Bool = false
     
-    var owner: SecureUser?
-    
     var mainItem: NoteCell.Model? {
         didSet {
             guard let item = mainItem else { return }
@@ -33,7 +31,7 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
             
             item.isReplyTarget = false
             item.onOtherNote = false
-            viewModel!.setItem(item)
+            viewModel?.setItem(item)
         }
     }
     
@@ -115,14 +113,14 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     // MARK: Setup Cell
     
     private func setupCell(_ dataSource: TableViewSectionedDataSource<NoteCell.Section>, _ tableView: UITableView, _ indexPath: IndexPath) -> UITableViewCell {
-        guard let viewModel = viewModel, let owner = owner else { return UITableViewCell() }
+        guard let viewModel = viewModel else { return UITableViewCell() }
         
         let index = indexPath.row
         let item = viewModel.cellsModel[index]
         let isDetailMode = item.identity == mainItem?.identity // リプライはDetailModeにしない
         
-        guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell
-        else { return NoteCell() }
+        guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell,
+            let owner = item.owner else { return NoteCell() }
         
         let shapedCell = noteCell.transform(with: .init(item: item, isDetailMode: isDetailMode, delegate: self, owner: owner))
         
