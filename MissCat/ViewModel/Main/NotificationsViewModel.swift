@@ -33,7 +33,7 @@ class NotificationsViewModel {
         return MisskeyKit(from: owner)
     }()
     
-    private lazy var model = NotificationsModel(from: misskey)
+    private lazy var model = NotificationsModel(from: misskey, owner: owner)
     
     init(disposeBag: DisposeBag) {
         self.disposeBag = disposeBag

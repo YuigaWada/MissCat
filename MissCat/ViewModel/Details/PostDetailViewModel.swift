@@ -24,7 +24,7 @@ class PostDetailViewModel {
         return MisskeyKit(from: owner)
     }()
     
-    private lazy var model = PostDetailModel(from: misskey)
+    private lazy var model = PostDetailModel(from: misskey, owner: owner)
     
     //    private lazy var model = PostDetailModel()
     

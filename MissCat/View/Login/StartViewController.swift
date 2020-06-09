@@ -197,7 +197,7 @@ class StartViewController: UIViewController {
     
     private func loginCompleted(_ apiKey: String) {
         saveUserData(with: apiKey) { user in
-            _ = EmojiHandler.handler // カスタム絵文字を読み込む
+            EmojiHandler.setHandler(owner: user) // カスタム絵文字を読み込む
             self.registerSw(of: user) // 通知を登録する
             
             DispatchQueue.main.async {

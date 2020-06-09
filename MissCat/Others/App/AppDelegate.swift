@@ -26,7 +26,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         setupMissCat()
         setupFirebase()
         setupNotifications(with: application)
-        registerSw()
+        setupUser()
         
         return true
     }
@@ -94,17 +94,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         application.registerForRemoteNotifications()
     }
     
-    private func registerSw() {
-        let savedUser = Cache.UserDefaults.shared.getUsers()
-        savedUser.forEach { user in
-            #if targetEnvironment(simulator)
-                let misscatApi = MisscatApi(apiKeyManager: MockApiKeyManager(), and: user)
-                misscatApi.registerSw()
-            #else
-                let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager(), and: user)
-                misscatApi.registerSw()
-            #endif
+    private func setupUser() {
+        let savedUsers = Cache.UserDefaults.shared.getUsers()
+        
+        savedUsers.forEach { user in
+            self.registerSw(for: user)
+            self.setupEmojiHandler(for: user)
         }
+    }
+    
+    private func registerSw(for user: SecureUser) {
+        #if targetEnvironment(simulator)
+            let misscatApi = MisscatApi(apiKeyManager: MockApiKeyManager(), and: user)
+            misscatApi.registerSw()
+        #else
+            let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager(), and: user)
+            misscatApi.registerSw()
+        #endif
+    }
+    
+    private func setupEmojiHandler(for user: SecureUser) {
+        EmojiHandler.setHandler(owner: user)
     }
     
     // MARK: Notifications

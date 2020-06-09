@@ -12,8 +12,10 @@ import RxSwift
 
 class MessageListModel {
     private let misskey: MisskeyKit?
-    init(from misskey: MisskeyKit?) {
+    private let owner: SecureUser?
+    init(from misskey: MisskeyKit?, owner: SecureUser?) {
         self.misskey = misskey
+        self.owner = owner
     }
     
     private func transformModel(with observer: AnyObserver<SenderCell.Model>, history: MessageHistoryModel) {
@@ -29,7 +31,7 @@ class MessageListModel {
                                              latestMessage: history.text,
                                              createdAt: history.createdAt)
         
-        sender.shapedName = MFMEngine.shapeDisplayName(user: other)
+        sender.shapedName = MFMEngine.shapeDisplayName(owner: owner, user: other)
         observer.onNext(sender)
     }
     

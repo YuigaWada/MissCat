@@ -34,7 +34,7 @@ class MessageListViewModel: ViewModelType {
     
     var cellsModel: [SenderCell.Model] = []
     private lazy var misskey = MisskeyKit(from: input.owner)
-    private lazy var model: MessageListModel = .init(from: misskey)
+    private lazy var model: MessageListModel = .init(from: misskey, owner: input.owner)
     
     private let disposeBag: DisposeBag
     private var _isLoading: Bool = false

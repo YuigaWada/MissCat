@@ -13,8 +13,10 @@ class PostDetailModel {
     private var replies: [NoteCell.Model] = []
     
     private let misskey: MisskeyKit?
-    init(from misskey: MisskeyKit?) {
+    private let owner: SecureUser?
+    init(from misskey: MisskeyKit?, owner: SecureUser?) {
         self.misskey = misskey
+        self.owner = owner
     }
     
     /// リプライを遡る
@@ -23,7 +25,7 @@ class PostDetailModel {
         misskey?.notes.showNote(noteId: id) { note, error in
             guard error == nil,
                 let note = note,
-                let shaped = note.getNoteCellModel() else { completion(self.backReplies); return }
+                let shaped = note.getNoteCellModel(owner: self.owner) else { completion(self.backReplies); return }
             
             shaped.isReplyTarget = true
             MFMEngine.shapeModel(shaped)
@@ -53,7 +55,7 @@ class PostDetailModel {
     /// - Parameter notes: [NoteModel]
     private func convertReplies(_ notes: [NoteModel]) -> [NoteCell.Model] {
         return notes.map {
-            guard let cellModel = $0.getNoteCellModel() else { return nil }
+            guard let cellModel = $0.getNoteCellModel(owner: self.owner) else { return nil }
             MFMEngine.shapeModel(cellModel)
             return cellModel
         }.compactMap { $0 }

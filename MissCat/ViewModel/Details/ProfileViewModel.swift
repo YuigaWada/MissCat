@@ -128,7 +128,7 @@ class ProfileViewModel: ViewModelType {
         
         if let description = diff.description {
             input.introYanagi.resetViewString()
-            setDesc(description, externalEmojis: emojis)
+            setDesc(description, externalEmojis: emojis, owner: input.owner)
             self.profile?.description = description
         }
         
@@ -154,7 +154,7 @@ class ProfileViewModel: ViewModelType {
         setRelation(targetUserId: user.id)
         setIcon(from: user)
         setName(name: user.name, username: user.username, externalEmojis: user.emojis)
-        setDesc(user.description, externalEmojis: user.emojis)
+        setDesc(user.description, externalEmojis: user.emojis, owner: input.owner)
         setBanner(from: user)
         
         output.isCat.accept(user.isCat ?? false)
@@ -197,13 +197,14 @@ class ProfileViewModel: ViewModelType {
         }
     }
     
-    private func setDesc(_ description: String?, externalEmojis: [EmojiModel?]?) {
+    private func setDesc(_ description: String?, externalEmojis: [EmojiModel?]?, owner: SecureUser?) {
         if let externalEmojis = externalEmojis { emojis += externalEmojis } // overrideInfoに備えてemoji情報を保持
         
         let textHex = Theme.shared.currentModel?.colorPattern.hex.text
         if let description = description {
             DispatchQueue.main.async {
-                let shaped = description.mfmPreTransform().mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
+                let shaped = description.mfmPreTransform().mfmTransform(owner: owner,
+                                                                        font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
                                                                         externalEmojis: externalEmojis,
                                                                         textHex: textHex)
                 
@@ -232,7 +233,8 @@ class ProfileViewModel: ViewModelType {
         
         if let username = username {
             DispatchQueue.main.async {
-                let shaped = MFMEngine.shapeDisplayName(name: name ?? username,
+                let shaped = MFMEngine.shapeDisplayName(owner: self.input.owner,
+                                                        name: name ?? username,
                                                         username: username,
                                                         emojis: externalEmojis,
                                                         nameFont: UIFont(name: "Helvetica", size: 13.0),

@@ -73,14 +73,21 @@ class ReactionGenModel {
         var currentIndex: Int = 0
         var isLoading: Bool = false
         var preloaded: [EmojiView.EmojiModel] = [] // 非同期で事前に詠み込んでおく
+        var categorizedDefault: CategorizedEmojis = .init()
+        var categorizedCustom: CategorizedEmojis = .init()
         
-        lazy var categorizedDefault = EmojiHandler.handler.categorizedDefaultEmojis
-        lazy var categorizedCustom = EmojiHandler.handler.categorizedCustomEmojis
+        init(from owner: SecureUser?) {
+            guard let owner = owner,
+                let handler = EmojiHandler.getHandler(owner: owner) else { return }
+            
+            categorizedDefault = handler.categorizedDefaultEmojis
+            categorizedCustom = handler.categorizedCustomEmojis
+        }
     }
     
     // MARK: Private Vars
     
-    private var emojis = Emojis()
+    private lazy var emojis = Emojis(from: self.owner)
     private var maxOnceLoad: Int = 50
     private var defaultPreset = ["👍", "❤️", "😆", "🤔", "😮", "🎉", "💢", "😥", "😇", "🍮", "🤯"]
     private var defaultLoaded = false

@@ -39,7 +39,7 @@ class UserListViewModel: ViewModelType {
     private lazy var misskey: MisskeyKit? = MisskeyKit(from: input.owner)
     
     var cellsModel: [UserCell.Model] = []
-    private lazy var model: UserListModel = .init(from: misskey)
+    private lazy var model: UserListModel = .init(from: misskey, owner: input.owner)
     
     private let disposeBag: DisposeBag
     private var hasSkeltonCell: Bool = false

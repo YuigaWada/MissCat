@@ -86,8 +86,10 @@ class TimelineModel {
     private lazy var streaming = misskey?.streaming
     
     private let misskey: MisskeyKit?
-    init(from misskey: MisskeyKit?) {
+    private let owner: SecureUser
+    init(from misskey: MisskeyKit?, owner: SecureUser) {
         self.misskey = misskey
+        self.owner = owner
     }
     
     // MARK: REST API
@@ -234,7 +236,7 @@ class TimelineModel {
             guard let renoteId = post.renoteId,
                 let user = post.user,
                 let renote = post.renote,
-                let renoteModel = renote.getNoteCellModel(withRN: checkNoteType(renote) == .CommentRenote) else { return }
+                let renoteModel = renote.getNoteCellModel(owner: owner, withRN: checkNoteType(renote) == .CommentRenote) else { return }
             
             let renoteeModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "",
                                                               renoteeUserName: user.username ?? "",
@@ -245,12 +247,11 @@ class TimelineModel {
             
             for cellModel in cellModels {
                 MFMEngine.shapeModel(cellModel)
-                cellModel.owner = owner // 紐付けられたアカウントを詰める
                 observer.onNext(cellModel)
             }
         } else if noteType == .Promotion { // PR投稿
             guard let noteId = post.id,
-                let cellModel = post.getNoteCellModel(withRN: checkNoteType(post) == .CommentRenote) else { return }
+                let cellModel = post.getNoteCellModel(owner: owner, withRN: checkNoteType(post) == .CommentRenote) else { return }
             
             let prModel = NoteCell.Model.fakePromotioncell(baseNoteId: noteId)
             var cellModels = [prModel, cellModel]
@@ -259,7 +260,6 @@ class TimelineModel {
             
             for cellModel in cellModels {
                 MFMEngine.shapeModel(cellModel)
-                cellModel.owner = owner // 紐付けられたアカウントを詰める
                 observer.onNext(cellModel)
             }
         } else { // just a note or a note with commentRN
@@ -269,7 +269,6 @@ class TimelineModel {
             if reverse { newCellsModel!.reverse() } // reverseしてからinsert (streamingの場合)
             newCellsModel!.forEach {
                 MFMEngine.shapeModel($0)
-                $0.owner = owner // 紐付けられたアカウントを詰める
                 observer.onNext($0)
             }
         }
@@ -414,7 +413,7 @@ class TimelineModel {
         
         if let reply = post.reply { // リプライ対象も表示する
             let replyWithRN = checkNoteType(reply) == .CommentRenote
-            var replyCellModel = reply.getNoteCellModel(withRN: replyWithRN)
+            let replyCellModel = reply.getNoteCellModel(owner: owner, withRN: replyWithRN)
             
             if replyCellModel != nil {
                 replyCellModel!.isReplyTarget = true
@@ -422,7 +421,7 @@ class TimelineModel {
             }
         }
         
-        if let cellModel = post.getNoteCellModel(withRN: withRN) {
+        if let cellModel = post.getNoteCellModel(owner: owner, withRN: withRN) {
             cellsModel.append(cellModel)
         }
         

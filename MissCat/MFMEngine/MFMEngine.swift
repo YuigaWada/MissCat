@@ -47,13 +47,15 @@ class MFMEngine {
     /// - Parameters:
     ///   - yanagi: どのTextViewか(YanagiText)
     ///   - externalEmojis: 他インスタンスの絵文字配列
-    func transform(font: UIFont, externalEmojis: [EmojiModel?]?, textHex: String?) -> NSAttributedString? {
+    func transform(owner: SecureUser?, font: UIFont, externalEmojis: [EmojiModel?]?, textHex: String?) -> NSAttributedString? {
         var rest = original
         let shaped = NSMutableAttributedString()
         
+        guard let owner = owner,
+            let handler = EmojiHandler.getHandler(owner: owner) else { return nil }
         // カスタム絵文字の候補をそれぞれ確認していく
         emojiTargets.forEach { target in
-            guard let converted = EmojiHandler.handler.convertEmoji(raw: target, external: externalEmojis),
+            guard let converted = handler.convertEmoji(raw: target, external: externalEmojis),
                 let range = rest.range(of: target) else { return }
             
             // カスタム絵文字を支点に文章を分割していく
@@ -121,7 +123,7 @@ class MFMEngine {
     /// - Parameter cellModel: NotificationCell.Model
     static func shapeModel(_ cellModel: NotificationCell.Model) {
         if let user = cellModel.fromUser {
-            cellModel.shapedDisplayName = shapeDisplayName(user: user)
+            cellModel.shapedDisplayName = shapeDisplayName(owner: cellModel.owner, user: user)
             // MEMO: MisskeyApiの "i/notifications"はfromUserの自己紹介を流してくれないので、対応するまで非表示にする
             
             //            if cellModel.type == .follow {
@@ -154,12 +156,12 @@ class MFMEngine {
     /// NoteCell.Modelのうち、投稿を整形する
     /// - Parameter cellModel: NoteCell.Model
     private static func shapeNote(_ cellModel: NoteCell.Model) -> MFMString {
-        return shapeString(needReplyMark: cellModel.isReply, text: cellModel.note, emojis: cellModel.emojis)
+        return shapeString(owner: cellModel.owner, needReplyMark: cellModel.isReply, text: cellModel.note, emojis: cellModel.emojis)
     }
     
     private static func shapedCw(_ cellModel: NoteCell.Model) -> MFMString? {
         guard let cw = cellModel.cw else { return nil }
-        var shaped = shapeString(needReplyMark: cellModel.isReply, text: cw, emojis: cellModel.emojis)
+        var shaped = shapeString(owner: cellModel.owner, needReplyMark: cellModel.isReply, text: cw, emojis: cellModel.emojis)
         
         if let attributed = shaped.attributed {
             shaped.attributed = attributed + generatePlaneString(string: "\n > タップで詳細表示",
@@ -175,12 +177,13 @@ class MFMEngine {
     ///   - needReplyMark: リプライマークがい必要か
     ///   - text: 任意の文字列
     ///   - emojis: 外インスタンスによるカスタム絵文字
-    static func shapeString(needReplyMark: Bool, text: String, emojis: [EmojiModel?]?) -> MFMString {
+    static func shapeString(owner: SecureUser?, needReplyMark: Bool, text: String, emojis: [EmojiModel?]?) -> MFMString {
         var textHex = Theme.shared.currentModel?.colorPattern.hex.text ?? "000000"
         textHex = "#\(textHex)"
         
         let replyHeader: NSMutableAttributedString = needReplyMark ? .getReplyMark() : .init() // リプライの場合は先頭にreplyマークつける
-        let mfmString = text.mfmTransform(font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
+        let mfmString = text.mfmTransform(owner: owner,
+                                          font: UIFont(name: "Helvetica", size: 11.0) ?? .systemFont(ofSize: 11.0),
                                           externalEmojis: emojis,
                                           lineHeight: 30,
                                           textHex: textHex)
@@ -191,14 +194,14 @@ class MFMEngine {
     /// 名前を整形
     /// - Parameter cellModel: NoteCell.Model
     private static func shapeDisplayName(_ cellModel: NoteCell.Model) -> MFMString {
-        return shapeDisplayName(name: cellModel.displayName, username: cellModel.username, emojis: cellModel.emojis)
+        return shapeDisplayName(owner: cellModel.owner, name: cellModel.displayName, username: cellModel.username, emojis: cellModel.emojis)
     }
     
     /// 名前を整形
     /// - Parameter user: UserModel
-    static func shapeDisplayName(user: UserModel?) -> MFMString? {
+    static func shapeDisplayName(owner: SecureUser?, user: UserModel?) -> MFMString? {
         guard let user = user else { return nil }
-        return shapeDisplayName(name: user.name, username: user.username, emojis: user.emojis)
+        return shapeDisplayName(owner: owner, name: user.name, username: user.username, emojis: user.emojis)
     }
     
     /// 名前を整形
@@ -210,7 +213,8 @@ class MFMEngine {
     ///   - _usernameFont:
     ///   - nameHex:
     ///   - usernameColor:
-    static func shapeDisplayName(name: String?,
+    static func shapeDisplayName(owner: SecureUser?,
+                                 name: String?,
                                  username: String?,
                                  emojis: [EmojiModel?]?,
                                  nameFont: UIFont? = nil,
@@ -223,7 +227,8 @@ class MFMEngine {
         var defaultTextHex = Theme.shared.currentModel?.colorPattern.hex.text ?? "000000"
         defaultTextHex = "#\(defaultTextHex)"
         
-        let mfmString = displayName.mfmTransform(font: font,
+        let mfmString = displayName.mfmTransform(owner: owner,
+                                                 font: font,
                                                  externalEmojis: emojis,
                                                  lineHeight: 25,
                                                  textHex: nameHex ?? defaultTextHex)
@@ -368,8 +373,9 @@ class MFMEngine {
 extension String {
     ///  Emoji形式":hogehoge:"をデフォルト絵文字 / カスタム絵文字のurl/imgに変更
     /// - Parameter externalEmojis: 外インスタンスのカスタム絵文字
-    func emojiEncoder(externalEmojis: [EmojiModel?]?) -> String {
-        return EmojiHandler.handler.emojiEncoder(note: self, externalEmojis: externalEmojis)
+    func emojiEncoder(owner: SecureUser, externalEmojis: [EmojiModel?]?) -> String {
+        guard let handler = EmojiHandler.getHandler(owner: owner) else { return "" }
+        return handler.emojiEncoder(note: self, externalEmojis: externalEmojis)
     }
     
     /// カスタム絵文字以外のMFM処理を行う
@@ -382,9 +388,10 @@ extension String {
     ///   - font: フォント
     ///   - externalEmojis: 外インスタンスのカスタム絵文字
     ///   - lineHeight: 文字の高さ
-    func mfmTransform(font: UIFont, externalEmojis: [EmojiModel?]? = nil, lineHeight: CGFloat? = nil, textHex: String? = nil) -> MFMString {
+    func mfmTransform(owner: SecureUser?, font: UIFont, externalEmojis: [EmojiModel?]? = nil, lineHeight: CGFloat? = nil, textHex: String? = nil) -> MFMString {
         let mfm = MFMEngine(with: self, lineHeight: lineHeight)
-        let mfmString = MFMString(mfmEngine: mfm, attributed: mfm.transform(font: font,
+        let mfmString = MFMString(mfmEngine: mfm, attributed: mfm.transform(owner: owner,
+                                                                            font: font,
                                                                             externalEmojis: externalEmojis,
                                                                             textHex: textHex))
         

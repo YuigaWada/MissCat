@@ -89,7 +89,7 @@ class TimelineViewModel: ViewModelType {
     private let usernameFont = UIFont.systemFont(ofSize: 11.0)
     
     private lazy var misskey = MisskeyKit(from: input.owner)
-    private lazy var model = TimelineModel(from: misskey)
+    private lazy var model = TimelineModel(from: misskey, owner: input.owner)
     
     private var owner: SecureUser?
     private var dataSource: NotesDataSource?
