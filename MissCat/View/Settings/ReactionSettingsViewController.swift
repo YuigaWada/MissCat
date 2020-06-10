@@ -266,25 +266,6 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     }
     
     private func vibrateCell(on vibrated: Bool) {
-        emojiCollectionView.visibleCells.forEach { self.vibrated(vibrated: vibrated, view: $0) }
-    }
-    
-    private func degreesToRadians(_ degrees: Float) -> Float {
-        return degrees * Float(Double.pi) / 180.0
-    }
-    
-    private func vibrated(vibrated: Bool, view: UIView) {
-        if vibrated {
-            let animation = CABasicAnimation(keyPath: "transform.rotation")
-            
-            animation.duration = 0.05
-            animation.fromValue = degreesToRadians(5.0)
-            animation.toValue = degreesToRadians(-5.0)
-            animation.repeatCount = Float.infinity
-            animation.autoreverses = true
-            view.layer.add(animation, forKey: "VibrateAnimationKey")
-        } else {
-            view.layer.removeAnimation(forKey: "VibrateAnimationKey")
-        }
+        emojiCollectionView.visibleCells.forEach { self.view.vibrated(vibrated: vibrated, view: $0) }
     }
 }
