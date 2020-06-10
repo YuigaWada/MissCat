@@ -21,6 +21,8 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
     private var viewModel: AccountsListViewModel?
     private let disposeBag = DisposeBag()
     
+    private var deleteTriggerDisposables: [Int: Disposable] = [:]
+    
     // MARK: Life Cycle
     
     override func loadView() {
@@ -71,7 +73,8 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
         mainTableView.register(UINib(nibName: "AccountCell", bundle: nil), forCellReuseIdentifier: "AccountCell")
         
         mainTableView.rx.setDelegate(self).disposed(by: disposeBag)
-        mainTableView.rowHeight = UITableView.automaticDimension
+//        mainTableView.rowHeight = UITableView.automaticDimension
+        mainTableView.rowHeight = 120
     }
     
     private func setupDataSource() -> AccountsListDataSource {
@@ -100,9 +103,18 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
             })
             .disposed(by: disposeBag)
         
-        output.changeEditableTrigger
+        output.switchEditableTrigger
             .asDriver(onErrorDriveWith: Driver.empty())
-            .drive(onNext: {})
+            .drive(onNext: {
+                self.switchEditable()
+            })
+            .disposed(by: disposeBag)
+        
+        output.switchNormalTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: {
+                self.switchNormal()
+            })
             .disposed(by: disposeBag)
     }
     
@@ -122,6 +134,25 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
         return viewController
     }
     
+    private func switchEditable() {
+        mainTableView.visibleCells
+            .compactMap { $0 as? AccountCell }
+            .forEach { $0.changeState(.editable) }
+    }
+    
+    private func switchNormal() {
+        mainTableView.visibleCells
+            .compactMap { $0 as? AccountCell }
+            .forEach { $0.changeState(.normal) }
+    }
+    
+    private func delete(index: Int, viewModel: AccountsListViewModel) {
+        showAlert(title: "", message: "本当に削除しますか？", yesOption: "はい") { yes in
+            guard yes else { return }
+            viewModel.delete(index: index)
+        }
+    }
+    
     // MARK: Setup Cell
     
     private func setupCell(_ dataSource: TableViewSectionedDataSource<AccountCell.Section>, _ tableView: UITableView, _ indexPath: IndexPath) -> UITableViewCell {
@@ -130,16 +161,26 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
         let index = indexPath.section
         let item = viewModel.accounts[index].items[0]
         
-        guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "AccountCell", for: indexPath) as? AccountCell
+        guard let accountCell = tableView.dequeueReusableCell(withIdentifier: "AccountCell", for: indexPath) as? AccountCell
         else { return AccountCell() }
         
-        let shapedCell = noteCell.transform(with: .init(user: item.owner))
+        let shapedCell = accountCell.transform(with: .init(user: item.owner))
         
+        // 購読し直す
+        let disposable = shapedCell.deleteTrigger.subscribe(onNext: {
+            self.delete(index: index, viewModel: viewModel)
+        })
+        
+        if let oldDisposable = deleteTriggerDisposables.removeValue(forKey: index) { // すでに購読していた場合は破棄する
+            oldDisposable.dispose()
+        }
+        
+        deleteTriggerDisposables[index] = disposable
         return shapedCell
     }
     
     func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
-        return UITableView.automaticDimension
+        return 120
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -150,7 +191,7 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return section != 0 ? 30 : 0 // 先頭のヘッダー(余白)は表示しない
+        return section != 0 ? 20 : 0 // 先頭のヘッダー(余白)は表示しない
     }
     
     // ヘッダーを透明にして空白を作る

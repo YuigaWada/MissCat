@@ -16,13 +16,22 @@ class AccountCell: UITableViewCell, ComponentType {
         let user: SecureUser
     }
     
+    enum State {
+        case normal
+        case editable
+    }
+    
     typealias Transformed = AccountCell
     
     @IBOutlet weak var iconImageView: MissCatImageView!
     @IBOutlet weak var nameLabel: UILabel!
+    @IBOutlet weak var borderView: UIView!
+    @IBOutlet weak var delButton: UIButton!
     
     @IBOutlet weak var usernameLabel: UILabel!
     @IBOutlet weak var instanceLabel: UILabel!
+    
+    lazy var deleteTrigger: Observable<Void> = self.delButton.rx.tap.asObservable()
     
     private let disposeBag: DisposeBag = .init()
     
@@ -42,7 +51,7 @@ class AccountCell: UITableViewCell, ComponentType {
         theme.map { $0.colorPattern.ui.text }.subscribe(onNext: { self.instanceLabel.textColor = $0 }).disposed(by: disposeBag)
         
         theme.map { $0.mainColorHex }.subscribe(onNext: { mainColorHex in
-            self.layer.borderColor = UIColor(hex: mainColorHex).cgColor
+            self.borderView.layer.borderColor = UIColor(hex: mainColorHex).cgColor
         }).disposed(by: disposeBag)
     }
     
@@ -54,7 +63,7 @@ class AccountCell: UITableViewCell, ComponentType {
         usernameLabel.textColor = colorPattern.text
         instanceLabel.textColor = colorPattern.text
         
-        layer.borderColor = UIColor(hex: theme.mainColorHex).cgColor
+        borderView.layer.borderColor = UIColor(hex: theme.mainColorHex).cgColor
     }
     
     func transform(with arg: Arg) -> AccountCell {
@@ -67,6 +76,15 @@ class AccountCell: UITableViewCell, ComponentType {
         return self
     }
     
+    func changeState(_ state: State) {
+        switch state {
+        case .normal:
+            delButton.isHidden = true
+        case .editable:
+            delButton.isHidden = false
+        }
+    }
+    
     private func setupComponent() {
         iconImageView.maskCircle()
         
@@ -74,9 +92,9 @@ class AccountCell: UITableViewCell, ComponentType {
         usernameLabel.font = UIFont(name: "Helvetica", size: 10.0)
         instanceLabel.font = UIFont(name: "Helvetica", size: 13.0)
         
-        layer.cornerRadius = 8
-        layer.masksToBounds = true
-        layer.borderWidth = 1
+        borderView.layer.cornerRadius = 8
+        borderView.layer.masksToBounds = true
+        borderView.layer.borderWidth = 1
         backgroundColor = .clear
     }
     

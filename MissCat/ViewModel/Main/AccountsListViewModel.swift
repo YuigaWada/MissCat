@@ -20,10 +20,12 @@ class AccountsListViewModel: ViewModelType {
     struct Output {
         let accounts: PublishRelay<[AccountCell.Section]> = .init()
         let showLoginViewTrigger: PublishRelay<Void> = .init()
-        let changeEditableTrigger: PublishRelay<Void> = .init()
+        let switchEditableTrigger: PublishRelay<Void> = .init()
+        let switchNormalTrigger: PublishRelay<Void> = .init()
     }
     
     struct State {
+        var isEditing: Bool = false
         var hasPrepared: Bool = false
         var hasAccounts: Bool {
             return Cache.UserDefaults.shared.getUsers().count > 0
@@ -48,6 +50,7 @@ class AccountsListViewModel: ViewModelType {
     func load() {
         let users = model.getUsers()
         
+        accounts.removeAll() // 初期化しておく
         state.hasPrepared = true
         users.forEach { user in
             let account = AccountCell.Model(owner: user)
@@ -59,9 +62,22 @@ class AccountsListViewModel: ViewModelType {
         update(accounts)
     }
     
+    func delete(index: Int) {
+        let user = accounts[index].items[0].owner
+        
+        model.removeUser(user: user)
+        accounts.remove(at: index)
+        update(accounts)
+    }
+    
     private func transform() {
         input.editTrigger.subscribe(onNext: {
-            self.output.changeEditableTrigger.accept(())
+            if self.state.isEditing {
+                self.output.switchNormalTrigger.accept(())
+            } else {
+                self.output.switchEditableTrigger.accept(())
+            }
+            self.state.isEditing = !self.state.isEditing
         }).disposed(by: disposeBag)
         
         input.loginTrigger.subscribe(onNext: {

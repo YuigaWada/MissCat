@@ -173,6 +173,13 @@ extension Cache {
             Foundation.UserDefaults.standard.set(usersData, forKey: savedUserKey)
             do { try keychain.remove(userId) }
             catch {}
+            
+            if let currentUser = getCurrentUser(), userId == currentUser.userId { // メインとしてログインしている場合
+                guard savedUser.count > 0 else { return }
+                
+                let newMainUserId = savedUser[0].userId
+                changeCurrentUser(userId: newMainUserId) // メインアカウントを移し替える
+            }
         }
         
         /// ユーザーを保存する
