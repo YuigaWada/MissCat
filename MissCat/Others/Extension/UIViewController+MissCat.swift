@@ -43,9 +43,8 @@ extension UIViewController {
         presentOnFullScreen(target, animated: true, completion: nil)
     }
     
-    func presentDropdownMenu(with menus: [DropdownMenu], size: CGSize, sourceRect: CGRect) -> Observable<Int>? {
-        let dropdownMenu = DropdownMenuViewController(with: menus, size: size)
-        
+    func presentDropdownMenu(menu dropdownMenu: Dropdown, size: CGSize, sourceRect: CGRect) -> Observable<Int>? {
+        guard let dropdownMenu = dropdownMenu as? (UIViewController & Dropdown) else { return nil }
         dropdownMenu.modalPresentationStyle = .popover
         dropdownMenu.preferredContentSize = size
         
@@ -60,6 +59,10 @@ extension UIViewController {
         return dropdownMenu.selected.asObservable()
     }
     
+    func presentDropdownMenu(with menus: [DropdownMenu], size: CGSize, sourceRect: CGRect) -> Observable<Int>? {
+        let dropdownMenu = PlainDropdownMenu(with: menus, size: size)
+        return presentDropdownMenu(menu: dropdownMenu, size: size, sourceRect: sourceRect)
+    }
     func presentReactionGen(owner: SecureUser, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, navigationController: UINavigationController?) -> ReactionGenViewController? {
         guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return nil }
         
