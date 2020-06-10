@@ -65,7 +65,7 @@ class NavBar: UIView {
     
     private func binding(with viewModel: NavBarViewModel) {
         let output = viewModel.output
-        output.userIcon.bind(to: userIconView.rx.image)
+        output.userIcon.bind(to: userIconView.rx.image).disposed(by: disposeBag)
     }
     
     override func layoutSubviews() {
@@ -143,7 +143,13 @@ class NavBar: UIView {
     }
     
     private func setUserIcon() {
-        guard let user = delegate?.currentUser() else { userIconView.image = nil; return }
+        guard let user = delegate?.currentUser() else {
+            userIconView.image = nil
+            userIconView.isHidden = true
+            return
+        }
+        
+        userIconView.isHidden = false
         viewModel?.transform(user: user)
     }
 }
