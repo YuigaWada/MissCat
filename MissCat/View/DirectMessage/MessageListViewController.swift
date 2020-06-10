@@ -118,3 +118,12 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
         navigationController?.pushViewController(getDMViewController(with: item), animated: true)
     }
 }
+
+extension MessageListViewController: NavBarDelegate {
+    func currentUser() -> SecureUser? {
+        return owner
+    }
+    
+    func showAccountMenu() {}
+    func tappedRightNavButton() {}
+}

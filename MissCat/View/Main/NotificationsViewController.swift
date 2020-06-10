@@ -195,3 +195,12 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
     
     func tappedProfile() {}
 }
+
+extension NotificationsViewController: NavBarDelegate {
+    func currentUser() -> SecureUser? {
+        return viewModel?.owner
+    }
+    
+    func showAccountMenu() {}
+    func tappedRightNavButton() {}
+}

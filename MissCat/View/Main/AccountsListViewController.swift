@@ -191,7 +191,7 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return section != 0 ? 20 : 0 // 先頭のヘッダー(余白)は表示しない
+        return section != 0 ? 10 : 0 // 先頭のヘッダー(余白)は表示しない
     }
     
     // ヘッダーを透明にして空白を作る
@@ -199,5 +199,16 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
         let marginView = UIView()
         marginView.backgroundColor = .clear
         return marginView
+    }
+}
+
+extension AccountsListViewController: NavBarDelegate {
+    func currentUser() -> SecureUser? {
+        return nil
+    }
+    
+    func showAccountMenu() {}
+    func tappedRightNavButton() {
+        homeViewController?.openSettings()
     }
 }
