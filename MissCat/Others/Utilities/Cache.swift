@@ -14,6 +14,14 @@ import UIKit
 
 typealias Attachments = [NSTextAttachment: YanagiText.Attachment]
 class Cache {
+    struct UserInfo {
+        let user: SecureUser
+        let name: String
+        let username: String
+        let host: String
+        let image: UIImage
+    }
+    
     // MARK: Singleton
     
     static var shared: Cache = .init()
@@ -24,6 +32,8 @@ class Cache {
     private var uiImage: [String: UIImage] = [:] // key: url
     private var dataOnUrl: [String: Data] = [:] // key: url
     private var urlPreview: [String: Response] = [:] // key: url
+    
+    private var userInfo: [UserInfo] = []
     
     private var me: UserModel?
     
@@ -56,6 +66,10 @@ class Cache {
         urlPreview[rawUrl] = response
     }
     
+    func saveUserInfo(info: UserInfo) {
+        userInfo.append(info)
+    }
+    
     // MARK: Get
     
     func getIcon(username: String) -> UIImage? {
@@ -78,6 +92,11 @@ class Cache {
     func getUrlPreview(on rawUrl: String) -> Response? {
         guard urlPreview.keys.contains(rawUrl) else { return nil }
         return urlPreview[rawUrl]
+    }
+    
+    func getUserInfo(user: SecureUser) -> UserInfo? {
+        let info = userInfo.filter { $0.user.userId == user.userId }
+        return info.count > 0 ? info[0] : nil
     }
     
     /// データをハッシュを利用して保存する
@@ -126,18 +145,6 @@ class Cache {
         }
         
         return applicationSupportDir
-    }
-}
-
-class SecureUser: Codable {
-    let userId: String
-    let instance: String
-    var apiKey: String?
-    
-    init(userId: String, instance: String, apiKey: String?) {
-        self.userId = userId
-        self.instance = instance
-        self.apiKey = apiKey
     }
 }
 

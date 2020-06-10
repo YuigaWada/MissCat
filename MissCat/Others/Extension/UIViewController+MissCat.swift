@@ -63,6 +63,15 @@ extension UIViewController {
         let dropdownMenu = PlainDropdownMenu(with: menus, size: size)
         return presentDropdownMenu(menu: dropdownMenu, size: size, sourceRect: sourceRect)
     }
+    
+    func presentAccountsDropdownMenu(sourceRect: CGRect) -> Observable<Int>? {
+        let users = Cache.UserDefaults.shared.getUsers()
+        let size = CGSize(width: view.frame.width * 3 / 5, height: 50 * CGFloat(users.count))
+        
+        let dropdownMenu = AccountsDropdownMenu(with: users, size: size)
+        return presentDropdownMenu(menu: dropdownMenu, size: size, sourceRect: sourceRect)
+    }
+    
     func presentReactionGen(owner: SecureUser, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, navigationController: UINavigationController?) -> ReactionGenViewController? {
         guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return nil }
         

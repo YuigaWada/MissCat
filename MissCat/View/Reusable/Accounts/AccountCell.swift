@@ -96,6 +96,10 @@ class AccountCell: UITableViewCell, ComponentType {
         borderView.layer.masksToBounds = true
         borderView.layer.borderWidth = 1
         backgroundColor = .clear
+        
+        let selectedView = UIView()
+        selectedView.backgroundColor = .clear
+        selectedBackgroundView = selectedView
     }
     
     private func binding(with viewModel: AccountCellViewModel) {

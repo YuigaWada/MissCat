@@ -165,6 +165,8 @@
 		8DF49FA224445B0500C4D2B2 /* TrendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DF49FA124445B0500C4D2B2 /* TrendViewController.swift */; };
 		8DFD613A2491197200E22C9F /* NavBarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DFD61392491197200E22C9F /* NavBarViewModel.swift */; };
 		8DFD613D24911B7F00E22C9F /* NavBarModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DFD613C24911B7F00E22C9F /* NavBarModel.swift */; };
+		8DFD613F2491208A00E22C9F /* AccountsDropdownMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DFD613E2491208A00E22C9F /* AccountsDropdownMenu.swift */; };
+		8DFD614124912F3D00E22C9F /* SecureUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DFD614024912F3D00E22C9F /* SecureUser.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -348,6 +350,8 @@
 		8DF49FA124445B0500C4D2B2 /* TrendViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendViewController.swift; sourceTree = "<group>"; };
 		8DFD61392491197200E22C9F /* NavBarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavBarViewModel.swift; sourceTree = "<group>"; };
 		8DFD613C24911B7F00E22C9F /* NavBarModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavBarModel.swift; sourceTree = "<group>"; };
+		8DFD613E2491208A00E22C9F /* AccountsDropdownMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsDropdownMenu.swift; sourceTree = "<group>"; };
+		8DFD614024912F3D00E22C9F /* SecureUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureUser.swift; sourceTree = "<group>"; };
 		DF4146F7CC2C0143F19E0DF3 /* Pods-MissCat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCat.release.xcconfig"; path = "Target Support Files/Pods-MissCat/Pods-MissCat.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -947,6 +951,7 @@
 				8D1C150D2424C649004B1202 /* Bridge.h */,
 				8DCCF8E4246A97C50001A21C /* MisscatApi.swift */,
 				8DCCF8E6246AB1090001A21C /* ApiKeyManager.swift */,
+				8DFD614024912F3D00E22C9F /* SecureUser.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -956,6 +961,7 @@
 			children = (
 				8D9702CC248DF6910000524A /* nib */,
 				8D9702CA248DF66D0000524A /* AccountCell.swift */,
+				8DFD613E2491208A00E22C9F /* AccountsDropdownMenu.swift */,
 			);
 			path = Accounts;
 			sourceTree = "<group>";
@@ -1281,6 +1287,7 @@
 				8D31018D24397B45004F8E55 /* ReactionSettingsViewController.swift in Sources */,
 				8D9702CB248DF66D0000524A /* AccountCell.swift in Sources */,
 				8DCBFBD624711B510028A5E6 /* MissCatImageView.swift in Sources */,
+				8DFD613F2491208A00E22C9F /* AccountsDropdownMenu.swift in Sources */,
 				8D0AC5C1237B865B00530508 /* TimelineModel.swift in Sources */,
 				8D5889F5244FFAC200C6EBC2 /* DesignSettingsViewController.swift in Sources */,
 				8DF49FA224445B0500C4D2B2 /* TrendViewController.swift in Sources */,
@@ -1354,6 +1361,7 @@
 				8DC27D9C243BF6DD0037E610 /* UrlPreviewerModel.swift in Sources */,
 				8DEB422D2478FCA500994439 /* DropdownMenuViewController.swift in Sources */,
 				8D8863A92383F8A900A7A5A8 /* NoteCellViewModel.swift in Sources */,
+				8DFD614124912F3D00E22C9F /* SecureUser.swift in Sources */,
 				8D2D523B2442CC9100712F48 /* UserCell.swift in Sources */,
 				8D310191243AE9AB004F8E55 /* MFMImageView.swift in Sources */,
 				8DD2F9C5246D5DA100562E85 /* ProfileSettingsViewController.swift in Sources */,

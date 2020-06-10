@@ -201,6 +201,9 @@ extension NotificationsViewController: NavBarDelegate {
         return viewModel?.owner
     }
     
-    func showAccountMenu() {}
+    func showAccountMenu(sourceRect: CGRect) {
+        parent?.presentAccountsDropdownMenu(sourceRect: sourceRect)
+    }
+    
     func tappedRightNavButton() {}
 }

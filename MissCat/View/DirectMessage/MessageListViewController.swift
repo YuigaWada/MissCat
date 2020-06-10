@@ -124,6 +124,6 @@ extension MessageListViewController: NavBarDelegate {
         return owner
     }
     
-    func showAccountMenu() {}
+    func showAccountMenu(sourceRect: CGRect) {}
     func tappedRightNavButton() {}
 }

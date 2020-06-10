@@ -40,21 +40,49 @@ class AccountCellViewModel: ViewModelType {
     
     func transform() {
         let user = input.user
+        
+        // キャッシュから
+        if let cache = Cache.shared.getUserInfo(user: user) {
+            let name = cache.name
+            let username = "@\(cache.username)"
+            
+            output.name.accept(name)
+            output.username.accept(username)
+            output.instance.accept(user.instance)
+            output.iconImage.accept(cache.image)
+            return
+        }
+        
+        // APIから
         model.getAccountInfo { info in
+            guard let info = info else { return }
+            
             // icon
-            _ = info?.avatarUrl?.toUIImage { image in
+            _ = info.avatarUrl?.toUIImage { image in
                 guard let image = image else { return }
                 self.output.iconImage.accept(image)
+                self.cache(user: user, userModel: info, image: image)
             }
             
             // text
             
-            let name = info?.name
-            let username = "@\(info?.username ?? "")"
+            let name = info.name
+            let username = "@\(info.username ?? "")"
             
             self.output.name.accept(name ?? username)
             self.output.username.accept(username)
             self.output.instance.accept(user.instance)
         }
+    }
+    
+    private func cache(user: SecureUser, userModel info: UserModel, image: UIImage) {
+        let username = info.username ?? ""
+        let cache = Cache.UserInfo(user: user,
+                                   name: info.name ?? username,
+                                   username: username,
+                                   host: user.instance,
+                                   image: image)
+        
+        Cache.shared.saveUserInfo(info: cache) // キャッシュしておく
     }
 }

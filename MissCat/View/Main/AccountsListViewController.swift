@@ -207,7 +207,8 @@ extension AccountsListViewController: NavBarDelegate {
         return nil
     }
     
-    func showAccountMenu() {}
+    func showAccountMenu(sourceRect: CGRect) {}
+    
     func tappedRightNavButton() {
         homeViewController?.openSettings()
     }

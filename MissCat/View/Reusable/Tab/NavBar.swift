@@ -10,7 +10,7 @@ import RxSwift
 import UIKit
 
 protocol NavBarDelegate {
-    func showAccountMenu()
+    func showAccountMenu(sourceRect: CGRect)
     func tappedRightNavButton()
     func currentUser() -> SecureUser?
 }
@@ -133,7 +133,7 @@ class NavBar: UIView {
     
     private func setupGesture() {
         userIconView.setTapGesture(disposeBag, closure: {
-            self.delegate?.showAccountMenu()
+            self.delegate?.showAccountMenu(sourceRect: self.userIconView.frame)
         })
         
         rightButton.rx.tap.subscribe { _ in
