@@ -707,9 +707,9 @@ extension HomeViewController: NavBarDelegate {
     func tappedLeftNavButton() {}
     
     func tappedRightNavButton() {
-        guard nowPage == .messages else { return }
-        
-        // DM処理書く
+        if nowPage == .profile {
+            openSettings()
+        }
     }
 }
 
