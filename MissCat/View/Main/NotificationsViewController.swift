@@ -204,6 +204,7 @@ extension NotificationsViewController: NavBarDelegate {
     func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
         let selected = parent?.presentAccountsDropdownMenu(sourceRect: sourceRect)
         selected?.subscribe(onNext: { user in
+            guard user.userId != self.viewModel?.owner?.userId else { return } // 同じアカウントへの切り替えを防ぐ
             self.viewModel?.owner = user
             self.viewModel?.removeAll()
             self.viewModel?.initialLoad()
