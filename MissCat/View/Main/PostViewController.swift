@@ -388,6 +388,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     private func showAccountsMenu() {
         let selected = presentAccountsDropdownMenu(sourceRect: iconImageView.frame)
         selected?.subscribe(onNext: { user in
+            self.owner = user
             self.viewModel?.changeUser(user)
             Cache.UserDefaults.shared.changeCurrentUser(userId: user.userId)
         }).disposed(by: disposeBag)
