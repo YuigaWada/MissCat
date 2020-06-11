@@ -166,6 +166,7 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
         
         let shapedCell = accountCell.transform(with: .init(user: item.owner))
         
+        shapedCell.selectionStyle = .none
         // 購読し直す
         let disposable = shapedCell.deleteTrigger.subscribe(onNext: {
             self.delete(index: index, viewModel: viewModel)
@@ -207,7 +208,9 @@ extension AccountsListViewController: NavBarDelegate {
         return nil
     }
     
-    func showAccountMenu(sourceRect: CGRect) {}
+    func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
+        return nil
+    }
     
     func tappedRightNavButton() {
         homeViewController?.openSettings()

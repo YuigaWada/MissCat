@@ -13,7 +13,6 @@ class NotificationsViewModel {
     let notes: PublishSubject<[NotificationCell.Section]> = .init()
     var dataSource: NotificationDataSource?
     var cellCount: Int { return cellsModel.count }
-    var owner: SecureUser?
     
     struct State {
         var hasPrepared: Bool = false
@@ -28,12 +27,20 @@ class NotificationsViewModel {
     var cellsModel: [NotificationCell.Model] = []
     
     private var disposeBag: DisposeBag
+    private lazy var model = NotificationsModel(from: misskey, owner: owner)
+    
     private lazy var misskey: MisskeyKit? = {
         guard let owner = owner else { return nil }
         return MisskeyKit(from: owner)
     }()
     
-    private lazy var model = NotificationsModel(from: misskey, owner: owner)
+    var owner: SecureUser? {
+        didSet {
+            guard let owner = owner else { return }
+            misskey = MisskeyKit(from: owner)
+            model.change(misskey: misskey, owner: owner)
+        }
+    }
     
     init(disposeBag: DisposeBag) {
         self.disposeBag = disposeBag
@@ -79,6 +86,11 @@ class NotificationsViewModel {
             self.update(new: self.cellsModel)
             completion?()
         }).disposed(by: disposeBag)
+    }
+    
+    func removeAll() {
+        cellsModel = []
+        update(new: cellsModel)
     }
     
     // MARK: Streaming

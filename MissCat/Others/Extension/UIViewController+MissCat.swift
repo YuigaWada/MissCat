@@ -64,12 +64,14 @@ extension UIViewController {
         return presentDropdownMenu(menu: dropdownMenu, size: size, sourceRect: sourceRect)
     }
     
-    func presentAccountsDropdownMenu(sourceRect: CGRect) -> Observable<Int>? {
+    func presentAccountsDropdownMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
         let users = Cache.UserDefaults.shared.getUsers()
         let size = CGSize(width: view.frame.width * 3 / 5, height: 50 * CGFloat(users.count))
         
         let dropdownMenu = AccountsDropdownMenu(with: users, size: size)
-        return presentDropdownMenu(menu: dropdownMenu, size: size, sourceRect: sourceRect)
+        let selected = presentDropdownMenu(menu: dropdownMenu, size: size, sourceRect: sourceRect)
+        
+        return selected?.map { users[$0] } // 選択されたユーザーを返す
     }
     
     func presentReactionGen(owner: SecureUser, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, navigationController: UINavigationController?) -> ReactionGenViewController? {

@@ -10,7 +10,7 @@ import RxSwift
 import UIKit
 
 protocol NavBarDelegate {
-    func showAccountMenu(sourceRect: CGRect)
+    func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>?
     func tappedRightNavButton()
     func currentUser() -> SecureUser?
 }
@@ -99,6 +99,8 @@ class NavBar: UIView {
     }
     
     // Public Methods
+    
+    /// NavBarのスタイルを設定する
     func setButton(style: NavBar.Button, rightText: String? = nil, leftText: String? = nil, rightFont: UIFont? = nil, leftFont: UIFont? = nil) {
         // Image
         setUserIcon()
@@ -133,7 +135,7 @@ class NavBar: UIView {
     
     private func setupGesture() {
         userIconView.setTapGesture(disposeBag, closure: {
-            self.delegate?.showAccountMenu(sourceRect: self.userIconView.frame)
+            self.showAccountsMenu()
         })
         
         rightButton.rx.tap.subscribe { _ in
@@ -142,15 +144,30 @@ class NavBar: UIView {
         }.disposed(by: disposeBag)
     }
     
+    /// ユーザーアイコンを設定
+    private func setUserIcon(of user: SecureUser) {
+        userIconView.isHidden = false
+        viewModel?.transform(user: user)
+    }
+    
+    /// ユーザーアイコンを設定
     private func setUserIcon() {
         guard let user = delegate?.currentUser() else {
             userIconView.image = nil
             userIconView.isHidden = true
             return
         }
+        setUserIcon(of: user)
+    }
+    
+    /// アカウントメニューを表示する
+    private func showAccountsMenu() {
+        let selected = delegate?.showAccountMenu(sourceRect: userIconView.frame)
         
-        userIconView.isHidden = false
-        viewModel?.transform(user: user)
+        selected?.subscribe(onNext: { user in
+            self.setUserIcon(of: user)
+            Cache.UserDefaults.shared.changeCurrentUser(userId: user.userId)
+        }).disposed(by: disposeBag)
     }
 }
 

@@ -201,8 +201,15 @@ extension NotificationsViewController: NavBarDelegate {
         return viewModel?.owner
     }
     
-    func showAccountMenu(sourceRect: CGRect) {
-        parent?.presentAccountsDropdownMenu(sourceRect: sourceRect)
+    func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
+        let selected = parent?.presentAccountsDropdownMenu(sourceRect: sourceRect)
+        selected?.subscribe(onNext: { user in
+            self.viewModel?.owner = user
+            self.viewModel?.removeAll()
+            self.viewModel?.initialLoad()
+        }).disposed(by: disposeBag)
+        
+        return selected
     }
     
     func tappedRightNavButton() {}

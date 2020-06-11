@@ -124,6 +124,9 @@ extension MessageListViewController: NavBarDelegate {
         return owner
     }
     
-    func showAccountMenu(sourceRect: CGRect) {}
+    func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
+        return nil
+    }
+    
     func tappedRightNavButton() {}
 }
