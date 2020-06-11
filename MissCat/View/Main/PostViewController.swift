@@ -278,6 +278,10 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
             })
             .disposed(by: disposeBag)
         
+        iconImageView.setTapGesture(disposeBag) {
+            self.showAccountsMenu()
+        }
+        
         output.nowPlaying
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(musicButton.rx.isEnabled)
@@ -379,6 +383,13 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         }).disposed(by: disposeBag)
         
         return cell.setupCell(item)
+    }
+    
+    private func showAccountsMenu() {
+        let selected = presentAccountsDropdownMenu(sourceRect: iconImageView.frame)
+        selected?.subscribe(onNext: { user in
+            self.viewModel?.changeUser(user)
+        }).disposed(by: disposeBag)
     }
     
     private func showReactionGen() {

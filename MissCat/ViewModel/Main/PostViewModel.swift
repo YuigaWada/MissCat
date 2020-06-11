@@ -13,7 +13,7 @@ import RxSwift
 
 class PostViewModel: ViewModelType {
     struct Input {
-        let owner: SecureUser?
+        var owner: SecureUser?
         let type: PostViewController.PostType
         let targetNote: NoteCell.Model?
         let rxCwText: ControlProperty<String?>
@@ -174,6 +174,17 @@ class PostViewModel: ViewModelType {
         setInnerNote()
         setSavedVisibility()
         checkMusic()
+    }
+    
+    // MARK: ChangeUser
+    
+    func changeUser(_ user: SecureUser) {
+        input.owner = user
+        model = PostModel(from: MisskeyKit(from: user))
+        model.getIconImage { image in
+            guard let image = image else { return }
+            self.iconImage.onNext(image)
+        }
     }
     
     private func submitNote() {
