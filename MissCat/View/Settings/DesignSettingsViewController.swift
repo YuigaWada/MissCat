@@ -106,6 +106,7 @@ class DesignSettingsViewController: FormViewController {
             let row = TabSettingsRow {
                 $0.cell?.setName(tab.name)
                 $0.cell?.setKind(tab.kind)
+                $0.cell?.setOwner(userId: tab.userId)
                 $0.baseCell.backgroundColor = self.getCellBackgroundColor()
             }
             section.insert(row, at: 0)

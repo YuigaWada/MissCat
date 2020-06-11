@@ -11,14 +11,62 @@ import RxCocoa
 import RxSwift
 import UIKit
 
-class AccountsDropdownMenu: UIViewController, UITableViewDelegate, UITableViewDataSource, Dropdown {
+class AccountsPopupMenu: AccountsMenu {
+    @IBOutlet weak var containerView: UIView!
+    @IBOutlet weak var selectLabel: UILabel!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setTheme()
+        containerView.layer.cornerRadius = 8
+        containerView.layer.borderWidth = 1
+    }
+    
+    private func setTheme() {
+        guard let theme = Theme.shared.currentModel else { return }
+        
+        let colorPattern = theme.colorPattern.ui
+        let backgroundColor = theme.colorMode == .light ? colorPattern.base : colorPattern.sub3
+        
+        containerView.backgroundColor = backgroundColor
+        containerView.layer.borderColor = UIColor.lightGray.cgColor
+        
+        selectLabel.textColor = colorPattern.text
+    }
+}
+
+class AccountsDropdownMenu: AccountsMenu {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupTableView()
+    }
+    
+    // MARK: Setup
+    
+    func setupTableView() {
+        let tableView = UITableView(frame: view.frame)
+        
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        tableView.bounces = false
+        tableView.showsVerticalScrollIndicator = false
+        tableView.backgroundColor = .clear
+        
+        tableView.delegate = self
+        tableView.dataSource = self
+        
+        view.addSubview(tableView)
+    }
+}
+
+class AccountsMenu: UIViewController, UITableViewDelegate, UITableViewDataSource, Dropdown {
     var cellHeight: CGFloat = 50
     var selected: PublishRelay<Int> = .init()
     
     private var textColor: UIColor = .black
     private var iconColor: UIColor = .systemBlue
     
-    private var users: [SecureUser] = []
+    var users: [SecureUser] = []
     
     // MARK: LifeCycle
     
@@ -40,7 +88,6 @@ class AccountsDropdownMenu: UIViewController, UITableViewDelegate, UITableViewDa
     override func viewDidLoad() {
         super.viewDidLoad()
         setTheme()
-        setupTableView()
     }
     
     // MARK: Design
@@ -56,23 +103,6 @@ class AccountsDropdownMenu: UIViewController, UITableViewDelegate, UITableViewDa
         textColor = theme.colorPattern.ui.text
         view.backgroundColor = backgroundColor
         popoverPresentationController?.backgroundColor = backgroundColor
-    }
-    
-    // MARK: Setup
-    
-    func setupTableView() {
-        let tableView = UITableView(frame: view.frame)
-        
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-        tableView.bounces = false
-        tableView.showsVerticalScrollIndicator = false
-        tableView.backgroundColor = .clear
-        
-        tableView.delegate = self
-        tableView.dataSource = self
-        
-        view.addSubview(tableView)
     }
     
     // MARK: Delegate
