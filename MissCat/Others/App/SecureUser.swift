@@ -11,10 +11,12 @@ import Foundation
 class SecureUser: Codable {
     let userId: String
     let instance: String
+    let username: String
     var apiKey: String?
     
-    init(userId: String, instance: String, apiKey: String?) {
+    init(userId: String, username: String, instance: String, apiKey: String?) {
         self.userId = userId
+        self.username = username
         self.instance = instance
         self.apiKey = apiKey
     }

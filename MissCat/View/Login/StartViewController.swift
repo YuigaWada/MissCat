@@ -182,7 +182,7 @@ class StartViewController: UIViewController {
         MisskeyKit.shared.auth.setAPIKey(apiKey)
         MisskeyKit.shared.users.i { user, _ in
             guard let user = user else { return }
-            let secureUser = SecureUser(userId: user.id, instance: self.misskeyInstance, apiKey: apiKey)
+            let secureUser = SecureUser(userId: user.id, username: user.username ?? "", instance: self.misskeyInstance, apiKey: apiKey)
             let success = Cache.UserDefaults.shared.saveUser(secureUser)
             
             guard success else { self.showAlert(); return }

@@ -213,7 +213,7 @@ extension Cache {
             
             // apikeyをキーチェーンから取り出して詰め替えていく
             return users.map {
-                return SecureUser(userId: $0.userId, instance: $0.instance, apiKey: self.keychain[$0.userId])
+                return SecureUser(userId: $0.userId, username: $0.username, instance: $0.instance, apiKey: self.keychain[$0.userId])
             }
         }
         
@@ -247,6 +247,7 @@ extension Cache {
             guard let currentUserId = getCurrentUserId(),
                 let currentUser = getUser(userId: currentUserId) else { return nil }
             
+            usernameRefill(with: currentUser)
             self.currentUser = currentUser
             return currentUser
         }
@@ -262,13 +263,25 @@ extension Cache {
                 let instance = Foundation.UserDefaults.standard.string(forKey: currentLoginedInstance) else { return }
             
             // 詰め替える
-            saveUser(.init(userId: userId, instance: instance, apiKey: apiKey))
+            _ = saveUser(.init(userId: userId, username: "", instance: instance, apiKey: apiKey))
             changeCurrentUser(userId: userId)
             
             // UserDefaultsに保存されているデータを削除
             Foundation.UserDefaults.standard.removeObject(forKey: currentLoginedApiKey)
             Foundation.UserDefaults.standard.removeObject(forKey: currentLoginedUserId)
             Foundation.UserDefaults.standard.removeObject(forKey: currentLoginedInstance)
+        }
+        
+        /// userRefill()で詰めきれなかったusernameを非同期で詰める
+        func usernameRefill(with user: SecureUser) {
+            guard user.username.isEmpty,
+                let apiKey = user.apiKey else { return }
+            let misskey = MisskeyKit(from: user)
+            misskey?.users.i { info, _ in
+                guard let info = info else { return }
+                let secureUser = SecureUser(userId: user.userId, username: info.username ?? "", instance: user.instance, apiKey: apiKey)
+                _ = Cache.UserDefaults.shared.saveUser(secureUser)
+            }
         }
         
         // MARK: Visibility
