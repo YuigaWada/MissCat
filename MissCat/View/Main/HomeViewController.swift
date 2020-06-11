@@ -70,7 +70,9 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     private var viewModel = HomeViewModel()
     private var disposeBag = DisposeBag()
     
-    private lazy var tabs: [Tab] = {
+    private lazy var tabs: [Tab] = transformTabs()
+    
+    private func transformTabs() -> [Tab] {
         guard let tabs = Theme.shared.currentModel?.tab else { return [] }
         
         // タブに紐付けられたユーザーの情報を詰めていく
@@ -79,7 +81,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
                 let owner = Cache.UserDefaults.shared.getUser(userId: userId) else { return nil }
             return Tab(name: $0.name, kind: $0.kind, userId: $0.userId, listId: $0.listId, owner: owner)
         }
-    }()
+    }
     
     // MARK: PolioPager Overrides
     
@@ -166,6 +168,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     /// - Parameter startingPage: どのpageがrelaunch後、最初に表示されるか
     func relaunchView(start startingPage: Page = .profile) {
         // main
+        tabs = transformTabs() // タブ情報を更新する
         reloadPager()
         
         // notif
@@ -246,9 +249,11 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
             // タブ情報が更新されている場合のみタブをリロード
             if let oldTheme = currentTheme {
                 if !theme.hasEqualTabs(to: oldTheme) {
+                    self.tabs = self.transformTabs() // タブ情報を更新する
                     self.reloadPager()
                 }
             } else {
+                self.tabs = self.transformTabs() // タブ情報を更新する
                 self.reloadPager()
             }
             
