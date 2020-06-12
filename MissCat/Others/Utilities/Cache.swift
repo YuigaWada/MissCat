@@ -211,10 +211,20 @@ extension Cache {
                 let users = try? JSONDecoder().decode([SecureUser].self, from: data),
                 users.count > 0 else { return [] }
             
+            var noApiKeyUserIds: [String] = []
+            
             // apikeyをキーチェーンから取り出して詰め替えていく
-            return users.map {
-                return SecureUser(userId: $0.userId, username: $0.username, instance: $0.instance, apiKey: self.keychain[$0.userId])
+            let _users: [SecureUser] = users.compactMap {
+                guard let apiKey = self.keychain[$0.userId] else { noApiKeyUserIds.append($0.userId); return nil }
+                return SecureUser(userId: $0.userId, username: $0.username, instance: $0.instance, apiKey: apiKey)
             }
+            
+            if noApiKeyUserIds.count > 0 { // apiKeyを持っていないユーザーは削除する
+                guard let usersData = try? JSONEncoder().encode(users.filter { !noApiKeyUserIds.contains($0.userId) }) else { return _users }
+                Foundation.UserDefaults.standard.set(usersData, forKey: savedUserKey)
+            }
+            
+            return _users
         }
         
         /// 指定されたuserIdのユーザーを取得する
