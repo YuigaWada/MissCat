@@ -22,6 +22,7 @@ class AccountsListViewModel: ViewModelType {
         let showLoginViewTrigger: PublishRelay<Void> = .init()
         let switchEditableTrigger: PublishRelay<Void> = .init()
         let switchNormalTrigger: PublishRelay<Void> = .init()
+        let noAccountsTrigger: PublishRelay<Void> = .init()
     }
     
     struct State {
@@ -68,6 +69,10 @@ class AccountsListViewModel: ViewModelType {
         model.removeUser(user: user)
         accounts.remove(at: index)
         update(accounts)
+        
+        if accounts.count == 0 {
+            output.noAccountsTrigger.accept(())
+        }
     }
     
     private func transform() {

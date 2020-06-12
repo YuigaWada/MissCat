@@ -79,6 +79,12 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         return tabs.compactMap {
             guard let userId = $0.userId ?? Cache.UserDefaults.shared.getCurrentUserId(),
                 let owner = Cache.UserDefaults.shared.getUser(userId: userId) else { return nil }
+            
+            if $0.kind == .home, $0.userId == nil { // userIdを持たないhomeタブは名前を@usernameに変更する
+                let username = Cache.UserDefaults.shared.getUser(userId: userId)?.username ?? ""
+                return Tab(name: "@\(username)", kind: $0.kind, userId: $0.userId, listId: $0.listId, owner: owner)
+            }
+            
             return Tab(name: $0.name, kind: $0.kind, userId: $0.userId, listId: $0.listId, owner: owner)
         }
     }
@@ -88,17 +94,23 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     /// 上タブのアイテム
     override func tabItems() -> [TabItem] {
         let colorPattern = Theme.shared.currentModel?.colorPattern
-        return tabs.map { tab in
+        let items = tabs.map { tab in
             TabItem(title: tab.name,
                     backgroundColor: colorPattern?.ui.base ?? .white,
                     normalColor: colorPattern?.ui.text ?? .black)
         }
+        
+        return items.count > 0 ? items : [TabItem(title: "")]
     }
     
     /// 上タブのアイテムに対応したViewControllerを返す
     override func viewControllers() -> [UIViewController] {
         setViewControllers = tabs.map { tab in // setされたviewControllerを記憶しておく
             getViewController(type: tab.kind, owner: tab.owner)
+        }
+        
+        if setViewControllers.count == 0 {
+            setViewControllers = [UIViewController()]
         }
         
         return [search] + setViewControllers
@@ -135,12 +147,10 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
-        if !logined {
-            userAuth()
-        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        if !logined { userAuth() } // アカウントを一つも持っていない場合はログインさせる
         super.viewDidAppear(animated)
         
         navigationController?.delegate = self
@@ -319,7 +329,13 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     
     private func showStartingViewController() {
         guard let startViewController = getViewController(name: "start") as? StartViewController else { return }
-        navigationController?.pushViewController(startViewController, animated: true)
+        
+        startViewController.reloadTrigger.subscribe(onNext: {
+            self.relaunchView(start: .main)
+        }).disposed(by: disposeBag)
+        
+        let navigationController = UINavigationController(rootViewController: startViewController)
+        presentOnFullScreen(navigationController, animated: true, completion: nil)
     }
     
     // MARK: Setup Tab

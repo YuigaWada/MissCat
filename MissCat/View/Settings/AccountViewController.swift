@@ -77,9 +77,7 @@ class AccountViewController: UITableViewController {
         Cache.shared.resetMyCache()
         
 //        startViewController.setup(afterLogout: true)
-        presentOnFullScreen(startViewController, animated: true) {
-            self.homeViewController?.relaunchView(start: .main) // すべてのviewをrelaunchする
-        }
+        presentOnFullScreen(startViewController, animated: true, completion: nil)
     }
     
     private func getViewController(name: String) -> UIViewController {

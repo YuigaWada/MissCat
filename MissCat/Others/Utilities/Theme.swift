@@ -30,6 +30,16 @@ public class Theme {
         self.currentModel = currentModel
     }
     
+    /// currentModelのタブ情報を全て削除する
+    func removeAllTabs() {
+        if currentModel == nil { set() }
+        
+        if let currentModel = currentModel {
+            currentModel.tab = Model.getDefault()?.tab ?? [] // デフォルトのタブに戻す
+            Model.save(with: currentModel)
+        }
+    }
+    
     /// viewの再launchが必要か
     /// - Parameters:
     ///   - model1: 比較対象1

@@ -22,7 +22,7 @@ class StartViewController: UIViewController {
     
     @IBOutlet weak var changeInstanceButton: UIButton!
     
-    var reloadListTrigger: PublishRelay<Void> = .init()
+    var reloadTrigger: PublishRelay<Void> = .init()
     private var appSecret: String?
     private var ioAppSecret: String = "0fRSNkKKl9hcZTGrUSyZOb19n8UUVkxw" // misskey.ioの場合はappSecret固定
     private var misskeyInstance: String = "misskey.io" {
@@ -99,15 +99,19 @@ class StartViewController: UIViewController {
     
     private func binding() {
         signupButton.rx.tap.subscribe(onNext: { _ in
-            guard let tos = self.getViewController(name: "tos") as? TosViewController else { return }
+            guard let navigationController = self.navigationController,
+                let tos = self.getViewController(name: "tos") as? TosViewController else { self.signup(); return }
+            
             tos.agreed = self.signup
-            self.navigationController?.pushViewController(tos, animated: true)
+            navigationController.pushViewController(tos, animated: true)
         }).disposed(by: disposeBag)
         
         loginButton.rx.tap.subscribe(onNext: { _ in
-            guard let tos = self.getViewController(name: "tos") as? TosViewController else { return }
+            guard let navigationController = self.navigationController,
+                let tos = self.getViewController(name: "tos") as? TosViewController else { self.login(); return }
+            
             tos.agreed = self.login
-            self.navigationController?.pushViewController(tos, animated: true)
+            navigationController.pushViewController(tos, animated: true)
         }).disposed(by: disposeBag)
         
         changeInstanceButton.rx.tap.subscribe(onNext: { _ in
@@ -187,6 +191,7 @@ class StartViewController: UIViewController {
             
             guard success else { self.showAlert(); return }
             Cache.UserDefaults.shared.changeCurrentUser(userId: user.id)
+            secureUser.apiKey = apiKey // saveUserでapiKeyが抜き消されるので詰め直す
             completion(secureUser)
         }
     }
@@ -201,8 +206,14 @@ class StartViewController: UIViewController {
             self.registerSw(of: user) // 通知を登録する
             
             DispatchQueue.main.async {
-                self.reloadListTrigger.accept(()) // AccountsListViewControllerのリロードを促す
-                self.navigationController?.popViewController(animated: true)
+                self.reloadTrigger.accept(()) // AccountsListViewControllerのリロードを促す
+                
+                if let navigationController = self.navigationController,
+                    !(navigationController.viewControllers[0] is StartViewController) { // navigationController由来の遷移の場合
+                    navigationController.popViewController(animated: true)
+                } else { // present(_:)由来の遷移の場合
+                    self.dismiss(animated: true, completion: nil)
+                }
             }
         }
     }

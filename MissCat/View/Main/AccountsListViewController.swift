@@ -116,14 +116,34 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
                 self.switchNormal()
             })
             .disposed(by: disposeBag)
+        
+        output.noAccountsTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: {
+                self.logout()
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func logout() {
+        guard let startViewController = getViewController(name: "start") as? StartViewController else { return }
+        
+        Cache.shared.resetMyCache()
+        Theme.shared.removeAllTabs()
+        
+        startViewController.reloadTrigger.subscribe(onNext: {
+            self.homeViewController?.relaunchView(start: .main) // すべてのviewをrelaunchする
+        }).disposed(by: disposeBag)
+        
+        presentOnFullScreen(startViewController, animated: true, completion: nil)
     }
     
     private func showLoginView() {
         guard let startViewController = getViewController(name: "start") as? StartViewController else { return }
         
-        startViewController.reloadListTrigger.subscribe(onNext: {
+        startViewController.reloadTrigger.subscribe(onNext: {
             self.viewModel?.load()
-            }).disposed(by: disposeBag)
+        }).disposed(by: disposeBag)
         navigationController?.pushViewController(startViewController, animated: true)
     }
     
