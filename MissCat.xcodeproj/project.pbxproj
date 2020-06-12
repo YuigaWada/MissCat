@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8D00BD5A249371560049FFE0 /* InstanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D00BD59249371560049FFE0 /* InstanceViewController.swift */; };
 		8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */; };
 		8D065B17237AC3D0003DFB7C /* TimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */; };
 		8D065B19237AC826003DFB7C /* NoteCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D065B18237AC825003DFB7C /* NoteCell.xib */; };
@@ -182,6 +183,7 @@
 /* Begin PBXFileReference section */
 		49D674DA4870479FF355F58B /* Pods_MissCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MissCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A9C2BEAFA1B2C51A77CF66B /* Pods-MissCat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCat.debug.xcconfig"; path = "Target Support Files/Pods-MissCat/Pods-MissCat.debug.xcconfig"; sourceTree = "<group>"; };
+		8D00BD59249371560049FFE0 /* InstanceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceViewController.swift; sourceTree = "<group>"; };
 		8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavigationController.swift; sourceTree = "<group>"; };
 		8D04919A237857AC000433CD /* MisskeyKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MisskeyKit.framework; path = Carthage/Build/iOS/MisskeyKit.framework; sourceTree = "<group>"; };
 		8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineViewModel.swift; sourceTree = "<group>"; };
@@ -1037,6 +1039,7 @@
 				8D5889F4244FFAC200C6EBC2 /* DesignSettingsViewController.swift */,
 				8D75EC7E2452E49100EAC2A8 /* ColorPicker.swift */,
 				8DD2F9C4246D5DA100562E85 /* ProfileSettingsViewController.swift */,
+				8D00BD59249371560049FFE0 /* InstanceViewController.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1299,6 +1302,7 @@
 				8DAF30192419842D0041BB85 /* AboutMisskeyViewController.swift in Sources */,
 				8D2D52432443D2BD00712F48 /* UserListViewModel.swift in Sources */,
 				8D2D52412443D03500712F48 /* UserListViewController.swift in Sources */,
+				8D00BD5A249371560049FFE0 /* InstanceViewController.swift in Sources */,
 				8D0D6891244A9A6800725ABB /* PlaceholderTableView.swift in Sources */,
 				8D57CA4924412430005DCEB2 /* SearchViewController.swift in Sources */,
 				8DAD238A240CE76000AB1F36 /* StartViewController.swift in Sources */,

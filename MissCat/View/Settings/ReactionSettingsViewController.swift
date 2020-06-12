@@ -21,7 +21,7 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     private var viewModel: ReactionSettingsViewModel?
     private let disposeBag = DisposeBag()
     
-    var owner: SecureUser? = Cache.UserDefaults.shared.getCurrentUser()
+    private var owner: SecureUser? = Cache.UserDefaults.shared.getCurrentUser()
     
     // MARK: LifeCycle
     
@@ -49,6 +49,11 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         if let viewModel = viewModel, !viewModel.state.saved {
             viewModel.save()
         }
+    }
+    
+    func setOwner(_ owner: SecureUser) {
+        self.owner = owner
+        title = owner.instance
     }
     
     // MARK: Design
@@ -104,8 +109,6 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         
         plusButton.titleLabel?.font = UIFont.awesomeSolid(fontSize: 14.0)
         minusButton.titleLabel?.font = UIFont.awesomeSolid(fontSize: 14.0)
-        
-        title = "絵文字の編集"
     }
     
     private func setupCollectionViewLayout() {

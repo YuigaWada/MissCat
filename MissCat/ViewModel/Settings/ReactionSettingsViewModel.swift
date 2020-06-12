@@ -33,6 +33,7 @@ class ReactionSettingsViewModel: ViewModelType {
     
     private var disposeBag: DisposeBag
     private var emojis: [EmojiView.EmojiModel] = []
+    private var defaultPresets = ["👍", "❤️", "😆", "🤔", "😮", "🎉", "💢", "😥", "😇", "🍮", "🤯"]
     
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
@@ -49,7 +50,7 @@ class ReactionSettingsViewModel: ViewModelType {
     
     /// UserDefaultsからお気に入り絵文字を取得する
     func setEmojiModel() {
-        emojis = EmojiModel.getEmojis(type: .favs, owner: input.owner) ?? []
+        emojis = getEmojis()
         updateEmojis(emojis)
     }
     
@@ -96,5 +97,17 @@ class ReactionSettingsViewModel: ViewModelType {
     private func updateEmojis(_ section: ReactionGenViewController.EmojisSection) {
         output.favs.onNext([section])
         state.saved = false
+    }
+    
+    private func getEmojis() -> [EmojiModel] {
+        guard let emojis = EmojiModel.getEmojis(type: .favs, owner: input.owner), emojis.count > 0 else { return getDefaultsPreset() }
+        return emojis
+    }
+    
+    private func getDefaultsPreset() -> [EmojiModel] {
+        return defaultPresets.map { EmojiModel(rawEmoji: $0,
+                                               isDefault: true,
+                                               defaultEmoji: $0,
+                                               customEmojiUrl: nil) }
     }
 }
