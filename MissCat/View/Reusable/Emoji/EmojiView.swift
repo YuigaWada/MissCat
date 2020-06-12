@@ -157,7 +157,7 @@ extension EmojiView {
         }
         
         private static func getKey(type: EmojiType, owner: SecureUser) -> String {
-            return "\(type.rawValue)-\(owner.userId)-\(owner.instance)"
+            return "\(type.rawValue)-\(owner.instance)" // 絵文字情報はインスタンスごとに管理する
         }
     }
 }
