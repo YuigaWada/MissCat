@@ -260,7 +260,7 @@ extension Theme {
         {
             "tab": [
                 {
-                    "name": "Home",
+                    "name": "___Home___",
                     "kind": "home"
                 },
                 {

@@ -103,8 +103,17 @@ class DesignSettingsViewController: FormViewController {
         
         // 保存されたテーマ情報からタブを再構築
         theme.tab.reversed().forEach { tab in
+            var tabName = tab.name
+            
+            // ホームタブがデフォルトなら@usernameに変更しておく(デフォルト値は___Home___)
+            if tab.kind == .home, tab.name == "___Home___", let userId = tab.userId {
+                if let user = Cache.UserDefaults.shared.getUser(userId: userId) {
+                    tabName = "@\(user.username)"
+                }
+            }
+            
             let row = TabSettingsRow {
-                $0.cell?.setName(tab.name)
+                $0.cell?.setName(tabName)
                 $0.cell?.setKind(tab.kind)
                 $0.cell?.setOwner(userId: tab.userId)
                 $0.baseCell.backgroundColor = self.getCellBackgroundColor()

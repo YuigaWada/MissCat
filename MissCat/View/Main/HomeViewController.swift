@@ -80,7 +80,8 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
             guard let userId = $0.userId ?? Cache.UserDefaults.shared.getCurrentUserId(),
                 let owner = Cache.UserDefaults.shared.getUser(userId: userId) else { return nil }
             
-            if $0.kind == .home, $0.userId == nil { // userIdを持たないhomeタブは名前を@usernameに変更する
+            // userIdを持たないhomeタブ、またはデフォルト値のhomeタブは名前を@usernameに変更する
+            if $0.kind == .home, $0.userId == nil || $0.name == "___Home___" {
                 let username = Cache.UserDefaults.shared.getUser(userId: userId)?.username ?? ""
                 return Tab(name: "@\(username)", kind: $0.kind, userId: $0.userId, listId: $0.listId, owner: owner)
             }
