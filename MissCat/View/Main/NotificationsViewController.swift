@@ -197,10 +197,6 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
 }
 
 extension NotificationsViewController: NavBarDelegate {
-    func currentUser() -> SecureUser? {
-        return viewModel?.owner
-    }
-    
     func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
         let selected = parent?.presentAccountsDropdownMenu(sourceRect: sourceRect)
         selected?.subscribe(onNext: { user in

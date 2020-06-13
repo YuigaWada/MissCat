@@ -12,7 +12,6 @@ import UIKit
 protocol NavBarDelegate {
     func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>?
     func tappedRightNavButton()
-    func currentUser() -> SecureUser?
 }
 
 class NavBar: UIView {
@@ -152,7 +151,7 @@ class NavBar: UIView {
     
     /// ユーザーアイコンを設定
     private func setUserIcon() {
-        guard let user = delegate?.currentUser() else {
+        guard let user = Cache.UserDefaults.shared.getCurrentUser() else {
             userIconView.image = nil
             userIconView.isHidden = true
             return
