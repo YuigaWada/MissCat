@@ -11,9 +11,14 @@ import RxCocoa
 import RxSwift
 
 class MessageListModel {
-    private let misskey: MisskeyKit?
-    private let owner: SecureUser?
+    private var misskey: MisskeyKit?
+    private var owner: SecureUser?
     init(from misskey: MisskeyKit?, owner: SecureUser?) {
+        self.misskey = misskey
+        self.owner = owner
+    }
+    
+    func change(from misskey: MisskeyKit?, owner: SecureUser?) {
         self.misskey = misskey
         self.owner = owner
     }

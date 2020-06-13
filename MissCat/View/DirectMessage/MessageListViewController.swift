@@ -36,7 +36,7 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
         view.deselectCell(on: tableView)
         
         if viewModel.state.hasAccounts, !viewModel.state.hasPrepared {
-            viewModel.setupInitialCell()
+            viewModel.load()
         }
     }
     
@@ -122,7 +122,9 @@ extension MessageListViewController: NavBarDelegate {
     func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
         let selected = parent?.presentAccountsDropdownMenu(sourceRect: sourceRect)
         selected?.subscribe(onNext: { user in
-            self.viewModel.state.owner = user
+            self.viewModel.owner = user
+            self.viewModel.removeAll()
+            self.viewModel.load()
         }).disposed(by: disposeBag)
         
         return selected

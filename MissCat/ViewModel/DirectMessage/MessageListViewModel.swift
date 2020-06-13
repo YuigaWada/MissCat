@@ -25,8 +25,6 @@ class MessageListViewModel: ViewModelType {
         var isLoading: Bool = false
         var hasPrepared: Bool = false
         
-        var owner: SecureUser? = Cache.UserDefaults.shared.getCurrentUser()
-        
         var hasAccounts: Bool {
             return Cache.UserDefaults.shared.getUsers().count > 0
         }
@@ -38,11 +36,18 @@ class MessageListViewModel: ViewModelType {
     
     var cellsModel: [SenderCell.Model] = []
     private lazy var misskey: MisskeyKit? = {
-        guard let owner = state.owner else { return nil }
+        guard let owner = owner else { return nil }
         return MisskeyKit(from: owner)
     }()
     
-    private lazy var model: MessageListModel = .init(from: misskey, owner: state.owner)
+    var owner: SecureUser? {
+        didSet {
+            guard let owner = owner else { return }
+            model.change(from: MisskeyKit(from: owner), owner: owner)
+        }
+    }
+    
+    private lazy var model: MessageListModel = .init(from: misskey, owner: owner)
     
     private let disposeBag: DisposeBag
     
@@ -51,9 +56,10 @@ class MessageListViewModel: ViewModelType {
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
         self.disposeBag = disposeBag
+        owner = Cache.UserDefaults.shared.getCurrentUser()
     }
     
-    func setupInitialCell() {
+    func load() {
         state.hasPrepared = true
         loadHistory().subscribe(onError: { error in
             print(error)
@@ -62,6 +68,11 @@ class MessageListViewModel: ViewModelType {
                 self.updateUsers(new: self.cellsModel)
             }
         }, onDisposed: nil).disposed(by: disposeBag)
+    }
+    
+    func removeAll() {
+        cellsModel = []
+        updateUsers(new: cellsModel)
     }
     
     // MARK: Load
