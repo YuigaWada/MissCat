@@ -10,6 +10,7 @@ import RxSwift
 import UIKit
 
 protocol NavBarDelegate {
+    func changeUser(_ user: SecureUser)
     func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>?
     func tappedRightNavButton()
 }
@@ -166,6 +167,7 @@ class NavBar: UIView {
         selected?.subscribe(onNext: { user in
             self.setUserIcon(of: user)
             Cache.UserDefaults.shared.changeCurrentUser(userId: user.userId)
+            self.delegate?.changeUser(user)
         }).disposed(by: disposeBag)
     }
 }

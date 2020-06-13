@@ -355,6 +355,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
             hasPreparedViews = true
         }
         
+        navBar.delegate = self
         navBar.frame = CGRect(x: 0,
                               y: 0,
                               width: view.frame.width,
@@ -408,7 +409,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     private func showAccountListView() {
         if let accountsListViewController = accountsListViewController {
             accountsListViewController.view.isHidden = false
-            showNavBar(title: "Accounts", delegate: accountsListViewController, page: .profile, style: .Right, rightText: "cog")
+            showNavBar(title: "Accounts", page: .profile, style: .Right, rightText: "cog")
             return
         }
         
@@ -421,7 +422,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         addChild(accountsListViewController)
         view.addSubview(accountsListViewController.view)
         
-        showNavBar(title: "Accounts", delegate: accountsListViewController, page: .profile, style: .Right, rightText: "cog")
+        showNavBar(title: "Accounts", page: .profile, style: .Right, rightText: "cog")
         self.accountsListViewController = accountsListViewController
     }
     
@@ -700,27 +701,41 @@ extension HomeViewController: FooterTabBarDelegate {
     private func showNotificationsView() {
         guard let notificationsViewController = notificationsViewController else { return }
         
-        showNavBar(title: "Notifications", delegate: notificationsViewController, page: .notifications)
+        showNavBar(title: "Notifications", page: .notifications)
         notificationsViewController.view.isHidden = false
     }
     
     func showFavView() {
         guard let favViewController = favViewController else { return }
         
-        showNavBar(title: "Chat", delegate: favViewController, page: .messages)
+        showNavBar(title: "Chat", page: .messages)
         favViewController.view.isHidden = false
     }
     
-    private func showNavBar(title: String, delegate: NavBarDelegate, page: Page, style: NavBar.Button = .None, rightText: String? = nil, rightFont: UIFont? = nil) {
+    private func showNavBar(title: String, page: Page, style: NavBar.Button = .None, rightText: String? = nil, rightFont: UIFont? = nil) {
         navBar.isHidden = false
         navBar.barTitle = title
-        navBar.delegate = delegate
         navBar.setButton(style: style,
                          rightText: rightText,
                          leftText: nil,
                          rightFont: rightFont ?? UIFont.awesomeSolid(fontSize: 16))
         
         nowPage = page
+    }
+}
+
+extension HomeViewController: NavBarDelegate {
+    func changeUser(_ user: SecureUser) {
+        favViewController?.changeUser(user)
+        notificationsViewController?.changeUser(user)
+    }
+    
+    func tappedRightNavButton() {
+        openSettings()
+    }
+    
+    func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
+        return presentAccountsDropdownMenu(sourceRect: sourceRect)
     }
 }
 

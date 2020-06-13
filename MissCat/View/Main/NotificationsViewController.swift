@@ -197,16 +197,15 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
 }
 
 extension NotificationsViewController: NavBarDelegate {
+    func changeUser(_ user: SecureUser) {
+        guard user.userId != viewModel?.owner?.userId else { return } // 同じアカウントへの切り替えを防ぐ
+        viewModel?.owner = user
+        viewModel?.removeAll()
+        viewModel?.initialLoad()
+    }
+    
     func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
-        let selected = parent?.presentAccountsDropdownMenu(sourceRect: sourceRect)
-        selected?.subscribe(onNext: { user in
-            guard user.userId != self.viewModel?.owner?.userId else { return } // 同じアカウントへの切り替えを防ぐ
-            self.viewModel?.owner = user
-            self.viewModel?.removeAll()
-            self.viewModel?.initialLoad()
-        }).disposed(by: disposeBag)
-        
-        return selected
+        return nil
     }
     
     func tappedRightNavButton() {}

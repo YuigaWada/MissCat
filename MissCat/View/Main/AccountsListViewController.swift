@@ -224,15 +224,11 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
 }
 
 extension AccountsListViewController: NavBarDelegate {
-    func currentUser() -> SecureUser? {
-        return nil
-    }
+    func changeUser(_ user: SecureUser) {}
     
     func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
         return nil
     }
     
-    func tappedRightNavButton() {
-        homeViewController?.openSettings()
-    }
+    func tappedRightNavButton() {}
 }

@@ -153,7 +153,7 @@ extension Cache {
         static var shared: Cache.UserDefaults = .init()
         
         private lazy var keychain = Keychain(service: "yuwd.MissCat") // indexをuseridとして、valueをapiKeyとする
-        private var currentUser: SecureUser?
+//        private var currentUser: SecureUser?
         
         private let latestNotificationKey = "latest-notification"
         
@@ -252,13 +252,10 @@ extension Cache {
         func getCurrentUser() -> SecureUser? {
             userRefill()
             
-            if currentUser != nil { return currentUser }
-            
             guard let currentUserId = getCurrentUserId(),
                 let currentUser = getUser(userId: currentUserId) else { return nil }
             
             usernameRefill(with: currentUser)
-            self.currentUser = currentUser
             return currentUser
         }
         
