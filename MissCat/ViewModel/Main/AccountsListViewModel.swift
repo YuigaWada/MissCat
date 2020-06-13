@@ -66,10 +66,15 @@ class AccountsListViewModel: ViewModelType {
     func delete(index: Int) {
         let user = accounts[index].items[0].owner
         
+        // アカウントを削除
         model.removeUser(user: user)
         accounts.remove(at: index)
         update(accounts)
         
+        // タブをチェック
+        model.checkTabs(for: user)
+        
+        // アカウントが残っているかチェック
         if accounts.count == 0 {
             output.noAccountsTrigger.accept(())
         }

@@ -36,7 +36,27 @@ public class Theme {
         
         if let currentModel = currentModel {
             currentModel.tab = Model.getDefault()?.tab ?? [] // デフォルトのタブに戻す
+            
             Model.save(with: currentModel)
+            self.currentModel = currentModel
+        }
+    }
+    
+    /// 削除しようとしているアカウントが紐付けられたタブを削除しておく
+    /// - Parameter user: SecureUser
+    func removeUserTabs(for user: SecureUser) {
+        if currentModel == nil { set() }
+        
+        if let currentModel = currentModel {
+            currentModel.tab = currentModel.tab.filter { $0.userId != user.userId }
+            
+            // タブが0個になったらデフォルトのタブに戻しておく
+            if currentModel.tab.count == 0 {
+                currentModel.tab = Model.getDefault()?.tab ?? []
+            }
+            
+            Model.save(with: currentModel)
+            self.currentModel = currentModel
         }
     }
     

@@ -72,11 +72,13 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     
     private lazy var tabs: [Tab] = transformTabs()
     
+    // MARK: Transform Tabs
+    
     private func transformTabs() -> [Tab] {
         guard let tabs = Theme.shared.currentModel?.tab else { return [] }
         
-        // タブに紐付けられたユーザーの情報を詰めていく
-        return tabs.compactMap {
+        // 有効なタブのみ取り出し、紐付けられたアカウント情報を詰めていく
+        let transformed: [Tab] = tabs.compactMap {
             guard let userId = $0.userId ?? Cache.UserDefaults.shared.getCurrentUserId(),
                 let owner = Cache.UserDefaults.shared.getUser(userId: userId) else { return nil }
             
@@ -88,6 +90,14 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
             
             return Tab(name: $0.name, kind: $0.kind, userId: $0.userId, listId: $0.listId, owner: owner)
         }
+        
+        // 有効なタブが存在しなかった場合
+        if transformed.count == 0 {
+            Theme.shared.currentModel?.tab = Theme.Model.getDefault()?.tab ?? [] // デフォルトのタブを代入しておく
+            return transformTabs()
+        }
+        
+        return transformed
     }
     
     // MARK: PolioPager Overrides
