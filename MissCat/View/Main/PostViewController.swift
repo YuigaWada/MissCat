@@ -45,6 +45,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     
     var homeViewController: HomeViewController?
     
+    private var owner: SecureUser?
     private var postType: PostType = .Post
     private var targetNote: NoteCell.Model?
     
@@ -53,6 +54,21 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     private let disposeBag = DisposeBag()
     
     // MARK: Life Cycle
+    
+    /// 引用RN / リプライの場合に、対象ノートのモデルを受け渡す
+    /// - Parameters:
+    ///   - note: note model
+    ///   - type: PostType
+    
+    func setup(owner: SecureUser, note: NoteCell.Model?, type: PostType) {
+        self.owner = owner
+        targetNote = note
+        postType = type
+    }
+    
+    func setup(owner: SecureUser) {
+        self.owner = owner
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -72,7 +88,8 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     }
     
     private func getViewModel() -> PostViewModel {
-        let input: PostViewModel.Input = .init(type: postType,
+        let input: PostViewModel.Input = .init(owner: owner,
+                                               type: postType,
                                                targetNote: targetNote,
                                                rxCwText: cwTextView.rx.text,
                                                rxMainText: mainTextView.rx.text,
@@ -98,15 +115,6 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         
         iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
         innerIconView.layer.cornerRadius = innerIconView.frame.width / 2
-    }
-    
-    /// 引用RN / リプライの場合に、対象ノートのモデルを受け渡す
-    /// - Parameters:
-    ///   - note: note model
-    ///   - type: PostType
-    func setTargetNote(_ note: NoteCell.Model, type: PostType) {
-        targetNote = note
-        postType = type
     }
     
     // MARK: Design
@@ -270,6 +278,10 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
             })
             .disposed(by: disposeBag)
         
+        iconImageView.setTapGesture(disposeBag) {
+            self.showAccountsMenu()
+        }
+        
         output.nowPlaying
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(musicButton.rx.isEnabled)
@@ -373,9 +385,21 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         return cell.setupCell(item)
     }
     
+    private func showAccountsMenu() {
+        let selected = presentAccountsDropdownMenu(sourceRect: iconImageView.frame)
+        selected?.subscribe(onNext: { user in
+            guard user.userId != self.owner?.userId else { return } // 同じアカウントへの切り替えを防ぐ
+            self.owner = user
+            self.viewModel?.changeUser(user)
+            Cache.UserDefaults.shared.changeCurrentUser(userId: user.userId)
+        }).disposed(by: disposeBag)
+    }
+    
     private func showReactionGen() {
-        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController,
+            let owner = owner else { return }
         
+        reactionGen.setOwner(owner)
         reactionGen.onPostViewController = true
         reactionGen.selectedEmoji.subscribe(onNext: { emojiModel in // ReactionGenで絵文字が選択されたらに送られてくる
             self.insertCustomEmoji(with: emojiModel)

@@ -14,7 +14,10 @@ private typealias EmojiModel = EmojiView.EmojiModel
 class ReactionSettingsViewModel: ViewModelType {
     // MARK: I/O
     
-    struct Input {}
+    struct Input {
+        let owner: SecureUser
+    }
+    
     struct Output {
         let favs: PublishSubject<[ReactionGenViewController.EmojisSection]> = .init()
     }
@@ -24,13 +27,16 @@ class ReactionSettingsViewModel: ViewModelType {
         var saved: Bool = true
     }
     
+    private let input: Input
     var output = Output()
     var state = State()
     
     private var disposeBag: DisposeBag
     private var emojis: [EmojiView.EmojiModel] = []
+    private var defaultPresets = ["👍", "❤️", "😆", "🤔", "😮", "🎉", "💢", "😥", "😇", "🍮", "🤯"]
     
-    init(_ disposeBag: DisposeBag) {
+    init(with input: Input, and disposeBag: DisposeBag) {
+        self.input = input
         self.disposeBag = disposeBag
     }
     
@@ -44,7 +50,7 @@ class ReactionSettingsViewModel: ViewModelType {
     
     /// UserDefaultsからお気に入り絵文字を取得する
     func setEmojiModel() {
-        emojis = EmojiModel.getEmojis(type: .favs) ?? []
+        emojis = getEmojis()
         updateEmojis(emojis)
     }
     
@@ -76,8 +82,8 @@ class ReactionSettingsViewModel: ViewModelType {
     
     /// お気に入り絵文字を保存する
     func save() {
-        EmojiView.EmojiModel.saveEmojis(with: emojis, type: .favs)
-        ReactionGenModel.fileShared.favEmojiModels = emojis
+        EmojiView.EmojiModel.saveEmojis(with: emojis, type: .favs, owner: input.owner)
+        EmojiRepository.shared.updateUserEmojis(to: .favs, owner: input.owner, new: emojis)
         state.saved = true
     }
     
@@ -91,5 +97,17 @@ class ReactionSettingsViewModel: ViewModelType {
     private func updateEmojis(_ section: ReactionGenViewController.EmojisSection) {
         output.favs.onNext([section])
         state.saved = false
+    }
+    
+    private func getEmojis() -> [EmojiModel] {
+        guard let emojis = EmojiModel.getEmojis(type: .favs, owner: input.owner), emojis.count > 0 else { return getDefaultsPreset() }
+        return emojis
+    }
+    
+    private func getDefaultsPreset() -> [EmojiModel] {
+        return defaultPresets.map { EmojiModel(rawEmoji: $0,
+                                               isDefault: true,
+                                               defaultEmoji: $0,
+                                               customEmojiUrl: nil) }
     }
 }

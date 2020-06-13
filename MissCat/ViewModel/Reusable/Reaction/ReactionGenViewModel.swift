@@ -13,6 +13,7 @@ class ReactionGenViewModel: ViewModelType {
     // MARK: I/O
     
     struct Input {
+        let owner: SecureUser
         let searchTrigger: Observable<String>
     }
     
@@ -44,7 +45,9 @@ class ReactionGenViewModel: ViewModelType {
     }
     
     private var myReaction: String?
-    private let model = ReactionGenModel()
+    
+    private lazy var misskey: MisskeyKit? = MisskeyKit(from: input.owner)
+    private lazy var model = ReactionGenModel(from: misskey, owner: input.owner)
     private let disposeBag: DisposeBag
     
     init(with input: Input, and disposeBag: DisposeBag) {

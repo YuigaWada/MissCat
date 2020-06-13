@@ -20,13 +20,14 @@ extension NoteModel {
     /// - Parameters:
     ///   - withRN: 引用RNかどうか
     ///   - onOtherNote: 何らかの形で、別の投稿の上に載ってる投稿か
-    func getNoteCellModel(withRN: Bool = false, onOtherNote: Bool = false) -> NoteCell.Model? {
+    func getNoteCellModel(owner: SecureUser?, withRN: Bool = false, onOtherNote: Bool = false) -> NoteCell.Model? {
         guard let user = post.user else { return nil }
         
         let displayName = (user.name ?? "") == "" ? user.username : user.name // user.nameがnilか""ならusernameで代替
         let emojis = (post.emojis ?? []) + (user.emojis ?? []) // 絵文字情報を統合する
         
-        let cellModel = NoteCell.Model(noteId: post.id,
+        let cellModel = NoteCell.Model(owner: owner,
+                                       noteId: post.id,
                                        iconImageUrl: user.avatarUrl,
                                        isCat: user.isCat ?? false,
                                        userId: user.id,
@@ -42,7 +43,7 @@ extension NoteModel {
                                        myReaction: post.myReaction,
                                        files: post.files?.compactMap { $0 } ?? [],
                                        emojis: emojis.compactMap { $0 },
-                                       commentRNTarget: withRN ? post.renote?.getNoteCellModel(onOtherNote: true) ?? nil : nil,
+                                       commentRNTarget: withRN ? post.renote?.getNoteCellModel(owner: owner, onOtherNote: true) ?? nil : nil,
                                        original: self,
                                        onOtherNote: onOtherNote,
                                        poll: post.poll,

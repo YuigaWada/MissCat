@@ -67,4 +67,25 @@ extension UIView {
         guard let indexPathForSelectedRow = tableView.indexPathForSelectedRow else { return }
         tableView.deselectRow(at: indexPathForSelectedRow, animated: true)
     }
+    
+    // MARK: Vibrate
+    
+    func vibrated(vibrated: Bool, view: UIView, radians: Float = 5.0, duration: Double = 0.05) {
+        if vibrated {
+            let animation = CABasicAnimation(keyPath: "transform.rotation")
+            
+            animation.duration = duration
+            animation.fromValue = degreesToRadians(radians)
+            animation.toValue = degreesToRadians(radians * (-1))
+            animation.repeatCount = Float.infinity
+            animation.autoreverses = true
+            view.layer.add(animation, forKey: "VibrateAnimationKey")
+        } else {
+            view.layer.removeAnimation(forKey: "VibrateAnimationKey")
+        }
+    }
+    
+    private func degreesToRadians(_ degrees: Float) -> Float {
+        return degrees * Float(Double.pi) / 180.0
+    }
 }

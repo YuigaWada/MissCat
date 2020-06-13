@@ -28,6 +28,7 @@ extension NoteCell {
         var isReplyTarget: Bool = false // リプライ先の投稿であるかどうか
         var fileVisible: Bool = true // ファイルを表示するか
         var onOtherNote: Bool = false // 引用RNはNoteCellの上にNoteCellが乗るという二重構造になっているので、内部のNoteCellかどうかを判別する
+        var owner: SecureUser?
         
         // MARK: Id
         
@@ -83,7 +84,8 @@ extension NoteCell {
         let replyCount: Int
         let renoteCount: Int
         
-        init(isSkelton: Bool = false, isReactionGenCell: Bool = false, isRenoteeCell: Bool = false, isPromotionCell: Bool = false, renotee: String? = nil, baseNoteId: String? = nil, isReply: Bool = false, isReplyTarget: Bool = false, noteId: String? = nil, iconImageUrl: String? = nil, iconImage: UIImage? = nil, isCat: Bool = false, userId: String, displayName: String, username: String, hostInstance: String = "", note: String, ago: String, replyCount: Int, renoteCount: Int, reactions: [ReactionCount], shapedReactions: [NoteCell.Reaction], myReaction: String? = nil, files: [File], emojis: [EmojiModel]? = nil, commentRNTarget: NoteCell.Model? = nil, original: NoteModel? = nil, onOtherNote: Bool = false, poll: Poll? = nil, cw: String? = nil) {
+        init(owner: SecureUser?, isSkelton: Bool = false, isReactionGenCell: Bool = false, isRenoteeCell: Bool = false, isPromotionCell: Bool = false, renotee: String? = nil, baseNoteId: String? = nil, isReply: Bool = false, isReplyTarget: Bool = false, noteId: String? = nil, iconImageUrl: String? = nil, iconImage: UIImage? = nil, isCat: Bool = false, userId: String, displayName: String, username: String, hostInstance: String = "", note: String, ago: String, replyCount: Int, renoteCount: Int, reactions: [ReactionCount], shapedReactions: [NoteCell.Reaction], myReaction: String? = nil, files: [File], emojis: [EmojiModel]? = nil, commentRNTarget: NoteCell.Model? = nil, original: NoteModel? = nil, onOtherNote: Bool = false, poll: Poll? = nil, cw: String? = nil) {
+            self.owner = owner
             self.isSkelton = isSkelton
             self.isReactionGenCell = isReactionGenCell
             self.isRenoteeCell = isRenoteeCell
@@ -128,7 +130,8 @@ extension NoteCell {
                 renotee = String(renotee.prefix(10)) + "..."
             }
             
-            return NoteCell.Model(isRenoteeCell: true,
+            return NoteCell.Model(owner: nil,
+                                  isRenoteeCell: true,
                                   renotee: renotee,
                                   baseNoteId: baseNoteId,
                                   noteId: "",
@@ -151,7 +154,8 @@ extension NoteCell {
         }
         
         static func fakePromotioncell(baseNoteId: String) -> NoteCell.Model {
-            return NoteCell.Model(isPromotionCell: true,
+            return NoteCell.Model(owner: nil,
+                                  isPromotionCell: true,
                                   baseNoteId: baseNoteId,
                                   noteId: "",
                                   iconImageUrl: "",
@@ -173,7 +177,8 @@ extension NoteCell {
         }
         
         static func fakeSkeltonCell() -> NoteCell.Model {
-            return NoteCell.Model(isSkelton: true,
+            return NoteCell.Model(owner: nil,
+                                  isSkelton: true,
                                   isRenoteeCell: false,
                                   renotee: "",
                                   baseNoteId: "",
@@ -259,7 +264,9 @@ extension NoteCell.Model {
             let isMyReaction = rawEmoji == self.myReaction
             
             guard rawEmoji != "",
-                let convertedEmojiData = EmojiHandler.handler.convertEmoji(raw: rawEmoji, external: externalEmojis) else {
+                let owner = owner,
+                let handler = EmojiHandler.getHandler(owner: owner),
+                let convertedEmojiData = handler.convertEmoji(raw: rawEmoji, external: externalEmojis) else {
                 // If being not converted
                 let reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
                                                       noteId: self.noteId ?? "",

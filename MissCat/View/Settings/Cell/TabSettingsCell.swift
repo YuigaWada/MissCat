@@ -14,6 +14,7 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
     @IBOutlet weak var textFiled: UITextField!
     
     var tabKind: Theme.TabKind?
+    var owner: SecureUser?
     var value: Theme.Tab {
         var name = textFiled.text ?? ""
         if name.isEmpty {
@@ -22,7 +23,7 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
         
         return .init(name: name,
                      kind: tabKind ?? .home,
-                     userId: nil,
+                     userId: owner?.userId,
                      listId: nil)
     }
     
@@ -56,6 +57,35 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
     
     // MARK: Menu
     
+    private func showAccountsMenu(_ kind: Theme.TabKind) {
+        guard let parent = parentViewController,
+            let popup = getViewController(name: "accounts-popup") as? AccountsPopupMenu else { return }
+        
+        let users = Cache.UserDefaults.shared.getUsers()
+        let size = CGSize(width: parent.view.frame.width * 3 / 5, height: 50 * CGFloat(users.count))
+        popup.cellHeight = size.height / CGFloat(users.count)
+        popup.users = users
+        
+        popup
+            .selected.map { users[$0] } // 選択されたユーザーを返す
+            .subscribe(onNext: { user in
+                self.owner = user
+                self.setKind(kind)
+            })
+        
+        popup.modalPresentationStyle = .overCurrentContext
+        parentViewController?.present(popup, animated: true, completion: {
+            popup.view.backgroundColor = popup.view.backgroundColor?.withAlphaComponent(0.7)
+        })
+    }
+    
+    private func getViewController(name: String) -> UIViewController {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let viewController = storyboard.instantiateViewController(withIdentifier: name)
+        
+        return viewController
+    }
+    
     private func showAlert() {
         guard !tabSelected else { return }
         let alert = UIAlertController(title: "タブ", message: "追加するタブの種類を選択してください", preferredStyle: .alert)
@@ -73,7 +103,7 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
     
     private func addMenu(to alert: UIAlertController, title: String, kind: Theme.TabKind) {
         alert.addAction(UIAlertAction(title: title, style: .default, handler: { _ in
-            self.setKind(kind)
+            self.showAccountsMenu(kind)
         }))
     }
     
@@ -84,7 +114,7 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
         switch kind {
         case .home:
             nameLabel.text = "ホーム"
-            textFiled.placeholder = "Home"
+            textFiled.placeholder = "@\(owner?.username ?? "")"
         case .local:
             nameLabel.text = "ローカル"
             textFiled.placeholder = "Local"
@@ -102,6 +132,11 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
     
     func setName(_ name: String) {
         textFiled.text = name
+    }
+    
+    func setOwner(userId: String?) {
+        guard let userId = userId else { return }
+        owner = Cache.UserDefaults.shared.getUser(userId: userId)
     }
 }
 

@@ -16,15 +16,12 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     @IBOutlet weak var tableView: UITableView!
     
     var homeViewController: HomeViewController?
+    
     private lazy var viewModel: MessageListViewModel = setupViewModel()
     private lazy var dataSource = self.setupDataSource()
     private let disposeBag: DisposeBag = .init()
     
     private var loggedIn: Bool = false
-    private var hasApiKey: Bool {
-        guard let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey() else { return false }
-        return !apiKey.isEmpty
-    }
     
     // MARK: LifeCycle
     
@@ -38,14 +35,12 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
         super.viewWillAppear(animated)
         view.deselectCell(on: tableView)
         
-        if !loggedIn, hasApiKey {
-            loggedIn = true
-            binding(dataSource: dataSource)
-            viewModel.setupInitialCell()
+        if viewModel.state.hasAccounts, !viewModel.state.hasPrepared {
+            viewModel.load()
         }
     }
     
-    private func binding(dataSource: SenderDataSource?) {
+    private func binding(with viewModel: MessageListViewModel, and dataSource: SenderDataSource?) {
         guard let dataSource = dataSource else { return }
         
         let output = viewModel.output
@@ -63,8 +58,10 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     
     private func setupViewModel() -> MessageListViewModel {
         let input = MessageListViewModel.Input(dataSource: dataSource)
+        let viewModel = MessageListViewModel(with: input, and: disposeBag)
         
-        return .init(with: input, and: disposeBag)
+        binding(with: viewModel, and: dataSource)
+        return viewModel
     }
     
     private func setupTableView() {
@@ -100,10 +97,11 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     }
     
     private func getDMViewController(with item: SenderCell.Model) -> DirectMessageViewController {
+        guard let owner = Cache.UserDefaults.shared.getCurrentUser() else { return DirectMessageViewController() }
         let dmViewController = DirectMessageViewController()
         
         dmViewController.homeViewController = homeViewController
-        dmViewController.setup(userId: item.userId ?? "", groupId: nil)
+        dmViewController.setup(userId: item.userId ?? "", groupId: nil, owner: owner)
         return dmViewController
     }
     
@@ -118,4 +116,19 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
         navigationController?.pushViewController(getDMViewController(with: item), animated: true)
     }
+}
+
+extension MessageListViewController: NavBarDelegate {
+    func changeUser(_ user: SecureUser) {
+        guard user.userId != viewModel.owner?.userId else { return } // 同じアカウントへの切り替えを防ぐ
+        viewModel.owner = user
+        viewModel.removeAll()
+        viewModel.load()
+    }
+    
+    func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
+        return nil
+    }
+    
+    func tappedRightNavButton() {}
 }

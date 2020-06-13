@@ -30,7 +30,11 @@ struct DropdownMenu {
     }
 }
 
-class DropdownMenuViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+protocol Dropdown {
+    var selected: PublishRelay<Int> { get }
+}
+
+class PlainDropdownMenu: UIViewController, UITableViewDelegate, UITableViewDataSource, Dropdown {
     var cellHeight: CGFloat = 50
     var selected: PublishRelay<Int> = .init()
     

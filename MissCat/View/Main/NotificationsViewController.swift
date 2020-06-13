@@ -22,10 +22,6 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
     private var cellHeightCache: [String: CGFloat] = [:] // String → identifier
     
     private var loggedIn: Bool = false
-    private var hasApiKey: Bool {
-        guard let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey() else { return false }
-        return !apiKey.isEmpty
-    }
     
     // MARK: Life Cycle
     
@@ -46,9 +42,8 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
         super.viewWillAppear(animated)
         view.deselectCell(on: mainTableView)
         
-        if !loggedIn, hasApiKey {
-            loggedIn = true
-            viewModel?.initialLoad()
+        if let viewModel = viewModel, viewModel.state.hasAccounts, !viewModel.state.hasPrepared {
+            viewModel.initialLoad()
         }
     }
     
@@ -102,7 +97,7 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
     // MARK: Setup Cell
     
     private func setupCell(_ dataSource: TableViewSectionedDataSource<NotificationCell.Section>, _ tableView: UITableView, _ indexPath: IndexPath) -> UITableViewCell {
-        guard let viewModel = viewModel else { return UITableViewCell() }
+        guard let viewModel = viewModel, let owner = viewModel.owner else { return UITableViewCell() }
         
         let index = indexPath.row
         let item = viewModel.cellsModel[index]
@@ -111,7 +106,7 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
             guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell, let replyNote = item.replyNote
             else { return NoteCell() }
             
-            let shapedCell = noteCell.transform(with: .init(item: replyNote, delegate: self))
+            let shapedCell = noteCell.transform(with: .init(item: replyNote, delegate: self, owner: owner))
             
             shapedCell.noteView.renderViewStrings()
             shapedCell.nameTextView.renderViewStrings()
@@ -199,4 +194,19 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
     func tappedDM() {}
     
     func tappedProfile() {}
+}
+
+extension NotificationsViewController: NavBarDelegate {
+    func changeUser(_ user: SecureUser) {
+        guard user.userId != viewModel?.owner?.userId else { return } // 同じアカウントへの切り替えを防ぐ
+        viewModel?.owner = user
+        viewModel?.removeAll()
+        viewModel?.initialLoad()
+    }
+    
+    func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
+        return nil
+    }
+    
+    func tappedRightNavButton() {}
 }

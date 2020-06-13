@@ -22,13 +22,25 @@ class NotificationsModel {
         let lastNotifId: String?
     }
     
+    private var misskey: MisskeyKit?
+    private var owner: SecureUser?
+    init(from misskey: MisskeyKit?, owner: SecureUser?) {
+        self.misskey = misskey
+        self.owner = owner
+    }
+    
+    func change(misskey: MisskeyKit?, owner: SecureUser?) {
+        self.misskey = misskey
+        self.owner = owner
+    }
+    
     private let needMyNoteType = ["mention", "reply", "renote", "quote", "reaction"]
     
     func loadNotification(with option: LoadOption, reversed: Bool = false) -> Observable<NotificationModel> {
         let dispose = Disposables.create()
         
         return Observable.create { observer in
-            MisskeyKit.notifications.get(limit: option.limit, untilId: option.untilId ?? "", following: false) { results, error in
+            self.misskey?.notifications.get(limit: option.limit, untilId: option.untilId ?? "", following: false) { results, error in
                 guard results != nil, results!.count > 0, error == nil else { return }
                 
                 var notifs = results!
@@ -68,8 +80,8 @@ class NotificationsModel {
         let dispose = Disposables.create()
         
         return Observable.create { [unowned self] observer in
-            let streaming = MisskeyKit.Streaming()
-            _ = streaming.connect(apiKey: apiKey, channels: [.main], response: { (response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) in
+            let streaming = self.misskey?.streaming
+            _ = streaming?.connect(apiKey: apiKey, channels: [.main], response: { (response: Any?, channel: SentStreamModel.Channel?, type: String?, error: MisskeyKitError?) in
                 self.handleStream(observer: observer,
                                   response: response,
                                   channel: channel,
@@ -132,24 +144,24 @@ class NotificationsModel {
         let isCommentRenote = type == .quote
         
         // replyかどうかで.noteと.replyの役割が入れ替わる
-        var replyNote = isReply ? (note.getNoteCellModel() ?? nil) : nil
+        var replyNote = isReply ? (note.getNoteCellModel(owner: owner) ?? nil) : nil
         
         var myNote: NoteCell.Model?
         if isReply {
             guard let reply = note.reply else { return nil }
-            myNote = reply.getNoteCellModel()
+            myNote = reply.getNoteCellModel(owner: owner)
         } else if isRenote {
             guard let renote = note.renote else { return nil }
-            myNote = renote.getNoteCellModel()
+            myNote = renote.getNoteCellModel(owner: owner)
         } else if isCommentRenote {
             guard let renote = note.renote else { return nil }
-            let commentRNTarget = renote.getNoteCellModel()
+            let commentRNTarget = renote.getNoteCellModel(owner: owner)
             commentRNTarget?.onOtherNote = true
             
-            replyNote = note.getNoteCellModel()
+            replyNote = note.getNoteCellModel(owner: owner)
             replyNote?.commentRNTarget = commentRNTarget
         } else {
-            myNote = note.getNoteCellModel()
+            myNote = note.getNoteCellModel(owner: owner)
         }
         
         let externalEmojis = getExternalEmojis(notification)
@@ -171,8 +183,8 @@ class NotificationsModel {
         
         return NotificationCell.Model(notificationId: note.id ?? "",
                                       type: .reply,
-                                      myNote: myNote.getNoteCellModel(),
-                                      replyNote: note.getNoteCellModel(),
+                                      myNote: myNote.getNoteCellModel(owner: owner),
+                                      replyNote: note.getNoteCellModel(owner: owner),
                                       fromUser: fromUser,
                                       reaction: nil,
                                       ago: note.createdAt ?? "")
@@ -197,7 +209,7 @@ class NotificationsModel {
         let externalEmojis = getExternalEmojis(target)
         return NotificationCell.Model(notificationId: target.id ?? "",
                                       type: type,
-                                      myNote: targetNote?.getNoteCellModel(),
+                                      myNote: targetNote?.getNoteCellModel(owner: owner),
                                       replyNote: nil,
                                       fromUser: fromUser,
                                       reaction: target.reaction,

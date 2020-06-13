@@ -27,11 +27,19 @@ class UserListModel {
         let loadLimit: Int = 40
     }
     
+    private let misskey: MisskeyKit?
+    private let owner: SecureUser?
+    init(from misskey: MisskeyKit?, owner: SecureUser?) {
+        self.misskey = misskey
+        self.owner = owner
+    }
+    
     private func transformUser(with observer: AnyObserver<UserCell.Model>, user: UserModel, reverse: Bool) {
         let userModel = user.getUserCellModel()
         
-        userModel.shapedName = MFMEngine.shapeDisplayName(user: user)
-        userModel.shapedDescritpion = MFMEngine.shapeString(needReplyMark: false,
+        userModel.shapedName = MFMEngine.shapeDisplayName(owner: owner, user: user)
+        userModel.shapedDescritpion = MFMEngine.shapeString(owner: owner,
+                                                            needReplyMark: false,
                                                             text: user.description?.mfmPreTransform() ?? "自己紹介文はありません",
                                                             emojis: user.emojis)
         
@@ -61,11 +69,11 @@ class UserListModel {
             switch option.type {
             case .search:
                 guard let query = option.query else { return dispose }
-                MisskeyKit.search.user(query: query,
-                                       limit: option.loadLimit,
-                                       untilId: option.untilId ?? "", // TODO: ここOffsetにすべき
-                                       localOnly: false,
-                                       result: handleResult)
+                self.misskey?.search.user(query: query,
+                                          limit: option.loadLimit,
+                                          untilId: option.untilId ?? "", // TODO: ここOffsetにすべき
+                                          localOnly: false,
+                                          result: handleResult)
             default:
                 break
             }

@@ -13,6 +13,7 @@ import RxSwift
 
 class PostViewModel: ViewModelType {
     struct Input {
+        var owner: SecureUser?
         let type: PostViewController.PostType
         let targetNote: NoteCell.Model?
         let rxCwText: ControlProperty<String?>
@@ -94,7 +95,12 @@ class PostViewModel: ViewModelType {
     private var attachmentsLists: [PostViewController.Attachments] = []
     private let attachments: PublishSubject<[PostViewController.AttachmentsSection]> = .init()
     
-    private let model = PostModel()
+    private lazy var misskey: MisskeyKit? = {
+        guard let owner = self.input.owner else { return nil }
+        return MisskeyKit(from: owner)
+    }()
+    
+    private lazy var model = PostModel(from: misskey)
     private var disposeBag: DisposeBag
     
     private var attachmentFiles: [AttachmentFile] = []
@@ -168,6 +174,17 @@ class PostViewModel: ViewModelType {
         setInnerNote()
         setSavedVisibility()
         checkMusic()
+    }
+    
+    // MARK: ChangeUser
+    
+    func changeUser(_ user: SecureUser) {
+        input.owner = user
+        model = PostModel(from: MisskeyKit(from: user))
+        model.getIconImage { image in
+            guard let image = image else { return }
+            self.iconImage.onNext(image)
+        }
     }
     
     private func submitNote() {

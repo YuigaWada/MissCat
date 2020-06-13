@@ -31,7 +31,7 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
             
             item.isReplyTarget = false
             item.onOtherNote = false
-            viewModel!.setItem(item)
+            viewModel?.setItem(item)
         }
     }
     
@@ -119,10 +119,10 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
         let item = viewModel.cellsModel[index]
         let isDetailMode = item.identity == mainItem?.identity // リプライはDetailModeにしない
         
-        guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell
-        else { return NoteCell() }
+        guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell,
+            let owner = item.owner else { return NoteCell() }
         
-        let shapedCell = noteCell.transform(with: .init(item: item, isDetailMode: isDetailMode, delegate: self))
+        let shapedCell = noteCell.transform(with: .init(item: item, isDetailMode: isDetailMode, delegate: self, owner: owner))
         
         shapedCell.nameTextView.renderViewStrings()
         shapedCell.noteView.renderViewStrings()
@@ -178,13 +178,13 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
     
     // MARK: Delegate
     
-    override func tappedLink(text: String) {
+    override func tappedLink(text: String, owner: SecureUser) {
         let (linkType, value) = text.analyzeHyperLink()
         switch linkType {
         case .url:
             homeViewController?.openLink(url: value)
         case .user:
-            homeViewController?.move2Profile(userId: value)
+            homeViewController?.move2Profile(userId: value, owner: owner)
         case .hashtag:
             navigationController?.popViewController(animated: true)
             homeViewController?.emulateFooterTabTap(tab: .home)

@@ -14,19 +14,43 @@ class NotificationsViewModel {
     var dataSource: NotificationDataSource?
     var cellCount: Int { return cellsModel.count }
     
+    struct State {
+        var hasPrepared: Bool = false
+        var hasAccounts: Bool {
+            return Cache.UserDefaults.shared.getUsers().count > 0
+        }
+    }
+    
+    var state: State = .init()
+    
     private var hasReactionGenCell: Bool = false
     var cellsModel: [NotificationCell.Model] = []
     
     private var disposeBag: DisposeBag
-    private lazy var model = NotificationsModel()
+    private lazy var model = NotificationsModel(from: misskey, owner: owner)
+    
+    private lazy var misskey: MisskeyKit? = {
+        guard let owner = owner else { return nil }
+        return MisskeyKit(from: owner)
+    }()
+    
+    var owner: SecureUser? {
+        didSet {
+            guard let owner = owner else { return }
+            misskey = MisskeyKit(from: owner)
+            model.change(misskey: misskey, owner: owner)
+        }
+    }
     
     init(disposeBag: DisposeBag) {
         self.disposeBag = disposeBag
+        owner = Cache.UserDefaults.shared.getCurrentUser()
     }
     
     // MARK: Load
     
     func initialLoad() {
+        state.hasPrepared = true
         loadNotification {
             // 読み込み完了後、Viewに伝達 & Streamingに接続
             self.connectStream()
@@ -64,10 +88,15 @@ class NotificationsViewModel {
         }).disposed(by: disposeBag)
     }
     
+    func removeAll() {
+        cellsModel = []
+        update(new: cellsModel)
+    }
+    
     // MARK: Streaming
     
     private func connectStream() {
-        guard let apiKey = MisskeyKit.auth.getAPIKey() else { return }
+        guard let apiKey = misskey?.auth.getAPIKey() else { return }
         model.connectStream(apiKey: apiKey).subscribe(onNext: { cellModel in
             self.shapeModel(cellModel)
             self.removeDuplicated(with: cellModel, array: &self.cellsModel)
@@ -96,6 +125,10 @@ class NotificationsViewModel {
             MFMEngine.shapeModel(replyNote)
         } else {
             MFMEngine.shapeModel(cellModel)
+        }
+        
+        if let owner = owner {
+            cellModel.owner = owner
         }
     }
     

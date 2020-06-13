@@ -27,6 +27,7 @@ class ProfileSettingsViewController: FormViewController {
     private let selectedImage: PublishRelay<UIImage> = .init()
     private let resetImage: PublishRelay<Void> = .init()
     private var viewModel: ProfileSettingsViewModel?
+    private var owner: SecureUser?
     
     // MARK: Row
     
@@ -60,7 +61,7 @@ class ProfileSettingsViewController: FormViewController {
     
     // MARK: LifeCycle
     
-    func setup(banner: UIImage? = nil, bannerUrl: String, icon: UIImage? = nil, iconUrl: String, name: String, description: String, isCat: Bool) {
+    func setup(owner: SecureUser, banner: UIImage? = nil, bannerUrl: String, icon: UIImage? = nil, iconUrl: String, name: String, description: String, isCat: Bool) {
         bannerImage.image = banner
         iconImage.image = icon
         
@@ -70,7 +71,8 @@ class ProfileSettingsViewController: FormViewController {
         nameTextArea.value = name
         bioTextArea.value = description
         catSwitch.value = isCat
-        let viewModel = getViewModel(loadIcon: loadIcon,
+        let viewModel = getViewModel(owner: owner,
+                                     loadIcon: loadIcon,
                                      loadBanner: loadBanner,
                                      bannerUrl: bannerUrl,
                                      iconUrl: iconUrl,
@@ -78,10 +80,12 @@ class ProfileSettingsViewController: FormViewController {
                                      description: description,
                                      isCat: isCat)
         self.viewModel = viewModel
+        self.owner = owner
     }
     
-    private func getViewModel(loadIcon: Bool, loadBanner: Bool, bannerUrl: String?, iconUrl: String?, name: String, description: String, isCat: Bool) -> ProfileSettingsViewModel {
-        let input: ProfileSettingsViewModel.Input = .init(needLoadIcon: loadIcon,
+    private func getViewModel(owner: SecureUser, loadIcon: Bool, loadBanner: Bool, bannerUrl: String?, iconUrl: String?, name: String, description: String, isCat: Bool) -> ProfileSettingsViewModel {
+        let input: ProfileSettingsViewModel.Input = .init(owner: owner,
+                                                          needLoadIcon: loadIcon,
                                                           needLoadBanner: loadBanner,
                                                           iconUrl: iconUrl,
                                                           bannerUrl: bannerUrl,
@@ -277,8 +281,10 @@ class ProfileSettingsViewController: FormViewController {
     /// ReactionGen(絵文字ピッカー)を表示する
     /// - Parameter viewWithText: UITextInput
     private func showReactionGen(target viewWithText: UITextInput) {
-        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController,
+            let owner = owner else { return }
         
+        reactionGen.setOwner(owner)
         reactionGen.onPostViewController = true
         reactionGen.selectedEmoji.subscribe(onNext: { emojiModel in // ReactionGenで絵文字が選択されたらに送られてくる
             self.insertCustomEmoji(with: emojiModel, to: viewWithText)

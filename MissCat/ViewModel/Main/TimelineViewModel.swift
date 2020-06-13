@@ -16,6 +16,7 @@ class TimelineViewModel: ViewModelType {
     // MARK: I/O
     
     struct Input {
+        let owner: SecureUser
         let dataSource: NotesDataSource
         let type: TimelineType
         let includeReplies: Bool?
@@ -45,15 +46,24 @@ class TimelineViewModel: ViewModelType {
         var renoteeCellCount: Int
         var isLoading: Bool
         
+        var hasSkeltonCell: Bool
+        var owner: SecureUser
+        
         var cellCompleted: Bool { // 準備した分のセルがすべて表示されたかどうか
             return (cellCount - renoteeCellCount) % loadLimit == 0
         }
         
-        init(cellCount: Int, renoteeCellCount: Int, isLoading: Bool, loadLimit: Int) {
+        var hasAccounts: Bool {
+            return Cache.UserDefaults.shared.getUsers().count > 0
+        }
+        
+        init(cellCount: Int, renoteeCellCount: Int, isLoading: Bool, loadLimit: Int, hasSkeltonCell: Bool, owner: SecureUser) {
             self.cellCount = cellCount
             self.renoteeCellCount = renoteeCellCount
             self.isLoading = isLoading
             self.loadLimit = loadLimit
+            self.hasSkeltonCell = hasSkeltonCell
+            self.owner = owner
         }
     }
     
@@ -65,7 +75,9 @@ class TimelineViewModel: ViewModelType {
         return .init(cellCount: { cellsModel.count }(),
                      renoteeCellCount: { cellsModel.filter { $0.isRenoteeCell }.count }(),
                      isLoading: _isLoading,
-                     loadLimit: input.loadLimit)
+                     loadLimit: input.loadLimit,
+                     hasSkeltonCell: hasSkeltonCell,
+                     owner: input.owner)
     }
     
     // MARK: PublishSubject
@@ -76,7 +88,10 @@ class TimelineViewModel: ViewModelType {
     private var hasSkeltonCell: Bool = false
     private let usernameFont = UIFont.systemFont(ofSize: 11.0)
     
-    private lazy var model = TimelineModel()
+    private lazy var misskey = MisskeyKit(from: input.owner)
+    private lazy var model = TimelineModel(from: misskey, owner: input.owner)
+    
+    private var owner: SecureUser?
     private var dataSource: NotesDataSource?
     private var disposeBag: DisposeBag
     
@@ -87,6 +102,8 @@ class TimelineViewModel: ViewModelType {
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
         self.disposeBag = disposeBag
+        owner = input.owner
+        
         binding()
     }
     
@@ -126,16 +143,6 @@ class TimelineViewModel: ViewModelType {
         }, onDisposed: nil).disposed(by: disposeBag)
     }
     
-    /// UserIdがUserDefaulsに保存されてるかチェック→保存されてない場合は保存する
-    func checkUserId() {
-        if let currentUserId = Cache.UserDefaults.shared.getCurrentLoginedUserId(), !currentUserId.isEmpty {
-            Cache.shared.getMe { me in
-                guard let me = me else { return }
-                Cache.UserDefaults.shared.setCurrentLoginedUserId(me.id)
-            }
-        }
-    }
-    
     func setSkeltonCell() {
         guard !hasSkeltonCell else { return }
         
@@ -158,7 +165,7 @@ class TimelineViewModel: ViewModelType {
     
     private func initialFollow() {
         guard initialNoteCount < 2 else { return }
-        MisskeyKit.users.follow(userId: "7ze0f2goa7") { _, error in
+        misskey?.users.follow(userId: "7ze0f2goa7") { _, error in
             guard error == nil else { // 失敗した場合は何回か再帰
                 self.initialNoteCount += 1
                 self.initialFollow()
@@ -173,7 +180,8 @@ class TimelineViewModel: ViewModelType {
     // MARK: Streaming
     
     private func connectStream(isReconnection: Bool = false) {
-        model.connectStream(type: input.type, isReconnection: isReconnection)
+        guard let owner = owner else { return }
+        model.connectStream(owner: owner, type: input.type, isReconnection: isReconnection)
             .subscribe(onNext: { cellModel in
                 self.output.connectedStream.accept(true)
                 
@@ -294,7 +302,7 @@ class TimelineViewModel: ViewModelType {
                                       lastNoteId: nil)
         _isLoading = true
         
-        return model.loadNotes(with: option).do(onNext: { cellModel in
+        return model.loadNotes(with: option, from: input.owner).do(onNext: { cellModel in
             self.cellsModel.append(cellModel)
         }, onCompleted: {
             self.initialNoteIds = self.model.initialNoteIds
@@ -351,7 +359,7 @@ class TimelineViewModel: ViewModelType {
                                       isReload: true,
                                       lastNoteId: lastNoteId)
         
-        model.loadNotes(with: option).subscribe(onNext: { cellModel in
+        model.loadNotes(with: option, from: input.owner).subscribe(onNext: { cellModel in
             self.cellsModel.insert(cellModel, at: 0)
         }, onCompleted: {
             self.updateNotes(new: self.cellsModel)

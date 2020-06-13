@@ -7,12 +7,21 @@
 //
 
 import Foundation
+import KeychainAccess
 import MisskeyKit
 import SwiftLinkPreview
 import UIKit
 
 typealias Attachments = [NSTextAttachment: YanagiText.Attachment]
 class Cache {
+    struct UserInfo {
+        let user: SecureUser
+        let name: String
+        let username: String
+        let host: String
+        let image: UIImage
+    }
+    
     // MARK: Singleton
     
     static var shared: Cache = .init()
@@ -23,6 +32,8 @@ class Cache {
     private var uiImage: [String: UIImage] = [:] // key: url
     private var dataOnUrl: [String: Data] = [:] // key: url
     private var urlPreview: [String: Response] = [:] // key: url
+    
+    private var userInfo: [UserInfo] = []
     
     private var me: UserModel?
     
@@ -55,6 +66,10 @@ class Cache {
         urlPreview[rawUrl] = response
     }
     
+    func saveUserInfo(info: UserInfo) {
+        userInfo.append(info)
+    }
+    
     // MARK: Get
     
     func getIcon(username: String) -> UIImage? {
@@ -63,20 +78,6 @@ class Cache {
     
     func getUiImage(url: String) -> UIImage? {
         return uiImage[url]
-    }
-    
-    func getMe(result callback: @escaping (UserModel?) -> Void) {
-        if let me = me {
-            callback(me)
-            return
-        }
-        
-        MisskeyKit.users.i { user, error in
-            guard let user = user, error == nil else { callback(nil); return }
-            self.me = user
-            
-            callback(self.me)
-        }
     }
     
     func getUrlData(on rawUrl: String) -> Data? {
@@ -91,6 +92,11 @@ class Cache {
     func getUrlPreview(on rawUrl: String) -> Response? {
         guard urlPreview.keys.contains(rawUrl) else { return nil }
         return urlPreview[rawUrl]
+    }
+    
+    func getUserInfo(user: SecureUser) -> UserInfo? {
+        let info = userInfo.filter { $0.user.userId == user.userId }
+        return info.count > 0 ? info[0] : nil
     }
     
     /// データをハッシュを利用して保存する
@@ -145,12 +151,17 @@ class Cache {
 extension Cache {
     class UserDefaults {
         static var shared: Cache.UserDefaults = .init()
+        
+        private lazy var keychain = Keychain(service: "yuwd.MissCat") // indexをuseridとして、valueをapiKeyとする
+//        private var currentUser: SecureUser?
+        
         private let latestNotificationKey = "latest-notification"
-        private let currentLoginedApiKey = "current-logined-ApiKey"
-        private let currentLoginedUserId = "current-logined-UserId"
-        private let currentLoginedInstance = "current-logined-instance"
+        
+        private let savedUserKey = "saved-user"
+        private let currentUserIdKey = "current-user-id"
         private let currentVisibilityKey = "current-visibility"
-        private let themeKey = "theme"
+        
+        // MARK: Notification
         
         func getLatestNotificationId() -> String? {
             return Foundation.UserDefaults.standard.string(forKey: latestNotificationKey)
@@ -160,29 +171,130 @@ extension Cache {
             Foundation.UserDefaults.standard.set(id, forKey: latestNotificationKey)
         }
         
-        func getCurrentLoginedApiKey() -> String? {
-            return Foundation.UserDefaults.standard.string(forKey: currentLoginedApiKey)
+        // MARK: User
+        
+        func removeUser(userId: String) {
+            let savedUser = getUsers().filter { $0.userId != userId } // 保存済みのユーザー情報からターゲットのみ除外する
+            guard let usersData = try? JSONEncoder().encode(savedUser) else { return }
+            
+            Foundation.UserDefaults.standard.set(usersData, forKey: savedUserKey)
+            do { try keychain.remove(userId) }
+            catch {}
+            
+            if let currentUser = getCurrentUser(), userId == currentUser.userId { // メインとしてログインしている場合
+                guard savedUser.count > 0 else { return }
+                
+                let newMainUserId = savedUser[0].userId
+                changeCurrentUser(userId: newMainUserId) // メインアカウントを移し替える
+            }
         }
         
-        func setCurrentLoginedApiKey(_ id: String) {
-            Foundation.UserDefaults.standard.set(id, forKey: currentLoginedApiKey)
+        /// ユーザーを保存する
+        func saveUser(_ user: SecureUser) -> Bool {
+            let savedUsers = getUsers()
+            if savedUsers.filter({ $0.userId == user.userId }).count > 0 { // アカウントがすでにログインされてたら
+                return false
+            }
+            
+            let users = savedUsers + [user]
+            guard let usersData = try? JSONEncoder().encode(users) else { return false }
+            
+            keychain[user.userId] = user.apiKey // apiKeyはキーチェーンに保存
+            user.apiKey = nil // apikeyは隠蔽する
+            Foundation.UserDefaults.standard.set(usersData, forKey: savedUserKey) // instance情報とuserIdはそのままUserDefaultsへ
+            return true
         }
         
-        func getCurrentLoginedUserId() -> String? {
-            return Foundation.UserDefaults.standard.string(forKey: currentLoginedUserId)
+        /// 保存されている全てのユーザー情報を取得する
+        func getUsers() -> [SecureUser] {
+            guard let data = Foundation.UserDefaults.standard.data(forKey: savedUserKey),
+                let users = try? JSONDecoder().decode([SecureUser].self, from: data),
+                users.count > 0 else { return [] }
+            
+            var noApiKeyUserIds: [String] = []
+            
+            // apikeyをキーチェーンから取り出して詰め替えていく
+            let _users: [SecureUser] = users.compactMap {
+                guard let apiKey = self.keychain[$0.userId] else { noApiKeyUserIds.append($0.userId); return nil }
+                return SecureUser(userId: $0.userId, username: $0.username, instance: $0.instance, apiKey: apiKey)
+            }
+            
+            if noApiKeyUserIds.count > 0 { // apiKeyを持っていないユーザーは削除する
+                guard let usersData = try? JSONEncoder().encode(users.filter { !noApiKeyUserIds.contains($0.userId) }) else { return _users }
+                Foundation.UserDefaults.standard.set(usersData, forKey: savedUserKey)
+            }
+            
+            return _users
         }
         
-        func setCurrentLoginedUserId(_ id: String) {
-            Foundation.UserDefaults.standard.set(id, forKey: currentLoginedUserId)
+        /// 指定されたuserIdのユーザーを取得する
+        func getUser(userId: String) -> SecureUser? {
+            var user: SecureUser?
+            let savedUser = getUsers()
+            savedUser.forEach {
+                if userId == $0.userId { user = $0; return }
+            }
+            
+            return user
         }
         
-        func getCurrentLoginedInstance() -> String? {
-            return Foundation.UserDefaults.standard.string(forKey: currentLoginedInstance)
+        /// 現在ログイン中のユーザー情報を変更する
+        func changeCurrentUser(userId id: String) {
+            Foundation.UserDefaults.standard.set(id, forKey: currentUserIdKey)
         }
         
-        func setCurrentLoginedInstance(_ id: String) {
-            Foundation.UserDefaults.standard.set(id, forKey: currentLoginedInstance)
+        /// 現在ログイン中のユーザーのuserIdを取得する
+        func getCurrentUserId() -> String? {
+            return Foundation.UserDefaults.standard.string(forKey: currentUserIdKey)
         }
+        
+        /// 現在ログイン中のユーザーデータを取得する
+        func getCurrentUser() -> SecureUser? {
+            userRefill()
+            
+            // currentUserIdを持つアカウントを探す
+            guard let currentUserId = getCurrentUserId(), let currentUser = getUser(userId: currentUserId) else {
+                let savedUser = getUsers()
+                return savedUser.count > 0 ? savedUser[0] : nil
+            }
+            
+            usernameRefill(with: currentUser)
+            return currentUser
+        }
+        
+        /// ユーザーデータの保持構造が変わったので、v1.1.0以前のバージョンから乗り換えた場合、ユーザーデータを詰め替える
+        func userRefill() {
+            let currentLoginedApiKey = "current-logined-ApiKey"
+            let currentLoginedUserId = "current-logined-UserId"
+            let currentLoginedInstance = "current-logined-instance"
+            
+            guard let apiKey = Foundation.UserDefaults.standard.string(forKey: currentLoginedApiKey),
+                let userId = Foundation.UserDefaults.standard.string(forKey: currentLoginedUserId),
+                let instance = Foundation.UserDefaults.standard.string(forKey: currentLoginedInstance) else { return }
+            
+            // 詰め替える
+            _ = saveUser(.init(userId: userId, username: "", instance: instance, apiKey: apiKey))
+            changeCurrentUser(userId: userId)
+            
+            // UserDefaultsに保存されているデータを削除
+            Foundation.UserDefaults.standard.removeObject(forKey: currentLoginedApiKey)
+            Foundation.UserDefaults.standard.removeObject(forKey: currentLoginedUserId)
+            Foundation.UserDefaults.standard.removeObject(forKey: currentLoginedInstance)
+        }
+        
+        /// userRefill()で詰めきれなかったusernameを非同期で詰める
+        func usernameRefill(with user: SecureUser) {
+            guard user.username.isEmpty,
+                let apiKey = user.apiKey else { return }
+            let misskey = MisskeyKit(from: user)
+            misskey?.users.i { info, _ in
+                guard let info = info else { return }
+                let secureUser = SecureUser(userId: user.userId, username: info.username ?? "", instance: user.instance, apiKey: apiKey)
+                _ = Cache.UserDefaults.shared.saveUser(secureUser)
+            }
+        }
+        
+        // MARK: Visibility
         
         func getCurrentVisibility() -> Visibility? {
             guard let raw = Foundation.UserDefaults.standard.string(forKey: currentVisibilityKey) else { return nil }
@@ -192,13 +304,5 @@ extension Cache {
         func setCurrentVisibility(_ visibility: Visibility) {
             Foundation.UserDefaults.standard.set(visibility.rawValue, forKey: currentVisibilityKey)
         }
-        
-//        func getTheme() -> String? {
-//            return Foundation.UserDefaults.standard.string(forKey: themeKey)
-//        }
-//
-//        func setTheme(_ rawJson: String) {
-//            Foundation.UserDefaults.standard.set(rawJson, forKey: themeKey)
-//        }
     }
 }

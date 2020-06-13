@@ -10,21 +10,26 @@ import MisskeyKit
 import UIKit
 
 class ProfileModel {
+    private let misskey: MisskeyKit?
+    init(from misskey: MisskeyKit?) {
+        self.misskey = misskey
+    }
+    
     func getUser(userId: String, completion: @escaping (UserModel?) -> Void) {
-        MisskeyKit.users.showUser(userId: userId) { user, error in
+        misskey?.users.showUser(userId: userId) { user, error in
             guard error == nil else { completion(nil); return }
             completion(user)
         }
     }
     
     func follow(userId: String, completion: @escaping (Bool) -> Void) {
-        MisskeyKit.users.follow(userId: userId) { _, _ in
+        misskey?.users.follow(userId: userId) { _, _ in
             completion(true)
         }
     }
     
     func unfollow(userId: String, completion: @escaping (Bool) -> Void) {
-        MisskeyKit.users.unfollow(userId: userId) { _, _ in
+        misskey?.users.unfollow(userId: userId) { _, _ in
             completion(true)
         }
     }
