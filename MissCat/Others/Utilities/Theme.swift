@@ -27,7 +27,37 @@ public class Theme {
             currentModel = defaultModel
         }
         
+        currentModel?.tab = checkTabs(currentModel?.tab) // 有効なフォーマットかチェックしておく
         self.currentModel = currentModel
+        
+        if let currentModel = currentModel {
+            Model.save(with: currentModel)
+        }
+    }
+    
+    /// 有効なタブのみ取り出し、紐付けられたアカウント情報を詰めていく
+    private func checkTabs(_ tabs: [Theme.Tab]?) -> [Theme.Tab] {
+        guard let tabs = tabs else { return [] }
+        
+        let transformed: [Theme.Tab] = tabs.compactMap {
+            guard let userId = $0.userId ?? Cache.UserDefaults.shared.getCurrentUserId() else { return nil }
+            
+            // userIdを持たないhomeタブ、またはデフォルト値のhomeタブは名前を@usernameに変更する
+            if $0.kind == .home, $0.userId == nil || $0.name == "___Home___" {
+                let username = Cache.UserDefaults.shared.getUser(userId: userId)?.username ?? ""
+                return Theme.Tab(name: "@\(username)", kind: $0.kind, userId: $0.userId, listId: $0.listId)
+            }
+            
+            return Theme.Tab(name: $0.name, kind: $0.kind, userId: $0.userId, listId: $0.listId)
+        }
+        
+        // 有効なタブが存在しなかった場合
+        if transformed.count == 0 {
+            let defaultTabs = Theme.Model.getDefault()?.tab ?? [] // デフォルトのタブを代入しておく
+            return checkTabs(defaultTabs)
+        }
+        
+        return transformed
     }
     
     /// currentModelのタブ情報を全て削除する
@@ -81,6 +111,7 @@ public class Theme {
             return
         }
         
+        newModel.tab = checkTabs(newModel.tab) // 有効なフォーマットかチェックしておく
         Model.save(with: newModel)
         
         currentModel = newModel

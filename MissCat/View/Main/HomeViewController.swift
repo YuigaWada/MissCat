@@ -77,24 +77,12 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     private func transformTabs() -> [Tab] {
         guard let tabs = Theme.shared.currentModel?.tab else { return [] }
         
-        // 有効なタブのみ取り出し、紐付けられたアカウント情報を詰めていく
+        // Theme.Tab → HomeViewController.Tabへと詰め替える
         let transformed: [Tab] = tabs.compactMap {
             guard let userId = $0.userId ?? Cache.UserDefaults.shared.getCurrentUserId(),
                 let owner = Cache.UserDefaults.shared.getUser(userId: userId) else { return nil }
             
-            // userIdを持たないhomeタブ、またはデフォルト値のhomeタブは名前を@usernameに変更する
-            if $0.kind == .home, $0.userId == nil || $0.name == "___Home___" {
-                let username = Cache.UserDefaults.shared.getUser(userId: userId)?.username ?? ""
-                return Tab(name: "@\(username)", kind: $0.kind, userId: $0.userId, listId: $0.listId, owner: owner)
-            }
-            
             return Tab(name: $0.name, kind: $0.kind, userId: $0.userId, listId: $0.listId, owner: owner)
-        }
-        
-        // 有効なタブが存在しなかった場合
-        if transformed.count == 0 {
-            Theme.shared.currentModel?.tab = Theme.Model.getDefault()?.tab ?? [] // デフォルトのタブを代入しておく
-            return transformTabs()
         }
         
         return transformed
