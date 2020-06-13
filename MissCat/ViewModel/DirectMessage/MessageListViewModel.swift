@@ -14,7 +14,6 @@ class MessageListViewModel: ViewModelType {
     // MARK: I/O
     
     struct Input {
-        let owner: SecureUser
         let dataSource: SenderDataSource
     }
     
@@ -23,21 +22,29 @@ class MessageListViewModel: ViewModelType {
     }
     
     struct State {
-        var isLoading: Bool
+        var isLoading: Bool = false
+        var hasPrepared: Bool = false
+        
+        var owner: SecureUser? = Cache.UserDefaults.shared.getCurrentUser()
+        
+        var hasAccounts: Bool {
+            return Cache.UserDefaults.shared.getUsers().count > 0
+        }
     }
     
     private let input: Input
     let output: Output = .init()
-    var state: State {
-        return .init(isLoading: _isLoading)
-    }
+    var state: State = .init()
     
     var cellsModel: [SenderCell.Model] = []
-    private lazy var misskey = MisskeyKit(from: input.owner)
-    private lazy var model: MessageListModel = .init(from: misskey, owner: input.owner)
+    private lazy var misskey: MisskeyKit? = {
+        guard let owner = state.owner else { return nil }
+        return MisskeyKit(from: owner)
+    }()
+    
+    private lazy var model: MessageListModel = .init(from: misskey, owner: state.owner)
     
     private let disposeBag: DisposeBag
-    private var _isLoading: Bool = false
     
     // MARK: LifeCycle
     
@@ -47,6 +54,7 @@ class MessageListViewModel: ViewModelType {
     }
     
     func setupInitialCell() {
+        state.hasPrepared = true
         loadHistory().subscribe(onError: { error in
             print(error)
         }, onCompleted: {
@@ -71,11 +79,11 @@ class MessageListViewModel: ViewModelType {
 //    }
     
     func loadHistory(untilId: String? = nil) -> Observable<SenderCell.Model> {
-        _isLoading = true
+        state.isLoading = true
         return model.loadHistory().do(onNext: { cellModel in
             self.cellsModel.append(cellModel)
         }, onCompleted: {
-            self._isLoading = false
+            self.state.isLoading = false
         })
     }
     

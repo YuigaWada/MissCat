@@ -16,7 +16,6 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     @IBOutlet weak var tableView: UITableView!
     
     var homeViewController: HomeViewController?
-    var owner: SecureUser? = Cache.UserDefaults.shared.getCurrentUser()
     
     private lazy var viewModel: MessageListViewModel = setupViewModel()
     private lazy var dataSource = self.setupDataSource()
@@ -36,14 +35,12 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
         super.viewWillAppear(animated)
         view.deselectCell(on: tableView)
         
-//        if !loggedIn, hasApiKey {
-//            loggedIn = true
-//            binding(dataSource: dataSource)
-//            viewModel.setupInitialCell()
-//        }
+        if viewModel.state.hasAccounts, !viewModel.state.hasPrepared {
+            viewModel.setupInitialCell()
+        }
     }
     
-    private func binding(dataSource: SenderDataSource?) {
+    private func binding(with viewModel: MessageListViewModel, and dataSource: SenderDataSource?) {
         guard let dataSource = dataSource else { return }
         
         let output = viewModel.output
@@ -60,9 +57,11 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
     // MARK: Setup
     
     private func setupViewModel() -> MessageListViewModel {
-        let input = MessageListViewModel.Input(owner: owner!, dataSource: dataSource)
+        let input = MessageListViewModel.Input(dataSource: dataSource)
+        let viewModel = MessageListViewModel(with: input, and: disposeBag)
         
-        return .init(with: input, and: disposeBag)
+        binding(with: viewModel, and: dataSource)
+        return viewModel
     }
     
     private func setupTableView() {
@@ -120,12 +119,13 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
 }
 
 extension MessageListViewController: NavBarDelegate {
-    func currentUser() -> SecureUser? {
-        return owner
-    }
-    
     func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
-        return nil
+        let selected = parent?.presentAccountsDropdownMenu(sourceRect: sourceRect)
+        selected?.subscribe(onNext: { user in
+            self.viewModel.state.owner = user
+        }).disposed(by: disposeBag)
+        
+        return selected
     }
     
     func tappedRightNavButton() {}
