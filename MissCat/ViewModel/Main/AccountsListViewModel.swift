@@ -23,6 +23,7 @@ class AccountsListViewModel: ViewModelType {
         let switchEditableTrigger: PublishRelay<Void> = .init()
         let switchNormalTrigger: PublishRelay<Void> = .init()
         let noAccountsTrigger: PublishRelay<Void> = .init()
+        let relaunchTabsTrigger: PublishRelay<Void> = .init()
     }
     
     struct State {
@@ -72,7 +73,11 @@ class AccountsListViewModel: ViewModelType {
         update(accounts)
         
         // タブをチェック
-        model.checkTabs(for: user)
+        let isChanged = model.checkTabs(for: user)
+        
+        if isChanged {
+            output.relaunchTabsTrigger.accept(())
+        }
         
         // アカウントが残っているかチェック
         if accounts.count == 0 {

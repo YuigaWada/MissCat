@@ -123,6 +123,13 @@ class AccountsListViewController: UIViewController, UITableViewDelegate {
                 self.logout()
             })
             .disposed(by: disposeBag)
+        
+        output.relaunchTabsTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: {
+                self.homeViewController?.relaunchView(start: .profile)
+            })
+            .disposed(by: disposeBag)
     }
     
     private func logout() {

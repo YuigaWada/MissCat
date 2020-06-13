@@ -45,10 +45,11 @@ public class Theme {
             // userIdを持たないhomeタブ、またはデフォルト値のhomeタブは名前を@usernameに変更する
             if $0.kind == .home, $0.userId == nil || $0.name == "___Home___" {
                 let username = Cache.UserDefaults.shared.getUser(userId: userId)?.username ?? ""
-                return Theme.Tab(name: "@\(username)", kind: $0.kind, userId: $0.userId, listId: $0.listId)
+                return Theme.Tab(name: "@\(username)", kind: $0.kind, userId: userId, listId: $0.listId)
             }
             
-            return Theme.Tab(name: $0.name, kind: $0.kind, userId: $0.userId, listId: $0.listId)
+            // userIdを持たない場合はgetCurrentUserId()が代入される
+            return Theme.Tab(name: $0.name, kind: $0.kind, userId: userId, listId: $0.listId)
         }
         
         // 有効なタブが存在しなかった場合
@@ -74,10 +75,11 @@ public class Theme {
     
     /// 削除しようとしているアカウントが紐付けられたタブを削除しておく
     /// - Parameter user: SecureUser
-    func removeUserTabs(for user: SecureUser) {
+    func removeUserTabs(for user: SecureUser) -> Bool {
         if currentModel == nil { set() }
         
         if let currentModel = currentModel {
+            let currentTabCount = currentModel.tab.count
             currentModel.tab = currentModel.tab.filter { $0.userId != user.userId }
             
             // タブが0個になったらデフォルトのタブに戻しておく
@@ -87,7 +89,11 @@ public class Theme {
             
             Model.save(with: currentModel)
             self.currentModel = currentModel
+            
+            return currentTabCount != currentModel.tab.count // remove後もタブ数が同じならタブは変更していない
         }
+        
+        return false
     }
     
     /// viewの再launchが必要か

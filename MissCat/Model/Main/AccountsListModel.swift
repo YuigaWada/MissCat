@@ -19,7 +19,7 @@ class AccountsListModel {
     
     /// 削除しようとしているアカウントが紐付けられたタブを削除しておく
     /// - Parameter user: SecureUser
-    func checkTabs(for user: SecureUser) {
-        Theme.shared.removeUserTabs(for: user)
+    func checkTabs(for user: SecureUser) -> Bool {
+        return Theme.shared.removeUserTabs(for: user)
     }
 }

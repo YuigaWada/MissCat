@@ -21,10 +21,6 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
             name = textFiled.placeholder ?? ""
         }
         
-        if tabKind == .home {
-            name = "@\(owner?.username ?? "")"
-        }
-        
         return .init(name: name,
                      kind: tabKind ?? .home,
                      userId: owner?.userId,
