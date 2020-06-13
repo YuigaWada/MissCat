@@ -295,6 +295,14 @@ extension NoteCell.Model {
                                                   emoji: convertedEmojiData.emoji,
                                                   isMyReaction: isMyReaction,
                                                   count: count)
+            case "non-colon":
+                reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
+                                                  noteId: self.noteId ?? "",
+                                                  url: nil,
+                                                  rawEmoji: convertedEmojiData.emoji,
+                                                  emoji: convertedEmojiData.emoji,
+                                                  isMyReaction: isMyReaction,
+                                                  count: count)
             default:
                 return nil
             }
