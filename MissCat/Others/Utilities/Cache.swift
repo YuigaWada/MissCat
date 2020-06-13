@@ -252,8 +252,11 @@ extension Cache {
         func getCurrentUser() -> SecureUser? {
             userRefill()
             
-            guard let currentUserId = getCurrentUserId(),
-                let currentUser = getUser(userId: currentUserId) else { return nil }
+            // currentUserIdを持つアカウントを探す
+            guard let currentUserId = getCurrentUserId(), let currentUser = getUser(userId: currentUserId) else {
+                let savedUser = getUsers()
+                return savedUser.count > 0 ? savedUser[0] : nil
+            }
             
             usernameRefill(with: currentUser)
             return currentUser
