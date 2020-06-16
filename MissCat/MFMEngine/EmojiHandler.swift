@@ -193,7 +193,8 @@ class EmojiHandler {
                       "angry": "💢",
                       "confused": "😥",
                       "rip": "😇",
-                      "pudding": "🍮"]
+                      "pudding": "🍮",
+                      "star": "⭐"]
         
         return emojis.map { NonColonEmoji(name: $0, emoji: $1) }
     }
