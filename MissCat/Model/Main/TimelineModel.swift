@@ -15,6 +15,7 @@ import RxSwift
 enum TimelineType {
     case Home
     case Local
+    case Social
     case Global
     
     case UserList
@@ -30,6 +31,7 @@ enum TimelineType {
         switch self {
         case .Home: return .homeTimeline
         case .Local: return .localTimeline
+        case .Social: return .hybridTimeline
         case .Global: return .globalTimeline
         default: return nil
         }
@@ -113,6 +115,10 @@ class TimelineModel {
                                                      untilId: option.untilId ?? "",
                                                      completion: handleResult)
                 
+            case .Social:
+                self.misskey?.notes.getHybridTimeline(limit: option.loadLimit,
+                                                      untilId: option.untilId ?? "",
+                                                      completion: handleResult)
             case .Global:
                 self.misskey?.notes.getGlobalTimeline(limit: option.loadLimit,
                                                       untilId: option.untilId ?? "",

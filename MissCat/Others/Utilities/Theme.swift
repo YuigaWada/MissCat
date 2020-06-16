@@ -218,6 +218,7 @@ extension Theme {
         case home
         case local
         case global
+        case social
         case user
         case list
     }

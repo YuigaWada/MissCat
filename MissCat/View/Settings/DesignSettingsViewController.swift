@@ -155,6 +155,7 @@ class DesignSettingsViewController: FormViewController {
         
         addMenu(to: alert, cell: cell, title: "ホーム", kind: .home)
         addMenu(to: alert, cell: cell, title: "ローカル", kind: .local)
+        addMenu(to: alert, cell: cell, title: "ソーシャル", kind: .social)
         addMenu(to: alert, cell: cell, title: "グローバル", kind: .global)
         
         alert.addAction(UIAlertAction(title: "閉じる", style: .default, handler: { _ in

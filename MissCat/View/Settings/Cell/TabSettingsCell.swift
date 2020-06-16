@@ -74,6 +74,9 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
         case .local:
             nameLabel.text = "ローカル"
             textFiled.placeholder = "Local"
+        case .social:
+            nameLabel.text = "ソーシャル"
+            textFiled.placeholder = "Social"
         case .global:
             nameLabel.text = "グローバル"
             textFiled.placeholder = "Global"

@@ -124,6 +124,8 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         case .local:
             // ioの場合はLTLではなくHomeを表示(Appleに怒られた)
             return io ? generateTimelineVC(type: .Home, of: user) : generateTimelineVC(type: .Local, of: user)
+        case .social:
+            return io ? generateTimelineVC(type: .Home, of: user) : generateTimelineVC(type: .Social, of: user)
         case .global:
             return generateTimelineVC(type: .Global, of: user)
         case .user:
