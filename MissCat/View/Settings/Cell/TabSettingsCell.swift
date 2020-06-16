@@ -30,6 +30,8 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
     }
     
     var showMenuTrigger: PublishRelay<Void> = .init()
+    var beingRemoved: Bool = false // removeすることになったらsetする
+    
     private var tabSelected: Bool {
         return tabKind != nil
     }
@@ -41,7 +43,10 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
     
     public override func layoutSubviews() {
         super.layoutSubviews()
+        
+        if !tabSelected, !beingRemoved {
             showMenuTrigger.accept(())
+        }
     }
     
     // MARK: Design

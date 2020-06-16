@@ -13,6 +13,7 @@ import UIKit
 class DesignSettingsViewController: FormViewController {
     var homeViewController: HomeViewController?
     private var disposeBag: DisposeBag = .init()
+    private var tabSettingsSection: Section?
     
     // MARK: LifeCycle
     
@@ -78,6 +79,8 @@ class DesignSettingsViewController: FormViewController {
         let themeSettingsSection = getThemeSettingsSection(with: theme)
         
         form +++ tabSettingsSection +++ themeSettingsSection
+        
+        self.tabSettingsSection = tabSettingsSection
     }
     
     private func getTabSettingsSection(with theme: Theme.Model) -> MultivaluedSection {
@@ -155,6 +158,9 @@ class DesignSettingsViewController: FormViewController {
         addMenu(to: alert, cell: cell, title: "グローバル", kind: .global)
         
         alert.addAction(UIAlertAction(title: "閉じる", style: .default, handler: { _ in
+            guard let section = self.tabSettingsSection else { return }
+            cell.beingRemoved = true
+            section.remove(at: section.count - 2) // 追加しようとしていたセルをけしてあげる
             alert.dismiss(animated: true, completion: nil)
         }))
         
