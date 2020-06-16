@@ -96,7 +96,12 @@ class DesignSettingsViewController: FormViewController {
             
             $0.multivaluedRowToInsertAt = { _ in
                 TabSettingsRow {
+                    guard let cell = $0.cell else { return }
+                    
                     $0.baseCell.backgroundColor = self.getCellBackgroundColor()
+                    $0.cell?.showMenuTrigger.subscribe(onNext: {
+                        self.showAlert(for: cell)
+                    }).disposed(by: self.disposeBag)
                 }
             }
         }
@@ -138,6 +143,55 @@ class DesignSettingsViewController: FormViewController {
                 $0.cell.setColor(currentColor)
                 $0.baseCell.backgroundColor = self.getCellBackgroundColor()
             }
+    }
+    
+    // MARK: Menu
+    
+    private func showAlert(for cell: TabSettingsCell) {
+        let alert = UIAlertController(title: "タブ", message: "追加するタブの種類を選択してください", preferredStyle: .alert)
+        
+        addMenu(to: alert, cell: cell, title: "ホーム", kind: .home)
+        addMenu(to: alert, cell: cell, title: "ローカル", kind: .local)
+        addMenu(to: alert, cell: cell, title: "グローバル", kind: .global)
+        
+        alert.addAction(UIAlertAction(title: "閉じる", style: .default, handler: { _ in
+            alert.dismiss(animated: true, completion: nil)
+        }))
+        
+        present(alert, animated: true)
+    }
+    
+    private func addMenu(to alert: UIAlertController, cell: TabSettingsCell, title: String, kind: Theme.TabKind) {
+        alert.addAction(UIAlertAction(title: title, style: .default, handler: { _ in
+            self.showAccountsMenu(for: cell, kind: kind)
+        }))
+    }
+    
+    private func showAccountsMenu(for cell: TabSettingsCell, kind: Theme.TabKind) {
+        guard let popup = getViewController(name: "accounts-popup") as? AccountsPopupMenu else { return }
+        
+        let users = Cache.UserDefaults.shared.getUsers()
+        let size = CGSize(width: view.frame.width * 3 / 5, height: 50 * CGFloat(users.count))
+        popup.cellHeight = size.height / CGFloat(users.count)
+        popup.users = users
+        
+        popup.selected.map { users[$0] } // 選択されたユーザーを返す
+            .subscribe(onNext: { user in
+                cell.owner = user
+                cell.setKind(kind)
+            }).disposed(by: disposeBag)
+        
+        popup.modalPresentationStyle = .overCurrentContext
+        present(popup, animated: true, completion: {
+            popup.view.backgroundColor = popup.view.backgroundColor?.withAlphaComponent(0.7)
+        })
+    }
+    
+    private func getViewController(name: String) -> UIViewController {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let viewController = storyboard.instantiateViewController(withIdentifier: name)
+        
+        return viewController
     }
     
     // MARK: Update / Save

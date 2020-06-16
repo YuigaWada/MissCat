@@ -7,6 +7,8 @@
 //
 
 import Eureka
+import RxCocoa
+import RxSwift
 import UIKit
 
 public class TabSettingsCell: Cell<Theme.Tab>, CellType {
@@ -27,6 +29,7 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
                      listId: nil)
     }
     
+    var showMenuTrigger: PublishRelay<Void> = .init()
     private var tabSelected: Bool {
         return tabKind != nil
     }
@@ -38,7 +41,7 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
     
     public override func layoutSubviews() {
         super.layoutSubviews()
-        showAlert()
+            showMenuTrigger.accept(())
     }
     
     // MARK: Design
@@ -53,58 +56,6 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
         let backView = UIView()
         backView.backgroundColor = .clear
         selectedBackgroundView = backView
-    }
-    
-    // MARK: Menu
-    
-    private func showAccountsMenu(_ kind: Theme.TabKind) {
-        guard let parent = parentViewController,
-            let popup = getViewController(name: "accounts-popup") as? AccountsPopupMenu else { return }
-        
-        let users = Cache.UserDefaults.shared.getUsers()
-        let size = CGSize(width: parent.view.frame.width * 3 / 5, height: 50 * CGFloat(users.count))
-        popup.cellHeight = size.height / CGFloat(users.count)
-        popup.users = users
-        
-        popup
-            .selected.map { users[$0] } // 選択されたユーザーを返す
-            .subscribe(onNext: { user in
-                self.owner = user
-                self.setKind(kind)
-            })
-        
-        popup.modalPresentationStyle = .overCurrentContext
-        parentViewController?.present(popup, animated: true, completion: {
-            popup.view.backgroundColor = popup.view.backgroundColor?.withAlphaComponent(0.7)
-        })
-    }
-    
-    private func getViewController(name: String) -> UIViewController {
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let viewController = storyboard.instantiateViewController(withIdentifier: name)
-        
-        return viewController
-    }
-    
-    private func showAlert() {
-        guard !tabSelected else { return }
-        let alert = UIAlertController(title: "タブ", message: "追加するタブの種類を選択してください", preferredStyle: .alert)
-        
-        addMenu(to: alert, title: "ホーム", kind: .home)
-        addMenu(to: alert, title: "ローカル", kind: .local)
-        addMenu(to: alert, title: "グローバル", kind: .global)
-        
-        // 以下２つは別のアップデートで実装する
-//        addMenu(to: alert, title: "ユーザー", kind: .user)
-//        addMenu(to: alert, title: "リスト", kind: .list)
-        
-        parentViewController?.present(alert, animated: true)
-    }
-    
-    private func addMenu(to alert: UIAlertController, title: String, kind: Theme.TabKind) {
-        alert.addAction(UIAlertAction(title: title, style: .default, handler: { _ in
-            self.showAccountsMenu(kind)
-        }))
     }
     
     // MARK: Utiliteis
