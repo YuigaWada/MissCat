@@ -82,6 +82,10 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
             guard let userId = $0.userId ?? Cache.UserDefaults.shared.getCurrentUserId(),
                 let owner = Cache.UserDefaults.shared.getUser(userId: userId) else { return nil }
             
+            // Homeタブがデフォルト値だったら修正しておく(userRefillが完了すれば、次の起動では正常に表示されるはず)
+            if $0.name == "___Home___" {
+                return Tab(name: "Home", kind: $0.kind, userId: $0.userId, listId: $0.listId, owner: owner)
+            }
             return Tab(name: $0.name, kind: $0.kind, userId: $0.userId, listId: $0.listId, owner: owner)
         }
         

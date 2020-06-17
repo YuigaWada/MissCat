@@ -205,6 +205,10 @@ class StartViewController: UIViewController {
             EmojiHandler.setHandler(owner: user) // カスタム絵文字を読み込む
             self.registerSw(of: user) // 通知を登録する
             
+            // テーマを設定し直す
+            Theme.shared.reset()
+            Theme.shared.set()
+            
             DispatchQueue.main.async {
                 self.reloadTrigger.accept(()) // AccountsListViewControllerのリロードを促す
                 

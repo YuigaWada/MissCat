@@ -35,6 +35,10 @@ public class Theme {
         }
     }
     
+    func reset() {
+        currentModel = nil
+    }
+    
     /// 有効なタブのみ取り出し、紐付けられたアカウント情報を詰めていく
     private func checkTabs(_ tabs: [Theme.Tab]?) -> [Theme.Tab] {
         guard let tabs = tabs else { return [] }
@@ -55,7 +59,8 @@ public class Theme {
         // 有効なタブが存在しなかった場合
         if transformed.count == 0 {
             let defaultTabs = Theme.Model.getDefault()?.tab ?? [] // デフォルトのタブを代入しておく
-            return checkTabs(defaultTabs)
+            let hasAccounts = Cache.UserDefaults.shared.getUsers().count > 0
+            return hasAccounts ? checkTabs(defaultTabs) : defaultTabs
         }
         
         return transformed
