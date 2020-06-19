@@ -93,6 +93,11 @@ class NotificationsViewModel {
         update(new: cellsModel)
     }
     
+    // Streamingを切断する
+    func disconnectStream() {
+        misskey?.streaming.disconnect()
+    }
+    
     // MARK: Streaming
     
     private func connectStream() {
