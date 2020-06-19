@@ -202,6 +202,7 @@ extension NotificationsViewController: NavBarDelegate {
         // 初期状態に戻しておく
         viewModel?.disconnectStream()
         viewModel?.removeAll()
+        loadCompleted = true
         
         // ユーザーを変更してロード
         viewModel?.owner = user
