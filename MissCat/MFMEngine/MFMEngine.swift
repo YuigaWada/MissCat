@@ -52,7 +52,8 @@ class MFMEngine {
         let shaped = NSMutableAttributedString()
         
         guard let owner = owner,
-            let handler = EmojiHandler.getHandler(owner: owner) else { return nil }
+            let handler = EmojiHandler.getHandler(owner: owner) else { return MFMEngine.generatePlaneString(string: rest, font: font, textHex: textHex) }
+        
         // カスタム絵文字の候補をそれぞれ確認していく
         emojiTargets.forEach { target in
             guard let converted = handler.convertEmoji(raw: target, external: externalEmojis),
