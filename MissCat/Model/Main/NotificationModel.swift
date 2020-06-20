@@ -139,14 +139,19 @@ class NotificationsModel {
     
     private func getNoteModel(notification: NotificationModel, id: String, type: ActionType, user: UserModel) -> NotificationCell.Model? {
         guard let note = notification.note else { return nil }
-        let isReply = type == .mention || type == .reply
+        let isReply = type == .reply
+        let isMention = type == .mention
         let isRenote = type == .renote
         let isCommentRenote = type == .quote
         
-        // replyかどうかで.noteと.replyの役割が入れ替わる
-        var replyNote = isReply ? (note.getNoteCellModel(owner: owner) ?? nil) : nil
+        // reply or mentionかどうかで.noteと.replyの役割が入れ替わる
+        var replyNote: NoteCell.Model?
+        if isReply || isMention {
+            replyNote = note.getNoteCellModel(owner: owner)
+        }
         
         var myNote: NoteCell.Model?
+        
         if isReply {
             guard let reply = note.reply else { return nil }
             myNote = reply.getNoteCellModel(owner: owner)
@@ -179,11 +184,12 @@ class NotificationsModel {
     
     // 生のNoteModelをNotificationCell.Modelに変換する
     private func convertNoteModel(_ target: Any) -> NotificationCell.Model? {
-        guard let note = target as? NoteModel, let myNote = note.reply, let fromUser = note.user else { return nil }
+        guard let note = target as? NoteModel, let fromUser = note.user else { return nil }
         
+        let myNote = note.reply
         return NotificationCell.Model(notificationId: note.id ?? "",
                                       type: .reply,
-                                      myNote: myNote.getNoteCellModel(owner: owner),
+                                      myNote: myNote?.getNoteCellModel(owner: owner), // メンションの場合myNoteが存在しない
                                       replyNote: note.getNoteCellModel(owner: owner),
                                       fromUser: fromUser,
                                       reaction: nil,
