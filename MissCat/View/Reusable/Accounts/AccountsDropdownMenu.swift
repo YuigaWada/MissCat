@@ -51,6 +51,7 @@ class AccountsDropdownMenu: AccountsMenu {
         tableView.bounces = false
         tableView.showsVerticalScrollIndicator = false
         tableView.backgroundColor = .clear
+        tableView.separatorStyle = .none
         
         tableView.delegate = self
         tableView.dataSource = self
