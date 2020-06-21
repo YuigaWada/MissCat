@@ -42,6 +42,7 @@ class AccountCellViewModel: ViewModelType {
         let user = input.user
         
         // username
+        let hasUsername = !user.username.isEmpty
         output.username.accept("@\(user.username)")
         
         // キャッシュから
@@ -75,6 +76,12 @@ class AccountCellViewModel: ViewModelType {
             self.output.name.accept(name ?? username)
             self.output.username.accept(username)
             self.output.instance.accept(user.instance)
+            
+            // username情報が保存されていない場合は保存しておく
+            if !hasUsername {
+                let secureUser = SecureUser(userId: user.userId, username: info.username ?? "", instance: user.instance, apiKey: user.apiKey)
+                _ = Cache.UserDefaults.shared.saveUser(secureUser)
+            }
         }
     }
     
