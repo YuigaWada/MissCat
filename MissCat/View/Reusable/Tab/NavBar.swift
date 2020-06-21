@@ -19,6 +19,7 @@ class NavBar: UIView {
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var userIconView: MissCatImageView!
     @IBOutlet weak var rightButton: UIButton!
+    @IBOutlet weak var separator: UIView!
     
     private var viewModel: NavBarViewModel?
     private let disposeBag = DisposeBag()
@@ -88,6 +89,7 @@ class NavBar: UIView {
         theme.map { $0.colorPattern.ui }.subscribe(onNext: { colorPattern in
             self.backgroundColor = colorPattern.base
             self.titleLabel.textColor = colorPattern.text
+            self.separator.backgroundColor = colorPattern.sub2
         }).disposed(by: disposeBag)
     }
     
@@ -95,6 +97,7 @@ class NavBar: UIView {
         if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
             backgroundColor = colorPattern.base
             titleLabel.textColor = colorPattern.text
+            separator.backgroundColor = colorPattern.sub2
         }
     }
     

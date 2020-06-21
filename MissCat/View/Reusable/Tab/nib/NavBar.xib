@@ -11,6 +11,7 @@
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="NavBar" customModule="MissCat" customModuleProvider="target">
             <connections>
                 <outlet property="rightButton" destination="RhL-lE-OIG" id="QT9-XK-JTZ"/>
+                <outlet property="separator" destination="Zm3-Cy-0oc" id="kOb-Jn-aNX"/>
                 <outlet property="titleLabel" destination="zX5-Zm-YUd" id="Jgy-Gi-QPX"/>
                 <outlet property="userIconView" destination="RSC-ka-fHa" id="4aC-hs-Nt7"/>
             </connections>
