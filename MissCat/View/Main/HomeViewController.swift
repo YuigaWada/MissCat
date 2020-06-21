@@ -19,18 +19,31 @@ import UIKit
 // 上タブ管理はBGで動いている親クラスのPolioPagerが行い、下タブ管理はHomeViewControllerが自前で行う。
 // 一時的なキャッシュ管理についてはsingletonのCacheクラスを使用
 
+extension HomeViewController {
+    struct Tab {
+        var name: String
+        var kind: Theme.TabKind
+        
+        var userId: String?
+        var listId: String?
+        
+        let owner: SecureUser
+    }
+}
+
 class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate {
     private var isXSeries = UIScreen.main.bounds.size.height > 811
     private let footerTabHeight: CGFloat = 55
     private var initialized: Bool = false
     
     // ViewController
-    private var notificationsViewController: UIViewController?
+    private var notificationsViewController: NotificationsViewController?
     private var detailViewController: UIViewController?
-    private var favViewController: UIViewController?
+    private var favViewController: MessageListViewController?
     
-    private var myProfileViewController: ProfileViewController?
+//    private var myProfileViewController: ProfileViewController?
     private var currentProfileViewController: ProfileViewController?
+    private var accountsListViewController: AccountsListViewController?
     
     // Tab
     private lazy var search = self.generateSearchVC()
@@ -57,46 +70,68 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     private var viewModel = HomeViewModel()
     private var disposeBag = DisposeBag()
     
+    private lazy var tabs: [Tab] = transformTabs()
+    
+    // MARK: Transform Tabs
+    
+    private func transformTabs() -> [Tab] {
+        guard let tabs = Theme.shared.currentModel?.tab else { return [] }
+        
+        // Theme.Tab → HomeViewController.Tabへと詰め替える
+        let transformed: [Tab] = tabs.compactMap {
+            guard let userId = $0.userId ?? Cache.UserDefaults.shared.getCurrentUserId(),
+                let owner = Cache.UserDefaults.shared.getUser(userId: userId) else { return nil }
+            
+            // Homeタブがデフォルト値だったら修正しておく(userRefillが完了すれば、次の起動では正常に表示されるはず)
+            if $0.name == "___Home___" {
+                return Tab(name: "Home", kind: $0.kind, userId: $0.userId, listId: $0.listId, owner: owner)
+            }
+            return Tab(name: $0.name, kind: $0.kind, userId: $0.userId, listId: $0.listId, owner: owner)
+        }
+        
+        return transformed
+    }
+    
     // MARK: PolioPager Overrides
     
     /// 上タブのアイテム
     override func tabItems() -> [TabItem] {
         let colorPattern = Theme.shared.currentModel?.colorPattern
-        let tabs = Theme.shared.currentModel?.tab ?? getDefaultTabs()
-        return tabs.map { tab in
+        let items = tabs.map { tab in
             TabItem(title: tab.name,
                     backgroundColor: colorPattern?.ui.base ?? .white,
                     normalColor: colorPattern?.ui.text ?? .black)
         }
+        
+        return items.count > 0 ? items : [TabItem(title: "")]
     }
     
     /// 上タブのアイテムに対応したViewControllerを返す
     override func viewControllers() -> [UIViewController] {
-        let tabs = Theme.shared.currentModel?.tab ?? getDefaultTabs()
         setViewControllers = tabs.map { tab in // setされたviewControllerを記憶しておく
-            getViewController(type: tab.kind)
+            getViewController(type: tab.kind, owner: tab.owner)
+        }
+        
+        if setViewControllers.count == 0 {
+            setViewControllers = [UIViewController()]
         }
         
         return [search] + setViewControllers
     }
     
-    func getDefaultTabs() -> [Theme.Tab] {
-        return [.init(name: "Home", kind: .home, userId: nil, listId: nil),
-                .init(name: "Local", kind: .local, userId: nil, listId: nil),
-                .init(name: "Global", kind: .global, userId: nil, listId: nil)]
-    }
-    
     /// Theme.TabKindからVCを生成
     /// - Parameter type: Theme.TabKind
-    private func getViewController(type: Theme.TabKind) -> UIViewController {
+    private func getViewController(type: Theme.TabKind, owner user: SecureUser) -> UIViewController {
         switch type {
         case .home:
-            return generateTimelineVC(type: .Home)
+            return generateTimelineVC(type: .Home, of: user)
         case .local:
             // ioの場合はLTLではなくHomeを表示(Appleに怒られた)
-            return io ? generateTimelineVC(type: .Home) : generateTimelineVC(type: .Local)
+            return io ? generateTimelineVC(type: .Home, of: user) : generateTimelineVC(type: .Local, of: user)
+        case .social:
+            return io ? generateTimelineVC(type: .Home, of: user) : generateTimelineVC(type: .Social, of: user)
         case .global:
-            return generateTimelineVC(type: .Global)
+            return generateTimelineVC(type: .Global, of: user)
         case .user:
             return .init()
         case .list:
@@ -117,12 +152,10 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
-        if !logined {
-            userAuth()
-        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        if !logined { userAuth() } // アカウントを一つも持っていない場合はログインさせる
         super.viewDidAppear(animated)
         
         navigationController?.delegate = self
@@ -150,6 +183,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     /// - Parameter startingPage: どのpageがrelaunch後、最初に表示されるか
     func relaunchView(start startingPage: Page = .profile) {
         // main
+        tabs = transformTabs() // タブ情報を更新する
         reloadPager()
         
         // notif
@@ -165,9 +199,13 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         setupFavVC()
         
         // profile
-        myProfileViewController?.view.removeFromSuperview()
-        myProfileViewController?.removeFromParent()
-        myProfileViewController = nil
+//        myProfileViewController?.view.removeFromSuperview()
+//        myProfileViewController?.removeFromParent()
+//        myProfileViewController = nil
+        
+        accountsListViewController?.view.removeFromSuperview()
+        accountsListViewController?.removeFromParent()
+        accountsListViewController = nil
         
         nowPage = .main
         switch startingPage {
@@ -226,9 +264,11 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
             // タブ情報が更新されている場合のみタブをリロード
             if let oldTheme = currentTheme {
                 if !theme.hasEqualTabs(to: oldTheme) {
+                    self.tabs = self.transformTabs() // タブ情報を更新する
                     self.reloadPager()
                 }
             } else {
+                self.tabs = self.transformTabs() // タブ情報を更新する
                 self.reloadPager()
             }
             
@@ -278,23 +318,29 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     // MARK: Auth
     
     private func userAuth() {
-        guard let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey(),
-            let currentInstance = Cache.UserDefaults.shared.getCurrentLoginedInstance(),
+        guard let currentUser = Cache.UserDefaults.shared.getCurrentUser(),
+            let apiKey = currentUser.apiKey,
             !apiKey.isEmpty else {
             showStartingViewController() // ApiKeyが確認できない場合はStartViewControllerへ
             return
         }
         
-        MisskeyKit.changeInstance(instance: currentInstance)
-        MisskeyKit.auth.setAPIKey(apiKey)
+//        MisskeyKit.changeInstance(instance: currentUser.instance)
+//        MisskeyKit.auth.setAPIKey(apiKey)
         
         logined = true
-        self.currentInstance = currentInstance
+        currentInstance = currentUser.instance
     }
     
     private func showStartingViewController() {
         guard let startViewController = getViewController(name: "start") as? StartViewController else { return }
-        navigationController?.pushViewController(startViewController, animated: true)
+        
+        startViewController.reloadTrigger.subscribe(onNext: {
+            self.relaunchView(start: .main)
+        }).disposed(by: disposeBag)
+        
+        let navigationController = UINavigationController(rootViewController: startViewController)
+        presentOnFullScreen(navigationController, animated: true, completion: nil)
     }
     
     // MARK: Setup Tab
@@ -364,6 +410,26 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         favViewController!.view.frame = getDisplayRect()
     }
     
+    private func showAccountListView() {
+        if let accountsListViewController = accountsListViewController {
+            accountsListViewController.view.isHidden = false
+            showNavBar(title: "Accounts", page: .profile, style: .Right, needIcon: false, rightText: "cog")
+            return
+        }
+        
+        guard let storyboard = self.storyboard,
+            let accountsListViewController = storyboard.instantiateViewController(withIdentifier: "accounts-list") as? AccountsListViewController else { return }
+        
+        accountsListViewController.view.frame = getDisplayRect(needNavBar: true)
+        accountsListViewController.homeViewController = self
+        accountsListViewController.view.layoutIfNeeded()
+        addChild(accountsListViewController)
+        view.addSubview(accountsListViewController.view)
+        
+        showNavBar(title: "Accounts", page: .profile, style: .Right, needIcon: false, rightText: "cog")
+        self.accountsListViewController = accountsListViewController
+    }
+    
     // MARK: Pages
     
     private func showPostDetailView(item: NoteCell.Model) {
@@ -382,29 +448,15 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         self.detailViewController = detailViewController
     }
     
-    private func showProfileView(userId: String, isMe: Bool = false) {
-        nowPage = isMe ? .profile : nowPage
-        if isMe, let myProfileViewController = myProfileViewController {
-            myProfileViewController.view.isHidden = false
-            return
-        }
-        
-        // If myProfileViewController, currentProfileViewController is nil...
+    private func showProfileView(userId: String, owner: SecureUser) {
         guard let storyboard = self.storyboard,
             let profileViewController = storyboard.instantiateViewController(withIdentifier: "profile") as? ProfileViewController else { return }
         
-        profileViewController.setUserId(userId, isMe: isMe)
+        profileViewController.setUserId(userId, owner: owner)
         profileViewController.view.frame = getDisplayRect(needNavBar: false)
         profileViewController.homeViewController = self
         
-        if isMe {
-            profileViewController.view.layoutIfNeeded()
-            addChild(profileViewController)
-            view.addSubview(profileViewController.view)
-            myProfileViewController = profileViewController
-        } else {
-            navigationController?.pushViewController(profileViewController, animated: true)
-        }
+        navigationController?.pushViewController(profileViewController, animated: true)
     }
     
     // MARK: Utilities
@@ -454,11 +506,11 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         return viewController
     }
     
-    private func generateTimelineVC(type: TimelineType) -> TimelineViewController {
+    private func generateTimelineVC(type: TimelineType, of user: SecureUser) -> TimelineViewController {
         guard let viewController = getViewController(name: "timeline") as? TimelineViewController
         else { fatalError("Internal Error.") }
         
-        viewController.setup(type: type)
+        viewController.setup(owner: user, type: type)
         viewController.view.backgroundColor = .clear
         return viewController
     }
@@ -471,7 +523,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         }
         
         if type != .profile {
-            myProfileViewController?.view.isHidden = true
+            accountsListViewController?.view.isHidden = true
             currentProfileViewController?.view.isHidden = true
         }
         
@@ -515,8 +567,8 @@ extension HomeViewController: NoteCellDelegate {
             
             switch order {
             case 0: // RN
-                guard let noteId = note.noteId else { return }
-                self.viewModel.renote(noteId: noteId)
+                guard let noteId = note.noteId, let owner = note.owner else { return }
+                self.viewModel.renote(noteId: noteId, owner: owner)
             case 1: // 引用RN
                 self.openPost(item: note, type: .CommentRenote)
             default:
@@ -527,7 +579,7 @@ extension HomeViewController: NoteCellDelegate {
         present(panelMenu, animated: true, completion: nil)
     }
     
-    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {}
+    func tappedReaction(owner: SecureUser, reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {}
     
     func tappedOthers(note: NoteCell.Model) {}
     
@@ -535,14 +587,14 @@ extension HomeViewController: NoteCellDelegate {
         tappedCell(item: item)
     }
     
-    func tappedLink(text: String) {
+    func tappedLink(text: String, owner: SecureUser) {
         let (linkType, value) = text.analyzeHyperLink()
         
         switch linkType {
         case .url:
             openLink(url: value)
         case .user:
-            openUserPage(username: value)
+            openUserPage(username: value, owner: owner)
         case .hashtag:
             searchHashtag(tag: value)
         default:
@@ -552,8 +604,8 @@ extension HomeViewController: NoteCellDelegate {
     
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}
     
-    func vote(choice: [Int], to noteId: String) {
-        viewModel.vote(choice: choice, to: noteId)
+    func vote(choice: [Int], to noteId: String, owner: SecureUser) {
+        viewModel.vote(choice: choice, to: noteId, owner: owner)
     }
     
     func showImage(_ urls: [URL], start startIndex: Int) {
@@ -620,7 +672,11 @@ extension HomeViewController: FooterTabBarDelegate {
     }
     
     func tappedPost() {
-        move2ViewController(identifier: "post")
+        guard let postViewController = storyboard?.instantiateViewController(withIdentifier: "post") as? PostViewController,
+            let owner = Cache.UserDefaults.shared.getCurrentUser() else { return }
+        
+        postViewController.setup(owner: owner)
+        presentOnFullScreen(postViewController, animated: true, completion: nil)
     }
     
     func tappedDM() {
@@ -635,12 +691,10 @@ extension HomeViewController: FooterTabBarDelegate {
     func tappedProfile() {
         guard nowPage != .profile else { return }
         
-        Cache.shared.getMe { me in
-            guard let me = me else { return }
-            DispatchQueue.main.async {
-                self.hideView(without: .profile)
-                self.showProfileView(userId: me.id, isMe: true)
-            }
+        DispatchQueue.main.async {
+            self.hideView(without: .profile)
+            self.showAccountListView()
+            // TODO: ここでアカウント選択画面を出す
         }
     }
     
@@ -651,36 +705,42 @@ extension HomeViewController: FooterTabBarDelegate {
     private func showNotificationsView() {
         guard let notificationsViewController = notificationsViewController else { return }
         
-        navBar.isHidden = false
-        navBar.barTitle = "Notifications"
-        navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
-        
-        nowPage = .notifications
+        showNavBar(title: "Notifications", page: .notifications)
         notificationsViewController.view.isHidden = false
     }
     
     func showFavView() {
         guard let favViewController = favViewController else { return }
         
-        navBar.isHidden = false
-        navBar.barTitle = "Chat"
-//        navBar.setButton(style: .Right, rightText: "plus", rightFont: UIFont.awesomeSolid(fontSize: 13))
-        navBar.setButton(style: .None, rightText: nil, leftText: nil)
-        
-        nowPage = .messages
+        showNavBar(title: "Chat", page: .messages)
         favViewController.view.isHidden = false
+    }
+    
+    private func showNavBar(title: String, page: Page, style: NavBar.Button = .None, needIcon: Bool = true, rightText: String? = nil, rightFont: UIFont? = nil) {
+        navBar.isHidden = false
+        navBar.barTitle = title
+        navBar.setButton(style: style,
+                         needIcon: needIcon,
+                         rightText: rightText,
+                         leftText: nil,
+                         rightFont: rightFont ?? UIFont.awesomeSolid(fontSize: 16))
+        
+        nowPage = page
     }
 }
 
 extension HomeViewController: NavBarDelegate {
-    // MARK: NavBar Delegate
-    
-    func tappedLeftNavButton() {}
+    func changeUser(_ user: SecureUser) {
+        favViewController?.changeUser(user)
+        notificationsViewController?.changeUser(user)
+    }
     
     func tappedRightNavButton() {
-        guard nowPage == .messages else { return }
-        
-        // DM処理書く
+        openSettings()
+    }
+    
+    func showAccountMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
+        return presentAccountsDropdownMenu(sourceRect: sourceRect)
     }
 }
 
@@ -691,11 +751,11 @@ extension HomeViewController: TimelineDelegate {
         showPostDetailView(item: item)
     }
     
-    func move2Profile(userId: String) {
-        showProfileView(userId: userId)
+    func move2Profile(userId: String, owner: SecureUser) {
+        showProfileView(userId: userId, owner: owner)
     }
     
-    func openUserPage(username: String) {
+    func openUserPage(username: String, owner: SecureUser) {
         // usernameから真のusernameとhostを切り離す
         let decomp = username.components(separatedBy: "@").filter { $0 != "" }
         
@@ -709,10 +769,11 @@ extension HomeViewController: TimelineDelegate {
             _username = decomp[0]
         } else { return }
         
-        MisskeyKit.users.showUser(username: _username, host: host) { user, error in
+        let misskey = MisskeyKit(from: owner)
+        misskey?.users.showUser(username: _username, host: host) { user, error in
             guard error == nil, let user = user else { return }
             DispatchQueue.main.async {
-                self.showProfileView(userId: user.id)
+                self.showProfileView(userId: user.id, owner: owner)
             }
         }
     }
@@ -732,9 +793,10 @@ extension HomeViewController: TimelineDelegate {
     }
     
     func openPost(item: NoteCell.Model, type: PostViewController.PostType) {
-        guard let postViewController = storyboard?.instantiateViewController(withIdentifier: "post") as? PostViewController else { return }
+        guard let postViewController = storyboard?.instantiateViewController(withIdentifier: "post") as? PostViewController,
+            let owner = item.owner else { return }
         
-        postViewController.setTargetNote(item, type: type)
+        postViewController.setup(owner: owner, note: item, type: type)
         presentOnFullScreen(postViewController, animated: true, completion: nil)
     }
     

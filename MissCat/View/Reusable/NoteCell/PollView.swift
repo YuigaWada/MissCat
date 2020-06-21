@@ -16,10 +16,17 @@ class PollView: UIView {
     @IBOutlet weak var totalPollLabel: UILabel!
     @IBOutlet weak var pollButton: UIButton!
     
+    let disposeBag = DisposeBag()
     var voteTriggar: PublishRelay<[Int]> = .init() // タップされるとvote対象のidを流す
-    var height: CGFloat {
+    var height: CGFloat { // NoteCellがこれを使ってAutoLayoutを設定する
         guard pollBarCount > 0 else { return 0 }
         
+        //        pollBars.forEach { $0.setNeedsLayout(); $0.layoutIfNeeded() }
+        //        let sumOfPollHeight = pollBars.map { pollBar in
+        //            pollBar.layoutIfNeeded()
+        //            return pollBar.frame.height
+        //        }.reduce(CGFloat.zero) { x, y in x + y }
+        //
         let spaceCount = pollBarCount - 1
         return CGFloat(spaceCount * 10 + pollBarCount * pollBarHeight + 38) + totalPollLabel.frame.height
     }
@@ -36,7 +43,6 @@ class PollView: UIView {
     private var selectedId: [Int] = []
     private var allowedMultiple: Bool = false // 複数選択可かどうか
     private var finishVoting: Bool = false
-    private let disposeBag = DisposeBag()
     
     // MARK: Life Cycle
     
@@ -76,7 +82,7 @@ class PollView: UIView {
         }
     }
     
-    private func setupComponent() {
+    func setupComponent() {
         pollButton.layer.borderWidth = 1
         pollButton.layer.cornerRadius = 5
         pollButton.setTitle("投票", for: .normal)
@@ -114,9 +120,11 @@ class PollView: UIView {
                                   finishVoting: finishVoting,
                                   myVoted: choice.isVoted ?? false)
             
+            pollBar.translatesAutoresizingMaskIntoConstraints = false
             setupPollBarTapGesture(with: pollBar, finishVoting)
             pollBars.append(pollBar)
             stackView.addArrangedSubview(pollBar)
+            setAutoLayout(pollBar)
         }
         
         if finishVoting {
@@ -159,6 +167,18 @@ class PollView: UIView {
                 self.selectedId.remove(at: index)
             }
         })
+    }
+    
+    private func setAutoLayout(_ view: PollBar) {
+        stackView.addConstraints([
+            NSLayoutConstraint(item: view,
+                               attribute: .height,
+                               relatedBy: .greaterThanOrEqual,
+                               toItem: stackView,
+                               attribute: .height,
+                               multiplier: 0,
+                               constant: 35)
+        ])
     }
     
     private func updatePoll(tapped ids: [Int]) {
@@ -225,7 +245,7 @@ extension PollView {
             let progressView = setupProgressView(rate: rate, canSeeRate: finishVoting, style: self.style)
             let radioButton = setupRadioButton(finishVoting: finishVoting)
             let nameLabel = setupNameLabel(name: name, finishVoting: finishVoting, style: self.style, radioButton: radioButton)
-            let rateLabel = setupRateLabel(rate: rate, canSeeRate: finishVoting, style: self.style)
+            let rateLabel = setupRateLabel(rate: rate, canSeeRate: finishVoting, style: self.style, nameLabel: nameLabel)
             
             changeStyle(with: self.style)
             
@@ -376,7 +396,8 @@ extension PollView {
         private func setupNameLabel(name: String, finishVoting: Bool, style: Style, radioButton: UIView) -> UILabel {
             let pollNameLabel = UILabel()
             pollNameLabel.numberOfLines = 0
-            pollNameLabel.lineBreakMode = NSLineBreakMode.byWordWrapping
+//            pollNameLabel.lineBreakMode = NSLineBreakMode.byWordWrapping
+            pollNameLabel.lineBreakMode = .byTruncatingTail
             pollNameLabel.font = UIFont.systemFont(ofSize: 15.0)
             pollNameLabel.text = name
             pollNameLabel.textColor = style.textColor
@@ -414,10 +435,18 @@ extension PollView {
             addConstraints([
                 pollNameConstraint,
                 NSLayoutConstraint(item: pollNameLabel,
-                                   attribute: .centerY,
+                                   attribute: .top,
                                    relatedBy: .equal,
                                    toItem: self,
-                                   attribute: .centerY,
+                                   attribute: .top,
+                                   multiplier: 1.0,
+                                   constant: 0),
+                
+                NSLayoutConstraint(item: pollNameLabel,
+                                   attribute: .bottom,
+                                   relatedBy: .equal,
+                                   toItem: self,
+                                   attribute: .bottom,
                                    multiplier: 1.0,
                                    constant: 0)
             ])
@@ -427,7 +456,7 @@ extension PollView {
         }
         
         // 投票率のラベルを設定
-        private func setupRateLabel(rate: Float, canSeeRate: Bool, style: Style) -> UILabel {
+        private func setupRateLabel(rate: Float, canSeeRate: Bool, style: Style, nameLabel: UIView) -> UILabel {
             let pollRateLabel = UILabel()
             pollRateLabel.numberOfLines = 0
             pollRateLabel.lineBreakMode = NSLineBreakMode.byWordWrapping
@@ -435,6 +464,8 @@ extension PollView {
             pollRateLabel.font = UIFont.systemFont(ofSize: 15.0)
             pollRateLabel.text = "\(Int(100 * rate))%"
             pollRateLabel.textColor = style.textColor
+            pollRateLabel.textAlignment = .right
+            pollRateLabel.minimumScaleFactor = 0.1
             
             pollRateLabel.alpha = canSeeRate ? 1 : 0 // 表示OKなら表示
             pollRateLabel.center = pollRateLabel.center
@@ -450,12 +481,27 @@ extension PollView {
             // AutoLayout
             addConstraints([
                 NSLayoutConstraint(item: pollRateLabel,
+                                   attribute: .left,
+                                   relatedBy: .equal,
+                                   toItem: nameLabel,
+                                   attribute: .right,
+                                   multiplier: 1.0,
+                                   constant: 5),
+                NSLayoutConstraint(item: pollRateLabel,
                                    attribute: .right,
                                    relatedBy: .equal,
                                    toItem: self,
                                    attribute: .right,
                                    multiplier: 1.0,
                                    constant: -10),
+                
+                NSLayoutConstraint(item: pollRateLabel,
+                                   attribute: .width,
+                                   relatedBy: .equal,
+                                   toItem: self,
+                                   attribute: .width,
+                                   multiplier: 0,
+                                   constant: 40),
                 
                 NSLayoutConstraint(item: pollRateLabel,
                                    attribute: .centerY,
@@ -500,9 +546,9 @@ extension PollView {
                 NSLayoutConstraint(item: radio,
                                    attribute: .width,
                                    relatedBy: .equal,
-                                   toItem: self,
+                                   toItem: radio,
                                    attribute: .height,
-                                   multiplier: 0.7,
+                                   multiplier: 1.0,
                                    constant: 0),
                 
                 NSLayoutConstraint(item: radio,
@@ -510,8 +556,8 @@ extension PollView {
                                    relatedBy: .equal,
                                    toItem: self,
                                    attribute: .height,
-                                   multiplier: 0.7,
-                                   constant: 0)
+                                   multiplier: 0,
+                                   constant: 24.5)
             ])
             
             radio.alpha = finishVoting ? 0 : 1

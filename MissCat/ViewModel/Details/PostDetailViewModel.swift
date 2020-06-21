@@ -6,6 +6,7 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import MisskeyKit
 import RxSwift
 
 class PostDetailViewModel {
@@ -13,11 +14,17 @@ class PostDetailViewModel {
     let forceUpdateIndex: PublishSubject<Int> = .init()
     var dataSource: NotesDataSource?
     var cellCount: Int { return cellsModel.count }
+    var owner: SecureUser?
     
     private var hasReactionGenCell: Bool = false
     var cellsModel: [NoteCell.Model] = [] // TODO: エラー再発しないか意識しておく
     
-    private let model = PostDetailModel()
+    private lazy var misskey: MisskeyKit? = {
+        guard let owner = owner else { return nil }
+        return MisskeyKit(from: owner)
+    }()
+    
+    private lazy var model = PostDetailModel(from: misskey, owner: owner)
     
     //    private lazy var model = PostDetailModel()
     
@@ -26,6 +33,7 @@ class PostDetailViewModel {
     init(disposeBag: DisposeBag) {}
     
     func setItem(_ item: NoteCell.Model) {
+        owner = item.owner
         cellsModel.append(item)
         updateNotes(new: cellsModel)
         

@@ -18,16 +18,16 @@ import WebKit
 protocol NoteCellDelegate {
     func tappedReply(note: NoteCell.Model)
     func tappedRenote(note: NoteCell.Model)
-    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?)
+    func tappedReaction(owner: SecureUser, reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?)
     func tappedOthers(note: NoteCell.Model)
     
     func move2PostDetail(item: NoteCell.Model)
     
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool)
-    func vote(choice: [Int], to noteId: String)
+    func vote(choice: [Int], to noteId: String, owner: SecureUser)
     
-    func tappedLink(text: String)
-    func move2Profile(userId: String)
+    func tappedLink(text: String, owner: SecureUser)
+    func move2Profile(userId: String, owner: SecureUser)
     
     func showImage(_ urls: [URL], start startIndex: Int)
     func playVideo(url: String)
@@ -41,6 +41,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         var item: NoteCell.Model
         var isDetailMode: Bool = false
         var delegate: NoteCellDelegate?
+        var owner: SecureUser
     }
     
     typealias Transformed = NoteCell
@@ -98,6 +99,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     var userId: String?
     var hostInstance: String?
     var iconImageUrl: String?
+    var owner: SecureUser?
     
     // MARK: Private Var
     
@@ -110,9 +112,10 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     private var onOtherNote: Bool = false
     private var isSkelton: Bool = false
     
-    private func getViewModel(item: NoteCell.Model, isDetailMode: Bool) -> ViewModel {
+    private func getViewModel(item: NoteCell.Model, isDetailMode: Bool, owner: SecureUser) -> ViewModel {
         let input: ViewModel.Input = .init(cellModel: item,
                                            isDetailMode: isDetailMode,
+                                           owner: owner,
                                            noteYanagi: noteView,
                                            nameYanagi: nameTextView)
         
@@ -246,9 +249,9 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     
     private func setupPoll() {
         pollView.voteTriggar.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { ids in
-            guard let noteId = self.noteId else { return }
+            guard let noteId = self.noteId, let owner = self.owner else { return }
             self.viewModel?.updateVote(choices: ids)
-            self.delegate?.vote(choice: ids, to: noteId)
+            self.delegate?.vote(choice: ids, to: noteId, owner: owner)
         }).disposed(by: disposeBag)
     }
     
@@ -453,8 +456,9 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             .disposed(by: disposeBag)
         
         urlPreviewer.setTapGesture(disposeBag) {
-            guard let previewdUrl = viewModel.state.previewedUrl else { return }
-            self.delegate?.tappedLink(text: previewdUrl)
+            guard let previewdUrl = viewModel.state.previewedUrl,
+                let owner = self.owner else { return }
+            self.delegate?.tappedLink(text: previewdUrl, owner: owner)
         }
     }
     
@@ -464,8 +468,10 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         gestureTargets.forEach {
             guard let view = $0 else { return }
             view.setTapGesture(disposeBag) {
-                guard let delegate = self.delegate, let userId = self.userId else { return }
-                delegate.move2Profile(userId: userId)
+                guard let delegate = self.delegate,
+                    let userId = self.userId,
+                    let owner = self.owner else { return }
+                delegate.move2Profile(userId: userId, owner: owner)
             }
         }
     }
@@ -513,13 +519,14 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         // main
         self.noteId = noteId
+        owner = arg.owner
         userId = item.userId
         hostInstance = item.hostInstance
         iconImageUrl = item.iconImageUrl
         delegate = arg.delegate
         
         // ViewModel
-        let viewModel = getViewModel(item: item, isDetailMode: isDetailMode)
+        let viewModel = getViewModel(item: item, isDetailMode: isDetailMode, owner: arg.owner)
         self.viewModel = viewModel
         
         viewModel.setCell()
@@ -548,6 +555,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         noteId = nil
         userId = nil
         hostInstance = nil
+        owner = nil
         
         backgroundColor = Theme.shared.currentModel?.colorPattern.ui.base ?? .white
         separatorBorder.isHidden = false
@@ -656,8 +664,8 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     // MARK: DELEGATE
     
     func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-        if let delegate = delegate {
-            delegate.tappedLink(text: URL.absoluteString)
+        if let delegate = delegate, let owner = owner {
+            delegate.tappedLink(text: URL.absoluteString, owner: owner)
         }
         
         return false
@@ -688,9 +696,14 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     }
     
     @IBAction func tappedReaction(_ sender: Any) {
-        guard let delegate = delegate, let noteId = self.noteId, let viewModel = viewModel, !viewModel.state.isMe else { return }
+        guard let delegate = delegate,
+            let owner = owner,
+            let noteId = self.noteId,
+            let viewModel = viewModel,
+            !viewModel.state.isMe else { return }
         
-        delegate.tappedReaction(reactioned: viewModel.state.reactioned,
+        delegate.tappedReaction(owner: owner,
+                                reactioned: viewModel.state.reactioned,
                                 noteId: noteId,
                                 iconUrl: iconImageUrl,
                                 displayName: viewModel.output.displayName,

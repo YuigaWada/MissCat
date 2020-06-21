@@ -6,6 +6,7 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
+import MisskeyKit
 import RxCocoa
 import RxSwift
 
@@ -21,29 +22,45 @@ class MessageListViewModel: ViewModelType {
     }
     
     struct State {
-        var isLoading: Bool
+        var isLoading: Bool = false
+        var hasPrepared: Bool = false
+        
+        var hasAccounts: Bool {
+            return Cache.UserDefaults.shared.getUsers().count > 0
+        }
     }
     
     private let input: Input
     let output: Output = .init()
-    var state: State {
-        return .init(isLoading: _isLoading)
-    }
+    var state: State = .init()
     
     var cellsModel: [SenderCell.Model] = []
-    private let model: MessageListModel = .init()
+    private lazy var misskey: MisskeyKit? = {
+        guard let owner = owner else { return nil }
+        return MisskeyKit(from: owner)
+    }()
+    
+    var owner: SecureUser? {
+        didSet {
+            guard let owner = owner else { return }
+            model.change(from: MisskeyKit(from: owner), owner: owner)
+        }
+    }
+    
+    private lazy var model: MessageListModel = .init(from: misskey, owner: owner)
     
     private let disposeBag: DisposeBag
-    private var _isLoading: Bool = false
     
     // MARK: LifeCycle
     
     init(with input: Input, and disposeBag: DisposeBag) {
         self.input = input
         self.disposeBag = disposeBag
+        owner = Cache.UserDefaults.shared.getCurrentUser()
     }
     
-    func setupInitialCell() {
+    func load() {
+        state.hasPrepared = true
         loadHistory().subscribe(onError: { error in
             print(error)
         }, onCompleted: {
@@ -51,6 +68,11 @@ class MessageListViewModel: ViewModelType {
                 self.updateUsers(new: self.cellsModel)
             }
         }, onDisposed: nil).disposed(by: disposeBag)
+    }
+    
+    func removeAll() {
+        cellsModel = []
+        updateUsers(new: cellsModel)
     }
     
     // MARK: Load
@@ -68,11 +90,11 @@ class MessageListViewModel: ViewModelType {
 //    }
     
     func loadHistory(untilId: String? = nil) -> Observable<SenderCell.Model> {
-        _isLoading = true
+        state.isLoading = true
         return model.loadHistory().do(onNext: { cellModel in
             self.cellsModel.append(cellModel)
         }, onCompleted: {
-            self._isLoading = false
+            self.state.isLoading = false
         })
     }
     

@@ -13,7 +13,7 @@ import SkeletonView
 import UIKit
 
 protocol UserCellDelegate {
-    func tappedLink(text: String)
+    func tappedLink(text: String, owner: SecureUser)
 }
 
 class UserCell: UITableViewCell, ComponentType, UITextViewDelegate {
@@ -21,6 +21,7 @@ class UserCell: UITableViewCell, ComponentType, UITextViewDelegate {
     
     typealias Transformed = UserCell
     struct Arg {
+        let owner: SecureUser
         let icon: String?
         let shapedName: MFMString?
         let shapedDescription: MFMString?
@@ -58,7 +59,8 @@ class UserCell: UITableViewCell, ComponentType, UITextViewDelegate {
     
     func transform(with arg: UserCell.Arg) -> UserCell {
         initialize()
-        let input = UserCellViewModel.Input(icon: arg.icon,
+        let input = UserCellViewModel.Input(owner: arg.owner,
+                                            icon: arg.icon,
                                             shapedName: arg.shapedName,
                                             shapedDescription: arg.shapedDescription,
                                             nameYanagi: nameTextView,
@@ -138,7 +140,8 @@ class UserCell: UITableViewCell, ComponentType, UITextViewDelegate {
     }
     
     func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-        delegate?.tappedLink(text: URL.absoluteString)
+        guard let owner = viewModel?.state.owner else { return false }
+        delegate?.tappedLink(text: URL.absoluteString, owner: owner)
         return false
     }
 }

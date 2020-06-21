@@ -17,6 +17,7 @@ class NoteCellViewModel: ViewModelType {
     struct Input {
         var cellModel: NoteCell.Model
         let isDetailMode: Bool
+        let owner: SecureUser
         
         // Modelに渡さなければならないので看過
         let noteYanagi: MisskeyTextView
@@ -87,7 +88,10 @@ class NoteCellViewModel: ViewModelType {
     
     private var dataSource: ReactionsDataSource?
     var reactionsModel: [NoteCell.Reaction] = []
-    private var model = NoteCellModel()
+    
+    private lazy var misskey: MisskeyKit? = MisskeyKit(from: input.owner)
+    
+    private lazy var model = NoteCellModel(from: self.misskey)
     private var disposeBag: DisposeBag
     
     private var imageSessionTasks: [URLSessionDataTask] = []
@@ -256,7 +260,7 @@ class NoteCellViewModel: ViewModelType {
         }
         
         // リアクション済みor自分の投稿ならばリアクションボタンを ＋ → − へ
-        item.userId.isMe { me in
+        item.userId.isMe(owner: input.owner) { me in
             let reactioned = myReaction != nil
             let minusShape = me || reactioned
             

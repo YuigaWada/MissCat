@@ -23,8 +23,9 @@ class NoteDisplay: UIViewController, NoteCellDelegate, UserCellDelegate {
         homeViewController?.tappedRenote(note: note)
     }
     
-    func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {
-        _ = presentReactionGen(noteId: noteId,
+    func tappedReaction(owner: SecureUser, reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {
+        _ = presentReactionGen(owner: owner,
+                               noteId: noteId,
                                iconUrl: iconUrl,
                                displayName: displayName,
                                username: username,
@@ -43,22 +44,22 @@ class NoteDisplay: UIViewController, NoteCellDelegate, UserCellDelegate {
         homeViewController?.tappedCell(item: item)
     }
     
-    func tappedLink(text: String) {
-        homeViewController?.tappedLink(text: text)
+    func tappedLink(text: String, owner: SecureUser) {
+        homeViewController?.tappedLink(text: text, owner: owner)
     }
     
-    func openUser(username: String) {
-        homeViewController?.openUserPage(username: username)
+    func openUser(username: String, owner: SecureUser) {
+        homeViewController?.openUserPage(username: username, owner: owner)
     }
     
-    func move2Profile(userId: String) {
-        homeViewController?.move2Profile(userId: userId)
+    func move2Profile(userId: String, owner: SecureUser) {
+        homeViewController?.move2Profile(userId: userId, owner: owner)
     }
     
     func updateMyReaction(targetNoteId: String, rawReaction: String, plus: Bool) {}
     
-    func vote(choice: [Int], to noteId: String) {
-        homeViewController?.vote(choice: choice, to: noteId)
+    func vote(choice: [Int], to noteId: String, owner: SecureUser) {
+        homeViewController?.vote(choice: choice, to: noteId, owner: owner)
     }
     
     func showImage(_ urls: [URL], start startIndex: Int) {

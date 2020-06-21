@@ -15,10 +15,13 @@ import UIKit
 
 typealias AttachmentsDataSource = RxCollectionViewSectionedReloadDataSource<PostViewController.AttachmentsSection>
 class PostViewController: UIViewController, UITextViewDelegate, UICollectionViewDelegate {
+    // MARK: View
+    
     @IBOutlet weak var attachmentCollectionView: UICollectionView!
     
     @IBOutlet weak var cancelButton: UIButton!
     @IBOutlet weak var submitButton: UIButton!
+    @IBOutlet weak var visibilityButton: UIButton!
     @IBOutlet weak var iconImageView: UIImageView!
     
     @IBOutlet weak var innerNoteCell: UIView!
@@ -26,35 +29,53 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     @IBOutlet weak var innerIconView: UIImageView!
     @IBOutlet weak var innerNoteLabel: UILabel!
     
-    @IBOutlet weak var mainTextView: UITextView!
+    @IBOutlet weak var mainStackView: UIStackView!
+    @IBOutlet weak var mainTextView: PostTextView!
     @IBOutlet weak var bottomConstraint: NSLayoutConstraint!
     
     @IBOutlet weak var bottomStackView: UIStackView!
-    
     @IBOutlet weak var addLocationButon: UIButton!
+    
+    private lazy var cwTextView = self.generateCwTextView()
+    private lazy var toolBar = UIToolbar()
+    private lazy var counter = UIBarButtonItem(title: "1500", style: .done, target: self, action: nil)
+    private lazy var musicButton = UIBarButtonItem(title: "headphones-alt", style: .plain, target: self, action: nil)
+    
+    // MARK: Vars
     
     var homeViewController: HomeViewController?
     
+    private var owner: SecureUser?
     private var postType: PostType = .Post
     private var targetNote: NoteCell.Model?
     
     private var viewModel: PostViewModel?
-    private lazy var toolBar = UIToolbar()
+    
     private let disposeBag = DisposeBag()
     
-    private lazy var counter = UIBarButtonItem(title: "1500", style: .done, target: self, action: nil)
-    private lazy var placeholderColor: UIColor = Theme.shared.currentModel?.colorPattern.ui.sub2 ?? .lightGray
-    
     // MARK: Life Cycle
+    
+    /// 引用RN / リプライの場合に、対象ノートのモデルを受け渡す
+    /// - Parameters:
+    ///   - note: note model
+    ///   - type: PostType
+    
+    func setup(owner: SecureUser, note: NoteCell.Model?, type: PostType) {
+        self.owner = owner
+        targetNote = note
+        postType = type
+    }
+    
+    func setup(owner: SecureUser) {
+        self.owner = owner
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let viewModel = PostViewModel(with: .init(type: postType, targetNote: targetNote), and: disposeBag)
+        let viewModel = getViewModel()
         let dataSource = setupDataSource()
         binding(viewModel, dataSource)
-        
-        viewModel.setInnerNote()
         setupComponent(with: viewModel)
         setTheme()
         NotificationCenter.default.addObserver(self,
@@ -62,7 +83,22 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
                                                name: UIResponder.keyboardWillShowNotification,
                                                object: nil)
         
+        viewModel.transform()
         self.viewModel = viewModel
+    }
+    
+    private func getViewModel() -> PostViewModel {
+        let input: PostViewModel.Input = .init(owner: owner,
+                                               type: postType,
+                                               targetNote: targetNote,
+                                               rxCwText: cwTextView.rx.text,
+                                               rxMainText: mainTextView.rx.text,
+                                               cancelTrigger: cancelButton.rx.tap.asObservable(),
+                                               submitTrigger: submitButton.rx.tap.asObservable(),
+                                               addNowPlayingInfoTrigger: musicButton.rx.tap.asObservable(),
+                                               visibilitySettingTrigger: visibilityButton.rx.tap.asObservable())
+        let viewModel = PostViewModel(with: input, and: disposeBag)
+        return viewModel
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -81,15 +117,6 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         innerIconView.layer.cornerRadius = innerIconView.frame.width / 2
     }
     
-    /// 引用RN / リプライの場合に、対象ノートのモデルを受け渡す
-    /// - Parameters:
-    ///   - note: note model
-    ///   - type: PostType
-    func setTargetNote(_ note: NoteCell.Model, type: PostType) {
-        targetNote = note
-        postType = type
-    }
-    
     // MARK: Design
     
     private func setTheme() {
@@ -98,13 +125,65 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
             markLabel.textColor = colorPattern.text
             innerNoteLabel.textColor = colorPattern.sub0
         }
-        mainTextView.textColor = placeholderColor
     }
     
     /// ステータスバーの文字色
     override var preferredStatusBarStyle: UIStatusBarStyle {
         let currentColorMode = Theme.shared.currentModel?.colorMode ?? .light
         return currentColorMode == .light ? UIStatusBarStyle.default : UIStatusBarStyle.lightContent
+    }
+    
+    private func generateCwTextView() -> PostTextView {
+        let cwTextView: PostTextView = .init()
+//        let separator: UIView = .init()
+//
+//        separator.translatesAutoresizingMaskIntoConstraints = false
+//        cwTextView.addSubview(separator)
+//
+//        // AutoLayout
+//        self.view.addConstraint([ NSLayoutConstraint(item: separator,
+//                                  attribute: .width,
+//                                  relatedBy: .equal,
+//                                  toItem: cwTextView,
+//                                  attribute: .width,
+//                                  multiplier: 1.0,
+//                                  constant: 0)])
+//
+//        cwTextView.addConstraints([
+//            NSLayoutConstraint(item: separator,
+//                               attribute: .width,
+//                               relatedBy: .equal,
+//                               toItem: cwTextView,
+//                               attribute: .width,
+//                               multiplier: 1.0,
+//                               constant: 0),
+//
+//            NSLayoutConstraint(item: separator,
+//                               attribute: .height,
+//                               relatedBy: .equal,
+//                               toItem: cwTextView,
+//                               attribute: .height,
+//                               multiplier: 0,
+//                               constant: 1),
+//
+//            NSLayoutConstraint(item: separator,
+//                               attribute: .centerX,
+//                               relatedBy: .equal,
+//                               toItem: cwTextView,
+//                               attribute: .centerX,
+//                               multiplier: 1.0,
+//                               constant: 0),
+//
+//            NSLayoutConstraint(item: separator,
+//                               attribute: .leading,
+//                               relatedBy: .equal,
+//                               toItem: cwTextView,
+//                               attribute: .leading,
+//                               multiplier: 1.0,
+//                               constant: 0)
+//        ])
+        
+        return cwTextView
     }
     
     // MARK: Setup
@@ -117,6 +196,10 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         innerNoteCell.isHidden = targetNote == nil
         attachmentCollectionView.isHidden = true
         markLabel.font = .awesomeSolid(fontSize: 11.0)
+        
+        view.setTapGesture(disposeBag, closure: {
+            self.mainTextView.becomeFirstResponder()
+        })
     }
     
     private func setupDataSource() -> AttachmentsDataSource {
@@ -133,24 +216,11 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         let output = viewModel.output
         
         output.iconImage.drive(iconImageView.rx.image).disposed(by: disposeBag)
-        //        output.isSuccess.subscribe { _ in
-        //
-        //        }.disposed(by: disposeBag)
         
-        cancelButton.rx.tap.asObservable().subscribe { _ in
-            self.mainTextView.resignFirstResponder()
-            self.dismiss(animated: true, completion: nil)
-        }.disposed(by: disposeBag)
-        
-        submitButton.rx.tap.asObservable().subscribe { _ in
-            viewModel.submitNote(self.mainTextView.text)
-            DispatchQueue.main.async { self.dismiss(animated: true, completion: nil) }
-        }.disposed(by: disposeBag)
-        
-        mainTextView.rx.text.asObservable().map {
-            guard let text = $0 else { return $0 ?? "" }
-            return String(1500 - text.count)
-        }.bind(to: counter.rx.title).disposed(by: disposeBag)
+        output.counter
+            .asObservable()
+            .bind(to: counter.rx.title)
+            .disposed(by: disposeBag)
         
         output.attachments.map {
             guard $0.count == 1 else { return true }
@@ -175,6 +245,47 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
             .asDriver(onErrorDriveWith: Driver.empty())
             .drive(markLabel.rx.text)
             .disposed(by: disposeBag)
+        
+        output.visibilityText
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(visibilityButton.rx.title(for: .normal))
+            .disposed(by: disposeBag)
+        
+        // trigger
+        
+        output.addCwTextViewTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { _ in self.addCwTextView() })
+            .disposed(by: disposeBag)
+        
+        output.removeCwTextViewTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { _ in self.removeCwTextView() })
+            .disposed(by: disposeBag)
+        
+        output.dismissTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: {
+                self.mainTextView.resignFirstResponder()
+                self.dismiss(animated: true, completion: nil)
+            })
+            .disposed(by: disposeBag)
+        
+        output.presentVisibilityMenuTrigger
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: {
+                self.presentVisibilityMenu()
+            })
+            .disposed(by: disposeBag)
+        
+        iconImageView.setTapGesture(disposeBag) {
+            self.showAccountsMenu()
+        }
+        
+        output.nowPlaying
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(musicButton.rx.isEnabled)
+            .disposed(by: disposeBag)
     }
     
     private func setupCollectionView() {
@@ -192,17 +303,28 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     }
     
     private func setupTextView(_ viewModel: PostViewModel) {
-        // miscs
-        mainTextView.rx.setDelegate(self).disposed(by: disposeBag)
-        mainTextView.textColor = .lightGray
-        
         // above toolbar
+        setupToolBar(with: viewModel)
+        
+        // text & color
+        let normalTextColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
+        let placeholderColor = Theme.shared.currentModel?.colorPattern.ui.sub2 ?? .lightGray
+        
+        mainTextView.setPlaceholder("What's happening?")
+        mainTextView.setColor(normalText: normalTextColor,
+                              placeholder: placeholderColor)
+        
+        cwTextView.setPlaceholder("-注釈をここに書く-")
+        cwTextView.setColor(normalText: normalTextColor,
+                            placeholder: placeholderColor)
+    }
+    
+    private func setupToolBar(with viewModel: PostViewModel) {
         let flexibleItem = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         
         let cameraButton = UIBarButtonItem(title: "camera", style: .plain, target: self, action: nil)
         let imageButton = UIBarButtonItem(title: "images", style: .plain, target: self, action: nil)
         let pollButton = UIBarButtonItem(title: "poll", style: .plain, target: self, action: nil)
-        let locationButton = UIBarButtonItem(title: "map-marker-alt", style: .plain, target: self, action: nil)
         let nsfwButton = UIBarButtonItem(title: "eye", style: .plain, target: self, action: nil)
         let emojiButton = UIBarButtonItem(title: "laugh-squint", style: .plain, target: self, action: nil)
         
@@ -211,21 +333,19 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         
         cameraButton.rx.tap.subscribe { _ in self.pickImage(type: .camera) }.disposed(by: disposeBag)
         imageButton.rx.tap.subscribe { _ in self.pickImage(type: .photoLibrary) }.disposed(by: disposeBag)
-        pollButton.rx.tap.subscribe { _ in }.disposed(by: disposeBag)
-        locationButton.rx.tap.subscribe { _ in viewModel.getLocation() }.disposed(by: disposeBag)
+        pollButton.rx.tap.subscribe { _ in self.addEditablePoll() }.disposed(by: disposeBag)
         nsfwButton.rx.tap.subscribe { _ in self.showNSFWSettings() }.disposed(by: disposeBag)
         emojiButton.rx.tap.subscribe { _ in self.showReactionGen() }.disposed(by: disposeBag)
         
         addLocationButon.isHidden = true // 次アップデートで機能追加する
         toolBar.setItems([cameraButton, imageButton,
-                          // 次アップデートで機能追加する
-                          // pollButton, locationButton,
-                          nsfwButton,
+                          pollButton,
+                          nsfwButton, musicButton,
                           flexibleItem, flexibleItem,
                           emojiButton, counter], animated: true)
         toolBar.sizeToFit()
         
-        change2AwesomeFont(buttons: [cameraButton, imageButton, pollButton, locationButton, nsfwButton, emojiButton])
+        change2AwesomeFont(buttons: [cameraButton, imageButton, pollButton, musicButton, nsfwButton, emojiButton])
         mainTextView.inputAccessoryView = toolBar
     }
     
@@ -234,6 +354,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         
         cancelButton.titleLabel?.font = .awesomeSolid(fontSize: fontSize)
         submitButton.titleLabel?.font = .awesomeSolid(fontSize: fontSize)
+        visibilityButton.titleLabel?.font = .awesomeSolid(fontSize: fontSize)
     }
     
     private func setupCell(_ dataSource: CollectionViewSectionedDataSource<PostViewController.AttachmentsSection>, _ collectionView: UICollectionView, _ indexPath: IndexPath) -> UICollectionViewCell {
@@ -264,9 +385,21 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         return cell.setupCell(item)
     }
     
+    private func showAccountsMenu() {
+        let selected = presentAccountsDropdownMenu(sourceRect: iconImageView.frame)
+        selected?.subscribe(onNext: { user in
+            guard user.userId != self.owner?.userId else { return } // 同じアカウントへの切り替えを防ぐ
+            self.owner = user
+            self.viewModel?.changeUser(user)
+            Cache.UserDefaults.shared.changeCurrentUser(userId: user.userId)
+        }).disposed(by: disposeBag)
+    }
+    
     private func showReactionGen() {
-        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController,
+            let owner = owner else { return }
         
+        reactionGen.setOwner(owner)
         reactionGen.onPostViewController = true
         reactionGen.selectedEmoji.subscribe(onNext: { emojiModel in // ReactionGenで絵文字が選択されたらに送られてくる
             self.insertCustomEmoji(with: emojiModel)
@@ -278,7 +411,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     
     private func showNSFWSettings() {
         let panelMenu = PanelMenuViewController()
-        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "投稿を閲覧注意にする", awesomeIcon: "sticky-note", order: 0),
+        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "投稿に注釈をつける", awesomeIcon: "sticky-note", order: 0),
                                                              .init(title: "画像を閲覧注意にする", awesomeIcon: "image", order: 1)]
         
         panelMenu.setupMenu(items: menuItems)
@@ -287,7 +420,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
             panelMenu.dismiss(animated: true, completion: nil)
             
             if order == 0 {
-                self.showNSFWAlert()
+                self.viewModel?.changeCwState()
             } else {
                 self.viewModel?.changeImageNsfwState()
             }
@@ -296,12 +429,27 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         present(panelMenu, animated: true, completion: nil)
     }
     
-    private func showNSFWAlert() {
-        let alert = UIAlertController(title: "投稿NSFWの設定", message: "開発中です。", preferredStyle: UIAlertController.Style.alert)
-        let cancelAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.cancel, handler: nil)
+    private func addEditablePoll() {
+        let editablePoll = EditablePollView()
+        editablePoll.translatesAutoresizingMaskIntoConstraints = false
         
-        alert.addAction(cancelAction)
-        present(alert, animated: true, completion: nil)
+        mainStackView.addArrangedSubview(editablePoll)
+        view.addConstraint(NSLayoutConstraint(item: editablePoll,
+                                              attribute: .height,
+                                              relatedBy: .equal,
+                                              toItem: editablePoll,
+                                              attribute: .height,
+                                              multiplier: 0,
+                                              constant: editablePoll.height))
+    }
+    
+    private func addCwTextView() {
+        cwTextView.isScrollEnabled = false // 高さを可変に
+        mainStackView.insertArrangedSubview(cwTextView, at: 0)
+    }
+    
+    private func removeCwTextView() {
+        cwTextView.removeFromSuperview()
     }
     
     private func setImageNSFW(to parentView: UIView) {
@@ -441,30 +589,40 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
         bottomConstraint.constant = keyboardHeight
     }
     
+    // MARK: Visibility
+    
+    private func presentVisibilityMenu() {
+        let frameSize = CGSize(width: view.frame.width / 3, height: 50 * 3)
+        let menus: [DropdownMenu] = [.init(awesomeIcon: "globe", title: "パブリック"),
+                                     .init(awesomeIcon: "home", title: "ホーム"),
+                                     .init(awesomeIcon: "lock", title: "フォロワー")]
+        let selected = presentDropdownMenu(with: menus, size: frameSize, sourceRect: visibilityButton.frame)
+        
+        selected?.subscribe(onNext: { selectedIndex in
+            switch selectedIndex {
+            case 0:
+                self.viewModel?.changeVisibility(to: .public)
+            case 1:
+                self.viewModel?.changeVisibility(to: .home)
+            case 2:
+                self.viewModel?.changeVisibility(to: .followers)
+            default:
+                break
+            }
+        }).disposed(by: disposeBag)
+    }
+    
     // MARK: Utilities
     
     private func change2AwesomeFont(buttons: [UIBarButtonItem]) {
         buttons.forEach { button in
             button.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.awesomeSolid(fontSize: 17.0)!], for: .normal)
             button.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.awesomeSolid(fontSize: 17.0)!], for: .selected)
+            button.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.awesomeSolid(fontSize: 17.0)!], for: .disabled)
         }
     }
     
     // MARK: Delegate
-    
-    func textViewDidBeginEditing(_ textView: UITextView) {
-        if mainTextView.textColor == placeholderColor {
-            mainTextView.text = ""
-            mainTextView.textColor = Theme.shared.currentModel?.colorPattern.ui.text ?? .black
-        }
-    }
-    
-    func textViewDidEndEditing(_ textView: UITextView) {
-        if mainTextView.text == "" {
-            mainTextView.text = "What's happening?"
-            mainTextView.textColor = placeholderColor
-        }
-    }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
         transformAttachment(disposeBag: disposeBag, picker: picker, didFinishPickingMediaWithInfo: info) { originalImage, editedImage, videoUrl in
@@ -531,5 +689,60 @@ extension PostViewController.AttachmentsSection: SectionModelType {
     init(original: PostViewController.AttachmentsSection, items: [Item]) {
         self = original
         self.items = items
+    }
+}
+
+/// 高さ可変でPlaceholderを持つTextView
+class PostTextView: UITextView, UITextViewDelegate {
+    private var placeholder: String?
+    private var placeholderColor: UIColor?
+    private var normalTextColor: UIColor?
+    
+    // MARK: LifeCycle
+    
+    override init(frame: CGRect, textContainer: NSTextContainer?) {
+        super.init(frame: frame, textContainer: textContainer)
+        setup()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+    
+    private func setup() {
+        delegate = self
+        isScrollEnabled = false // 高さが可変になる
+        backgroundColor = .clear
+        font = .systemFont(ofSize: 17.0)
+    }
+    
+    // MARK: Set
+    
+    func setPlaceholder(_ text: String) {
+        placeholder = text
+        self.text = placeholder
+    }
+    
+    func setColor(normalText: UIColor, placeholder: UIColor) {
+        normalTextColor = normalText
+        placeholderColor = placeholder
+        textColor = placeholder
+    }
+    
+    // MARK: Delegate
+    
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        if textColor == placeholderColor {
+            text = ""
+            textColor = normalTextColor ?? .black
+        }
+    }
+    
+    func textViewDidEndEditing(_ textView: UITextView) {
+        if text == "" {
+            text = placeholder
+            textColor = placeholderColor ?? .white
+        }
     }
 }

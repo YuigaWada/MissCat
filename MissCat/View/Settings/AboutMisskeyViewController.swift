@@ -36,6 +36,8 @@ class AboutMisskeyViewController: UIViewController {
     
     private var initialAppearing: Bool = true
     
+    var misskey: MisskeyKit?
+    
     // MARK: LifeCycle
     
     override func viewDidLoad() {
@@ -146,7 +148,7 @@ class AboutMisskeyViewController: UIViewController {
         twitterIconImageView.layer.cornerRadius = twitterIconImageView.frame.width / 2
         
         let twitterAccountIcon = "https://avatars.io/twitter/yuigawada"
-        twitterAccountIcon.toUIImage { image in
+        _ = twitterAccountIcon.toUIImage { image in
             guard let image = image else { return }
             DispatchQueue.main.async { self.twitterIconImageView.image = image }
         }
@@ -154,10 +156,10 @@ class AboutMisskeyViewController: UIViewController {
         // Misskey Icon
         misskeyAccountImageView.layer.cornerRadius = misskeyAccountImageView.frame.width / 2
         
-        MisskeyKit.users.showUser(username: "wada", host: "misskey.io") { user, error in
+        misskey?.users.showUser(username: "wada", host: "misskey.io") { user, error in
             guard let user = user, let avatarUrl = user.avatarUrl, error == nil else { return }
             
-            avatarUrl.toUIImage { image in
+            _ = avatarUrl.toUIImage { image in
                 guard let image = image else { return }
                 DispatchQueue.main.async { self.misskeyAccountImageView.image = image }
             }

@@ -15,8 +15,9 @@ class DirectMessageViewController: ChatViewController {
     private var viewModel: DirectMessageViewModel?
     private let disposeBag = DisposeBag()
     
-    func setup(userId: String? = nil, groupId: String? = nil) {
-        let viewModel: DirectMessageViewModel = .init(with: .init(userId: userId ?? "",
+    func setup(userId: String? = nil, groupId: String? = nil, owner: SecureUser) {
+        let viewModel: DirectMessageViewModel = .init(with: .init(owner: owner,
+                                                                  userId: userId ?? "",
                                                                   sendTrigger: sendTrigger),
                                                       and: disposeBag)
         
@@ -39,7 +40,7 @@ class DirectMessageViewController: ChatViewController {
                 self.homeViewController?.emulateFooterTabTap(tab: .home)
                 self.homeViewController?.searchHashtag(tag: link.value)
             case .mention:
-                self.homeViewController?.openUserPage(username: link.value)
+                self.homeViewController?.openUserPage(username: link.value, owner: viewModel.state.owner)
             }
         }).disposed(by: disposeBag)
         

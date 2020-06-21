@@ -77,13 +77,13 @@ class NotificationBanner: UIView {
             return
         }
         
-        guard icon != .Reaction else {
-            guard let reaction = reaction else { return }
-            
-            let encodedReaction = EmojiHandler.handler.emojiEncoder(note: reaction, externalEmojis: nil)
-            iconLabel.attributedText = encodedReaction.toAttributedString(family: "Helvetica", size: 15.0)
-            return
-        }
+//        guard icon != .Reaction else {
+//            guard let reaction = reaction else { return }
+//
+//            let encodedReaction = EmojiHandler.handler.emojiEncoder(note: reaction, externalEmojis: nil)
+//            iconLabel.attributedText = encodedReaction.toAttributedString(family: "Helvetica", size: 15.0)
+//            return
+//        }
         
         iconLabel.text = icon.convertAwesome()
     }

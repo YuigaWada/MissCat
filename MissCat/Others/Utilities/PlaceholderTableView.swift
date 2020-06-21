@@ -30,17 +30,20 @@ class PlaceholderTableView: UITableView {
         if num == 0 {
             guard !contains(placeholder) else { return }
             
-            backgroundView = placeholder
+            addSubview(placeholder)
             setAutoLayout(to: placeholder)
         } else {
             placeholder.removeFromSuperview()
         }
+        
+        placeholder.frame = frame
     }
     
     private func setPlaceholder() {
+        placeholder.frame = frame
         guard !contains(placeholder) else { return }
         
-        backgroundView = placeholder
+        addSubview(placeholder)
         setAutoLayout(to: placeholder)
     }
     

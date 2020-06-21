@@ -27,7 +27,78 @@ public class Theme {
             currentModel = defaultModel
         }
         
+        currentModel?.tab = checkTabs(currentModel?.tab) // 有効なフォーマットかチェックしておく
         self.currentModel = currentModel
+        
+        if let currentModel = currentModel {
+            Model.save(with: currentModel)
+        }
+    }
+    
+    func reset() {
+        currentModel = nil
+    }
+    
+    /// 有効なタブのみ取り出し、紐付けられたアカウント情報を詰めていく
+    private func checkTabs(_ tabs: [Theme.Tab]?) -> [Theme.Tab] {
+        guard let tabs = tabs else { return [] }
+        
+        let transformed: [Theme.Tab] = tabs.compactMap {
+            guard let userId = $0.userId ?? Cache.UserDefaults.shared.getCurrentUserId() else { return nil }
+            
+            // userIdを持たないhomeタブ、またはデフォルト値のhomeタブは名前を@usernameに変更する
+            if $0.kind == .home, $0.userId == nil || $0.name == "___Home___" {
+                let username = Cache.UserDefaults.shared.getUser(userId: userId)?.username ?? ""
+                return Theme.Tab(name: "@\(username)", kind: $0.kind, userId: userId, listId: $0.listId)
+            }
+            
+            // userIdを持たない場合はgetCurrentUserId()が代入される
+            return Theme.Tab(name: $0.name, kind: $0.kind, userId: userId, listId: $0.listId)
+        }
+        
+        // 有効なタブが存在しなかった場合
+        if transformed.count == 0 {
+            let defaultTabs = Theme.Model.getDefault()?.tab ?? [] // デフォルトのタブを代入しておく
+            let hasAccounts = Cache.UserDefaults.shared.getUsers().count > 0
+            return hasAccounts ? checkTabs(defaultTabs) : defaultTabs
+        }
+        
+        return transformed
+    }
+    
+    /// currentModelのタブ情報を全て削除する
+    func removeAllTabs() {
+        if currentModel == nil { set() }
+        
+        if let currentModel = currentModel {
+            currentModel.tab = Model.getDefault()?.tab ?? [] // デフォルトのタブに戻す
+            
+            Model.save(with: currentModel)
+            self.currentModel = currentModel
+        }
+    }
+    
+    /// 削除しようとしているアカウントが紐付けられたタブを削除しておく
+    /// - Parameter user: SecureUser
+    func removeUserTabs(for user: SecureUser) -> Bool {
+        if currentModel == nil { set() }
+        
+        if let currentModel = currentModel {
+            let currentTabCount = currentModel.tab.count
+            currentModel.tab = currentModel.tab.filter { $0.userId != user.userId }
+            
+            // タブが0個になったらデフォルトのタブに戻しておく
+            if currentModel.tab.count == 0 {
+                currentModel.tab = Model.getDefault()?.tab ?? []
+            }
+            
+            Model.save(with: currentModel)
+            self.currentModel = currentModel
+            
+            return currentTabCount != currentModel.tab.count // remove後もタブ数が同じならタブは変更していない
+        }
+        
+        return false
     }
     
     /// viewの再launchが必要か
@@ -51,6 +122,7 @@ public class Theme {
             return
         }
         
+        newModel.tab = checkTabs(newModel.tab) // 有効なフォーマットかチェックしておく
         Model.save(with: newModel)
         
         currentModel = newModel
@@ -151,6 +223,7 @@ extension Theme {
         case home
         case local
         case global
+        case social
         case user
         case list
     }
@@ -212,8 +285,23 @@ extension Theme {
         
         static func get() -> Model? {
             let key = getKey()
-            guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
-            return try? JSONDecoder().decode(Model.self, from: data)
+            guard let data = UserDefaults.standard.data(forKey: key),
+                let model = try? JSONDecoder().decode(Model.self, from: data) else { return nil }
+            
+            // userIdが存在しなかったら現在ログイン中のアカウントのuserIdを詰める
+            let currentUser = Cache.UserDefaults.shared.getCurrentUser()
+            var hasNonUserTab: Bool = false
+            
+            model.tab = model.tab.map {
+                hasNonUserTab = ($0.userId == nil) || hasNonUserTab // userIdを持たないタブが存在したら記録しておく
+                return .init(name: $0.name, kind: $0.kind, userId: $0.userId ?? currentUser?.userId, listId: $0.listId)
+            }
+            
+            if hasNonUserTab {
+                save(with: model)
+            }
+            
+            return model
         }
         
         static func save(with target: Model) {
@@ -235,7 +323,7 @@ extension Theme {
         {
             "tab": [
                 {
-                    "name": "Home",
+                    "name": "___Home___",
                     "kind": "home"
                 },
                 {

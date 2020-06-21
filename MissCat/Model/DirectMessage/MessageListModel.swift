@@ -11,8 +11,20 @@ import RxCocoa
 import RxSwift
 
 class MessageListModel {
+    private var misskey: MisskeyKit?
+    private var owner: SecureUser?
+    init(from misskey: MisskeyKit?, owner: SecureUser?) {
+        self.misskey = misskey
+        self.owner = owner
+    }
+    
+    func change(from misskey: MisskeyKit?, owner: SecureUser?) {
+        self.misskey = misskey
+        self.owner = owner
+    }
+    
     private func transformModel(with observer: AnyObserver<SenderCell.Model>, history: MessageHistoryModel) {
-        let myId = Cache.UserDefaults.shared.getCurrentLoginedUserId() ?? ""
+        let myId = owner?.userId ?? ""
         let others = [history.recipient, history.user].compactMap { $0 }.filter { $0.id != myId } // チャット相手
         let other = others.count > 0 ? others[0] : history.recipient
         
@@ -24,7 +36,7 @@ class MessageListModel {
                                              latestMessage: history.text,
                                              createdAt: history.createdAt)
         
-        sender.shapedName = MFMEngine.shapeDisplayName(user: other)
+        sender.shapedName = MFMEngine.shapeDisplayName(owner: owner, user: other)
         observer.onNext(sender)
     }
     
@@ -48,7 +60,7 @@ class MessageListModel {
                 }
             }
             
-            MisskeyKit.messaging.getHistory(result: handleResult)
+            self.misskey?.messaging.getHistory(result: handleResult)
             return dispose
         }
     }

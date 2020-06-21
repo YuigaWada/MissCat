@@ -135,7 +135,7 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     // MARK: - MessagesDataSource
     
     func currentSender() -> SenderType {
-        let myId = Cache.UserDefaults.shared.getCurrentLoginedUserId() ?? ""
+        let myId = Cache.UserDefaults.shared.getCurrentUser()?.userId ?? ""
         return DirectMessage.User(senderId: myId,
                                   displayName: "",
                                   iconUrl: "")
@@ -194,7 +194,7 @@ class DirectMessage: MessageType {
         }
         
         static var me: User = {
-            let myId = Cache.UserDefaults.shared.getCurrentLoginedUserId() ?? UUID().uuidString
+            let myId = Cache.UserDefaults.shared.getCurrentUser()?.userId ?? UUID().uuidString
             return .init(senderId: myId,
                          displayName: "",
                          iconUrl: "")

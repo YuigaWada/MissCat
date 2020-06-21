@@ -7,6 +7,8 @@
 //
 
 import Eureka
+import RxCocoa
+import RxSwift
 import UIKit
 
 public class TabSettingsCell: Cell<Theme.Tab>, CellType {
@@ -14,6 +16,7 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
     @IBOutlet weak var textFiled: UITextField!
     
     var tabKind: Theme.TabKind?
+    var owner: SecureUser?
     var value: Theme.Tab {
         var name = textFiled.text ?? ""
         if name.isEmpty {
@@ -22,9 +25,12 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
         
         return .init(name: name,
                      kind: tabKind ?? .home,
-                     userId: nil,
+                     userId: owner?.userId,
                      listId: nil)
     }
+    
+    var showMenuTrigger: PublishRelay<Void> = .init()
+    var beingRemoved: Bool = false // removeすることになったらsetする
     
     private var tabSelected: Bool {
         return tabKind != nil
@@ -37,7 +43,10 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
     
     public override func layoutSubviews() {
         super.layoutSubviews()
-        showAlert()
+        
+        if !tabSelected, !beingRemoved {
+            showMenuTrigger.accept(())
+        }
     }
     
     // MARK: Design
@@ -54,29 +63,6 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
         selectedBackgroundView = backView
     }
     
-    // MARK: Menu
-    
-    private func showAlert() {
-        guard !tabSelected else { return }
-        let alert = UIAlertController(title: "タブ", message: "追加するタブの種類を選択してください", preferredStyle: .alert)
-        
-        addMenu(to: alert, title: "ホーム", kind: .home)
-        addMenu(to: alert, title: "ローカル", kind: .local)
-        addMenu(to: alert, title: "グローバル", kind: .global)
-        
-        // 以下２つは別のアップデートで実装する
-//        addMenu(to: alert, title: "ユーザー", kind: .user)
-//        addMenu(to: alert, title: "リスト", kind: .list)
-        
-        parentViewController?.present(alert, animated: true)
-    }
-    
-    private func addMenu(to alert: UIAlertController, title: String, kind: Theme.TabKind) {
-        alert.addAction(UIAlertAction(title: title, style: .default, handler: { _ in
-            self.setKind(kind)
-        }))
-    }
-    
     // MARK: Utiliteis
     
     func setKind(_ kind: Theme.TabKind) {
@@ -84,10 +70,13 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
         switch kind {
         case .home:
             nameLabel.text = "ホーム"
-            textFiled.placeholder = "Home"
+            textFiled.placeholder = "@\(owner?.username ?? "")"
         case .local:
             nameLabel.text = "ローカル"
             textFiled.placeholder = "Local"
+        case .social:
+            nameLabel.text = "ソーシャル"
+            textFiled.placeholder = "Social"
         case .global:
             nameLabel.text = "グローバル"
             textFiled.placeholder = "Global"
@@ -102,6 +91,11 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
     
     func setName(_ name: String) {
         textFiled.text = name
+    }
+    
+    func setOwner(userId: String?) {
+        guard let userId = userId else { return }
+        owner = Cache.UserDefaults.shared.getUser(userId: userId)
     }
 }
 

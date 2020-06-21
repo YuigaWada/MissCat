@@ -21,6 +21,8 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     private var viewModel: ReactionSettingsViewModel?
     private let disposeBag = DisposeBag()
     
+    private var owner: SecureUser? = Cache.UserDefaults.shared.getCurrentUser()
+    
     // MARK: LifeCycle
     
     override func viewDidLoad() {
@@ -47,6 +49,11 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         if let viewModel = viewModel, !viewModel.state.saved {
             viewModel.save()
         }
+    }
+    
+    func setOwner(_ owner: SecureUser) {
+        self.owner = owner
+        title = owner.instance
     }
     
     // MARK: Design
@@ -87,7 +94,8 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     // MARK: Setup
     
     private func setupViewModel() -> ReactionSettingsViewModel {
-        let viewModel = ReactionSettingsViewModel(disposeBag)
+        let input: ReactionSettingsViewModel.Input = .init(owner: owner!)
+        let viewModel = ReactionSettingsViewModel(with: input, and: disposeBag)
         let dataSource = setupDataSource()
         
         binding(dataSource: dataSource, viewModel: viewModel)
@@ -101,8 +109,6 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         
         plusButton.titleLabel?.font = UIFont.awesomeSolid(fontSize: 14.0)
         minusButton.titleLabel?.font = UIFont.awesomeSolid(fontSize: 14.0)
-        
-        title = "絵文字の編集"
     }
     
     private func setupCollectionViewLayout() {
@@ -237,8 +243,10 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     }
     
     private func showReactionGen() {
-        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return }
+        guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController,
+            let owner = owner else { return }
         
+        reactionGen.setOwner(owner)
         reactionGen.onPostViewController = true
         reactionGen.selectedEmoji.subscribe(onNext: { emojiModel in // ReactionGenで絵文字が選択されたらに送られてくる
             self.viewModel?.addEmoji(emojiModel)
@@ -261,25 +269,6 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     }
     
     private func vibrateCell(on vibrated: Bool) {
-        emojiCollectionView.visibleCells.forEach { self.vibrated(vibrated: vibrated, view: $0) }
-    }
-    
-    private func degreesToRadians(_ degrees: Float) -> Float {
-        return degrees * Float(Double.pi) / 180.0
-    }
-    
-    private func vibrated(vibrated: Bool, view: UIView) {
-        if vibrated {
-            let animation = CABasicAnimation(keyPath: "transform.rotation")
-            
-            animation.duration = 0.05
-            animation.fromValue = degreesToRadians(5.0)
-            animation.toValue = degreesToRadians(-5.0)
-            animation.repeatCount = Float.infinity
-            animation.autoreverses = true
-            view.layer.add(animation, forKey: "VibrateAnimationKey")
-        } else {
-            view.layer.removeAnimation(forKey: "VibrateAnimationKey")
-        }
+        emojiCollectionView.visibleCells.forEach { self.view.vibrated(vibrated: vibrated, view: $0) }
     }
 }

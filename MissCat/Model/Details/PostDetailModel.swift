@@ -12,13 +12,20 @@ class PostDetailModel {
     private var backReplies: [NoteCell.Model] = []
     private var replies: [NoteCell.Model] = []
     
+    private let misskey: MisskeyKit?
+    private let owner: SecureUser?
+    init(from misskey: MisskeyKit?, owner: SecureUser?) {
+        self.misskey = misskey
+        self.owner = owner
+    }
+    
     /// リプライを遡る
     /// - Parameter note: モデル
     func goBackReplies(id: String, completion: @escaping ([NoteCell.Model]) -> Void) {
-        MisskeyKit.notes.showNote(noteId: id) { note, error in
+        misskey?.notes.showNote(noteId: id) { note, error in
             guard error == nil,
                 let note = note,
-                let shaped = note.getNoteCellModel() else { completion(self.backReplies); return }
+                let shaped = note.getNoteCellModel(owner: self.owner) else { completion(self.backReplies); return }
             
             shaped.isReplyTarget = true
             MFMEngine.shapeModel(shaped)
@@ -35,7 +42,7 @@ class PostDetailModel {
     /// リプライを探す
     /// - Parameter id: noteId
     func getReplies(id: String, completion: @escaping ([NoteCell.Model]) -> Void) {
-        MisskeyKit.notes.getChildren(noteId: id) { notes, error in
+        misskey?.notes.getChildren(noteId: id) { notes, error in
             guard let notes = notes, error == nil else { return }
             DispatchQueue.global().async {
                 self.replies = self.convertReplies(notes)
@@ -48,7 +55,7 @@ class PostDetailModel {
     /// - Parameter notes: [NoteModel]
     private func convertReplies(_ notes: [NoteModel]) -> [NoteCell.Model] {
         return notes.map {
-            guard let cellModel = $0.getNoteCellModel() else { return nil }
+            guard let cellModel = $0.getNoteCellModel(owner: self.owner) else { return nil }
             MFMEngine.shapeModel(cellModel)
             return cellModel
         }.compactMap { $0 }

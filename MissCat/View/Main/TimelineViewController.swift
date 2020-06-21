@@ -16,8 +16,8 @@ import XLPagerTabStrip
 
 protocol TimelineDelegate { // For HomeViewController
     func tappedCell(item: NoteCell.Model)
-    func move2Profile(userId: String)
-    func openUserPage(username: String)
+    func move2Profile(userId: String, owner: SecureUser)
+    func openUserPage(username: String, owner: SecureUser)
     func openSettings()
     func openPost(item: NoteCell.Model, type: PostViewController.PostType)
     
@@ -52,16 +52,11 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     
     var xlTitle: IndicatorInfo? // XLPagerTabStripで用いるtitle
     
-    private var loggedIn: Bool = false
-    private var hasApiKey: Bool {
-        guard let apiKey = Cache.UserDefaults.shared.getCurrentLoginedApiKey() else { return false }
-        return !apiKey.isEmpty
-    }
-    
     // MARK: Life Cycle
     
     /// 外部からTimelineViewContollerのインスタンスを生成する場合、このメソッドを通じて適切なパラメータをセットしていく
     /// - Parameters:
+    ///   - owner: TLに紐付けられたユーザーのデータ
     ///   - type: TimelineType
     ///   - includeReplies: リプライ含めるか
     ///   - onlyFiles: ファイルのみのタイムラインか
@@ -73,7 +68,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     ///   - lockScroll: スクロールを固定するかどうか
     ///   - loadLimit: 一度に読み込むnoteの量
     ///   - xlTitle: タブに表示する名前
-    func setup(type: TimelineType,
+    func setup(owner: SecureUser,
+               type: TimelineType,
                includeReplies: Bool? = nil,
                onlyFiles: Bool? = nil,
                userId: String? = nil,
@@ -85,7 +81,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                withTopShadow: Bool = false,
                loadLimit: Int = 40,
                xlTitle: IndicatorInfo? = nil) {
-        let input = ViewModel.Input(dataSource: dataSource,
+        let input = ViewModel.Input(owner: owner,
+                                    dataSource: dataSource,
                                     type: type,
                                     includeReplies: includeReplies,
                                     onlyFiles: onlyFiles,
@@ -110,9 +107,6 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         
         setupTableView()
         setupPullGesture()
-        if viewModel == nil {
-            setup(type: .Home)
-        }
         
         binding(dataSource: dataSource)
         setupTopShadow()
@@ -123,12 +117,11 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         super.viewWillAppear(animated)
         view.deselectCell(on: mainTableView)
         
-        if !loggedIn, hasApiKey {
-            loggedIn = true
-            viewModel?.setupInitialCell()
-            viewModel?.checkUserId()
+        if let viewModel = viewModel, viewModel.state.hasAccounts, !viewModel.state.hasSkeltonCell {
+            viewModel.setupInitialCell()
+            viewModel.setSkeltonCell()
         }
-        viewModel?.setSkeltonCell()
+        
         setTheme()
         
         if let bottomConstraint = bottomConstraint {
@@ -242,7 +235,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             renoteeCell.setRenotee(item.renotee ?? "")
             
             renoteeCell.setTapGesture(disposeBag) {
-                self.openUser(username: item.username)
+                self.openUser(username: item.username, owner: viewModel.state.owner)
             }
             
             return renoteeCell
@@ -252,7 +245,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         guard let itemCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell else { fatalError("Internal Error.") }
         
         let shapedCell = itemCell.transform(with: .init(item: item,
-                                                        delegate: self))
+                                                        delegate: self,
+                                                        owner: viewModel.state.owner))
         
         shapedCell.nameTextView.renderViewStrings()
         shapedCell.noteView.renderViewStrings()
@@ -399,7 +393,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     
     // MARK: NoteCell Delegate
     
-    override func tappedReaction(reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {
+    override func tappedReaction(owner: SecureUser, reactioned: Bool, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, myReaction: String?) {
         if reactioned { // リアクションを取り消す
             guard let myReaction = myReaction else { return }
             viewModel?.updateReaction(targetNoteId: noteId,
@@ -411,7 +405,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             return
         }
         
-        let reactionGen = presentReactionGen(noteId: noteId,
+        let reactionGen = presentReactionGen(owner: owner,
+                                             noteId: noteId,
                                              iconUrl: iconUrl,
                                              displayName: displayName,
                                              username: username,
@@ -442,9 +437,10 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     }
     
     override func tappedOthers(note: NoteCell.Model) {
+        guard let owner = viewModel?.state.owner else { return }
         // ユーザーをブロック・投稿を通報する
         // 投稿の削除
-        note.userId.isMe { isMe in
+        note.userId.isMe(owner: owner) { isMe in
             if isMe { self.showDeletePanel(note); return }
             self.showReportPanel(note)
         }
@@ -516,26 +512,6 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             guard let noteId = note.noteId, okay else { return }
             self.viewModel?.deleteMyNote(noteId: noteId)
         }
-    }
-    
-    private func showAlert(title: String, message: String, yesOption: String? = nil, action: @escaping (Bool) -> Void) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertController.Style.alert)
-        let cancelAction: UIAlertAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.cancel, handler: {
-            (_: UIAlertAction!) -> Void in
-            action(yesOption == nil)
-        })
-        
-        alert.addAction(cancelAction)
-        
-        if let yesOption = yesOption {
-            let defaultAction: UIAlertAction = UIAlertAction(title: yesOption, style: UIAlertAction.Style.destructive, handler: {
-                (_: UIAlertAction!) -> Void in
-                action(true)
-            })
-            alert.addAction(defaultAction)
-        }
-        
-        present(alert, animated: true, completion: nil)
     }
     
     private func showTextAlert(title: String, placeholder: String, handler: @escaping (String) -> Void) {

@@ -10,11 +10,16 @@ import MisskeyKit
 import RxSwift
 
 class SearchModel {
+    private let misskey: MisskeyKit?
+    init(from misskey: MisskeyKit?) {
+        self.misskey = misskey
+    }
+    
     func searchUser(with query: String, sinceId: String = "", untilId: String = "") -> Observable<[UserModel]> {
         return Observable.create { observer in
             let dispose = Disposables.create()
             
-            MisskeyKit.search.user(query: query, limit: 40, sinceId: sinceId, untilId: untilId, detail: true) { users, error in
+            self.misskey?.search.user(query: query, limit: 40, sinceId: sinceId, untilId: untilId, detail: true) { users, error in
                 guard let users = users else { return }
                 if let error = error { observer.onError(error); return }
                 

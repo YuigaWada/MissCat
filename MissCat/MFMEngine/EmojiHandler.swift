@@ -8,7 +8,14 @@
 
 import MisskeyKit
 
+typealias CategorizedEmojis = [String: [EmojiView.EmojiModel]]
 class EmojiHandler {
+    // ノンコロン絵文字: コロンで挟まれないデフォルト絵文字(v12で廃止)→ ex.) congrats = 🎉
+    struct NonColonEmoji {
+        let name: String
+        let emoji: String
+    }
+    
     // setされた瞬間カテゴリー分けを行うが、カスタム絵文字を先にcategorizedEmojisへ格納する
     var defaultEmojis: [DefaultEmojiModel]? {
         didSet {
@@ -24,15 +31,35 @@ class EmojiHandler {
         }
     }
     
+    private lazy var nonColonEmojis: [NonColonEmoji] = getNonColonEmojis()
+    
     // 絵文字のカテゴリーによって分類分けする(Dictionaryは順序を保証しないので、デフォルト・カスタムで分割する)
-    var categorizedDefaultEmojis: [String: [EmojiView.EmojiModel]] = .init()
-    var categorizedCustomEmojis: [String: [EmojiView.EmojiModel]] = .init()
+    var categorizedDefaultEmojis: CategorizedEmojis = .init()
+    var categorizedCustomEmojis: CategorizedEmojis = .init()
     
-    static let handler = EmojiHandler() // Singleton
+    let owner: SecureUser
     
-    init() { // 先に絵文字情報をダウンロードしておく
-        MisskeyKit.Emojis.getDefault { self.defaultEmojis = $0 }
-        MisskeyKit.Emojis.getCustom { self.customEmojis = $0 }
+    // MARK: Static
+    
+    private static var handlers: [EmojiHandler] = []
+    static func setHandler(owner: SecureUser) {
+        if let _ = getHandler(owner: owner) { return } // すでに同じインスタンスの絵文字が登録されていたらsetしない
+        guard let misskey = MisskeyKit(from: owner) else { return }
+        let newHandler = EmojiHandler(from: misskey, owner: owner)
+        handlers.append(newHandler)
+    }
+    
+    static func getHandler(owner: SecureUser) -> EmojiHandler? {
+        let option = handlers.filter { $0.owner.instance == owner.instance } // インスタンスごとに絵文字を管理
+        return option.count > 0 ? option[0] : nil
+    }
+    
+    // MARK: Public
+    
+    init(from misskey: MisskeyKit, owner: SecureUser) { // 先に絵文字情報をダウンロードしておく
+        self.owner = owner
+        misskey.emojis.getDefault { self.defaultEmojis = $0 }
+        misskey.emojis.getCustom { self.customEmojis = $0 }
     }
     
     /// 自インスタンス・他インスタンスに拘らず、絵文字をデフォルト絵文字かカスタム絵文字のurlに変換する
@@ -47,6 +74,9 @@ class EmojiHandler {
             return ("default", emoji)
         } else if let customEmoji = encoded as? EmojiModel, let emojiUrl = customEmoji.url {
             return ("custom", emojiUrl)
+        } else if let nonColonEmoji = encoded as? NonColonEmoji {
+            let emoji = nonColonEmoji.emoji
+            return ("non-colon", emoji)
         }
         
         // 他インスタンス由来のEmoji
@@ -66,6 +96,10 @@ class EmojiHandler {
         
         // name: "wara"  char: "(^o^)"
         
+        if nonColonEmojis.filter({ $0.name == raw }).count > 0 {
+            return nonColonEmojis.filter { $0.name == raw }[0]
+        }
+        
         let defaultOption = defaultEmojis.filter { self.checkName($0.name, input: raw) }
         let customOption = customEmojis.filter { self.checkName($0.name, input: raw) }
         
@@ -83,8 +117,8 @@ class EmojiHandler {
         return raw == ":" + name + ":" || raw == name || raw.replacingOccurrences(of: ":", with: "") == name
     }
     
-    static func convert2EmojiModel(raw: String, external externalEmojis: [EmojiModel] = []) -> EmojiView.EmojiModel {
-        guard let convertedEmojiData = EmojiHandler.handler.convertEmoji(raw: raw, external: externalEmojis)
+    func convert2EmojiModel(raw: String, external externalEmojis: [EmojiModel] = []) -> EmojiView.EmojiModel {
+        guard let convertedEmojiData = convertEmoji(raw: raw, external: externalEmojis)
         else {
             return .init(rawEmoji: raw,
                          isDefault: true,
@@ -93,11 +127,18 @@ class EmojiHandler {
         }
         
         let isDefault = convertedEmojiData.type == "default"
-        
-        return EmojiView.EmojiModel(rawEmoji: raw,
-                                    isDefault: isDefault,
-                                    defaultEmoji: isDefault ? raw : nil,
-                                    customEmojiUrl: isDefault ? nil : convertedEmojiData.emoji)
+        let isNonColonEmoji = convertedEmojiData.type == "non-colon"
+        if isNonColonEmoji {
+            return EmojiView.EmojiModel(rawEmoji: raw,
+                                        isDefault: true,
+                                        defaultEmoji: convertedEmojiData.emoji,
+                                        customEmojiUrl: nil)
+        } else {
+            return EmojiView.EmojiModel(rawEmoji: raw,
+                                        isDefault: isDefault,
+                                        defaultEmoji: isDefault ? raw : nil,
+                                        customEmojiUrl: isDefault ? nil : convertedEmojiData.emoji)
+        }
     }
     
     /// デフォルト絵文字をカテゴリーにとって分類する
@@ -142,6 +183,22 @@ class EmojiHandler {
         }
     }
     
+    private func getNonColonEmojis() -> [NonColonEmoji] {
+        let emojis = ["like": "👍",
+                      "love": "❤️",
+                      "laugh": "😆",
+                      "hmm": "🤔",
+                      "surprise": "😮",
+                      "congrats": "🎉",
+                      "angry": "💢",
+                      "confused": "😥",
+                      "rip": "😇",
+                      "pudding": "🍮",
+                      "star": "⭐"]
+        
+        return emojis.map { NonColonEmoji(name: $0, emoji: $1) }
+    }
+    
     // Emoji形式":hogehoge:"をデフォルト絵文字 / カスタム絵文字のurl/imgに変更
     // TODO: このメソッドはレガシーで今は使わないはず？？
     func emojiEncoder(note: String, externalEmojis: [EmojiModel?]?) -> String {
@@ -153,7 +210,7 @@ class EmojiHandler {
             guard target.count > 0 else { return }
             let target = target[0]
             
-            guard let converted = EmojiHandler.handler.convertEmoji(raw: target, external: externalEmojis)
+            guard let converted = convertEmoji(raw: target, external: externalEmojis)
             else { return }
             
             switch converted.type {

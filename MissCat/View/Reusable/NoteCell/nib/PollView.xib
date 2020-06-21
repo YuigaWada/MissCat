@@ -31,6 +31,9 @@
                 </label>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OZI-eT-iPn">
                     <rect key="frame" x="0.0" y="341" width="30" height="30"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="30" id="l8h-xe-1rj"/>
+                    </constraints>
                     <state key="normal" title="Poll"/>
                 </button>
             </subviews>

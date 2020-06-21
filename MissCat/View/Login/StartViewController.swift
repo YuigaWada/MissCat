@@ -22,12 +22,12 @@ class StartViewController: UIViewController {
     
     @IBOutlet weak var changeInstanceButton: UIButton!
     
+    var reloadTrigger: PublishRelay<Void> = .init()
     private var appSecret: String?
-    private var afterLogout: Bool = false // ログアウト直後かどうか
     private var ioAppSecret: String = "0fRSNkKKl9hcZTGrUSyZOb19n8UUVkxw" // misskey.ioの場合はappSecret固定
     private var misskeyInstance: String = "misskey.io" {
         didSet {
-            MisskeyKit.changeInstance(instance: misskeyInstance) // インスタンスを変更
+            MisskeyKit.shared.changeInstance(instance: misskeyInstance) // インスタンスを変更
         }
     }
     
@@ -63,16 +63,13 @@ class StartViewController: UIViewController {
     
     // MARK: LifeCycle
     
-    func setup(afterLogout: Bool = false) {
-        self.afterLogout = afterLogout
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         setGradientLayer()
         binding()
         
-        MisskeyKit.changeInstance(instance: misskeyInstance) // インスタンスを変更
+        MisskeyKit.shared.auth.setAPIKey("")
+        MisskeyKit.shared.changeInstance(instance: misskeyInstance) // インスタンスを変更
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -102,17 +99,19 @@ class StartViewController: UIViewController {
     
     private func binding() {
         signupButton.rx.tap.subscribe(onNext: { _ in
-            guard !self.afterLogout else { self.signup(); return } // ログアウト直後なら普通にMisskeyのトップページを表示する
-            guard let tos = self.getViewController(name: "tos") as? TosViewController else { return }
+            guard let navigationController = self.navigationController,
+                let tos = self.getViewController(name: "tos") as? TosViewController else { self.signup(); return }
+            
             tos.agreed = self.signup
-            self.navigationController?.pushViewController(tos, animated: true)
+            navigationController.pushViewController(tos, animated: true)
         }).disposed(by: disposeBag)
         
         loginButton.rx.tap.subscribe(onNext: { _ in
-            guard !self.afterLogout else { self.login(); return } // ログアウト直後なら普通にログインする
-            guard let tos = self.getViewController(name: "tos") as? TosViewController else { return }
+            guard let navigationController = self.navigationController,
+                let tos = self.getViewController(name: "tos") as? TosViewController else { self.login(); return }
+            
             tos.agreed = self.login
-            self.navigationController?.pushViewController(tos, animated: true)
+            navigationController.pushViewController(tos, animated: true)
         }).disposed(by: disposeBag)
         
         changeInstanceButton.rx.tap.subscribe(onNext: { _ in
@@ -143,7 +142,7 @@ class StartViewController: UIViewController {
             completion(ioAppSecret); return
         }
         
-        MisskeyKit.app.create(name: "MissCat", description: "MissCat is an flexible Misskey client for iOS!", permission: appPermissions, callbackUrl: "https://misscat.dev") { data, error in
+        MisskeyKit.shared.app.create(name: "MissCat", description: "MissCat is a flexible Misskey client for iOS!", permission: appPermissions, callbackUrl: "https://misscat.dev") { data, error in
             guard let data = data, error == nil, let secret = data.secret else {
                 if error == .some(.FailedToCommunicateWithServer) {
                     self.invalidUrlError()
@@ -182,20 +181,43 @@ class StartViewController: UIViewController {
         return viewController
     }
     
+    private func saveUserData(with apiKey: String, completion: @escaping (SecureUser) -> Void) {
+        MisskeyKit.shared.changeInstance(instance: misskeyInstance)
+        MisskeyKit.shared.auth.setAPIKey(apiKey)
+        MisskeyKit.shared.users.i { user, _ in
+            guard let user = user else { return }
+            let secureUser = SecureUser(userId: user.id, username: user.username ?? "", instance: self.misskeyInstance, apiKey: apiKey)
+            let success = Cache.UserDefaults.shared.saveUser(secureUser)
+            
+            guard success else { self.showAlert(); return }
+            Cache.UserDefaults.shared.changeCurrentUser(userId: user.id)
+            secureUser.apiKey = apiKey // saveUserでapiKeyが抜き消されるので詰め直す
+            completion(secureUser)
+        }
+    }
+    
+    private func showAlert() {
+        showAlert(title: "エラー", message: "このアカウントはすでに登録されています") { _ in }
+    }
+    
     private func loginCompleted(_ apiKey: String) {
-        Cache.UserDefaults.shared.setCurrentLoginedApiKey(apiKey)
-        Cache.UserDefaults.shared.setCurrentLoginedInstance(misskeyInstance)
-        
-        _ = EmojiHandler.handler // カスタム絵文字を読み込む
-        registerSw() // 通知を登録する
-        
-        DispatchQueue.main.async {
-            if self.afterLogout { // 設定画面からのログイン
-                MisskeyKit.changeInstance(instance: self.misskeyInstance)
-                MisskeyKit.auth.setAPIKey(apiKey)
-                self.dismiss(animated: true)
-            } else { // 初期画面からのログイン
-                self.navigationController?.popViewController(animated: true)
+        saveUserData(with: apiKey) { user in
+            EmojiHandler.setHandler(owner: user) // カスタム絵文字を読み込む
+            self.registerSw(of: user) // 通知を登録する
+            
+            // テーマを設定し直す
+            Theme.shared.reset()
+            Theme.shared.set()
+            
+            DispatchQueue.main.async {
+                self.reloadTrigger.accept(()) // AccountsListViewControllerのリロードを促す
+                
+                if let navigationController = self.navigationController,
+                    !(navigationController.viewControllers[0] is StartViewController) { // navigationController由来の遷移の場合
+                    navigationController.popViewController(animated: true)
+                } else { // present(_:)由来の遷移の場合
+                    self.dismiss(animated: true, completion: nil)
+                }
             }
         }
     }
@@ -222,12 +244,12 @@ class StartViewController: UIViewController {
     
     // MARK: SW
     
-    private func registerSw() {
+    private func registerSw(of user: SecureUser) {
         #if targetEnvironment(simulator)
-            let misscatApi = MisscatApi(apiKeyManager: MockApiKeyManager())
+            let misscatApi = MisscatApi(apiKeyManager: MockApiKeyManager(), and: user)
             misscatApi.registerSw()
         #else
-            let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager())
+            let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager(), and: user)
             misscatApi.registerSw()
         #endif
     }

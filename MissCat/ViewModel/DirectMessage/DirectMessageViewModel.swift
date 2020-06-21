@@ -6,6 +6,7 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
+import MisskeyKit
 import RxCocoa
 import RxSwift
 import SwiftLinkPreview
@@ -14,6 +15,7 @@ class DirectMessageViewModel: ViewModelType {
     // MARK: I/O
     
     struct Input {
+        let owner: SecureUser
         var userId: String
         var sendTrigger: PublishRelay<String>
     }
@@ -23,13 +25,17 @@ class DirectMessageViewModel: ViewModelType {
         let sendCompleted: PublishRelay<Bool> = .init()
     }
     
-    struct State {}
+    struct State {
+        let owner: SecureUser
+    }
     
     private let input: Input
     let output: Output = .init()
+    var state: State { return .init(owner: input.owner) }
     
     private var messages: [DirectMessage] = []
-    private let model: DirectMessageModel = .init()
+    private lazy var misskey = MisskeyKit(from: input.owner)
+    private lazy var model: DirectMessageModel = .init(from: misskey)
     
     private let disposeBag: DisposeBag
     

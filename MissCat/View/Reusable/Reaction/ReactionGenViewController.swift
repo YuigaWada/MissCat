@@ -31,6 +31,7 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
     var delegate: ReactionGenViewControllerDelegate?
     var parentNavigationController: UINavigationController?
     var onPostViewController: Bool = false
+    var owner: SecureUser?
     
     var selectedEmoji: PublishRelay<EmojiView.EmojiModel> = .init()
     
@@ -122,7 +123,8 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
     // MARK: Setup
     
     private func setupViewModel() -> ReactionGenViewModel {
-        let viewModel = ReactionGenViewModel(with: .init(searchTrigger: getSearchTrigger()),
+        guard let owner = owner else { fatalError("MUST SET OWNER!") }
+        let viewModel = ReactionGenViewModel(with: .init(owner: owner, searchTrigger: getSearchTrigger()),
                                              and: disposeBag)
         let dataSource = setupDataSource()
         
@@ -292,6 +294,10 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
     
     // MARK: Public Methods
     
+    func setOwner(_ owner: SecureUser) {
+        self.owner = owner
+    }
+    
     func setTargetNote(noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool) {
         let colorMode = Theme.shared.currentModel?.colorMode ?? .light
         let isLightMode = colorMode == .light
@@ -303,7 +309,7 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         if let image = Cache.shared.getIcon(username: "\(username)@\(hostInstance)") {
             iconImageView.image = image
         } else if let iconUrl = iconUrl, let url = URL(string: iconUrl) {
-            url.toUIImage { [weak self] image in
+            _ = url.toUIImage { [weak self] image in
                 guard let self = self, let image = image else { return }
                 
                 DispatchQueue.main.async {

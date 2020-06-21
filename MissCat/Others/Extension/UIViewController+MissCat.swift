@@ -43,9 +43,41 @@ extension UIViewController {
         presentOnFullScreen(target, animated: true, completion: nil)
     }
     
-    func presentReactionGen(noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, navigationController: UINavigationController?) -> ReactionGenViewController? {
+    func presentDropdownMenu(menu dropdownMenu: Dropdown, size: CGSize, sourceRect: CGRect) -> Observable<Int>? {
+        guard let dropdownMenu = dropdownMenu as? (UIViewController & Dropdown) else { return nil }
+        dropdownMenu.modalPresentationStyle = .popover
+        dropdownMenu.preferredContentSize = size
+        
+        guard let popOver = dropdownMenu.popoverPresentationController else { return nil }
+        
+        popOver.sourceView = view
+        popOver.sourceRect = sourceRect
+        popOver.permittedArrowDirections = .any
+        popOver.delegate = self
+        
+        present(dropdownMenu, animated: true, completion: nil)
+        return dropdownMenu.selected.asObservable()
+    }
+    
+    func presentDropdownMenu(with menus: [DropdownMenu], size: CGSize, sourceRect: CGRect) -> Observable<Int>? {
+        let dropdownMenu = PlainDropdownMenu(with: menus, size: size)
+        return presentDropdownMenu(menu: dropdownMenu, size: size, sourceRect: sourceRect)
+    }
+    
+    func presentAccountsDropdownMenu(sourceRect: CGRect) -> Observable<SecureUser>? {
+        let users = Cache.UserDefaults.shared.getUsers()
+        let size = CGSize(width: view.frame.width * 3 / 5, height: 50 * CGFloat(users.count))
+        
+        let dropdownMenu = AccountsDropdownMenu(with: users, size: size)
+        let selected = presentDropdownMenu(menu: dropdownMenu, size: size, sourceRect: sourceRect)
+        
+        return selected?.map { users[$0] } // 選択されたユーザーを返す
+    }
+    
+    func presentReactionGen(owner: SecureUser, noteId: String, iconUrl: String?, displayName: String, username: String, hostInstance: String, note: NSAttributedString, hasFile: Bool, hasMarked: Bool, navigationController: UINavigationController?) -> ReactionGenViewController? {
         guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController else { return nil }
         
+        reactionGen.setOwner(owner)
         presentWithSemiModal(reactionGen, animated: true, completion: nil)
         
         reactionGen.parentNavigationController = navigationController
@@ -59,6 +91,28 @@ extension UIViewController {
                                   hasMarked: hasMarked)
         
         return reactionGen
+    }
+    
+    // MARK: Alert
+    
+    func showAlert(title: String, message: String, yesOption: String? = nil, action: @escaping (Bool) -> Void) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertController.Style.alert)
+        let cancelAction: UIAlertAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.cancel, handler: {
+            (_: UIAlertAction!) -> Void in
+            action(yesOption == nil)
+        })
+        
+        alert.addAction(cancelAction)
+        
+        if let yesOption = yesOption {
+            let defaultAction: UIAlertAction = UIAlertAction(title: yesOption, style: UIAlertAction.Style.destructive, handler: {
+                (_: UIAlertAction!) -> Void in
+                action(true)
+            })
+            alert.addAction(defaultAction)
+        }
+        
+        present(alert, animated: true, completion: nil)
     }
     
     // MARK: Get Size
@@ -131,5 +185,12 @@ extension UIViewController: FloatingPanelControllerDelegate {
         guard targetPosition == .tip else { return }
         
         fpc.dismiss(animated: true, completion: nil)
+    }
+}
+
+extension UIViewController: UIPopoverPresentationControllerDelegate {
+    // For presentDropdownMenu()
+    public func adaptivePresentationStyle(for controller: UIPresentationController, traitCollection: UITraitCollection) -> UIModalPresentationStyle {
+        return .none
     }
 }

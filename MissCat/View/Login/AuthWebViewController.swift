@@ -88,8 +88,8 @@ class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigationDelegat
         self.misskeyInstance = misskeyInstance
         currentType = .Login
         
-        MisskeyKit.changeInstance(instance: misskeyInstance) // インスタンスを変更
-        MisskeyKit.auth.startSession(appSecret: appSecret) { auth, error in
+        MisskeyKit.shared.changeInstance(instance: misskeyInstance) // インスタンスを変更
+        MisskeyKit.shared.auth.startSession(appSecret: appSecret) { auth, error in
             guard let auth = auth,
                 let token = auth.token,
                 error == nil,
@@ -123,8 +123,8 @@ class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigationDelegat
     
     /// ApiKeyを取得し、StartViewControllerへと流す(comletion→StartViewController)
     private func getApiKey() {
-        MisskeyKit.auth.getAccessToken { auth, _ in
-            guard auth != nil, let apiKey = MisskeyKit.auth.getAPIKey() else { return }
+        MisskeyKit.shared.auth.getAccessToken { auth, _ in
+            guard auth != nil, let apiKey = MisskeyKit.shared.auth.getAPIKey() else { return }
             
             DispatchQueue.main.async {
                 self.dismiss(animated: true, completion: nil)

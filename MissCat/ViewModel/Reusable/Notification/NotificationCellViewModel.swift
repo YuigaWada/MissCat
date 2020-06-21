@@ -150,11 +150,13 @@ class NotificationCellViewModel: ViewModelType {
         
         // reaction
         else if let reaction = item.reaction {
+            guard let owner = input.item.owner,
+                let handler = EmojiHandler.getHandler(owner: owner) else { return }
             output.typeIconString.accept("heart")
             output.typeString.accept("Reaction")
             output.needEmoji.accept(true)
             output.typeIconColor.accept(reactionIconColor)
-            output.emoji.accept(EmojiHandler.convert2EmojiModel(raw: reaction, external: item.emojis))
+            output.emoji.accept(handler.convert2EmojiModel(raw: reaction, external: item.emojis))
         }
         
         // follow

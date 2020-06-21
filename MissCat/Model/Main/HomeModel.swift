@@ -9,16 +9,18 @@
 import MisskeyKit
 
 class HomeModel {
-    func vote(choice: [Int], to noteId: String) {
+    func vote(choice: [Int], to noteId: String, owner: SecureUser) {
+        guard let misskey = MisskeyKit(from: owner) else { return }
         choice.forEach {
-            MisskeyKit.notes.vote(noteId: noteId, choice: $0, result: { _, _ in
+            misskey.notes.vote(noteId: noteId, choice: $0, result: { _, _ in
                 //            print(error)
             })
         }
     }
     
-    func renote(noteId: String) {
-        MisskeyKit.notes.renote(renoteId: noteId) { _, _ in
+    func renote(noteId: String, owner: SecureUser) {
+        guard let misskey = MisskeyKit(from: owner) else { return }
+        misskey.notes.renote(renoteId: noteId) { _, _ in
             //            print(error)
         }
     }
