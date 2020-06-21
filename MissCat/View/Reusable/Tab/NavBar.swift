@@ -101,9 +101,10 @@ class NavBar: UIView {
     // Public Methods
     
     /// NavBarのスタイルを設定する
-    func setButton(style: NavBar.Button, rightText: String? = nil, leftText: String? = nil, rightFont: UIFont? = nil, leftFont: UIFont? = nil) {
+    func setButton(style: NavBar.Button, needIcon: Bool = true, rightText: String? = nil, leftText: String? = nil, rightFont: UIFont? = nil, leftFont: UIFont? = nil) {
         // Image
         setUserIcon()
+        userIconView.isHidden = !needIcon
         
         // isHidden
         rightButton.isHidden = false

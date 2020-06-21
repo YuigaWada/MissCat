@@ -413,7 +413,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     private func showAccountListView() {
         if let accountsListViewController = accountsListViewController {
             accountsListViewController.view.isHidden = false
-            showNavBar(title: "Accounts", page: .profile, style: .Right, rightText: "cog")
+            showNavBar(title: "Accounts", page: .profile, style: .Right, needIcon: false, rightText: "cog")
             return
         }
         
@@ -426,7 +426,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         addChild(accountsListViewController)
         view.addSubview(accountsListViewController.view)
         
-        showNavBar(title: "Accounts", page: .profile, style: .Right, rightText: "cog")
+        showNavBar(title: "Accounts", page: .profile, style: .Right, needIcon: false, rightText: "cog")
         self.accountsListViewController = accountsListViewController
     }
     
@@ -716,10 +716,11 @@ extension HomeViewController: FooterTabBarDelegate {
         favViewController.view.isHidden = false
     }
     
-    private func showNavBar(title: String, page: Page, style: NavBar.Button = .None, rightText: String? = nil, rightFont: UIFont? = nil) {
+    private func showNavBar(title: String, page: Page, style: NavBar.Button = .None, needIcon: Bool = true, rightText: String? = nil, rightFont: UIFont? = nil) {
         navBar.isHidden = false
         navBar.barTitle = title
         navBar.setButton(style: style,
+                         needIcon: needIcon,
                          rightText: rightText,
                          leftText: nil,
                          rightFont: rightFont ?? UIFont.awesomeSolid(fontSize: 16))
