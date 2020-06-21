@@ -192,12 +192,17 @@ extension Cache {
         /// ユーザーを保存する
         func saveUser(_ user: SecureUser) -> Bool {
             let savedUsers = getUsers()
+            var newUsers: [SecureUser]
             if savedUsers.filter({ $0.userId == user.userId }).count > 0 { // アカウントがすでにログインされてたら
-                return false
+                newUsers = savedUsers.map { // アカウント情報をアップデートする
+                    guard $0.userId == user.userId else { return $0 }
+                    return user
+                }
+            } else { // 新規のアカウントだったら
+                newUsers = savedUsers + [user]
             }
             
-            let users = savedUsers + [user]
-            guard let usersData = try? JSONEncoder().encode(users) else { return false }
+            guard let usersData = try? JSONEncoder().encode(newUsers) else { return false }
             
             keychain[user.userId] = user.apiKey // apiKeyはキーチェーンに保存
             user.apiKey = nil // apikeyは隠蔽する
