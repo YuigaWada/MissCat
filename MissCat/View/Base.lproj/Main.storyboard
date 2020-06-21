@@ -1193,7 +1193,7 @@
                                                     <constraint firstAttribute="width" secondItem="9fF-V7-zaW" secondAttribute="height" multiplier="15:8" id="N5J-x3-DGN"/>
                                                 </constraints>
                                             </imageView>
-                                            <imageView clipsSubviews="YES" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="rGP-dP-dhq">
+                                            <imageView clipsSubviews="YES" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="rGP-dP-dhq">
                                                 <rect key="frame" x="20" y="95" width="78" height="78"/>
                                                 <constraints>
                                                     <constraint firstAttribute="width" secondItem="rGP-dP-dhq" secondAttribute="height" multiplier="1:1" id="kgB-c8-ez8"/>
