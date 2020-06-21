@@ -41,6 +41,10 @@ class AccountCell: UITableViewCell, ComponentType {
         selectedBackgroundView = UIView()
         selectedBackgroundView?.backgroundColor = .red
         contentView.backgroundColor = nil
+        
+        nameLabel.text = nil
+        usernameLabel.text = nil
+        instanceLabel.text = nil
     }
     
     override func layoutSubviews() {

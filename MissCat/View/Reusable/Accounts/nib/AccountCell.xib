@@ -17,8 +17,9 @@
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="wx7-eM-IPc">
                     <rect key="frame" x="12.5" y="12.5" width="389" height="102.5"/>
                     <subviews>
-                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="NRt-Nh-pOS" customClass="MissCatImageView" customModule="MissCat" customModuleProvider="target">
+                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="NRt-Nh-pOS" customClass="MissCatImageView" customModule="MissCat" customModuleProvider="target">
                             <rect key="frame" x="15" y="23" width="56" height="56.5"/>
+                            <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <constraints>
                                 <constraint firstAttribute="width" secondItem="NRt-Nh-pOS" secondAttribute="height" multiplier="1:1" id="5eD-SC-dQG"/>
                             </constraints>

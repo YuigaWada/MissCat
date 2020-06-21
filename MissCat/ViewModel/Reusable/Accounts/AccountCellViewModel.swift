@@ -41,6 +41,9 @@ class AccountCellViewModel: ViewModelType {
     func transform() {
         let user = input.user
         
+        // username
+        output.username.accept("@\(user.username)")
+        
         // キャッシュから
         if let cache = Cache.shared.getUserInfo(user: user) {
             let name = cache.name
