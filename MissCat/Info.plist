@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSAppleMusicUsageDescription</key>
-	<string>#nowplaying投稿に必要です</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>yuwd.MissCat</string>
@@ -30,6 +28,8 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>#nowplaying投稿に必要です</string>
 	<key>NSCameraUsageDescription</key>
 	<string>アップロードする画像を撮影するために必要です。</string>
 	<key>NSMicrophoneUsageDescription</key>
