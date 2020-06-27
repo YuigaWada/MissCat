@@ -113,31 +113,48 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     
     /// バナー通知を表示する
     /// - Parameter raw: userInfo
-    private func showBannerNotif(with raw: [AnyHashable: Any]) {
-        guard raw.keys.contains("aps"),
-            let data = raw["aps"] as? [String: AnyObject],
-            let alertPayload = data["alert"] as? [String: String] else { return }
-        
-        let contents = extractPayload(from: alertPayload)
+    private func showBannerNotif(with rawPayload: [AnyHashable: Any]) {
+        let contents = extractPayload(from: rawPayload)
         dump(contents)
     }
     
     /// ペイロードからメッセージ等を抽出する
     /// - Parameter payload: [String:String]
-    private func extractPayload(from payload: [String: String]) -> NotificationData {
-        // MEMO: usericon, username, notification_typeが必要
+    private func extractPayload(from payload: [AnyHashable: Any]) -> NotificationData? {
+        guard let mainContents = getMainContents(payload: payload),
+            let metaContents = getMetaContents(payload: payload) else { return nil }
+        
+        return NotificationData(main: mainContents, meta: metaContents)
+    }
+    
+    private func getMainContents(payload rawPayload: [AnyHashable: Any]) -> NotificationData.Main? {
+        guard rawPayload.keys.contains("aps"),
+            let data = rawPayload["aps"] as? [String: AnyObject],
+            let alertPayload = data["alert"] as? [String: String] else { return nil }
         
         var title: String?
         var message: String?
-        payload.keys.forEach { key in
+        alertPayload.keys.forEach { key in
+            guard let contents = alertPayload[key],
+                !contents.isEmpty else { return } // emptyなものは無視する
+            
             if key == "title" {
-                title = payload[key]
+                title = contents
             } else if key == "body" {
-                message = payload[key]
+                message = contents
             }
         }
         
-        return NotificationData(title: title ?? "通知", body: message ?? "")
+        return NotificationData.Main(title: title ?? "通知", body: message ?? "")
+    }
+    
+    private func getMetaContents(payload rawPayload: [AnyHashable: Any]) -> NotificationData.Meta? {
+        guard let rawType = rawPayload["type"] as? String,
+            let username = rawPayload["from_username"] as? String,
+            let iconUrl = rawPayload["icon_url"] as? String,
+            let kind = NotificationData.Meta.Kind(rawValue: rawType) else { return nil }
+        
+        return NotificationData.Meta(username: username, kind: kind, userIcon: iconUrl)
     }
     
     // MARK: UISceneSession Lifecycle
@@ -158,6 +175,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 }
 
 struct NotificationData {
-    let title: String
-    let body: String
+    let main: Main
+    let meta: Meta
+}
+
+extension NotificationData {
+    struct Main {
+        let title: String
+        let body: String
+    }
+    
+    // アプリ内通知のためのデータ
+    struct Meta {
+        let username: String
+        let kind: Kind
+        let userIcon: String
+    }
+}
+
+extension NotificationData.Meta {
+    enum Kind: String {
+        case reaction
+        case follow
+        case mention
+        case reply
+        case renote
+        case quote
+    }
 }
