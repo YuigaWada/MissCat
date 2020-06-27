@@ -12,7 +12,10 @@ exports.generateContents = function(rawJson, lang) {
 
   var title;
   var messages;
+  var extra = generateExtraContents(body); // アプリ内通知で利用するデータ
+
   // cf. https://github.com/YuigaWada/MissCat/blob/develop/MissCat/Model/Main/NotificationModel.swift
+
   if (type == "reaction") {
     const reaction = body.reaction;
     const myNote = body.note.text;
@@ -36,13 +39,15 @@ exports.generateContents = function(rawJson, lang) {
     title = fromUser + "さんが" + renoteKind + "Renoteしました";
     message = justRenote ? body.note.renote.text : body.note.text;
   }
-  else { return [null,null]; }
+  else { return [null,null,null]; }
 
-  return [title,message];
+  return [title,message,extra];
 }
 
 
-exports.send = function (token, title, body) {
+exports.send = function (token, title, body, extra) {
+  // cf. https://www.npmjs.com/package/fcm-node
+
   var message = {
      to: token,
 
@@ -53,10 +58,28 @@ exports.send = function (token, title, body) {
      }
   };
 
+  // アプリ内通知で利用するデータをペイロードに積む
+  if(extra){
+    message.data = extra
+  }
+
   fcm.send(message, function(error, response){
       const success = error == null
       if (!success) {
          console.log("FCM Error:",error);
       }
   });
+}
+
+
+// アプリ内通知で利用するデータを適切なフォーマットに変換しておく
+function generateExtraContents(body) {
+    const type = body.type
+    const user = body.user
+
+    return {
+      type: type,
+      from_username: user.username,
+      icon_url: user.avatarUrl
+    }
 }

@@ -56,10 +56,11 @@ app.post("/api/:version/push/:lang/:userId/:deviceToken", function(req, res){
     const contents = notification.generateContents(rawJson,lang);
     const title = contents[0];
     const body = contents[1];
+    const extra = contents[2];
     if (!title && !body) { res.status(200).send('Invalid Json.').end(); return; }
 
     // console.log("deviceToken",deviceToken);
-    notification.send(deviceToken, title, body); // send!
+    notification.send(deviceToken, title, body, extra); // send!
     res.status(200).send('Ok').end();
 });
 
