@@ -36,39 +36,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any]) {
-        // If you are receiving a notification message while your app is in the background,
-        // this callback will not be fired till the user taps on the notification launching the application.
-        // TODO: Handle data of notification
-        
-        // With swizzling disabled you must let Messaging know about the message, for Analytics
-        // Messaging.messaging().appDidReceiveMessage(userInfo)
-        
-        // Print message ID.
         if let messageID = userInfo[gcmMessageIDKey] {
             print("Message ID: \(messageID)")
         }
         
-        // Print full message.
         print(userInfo)
     }
     
+    // foreground時に通知が飛んできたらこれがよばれる
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
                      fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        // If you are receiving a notification message while your app is in the background,
-        // this callback will not be fired till the user taps on the notification launching the application.
-        // TODO: Handle data of notification
-        
-        // With swizzling disabled you must let Messaging know about the message, for Analytics
-        // Messaging.messaging().appDidReceiveMessage(userInfo)
-        
-        // Print message ID.
         if let messageID = userInfo[gcmMessageIDKey] {
             print("Message ID: \(messageID)")
         }
         
-        // Print full message.
+        showBannerNotif(with: userInfo) // アプリ内通知を表示
         print(userInfo)
-        
         completionHandler(UIBackgroundFetchResult.newData)
     }
     
@@ -128,6 +111,35 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         })
     }
     
+    /// バナー通知を表示する
+    /// - Parameter raw: userInfo
+    private func showBannerNotif(with raw: [AnyHashable: Any]) {
+        guard raw.keys.contains("aps"),
+            let data = raw["aps"] as? [String: AnyObject],
+            let alertPayload = data["alert"] as? [String: String] else { return }
+        
+        let contents = extractPayload(from: alertPayload)
+        dump(contents)
+    }
+    
+    /// ペイロードからメッセージ等を抽出する
+    /// - Parameter payload: [String:String]
+    private func extractPayload(from payload: [String: String]) -> NotificationData {
+        // MEMO: usericon, username, notification_typeが必要
+        
+        var title: String?
+        var message: String?
+        payload.keys.forEach { key in
+            if key == "title" {
+                title = payload[key]
+            } else if key == "body" {
+                message = payload[key]
+            }
+        }
+        
+        return NotificationData(title: title ?? "通知", body: message ?? "")
+    }
+    
     // MARK: UISceneSession Lifecycle
     
     @available(iOS 13.0, *)
@@ -145,7 +157,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 }
 
-struct NotificationContents {
+struct NotificationData {
     let title: String
     let body: String
 }
