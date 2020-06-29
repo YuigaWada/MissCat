@@ -8,7 +8,149 @@
 
 import UIKit
 
+
+// Data
+struct NotificationData {
+    let main: Main
+    let meta: Meta
+}
+
+extension NotificationData {
+    struct Main {
+        let title: String
+        let body: String
+    }
+    
+    // アプリ内通知のためのデータ
+    struct Meta {
+        let username: String
+        let kind: Kind
+        let userIcon: String
+    }
+}
+
+extension NotificationData.Meta {
+    enum Kind: String {
+        case reaction
+        case follow
+        case mention
+        case reply
+        case renote
+        case quote
+    }
+}
+
+extension NotificationData {
+    func convertModel()-> NotificationCell.Model {
+        
+    }
+}
+
+// Banner
+
 class NotificationBanner: UIView {
+    private var cell: NotificationCell?
+    private var contents: NotificationData?
+    
+    // MARK: LifeCycle
+    
+    convenience init(with contents: NotificationData) {
+        self.init()
+        self.contents = contents
+    }
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        prepareCell()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        prepareCell()
+    }
+    
+    private func prepareCell() {
+        // prepare cell
+        let nib = UINib(nibName: "NotificationCell", bundle: nil)
+        guard let cell = nib.instantiate(withOwner: self, options: nil).first as? NotificationCell else { return }
+        
+        cell.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(cell)
+        makeSameLayout(to: self) // AutoLayoutでcellを全く同じサイズにする
+        
+        self.cell = cell
+        
+        // prepare contents
+        if let converted = contents?.convertModel() {
+            _ = cell.shapeCell(item: converted)
+        }
+    }
+    
+    // MARK: AutoLayout
+    
+    func setAutoLayout(on view: UIView, widthScale: CGFloat, heightScale: CGFloat, originY: CGFloat) {
+        addConstraints([
+            NSLayoutConstraint(item: self,
+                               attribute: .width,
+                               relatedBy: .equal,
+                               toItem: target,
+                               attribute: .width,
+                               multiplier: widthScale,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: self,
+                               attribute: .height,
+                               relatedBy: .equal,
+                               toItem: target,
+                               attribute: .height,
+                               multiplier: heightScale,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: self,
+                               attribute: .centerX,
+                               relatedBy: .equal,
+                               toItem: target,
+                               attribute: .centerX,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: self,
+                               attribute: .top,
+                               relatedBy: .equal,
+                               toItem: target,
+                               attribute: .top,
+                               multiplier: 1.0,
+                               constant: originY)
+        ])
+    }
+    
+    // MARK: Animation
+    
+    private func setupTimer() {
+        _ = Timer.scheduledTimer(timeInterval: 2,
+                                 target: self,
+                                 selector: #selector(disappear),
+                                 userInfo: nil,
+                                 repeats: false)
+    }
+    
+    private func appear() {
+        UIView.animate(withDuration: 1.3, animations: {
+            self.alpha = 0.8
+        })
+    }
+    
+    @objc private func disappear() {
+        UIView.animate(withDuration: 1.3, animations: {
+            self.alpha = 0
+        }, completion: { _ in
+            self.removeFromSuperview()
+        })
+    }
+}
+
+// 小さい通知バナー
+class NanoNotificationBanner: UIView {
     @IBOutlet weak var iconLabel: UILabel!
     @IBOutlet weak var mainContentLabel: UILabel!
     
@@ -77,13 +219,13 @@ class NotificationBanner: UIView {
             return
         }
         
-//        guard icon != .Reaction else {
-//            guard let reaction = reaction else { return }
-//
-//            let encodedReaction = EmojiHandler.handler.emojiEncoder(note: reaction, externalEmojis: nil)
-//            iconLabel.attributedText = encodedReaction.toAttributedString(family: "Helvetica", size: 15.0)
-//            return
-//        }
+        //        guard icon != .Reaction else {
+        //            guard let reaction = reaction else { return }
+        //
+        //            let encodedReaction = EmojiHandler.handler.emojiEncoder(note: reaction, externalEmojis: nil)
+        //            iconLabel.attributedText = encodedReaction.toAttributedString(family: "Helvetica", size: 15.0)
+        //            return
+        //        }
         
         iconLabel.text = icon.convertAwesome()
     }
@@ -146,7 +288,7 @@ class NotificationBanner: UIView {
     }
 }
 
-extension NotificationBanner {
+extension NanoNotificationBanner {
     enum IconType {
         case Loading
         case Success

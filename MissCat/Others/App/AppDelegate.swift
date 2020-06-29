@@ -46,11 +46,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     // foreground時に通知が飛んできたらこれがよばれる
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
                      fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        if let messageID = userInfo[gcmMessageIDKey] {
-            print("Message ID: \(messageID)")
+        if let contents = extractPayload(from: userInfo) {
+            showNotificationBanner(with: contents) // アプリ内通知を表示
         }
         
-        showBannerNotif(with: userInfo) // アプリ内通知を表示
         print(userInfo)
         completionHandler(UIBackgroundFetchResult.newData)
     }
@@ -113,9 +112,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     
     /// バナー通知を表示する
     /// - Parameter raw: userInfo
-    private func showBannerNotif(with rawPayload: [AnyHashable: Any]) {
-        let contents = extractPayload(from: rawPayload)
-        dump(contents)
+    private func showNotificationBanner(with contents: NotificationData) {
+        guard let homeVC = window?.rootViewController as? HomeViewController else { return }
+        homeVC.showNotificationBanner(with: contents)
     }
     
     /// ペイロードからメッセージ等を抽出する
@@ -174,32 +173,3 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
 }
 
-struct NotificationData {
-    let main: Main
-    let meta: Meta
-}
-
-extension NotificationData {
-    struct Main {
-        let title: String
-        let body: String
-    }
-    
-    // アプリ内通知のためのデータ
-    struct Meta {
-        let username: String
-        let kind: Kind
-        let userIcon: String
-    }
-}
-
-extension NotificationData.Meta {
-    enum Kind: String {
-        case reaction
-        case follow
-        case mention
-        case reply
-        case renote
-        case quote
-    }
-}

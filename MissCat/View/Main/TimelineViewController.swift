@@ -23,7 +23,7 @@ protocol TimelineDelegate { // For HomeViewController
     
     func successInitialLoading(_ success: Bool)
     func changedStreamState(success: Bool)
-    func showNotificationBanner(icon: NotificationBanner.IconType, notification: String)
+    func showNanoBanner(icon: NanoNotificationBanner.IconType, notification: String)
 }
 
 typealias NotesDataSource = RxTableViewSectionedAnimatedDataSource<NoteCell.Section>
@@ -314,7 +314,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         print("loadUntilNotes...")
         viewModel.loadUntilNotes().subscribe(onError: { error in
             if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty { return }
-            self.homeViewController?.showNotificationBanner(icon: .Failed, notification: error.description)
+            self.homeViewController?.showNanoBanner(icon: .Failed, notification: error.description)
         }).disposed(by: disposeBag)
     }
     
