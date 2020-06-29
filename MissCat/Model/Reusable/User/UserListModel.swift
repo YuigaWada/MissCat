@@ -35,7 +35,7 @@ class UserListModel {
     }
     
     private func transformUser(with observer: AnyObserver<UserCell.Model>, user: UserEntity, reverse: Bool) {
-        let userModel = UserCell.Model(from: user)
+        let userModel = UserCell.Model(user: user)
         
         userModel.shapedName = MFMEngine.shapeDisplayName(owner: owner, user: user)
         userModel.shapedDescritpion = MFMEngine.shapeString(owner: owner,

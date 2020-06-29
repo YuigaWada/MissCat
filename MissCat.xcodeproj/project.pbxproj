@@ -158,6 +158,7 @@
 		8DDB52CF245032E500C97130 /* ColorPickerCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DDB52CE245032E500C97130 /* ColorPickerCell.xib */; };
 		8DE35E6B23F68FC300E10CB4 /* Pods_MissCat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49D674DA4870479FF355F58B /* Pods_MissCat.framework */; };
 		8DE65B9124AA8FF600E78876 /* UserEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE65B9024AA8FF600E78876 /* UserEntity.swift */; };
+		8DE65B9424AA9F5000E78876 /* CellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE65B9324AA9F5000E78876 /* CellModel.swift */; };
 		8DE88825242764AE002CC9DE /* NoteCell.Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE88824242764AD002CC9DE /* NoteCell.Model.swift */; };
 		8DE8882724276512002CC9DE /* NoteCell.FileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE8882624276512002CC9DE /* NoteCell.FileView.swift */; };
 		8DEB21C5243B0C1400E4D1EB /* Error+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */; };
@@ -345,6 +346,7 @@
 		8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickerCell.swift; sourceTree = "<group>"; };
 		8DDB52CE245032E500C97130 /* ColorPickerCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ColorPickerCell.xib; sourceTree = "<group>"; };
 		8DE65B9024AA8FF600E78876 /* UserEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserEntity.swift; sourceTree = "<group>"; };
+		8DE65B9324AA9F5000E78876 /* CellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellModel.swift; sourceTree = "<group>"; };
 		8DE88824242764AD002CC9DE /* NoteCell.Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCell.Model.swift; sourceTree = "<group>"; };
 		8DE8882624276512002CC9DE /* NoteCell.FileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCell.FileView.swift; sourceTree = "<group>"; };
 		8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Error+MissCat.swift"; sourceTree = "<group>"; };
@@ -488,6 +490,7 @@
 				8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */,
 				8D560353246F9E8500DD41BE /* RxEureka.swift */,
 				8DCBFBD524711B510028A5E6 /* MissCatImageView.swift */,
+				8DE65B9324AA9F5000E78876 /* CellModel.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -1289,6 +1292,7 @@
 				8D5D2C4024480E4E00D15974 /* SenderCell.swift in Sources */,
 				8DEFF31E239BD4F200142802 /* ProfileModel.swift in Sources */,
 				8D127987247BA3EE003BA9CD /* EditablePollView.swift in Sources */,
+				8DE65B9424AA9F5000E78876 /* CellModel.swift in Sources */,
 				8D47FAD8243388B100549A0B /* TosViewController.swift in Sources */,
 				8DC27D9A243BF57A0037E610 /* UrlPreviewerViewModel.swift in Sources */,
 				8D63BFC3242BBF03009C3ADE /* HomeViewModel.swift in Sources */,

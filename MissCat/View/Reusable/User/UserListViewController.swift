@@ -124,12 +124,12 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
         
         guard let itemCell = tableView.dequeueReusableCell(withIdentifier: "UserCell", for: indexPath) as? UserCell else { fatalError("Internal Error.") }
         
-        if item.isSkelton {
+        if item.type == .skelton {
             return itemCell.transform(isSkelton: true)
         }
         
         let shapedCell = itemCell.transform(with: .init(owner: viewModel.state.owner,
-                                                        icon: item.icon,
+                                                        icon: item.entity.avatarUrl,
                                                         shapedName: item.shapedName,
                                                         shapedDescription: item.shapedDescritpion))
         
@@ -167,8 +167,7 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
         let index = indexPath.row
         let item = viewModel.cellsModel[index]
         
-        if let userId = item.userId {
-            move2Profile(userId: userId, owner: viewModel.state.owner)
-        }
+        let userId = item.entity.userId
+        move2Profile(userId: userId, owner: viewModel.state.owner)
     }
 }

@@ -147,44 +147,24 @@ class UserCell: UITableViewCell, ComponentType, UITextViewDelegate {
 }
 
 extension UserCell {
-    class Model: IdentifiableType, Equatable {
-        typealias Identity = String
-        let identity: String = String(Float.random(in: 1 ..< 100))
-        
-        let isSkelton: Bool
-        
-        let userId: String?
-        let icon: String?
-        let name: String?
-        let username: String?
-        let description: String?
+    class Model: CellModel {
+        let type: ModelType
+        let entity: UserEntity
         
         var shapedName: MFMString?
         var shapedDescritpion: MFMString?
         
-        init(isSkelton: Bool = false, userId: String, icon: String?, name: String?, username: String?, description: String?, shapedName: MFMString? = nil, shapedDescritpion: MFMString? = nil) {
-            self.isSkelton = isSkelton
-            self.userId = userId
-            self.icon = icon
-            self.name = name
-            self.username = username
-            self.description = description
+        init(type: ModelType = .model, user entity: UserEntity = .mock, shapedName: MFMString? = nil, shapedDescritpion: MFMString? = nil) {
+            self.type = type
+            self.entity = entity
             self.shapedName = shapedName
             self.shapedDescritpion = shapedDescritpion
         }
-        
-        static func == (lhs: UserCell.Model, rhs: UserCell.Model) -> Bool {
-            return lhs.identity == rhs.identity
-        }
-        
-        static func fakeSkeltonCell() -> UserCell.Model {
-            return .init(isSkelton: true,
-                         userId: "",
-                         icon: nil,
-                         name: nil,
-                         username: nil,
-                         description: nil)
-        }
+    }
+    
+    enum ModelType {
+        case model
+        case skelton
     }
     
     struct Section {

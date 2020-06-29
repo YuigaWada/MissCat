@@ -50,3 +50,9 @@ class UserEntity {
         notesCount = user.notesCount
     }
 }
+
+extension UserEntity {
+    static var mock: UserEntity {
+        return UserEntity(id: "")
+    }
+}
