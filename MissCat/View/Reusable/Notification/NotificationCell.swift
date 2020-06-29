@@ -230,7 +230,7 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
         // リアクションした者のプロフィールを表示
         for aboutReactee in [nameTextView, iconImageView, emojiView, followButton] {
             aboutReactee?.setTapGesture(disposeBag, closure: {
-                guard let userId = item.fromUser?.id, let owner = item.owner else { return }
+                guard let userId = item.fromUser?.userId, let owner = item.owner else { return }
                 self.delegate?.move2Profile(userId: userId, owner: owner)
             })
         }
@@ -265,7 +265,7 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
 
 extension NotificationCell {
     class Model: IdentifiableType, Equatable {
-        internal init(isMock: Bool = false, notificationId: String, type: ActionType = .reply, shapedDisplayName: MFMString? = nil, myNote: NoteCell.Model?, replyNote: NoteCell.Model?, fromUser: UserModel?, reaction: String?, emojis: [EmojiModel] = [], ago: String) {
+        internal init(isMock: Bool = false, notificationId: String, type: ActionType = .reply, shapedDisplayName: MFMString? = nil, myNote: NoteCell.Model?, replyNote: NoteCell.Model?, fromUser: UserEntity?, reaction: String?, emojis: [EmojiModel] = [], ago: String) {
             self.isMock = isMock
             self.notificationId = notificationId
             self.type = type
@@ -293,7 +293,7 @@ extension NotificationCell {
         let myNote: NoteCell.Model? // 自分のどの投稿に対してか
         let replyNote: NoteCell.Model? // 相手の投稿
         
-        let fromUser: UserModel?
+        let fromUser: UserEntity?
         
         let reaction: String?
         var emojis: [EmojiModel]

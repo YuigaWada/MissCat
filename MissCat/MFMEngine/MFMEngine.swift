@@ -199,8 +199,8 @@ class MFMEngine {
     }
     
     /// 名前を整形
-    /// - Parameter user: UserModel
-    static func shapeDisplayName(owner: SecureUser?, user: UserModel?) -> MFMString? {
+    /// - Parameter user: UserEntity
+    static func shapeDisplayName(owner: SecureUser?, user: UserEntity?) -> MFMString? {
         guard let user = user else { return nil }
         return shapeDisplayName(owner: owner, name: user.name, username: user.username, emojis: user.emojis)
     }
