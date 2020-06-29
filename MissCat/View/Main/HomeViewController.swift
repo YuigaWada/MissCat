@@ -532,7 +532,19 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         }
     }
     
-    func showNotificationBanner(icon: NotificationBanner.IconType, notification: String) {
+    func showNotificationBanner(with contents: NotificationData) {
+        DispatchQueue.main.async {
+            let banner = NotificationBanner()
+            
+            banner.translatesAutoresizingMaskIntoConstraints = false
+            self.view.addSubview(banner)
+            banner.setAutoLayout(on: self.view, widthScale: 0.8, heightScale: 0.3, originY: self.footerTab.frame.origin.y - 30)
+            
+            self.view.bringSubviewToFront(banner)
+        }
+    }
+    
+    func showNanoBanner(icon: NanoNotificationBanner.IconType, notification: String) {
         DispatchQueue.main.async {
             let bannerWidth = self.view.frame.width / 3
             
@@ -541,7 +553,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
                                width: bannerWidth,
                                height: 30)
             
-            let notificationBanner = NotificationBanner(frame: frame, icon: icon, notification: notification)
+            let notificationBanner = NanoNotificationBanner(frame: frame, icon: icon, notification: notification)
             self.view.addSubview(notificationBanner)
             self.view.bringSubviewToFront(notificationBanner)
         }
@@ -803,7 +815,7 @@ extension HomeViewController: TimelineDelegate {
     func successInitialLoading(_ success: Bool) {
         guard !success else { return }
         
-        showNotificationBanner(icon: .Failed, notification: "投稿の取得に失敗しました")
+        showNanoBanner(icon: .Failed, notification: "投稿の取得に失敗しました")
     }
     
     func changedStreamState(success: Bool) {
@@ -812,7 +824,7 @@ extension HomeViewController: TimelineDelegate {
     }
     
     func loadingBanner() {
-        showNotificationBanner(icon: .Loading, notification: "ロード中...")
+        showNanoBanner(icon: .Loading, notification: "ロード中...")
     }
 }
 

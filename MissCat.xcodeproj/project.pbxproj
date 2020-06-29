@@ -157,6 +157,7 @@
 		8DDB52CD245032DD00C97130 /* ColorPickerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */; };
 		8DDB52CF245032E500C97130 /* ColorPickerCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DDB52CE245032E500C97130 /* ColorPickerCell.xib */; };
 		8DE35E6B23F68FC300E10CB4 /* Pods_MissCat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49D674DA4870479FF355F58B /* Pods_MissCat.framework */; };
+		8DE65B8F24AA8BC800E78876 /* UserEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE65B8E24AA8BC800E78876 /* UserEntity.swift */; };
 		8DE88825242764AE002CC9DE /* NoteCell.Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE88824242764AD002CC9DE /* NoteCell.Model.swift */; };
 		8DE8882724276512002CC9DE /* NoteCell.FileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE8882624276512002CC9DE /* NoteCell.FileView.swift */; };
 		8DEB21C5243B0C1400E4D1EB /* Error+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */; };
@@ -343,6 +344,7 @@
 		8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailViewModel.swift; sourceTree = "<group>"; };
 		8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickerCell.swift; sourceTree = "<group>"; };
 		8DDB52CE245032E500C97130 /* ColorPickerCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ColorPickerCell.xib; sourceTree = "<group>"; };
+		8DE65B8E24AA8BC800E78876 /* UserEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserEntity.swift; sourceTree = "<group>"; };
 		8DE88824242764AD002CC9DE /* NoteCell.Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCell.Model.swift; sourceTree = "<group>"; };
 		8DE8882624276512002CC9DE /* NoteCell.FileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCell.FileView.swift; sourceTree = "<group>"; };
 		8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Error+MissCat.swift"; sourceTree = "<group>"; };
@@ -566,6 +568,7 @@
 		8D4A2A14237437BE00503685 /* MissCat */ = {
 			isa = PBXGroup;
 			children = (
+				8DE65B8D24AA89F800E78876 /* Entity */,
 				8D4A2A23237437C000503685 /* Info.plist */,
 				8D1C150E2424E3B6004B1202 /* MissCat.entitlements */,
 				8D905643246A7120006D0F50 /* GoogleService-Info.plist */,
@@ -1044,6 +1047,14 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
+		8DE65B8D24AA89F800E78876 /* Entity */ = {
+			isa = PBXGroup;
+			children = (
+				8DE65B8E24AA8BC800E78876 /* UserEntity.swift */,
+			);
+			path = Entity;
+			sourceTree = "<group>";
+		};
 		8DFD61382491196600E22C9F /* Tab */ = {
 			isa = PBXGroup;
 			children = (
@@ -1335,6 +1346,7 @@
 				8D2D523F2443BDFB00712F48 /* UserCellViewModel.swift in Sources */,
 				8DA36F862394B9D000512459 /* UIFont+MissCat.swift in Sources */,
 				8D8A50C1242355200065B1D2 /* AccountViewController.swift in Sources */,
+				8DE65B8F24AA8BC800E78876 /* UserEntity.swift in Sources */,
 				8D4A2A16237437BE00503685 /* AppDelegate.swift in Sources */,
 				8D2D523D2443BDDB00712F48 /* UserCellModel.swift in Sources */,
 				8D31018F24397D5E004F8E55 /* ReactionSettingsViewModel.swift in Sources */,
