@@ -65,10 +65,10 @@ class MFMEngine {
             
             // カスタム絵文字を適切な形に変換していく
             switch converted.type {
-            case "default":
+            case .default:
                 shaped.append(NSAttributedString(string: converted.emoji))
                 
-            case "custom":
+            case .custom:
                 let (attachmentString, attachment) = YanagiText.getAttachmentString(size: CGSize(width: lineHeight, height: lineHeight))
                 if let attachmentString = attachmentString {
                     shaped.append(attachmentString)
@@ -77,7 +77,7 @@ class MFMEngine {
                     attachments.append(attachment)
                 }
             default:
-                return
+                break
             }
             
             rest = String(rest[range.upperBound...])

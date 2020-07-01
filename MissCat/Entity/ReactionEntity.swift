@@ -40,21 +40,21 @@ class ReactionEntity {
         }
         
         switch convertedEmojiData.type {
-        case "default":
+        case .default:
             self.noteId = noteId
             url = nil
             self.rawEmoji = rawEmoji
             emoji = convertedEmojiData.emoji
             self.isMyReaction = isMyReaction
             self.count = count
-        case "custom":
+        case .custom:
             self.noteId = noteId
             url = convertedEmojiData.emoji
             self.rawEmoji = rawEmoji
             emoji = convertedEmojiData.emoji
             self.isMyReaction = isMyReaction
             self.count = count
-        case "non-colon":
+        case .nonColon:
             self.noteId = noteId
             url = nil
             self.rawEmoji = convertedEmojiData.emoji
