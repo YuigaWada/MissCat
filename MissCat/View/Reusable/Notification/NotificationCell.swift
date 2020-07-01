@@ -264,7 +264,7 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
 // MARK: NotificationCell.Model
 
 extension NotificationCell {
-    class Model: IdentifiableType, Equatable {
+    class Model: CellModel {
         internal init(isMock: Bool = false, notificationId: String, type: ActionType = .reply, shapedDisplayName: MFMString? = nil, myNote: NoteCell.Model?, replyNote: NoteCell.Model?, fromUser: UserEntity?, reaction: String?, emojis: [EmojiModel] = [], ago: String) {
             self.isMock = isMock
             self.notificationId = notificationId
@@ -277,9 +277,6 @@ extension NotificationCell {
             self.emojis = emojis
             self.ago = ago
         }
-        
-        typealias Identity = String
-        let identity: String = String(Float.random(in: 1 ..< 100))
         
         var isMock: Bool = false
         
@@ -299,10 +296,6 @@ extension NotificationCell {
         var emojis: [EmojiModel]
         
         let ago: String
-        
-        static func == (lhs: NotificationCell.Model, rhs: NotificationCell.Model) -> Bool {
-            return lhs.identity == rhs.identity
-        }
     }
     
     struct Section {
