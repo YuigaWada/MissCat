@@ -19,16 +19,21 @@ struct MFMString {
 }
 
 class MFMEngine {
+    struct CustomEmojiAttachments {
+        let url: String
+        let attachment: NSTextAttachment
+    }
+    
+    // MARK: Format
+    
     private var lineHeight: CGFloat = 30
+    static var usernameFont = UIFont.systemFont(ofSize: 11.0)
+    
+    // MARK: Emoji
     
     private let original: String
     private let emojiTargets: [String]
-    
-    // 　この２つは順序が等しくなるよう気をつけて格納していく
-    private var customEmojis: [String] = []
-    private var attachments: [NSTextAttachment] = []
-    
-    static var usernameFont = UIFont.systemFont(ofSize: 11.0)
+    private var customEmojis: [CustomEmojiAttachments] = []
     
     // MARK: Init
     
@@ -73,8 +78,8 @@ class MFMEngine {
                 if let attachmentString = attachmentString {
                     shaped.append(attachmentString)
                     
-                    customEmojis.append(converted.emoji)
-                    attachments.append(attachment)
+                    let customEmoji = CustomEmojiAttachments(url: converted.emoji, attachment: attachment)
+                    customEmojis.append(customEmoji)
                 }
             default:
                 break
@@ -91,16 +96,12 @@ class MFMEngine {
     /// カスタム絵文字を表示するViewを生成し、YanagiTextへAddする
     /// - Parameter yanagi: YanagiText
     func renderCustomEmojis(on yanagi: YanagiText) {
-        guard customEmojis.count == attachments.count else { return }
-        
-        for index in 0 ..< customEmojis.count {
-            let customEmoji = customEmojis[index]
-            let attachment = attachments[index]
+        customEmojis.forEach { customEmoji in
             
-            let targetView = MFMEngine.generateAsyncImageView(imageUrl: customEmoji, lineHeight: lineHeight)
+            let targetView = MFMEngine.generateAsyncImageView(imageUrl: customEmoji.url, lineHeight: lineHeight)
             let yanagiAttachment = YanagiText.Attachment(view: targetView, size: targetView.frame.size)
             
-            yanagi.addAttachment(ns: attachment, yanagi: yanagiAttachment)
+            yanagi.addAttachment(ns: customEmoji.attachment, yanagi: yanagiAttachment)
         }
     }
     
