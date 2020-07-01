@@ -141,14 +141,14 @@ class NotificationsViewModel {
     private func removeDuplicated(with cellModel: NotificationCell.Model, array: inout [NotificationCell.Model]) {
         // 例えば、何度もリアクションを変更されたりすると重複して送られてくる
         let duplicated = array.filter {
-            guard let fromUserId = $0.fromUser?.userId, let myNoteId = $0.myNote?.noteId else { return false }
+            guard let fromUserId = $0.fromUser?.userId, let myNoteId = $0.myNote?.noteEntity.noteId else { return false }
             
             let sameUser = fromUserId == cellModel.fromUser?.userId
-            let sameMyNote = myNoteId == cellModel.myNote?.noteId
+            let sameMyNote = myNoteId == cellModel.myNote?.noteEntity.noteId
             let sameType = $0.type == cellModel.type
             
             if let replyNote = $0.replyNote, let _replyNote = cellModel.replyNote {
-                let sameReplyNote = replyNote.noteId == _replyNote.noteId
+                let sameReplyNote = replyNote.noteEntity.noteId == _replyNote.noteEntity.noteId
                 return sameUser && sameMyNote && sameType && sameReplyNote
             }
             

@@ -157,12 +157,12 @@ class MFMEngine {
     /// NoteCell.Modelのうち、投稿を整形する
     /// - Parameter cellModel: NoteCell.Model
     private static func shapeNote(_ cellModel: NoteCell.Model) -> MFMString {
-        return shapeString(owner: cellModel.owner, needReplyMark: cellModel.isReply, text: cellModel.note, emojis: cellModel.emojis)
+        return shapeString(owner: cellModel.owner, needReplyMark: cellModel.isReply, text: cellModel.noteEntity.note, emojis: cellModel.noteEntity.emojis)
     }
     
     private static func shapedCw(_ cellModel: NoteCell.Model) -> MFMString? {
-        guard let cw = cellModel.cw else { return nil }
-        var shaped = shapeString(owner: cellModel.owner, needReplyMark: cellModel.isReply, text: cw, emojis: cellModel.emojis)
+        guard let cw = cellModel.noteEntity.cw else { return nil }
+        var shaped = shapeString(owner: cellModel.owner, needReplyMark: cellModel.isReply, text: cw, emojis: cellModel.noteEntity.emojis)
         
         if let attributed = shaped.attributed {
             shaped.attributed = attributed + generatePlaneString(string: "\n > タップで詳細表示",
@@ -195,7 +195,7 @@ class MFMEngine {
     /// 名前を整形
     /// - Parameter cellModel: NoteCell.Model
     private static func shapeDisplayName(_ cellModel: NoteCell.Model) -> MFMString {
-        return shapeDisplayName(owner: cellModel.owner, name: cellModel.displayName, username: cellModel.username, emojis: cellModel.emojis)
+        return shapeDisplayName(owner: cellModel.owner, name: cellModel.noteEntity.displayName, username: cellModel.noteEntity.username, emojis: cellModel.noteEntity.emojis)
     }
     
     /// 名前を整形

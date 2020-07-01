@@ -26,28 +26,31 @@ extension NoteModel {
         let displayName = (user.name ?? "") == "" ? user.username : user.name // user.nameがnilか""ならusernameで代替
         let emojis = (post.emojis ?? []) + (user.emojis ?? []) // 絵文字情報を統合する
         
+        let entity = NoteEntity(noteId: post.id,
+                                iconImageUrl: user.avatarUrl,
+                                isCat: user.isCat ?? false,
+                                userId: user.id,
+                                displayName: displayName ?? "",
+                                username: user.username ?? "",
+                                hostInstance: user.host ?? "",
+                                note: post.text?.mfmPreTransform() ?? "", // MFMEngineを通して加工の前処理をしておく
+                                ago: post.createdAt!,
+                                replyCount: post.repliesCount ?? 0,
+                                renoteCount: post.renoteCount ?? 0,
+                                reactions: post.reactions?.compactMap { $0 } ?? [],
+                                shapedReactions: [],
+                                myReaction: post.myReaction,
+                                files: post.files?.compactMap { $0 } ?? [],
+                                emojis: emojis.compactMap { $0 },
+                                original: self,
+                                onOtherNote: onOtherNote,
+                                poll: post.poll,
+                                cw: post.cw)
+        
+        let commentRNTarget = withRN ? post.renote?.getNoteCellModel(owner: owner, onOtherNote: true) ?? nil : nil
         let cellModel = NoteCell.Model(owner: owner,
-                                       noteId: post.id,
-                                       iconImageUrl: user.avatarUrl,
-                                       isCat: user.isCat ?? false,
-                                       userId: user.id,
-                                       displayName: displayName ?? "",
-                                       username: user.username ?? "",
-                                       hostInstance: user.host ?? "",
-                                       note: post.text?.mfmPreTransform() ?? "", // MFMEngineを通して加工の前処理をしておく
-                                       ago: post.createdAt!,
-                                       replyCount: post.repliesCount ?? 0,
-                                       renoteCount: post.renoteCount ?? 0,
-                                       reactions: post.reactions?.compactMap { $0 } ?? [],
-                                       shapedReactions: [],
-                                       myReaction: post.myReaction,
-                                       files: post.files?.compactMap { $0 } ?? [],
-                                       emojis: emojis.compactMap { $0 },
-                                       commentRNTarget: withRN ? post.renote?.getNoteCellModel(owner: owner, onOtherNote: true) ?? nil : nil,
-                                       original: self,
-                                       onOtherNote: onOtherNote,
-                                       poll: post.poll,
-                                       cw: post.cw)
+                                       entity: entity,
+                                       commentRNTarget: commentRNTarget)
         
         cellModel.shapedReactions = cellModel.getReactions(with: emojis)
         cellModel.isReply = post.reply != nil

@@ -48,7 +48,7 @@ class PostDetailViewModel {
     // MARK: REST
     
     private func goBackReplies(_ item: NoteCell.Model) {
-        guard let replyId = item.original?.replyId else { return }
+        guard let replyId = item.noteEntity.original?.replyId else { return }
         model.goBackReplies(id: replyId) { replies in
             self.cellsModel = replies.reversed() + self.cellsModel
             self.updateNotes(new: self.cellsModel)
@@ -56,7 +56,7 @@ class PostDetailViewModel {
     }
     
     private func getReplies(_ item: NoteCell.Model) {
-        guard let noteId = item.noteId else { return }
+        guard let noteId = item.noteEntity.noteId else { return }
         model.getReplies(id: noteId) { replies in
             self.cellsModel += replies
             self.updateNotes(new: self.cellsModel)

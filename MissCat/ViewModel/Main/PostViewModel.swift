@@ -190,8 +190,8 @@ class PostViewModel: ViewModelType {
     private func submitNote() {
         let note = currentNote
         let cw = currentCw
-        let renoteId = input.type == .CommentRenote ? input.targetNote?.noteId : nil
-        let replyId = input.type == .Reply ? input.targetNote?.noteId : nil
+        let renoteId = input.type == .CommentRenote ? input.targetNote?.noteEntity.noteId : nil
+        let replyId = input.type == .Reply ? input.targetNote?.noteEntity.noteId : nil
         
         guard attachmentFiles.count > 0 else {
             model.submitNote(note,
@@ -234,7 +234,7 @@ class PostViewModel: ViewModelType {
     // MARK: Inner Note
     
     private func setInnerNote() {
-        guard let target = input.targetNote else { return }
+        guard let target = input.targetNote?.noteEntity else { return }
         
         // text
         setMark(type: input.type)

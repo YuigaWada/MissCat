@@ -567,7 +567,7 @@ extension HomeViewController: NoteCellDelegate {
             
             switch order {
             case 0: // RN
-                guard let noteId = note.noteId, let owner = note.owner else { return }
+                guard let noteId = note.noteEntity.noteId, let owner = note.owner else { return }
                 self.viewModel.renote(noteId: noteId, owner: owner)
             case 1: // 引用RN
                 self.openPost(item: note, type: .CommentRenote)

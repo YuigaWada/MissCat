@@ -223,11 +223,11 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         let item = viewModel.cellsModel[index]
         
         // View側で NoteCell / RenoteeCell / PromotionCell を区別する
-        if item.isPromotionCell {
+        if item.type == .promote {
             let prCell = tableView.dequeueReusableCell(withIdentifier: "PromotionCell", for: indexPath)
             prCell.selectionStyle = UITableViewCell.SelectionStyle.none
             return prCell
-        } else if item.isRenoteeCell {
+        } else if item.type == .renotee {
             guard let renoteeCell = tableView.dequeueReusableCell(withIdentifier: "RenoteeCell", for: indexPath) as? RenoteeCell
             else { return RenoteeCell() }
             
@@ -235,7 +235,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             renoteeCell.setRenotee(item.renotee ?? "")
             
             renoteeCell.setTapGesture(disposeBag) {
-                self.openUser(username: item.username, owner: viewModel.state.owner)
+                self.openUser(username: item.noteEntity.username, owner: viewModel.state.owner)
             }
             
             return renoteeCell
@@ -270,7 +270,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         
         let id = viewModel.cellsModel[index].identity
         guard let height = cellHeightCache[id] else {
-            return viewModel.cellsModel[index].isRenoteeCell ? 25 : UITableView.automaticDimension
+            return viewModel.cellsModel[index].type == .renotee ? 25 : UITableView.automaticDimension
         }
         return height
     }
@@ -304,7 +304,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         
         // 再計算しないでいいようにセルの高さをキャッシュ
         if cellHeightCache.keys.contains(id) != true {
-            cellHeightCache[id] = cellModel.isRenoteeCell || cellModel.isPromotionCell ? 25 : cell.frame.height
+            cellHeightCache[id] = cellModel.type == .renotee || cellModel.type == .promote ? 25 : cell.frame.height
         }
         
         // 下位4分の1のcellでセル更新
@@ -322,7 +322,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         let index = indexPath.row
         guard let item = viewModel?.cellsModel[index] else { return indexPath }
         
-        if item.isPromotionCell { //  PromotionCellはタップできないように
+        if item.type == .promote { //  PromotionCellはタップできないように
             return nil
         }
         
@@ -440,7 +440,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         guard let owner = viewModel?.state.owner else { return }
         // ユーザーをブロック・投稿を通報する
         // 投稿の削除
-        note.userId.isMe(owner: owner) { isMe in
+        note.noteEntity.userId.isMe(owner: owner) { isMe in
             if isMe { self.showDeletePanel(note); return }
             self.showReportPanel(note)
         }
@@ -492,7 +492,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     private func showBlockAlert(_ note: NoteCell.Model) {
         showAlert(title: "ブロック", message: "本当にこのユーザーをブロックしますか？", yesOption: "ブロック") { yes in
             guard yes else { return }
-            self.viewModel?.block(userId: note.userId)
+            self.viewModel?.block(userId: note.noteEntity.userId)
         }
     }
     
@@ -502,14 +502,14 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         showTextAlert(title: "迷惑行為の詳細を記述してください", placeholder: "例: 著作権侵害/不適切な投稿など") { message in
             self.showAlert(title: "通報", message: "本当にこの投稿を通報しますか？", yesOption: "通報") { yes in
                 guard yes else { return }
-                self.viewModel?.report(message: message, userId: note.userId)
+                self.viewModel?.report(message: message, userId: note.noteEntity.userId)
             }
         }
     }
     
     private func showDeleteAlert(_ note: NoteCell.Model) {
         showAlert(title: "削除", message: "本当にこの投稿を削除しますか？", yesOption: "削除") { okay in
-            guard let noteId = note.noteId, okay else { return }
+            guard let noteId = note.noteEntity.noteId, okay else { return }
             self.viewModel?.deleteMyNote(noteId: noteId)
         }
     }

@@ -125,7 +125,7 @@ class NotificationCellViewModel: ViewModelType {
             let shapedNote = myNote.shapedNote else { return }
         
         // file
-        let fileCount = myNote.files.count
+        let fileCount = myNote.noteEntity.files.count
         if fileCount > 0, let attributedMyNote = shapedNote.attributed {
             let mfmString = MFMString(mfmEngine: shapedNote.mfmEngine,
                                       attributed: attributedMyNote + NSAttributedString(string: "\n> \(fileCount)つのファイル "))

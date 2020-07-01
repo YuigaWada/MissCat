@@ -122,7 +122,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         let viewModel = NoteCellViewModel(with: input, and: disposeBag)
         
         noteModel = item
-        binding(viewModel: viewModel, noteId: item.noteId ?? "")
+        binding(viewModel: viewModel, noteId: item.noteEntity.noteId ?? "")
         return viewModel
     }
     
@@ -292,7 +292,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         output.commentRenoteTarget
             .asDriver(onErrorDriveWith: Driver.empty())
-            .map { $0.iconImage }
+            .map { $0.noteEntity.iconImage }
             .drive(innerIconView.rx.image)
             .disposed(by: disposeBag)
         
@@ -316,7 +316,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         output.commentRenoteTarget
             .asDriver(onErrorDriveWith: Driver.empty())
-            .map { $0.ago.calculateAgo() }
+            .map { $0.noteEntity.ago.calculateAgo() }
             .drive(innerAgoLabel.rx.text).disposed(by: disposeBag)
         
         output.innerIconImage
@@ -486,15 +486,16 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         setupView()
         
         let item = arg.item
+        let noteEntity = item.noteEntity
         let isDetailMode = arg.isDetailMode
-        isSkelton = item.isSkelton
-        guard !item.isSkelton else { // SkeltonViewを表示する
+        isSkelton = item.type == .skelton
+        guard !isSkelton else { // SkeltonViewを表示する
             setupSkeltonMode()
             changeSkeltonState(on: true)
             return self
         }
         
-        let hasFile = item.fileVisible && item.files.count > 0 && !(item.hasCw && !isDetailMode)
+        let hasFile = item.fileVisible && noteEntity.files.count > 0 && !(noteEntity.hasCw && !isDetailMode)
         
         // Font
         noteView.font = UIFont(name: "Helvetica",
@@ -510,19 +511,19 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         changeSkeltonState(on: false)
         
-        guard let noteId = item.noteId else { return NoteCell() }
+        guard let noteId = noteEntity.noteId else { return NoteCell() }
         
         initializeComponent(hasFile: hasFile) // Initialize because NoteCell is reused by TableView.
         
         // Cat
-        catIcon.isHidden = !item.isCat
+        catIcon.isHidden = !noteEntity.isCat
         
         // main
         self.noteId = noteId
         owner = arg.owner
-        userId = item.userId
-        hostInstance = item.hostInstance
-        iconImageUrl = item.iconImageUrl
+        userId = noteEntity.userId
+        hostInstance = noteEntity.hostInstance
+        iconImageUrl = noteEntity.iconImageUrl
         delegate = arg.delegate
         
         // ViewModel
@@ -542,7 +543,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     
     private func setFile(with item: NoteCell.Model, hasFile: Bool, noteId: String, delegate: NoteCellDelegate?) {
         if hasFile {
-            _ = fileContainer.transform(with: FileContainer.Arg(files: item.files,
+            _ = fileContainer.transform(with: FileContainer.Arg(files: item.noteEntity.files,
                                                                 noteId: noteId,
                                                                 fileVisible: item.fileVisible,
                                                                 delegate: delegate))
