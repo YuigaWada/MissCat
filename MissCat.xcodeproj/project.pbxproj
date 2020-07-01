@@ -153,6 +153,7 @@
 		8DCCF8E7246AB1090001A21C /* ApiKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCCF8E6246AB1090001A21C /* ApiKeyManager.swift */; };
 		8DD2F9C5246D5DA100562E85 /* ProfileSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD2F9C4246D5DA100562E85 /* ProfileSettingsViewController.swift */; };
 		8DD2F9C7246D8EA900562E85 /* ProfileSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD2F9C6246D8EA900562E85 /* ProfileSettingsViewModel.swift */; };
+		8DD5B43324AC91500000EEAF /* ReactionEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD5B43224AC91500000EEAF /* ReactionEntity.swift */; };
 		8DD8898B23935CC400D22910 /* PostDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */; };
 		8DDB52CD245032DD00C97130 /* ColorPickerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */; };
 		8DDB52CF245032E500C97130 /* ColorPickerCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DDB52CE245032E500C97130 /* ColorPickerCell.xib */; };
@@ -343,6 +344,7 @@
 		8DD0D80B23B47CA8003F02ED /* YanagiText.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = YanagiText.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DD2F9C4246D5DA100562E85 /* ProfileSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsViewController.swift; sourceTree = "<group>"; };
 		8DD2F9C6246D8EA900562E85 /* ProfileSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsViewModel.swift; sourceTree = "<group>"; };
+		8DD5B43224AC91500000EEAF /* ReactionEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionEntity.swift; sourceTree = "<group>"; };
 		8DD8898A23935CC400D22910 /* PostDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailViewModel.swift; sourceTree = "<group>"; };
 		8DDB52CC245032DD00C97130 /* ColorPickerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickerCell.swift; sourceTree = "<group>"; };
 		8DDB52CE245032E500C97130 /* ColorPickerCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ColorPickerCell.xib; sourceTree = "<group>"; };
@@ -1057,6 +1059,7 @@
 			children = (
 				8DE65B9024AA8FF600E78876 /* UserEntity.swift */,
 				8DE65B9524AAA50100E78876 /* NoteEntity.swift */,
+				8DD5B43224AC91500000EEAF /* ReactionEntity.swift */,
 			);
 			path = Entity;
 			sourceTree = "<group>";
@@ -1411,6 +1414,7 @@
 				8D2279F02446CD9700FA87A2 /* UrlPreviewer.swift in Sources */,
 				8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */,
 				8D5D2C4C24487CD100D15974 /* DirectMessageModel.swift in Sources */,
+				8DD5B43324AC91500000EEAF /* ReactionEntity.swift in Sources */,
 				8DA536AE23AC8C47005EB1B5 /* AttachmentCell.swift in Sources */,
 				8D63BFC7242BC239009C3ADE /* NoteDisplay.swift in Sources */,
 				8D502D5A2380270A00525A96 /* TabBar.swift in Sources */,
