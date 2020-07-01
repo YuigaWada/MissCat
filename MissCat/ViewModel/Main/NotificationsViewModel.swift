@@ -125,15 +125,15 @@ class NotificationsViewModel {
     // MARK: Utilities
     
     private func shapeModel(_ cellModel: NotificationCell.Model) {
+        // 先にowner詰めとく
+        cellModel.owner = owner
+        
+        // Shape!
         if cellModel.type == .mention || cellModel.type == .reply || cellModel.type == .quote,
             let replyNote = cellModel.replyNote {
             MFMEngine.shapeModel(replyNote)
         } else {
             MFMEngine.shapeModel(cellModel)
-        }
-        
-        if let owner = owner {
-            cellModel.owner = owner
         }
     }
     
