@@ -58,19 +58,19 @@ class ReactionCell: UICollectionViewCell, ComponentType {
     
     func transform(with arg: NoteCell.Reaction) -> ReactionCell {
         let item = arg
-        guard let rawEmoji = item.rawEmoji else { return self }
+        guard let rawEmoji = item.entity.rawEmoji else { return self }
         
-        if let customEmojiUrl = item.url {
-            setup(noteId: item.noteId,
-                  count: item.count,
+        if let customEmojiUrl = item.entity.url {
+            setup(noteId: item.entity.noteId,
+                  count: item.entity.count,
                   customEmoji: customEmojiUrl,
-                  isMyReaction: item.isMyReaction,
+                  isMyReaction: item.entity.isMyReaction,
                   rawReaction: rawEmoji)
         } else {
-            setup(noteId: item.noteId,
-                  count: item.count,
+            setup(noteId: item.entity.noteId,
+                  count: item.entity.count,
                   rawDefaultEmoji: rawEmoji,
-                  isMyReaction: item.isMyReaction,
+                  isMyReaction: item.entity.isMyReaction,
                   rawReaction: rawEmoji)
         }
         

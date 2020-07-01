@@ -27,6 +27,7 @@ class MessageListModel {
         let myId = owner?.userId ?? ""
         let others = [history.recipient, history.user].compactMap { $0 }.filter { $0.id != myId } // チャット相手
         let other = others.count > 0 ? others[0] : history.recipient
+        let otherEntity = other != nil ? UserEntity(from: other!) : nil
         
         let sender: SenderCell.Model = .init(isSkelton: false,
                                              userId: other?.id,
@@ -36,7 +37,7 @@ class MessageListModel {
                                              latestMessage: history.text,
                                              createdAt: history.createdAt)
         
-        sender.shapedName = MFMEngine.shapeDisplayName(owner: owner, user: other)
+        sender.shapedName = MFMEngine.shapeDisplayName(owner: owner, user: otherEntity)
         observer.onNext(sender)
     }
     

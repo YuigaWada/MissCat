@@ -35,7 +35,7 @@ class Cache {
     
     private var userInfo: [UserInfo] = []
     
-    private var me: UserModel?
+    private var me: UserEntity?
     
     private lazy var applicationSupportDir = CreateApplicationSupportDir()
     

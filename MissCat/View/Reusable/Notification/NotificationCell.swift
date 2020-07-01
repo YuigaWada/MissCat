@@ -230,7 +230,7 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
         // リアクションした者のプロフィールを表示
         for aboutReactee in [nameTextView, iconImageView, emojiView, followButton] {
             aboutReactee?.setTapGesture(disposeBag, closure: {
-                guard let userId = item.fromUser?.id, let owner = item.owner else { return }
+                guard let userId = item.fromUser?.userId, let owner = item.owner else { return }
                 self.delegate?.move2Profile(userId: userId, owner: owner)
             })
         }
@@ -264,8 +264,8 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
 // MARK: NotificationCell.Model
 
 extension NotificationCell {
-    class Model: IdentifiableType, Equatable {
-        internal init(isMock: Bool = false, notificationId: String, type: ActionType = .reply, shapedDisplayName: MFMString? = nil, myNote: NoteCell.Model?, replyNote: NoteCell.Model?, fromUser: UserModel?, reaction: String?, emojis: [EmojiModel] = [], ago: String) {
+    class Model: CellModel {
+        internal init(isMock: Bool = false, notificationId: String, type: ActionType = .reply, shapedDisplayName: MFMString? = nil, myNote: NoteCell.Model?, replyNote: NoteCell.Model?, fromUser: UserEntity?, reaction: String?, emojis: [EmojiModel] = [], ago: String) {
             self.isMock = isMock
             self.notificationId = notificationId
             self.type = type
@@ -277,9 +277,6 @@ extension NotificationCell {
             self.emojis = emojis
             self.ago = ago
         }
-        
-        typealias Identity = String
-        let identity: String = String(Float.random(in: 1 ..< 100))
         
         var isMock: Bool = false
         
@@ -293,16 +290,12 @@ extension NotificationCell {
         let myNote: NoteCell.Model? // 自分のどの投稿に対してか
         let replyNote: NoteCell.Model? // 相手の投稿
         
-        let fromUser: UserModel?
+        let fromUser: UserEntity?
         
         let reaction: String?
         var emojis: [EmojiModel]
         
         let ago: String
-        
-        static func == (lhs: NotificationCell.Model, rhs: NotificationCell.Model) -> Bool {
-            return lhs.identity == rhs.identity
-        }
     }
     
     struct Section {

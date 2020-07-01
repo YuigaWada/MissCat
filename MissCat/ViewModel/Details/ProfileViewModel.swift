@@ -141,7 +141,7 @@ class ProfileViewModel: ViewModelType {
     
     /// binding
     /// - Parameter user: UserModel
-    private func binding(_ user: UserModel?) {
+    private func binding(_ user: UserEntity?) {
         guard let user = user else { return }
         
         profile = user.getProfile()
@@ -151,7 +151,7 @@ class ProfileViewModel: ViewModelType {
         output.followCount.accept(user.followingCount?.description ?? "0")
         output.followerCount.accept(user.followersCount?.description ?? "0")
         
-        setRelation(targetUserId: user.id)
+        setRelation(targetUserId: user.userId)
         setIcon(from: user)
         setName(name: user.name, username: user.username, externalEmojis: user.emojis)
         setDesc(user.description, externalEmojis: user.emojis, owner: input.owner)
@@ -184,7 +184,7 @@ class ProfileViewModel: ViewModelType {
     
     // MARK: Set
     
-    private func setIcon(from user: UserModel) {
+    private func setIcon(from user: UserEntity) {
         // Icon Image
         let host = user.host ?? ""
         if let username = user.username, let cachediconImage = Cache.shared.getIcon(username: "\(username)@\(host)") {
@@ -218,7 +218,7 @@ class ProfileViewModel: ViewModelType {
         }
     }
     
-    private func setBanner(from user: UserModel) {
+    private func setBanner(from user: UserEntity) {
         // Banner Image
         if let bannerUrl = user.bannerUrl {
             _ = bannerUrl.toUIImage { image in
@@ -260,8 +260,8 @@ class ProfileViewModel: ViewModelType {
     }
 }
 
-extension UserModel {
-    /// UserModelをProfileViewModel.Profileに変更
+extension UserEntity {
+    /// UserEntityをProfileViewModel.Profileに変更
     fileprivate func getProfile() -> ProfileViewModel.Profile {
         return .init(bannerUrl: bannerUrl ?? "",
                      iconUrl: avatarUrl ?? "",

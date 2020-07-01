@@ -73,8 +73,8 @@ class NoteCellViewModel: ViewModelType {
     }
     
     private var input: Input
-    lazy var output: Output = .init(displayName: input.cellModel.displayName,
-                                    username: input.cellModel.username)
+    lazy var output: Output = .init(displayName: input.cellModel.noteEntity.displayName,
+                                    username: input.cellModel.noteEntity.username)
     var state: State {
         return .init(previewedUrl: previewedUrl, isMe: isMe, myReaction: myReaction)
     }
@@ -119,7 +119,7 @@ class NoteCellViewModel: ViewModelType {
         let item = input.cellModel
         DispatchQueue.global(qos: .default).async {
             self.output.isReplyTarget.accept(item.isReplyTarget)
-            self.output.ago.accept(item.ago.calculateAgo())
+            self.output.ago.accept(item.noteEntity.ago.calculateAgo())
         }
         
         setNote()
@@ -133,10 +133,17 @@ class NoteCellViewModel: ViewModelType {
         getUrl(from: item)
         prepareCommentRenote(item)
         output.onOtherNote.accept(item.onOtherNote)
-        output.poll.accept(item.poll)
+        output.poll.accept(item.noteEntity.poll)
         
-        setImage(to: output.iconImage, username: item.username, hostInstance: item.hostInstance, imageRawUrl: item.iconImageUrl)
-        setImage(to: output.innerIconImage, username: item.commentRNTarget?.username, hostInstance: item.hostInstance, imageRawUrl: item.commentRNTarget?.iconImageUrl)
+        setImage(to: output.iconImage,
+                 username: item.noteEntity.username,
+                 hostInstance: item.noteEntity.hostInstance,
+                 imageRawUrl: item.noteEntity.iconImageUrl)
+        setImage(to: output.innerIconImage,
+                 username: item.commentRNTarget?.noteEntity.username,
+                 hostInstance: item.noteEntity.hostInstance,
+                 imageRawUrl: item.commentRNTarget?.noteEntity.iconImageUrl)
+        
         setFooter(from: item)
     }
     
@@ -158,7 +165,7 @@ class NoteCellViewModel: ViewModelType {
     
     private func setNote() {
         var target: MFMString?
-        if input.cellModel.hasCw, !input.isDetailMode {
+        if input.cellModel.noteEntity.hasCw, !input.isDetailMode {
             target = input.cellModel.shapedCw
         } else {
             target = input.cellModel.shapedNote
@@ -235,7 +242,7 @@ class NoteCellViewModel: ViewModelType {
     
     private func searchUrl(from item: NoteCell.Model) -> String? {
         let normalLink = "(https?://[\\w/:%#\\$&\\?\\(~\\.=\\+\\-@\"]+)"
-        let targets = item.original?.text?.regexMatches(pattern: normalLink).map { $0[0] }
+        let targets = item.noteEntity.original?.text?.regexMatches(pattern: normalLink).map { $0[0] }
         if let targets = targets, targets.count > 0 {
             return targets[0]
         }
@@ -243,24 +250,24 @@ class NoteCellViewModel: ViewModelType {
     }
     
     private func setFooter(from item: NoteCell.Model) {
-        let replyCount = item.replyCount != 0 ? String(item.replyCount) : ""
-        let renoteCount = item.renoteCount != 0 ? String(item.renoteCount) : ""
+        let replyCount = item.noteEntity.replyCount != 0 ? String(item.noteEntity.replyCount) : ""
+        let renoteCount = item.noteEntity.renoteCount != 0 ? String(item.noteEntity.renoteCount) : ""
         
         output.replyLabel.accept("reply\(replyCount)")
         output.renoteLabel.accept("retweet\(renoteCount)")
         
-        setReactionCount(from: item, myReaction: item.myReaction)
-        myReaction = item.myReaction
+        setReactionCount(from: item, myReaction: item.noteEntity.myReaction)
+        myReaction = item.noteEntity.myReaction
     }
     
     private func setReactionCount(from item: NoteCell.Model, myReaction: String? = nil, startCount: Int = 0) {
         var reactionsCount: Int = startCount
         item.shapedReactions.forEach {
-            reactionsCount += Int($0.count) ?? 0
+            reactionsCount += Int($0.entity.count) ?? 0
         }
         
         // リアクション済みor自分の投稿ならばリアクションボタンを ＋ → − へ
-        item.userId.isMe(owner: input.owner) { me in
+        item.noteEntity.userId.isMe(owner: input.owner) { me in
             let reactioned = myReaction != nil
             let minusShape = me || reactioned
             
@@ -283,21 +290,21 @@ class NoteCellViewModel: ViewModelType {
     
     func cancelReaction(noteId: String) {
         myReaction = nil // stateの変更
-        input.cellModel.myReaction = nil
+        input.cellModel.noteEntity.myReaction = nil
         setReactionCount(from: input.cellModel, startCount: -1)
         model.cancelReaction(noteId: noteId)
     }
     
     func updateVote(choices: [Int]) {
-        guard let poll = input.cellModel.poll,
+        guard let poll = input.cellModel.noteEntity.poll,
             let currentChoices = poll.choices else { return }
         
         choices.forEach { choiceIndex in
             guard choiceIndex >= 0, choiceIndex < currentChoices.count else { return }
             let currentVotes = currentChoices[choiceIndex]?.votes ?? 0
             
-            input.cellModel.poll?.choices?[choiceIndex]?.votes = currentVotes + 1
-            input.cellModel.poll?.choices?[choiceIndex]?.isVoted = true
+            input.cellModel.noteEntity.poll?.choices?[choiceIndex]?.votes = currentVotes + 1
+            input.cellModel.noteEntity.poll?.choices?[choiceIndex]?.isVoted = true
         }
     }
     

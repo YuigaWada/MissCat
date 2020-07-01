@@ -108,17 +108,18 @@ class NotificationsModel {
     func getModel(notification: NotificationModel) -> NotificationCell.Model? {
         guard let id = notification.id, let type = notification.type, let user = notification.user else { return nil }
         
+        let userEntity = UserEntity(from: user)
         if type == .follow {
             return NotificationCell.Model(notificationId: id,
                                           type: type,
                                           myNote: nil,
                                           replyNote: nil,
-                                          fromUser: user,
+                                          fromUser: userEntity,
                                           reaction: nil,
                                           ago: notification.createdAt ?? "")
         }
         
-        return getNoteModel(notification: notification, id: id, type: type, user: user)
+        return getNoteModel(notification: notification, id: id, type: type, user: userEntity)
     }
     
     // 任意のresponseからNotificationCell.Modelを生成する
@@ -137,7 +138,7 @@ class NotificationsModel {
         }
     }
     
-    private func getNoteModel(notification: NotificationModel, id: String, type: ActionType, user: UserModel) -> NotificationCell.Model? {
+    private func getNoteModel(notification: NotificationModel, id: String, type: ActionType, user: UserEntity) -> NotificationCell.Model? {
         guard let note = notification.note else { return nil }
         let isReply = type == .reply
         let isMention = type == .mention
@@ -191,7 +192,7 @@ class NotificationsModel {
                                       type: .reply,
                                       myNote: myNote?.getNoteCellModel(owner: owner), // メンションの場合myNoteが存在しない
                                       replyNote: note.getNoteCellModel(owner: owner),
-                                      fromUser: fromUser,
+                                      fromUser: UserEntity(from: fromUser),
                                       reaction: nil,
                                       ago: note.createdAt ?? "")
     }
@@ -217,7 +218,7 @@ class NotificationsModel {
                                       type: type,
                                       myNote: targetNote?.getNoteCellModel(owner: owner),
                                       replyNote: nil,
-                                      fromUser: fromUser,
+                                      fromUser: UserEntity(from: fromUser),
                                       reaction: target.reaction,
                                       emojis: externalEmojis,
                                       ago: target.createdAt ?? "")
