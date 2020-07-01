@@ -372,13 +372,6 @@ class MFMEngine {
 
 // 装飾関係
 extension String {
-    ///  Emoji形式":hogehoge:"をデフォルト絵文字 / カスタム絵文字のurl/imgに変更
-    /// - Parameter externalEmojis: 外インスタンスのカスタム絵文字
-    func emojiEncoder(owner: SecureUser, externalEmojis: [EmojiModel?]?) -> String {
-        guard let handler = EmojiHandler.getHandler(owner: owner) else { return "" }
-        return handler.emojiEncoder(note: self, externalEmojis: externalEmojis)
-    }
-    
     /// カスタム絵文字以外のMFM処理を行う
     func mfmPreTransform() -> String {
         return MFMEngine.preTransform(string: self)

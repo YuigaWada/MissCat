@@ -212,32 +212,4 @@ class EmojiHandler {
         
         return emojis.map { NonColonEmoji(name: $0, emoji: $1) }
     }
-    
-    // Emoji形式":hogehoge:"をデフォルト絵文字 / カスタム絵文字のurl/imgに変更
-    func emojiEncoder(note: String, externalEmojis: [EmojiModel?]?) -> String {
-        var newNote = note
-        let targets = note.regexMatches(pattern: "(:[^(\\s|:)]+:)")
-        
-        guard targets.count > 0 else { return note }
-        targets.forEach { target in
-            guard target.count > 0 else { return }
-            let target = target[0]
-            
-            guard let converted = convertEmoji(raw: target, external: externalEmojis)
-            else { return }
-            
-            switch converted.type {
-            case .default:
-                newNote = newNote.replacingOccurrences(of: target, with: converted.emoji)
-                
-            case .custom:
-                newNote = newNote.replacingOccurrences(of: target, with: "<img width=\"30\" height=\"30\"  src=\"\(converted.emoji)\">") // TODO: ここのrenderingが遅い / ここでnewNoteを分割
-                
-            default:
-                break
-            }
-        }
-        
-        return newNote
-    }
 }
