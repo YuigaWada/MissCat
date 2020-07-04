@@ -74,12 +74,10 @@ exports.send = function (token, title, body, extra) {
 
 // アプリ内通知で利用するデータを適切なフォーマットに変換しておく
 function generateExtraContents(body) {
-    const type = body.type
-    const user = body.user
+    const id = body.id;
 
+    // TODO: 宛先のユーザーを識別するためにはuserIdが必要なのでapi.jsから持ってくる
     return {
-      type: type,
-      from_username: user.username,
-      icon_url: user.avatarUrl
+      notification_id: id
     }
 }
