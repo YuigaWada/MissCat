@@ -532,9 +532,9 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         }
     }
     
-    func showNotificationBanner(with contents: NotificationData) {
+    func showNotificationBanner(with contents: NotificationModel) {
         DispatchQueue.main.async {
-            let banner = NotificationBanner()
+            let banner = NotificationBanner(with: contents)
             
             banner.translatesAutoresizingMaskIntoConstraints = false
             self.view.addSubview(banner)

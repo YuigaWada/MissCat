@@ -114,46 +114,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// - Parameter raw: userInfo
     private func showNotificationBanner(with contents: NotificationData) {
         guard let homeVC = window?.rootViewController as? HomeViewController else { return }
-        homeVC.showNotificationBanner(with: contents)
+        
+        guard let owner = Cache.UserDefaults.shared.getUser(userId: contents.ownerId) else { return } // どのユーザー宛の通知か
+        
+        let misskey = MisskeyKit(from: owner)
+        misskey?.notifications.get(markAsRead: false) { notifications, _ in
+            guard let notifications = notifications else { return }
+            
+            notifications.forEach {
+                guard $0.id == contents.notificationId else { return }
+                homeVC.showNotificationBanner(with: $0)
+            }
+        }
     }
     
     /// ペイロードからメッセージ等を抽出する
     /// - Parameter payload: [String:String]
     private func extractPayload(from payload: [AnyHashable: Any]) -> NotificationData? {
-        guard let mainContents = getMainContents(payload: payload),
-            let metaContents = getMetaContents(payload: payload) else { return nil }
+        guard let notificationId = payload["notification_id"] as? String,
+            let ownerId = payload["owner_id"] as? String else { return nil }
         
-        return NotificationData(main: mainContents, meta: metaContents)
-    }
-    
-    private func getMainContents(payload rawPayload: [AnyHashable: Any]) -> NotificationData.Main? {
-        guard rawPayload.keys.contains("aps"),
-            let data = rawPayload["aps"] as? [String: AnyObject],
-            let alertPayload = data["alert"] as? [String: String] else { return nil }
-        
-        var title: String?
-        var message: String?
-        alertPayload.keys.forEach { key in
-            guard let contents = alertPayload[key],
-                !contents.isEmpty else { return } // emptyなものは無視する
-            
-            if key == "title" {
-                title = contents
-            } else if key == "body" {
-                message = contents
-            }
-        }
-        
-        return NotificationData.Main(title: title ?? "通知", body: message ?? "")
-    }
-    
-    private func getMetaContents(payload rawPayload: [AnyHashable: Any]) -> NotificationData.Meta? {
-        guard let rawType = rawPayload["type"] as? String,
-            let username = rawPayload["from_username"] as? String,
-            let iconUrl = rawPayload["icon_url"] as? String,
-            let kind = NotificationData.Meta.Kind(rawValue: rawType) else { return nil }
-        
-        return NotificationData.Meta(username: username, kind: kind, userIcon: iconUrl)
+        return NotificationData(ownerId: ownerId, notificationId: notificationId)
     }
     
     // MARK: UISceneSession Lifecycle
@@ -172,4 +153,3 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
     }
 }
-
