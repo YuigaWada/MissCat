@@ -2,7 +2,7 @@ const fcmNode = require('fcm-node');
 const serverKey = require('./key/fcm_private_key.json');
 const fcm = new fcmNode(serverKey);
 
-exports.generateContents = function(rawJson, lang) {
+exports.generateContents = function(rawJson, ownerId, lang) {
   const json = JSON.parse(rawJson);
   const body = json.body;
   if (json.type != "notification") { return [null,null]; }
@@ -12,7 +12,7 @@ exports.generateContents = function(rawJson, lang) {
 
   var title;
   var messages;
-  var extra = generateExtraContents(body); // アプリ内通知で利用するデータ
+  var extra = generateExtraContents(body, ownerId); // アプリ内通知で利用するデータ
 
   // cf. https://github.com/YuigaWada/MissCat/blob/develop/MissCat/Model/Main/NotificationModel.swift
 
@@ -73,11 +73,11 @@ exports.send = function (token, title, body, extra) {
 
 
 // アプリ内通知で利用するデータを適切なフォーマットに変換しておく
-function generateExtraContents(body) {
+function generateExtraContents(body, ownerId) {
     const id = body.id;
 
-    // TODO: 宛先のユーザーを識別するためにはuserIdが必要なのでapi.jsから持ってくる
     return {
+      owner_id: ownerId, // userIdからどのユーザー宛の通知かを識別する
       notification_id: id
     }
 }

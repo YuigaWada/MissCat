@@ -53,7 +53,7 @@ app.post("/api/:version/push/:lang/:userId/:deviceToken", function(req, res){
     if (!rawJson||!userId||!deviceToken||!lang) { res.status(410).send('Invalid Url.').end(); return; }
 
     console.log(rawJson)
-    const contents = notification.generateContents(rawJson,lang);
+    const contents = notification.generateContents(rawJson,userId,lang);
     const title = contents[0];
     const body = contents[1];
     const extra = contents[2];
