@@ -37,11 +37,11 @@ class NotificationBanner: UIView, UITextViewDelegate {
     
     // MARK: LifeCycle
     
-    convenience init(with contents: NotificationModel) {
+    convenience init(with contents: NotificationModel, owner: SecureUser) {
         self.init()
         loadNib()
         setupComponents()
-        viewModel = getViewModel(with: contents)
+        viewModel = getViewModel(with: contents, owner: owner)
     }
     
     override init(frame: CGRect) {
@@ -59,12 +59,14 @@ class NotificationBanner: UIView, UITextViewDelegate {
     override func layoutSubviews() {
         super.layoutSubviews()
         nameTextView.transformText()
+//        appear()
     }
     
     func loadNib() {
         if let view = UINib(nibName: "NotificationBanner", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
             addSubview(view)
+            initialize()
         }
     }
     
@@ -90,12 +92,25 @@ class NotificationBanner: UIView, UITextViewDelegate {
     
     // MARK: Setup
     
-    private func getViewModel(with item: NotificationModel) -> NotificationBannerViewModel? {
-        guard let viewModel = NotificationBannerViewModel(with: item, and: disposeBag) else { return nil }
+    private func getViewModel(with item: NotificationModel, owner: SecureUser) -> NotificationBannerViewModel? {
+        guard let viewModel = NotificationBannerViewModel(with: item, and: disposeBag, owner: owner) else { return nil }
         
         binding(with: viewModel)
         viewModel.setCell()
         return viewModel
+    }
+    
+    func initialize() {
+        iconImageView.image = nil
+        
+        noteView.attributedText = nil
+        typeIconView.text = nil
+        typeLabel.text = nil
+        
+        nameTextView.attributedText = nil
+        
+        emojiView.isHidden = false
+        emojiView.initialize()
     }
     
     private func setupComponents() {
@@ -106,6 +121,7 @@ class NotificationBanner: UIView, UITextViewDelegate {
         noteView.textColor = .lightGray
         
         typeIconView.font = .awesomeSolid(fontSize: 14.0)
+        setupTimer()
     }
     
     // MARK: Binding
@@ -202,7 +218,7 @@ class NotificationBanner: UIView, UITextViewDelegate {
     
     // MARK: AutoLayout
     
-    func setAutoLayout(on view: UIView, widthScale: CGFloat, heightScale: CGFloat, originY: CGFloat) {
+    func setAutoLayout(on view: UIView, widthScale: CGFloat, heightScale: CGFloat, bottom: CGFloat) {
         view.addConstraints([
             NSLayoutConstraint(item: self,
                                attribute: .width,
@@ -229,19 +245,19 @@ class NotificationBanner: UIView, UITextViewDelegate {
                                constant: 0),
             
             NSLayoutConstraint(item: self,
-                               attribute: .top,
+                               attribute: .bottom,
                                relatedBy: .equal,
-                               toItem: view,
-                               attribute: .top,
+                               toItem: view.safeAreaLayoutGuide,
+                               attribute: .bottom,
                                multiplier: 1.0,
-                               constant: originY)
+                               constant: -1 * bottom)
         ])
     }
     
     // MARK: Animation
     
     private func setupTimer() {
-        _ = Timer.scheduledTimer(timeInterval: 2,
+        _ = Timer.scheduledTimer(timeInterval: 5.0,
                                  target: self,
                                  selector: #selector(disappear),
                                  userInfo: nil,

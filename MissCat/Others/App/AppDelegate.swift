@@ -125,7 +125,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             
             notifications.forEach {
                 guard $0.id == contents.notificationId else { return }
-                homeVC.showNotificationBanner(with: $0)
+                homeVC.showNotificationBanner(with: $0, owner: owner)
             }
         }
     }

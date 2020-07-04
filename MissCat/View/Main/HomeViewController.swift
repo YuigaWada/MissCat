@@ -532,13 +532,14 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         }
     }
     
-    func showNotificationBanner(with contents: NotificationModel) {
+    func showNotificationBanner(with contents: NotificationModel, owner: SecureUser) {
         DispatchQueue.main.async {
-            let banner = NotificationBanner(with: contents)
+            let banner = NotificationBanner(with: contents, owner: owner)
             
             banner.translatesAutoresizingMaskIntoConstraints = false
+            banner.layer.cornerRadius = 4
             self.view.addSubview(banner)
-            banner.setAutoLayout(on: self.view, widthScale: 0.8, heightScale: 0.3, originY: self.footerTab.frame.origin.y - 30)
+            banner.setAutoLayout(on: self.view, widthScale: 0.9, heightScale: 0.2, bottom: self.footerTabHeight + 10)
             
             self.view.bringSubviewToFront(banner)
         }
