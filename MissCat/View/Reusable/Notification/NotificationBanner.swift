@@ -37,41 +37,17 @@ extension NotificationData.Meta {
         case reply
         case renote
         case quote
-        
-        func convert() -> ActionType {
-            switch self {
-            case .reaction:
-                return .reaction
-            case .follow:
-                return .follow
-            case .mention:
-                return .mention
-            case .reply:
-                return .reply
-            case .renote:
-                return .renote
-            case .quote:
-                return .quote
-            }
-        }
     }
 }
 
 extension NotificationData {
     func convertModel() -> NotificationCell.Model? {
-        let type = meta.kind.convert()
+        let type = meta.kind
         let user = UserEntity(id: UUID().uuidString, name: meta.username, username: meta.username)
         
         // mynote, replynote, reaction, notificationId が必要
         
         return nil
-//        return NotificationCell.Model(notificationId: <#T##String#>,
-//                               myNote: <#T##NoteCell.Model?#>,
-//                               type: type
-//                               replyNote: <#T##NoteCell.Model?#>,
-//                               fromUser: user,
-//                               reaction: <#T##String?#>,
-//                               ago: "")
     }
 }
 
@@ -213,7 +189,7 @@ class NanoNotificationBanner: UIView {
     }
     
     func loadNib() {
-        if let view = UINib(nibName: "NotificationBanner", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
+        if let view = UINib(nibName: "NanoNotificationBanner", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
             addSubview(view)
         }

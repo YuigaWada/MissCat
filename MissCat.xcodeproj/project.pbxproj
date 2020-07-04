@@ -113,6 +113,7 @@
 		8D9702D4248DF8EA0000524A /* AccountCellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9702D3248DF8EA0000524A /* AccountCellModel.swift */; };
 		8D9702D6248E48A50000524A /* AccountsListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9702D5248E48A50000524A /* AccountsListViewModel.swift */; };
 		8D9702D8248E49140000524A /* AccountsListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9702D7248E49140000524A /* AccountsListModel.swift */; };
+		8D9774E824B0814A00396606 /* NotificationBanner.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D9774E724B0814A00396606 /* NotificationBanner.xib */; };
 		8D98C268242E0AD600BB8049 /* PostDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D98C267242E0AD600BB8049 /* PostDetailModel.swift */; };
 		8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */; };
 		8D9EF4C8238187A4005449EC /* ReactionGenCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */; };
@@ -146,7 +147,7 @@
 		8DC27D96243BF2DF0037E610 /* UrlPreviewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC27D95243BF2DF0037E610 /* UrlPreviewer.xib */; };
 		8DC27D9A243BF57A0037E610 /* UrlPreviewerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC27D99243BF57A0037E610 /* UrlPreviewerViewModel.swift */; };
 		8DC27D9C243BF6DD0037E610 /* UrlPreviewerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */; };
-		8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */; };
+		8DC95AF723B0BD3C0013CABC /* NanoNotificationBanner.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC95AF623B0BD3C0013CABC /* NanoNotificationBanner.xib */; };
 		8DC95AF923B0BD450013CABC /* NotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC95AF823B0BD450013CABC /* NotificationBanner.swift */; };
 		8DCBFBD624711B510028A5E6 /* MissCatImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCBFBD524711B510028A5E6 /* MissCatImageView.swift */; };
 		8DCCF8E5246A97C50001A21C /* MisscatApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCCF8E4246A97C50001A21C /* MisscatApi.swift */; };
@@ -302,6 +303,7 @@
 		8D9702D3248DF8EA0000524A /* AccountCellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCellModel.swift; sourceTree = "<group>"; };
 		8D9702D5248E48A50000524A /* AccountsListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsListViewModel.swift; sourceTree = "<group>"; };
 		8D9702D7248E49140000524A /* AccountsListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsListModel.swift; sourceTree = "<group>"; };
+		8D9774E724B0814A00396606 /* NotificationBanner.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NotificationBanner.xib; sourceTree = "<group>"; };
 		8D98C267242E0AD600BB8049 /* PostDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailModel.swift; sourceTree = "<group>"; };
 		8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenViewController.swift; sourceTree = "<group>"; };
 		8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReactionGenCell.xib; sourceTree = "<group>"; };
@@ -336,7 +338,7 @@
 		8DC27D95243BF2DF0037E610 /* UrlPreviewer.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = UrlPreviewer.xib; sourceTree = "<group>"; };
 		8DC27D99243BF57A0037E610 /* UrlPreviewerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UrlPreviewerViewModel.swift; sourceTree = "<group>"; };
 		8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UrlPreviewerModel.swift; sourceTree = "<group>"; };
-		8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = NotificationBanner.xib; sourceTree = "<group>"; };
+		8DC95AF623B0BD3C0013CABC /* NanoNotificationBanner.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = NanoNotificationBanner.xib; sourceTree = "<group>"; };
 		8DC95AF823B0BD450013CABC /* NotificationBanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationBanner.swift; sourceTree = "<group>"; };
 		8DCBFBD524711B510028A5E6 /* MissCatImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatImageView.swift; sourceTree = "<group>"; };
 		8DCCF8E4246A97C50001A21C /* MisscatApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MisscatApi.swift; sourceTree = "<group>"; };
@@ -761,7 +763,8 @@
 			isa = PBXGroup;
 			children = (
 				8DA06A082389E9820093A718 /* NotificationCell.xib */,
-				8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */,
+				8DC95AF623B0BD3C0013CABC /* NanoNotificationBanner.xib */,
+				8D9774E724B0814A00396606 /* NotificationBanner.xib */,
 			);
 			path = nib;
 			sourceTree = "<group>";
@@ -1174,6 +1177,7 @@
 				8D7968812404BE68004F87FA /* ReactionCollectionHeader.xib in Resources */,
 				8D0AC5BA237B5D0D00530508 /* Font Awesome 5 Free-Solid-900.otf in Resources */,
 				8D57CA43243FDB9C005DCEB2 /* PromotionCell.xib in Resources */,
+				8D9774E824B0814A00396606 /* NotificationBanner.xib in Resources */,
 				8D5D2C4224480E5700D15974 /* SenderCell.xib in Resources */,
 				8D4A2A22237437C000503685 /* LaunchScreen.storyboard in Resources */,
 				8D905644246A7120006D0F50 /* GoogleService-Info.plist in Resources */,
@@ -1192,7 +1196,7 @@
 				8DDB52CF245032E500C97130 /* ColorPickerCell.xib in Resources */,
 				8D9702CE248DF69C0000524A /* AccountCell.xib in Resources */,
 				8DAEA1352382E4F00083AA69 /* EmojiView.xib in Resources */,
-				8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */,
+				8DC95AF723B0BD3C0013CABC /* NanoNotificationBanner.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
