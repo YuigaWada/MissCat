@@ -116,6 +116,7 @@
 		8D9774E824B0814A00396606 /* NotificationBanner.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D9774E724B0814A00396606 /* NotificationBanner.xib */; };
 		8D9774EA24B08D0700396606 /* NotificationBannerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9774E924B08D0700396606 /* NotificationBannerViewModel.swift */; };
 		8D9774EC24B0937C00396606 /* NotificationBannerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9774EB24B0937C00396606 /* NotificationBannerModel.swift */; };
+		8D9774EE24B0A00700396606 /* NanoNotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9774ED24B0A00700396606 /* NanoNotificationBanner.swift */; };
 		8D98C268242E0AD600BB8049 /* PostDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D98C267242E0AD600BB8049 /* PostDetailModel.swift */; };
 		8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */; };
 		8D9EF4C8238187A4005449EC /* ReactionGenCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */; };
@@ -308,6 +309,7 @@
 		8D9774E724B0814A00396606 /* NotificationBanner.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NotificationBanner.xib; sourceTree = "<group>"; };
 		8D9774E924B08D0700396606 /* NotificationBannerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBannerViewModel.swift; sourceTree = "<group>"; };
 		8D9774EB24B0937C00396606 /* NotificationBannerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBannerModel.swift; sourceTree = "<group>"; };
+		8D9774ED24B0A00700396606 /* NanoNotificationBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NanoNotificationBanner.swift; sourceTree = "<group>"; };
 		8D98C267242E0AD600BB8049 /* PostDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailModel.swift; sourceTree = "<group>"; };
 		8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenViewController.swift; sourceTree = "<group>"; };
 		8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReactionGenCell.xib; sourceTree = "<group>"; };
@@ -759,6 +761,7 @@
 				8DA06A0A2389E98D0093A718 /* NotificationCell.swift */,
 				8DC95AF823B0BD450013CABC /* NotificationBanner.swift */,
 				8D72E505244AE81F00B30C3A /* nib */,
+				8D9774ED24B0A00700396606 /* NanoNotificationBanner.swift */,
 			);
 			path = Notification;
 			sourceTree = "<group>";
@@ -1344,6 +1347,7 @@
 				8D5889F9245019D300C6EBC2 /* TabSettingsCell.swift in Sources */,
 				8D4B02C1241FE5C90056605F /* Theme.swift in Sources */,
 				8D5D2C48244814AC00D15974 /* MessageListModel.swift in Sources */,
+				8D9774EE24B0A00700396606 /* NanoNotificationBanner.swift in Sources */,
 				8DEB21C5243B0C1400E4D1EB /* Error+MissCat.swift in Sources */,
 				8DA06A0F2389F04E0093A718 /* NotificationModel.swift in Sources */,
 				8DFD613D24911B7F00E22C9F /* NavBarModel.swift in Sources */,
