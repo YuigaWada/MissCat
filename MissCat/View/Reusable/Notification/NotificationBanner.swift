@@ -6,8 +6,8 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import MisskeyKit
 import UIKit
-
 
 // Data
 struct NotificationData {
@@ -37,12 +37,41 @@ extension NotificationData.Meta {
         case reply
         case renote
         case quote
+        
+        func convert() -> ActionType {
+            switch self {
+            case .reaction:
+                return .reaction
+            case .follow:
+                return .follow
+            case .mention:
+                return .mention
+            case .reply:
+                return .reply
+            case .renote:
+                return .renote
+            case .quote:
+                return .quote
+            }
+        }
     }
 }
 
 extension NotificationData {
-    func convertModel()-> NotificationCell.Model {
+    func convertModel() -> NotificationCell.Model? {
+        let type = meta.kind.convert()
+        let user = UserEntity(id: UUID().uuidString, name: meta.username, username: meta.username)
         
+        // mynote, replynote, reaction, notificationId が必要
+        
+        return nil
+//        return NotificationCell.Model(notificationId: <#T##String#>,
+//                               myNote: <#T##NoteCell.Model?#>,
+//                               type: type
+//                               replyNote: <#T##NoteCell.Model?#>,
+//                               fromUser: user,
+//                               reaction: <#T##String?#>,
+//                               ago: "")
     }
 }
 
