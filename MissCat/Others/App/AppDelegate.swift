@@ -113,9 +113,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// バナー通知を表示する
     /// - Parameter raw: userInfo
     private func showNotificationBanner(with contents: NotificationData) {
-        guard let homeVC = window?.rootViewController as? HomeViewController else { return }
-        
-        guard let owner = Cache.UserDefaults.shared.getUser(userId: contents.ownerId) else { return } // どのユーザー宛の通知か
+        guard let children = window?.rootViewController?.children,
+            children.count > 0,
+            let homeVC = children[0] as? HomeViewController,
+            let owner = Cache.UserDefaults.shared.getUser(userId: contents.ownerId) // どのユーザー宛の通知か
+        else { return }
         
         let misskey = MisskeyKit(from: owner)
         misskey?.notifications.get(markAsRead: false) { notifications, _ in

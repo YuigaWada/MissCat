@@ -39,6 +39,8 @@ class NotificationBanner: UIView, UITextViewDelegate {
     
     convenience init(with contents: NotificationModel) {
         self.init()
+        loadNib()
+        setupComponents()
         viewModel = getViewModel(with: contents)
     }
     
@@ -201,11 +203,11 @@ class NotificationBanner: UIView, UITextViewDelegate {
     // MARK: AutoLayout
     
     func setAutoLayout(on view: UIView, widthScale: CGFloat, heightScale: CGFloat, originY: CGFloat) {
-        addConstraints([
+        view.addConstraints([
             NSLayoutConstraint(item: self,
                                attribute: .width,
                                relatedBy: .equal,
-                               toItem: target,
+                               toItem: view,
                                attribute: .width,
                                multiplier: widthScale,
                                constant: 0),
@@ -213,7 +215,7 @@ class NotificationBanner: UIView, UITextViewDelegate {
             NSLayoutConstraint(item: self,
                                attribute: .height,
                                relatedBy: .equal,
-                               toItem: target,
+                               toItem: view,
                                attribute: .height,
                                multiplier: heightScale,
                                constant: 0),
@@ -221,7 +223,7 @@ class NotificationBanner: UIView, UITextViewDelegate {
             NSLayoutConstraint(item: self,
                                attribute: .centerX,
                                relatedBy: .equal,
-                               toItem: target,
+                               toItem: view,
                                attribute: .centerX,
                                multiplier: 1.0,
                                constant: 0),
@@ -229,7 +231,7 @@ class NotificationBanner: UIView, UITextViewDelegate {
             NSLayoutConstraint(item: self,
                                attribute: .top,
                                relatedBy: .equal,
-                               toItem: target,
+                               toItem: view,
                                attribute: .top,
                                multiplier: 1.0,
                                constant: originY)
