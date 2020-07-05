@@ -28,6 +28,7 @@ class NotificationBanner: UIView, UITextViewDelegate {
     @IBOutlet weak var typeIconView: UILabel!
     @IBOutlet weak var typeLabel: UILabel!
     
+    private var emojiViewOnView: Bool = false
     private lazy var emojiView = self.generateEmojiView()
     
     private var contents: NotificationData?
@@ -59,7 +60,10 @@ class NotificationBanner: UIView, UITextViewDelegate {
     override func layoutSubviews() {
         super.layoutSubviews()
         nameTextView.transformText()
-//        appear()
+        
+        appear()
+        bringSubviewToFront(emojiView)
+        setupTimer()
     }
     
     func loadNib() {
@@ -85,7 +89,8 @@ class NotificationBanner: UIView, UITextViewDelegate {
 //            mainColor = UIColor(hex: mainColorHex)
 //        }
         if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
-            backgroundColor = colorPattern.base
+            backgroundColor = .darkGray
+            layer.borderColor = colorPattern.sub1.cgColor
             typeLabel.textColor = colorPattern.text
         }
     }
@@ -111,6 +116,8 @@ class NotificationBanner: UIView, UITextViewDelegate {
         
         emojiView.isHidden = false
         emojiView.initialize()
+        
+        alpha = 0.1
     }
     
     private func setupComponents() {
@@ -121,7 +128,10 @@ class NotificationBanner: UIView, UITextViewDelegate {
         noteView.textColor = .lightGray
         
         typeIconView.font = .awesomeSolid(fontSize: 14.0)
-        setupTimer()
+        
+        guard !emojiViewOnView else { return }
+        addSubview(emojiView)
+        emojiViewOnView = true
     }
     
     // MARK: Binding
@@ -218,7 +228,7 @@ class NotificationBanner: UIView, UITextViewDelegate {
     
     // MARK: AutoLayout
     
-    func setAutoLayout(on view: UIView, widthScale: CGFloat, heightScale: CGFloat, bottom: CGFloat) {
+    func setAutoLayout(on view: UIView, widthScale: CGFloat, height: CGFloat, bottom: CGFloat) {
         view.addConstraints([
             NSLayoutConstraint(item: self,
                                attribute: .width,
@@ -233,8 +243,8 @@ class NotificationBanner: UIView, UITextViewDelegate {
                                relatedBy: .equal,
                                toItem: view,
                                attribute: .height,
-                               multiplier: heightScale,
-                               constant: 0),
+                               multiplier: 0,
+                               constant: height),
             
             NSLayoutConstraint(item: self,
                                attribute: .centerX,
@@ -265,8 +275,8 @@ class NotificationBanner: UIView, UITextViewDelegate {
     }
     
     private func appear() {
-        UIView.animate(withDuration: 1.3, animations: {
-            self.alpha = 0.8
+        UIView.animate(withDuration: 0.5, animations: {
+            self.alpha = 1.0
         })
     }
     

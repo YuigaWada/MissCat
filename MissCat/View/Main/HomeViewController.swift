@@ -537,9 +537,9 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
             let banner = NotificationBanner(with: contents, owner: owner)
             
             banner.translatesAutoresizingMaskIntoConstraints = false
-            banner.layer.cornerRadius = 4
+            banner.layer.cornerRadius = 8
             self.view.addSubview(banner)
-            banner.setAutoLayout(on: self.view, widthScale: 0.9, heightScale: 0.2, bottom: self.footerTabHeight + 10)
+            banner.setAutoLayout(on: self.view, widthScale: 0.9, height: self.footerTabHeight * 2, bottom: self.footerTabHeight + 10)
             
             self.view.bringSubviewToFront(banner)
         }
