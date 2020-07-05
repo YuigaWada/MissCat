@@ -264,9 +264,19 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
 // MARK: NotificationCell.Model
 
 extension NotificationCell {
+    struct CustomModel {
+        let awesomeColor: UIColor
+        let awesomeIcon: String
+        let miniTitle: String
+        
+        let title: String
+        let body: String
+        let icon: UIImage
+    }
+    
     class Model: CellModel {
-        internal init(isMock: Bool = false, notificationId: String, type: ActionType = .reply, shapedDisplayName: MFMString? = nil, myNote: NoteCell.Model?, replyNote: NoteCell.Model?, fromUser: UserEntity?, reaction: String?, emojis: [EmojiModel] = [], ago: String) {
-            self.isMock = isMock
+        init(notificationId: String, type: ModelType, shapedDisplayName: MFMString? = nil, myNote: NoteCell.Model?, replyNote: NoteCell.Model?, fromUser: UserEntity?, reaction: String?, emojis: [EmojiModel] = [], ago: String) {
+            self.type = type
             self.notificationId = notificationId
             self.type = type
             self.shapedDisplayName = shapedDisplayName
@@ -278,11 +288,16 @@ extension NotificationCell {
             self.ago = ago
         }
         
-        var isMock: Bool = false
+        convenience init(notificationId: String, custom: CustomModel) {
+            self.init(notificationId: notificationId, type: .custom, myNote: nil, replyNote: nil, fromUser: nil, reaction: nil, ago: "")
+            self.custom = custom
+        }
+        
+        var type: ModelType
+        var custom: CustomModel? // Misskeyから送られてきた通知以外の通知モデル
         
         var owner: SecureUser?
         var notificationId: String
-        var type: ActionType = .reply
         
         var shapedDisplayName: MFMString?
         var shapedDescritpion: MFMString?
@@ -296,6 +311,36 @@ extension NotificationCell {
         var emojis: [EmojiModel]
         
         let ago: String
+    }
+    
+    enum ModelType: String, Codable {
+        case follow
+        case mention
+        case reply
+        case renote
+        case quote
+        case reaction
+        case mock
+        case custom
+        
+        init?(from actionType: ActionType) {
+            switch actionType {
+            case .follow:
+                self = .follow
+            case .mention:
+                self = .mention
+            case .reply:
+                self = .reply
+            case .renote:
+                self = .renote
+            case .quote:
+                self = .quote
+            case .reaction:
+                self = .reaction
+            default:
+                return nil
+            }
+        }
     }
     
     struct Section {

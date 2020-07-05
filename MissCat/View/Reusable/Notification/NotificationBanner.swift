@@ -38,11 +38,20 @@ class NotificationBanner: UIView, UITextViewDelegate {
     
     // MARK: LifeCycle
     
+    // NotificationModelをそのまま通知にする
     convenience init(with contents: NotificationModel, owner: SecureUser) {
         self.init()
         loadNib()
         setupComponents()
         viewModel = getViewModel(with: contents, owner: owner)
+    }
+    
+    // オリジナル通知
+    convenience init(with contents: NotificationCell.CustomModel) {
+        self.init()
+        loadNib()
+        setupComponents()
+        viewModel = getViewModel(with: contents)
     }
     
     override init(frame: CGRect) {
@@ -99,6 +108,14 @@ class NotificationBanner: UIView, UITextViewDelegate {
     
     private func getViewModel(with item: NotificationModel, owner: SecureUser) -> NotificationBannerViewModel? {
         guard let viewModel = NotificationBannerViewModel(with: item, and: disposeBag, owner: owner) else { return nil }
+        
+        binding(with: viewModel)
+        viewModel.setCell()
+        return viewModel
+    }
+    
+    private func getViewModel(with contents: NotificationCell.CustomModel) -> NotificationBannerViewModel? {
+        guard let viewModel = NotificationBannerViewModel(with: contents, disposeBag: disposeBag) else { return nil }
         
         binding(with: viewModel)
         viewModel.setCell()

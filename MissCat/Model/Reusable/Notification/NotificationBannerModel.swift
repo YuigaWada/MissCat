@@ -6,6 +6,11 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
-import Foundation
+import UIKit
 
-class NotificationBannerModel: NotificationsModel {}
+class NotificationBannerModel: NotificationsModel {
+    func getModel(with contents: NotificationCell.CustomModel) -> NotificationCell.Model {
+        let id = UUID().uuidString
+        return .init(notificationId: id, custom: contents)
+    }
+}

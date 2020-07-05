@@ -34,7 +34,7 @@ class NotificationCellViewModel: ViewModelType {
         let textColor: PublishRelay<UIColor> = .init()
         
         // Response
-        let type: PublishRelay<ActionType> = .init()
+        let type: PublishRelay<NotificationCell.ModelType> = .init()
         let typeString: PublishRelay<String> = .init()
         let typeIconString: PublishRelay<String> = .init()
         let typeIconColor: PublishRelay<UIColor> = .init()
@@ -52,6 +52,7 @@ class NotificationCellViewModel: ViewModelType {
     
     private lazy var reactionIconColor = UIColor(red: 231 / 255, green: 76 / 255, blue: 60 / 255, alpha: 1)
     private lazy var renoteIconColor = UIColor(red: 46 / 255, green: 204 / 255, blue: 113 / 255, alpha: 1)
+    
     private var mainColor: UIColor = {
         guard let mainColorHex = Theme.shared.currentModel?.mainColorHex else { return .systemBlue }
         return UIColor(hex: mainColorHex)
@@ -80,16 +81,34 @@ class NotificationCellViewModel: ViewModelType {
     
     func setCell() {
         let item = input.item
-        if !item.isMock, item.fromUser?.username == nil {
+        let isMock = input.item.type == .mock
+        if !isMock {
             return
         }
         
-        setImage(item)
-        setGeneral(item)
-        
-        setNote(item)
-        setResponse(item)
-        setColor()
+        if input.item.type == .custom { // オリジナルの通知
+            guard let custom = input.item.custom else { return }
+            output.iconImage.accept(custom.icon)
+            
+            output.name.accept(convertMfmString(custom.title))
+            output.note.accept(convertMfmString(custom.body))
+            
+            output.typeIconString.accept(custom.awesomeIcon)
+            output.typeString.accept(custom.miniTitle)
+            output.typeIconColor.accept(custom.awesomeColor)
+            
+            output.type.accept(.custom)
+            output.needEmoji.accept(false)
+        } else { // Misskey経由の通知
+            guard item.fromUser?.username == nil else { return }
+            
+            setImage(item)
+            setGeneral(item)
+            
+            setNote(item)
+            setResponse(item)
+            setColor()
+        }
     }
     
     private func setImage(_ item: NotificationCell.Model) {
@@ -175,5 +194,11 @@ class NotificationCellViewModel: ViewModelType {
                 output.selectedBackgroundColor.accept(currentModel.colorPattern.ui.sub2)
             }
         }
+    }
+    
+    private func convertMfmString(_ string: String) -> MFMString {
+        let mfm = MFMEngine(with: string, lineHeight: 30)
+        let mfmString = MFMString(mfmEngine: mfm, attributed: MFMEngine.generatePlaneString(string: string, font: nil))
+        return mfmString
     }
 }

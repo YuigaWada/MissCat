@@ -27,4 +27,12 @@ class NotificationBannerViewModel: NotificationCellViewModel {
         let input = NotificationCellViewModel.Input(item: item)
         self.init(with: input, and: disposeBag)
     }
+    
+    convenience init?(with contents: NotificationCell.CustomModel, disposeBag: DisposeBag) {
+        let model: NotificationBannerModel = .init(from: nil, owner: nil)
+        let item = model.getModel(with: contents)
+        
+        let input = NotificationCellViewModel.Input(item: item)
+        self.init(with: input, and: disposeBag)
+    }
 }
