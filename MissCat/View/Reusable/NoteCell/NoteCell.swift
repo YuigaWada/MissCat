@@ -280,7 +280,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         output.url.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { url in
             guard !url.isEmpty else { return }
             self.urlPreviewer.isHidden = false
-            _ = self.urlPreviewer.transform(with: .init(url: url))
+            _ = self.urlPreviewer.transform(with: .init(url: url, owner: self.owner))
         }).disposed(by: disposeBag)
         
         // Renote With Comment

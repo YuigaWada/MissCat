@@ -31,7 +31,7 @@ class Cache {
     private var icon: [String: UIImage] = [:] // key: username
     private var uiImage: [String: UIImage] = [:] // key: url
     private var dataOnUrl: [String: Data] = [:] // key: url
-    private var urlPreview: [String: Response] = [:] // key: url
+    private var urlPreview: [String: UrlSummalyEntity] = [:] // key: url
     
     private var userInfo: [UserInfo] = []
     
@@ -62,7 +62,7 @@ class Cache {
         }
     }
     
-    func saveUrlPreview(response: Response, on rawUrl: String) {
+    func saveUrlPreview(_ response: UrlSummalyEntity, on rawUrl: String) {
         urlPreview[rawUrl] = response
     }
     
@@ -89,7 +89,7 @@ class Cache {
         return dataOnUrl[rawUrl]
     }
     
-    func getUrlPreview(on rawUrl: String) -> Response? {
+    func getUrlPreview(on rawUrl: String) -> UrlSummalyEntity? {
         guard urlPreview.keys.contains(rawUrl) else { return nil }
         return urlPreview[rawUrl]
     }

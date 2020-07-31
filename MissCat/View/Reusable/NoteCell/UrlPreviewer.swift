@@ -14,6 +14,7 @@ class UrlPreviewer: UIView, ComponentType {
     typealias Transformed = UrlPreviewer
     struct Arg {
         let url: String
+        let owner: SecureUser?
     }
     
     @IBOutlet weak var imageView: UIImageView!
@@ -96,7 +97,7 @@ class UrlPreviewer: UIView, ComponentType {
     // MARK: Publics
     
     func transform(with arg: UrlPreviewer.Arg) -> UrlPreviewer {
-        let viewModel = UrlPreviewerViewModel(with: .init(url: arg.url), and: disposeBag)
+        let viewModel = UrlPreviewerViewModel(with: .init(url: arg.url, owner: arg.owner), and: disposeBag)
         binding(viewModel)
         
         self.viewModel = viewModel
