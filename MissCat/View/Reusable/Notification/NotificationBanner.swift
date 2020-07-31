@@ -43,7 +43,23 @@ class NotificationBanner: UIView, UITextViewDelegate {
         self.init()
         loadNib()
         setupComponents()
-        viewModel = getViewModel(with: contents, owner: owner)
+        
+        var viewModel: NotificationBannerViewModel?
+        // リプライ・メンションであれば、カスタム通知で対応する
+        if let type = contents.type , type == .reply || type == .mention {
+            let custom = convertCustomModel()
+            viewModel = getViewModel(with: custom)
+        }
+        else {
+            viewModel = getViewModel(with: contents, owner: owner)
+        }
+        
+        self.viewModel = viewModel
+    }
+    
+    
+    private func convertCustomModel()-> NotificationCell.CustomModel {
+        
     }
     
     // オリジナル通知
