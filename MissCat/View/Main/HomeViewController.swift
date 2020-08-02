@@ -41,8 +41,6 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     private var detailViewController: UIViewController?
     private var favViewController: MessageListViewController?
     
-//    private var myProfileViewController: ProfileViewController?
-    private var currentProfileViewController: ProfileViewController?
     private var accountsListViewController: AccountsListViewController?
     
     // Tab
@@ -371,17 +369,11 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     private func setupNotificationsVC() {
         if notificationsViewController == nil {
             guard let storyboard = self.storyboard, let notificationsViewController = storyboard.instantiateViewController(withIdentifier: "notifications") as? NotificationsViewController else { return }
-            notificationsViewController.view.isHidden = true
             notificationsViewController.homeViewController = self
             self.notificationsViewController = notificationsViewController
             
             navBar.barTitle = "Notifications"
             navBar.setButton(style: .None, rightFont: nil, leftFont: nil)
-            
-            addChild(self.notificationsViewController!)
-            view.addSubview(self.notificationsViewController!.view)
-            view.bringSubviewToFront(navBar)
-            view.bringSubviewToFront(footerTab)
         }
         
         notificationsViewController!.view.frame = getDisplayRect()
@@ -393,18 +385,12 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
                 let favViewController = storyboard.instantiateViewController(withIdentifier: "messages") as? MessageListViewController
             else { return }
             
-            favViewController.view.isHidden = true
             favViewController.homeViewController = self
             self.favViewController = favViewController
             
             navBar.barTitle = "Chat"
 //            navBar.setButton(style: .Right, rightText: "plus", rightFont: UIFont.awesomeSolid(fontSize: 11))
             navBar.setButton(style: .None, rightText: nil, leftText: nil)
-            
-            addChild(self.favViewController!)
-            view.addSubview(self.favViewController!.view)
-            view.bringSubviewToFront(navBar)
-            view.bringSubviewToFront(footerTab)
         }
         
         favViewController!.view.frame = getDisplayRect()
@@ -412,7 +398,10 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     
     private func showAccountListView() {
         if let accountsListViewController = accountsListViewController {
-            accountsListViewController.view.isHidden = false
+            addChild(accountsListViewController)
+            view.addSubview(accountsListViewController.view)
+            view.bringSubviewToFront(navBar)
+            view.bringSubviewToFront(footerTab)
             showNavBar(title: "Accounts", page: .profile, style: .Right, needIcon: false, rightText: "cog")
             return
         }
@@ -423,10 +412,13 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         accountsListViewController.view.frame = getDisplayRect(needNavBar: true)
         accountsListViewController.homeViewController = self
         accountsListViewController.view.layoutIfNeeded()
-        addChild(accountsListViewController)
-        view.addSubview(accountsListViewController.view)
         
         showNavBar(title: "Accounts", page: .profile, style: .Right, needIcon: false, rightText: "cog")
+        
+        addChild(accountsListViewController)
+        view.addSubview(accountsListViewController.view)
+        view.bringSubviewToFront(navBar)
+        view.bringSubviewToFront(footerTab)
         self.accountsListViewController = accountsListViewController
     }
     
@@ -519,16 +511,18 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         navBar.isHidden = true
         
         if type != .notifications {
-            notificationsViewController?.view.isHidden = true
+            notificationsViewController?.removeFromParent()
+            notificationsViewController?.view.removeFromSuperview()
         }
         
         if type != .profile {
-            accountsListViewController?.view.isHidden = true
-            currentProfileViewController?.view.isHidden = true
+            accountsListViewController?.removeFromParent()
+            accountsListViewController?.view.removeFromSuperview()
         }
         
         if type != .messages {
-            favViewController?.view.isHidden = true
+            favViewController?.removeFromParent()
+            favViewController?.view.removeFromSuperview()
         }
     }
     
@@ -706,14 +700,20 @@ extension HomeViewController: FooterTabBarDelegate {
         guard let notificationsViewController = notificationsViewController else { return }
         
         showNavBar(title: "Notifications", page: .notifications)
-        notificationsViewController.view.isHidden = false
+        addChild(notificationsViewController)
+        view.addSubview(notificationsViewController.view)
+        view.bringSubviewToFront(navBar)
+        view.bringSubviewToFront(footerTab)
     }
     
     func showFavView() {
         guard let favViewController = favViewController else { return }
         
         showNavBar(title: "Chat", page: .messages)
-        favViewController.view.isHidden = false
+        addChild(favViewController)
+        view.addSubview(favViewController.view)
+        view.bringSubviewToFront(navBar)
+        view.bringSubviewToFront(footerTab)
     }
     
     private func showNavBar(title: String, page: Page, style: NavBar.Button = .None, needIcon: Bool = true, rightText: String? = nil, rightFont: UIFont? = nil) {
