@@ -173,6 +173,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         
         setupNotificationsVC() // 先にNotificationsVCをロードしておく → 通知のロードを裏で行う
         setupFavVC()
+        setupAccountListVC()
         setupNavTab()
     }
     
@@ -396,30 +397,18 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         favViewController!.view.frame = getDisplayRect()
     }
     
-    private func showAccountListView() {
-        if let accountsListViewController = accountsListViewController {
-            addChild(accountsListViewController)
-            view.addSubview(accountsListViewController.view)
-            view.bringSubviewToFront(navBar)
-            view.bringSubviewToFront(footerTab)
-            showNavBar(title: "Accounts", page: .profile, style: .Right, needIcon: false, rightText: "cog")
-            return
+    private func setupAccountListVC() {
+        if accountsListViewController == nil {
+            guard let storyboard = self.storyboard,
+                let accountsListViewController = storyboard.instantiateViewController(withIdentifier: "accounts-list") as? AccountsListViewController else { return }
+            
+            accountsListViewController.homeViewController = self
+            accountsListViewController.view.layoutIfNeeded()
+            
+            self.accountsListViewController = accountsListViewController
         }
         
-        guard let storyboard = self.storyboard,
-            let accountsListViewController = storyboard.instantiateViewController(withIdentifier: "accounts-list") as? AccountsListViewController else { return }
-        
-        accountsListViewController.view.frame = getDisplayRect(needNavBar: true)
-        accountsListViewController.homeViewController = self
-        accountsListViewController.view.layoutIfNeeded()
-        
-        showNavBar(title: "Accounts", page: .profile, style: .Right, needIcon: false, rightText: "cog")
-        
-        addChild(accountsListViewController)
-        view.addSubview(accountsListViewController.view)
-        view.bringSubviewToFront(navBar)
-        view.bringSubviewToFront(footerTab)
-        self.accountsListViewController = accountsListViewController
+        accountsListViewController!.view.frame = getDisplayRect(needNavBar: true)
     }
     
     // MARK: Pages
@@ -712,6 +701,16 @@ extension HomeViewController: FooterTabBarDelegate {
         showNavBar(title: "Chat", page: .messages)
         addChild(favViewController)
         view.addSubview(favViewController.view)
+        view.bringSubviewToFront(navBar)
+        view.bringSubviewToFront(footerTab)
+    }
+    
+    private func showAccountListView() {
+        guard let accountsListViewController = accountsListViewController else { return }
+        
+        showNavBar(title: "Accounts", page: .profile, style: .Right, needIcon: false, rightText: "cog")
+        addChild(accountsListViewController)
+        view.addSubview(accountsListViewController.view)
         view.bringSubviewToFront(navBar)
         view.bringSubviewToFront(footerTab)
     }
