@@ -441,12 +441,13 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         // ユーザーをブロック・投稿を通報する
         // 投稿の削除
         note.noteEntity.userId.isMe(owner: owner) { isMe in
-            if isMe { self.showDeletePanel(note); return }
-            self.showReportPanel(note)
+            if isMe { self.showOtherMenuForMe(note); return }
+            self.showOtherMenuForOthers(note)
         }
     }
     
-    private func showReportPanel(_ note: NoteCell.Model) {
+    /// 他人の投稿に対する...ボタン(三点リーダーボタン)の挙動
+    private func showOtherMenuForOthers(_ note: NoteCell.Model) {
         let panelMenu = PanelMenuViewController()
         let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "ユーザーをブロック", awesomeIcon: "angry", order: 0),
                                                              .init(title: "投稿を通報する", awesomeIcon: "ban", order: 1)]
@@ -469,7 +470,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         present(panelMenu, animated: true, completion: nil)
     }
     
-    private func showDeletePanel(_ note: NoteCell.Model) {
+    /// 自分の投稿に対する...ボタン(三点リーダーボタン)の挙動
+    private func showOtherMenuForMe(_ note: NoteCell.Model) {
         let panelMenu = PanelMenuViewController()
         let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "投稿を削除する", awesomeIcon: "trash-alt", order: 0)]
         
