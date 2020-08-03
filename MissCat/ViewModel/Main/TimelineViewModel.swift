@@ -38,6 +38,8 @@ class TimelineViewModel: ViewModelType {
         let connectedStream: PublishRelay<Bool> = .init()
         
         let reserveLockTrigger: PublishRelay<Void> = .init()
+        let openSafariTrigger: PublishRelay<URL> = .init()
+        let shareLinksTrigger: PublishRelay<URL> = .init()
     }
     
     class State {
@@ -365,6 +367,40 @@ class TimelineViewModel: ViewModelType {
             self.updateNotes(new: self.cellsModel)
             completion()
         }).disposed(by: disposeBag)
+    }
+    
+    // MARK: Misc
+    
+    func copyContents(_ note: NoteCell.Model) {
+        UIPasteboard.general.string = note.noteEntity.original?.text
+    }
+    
+    func copyLink(_ note: NoteCell.Model) {
+        guard let noteUrl = getNoteUrl(note) else { return }
+        UIPasteboard.general.string = noteUrl
+    }
+    
+    func openSafari(_ note: NoteCell.Model) {
+        guard let rawUrl = getNoteUrl(note),
+            let noteUrl = URL(string: rawUrl) else { return }
+        
+        output.openSafariTrigger.accept(noteUrl)
+    }
+    
+    func shareLinks(_ note: NoteCell.Model) {
+        guard let rawUrl = getNoteUrl(note),
+            let noteUrl = URL(string: rawUrl) else { return }
+        
+        output.shareLinksTrigger.accept(noteUrl)
+    }
+    
+    // MARK: Utilities
+    
+    private func getNoteUrl(_ note: NoteCell.Model) -> String? {
+        guard let noteId = note.noteEntity.noteId else { return nil }
+        let host = note.noteEntity.hostInstance
+        
+        return "http://\(host)/notes/\(noteId)"
     }
     
     // dataSourceからnoteを探してtargetのindexの下にreactiongencell入れる

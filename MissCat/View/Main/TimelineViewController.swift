@@ -192,6 +192,16 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             self.mainTableView.reserveLock() // 次にセルがupdateされた時にスクロールを固定し直す
         }).disposed(by: disposeBag)
         
+        output.openSafariTrigger.subscribe(onNext: { url in
+            guard UIApplication.shared.canOpenURL(url) else { return }
+            UIApplication.shared.open(url)
+        }).disposed(by: disposeBag)
+        
+        output.shareLinksTrigger.subscribe(onNext: { url in
+            let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+            self.present(activityVC, animated: true, completion: nil)
+        }).disposed(by: disposeBag)
+        
         mainTableView.lockScroll = output.lockTableScroll.asObservable()
     }
     
@@ -449,8 +459,13 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     /// 他人の投稿に対する...ボタン(三点リーダーボタン)の挙動
     private func showOtherMenuForOthers(_ note: NoteCell.Model) {
         let panelMenu = PanelMenuViewController()
-        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "ユーザーをブロック", awesomeIcon: "angry", order: 0),
-                                                             .init(title: "投稿を通報する", awesomeIcon: "ban", order: 1)]
+        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "詳細", awesomeIcon: "angry", order: 0),
+                                                             .init(title: "内容をコピー", awesomeIcon: "angry", order: 1),
+                                                             .init(title: "投稿のリンクをコピー", awesomeIcon: "angry", order: 2),
+                                                             .init(title: "safariで表示", awesomeIcon: "angry", order: 3),
+                                                             .init(title: "投稿を共有", awesomeIcon: "angry", order: 4),
+                                                             .init(title: "ユーザーをブロック", awesomeIcon: "angry", order: 5),
+                                                             .init(title: "投稿を通報する", awesomeIcon: "ban", order: 6)]
         
         panelMenu.setupMenu(items: menuItems)
         panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
@@ -458,9 +473,19 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             panelMenu.dismiss(animated: true, completion: nil)
             
             switch order {
-            case 0: // Block
+            case 0: // 詳細
+                self.showDetailView(item: note)
+            case 1: // 内容コピー
+                self.viewModel?.copyContents(note)
+            case 2: // リンクコピー
+                self.viewModel?.copyLink(note)
+            case 3: // safariで表示
+                self.viewModel?.openSafari(note)
+            case 4: // 共有
+                self.viewModel?.shareLinks(note)
+            case 5: // Block
                 self.showBlockAlert(note)
-            case 1: // Report
+            case 6: // Report
                 self.showReportAlert(note)
             default:
                 break
