@@ -199,14 +199,14 @@
                     </constraints>
                 </stackView>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="nBn-X2-lSh">
-                    <rect key="frame" x="0.0" y="438" width="414" height="1"/>
+                    <rect key="frame" x="0.0" y="438.5" width="414" height="0.5"/>
                     <color key="backgroundColor" red="0.77647058820000003" green="0.77647058820000003" blue="0.77647058820000003" alpha="1" colorSpace="calibratedRGB"/>
                     <constraints>
-                        <constraint firstAttribute="height" constant="1" id="UbM-hl-v07"/>
+                        <constraint firstAttribute="height" constant="0.29999999999999999" id="UbM-hl-v07"/>
                     </constraints>
                 </view>
                 <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hNW-sZ-76E">
-                    <rect key="frame" x="43.5" y="71" width="3" height="359"/>
+                    <rect key="frame" x="43.5" y="71" width="3" height="359.5"/>
                     <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     <constraints>
                         <constraint firstAttribute="width" constant="3" id="Sxd-N2-szX"/>

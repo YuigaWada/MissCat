@@ -31,15 +31,15 @@
                     <nil key="highlightedColor"/>
                 </label>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="acT-dO-I9n">
-                    <rect key="frame" x="0.0" y="188" width="414" height="1"/>
+                    <rect key="frame" x="0.0" y="188.5" width="414" height="0.5"/>
                     <color key="backgroundColor" red="0.77647058820000003" green="0.77647058820000003" blue="0.77647058820000003" alpha="1" colorSpace="calibratedRGB"/>
                     <constraints>
-                        <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="1" id="6Bq-Am-1Zf"/>
-                        <constraint firstAttribute="height" constant="1" id="qxw-sM-ggw"/>
+                        <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="0.29999999999999999" id="6Bq-Am-1Zf"/>
+                        <constraint firstAttribute="height" constant="0.29999999999999999" id="qxw-sM-ggw"/>
                     </constraints>
                 </view>
                 <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" editable="NO" text="Note" translatesAutoresizingMaskIntoConstraints="NO" id="yGc-gb-yjT" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
-                    <rect key="frame" x="77" y="58" width="317" height="111"/>
+                    <rect key="frame" x="77" y="58" width="317" height="111.5"/>
                     <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
                     <fontDescription key="fontDescription" type="system" pointSize="14"/>
                     <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
@@ -62,7 +62,7 @@
                     </subviews>
                 </stackView>
                 <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5uB-Xc-Pr3">
-                    <rect key="frame" x="289" y="142" width="105" height="27"/>
+                    <rect key="frame" x="289" y="142.5" width="105" height="27"/>
                     <color key="backgroundColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     <constraints>
                         <constraint firstAttribute="height" constant="27" id="9yE-Xj-O7s"/>

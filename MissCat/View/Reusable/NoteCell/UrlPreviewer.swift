@@ -86,7 +86,7 @@ class UrlPreviewer: UIView, ComponentType {
     private func setComponent() {
         layer.cornerRadius = 5
         layer.borderColor = UIColor.lightGray.cgColor
-        layer.borderWidth = 1
+        layer.borderWidth = 0.3
         clipsToBounds = true
         
         imageView.backgroundColor = .lightGray
