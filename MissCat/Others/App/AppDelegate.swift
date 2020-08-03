@@ -110,7 +110,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         })
     }
     
-    /// バナー通知を表示する
+    /// バナー通知を表示する: サーバーから送られてくるデータは、どのユーザー宛かの情報と通知のid
     /// - Parameter raw: userInfo
     private func showNotificationBanner(with contents: NotificationData) {
         guard let children = window?.rootViewController?.children,
