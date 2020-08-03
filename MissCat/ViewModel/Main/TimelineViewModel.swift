@@ -398,7 +398,9 @@ class TimelineViewModel: ViewModelType {
     
     private func getNoteUrl(_ note: NoteCell.Model) -> String? {
         guard let noteId = note.noteEntity.noteId else { return nil }
-        let host = note.noteEntity.hostInstance
+        
+        // 他インスタンスでの投稿はインスタンスごとにnoteIdが違うため、自インスタンスのurlを作成することにする
+        let host = input.owner.instance
         
         return "http://\(host)/notes/\(noteId)"
     }
