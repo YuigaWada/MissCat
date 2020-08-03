@@ -96,7 +96,6 @@ class NotificationBanner: UIView, UITextViewDelegate {
         
         appear()
         bringSubviewToFront(emojiView)
-        setupTimer()
     }
     
     func loadNib() {
@@ -318,13 +317,16 @@ class NotificationBanner: UIView, UITextViewDelegate {
     private func appear() {
         UIView.animate(withDuration: 0.5, animations: {
             self.alpha = 1.0
+        }, completion: { _ in
+            self.setupTimer()
         })
     }
     
     @objc private func disappear() {
-        UIView.animate(withDuration: 1.3, animations: {
+        UIView.animate(withDuration: 0.5, animations: {
             self.alpha = 0
         }, completion: { _ in
+            self.isHidden = true
             self.removeFromSuperview()
         })
     }
