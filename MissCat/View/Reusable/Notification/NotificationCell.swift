@@ -271,7 +271,13 @@ extension NotificationCell {
         
         let title: String
         let body: String
-        let icon: UIImage
+        let iconType: IconType
+        let icon: URL?
+        
+        enum IconType {
+            case original
+            case error
+        }
     }
     
     class Model: CellModel {

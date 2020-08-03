@@ -9,6 +9,7 @@
 import MisskeyKit
 import RxSwift
 
+// NotificationCellのViewModelをベースに。
 class NotificationBannerViewModel: NotificationCellViewModel {
     convenience init?(with contents: NotificationModel, and disposeBag: DisposeBag, owner: SecureUser) {
         let model: NotificationBannerModel = .init(from: nil, owner: nil)

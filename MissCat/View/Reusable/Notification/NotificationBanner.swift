@@ -45,21 +45,29 @@ class NotificationBanner: UIView, UITextViewDelegate {
         setupComponents()
         
         var viewModel: NotificationBannerViewModel?
+        
         // リプライ・メンションであれば、カスタム通知で対応する
-        if let type = contents.type , type == .reply || type == .mention {
-            let custom = convertCustomModel()
+        if let type = contents.type, type == .reply || type == .mention {
+            let custom = convertCustomModel(contents)
             viewModel = getViewModel(with: custom)
-        }
-        else {
+        } else { // リアクション通知などは普通にNotificationModelを渡す
             viewModel = getViewModel(with: contents, owner: owner)
         }
         
         self.viewModel = viewModel
     }
     
-    
-    private func convertCustomModel()-> NotificationCell.CustomModel {
+    private func convertCustomModel(_ contents: NotificationModel) -> NotificationCell.CustomModel {
+        let iconRawUrl = contents.user?.avatarUrl ?? ""
+        let url = URL(string: iconRawUrl)
         
+        return .init(awesomeColor: UIColor(hex: "2ba3bc"),
+                     awesomeIcon: "reply",
+                     miniTitle: "reply",
+                     title: contents.user?.name ?? contents.user?.username ?? "",
+                     body: contents.note?.text ?? "",
+                     iconType: .original,
+                     icon: url)
     }
     
     // オリジナル通知

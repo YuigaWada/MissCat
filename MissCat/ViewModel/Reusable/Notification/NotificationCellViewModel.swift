@@ -81,18 +81,25 @@ class NotificationCellViewModel: ViewModelType {
     
     func setCell() {
         let item = input.item
-        let isMock = input.item.type == .mock
-        if !isMock {
-            return
-        }
         
         if input.item.type == .custom { // オリジナルの通知
             guard let custom = input.item.custom else { return }
-            output.iconImage.accept(custom.icon)
             
+            // icon
+            _ = custom.icon?.toUIImage { image in
+                guard let image = image else { return }
+                self.output.iconImage.accept(image)
+            }
+            
+            if custom.iconType == .error, let errorImage = UIImage(named: "error") {
+                output.iconImage.accept(errorImage)
+            }
+            
+            // String
             output.name.accept(convertMfmString(custom.title))
             output.note.accept(convertMfmString(custom.body))
             
+            // typeIcon
             output.typeIconString.accept(custom.awesomeIcon)
             output.typeString.accept(custom.miniTitle)
             output.typeIconColor.accept(custom.awesomeColor)
@@ -100,7 +107,7 @@ class NotificationCellViewModel: ViewModelType {
             output.type.accept(.custom)
             output.needEmoji.accept(false)
         } else { // Misskey経由の通知
-            guard item.fromUser?.username == nil else { return }
+            guard item.fromUser?.username != nil else { return }
             
             setImage(item)
             setGeneral(item)
@@ -198,7 +205,10 @@ class NotificationCellViewModel: ViewModelType {
     
     private func convertMfmString(_ string: String) -> MFMString {
         let mfm = MFMEngine(with: string, lineHeight: 30)
-        let mfmString = MFMString(mfmEngine: mfm, attributed: MFMEngine.generatePlaneString(string: string, font: nil))
+        let font = UIFont(name: "Helvetica", size: 11.0)
+        
+        let textHex = Theme.shared.currentModel?.colorPattern.hex.text ?? "000000"
+        let mfmString = MFMString(mfmEngine: mfm, attributed: MFMEngine.generatePlaneString(string: string, font: font, textHex: textHex))
         return mfmString
     }
 }
