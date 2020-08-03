@@ -32,7 +32,7 @@ extension NoteModel {
                                 userId: user.id,
                                 displayName: displayName ?? "",
                                 username: user.username ?? "",
-                                hostInstance: user.host ?? "",
+                                hostInstance: user.host ?? owner?.instance ?? "", // 同じインスタンスのユーザーはhostがnilになるので追加しておく
                                 note: post.text?.mfmPreTransform() ?? "", // MFMEngineを通して加工の前処理をしておく
                                 ago: post.createdAt!,
                                 replyCount: post.repliesCount ?? 0,
