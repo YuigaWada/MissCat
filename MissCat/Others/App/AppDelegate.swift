@@ -36,39 +36,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any]) {
-        // If you are receiving a notification message while your app is in the background,
-        // this callback will not be fired till the user taps on the notification launching the application.
-        // TODO: Handle data of notification
-        
-        // With swizzling disabled you must let Messaging know about the message, for Analytics
-        // Messaging.messaging().appDidReceiveMessage(userInfo)
-        
-        // Print message ID.
         if let messageID = userInfo[gcmMessageIDKey] {
             print("Message ID: \(messageID)")
         }
         
-        // Print full message.
         print(userInfo)
     }
     
+    // foreground時に通知が飛んできたらこれがよばれる
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
                      fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        // If you are receiving a notification message while your app is in the background,
-        // this callback will not be fired till the user taps on the notification launching the application.
-        // TODO: Handle data of notification
-        
-        // With swizzling disabled you must let Messaging know about the message, for Analytics
-        // Messaging.messaging().appDidReceiveMessage(userInfo)
-        
-        // Print message ID.
-        if let messageID = userInfo[gcmMessageIDKey] {
-            print("Message ID: \(messageID)")
+        if let contents = extractPayload(from: userInfo) {
+            showNotificationBanner(with: contents) // アプリ内通知を表示
         }
         
-        // Print full message.
         print(userInfo)
-        
         completionHandler(UIBackgroundFetchResult.newData)
     }
     
@@ -128,6 +110,35 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         })
     }
     
+    /// バナー通知を表示する: サーバーから送られてくるデータは、どのユーザー宛かの情報と通知のid
+    /// - Parameter raw: userInfo
+    private func showNotificationBanner(with contents: NotificationData) {
+        guard let children = window?.rootViewController?.children,
+            children.count > 0,
+            let homeVC = children[0] as? HomeViewController,
+            let owner = Cache.UserDefaults.shared.getUser(userId: contents.ownerId) // どのユーザー宛の通知か
+        else { return }
+        
+        let misskey = MisskeyKit(from: owner)
+        misskey?.notifications.get(markAsRead: false) { notifications, _ in
+            guard let notifications = notifications else { return }
+            
+            notifications.forEach {
+                guard $0.id == contents.notificationId else { return }
+                homeVC.showNotificationBanner(with: $0, owner: owner)
+            }
+        }
+    }
+    
+    /// ペイロードからメッセージ等を抽出する
+    /// - Parameter payload: [String:String]
+    private func extractPayload(from payload: [AnyHashable: Any]) -> NotificationData? {
+        guard let notificationId = payload["notification_id"] as? String,
+            let ownerId = payload["owner_id"] as? String else { return nil }
+        
+        return NotificationData(ownerId: ownerId, notificationId: notificationId)
+    }
+    
     // MARK: UISceneSession Lifecycle
     
     @available(iOS 13.0, *)
@@ -143,9 +154,4 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
     }
-}
-
-struct NotificationContents {
-    let title: String
-    let body: String
 }

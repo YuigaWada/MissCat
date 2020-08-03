@@ -106,7 +106,10 @@ class NotificationsModel {
     }
     
     func getModel(notification: NotificationModel) -> NotificationCell.Model? {
-        guard let id = notification.id, let type = notification.type, let user = notification.user else { return nil }
+        guard let id = notification.id,
+            let actionType = notification.type,
+            let user = notification.user,
+            let type = NotificationCell.ModelType(from: actionType) else { return nil }
         
         let userEntity = UserEntity(from: user)
         if type == .follow {
@@ -138,7 +141,7 @@ class NotificationsModel {
         }
     }
     
-    private func getNoteModel(notification: NotificationModel, id: String, type: ActionType, user: UserEntity) -> NotificationCell.Model? {
+    private func getNoteModel(notification: NotificationModel, id: String, type: NotificationCell.ModelType, user: UserEntity) -> NotificationCell.Model? {
         guard let note = notification.note else { return nil }
         let isReply = type == .reply
         let isMention = type == .mention
@@ -200,18 +203,20 @@ class NotificationsModel {
     private func convertNotification(_ target: Any) -> NotificationCell.Model? {
         guard let target = target as? StreamingModel, let fromUser = target.user else { return nil }
         
-        var type: ActionType
+        var actionType: ActionType
         var targetNote: NoteModel? = target.note
         if target.reaction != nil {
-            type = .reaction
+            actionType = .reaction
         } else if target.type == "follow" {
-            type = .follow
+            actionType = .follow
         } else if target.type == "renote" {
-            type = .renote
+            actionType = .renote
             targetNote = target.note?.renote // renoteの場合は相手の投稿(=target.note)のrenote内に自分の投稿が含まれている
         } else {
             return nil
         }
+        
+        guard let type = NotificationCell.ModelType(from: actionType) else { return nil }
         
         let externalEmojis = getExternalEmojis(target)
         return NotificationCell.Model(notificationId: target.id ?? "",

@@ -6,175 +6,328 @@
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
+import MisskeyKit
+import RxCocoa
+import RxSwift
 import UIKit
 
-class NotificationBanner: UIView {
-    @IBOutlet weak var iconLabel: UILabel!
-    @IBOutlet weak var mainContentLabel: UILabel!
+// Data
+struct NotificationData {
+    let ownerId: String
+    let notificationId: String
+}
+
+// Banner
+
+class NotificationBanner: UIView, UITextViewDelegate {
+    @IBOutlet weak var iconImageView: MissCatImageView!
     
-    private var icon: IconType = .Failed
-    private var reaction: String?
-    private var notification: String?
+    @IBOutlet weak var nameTextView: MisskeyTextView!
+    @IBOutlet weak var noteView: MisskeyTextView!
     
-    // MARK: Life Cycle
+    @IBOutlet weak var typeIconView: UILabel!
+    @IBOutlet weak var typeLabel: UILabel!
     
-    init(frame: CGRect, icon: IconType, reaction: String? = nil, notification: String) {
-        super.init(frame: frame)
-        
-        self.icon = icon
-        self.reaction = reaction
-        self.notification = notification
-        
+    private var emojiViewOnView: Bool = false
+    private lazy var emojiView = self.generateEmojiView()
+    
+    private var contents: NotificationData?
+    
+    private var viewModel: NotificationBannerViewModel?
+    private let disposeBag: DisposeBag = .init()
+    
+    // MARK: LifeCycle
+    
+    // NotificationModelをそのまま通知にする
+    convenience init(with contents: NotificationModel, owner: SecureUser) {
+        self.init()
         loadNib()
-        setupTimer()
+        setupComponents()
+        
+        var viewModel: NotificationBannerViewModel?
+        
+        // リプライ・メンションであれば、カスタム通知で対応する
+        if let type = contents.type, type == .reply || type == .mention {
+            let custom = convertCustomModel(contents)
+            viewModel = getViewModel(with: custom)
+        } else { // リアクション通知などは普通にNotificationModelを渡す
+            viewModel = getViewModel(with: contents, owner: owner)
+        }
+        
+        self.viewModel = viewModel
+    }
+    
+    private func convertCustomModel(_ contents: NotificationModel) -> NotificationCell.CustomModel {
+        let iconRawUrl = contents.user?.avatarUrl ?? ""
+        let url = URL(string: iconRawUrl)
+        
+        return .init(awesomeColor: UIColor(hex: "2ba3bc"),
+                     awesomeIcon: "reply",
+                     miniTitle: "reply",
+                     title: contents.user?.name ?? contents.user?.username ?? "",
+                     body: contents.note?.text ?? "",
+                     iconType: .original,
+                     icon: url)
+    }
+    
+    // オリジナル通知
+    convenience init(with contents: NotificationCell.CustomModel) {
+        self.init()
+        loadNib()
+        setupComponents()
+        viewModel = getViewModel(with: contents)
     }
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         loadNib()
-        setupTimer()
+        setupComponents()
     }
     
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)!
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
         loadNib()
-        setupTimer()
+        setupComponents()
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        nameTextView.transformText()
+        
+        appear()
+        bringSubviewToFront(emojiView)
     }
     
     func loadNib() {
         if let view = UINib(nibName: "NotificationBanner", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
             view.frame = bounds
             addSubview(view)
+            initialize()
         }
     }
     
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        setupComponents()
+    // MARK: Theme
+    
+    private func bindTheme() {
+        let theme = Theme.shared.theme
         
-        adjustFrame()
-        setupCornerRadius()
-        appear()
+        theme.map { UIColor(hex: $0.mainColorHex) }.subscribe(onNext: { _ in
+            
+        }).disposed(by: disposeBag)
+    }
+    
+    private func setTheme() {
+//        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
+//            mainColor = UIColor(hex: mainColorHex)
+//        }
+        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
+            backgroundColor = .darkGray
+            layer.borderColor = colorPattern.sub1.cgColor
+            typeLabel.textColor = colorPattern.text
+        }
     }
     
     // MARK: Setup
     
-    private func setupComponents() {
-        iconLabel.font = .awesomeSolid(fontSize: 15.0)
-        iconLabel.textColor = .white
+    private func getViewModel(with item: NotificationModel, owner: SecureUser) -> NotificationBannerViewModel? {
+        guard let viewModel = NotificationBannerViewModel(with: item, and: disposeBag, owner: owner) else { return nil }
         
-        mainContentLabel.textColor = .white
-        
-        backgroundColor = .black
-        alpha = 0
-        
-        // Message
-        mainContentLabel.text = notification
-        
-        // Icon
-        guard icon != .Loading else {
-            addIndicator()
-            return
-        }
-        
-//        guard icon != .Reaction else {
-//            guard let reaction = reaction else { return }
-//
-//            let encodedReaction = EmojiHandler.handler.emojiEncoder(note: reaction, externalEmojis: nil)
-//            iconLabel.attributedText = encodedReaction.toAttributedString(family: "Helvetica", size: 15.0)
-//            return
-//        }
-        
-        iconLabel.text = icon.convertAwesome()
+        binding(with: viewModel)
+        viewModel.setCell()
+        return viewModel
     }
     
-    private func adjustFrame() {
-        let contentLabelWidth = getLabelWidth(text: notification ?? "", font: UIFont.systemFont(ofSize: 12.0))
-        let width = iconLabel.frame.width + contentLabelWidth + 20
+    private func getViewModel(with contents: NotificationCell.CustomModel) -> NotificationBannerViewModel? {
+        guard let viewModel = NotificationBannerViewModel(with: contents, disposeBag: disposeBag) else { return nil }
         
-        let dWidth = width - frame.width
-        
-        frame = CGRect(x: frame.origin.x - dWidth,
-                       y: frame.origin.y,
-                       width: width,
-                       height: frame.height)
+        binding(with: viewModel)
+        viewModel.setCell()
+        return viewModel
     }
+    
+    func initialize() {
+        iconImageView.image = nil
+        
+        noteView.attributedText = nil
+        typeIconView.text = nil
+        typeLabel.text = nil
+        
+        nameTextView.attributedText = nil
+        
+        emojiView.isHidden = false
+        emojiView.initialize()
+        
+        alpha = 0.1
+    }
+    
+    private func setupComponents() {
+        iconImageView.maskCircle()
+        setTheme()
+        
+        noteView.delegate = self
+        noteView.textColor = .lightGray
+        
+        typeIconView.font = .awesomeSolid(fontSize: 14.0)
+        
+        guard !emojiViewOnView else { return }
+        addSubview(emojiView)
+        emojiViewOnView = true
+    }
+    
+    // MARK: Binding
+    
+    private func binding(with viewModel: NotificationBannerViewModel) {
+        let output = viewModel.output
+        
+        // meta
+        output.name
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { nameMfmString in
+                self.nameTextView.attributedText = nameMfmString.attributed
+                nameMfmString.mfmEngine.renderCustomEmojis(on: self.nameTextView)
+            }).disposed(by: disposeBag)
+        
+        output.note
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { noteMfmString in
+                self.noteView.attributedText = noteMfmString.attributed
+                noteMfmString.mfmEngine.renderCustomEmojis(on: self.noteView)
+            }).disposed(by: disposeBag)
+        
+        output.iconImage
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(iconImageView.rx.image)
+            .disposed(by: disposeBag)
+        
+        // color
+        
+        output.textColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { self.typeLabel.textColor = $0 })
+            .disposed(by: disposeBag)
+        
+        output.backgroundColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(rx.backgroundColor)
+            .disposed(by: disposeBag)
+        
+        // emoji
+        output.needEmoji
+            .map { !$0 }
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(emojiView.rx.isHidden)
+            .disposed(by: disposeBag)
+        
+        output.emoji
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { self.emojiView.emoji = $0 })
+            .disposed(by: disposeBag)
+        
+        // response
+        output.typeString
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(typeLabel.rx.text)
+            .disposed(by: disposeBag)
+        
+        output.typeIconColor
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(onNext: { self.typeIconView.textColor = $0 })
+            .disposed(by: disposeBag)
+        
+        output.typeIconString
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(typeIconView.rx.text)
+            .disposed(by: disposeBag)
+    }
+    
+    // MARK: View
+    
+    private func generateEmojiView() -> EmojiView {
+        let emojiView = EmojiView()
+        
+        let sqrt2 = 1.41421356237
+        let cos45 = CGFloat(sqrt2 / 2)
+        
+        let r = iconImageView.frame.width / 2
+        let emojiViewRadius = 2 / 3 * r
+        
+        let basePosition = iconImageView.frame.origin
+        let position = CGPoint(x: basePosition.x + cos45 * r,
+                               y: basePosition.y + cos45 * r)
+        
+        emojiView.frame = CGRect(x: position.x,
+                                 y: position.y,
+                                 width: emojiViewRadius * 2,
+                                 height: emojiViewRadius * 2)
+        
+        emojiView.view.layer.backgroundColor = UIColor(hex: "EE7258").cgColor
+        emojiView.view.layer.cornerRadius = emojiViewRadius
+        
+        return emojiView
+    }
+    
+    // MARK: AutoLayout
+    
+    func setAutoLayout(on view: UIView, widthScale: CGFloat, height: CGFloat, bottom: CGFloat) {
+        view.addConstraints([
+            NSLayoutConstraint(item: self,
+                               attribute: .width,
+                               relatedBy: .equal,
+                               toItem: view,
+                               attribute: .width,
+                               multiplier: widthScale,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: self,
+                               attribute: .height,
+                               relatedBy: .equal,
+                               toItem: view,
+                               attribute: .height,
+                               multiplier: 0,
+                               constant: height),
+            
+            NSLayoutConstraint(item: self,
+                               attribute: .centerX,
+                               relatedBy: .equal,
+                               toItem: view,
+                               attribute: .centerX,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: self,
+                               attribute: .bottom,
+                               relatedBy: .equal,
+                               toItem: view.safeAreaLayoutGuide,
+                               attribute: .bottom,
+                               multiplier: 1.0,
+                               constant: -1 * bottom)
+        ])
+    }
+    
+    // MARK: Animation
     
     private func setupTimer() {
-        _ = Timer.scheduledTimer(timeInterval: 2,
+        _ = Timer.scheduledTimer(timeInterval: 5.0,
                                  target: self,
                                  selector: #selector(disappear),
                                  userInfo: nil,
                                  repeats: false)
     }
     
-    private func setupCornerRadius() {
-        layer.cornerRadius = 5
-        layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        layer.masksToBounds = true
-    }
-    
-    private func addIndicator() {
-        let indicatorCenter = CGPoint(x: (mainContentLabel.frame.origin.x - 30) / 2,
-                                      y: frame.height / 2)
-        
-        let activityIndicator = UIActivityIndicatorView()
-        activityIndicator.center = indicatorCenter
-        activityIndicator.hidesWhenStopped = true
-        activityIndicator.style = UIActivityIndicatorView.Style.white
-        
-        addSubview(activityIndicator)
-        activityIndicator.startAnimating()
-        
-        iconLabel.text = nil
-    }
-    
-    // MARK: Appear / Disappear
-    
     private func appear() {
-        UIView.animate(withDuration: 1.3, animations: {
-            self.alpha = 0.8
+        UIView.animate(withDuration: 0.5, animations: {
+            self.alpha = 1.0
+        }, completion: { _ in
+            self.setupTimer()
         })
     }
     
     @objc private func disappear() {
-        UIView.animate(withDuration: 1.3, animations: {
+        UIView.animate(withDuration: 0.5, animations: {
             self.alpha = 0
         }, completion: { _ in
+            self.isHidden = true
             self.removeFromSuperview()
         })
-    }
-}
-
-extension NotificationBanner {
-    enum IconType {
-        case Loading
-        case Success
-        
-        case Reply
-        case Renote
-        case Reaction
-        
-        case Failed
-        case Warning
-        
-        func convertAwesome() -> String {
-            switch self {
-            case .Loading:
-                return ""
-            case .Success:
-                return "check-circle"
-            case .Reply:
-                return "reply"
-            case .Renote:
-                return "retweet"
-            case .Reaction:
-                return ""
-            case .Failed:
-                return "times-circle"
-            case .Warning:
-                return "exclamation-triangle"
-            }
-        }
     }
 }

@@ -113,6 +113,10 @@
 		8D9702D4248DF8EA0000524A /* AccountCellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9702D3248DF8EA0000524A /* AccountCellModel.swift */; };
 		8D9702D6248E48A50000524A /* AccountsListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9702D5248E48A50000524A /* AccountsListViewModel.swift */; };
 		8D9702D8248E49140000524A /* AccountsListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9702D7248E49140000524A /* AccountsListModel.swift */; };
+		8D9774E824B0814A00396606 /* NotificationBanner.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D9774E724B0814A00396606 /* NotificationBanner.xib */; };
+		8D9774EA24B08D0700396606 /* NotificationBannerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9774E924B08D0700396606 /* NotificationBannerViewModel.swift */; };
+		8D9774EC24B0937C00396606 /* NotificationBannerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9774EB24B0937C00396606 /* NotificationBannerModel.swift */; };
+		8D9774EE24B0A00700396606 /* NanoNotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9774ED24B0A00700396606 /* NanoNotificationBanner.swift */; };
 		8D98C268242E0AD600BB8049 /* PostDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D98C267242E0AD600BB8049 /* PostDetailModel.swift */; };
 		8D9EF4C62381875F005449EC /* ReactionGenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */; };
 		8D9EF4C8238187A4005449EC /* ReactionGenCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */; };
@@ -146,7 +150,7 @@
 		8DC27D96243BF2DF0037E610 /* UrlPreviewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC27D95243BF2DF0037E610 /* UrlPreviewer.xib */; };
 		8DC27D9A243BF57A0037E610 /* UrlPreviewerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC27D99243BF57A0037E610 /* UrlPreviewerViewModel.swift */; };
 		8DC27D9C243BF6DD0037E610 /* UrlPreviewerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */; };
-		8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */; };
+		8DC95AF723B0BD3C0013CABC /* NanoNotificationBanner.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8DC95AF623B0BD3C0013CABC /* NanoNotificationBanner.xib */; };
 		8DC95AF923B0BD450013CABC /* NotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC95AF823B0BD450013CABC /* NotificationBanner.swift */; };
 		8DCBFBD624711B510028A5E6 /* MissCatImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCBFBD524711B510028A5E6 /* MissCatImageView.swift */; };
 		8DCCF8E5246A97C50001A21C /* MisscatApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCCF8E4246A97C50001A21C /* MisscatApi.swift */; };
@@ -304,6 +308,10 @@
 		8D9702D3248DF8EA0000524A /* AccountCellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCellModel.swift; sourceTree = "<group>"; };
 		8D9702D5248E48A50000524A /* AccountsListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsListViewModel.swift; sourceTree = "<group>"; };
 		8D9702D7248E49140000524A /* AccountsListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsListModel.swift; sourceTree = "<group>"; };
+		8D9774E724B0814A00396606 /* NotificationBanner.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NotificationBanner.xib; sourceTree = "<group>"; };
+		8D9774E924B08D0700396606 /* NotificationBannerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBannerViewModel.swift; sourceTree = "<group>"; };
+		8D9774EB24B0937C00396606 /* NotificationBannerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBannerModel.swift; sourceTree = "<group>"; };
+		8D9774ED24B0A00700396606 /* NanoNotificationBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NanoNotificationBanner.swift; sourceTree = "<group>"; };
 		8D98C267242E0AD600BB8049 /* PostDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailModel.swift; sourceTree = "<group>"; };
 		8D9EF4C52381875F005449EC /* ReactionGenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionGenViewController.swift; sourceTree = "<group>"; };
 		8D9EF4C7238187A4005449EC /* ReactionGenCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReactionGenCell.xib; sourceTree = "<group>"; };
@@ -338,7 +346,7 @@
 		8DC27D95243BF2DF0037E610 /* UrlPreviewer.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = UrlPreviewer.xib; sourceTree = "<group>"; };
 		8DC27D99243BF57A0037E610 /* UrlPreviewerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UrlPreviewerViewModel.swift; sourceTree = "<group>"; };
 		8DC27D9B243BF6DD0037E610 /* UrlPreviewerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UrlPreviewerModel.swift; sourceTree = "<group>"; };
-		8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = NotificationBanner.xib; sourceTree = "<group>"; };
+		8DC95AF623B0BD3C0013CABC /* NanoNotificationBanner.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = NanoNotificationBanner.xib; sourceTree = "<group>"; };
 		8DC95AF823B0BD450013CABC /* NotificationBanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationBanner.swift; sourceTree = "<group>"; };
 		8DCBFBD524711B510028A5E6 /* MissCatImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatImageView.swift; sourceTree = "<group>"; };
 		8DCCF8E4246A97C50001A21C /* MisscatApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MisscatApi.swift; sourceTree = "<group>"; };
@@ -758,6 +766,7 @@
 				8DA06A0A2389E98D0093A718 /* NotificationCell.swift */,
 				8DC95AF823B0BD450013CABC /* NotificationBanner.swift */,
 				8D72E505244AE81F00B30C3A /* nib */,
+				8D9774ED24B0A00700396606 /* NanoNotificationBanner.swift */,
 			);
 			path = Notification;
 			sourceTree = "<group>";
@@ -766,7 +775,8 @@
 			isa = PBXGroup;
 			children = (
 				8DA06A082389E9820093A718 /* NotificationCell.xib */,
-				8DC95AF623B0BD3C0013CABC /* NotificationBanner.xib */,
+				8DC95AF623B0BD3C0013CABC /* NanoNotificationBanner.xib */,
+				8D9774E724B0814A00396606 /* NotificationBanner.xib */,
 			);
 			path = nib;
 			sourceTree = "<group>";
@@ -822,6 +832,7 @@
 			isa = PBXGroup;
 			children = (
 				8DA06A13238A86B80093A718 /* NotificationCellViewModel.swift */,
+				8D9774E924B08D0700396606 /* NotificationBannerViewModel.swift */,
 			);
 			path = Notification;
 			sourceTree = "<group>";
@@ -874,6 +885,7 @@
 			isa = PBXGroup;
 			children = (
 				8DA06A15238A86DC0093A718 /* NotificationCellModel.swift */,
+				8D9774EB24B0937C00396606 /* NotificationBannerModel.swift */,
 			);
 			path = Notification;
 			sourceTree = "<group>";
@@ -1180,6 +1192,7 @@
 				8D7968812404BE68004F87FA /* ReactionCollectionHeader.xib in Resources */,
 				8D0AC5BA237B5D0D00530508 /* Font Awesome 5 Free-Solid-900.otf in Resources */,
 				8D57CA43243FDB9C005DCEB2 /* PromotionCell.xib in Resources */,
+				8D9774E824B0814A00396606 /* NotificationBanner.xib in Resources */,
 				8D5D2C4224480E5700D15974 /* SenderCell.xib in Resources */,
 				8D4A2A22237437C000503685 /* LaunchScreen.storyboard in Resources */,
 				8D905644246A7120006D0F50 /* GoogleService-Info.plist in Resources */,
@@ -1198,7 +1211,7 @@
 				8DDB52CF245032E500C97130 /* ColorPickerCell.xib in Resources */,
 				8D9702CE248DF69C0000524A /* AccountCell.xib in Resources */,
 				8DAEA1352382E4F00083AA69 /* EmojiView.xib in Resources */,
-				8DC95AF723B0BD3C0013CABC /* NotificationBanner.xib in Resources */,
+				8DC95AF723B0BD3C0013CABC /* NanoNotificationBanner.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1333,12 +1346,14 @@
 				8D0D6891244A9A6800725ABB /* PlaceholderTableView.swift in Sources */,
 				8D57CA4924412430005DCEB2 /* SearchViewController.swift in Sources */,
 				8DAD238A240CE76000AB1F36 /* StartViewController.swift in Sources */,
+				8D9774EA24B08D0700396606 /* NotificationBannerViewModel.swift in Sources */,
 				8D61391A2427B9B0003B5BEF /* FileContainer.swift in Sources */,
 				8D5D2C3D24480DE500D15974 /* MessageListViewController.swift in Sources */,
 				8D53741B23A32D03004523FC /* ViewModelType.swift in Sources */,
 				8D5889F9245019D300C6EBC2 /* TabSettingsCell.swift in Sources */,
 				8D4B02C1241FE5C90056605F /* Theme.swift in Sources */,
 				8D5D2C48244814AC00D15974 /* MessageListModel.swift in Sources */,
+				8D9774EE24B0A00700396606 /* NanoNotificationBanner.swift in Sources */,
 				8DEB21C5243B0C1400E4D1EB /* Error+MissCat.swift in Sources */,
 				8DA06A0F2389F04E0093A718 /* NotificationModel.swift in Sources */,
 				8DFD613D24911B7F00E22C9F /* NavBarModel.swift in Sources */,
@@ -1404,6 +1419,7 @@
 				8D0D47AA23A74EC80095361D /* UIViewController+PhotoEditor.swift in Sources */,
 				8D84061D238FFC5C00EED595 /* UIImage+MissCat.swift in Sources */,
 				8DBC7A45241245A800D8FEA5 /* AVKit+MissCat.swift in Sources */,
+				8D9774EC24B0937C00396606 /* NotificationBannerModel.swift in Sources */,
 				8DC16154238BBD0C007793B7 /* NoteModel+MissCat.swift in Sources */,
 				8D7779A624138120005764D9 /* PanelMenuViewController.swift in Sources */,
 				8D5D2C452448106000D15974 /* MessageListViewModel.swift in Sources */,

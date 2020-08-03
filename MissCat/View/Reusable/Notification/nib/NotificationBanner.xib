@@ -1,49 +1,85 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15705" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15706"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="NotificationBanner" customModule="MissCat" customModuleProvider="target">
             <connections>
-                <outlet property="iconLabel" destination="5O8-wW-Izu" id="Xde-ba-ABs"/>
-                <outlet property="mainContentLabel" destination="s1T-ii-J3t" id="U63-mB-EU1"/>
+                <outlet property="iconImageView" destination="jn6-Lp-OH0" id="6cz-Ke-AGt"/>
+                <outlet property="nameTextView" destination="F0g-Is-YvU" id="fyY-Fp-uhO"/>
+                <outlet property="noteView" destination="uYo-WZ-r28" id="Ice-bg-JfZ"/>
+                <outlet property="typeIconView" destination="V9k-vi-dg0" id="5k4-cX-0dc"/>
+                <outlet property="typeLabel" destination="xlg-jV-4k3" id="GVs-dK-YZv"/>
             </connections>
         </placeholder>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
         <view contentMode="scaleToFill" id="iN0-l3-epB">
-            <rect key="frame" x="0.0" y="0.0" width="414" height="54"/>
+            <rect key="frame" x="0.0" y="0.0" width="414" height="155"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="s1T-ii-J3t">
-                    <rect key="frame" x="62" y="20" width="332" height="14.5"/>
-                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
-                    <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    <nil key="highlightedColor"/>
-                </label>
-                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5O8-wW-Izu">
-                    <rect key="frame" x="10" y="16.5" width="42" height="21"/>
-                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                    <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    <nil key="highlightedColor"/>
-                </label>
+                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" text="Name" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="F0g-Is-YvU" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
+                    <rect key="frame" x="77" y="23" width="317" height="35"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="35" id="zFq-4k-alO"/>
+                    </constraints>
+                    <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                </textView>
+                <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" editable="NO" text="Note" translatesAutoresizingMaskIntoConstraints="NO" id="uYo-WZ-r28" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
+                    <rect key="frame" x="77" y="58" width="317" height="87"/>
+                    <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                </textView>
+                <stackView opaque="NO" contentMode="scaleToFill" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="CV2-z0-auz">
+                    <rect key="frame" x="28" y="8" width="115" height="17"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="fire-alt" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="V9k-vi-dg0">
+                            <rect key="frame" x="0.0" y="0.0" width="43.5" height="17"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <nil key="textColor"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="リアクション" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xlg-jV-4k3">
+                            <rect key="frame" x="47.5" y="0.0" width="67.5" height="17"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="11"/>
+                            <nil key="textColor"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                    </subviews>
+                </stackView>
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="jn6-Lp-OH0" customClass="MissCatImageView" customModule="MissCat" customModuleProvider="target">
+                    <rect key="frame" x="20" y="30" width="50" height="50"/>
+                    <color key="backgroundColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <constraints>
+                        <constraint firstAttribute="width" secondItem="jn6-Lp-OH0" secondAttribute="height" multiplier="1:1" id="SBj-3J-aQy"/>
+                    </constraints>
+                </imageView>
             </subviews>
-            <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
             <constraints>
-                <constraint firstItem="s1T-ii-J3t" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="CE8-0O-hP7"/>
-                <constraint firstItem="5O8-wW-Izu" firstAttribute="width" secondItem="iN0-l3-epB" secondAttribute="width" multiplier="0.101449" id="Ing-yu-aa4"/>
-                <constraint firstAttribute="trailing" secondItem="s1T-ii-J3t" secondAttribute="trailing" constant="20" id="dN7-Gv-c4F"/>
-                <constraint firstItem="s1T-ii-J3t" firstAttribute="leading" secondItem="5O8-wW-Izu" secondAttribute="trailing" constant="10" id="eE3-7y-ORE"/>
-                <constraint firstItem="5O8-wW-Izu" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="ems-VM-KSD"/>
-                <constraint firstItem="5O8-wW-Izu" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="10" id="gYe-iI-OPu"/>
+                <constraint firstItem="CV2-z0-auz" firstAttribute="leading" secondItem="jn6-Lp-OH0" secondAttribute="leading" constant="8" id="5Bn-Th-BBE"/>
+                <constraint firstItem="jn6-Lp-OH0" firstAttribute="top" secondItem="CV2-z0-auz" secondAttribute="bottom" constant="5" id="7a2-q1-78Y"/>
+                <constraint firstItem="jn6-Lp-OH0" firstAttribute="width" secondItem="iN0-l3-epB" secondAttribute="width" multiplier="0.120773" id="C0n-Lg-zne"/>
+                <constraint firstItem="F0g-Is-YvU" firstAttribute="top" secondItem="jn6-Lp-OH0" secondAttribute="top" constant="-7" id="Qmk-Xe-FU7"/>
+                <constraint firstAttribute="bottom" secondItem="uYo-WZ-r28" secondAttribute="bottom" constant="10" id="UAO-lu-gDX"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="F0g-Is-YvU" secondAttribute="trailing" constant="20" id="Wad-qF-tpZ"/>
+                <constraint firstItem="jn6-Lp-OH0" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="20" id="Ydk-vG-6vO"/>
+                <constraint firstItem="jn6-Lp-OH0" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="30" id="Z8f-iI-1Eq"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="uYo-WZ-r28" secondAttribute="trailing" constant="20" id="ajq-TP-wEt"/>
+                <constraint firstItem="uYo-WZ-r28" firstAttribute="top" secondItem="F0g-Is-YvU" secondAttribute="bottom" id="ccD-R6-nMD"/>
+                <constraint firstItem="F0g-Is-YvU" firstAttribute="leading" secondItem="jn6-Lp-OH0" secondAttribute="trailing" constant="7" id="ekY-rC-QRP"/>
+                <constraint firstItem="uYo-WZ-r28" firstAttribute="leading" secondItem="F0g-Is-YvU" secondAttribute="leading" id="nDg-15-6a0"/>
             </constraints>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
-            <point key="canvasLocation" x="137.68115942028987" y="-165.40178571428569"/>
+            <point key="canvasLocation" x="137.68115942028987" y="-128.23660714285714"/>
         </view>
     </objects>
 </document>
