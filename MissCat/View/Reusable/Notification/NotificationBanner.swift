@@ -322,7 +322,7 @@ class NotificationBanner: UIView, UITextViewDelegate {
         })
     }
     
-    @objc private func disappear() {
+    @objc func disappear() {
         UIView.animate(withDuration: 0.5, animations: {
             self.alpha = 0
         }, completion: { _ in

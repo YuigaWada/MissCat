@@ -529,6 +529,7 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
             banner.rxTap.subscribe(onNext: { _ in
                 guard let notificationId = contents.id else { return }
                 self.openNotification(notificationId, owner: owner)
+                banner.disappear()
             }).disposed(by: self.disposeBag)
             
             self.view.bringSubviewToFront(banner)
