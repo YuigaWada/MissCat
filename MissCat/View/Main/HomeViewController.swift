@@ -515,6 +515,8 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         }
     }
     
+    // MARK: Notitifcation
+    
     func showNotificationBanner(with contents: NotificationModel, owner: SecureUser) {
         DispatchQueue.main.async {
             let banner = NotificationBanner(with: contents, owner: owner)
@@ -522,7 +524,12 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
             banner.translatesAutoresizingMaskIntoConstraints = false
             banner.layer.cornerRadius = 8
             self.view.addSubview(banner)
+            
             banner.setAutoLayout(on: self.view, widthScale: 0.9, height: self.footerTabHeight * 2, bottom: self.footerTabHeight + 10)
+            banner.rxTap.subscribe(onNext: { _ in
+                guard let notificationId = contents.id else { return }
+                self.openNotification(notificationId, owner: owner)
+            }).disposed(by: self.disposeBag)
             
             self.view.bringSubviewToFront(banner)
         }
@@ -541,6 +548,11 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
             self.view.addSubview(notificationBanner)
             self.view.bringSubviewToFront(notificationBanner)
         }
+    }
+    
+    private func openNotification(_ notificationId: String, owner: SecureUser) {
+        navBar.changeUser(to: owner) // ユーザーを変更しておく
+        emulateFooterTabTap(tab: .notifications)
     }
 }
 
