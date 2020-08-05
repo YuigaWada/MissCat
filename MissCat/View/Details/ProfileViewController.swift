@@ -252,7 +252,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         
         iconImageView.setTapGesture(disposeBag) {
             guard let icon = self.iconImageView.image else { return }
-            Agrume(image: icon).show(from: self) // 画像を表示
+            self.viewImage(image: icon, disposeBag: self.disposeBag) // 画像を表示
         }
         
         if !isMe {

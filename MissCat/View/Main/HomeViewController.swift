@@ -618,8 +618,7 @@ extension HomeViewController: NoteCellDelegate {
     }
     
     func showImage(_ urls: [URL], start startIndex: Int) {
-        let agrume = Agrume(urls: urls, startIndex: startIndex)
-        agrume.show(from: self) // 画像を表示
+        viewImage(urls: urls, startIndex: startIndex, disposeBag: disposeBag)
     }
     
     func playVideo(url: String) {
