@@ -234,6 +234,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         fileContainer.layer.cornerRadius = 10
         fileContainer.layer.borderColor = UIColor.lightGray.cgColor
         fileContainer.layer.borderWidth = 0.3
+        fileContainer.layer.backgroundColor = UIColor.clear.cgColor
     }
     
     private func setupInnerRenoteDisplay() {
