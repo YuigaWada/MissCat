@@ -96,8 +96,8 @@ class NotificationCellViewModel: ViewModelType {
             }
             
             // String
-            output.name.accept(convertMfmString(custom.title))
-            output.note.accept(convertMfmString(custom.body))
+            output.name.accept(convertMfmString(custom.title, fontSize: 11.0))
+            output.note.accept(convertMfmString(custom.body, fontSize: 9.5))
             
             // typeIcon
             output.typeIconString.accept(custom.awesomeIcon)
@@ -203,9 +203,9 @@ class NotificationCellViewModel: ViewModelType {
         }
     }
     
-    private func convertMfmString(_ string: String) -> MFMString {
+    private func convertMfmString(_ string: String, fontSize: CGFloat) -> MFMString {
         let mfm = MFMEngine(with: string, lineHeight: 30)
-        let font = UIFont(name: "Helvetica", size: 11.0)
+        let font = UIFont(name: "Helvetica", size: fontSize)
         
         let textHex = Theme.shared.currentModel?.colorPattern.hex.text ?? "000000"
         let mfmString = MFMString(mfmEngine: mfm, attributed: MFMEngine.generatePlaneString(string: string, font: font, textHex: textHex))
