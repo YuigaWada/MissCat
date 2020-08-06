@@ -12,9 +12,9 @@
 MissCatはMisskeyに特化したiOS向けのネイティブアプリです。
 
 <br><br>
-## Goals & Missions
+## Missions & Goals 
 
-MissCatの目標は以下の<u>5つ</u>です。
+MissCatのミッションは以下の<u>5つ</u>です。
 
 - Misskeyをより身近なSNSにすること
 - スマホに適した直感的な操作性を提供すること
@@ -23,7 +23,7 @@ MissCatの目標は以下の<u>5つ</u>です。
 - Misskeyを広めること
 
 <br><br>
-これらに応じて、順に以下のようなミッションを設定しています。
+これらに応じて、順に以下のようなゴールを設定しています。
 <br><br>
 
 
