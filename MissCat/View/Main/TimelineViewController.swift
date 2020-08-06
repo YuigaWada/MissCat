@@ -202,6 +202,12 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             self.present(activityVC, animated: true, completion: nil)
         }).disposed(by: disposeBag)
         
+        output.showErrorTrigger.subscribe(onNext: { error, owner in
+            self.homeViewController?.showNotificationBanner(title: error.errorMessage,
+                                                            body: error.description,
+                                                            owner: owner)
+        }).disposed(by: disposeBag)
+        
         mainTableView.lockScroll = output.lockTableScroll.asObservable()
     }
     

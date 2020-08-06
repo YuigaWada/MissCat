@@ -40,6 +40,7 @@ class TimelineViewModel: ViewModelType {
         let reserveLockTrigger: PublishRelay<Void> = .init()
         let openSafariTrigger: PublishRelay<URL> = .init()
         let shareLinksTrigger: PublishRelay<URL> = .init()
+        let showErrorTrigger: PublishRelay<(MisskeyKitError, SecureUser)> = .init()
     }
     
     class State {
@@ -128,6 +129,16 @@ class TimelineViewModel: ViewModelType {
         loadNotes().subscribe(onError: { error in
             if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty, self.input.type == .Home {
                 self.initialFollow()
+            }
+            
+            if let error = error as? MisskeyKitError {
+                self.output.showErrorTrigger.accept((error, self.input.owner))
+                if error == .ForbiddonError { // 連携が解除されている場合はSkeltonCellを非表示にする
+                    self.hasSkeltonCell = true
+                    DispatchQueue.main.async {
+                        self.removeSkeltonCell()
+                    }
+                }
             }
             
             print(error)
