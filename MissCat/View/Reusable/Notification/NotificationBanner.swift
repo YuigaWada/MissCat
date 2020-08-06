@@ -57,6 +57,19 @@ class NotificationBanner: UIView, UITextViewDelegate {
         self.viewModel = viewModel
     }
     
+    convenience init(title: String, body: String, owner: SecureUser) {
+        self.init()
+        loadNib()
+        setupComponents()
+        
+        var viewModel: NotificationBannerViewModel?
+        
+        let custom = convertCustomModel(title: title, body: body)
+        viewModel = getViewModel(with: custom)
+        
+        self.viewModel = viewModel
+    }
+    
     private func convertCustomModel(_ contents: NotificationModel) -> NotificationCell.CustomModel {
         let iconRawUrl = contents.user?.avatarUrl ?? ""
         let url = URL(string: iconRawUrl)
@@ -68,6 +81,16 @@ class NotificationBanner: UIView, UITextViewDelegate {
                      body: contents.note?.text ?? "",
                      iconType: .original,
                      icon: url)
+    }
+    
+    private func convertCustomModel(title: String, body: String) -> NotificationCell.CustomModel {
+        return .init(awesomeColor: UIColor(red: 231 / 255, green: 76 / 255, blue: 60 / 255, alpha: 1),
+                     awesomeIcon: "times",
+                     miniTitle: "Error",
+                     title: title,
+                     body: body,
+                     iconType: .error,
+                     icon: nil)
     }
     
     // オリジナル通知

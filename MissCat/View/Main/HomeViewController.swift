@@ -521,19 +521,36 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
         DispatchQueue.main.async {
             let banner = NotificationBanner(with: contents, owner: owner)
             
-            banner.translatesAutoresizingMaskIntoConstraints = false
-            banner.layer.cornerRadius = 8
-            self.view.addSubview(banner)
-            
-            banner.setAutoLayout(on: self.view, widthScale: 0.9, height: self.footerTabHeight * 2, bottom: self.footerTabHeight + 10)
             banner.rxTap.subscribe(onNext: { _ in
                 guard let notificationId = contents.id else { return }
                 self.openNotification(notificationId, owner: owner)
                 banner.disappear()
             }).disposed(by: self.disposeBag)
             
-            self.view.bringSubviewToFront(banner)
+            self.setupNotificationBanner(banner)
         }
+    }
+    
+    func showNotificationBanner(title: String, body: String, owner: SecureUser) {
+        DispatchQueue.main.async {
+            let banner = NotificationBanner(title: title, body: body, owner: owner)
+            
+            banner.rxTap.subscribe(onNext: { _ in
+                banner.disappear()
+            }).disposed(by: self.disposeBag)
+            
+            self.setupNotificationBanner(banner)
+        }
+    }
+    
+    private func setupNotificationBanner(_ banner: NotificationBanner) {
+        banner.translatesAutoresizingMaskIntoConstraints = false
+        banner.layer.cornerRadius = 8
+        view.addSubview(banner)
+        
+        banner.setAutoLayout(on: view, widthScale: 0.9, height: footerTabHeight * 2, bottom: footerTabHeight + 10)
+        
+        view.bringSubviewToFront(banner)
     }
     
     func showNanoBanner(icon: NanoNotificationBanner.IconType, notification: String) {
