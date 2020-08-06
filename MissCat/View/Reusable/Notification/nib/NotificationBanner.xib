@@ -23,16 +23,16 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" text="Name" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="F0g-Is-YvU" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
-                    <rect key="frame" x="77" y="23" width="317" height="35"/>
+                    <rect key="frame" x="77" y="23" width="317" height="25"/>
                     <constraints>
-                        <constraint firstAttribute="height" constant="35" id="zFq-4k-alO"/>
+                        <constraint firstAttribute="height" constant="25" id="zFq-4k-alO"/>
                     </constraints>
                     <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
                     <fontDescription key="fontDescription" type="system" pointSize="14"/>
                     <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                 </textView>
                 <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" editable="NO" text="Note" translatesAutoresizingMaskIntoConstraints="NO" id="uYo-WZ-r28" customClass="MisskeyTextView" customModule="MissCat" customModuleProvider="target">
-                    <rect key="frame" x="77" y="58" width="317" height="87"/>
+                    <rect key="frame" x="77" y="48" width="317" height="97"/>
                     <color key="textColor" systemColor="labelColor" cocoaTouchSystemColor="darkTextColor"/>
                     <fontDescription key="fontDescription" type="system" pointSize="14"/>
                     <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
