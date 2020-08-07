@@ -94,7 +94,6 @@ class ShareViewController: SLComposeServiceViewController {
     }
     
     override func configurationItems() -> [Any]! {
-        // To add configuration options via table cells at the bottom of the sheet, return an array of SLComposeSheetConfigurationItem here.
         return [accountConfig, visibilityConfig]
     }
     
@@ -122,9 +121,9 @@ class ShareViewController: SLComposeServiceViewController {
         var image: UIImage?
         
         if let url = data as? URL {
-            if url.absoluteString.prefix(8) == "file:///", let imageData = try? Data(contentsOf: url) {
+            if url.absoluteString.prefix(8) == "file:///", let imageData = try? Data(contentsOf: url) { // 画像ファイルの場合
                 image = UIImage(data: imageData)
-            } else {
+            } else { // 通常のURLの場合
                 text += " " + url.absoluteString
             }
         }
