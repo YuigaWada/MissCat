@@ -13,9 +13,18 @@ import UIKit
 
 class ShareViewController: SLComposeServiceViewController {
     private lazy var mainColor = UIColor(hex: "2ba3bc")
+    private var accountConfig = SLComposeSheetConfigurationItem()!
+    private var visibilityConfig = SLComposeSheetConfigurationItem()!
+    
+    private let userModel: UserModel = .init()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupComponent()
+        setupMenu()
+    }
+    
+    private func setupComponent() {
         title = "Misskeyへ投稿"
         
         navigationController?.navigationBar.tintColor = .white
@@ -25,6 +34,18 @@ class ShareViewController: SLComposeServiceViewController {
         
         let controller: UIViewController = navigationController!.viewControllers.first!
         controller.navigationItem.rightBarButtonItem!.title = "投稿"
+    }
+    
+    private func setupMenu() {
+        guard let currentUser = userModel.getCurrentUser() else { errorMessage(); fatalError() }
+        accountConfig.title = "アカウント"
+        accountConfig.value = "\(currentUser.username)@\(currentUser.instance)"
+        accountConfig.tapHandler = {}
+        
+        let currentVisibity = userModel.getCurrentVisibility() ?? Visibility.public
+        visibilityConfig.title = "公開範囲"
+        visibilityConfig.value = currentVisibity.rawValue
+        visibilityConfig.tapHandler = {}
     }
     
     override func isContentValid() -> Bool {
@@ -48,7 +69,7 @@ class ShareViewController: SLComposeServiceViewController {
     
     override func configurationItems() -> [Any]! {
         // To add configuration options via table cells at the bottom of the sheet, return an array of SLComposeSheetConfigurationItem here.
-        return []
+        return [accountConfig, visibilityConfig]
     }
     
     private func getSiteData(handler: @escaping ((String, String)) -> Void) {
@@ -73,17 +94,26 @@ class ShareViewController: SLComposeServiceViewController {
     }
     
     private func post(with data: NSSecureCoding) {
-        if let image = data as? UIImage {
-            
+        guard let user = userModel.getCurrentUser(),
+            let visibility = userModel.getCurrentVisibility() else { return }
+        
+        var text = contentText ?? ""
+        let image = data as? UIImage
+        
+        if let url = data as? URL {
+            text += " " + url.absoluteString
         }
-        else if let url = data as? NSURL {
-            
-        }
-        //        let model = PostModel()
+        
+        let model = PostModel(user: user)
+        model.submitNote(text, image: image, visibility: visibility, completion: { success in
+            if !success {
+                self.errorMessage("送信に失敗しました")
+            }
+        })
     }
     
-    private func errorMessage()  {
-        let alert = UIAlertController(title: "エラー", message: "データの取得に失敗しました。", preferredStyle: UIAlertController.Style.alert)
+    private func errorMessage(_ message: String = "データの取得に失敗しました。") {
+        let alert = UIAlertController(title: "エラー", message: message, preferredStyle: UIAlertController.Style.alert)
         present(alert, animated: true, completion: nil)
     }
 }
