@@ -30,16 +30,27 @@ class ShareViewController: SLComposeServiceViewController {
         setupMenu()
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(true)
+        setupGradiantNav()
+    }
+    
     private func setupComponent() {
-        title = "Misskeyへ投稿"
+        title = nil
+        
+        navigationController?.navigationBar.barStyle = .default
         
         navigationController?.navigationBar.tintColor = .white
         navigationController?.navigationBar.barTintColor = .white
         navigationController?.navigationBar.backgroundColor = mainColor
-        navigationController?.navigationBar.alpha = 0.75
+        navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
         
-        let controller: UIViewController = navigationController!.viewControllers.first!
+        let controller = navigationController!.viewControllers.first!
+        let missCatImage = UIImageView(image: UIImage(named: "MissCat"))
+        
+        missCatImage.contentMode = .scaleAspectFit
         controller.navigationItem.rightBarButtonItem!.title = "投稿"
+        controller.navigationItem.titleView = missCatImage
     }
     
     private func setupMenu() {
@@ -78,6 +89,23 @@ class ShareViewController: SLComposeServiceViewController {
     override func configurationItems() -> [Any]! {
         // To add configuration options via table cells at the bottom of the sheet, return an array of SLComposeSheetConfigurationItem here.
         return [accountConfig, visibilityConfig]
+    }
+    
+    // MARK: Design
+    
+    private func setupGradiantNav() {
+        guard let navigationBar = navigationController?.navigationBar else { return }
+        let gradientLayer: CAGradientLayer = CAGradientLayer()
+        
+        gradientLayer.colors = [UIColor(hex: "4691a3").cgColor,
+                                UIColor(hex: "5AB0C5").cgColor,
+                                UIColor(hex: "89d5e8").cgColor]
+        gradientLayer.frame = navigationBar.layer.frame
+        gradientLayer.startPoint = CGPoint(x: 0, y: 1)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 0)
+        
+        let index = navigationBar.layer.sublayers?.count ?? 1
+        navigationBar.layer.insertSublayer(gradientLayer, at: UInt32(index - 1))
     }
     
     // MARK: Others
