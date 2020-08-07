@@ -19,19 +19,22 @@ class PostModel {
     }
     
     /// 投稿する
-    func submitNote(_ note: String?, cw: String? = nil, fileIds: [String]? = nil, replyId: String? = nil, renoteId: String? = nil, visibility: Visibility, completion: @escaping (Bool) -> Void) {
+    func submitNote(_ note: String?, image: UIImage?, visibility: Visibility, completion: @escaping (Bool) -> Void) {
         guard let note = note else { return }
         
-        if let renoteId = renoteId { // 引用RN
-            misskey?.notes.renote(renoteId: renoteId, quote: note, visibility: visibility) { post, error in
-                let isSuccess = post != nil && error == nil
-                completion(isSuccess)
+        if let image = image { // 画像が添付されている場合
+            uploadFile(image, nsfw: false) { id in
+                guard let id = id else { completion(false); return }
+                self.misskey?.notes.createNote(visibility: visibility, text: note, fileIds: [id]) { post, error in
+                    let isSuccess = post != nil && error == nil
+                    completion(isSuccess)
+                }
             }
-        } else { // 通常の投稿
-            misskey?.notes.createNote(visibility: visibility, text: note, cw: cw ?? "", fileIds: fileIds ?? [], replyId: replyId ?? "") { post, error in
-                let isSuccess = post != nil && error == nil
-                completion(isSuccess)
-            }
+        }
+        
+        misskey?.notes.createNote(visibility: visibility, text: note, fileIds: []) { post, error in
+            let isSuccess = post != nil && error == nil
+            completion(isSuccess)
         }
     }
     
