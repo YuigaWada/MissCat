@@ -80,8 +80,11 @@ class ShareViewController: SLComposeServiceViewController {
             let itemProvider = extensionItem.attachments?.first else { return }
         
         let puclicURL = kUTTypeURL as String
-        if itemProvider.hasItemConformingToTypeIdentifier(puclicURL) {
-            itemProvider.loadItem(forTypeIdentifier: puclicURL, options: nil, completionHandler: { data, _ in
+        let typeImage = kUTTypeImage as String
+        
+        for typeIdentifier in [puclicURL, typeImage] {
+            guard itemProvider.hasItemConformingToTypeIdentifier(typeIdentifier) else { continue }
+            itemProvider.loadItem(forTypeIdentifier: typeIdentifier, options: nil, completionHandler: { data, _ in
                 guard let data = data else { self.errorMessage(); return }
                 
                 self.post(with: data)
@@ -116,17 +119,19 @@ class ShareViewController: SLComposeServiceViewController {
         guard let user = currentUser else { return }
         
         var text = contentText ?? ""
-        let image = data as? UIImage
+        var image: UIImage?
         
         if let url = data as? URL {
-            text += " " + url.absoluteString
+            if url.absoluteString.prefix(8) == "file:///", let imageData = try? Data(contentsOf: url) {
+                image = UIImage(data: imageData)
+            } else {
+                text += " " + url.absoluteString
+            }
         }
         
         let model = PostModel(user: user)
         model.submitNote(text, image: image, visibility: currentVisibility, completion: { success in
-            if !success {
-                self.errorMessage("送信に失敗しました")
-            }
+            if !success { self.errorMessage("送信に失敗しました") }
         })
     }
     
