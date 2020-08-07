@@ -12,11 +12,17 @@ import Social
 import UIKit
 
 class ShareViewController: SLComposeServiceViewController {
+    // MARK: Items
+    
     private lazy var mainColor = UIColor(hex: "2ba3bc")
     private var accountConfig = SLComposeSheetConfigurationItem()!
     private var visibilityConfig = SLComposeSheetConfigurationItem()!
     
+    // MARK: Models
+    
     private let userModel: UserModel = .init()
+    
+    // MARK: LifeCycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -48,6 +54,8 @@ class ShareViewController: SLComposeServiceViewController {
         visibilityConfig.tapHandler = {}
     }
     
+    // MARK: Overrides
+    
     override func isContentValid() -> Bool {
         return contentText.count <= 1500
     }
@@ -72,26 +80,7 @@ class ShareViewController: SLComposeServiceViewController {
         return [accountConfig, visibilityConfig]
     }
     
-    private func getSiteData(handler: @escaping ((String, String)) -> Void) {
-        for item: Any in extensionContext!.inputItems {
-            let inputItem = item as! NSExtensionItem
-            
-            for itemProvider: NSItemProvider in inputItem.attachments! {
-                guard itemProvider.hasItemConformingToTypeIdentifier("public.data") else { return }
-                itemProvider.loadItem(forTypeIdentifier: "public.data", options: nil, completionHandler: { item, _ in
-                    
-                    guard let dictionary = item as? NSDictionary else { return }
-                    DispatchQueue.main.async { () -> Void in
-                        let results = dictionary[NSExtensionJavaScriptPreprocessingResultsKey] as! NSDictionary
-                        
-                        guard let url = results["title"] as? String,
-                            let title = results["title"] as? String else { return }
-                        handler((url, title))
-                    }
-                })
-            }
-        }
-    }
+    // MARK: Others
     
     private func post(with data: NSSecureCoding) {
         guard let user = userModel.getCurrentUser(),
