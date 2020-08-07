@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		552FF854616F36CC7803886D /* Pods_MissCatShare.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F412ED176465DBF0296E756B /* Pods_MissCatShare.framework */; };
 		8D00BD5A249371560049FFE0 /* InstanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D00BD59249371560049FFE0 /* InstanceViewController.swift */; };
 		8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */; };
 		8D065B17237AC3D0003DFB7C /* TimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */; };
@@ -23,6 +24,10 @@
 		8D0F7D11239B4875009B45E1 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */; };
 		8D127987247BA3EE003BA9CD /* EditablePollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D127986247BA3EE003BA9CD /* EditablePollView.swift */; };
 		8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D16656823A0DB3100C03764 /* MFMEngine.swift */; };
+		8D1A4BFD24DD7BFF00EFD826 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1A4BFC24DD7BFF00EFD826 /* ShareViewController.swift */; };
+		8D1A4C0024DD7BFF00EFD826 /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8D1A4BFE24DD7BFF00EFD826 /* MainInterface.storyboard */; };
+		8D1A4C0424DD7BFF00EFD826 /* MissCatShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 8D1A4BFA24DD7BFF00EFD826 /* MissCatShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8D1A4C0A24DD82CC00EFD826 /* PostModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1A4C0924DD82CC00EFD826 /* PostModel.swift */; };
 		8D2279EE24468FD100FA87A2 /* MFMTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2279ED24468FD100FA87A2 /* MFMTests.swift */; };
 		8D2279F02446CD9700FA87A2 /* UrlPreviewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2279EF2446CD9700FA87A2 /* UrlPreviewer.swift */; };
 		8D2A7236242A49CC00F8827D /* MissCatTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2A7235242A49CC00F8827D /* MissCatTableView.swift */; };
@@ -182,6 +187,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		8D1A4C0224DD7BFF00EFD826 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8D4A2A0A237437BE00503685 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D1A4BF924DD7BFF00EFD826;
+			remoteInfo = MissCatShare;
+		};
 		8D4A2A29237437C100503685 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 8D4A2A0A237437BE00503685 /* Project object */;
@@ -191,8 +203,24 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		8D1A4C0524DD7BFF00EFD826 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				8D1A4C0424DD7BFF00EFD826 /* MissCatShare.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		3454BE3D06D0C12BCA775B4B /* Pods-MissCatShare.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCatShare.release.xcconfig"; path = "Target Support Files/Pods-MissCatShare/Pods-MissCatShare.release.xcconfig"; sourceTree = "<group>"; };
 		49D674DA4870479FF355F58B /* Pods_MissCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MissCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		79B7AD7D002BC8FC43933AF9 /* Pods-MissCatShare.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCatShare.debug.xcconfig"; path = "Target Support Files/Pods-MissCatShare/Pods-MissCatShare.debug.xcconfig"; sourceTree = "<group>"; };
 		7A9C2BEAFA1B2C51A77CF66B /* Pods-MissCat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCat.debug.xcconfig"; path = "Target Support Files/Pods-MissCat/Pods-MissCat.debug.xcconfig"; sourceTree = "<group>"; };
 		8D00BD59249371560049FFE0 /* InstanceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceViewController.swift; sourceTree = "<group>"; };
 		8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavigationController.swift; sourceTree = "<group>"; };
@@ -212,6 +240,11 @@
 		8D0F7D10239B4875009B45E1 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		8D127986247BA3EE003BA9CD /* EditablePollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditablePollView.swift; sourceTree = "<group>"; };
 		8D16656823A0DB3100C03764 /* MFMEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MFMEngine.swift; sourceTree = "<group>"; };
+		8D1A4BFA24DD7BFF00EFD826 /* MissCatShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MissCatShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D1A4BFC24DD7BFF00EFD826 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		8D1A4BFF24DD7BFF00EFD826 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
+		8D1A4C0124DD7BFF00EFD826 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8D1A4C0924DD82CC00EFD826 /* PostModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostModel.swift; sourceTree = "<group>"; };
 		8D1C150D2424C649004B1202 /* Bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Bridge.h; sourceTree = "<group>"; };
 		8D1C150E2424E3B6004B1202 /* MissCat.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MissCat.entitlements; sourceTree = "<group>"; };
 		8D2279ED24468FD100FA87A2 /* MFMTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MFMTests.swift; sourceTree = "<group>"; };
@@ -377,9 +410,18 @@
 		8DFD613E2491208A00E22C9F /* AccountsDropdownMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsDropdownMenu.swift; sourceTree = "<group>"; };
 		8DFD614024912F3D00E22C9F /* SecureUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureUser.swift; sourceTree = "<group>"; };
 		DF4146F7CC2C0143F19E0DF3 /* Pods-MissCat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCat.release.xcconfig"; path = "Target Support Files/Pods-MissCat/Pods-MissCat.release.xcconfig"; sourceTree = "<group>"; };
+		F412ED176465DBF0296E756B /* Pods_MissCatShare.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MissCatShare.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		8D1A4BF724DD7BFF00EFD826 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				552FF854616F36CC7803886D /* Pods_MissCatShare.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D4A2A0F237437BE00503685 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -403,6 +445,8 @@
 			children = (
 				7A9C2BEAFA1B2C51A77CF66B /* Pods-MissCat.debug.xcconfig */,
 				DF4146F7CC2C0143F19E0DF3 /* Pods-MissCat.release.xcconfig */,
+				79B7AD7D002BC8FC43933AF9 /* Pods-MissCatShare.debug.xcconfig */,
+				3454BE3D06D0C12BCA775B4B /* Pods-MissCatShare.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -473,6 +517,17 @@
 				8D0AC5B7237B5AD900530508 /* Font Awesome 5 Free-Solid-900.otf */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		8D1A4BFB24DD7BFF00EFD826 /* MissCatShare */ = {
+			isa = PBXGroup;
+			children = (
+				8D1A4BFC24DD7BFF00EFD826 /* ShareViewController.swift */,
+				8D1A4BFE24DD7BFF00EFD826 /* MainInterface.storyboard */,
+				8D1A4C0124DD7BFF00EFD826 /* Info.plist */,
+				8D1A4C0924DD82CC00EFD826 /* PostModel.swift */,
+			);
+			path = MissCatShare;
 			sourceTree = "<group>";
 		};
 		8D3037032389086800BA6D38 /* Extension */ = {
@@ -573,6 +628,7 @@
 			children = (
 				8D4A2A14237437BE00503685 /* MissCat */,
 				8D4A2A2B237437C100503685 /* MissCatTests */,
+				8D1A4BFB24DD7BFF00EFD826 /* MissCatShare */,
 				8D4A2A13237437BE00503685 /* Products */,
 				8D4A2A372374388300503685 /* Frameworks */,
 				55E2552AB409AE8A0EA8AE7A /* Pods */,
@@ -584,6 +640,7 @@
 			children = (
 				8D4A2A12237437BE00503685 /* MissCat.app */,
 				8D4A2A28237437C100503685 /* MissCatTests.xctest */,
+				8D1A4BFA24DD7BFF00EFD826 /* MissCatShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -624,6 +681,7 @@
 				8DD0D80B23B47CA8003F02ED /* YanagiText.framework */,
 				8D04919A237857AC000433CD /* MisskeyKit.framework */,
 				49D674DA4870479FF355F58B /* Pods_MissCat.framework */,
+				F412ED176465DBF0296E756B /* Pods_MissCatShare.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1104,6 +1162,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		8D1A4BF924DD7BFF00EFD826 /* MissCatShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8D1A4C0824DD7BFF00EFD826 /* Build configuration list for PBXNativeTarget "MissCatShare" */;
+			buildPhases = (
+				EA581CBB0A7B6DD1F02696DF /* [CP] Check Pods Manifest.lock */,
+				8D1A4BF624DD7BFF00EFD826 /* Sources */,
+				8D1A4BF724DD7BFF00EFD826 /* Frameworks */,
+				8D1A4BF824DD7BFF00EFD826 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MissCatShare;
+			productName = MissCatShare;
+			productReference = 8D1A4BFA24DD7BFF00EFD826 /* MissCatShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		8D4A2A11237437BE00503685 /* MissCat */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8D4A2A31237437C100503685 /* Build configuration list for PBXNativeTarget "MissCat" */;
@@ -1115,10 +1191,12 @@
 				8D10B7BF23F2BE1100FFD9DA /* SwiftFormat */,
 				8C739A5D3A37D7C2A426ECC7 /* [CP] Embed Pods Frameworks */,
 				8B9CC6DDD98A244177B80DA4 /* [CP] Copy Pods Resources */,
+				8D1A4C0524DD7BFF00EFD826 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				8D1A4C0324DD7BFF00EFD826 /* PBXTargetDependency */,
 			);
 			name = MissCat;
 			productName = MissCat;
@@ -1149,10 +1227,13 @@
 		8D4A2A0A237437BE00503685 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1120;
+				LastSwiftUpdateCheck = 1130;
 				LastUpgradeCheck = 1120;
 				ORGANIZATIONNAME = "Yuiga Wada";
 				TargetAttributes = {
+					8D1A4BF924DD7BFF00EFD826 = {
+						CreatedOnToolsVersion = 11.3.1;
+					};
 					8D4A2A11237437BE00503685 = {
 						CreatedOnToolsVersion = 11.2;
 					};
@@ -1177,11 +1258,20 @@
 			targets = (
 				8D4A2A11237437BE00503685 /* MissCat */,
 				8D4A2A27237437C100503685 /* MissCatTests */,
+				8D1A4BF924DD7BFF00EFD826 /* MissCatShare */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		8D1A4BF824DD7BFF00EFD826 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D1A4C0024DD7BFF00EFD826 /* MainInterface.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D4A2A10237437BE00503685 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1302,9 +1392,40 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		EA581CBB0A7B6DD1F02696DF /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-MissCatShare-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		8D1A4BF624DD7BFF00EFD826 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D1A4BFD24DD7BFF00EFD826 /* ShareViewController.swift in Sources */,
+				8D1A4C0A24DD82CC00EFD826 /* PostModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D4A2A0E237437BE00503685 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1464,6 +1585,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		8D1A4C0324DD7BFF00EFD826 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8D1A4BF924DD7BFF00EFD826 /* MissCatShare */;
+			targetProxy = 8D1A4C0224DD7BFF00EFD826 /* PBXContainerItemProxy */;
+		};
 		8D4A2A2A237437C100503685 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 8D4A2A11237437BE00503685 /* MissCat */;
@@ -1472,6 +1598,14 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		8D1A4BFE24DD7BFF00EFD826 /* MainInterface.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				8D1A4BFF24DD7BFF00EFD826 /* Base */,
+			);
+			name = MainInterface.storyboard;
+			sourceTree = "<group>";
+		};
 		8D4A2A1B237437BE00503685 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1491,6 +1625,50 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		8D1A4C0624DD7BFF00EFD826 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 79B7AD7D002BC8FC43933AF9 /* Pods-MissCatShare.debug.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 4LMTSU8RLS;
+				INFOPLIST_FILE = MissCatShare/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCat.MissCatShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		8D1A4C0724DD7BFF00EFD826 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3454BE3D06D0C12BCA775B4B /* Pods-MissCatShare.release.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 4LMTSU8RLS;
+				INFOPLIST_FILE = MissCatShare/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCat.MissCatShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		8D4A2A2F237437C100503685 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1613,6 +1791,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7A9C2BEAFA1B2C51A77CF66B /* Pods-MissCat.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -1692,6 +1871,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = DF4146F7CC2C0143F19E0DF3 /* Pods-MissCat.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -1814,6 +1994,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		8D1A4C0824DD7BFF00EFD826 /* Build configuration list for PBXNativeTarget "MissCatShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8D1A4C0624DD7BFF00EFD826 /* Debug */,
+				8D1A4C0724DD7BFF00EFD826 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		8D4A2A0D237437BE00503685 /* Build configuration list for PBXProject "MissCat" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
