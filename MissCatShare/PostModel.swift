@@ -11,13 +11,10 @@ import MisskeyKit
 class PostModel {
     private let misskey: MisskeyKit?
     
-//    init(user: SecureUser) {
-    init() {
-//        self.misskey = MisskeyKit(instance: user.instance, apiKey: user.apiKey)
+    init(user: SecureUser) {
         let misskey = MisskeyKit()
-        misskey.changeInstance(instance: "")
-        misskey.auth.setAPIKey("")
-        
+        misskey.changeInstance(instance: user.instance)
+        misskey.auth.setAPIKey(user.apiKey!)
         self.misskey = misskey
     }
     

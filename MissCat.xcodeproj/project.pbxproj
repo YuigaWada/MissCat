@@ -28,6 +28,7 @@
 		8D1A4C0024DD7BFF00EFD826 /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8D1A4BFE24DD7BFF00EFD826 /* MainInterface.storyboard */; };
 		8D1A4C0424DD7BFF00EFD826 /* MissCatShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 8D1A4BFA24DD7BFF00EFD826 /* MissCatShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		8D1A4C0A24DD82CC00EFD826 /* PostModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1A4C0924DD82CC00EFD826 /* PostModel.swift */; };
+		8D1A4C0E24DD95CA00EFD826 /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1A4C0D24DD95CA00EFD826 /* UserModel.swift */; };
 		8D2279EE24468FD100FA87A2 /* MFMTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2279ED24468FD100FA87A2 /* MFMTests.swift */; };
 		8D2279F02446CD9700FA87A2 /* UrlPreviewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2279EF2446CD9700FA87A2 /* UrlPreviewer.swift */; };
 		8D2A7236242A49CC00F8827D /* MissCatTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2A7235242A49CC00F8827D /* MissCatTableView.swift */; };
@@ -245,6 +246,8 @@
 		8D1A4BFF24DD7BFF00EFD826 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
 		8D1A4C0124DD7BFF00EFD826 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1A4C0924DD82CC00EFD826 /* PostModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostModel.swift; sourceTree = "<group>"; };
+		8D1A4C0D24DD95CA00EFD826 /* UserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModel.swift; sourceTree = "<group>"; };
+		8D1A4C0F24DD9B4000EFD826 /* MissCatShare.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MissCatShare.entitlements; sourceTree = "<group>"; };
 		8D1C150D2424C649004B1202 /* Bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Bridge.h; sourceTree = "<group>"; };
 		8D1C150E2424E3B6004B1202 /* MissCat.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MissCat.entitlements; sourceTree = "<group>"; };
 		8D2279ED24468FD100FA87A2 /* MFMTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MFMTests.swift; sourceTree = "<group>"; };
@@ -522,10 +525,12 @@
 		8D1A4BFB24DD7BFF00EFD826 /* MissCatShare */ = {
 			isa = PBXGroup;
 			children = (
+				8D1A4C0F24DD9B4000EFD826 /* MissCatShare.entitlements */,
 				8D1A4BFC24DD7BFF00EFD826 /* ShareViewController.swift */,
 				8D1A4BFE24DD7BFF00EFD826 /* MainInterface.storyboard */,
 				8D1A4C0124DD7BFF00EFD826 /* Info.plist */,
 				8D1A4C0924DD82CC00EFD826 /* PostModel.swift */,
+				8D1A4C0D24DD95CA00EFD826 /* UserModel.swift */,
 			);
 			path = MissCatShare;
 			sourceTree = "<group>";
@@ -1422,6 +1427,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D1A4BFD24DD7BFF00EFD826 /* ShareViewController.swift in Sources */,
+				8D1A4C0E24DD95CA00EFD826 /* UserModel.swift in Sources */,
 				8D1A4C0A24DD82CC00EFD826 /* PostModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1629,6 +1635,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 79B7AD7D002BC8FC43933AF9 /* Pods-MissCatShare.debug.xcconfig */;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MissCatShare/MissCatShare.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -1651,6 +1658,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 3454BE3D06D0C12BCA775B4B /* Pods-MissCatShare.release.xcconfig */;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MissCatShare/MissCatShare.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
