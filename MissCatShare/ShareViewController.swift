@@ -18,6 +18,11 @@ class ShareViewController: SLComposeServiceViewController {
     private var accountConfig = SLComposeSheetConfigurationItem()!
     private var visibilityConfig = SLComposeSheetConfigurationItem()!
     
+    // MARK: States
+    
+    private lazy var currentUser: SecureUser? = self.userModel.getCurrentUser()
+    private var currentVisibility: Visibility = .public
+    
     // MARK: Models
     
     private let userModel: UserModel = .init()
@@ -49,10 +54,12 @@ class ShareViewController: SLComposeServiceViewController {
     }
     
     private func setupMenu() {
-        guard let currentUser = userModel.getCurrentUser() else { errorMessage(); fatalError() }
+        guard let currentUser = currentUser else { errorMessage(); fatalError() }
         accountConfig.title = "アカウント"
         accountConfig.value = "\(currentUser.username)@\(currentUser.instance)"
-        accountConfig.tapHandler = {}
+        accountConfig.tapHandler = {
+            self.showAccountsViewController()
+        }
         
         let currentVisibity = userModel.getCurrentVisibility() ?? Visibility.public
         visibilityConfig.title = "公開範囲"
@@ -86,14 +93,19 @@ class ShareViewController: SLComposeServiceViewController {
         return [accountConfig, visibilityConfig]
     }
     
+    // MARK: VC
     
+    private func showAccountsViewController() {
+        let users = userModel.getUsers()
+        let accountsVC = AccountsViewController(with: users)
+        accountsVC.delegate = self
+        navigationController?.pushViewController(accountsVC, animated: true)
     }
     
     // MARK: Others
     
     private func post(with data: NSSecureCoding) {
-        guard let user = userModel.getCurrentUser(),
-            let visibility = userModel.getCurrentVisibility() else { return }
+        guard let user = currentUser else { return }
         
         var text = contentText ?? ""
         let image = data as? UIImage
@@ -103,7 +115,7 @@ class ShareViewController: SLComposeServiceViewController {
         }
         
         let model = PostModel(user: user)
-        model.submitNote(text, image: image, visibility: visibility, completion: { success in
+        model.submitNote(text, image: image, visibility: currentVisibility, completion: { success in
             if !success {
                 self.errorMessage("送信に失敗しました")
             }
@@ -113,6 +125,14 @@ class ShareViewController: SLComposeServiceViewController {
     private func errorMessage(_ message: String = "データの取得に失敗しました。") {
         let alert = UIAlertController(title: "エラー", message: message, preferredStyle: UIAlertController.Style.alert)
         present(alert, animated: true, completion: nil)
+    }
+}
+
+extension ShareViewController: AccountsProtocol {
+    func switchAccount(userId: String) {
+        guard let user = userModel.getUser(userId: userId) else { errorMessage(); fatalError() }
+        currentUser = user
+        accountConfig.value = "\(user.username)@\(user.instance)"
     }
 }
 
