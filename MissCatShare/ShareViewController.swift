@@ -30,11 +30,6 @@ class ShareViewController: SLComposeServiceViewController {
         setupMenu()
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(true)
-        setupGradiantNav()
-    }
-    
     private func setupComponent() {
         title = nil
         
@@ -43,7 +38,7 @@ class ShareViewController: SLComposeServiceViewController {
         navigationController?.navigationBar.tintColor = .white
         navigationController?.navigationBar.barTintColor = .white
         navigationController?.navigationBar.backgroundColor = mainColor
-        navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
+        navigationController?.navigationBar.setBackgroundImage(UIImage(named: "back"), for: .default)
         
         let controller = navigationController!.viewControllers.first!
         let missCatImage = UIImageView(image: UIImage(named: "MissCat"))
@@ -91,21 +86,7 @@ class ShareViewController: SLComposeServiceViewController {
         return [accountConfig, visibilityConfig]
     }
     
-    // MARK: Design
     
-    private func setupGradiantNav() {
-        guard let navigationBar = navigationController?.navigationBar else { return }
-        let gradientLayer: CAGradientLayer = CAGradientLayer()
-        
-        gradientLayer.colors = [UIColor(hex: "4691a3").cgColor,
-                                UIColor(hex: "5AB0C5").cgColor,
-                                UIColor(hex: "89d5e8").cgColor]
-        gradientLayer.frame = navigationBar.layer.frame
-        gradientLayer.startPoint = CGPoint(x: 0, y: 1)
-        gradientLayer.endPoint = CGPoint(x: 1, y: 0)
-        
-        let index = navigationBar.layer.sublayers?.count ?? 1
-        navigationBar.layer.insertSublayer(gradientLayer, at: UInt32(index - 1))
     }
     
     // MARK: Others
