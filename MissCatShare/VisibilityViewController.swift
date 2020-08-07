@@ -1,25 +1,21 @@
 //
-//  AccountsViewController.swift
+//  VisibilityViewController.swift
 //  MissCatShare
 //
 //  Created by Yuiga Wada on 2020/08/08.
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
+import MisskeyKit
 import UIKit
 
-protocol AccountsProtocol {
-    func switchAccount(userId: String)
+protocol VisibilityProtocol {
+    func switchVisibility(_ visibility: Visibility)
 }
 
-class AccountsViewController: UITableViewController {
-    private var accounts: [SecureUser] = []
-    var delegate: AccountsProtocol?
-    
-    convenience init(with accounts: [SecureUser]) {
-        self.init()
-        self.accounts = accounts
-    }
+class VisibilityViewController: UITableViewController {
+    private var visibilities: [Visibility] = [.public, .home, .followers]
+    var delegate: VisibilityProtocol?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,22 +28,22 @@ class AccountsViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return accounts.count
+        return visibilities.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let user = accounts[indexPath.row]
+        let visibility = visibilities[indexPath.row]
         let cell = UITableViewCell()
         
         cell.backgroundColor = .clear
-        cell.textLabel?.text = "\(user.username)@\(user.instance)"
+        cell.textLabel?.text = visibility.rawValue
         
         return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let user = accounts[indexPath.row]
-        delegate?.switchAccount(userId: user.userId)
+        let visibility = visibilities[indexPath.row]
+        delegate?.switchVisibility(visibility)
         navigationController?.popViewController(animated: true)
     }
 }

@@ -64,7 +64,9 @@ class ShareViewController: SLComposeServiceViewController {
         let currentVisibity = userModel.getCurrentVisibility() ?? Visibility.public
         visibilityConfig.title = "公開範囲"
         visibilityConfig.value = currentVisibity.rawValue
-        visibilityConfig.tapHandler = {}
+        visibilityConfig.tapHandler = {
+            self.showVisibilityViewController()
+        }
     }
     
     // MARK: Overrides
@@ -102,6 +104,12 @@ class ShareViewController: SLComposeServiceViewController {
         navigationController?.pushViewController(accountsVC, animated: true)
     }
     
+    private func showVisibilityViewController() {
+        let visibilityVC = VisibilityViewController()
+        visibilityVC.delegate = self
+        navigationController?.pushViewController(visibilityVC, animated: true)
+    }
+    
     // MARK: Others
     
     private func post(with data: NSSecureCoding) {
@@ -128,6 +136,8 @@ class ShareViewController: SLComposeServiceViewController {
     }
 }
 
+// MARK: Delegate
+
 extension ShareViewController: AccountsProtocol {
     func switchAccount(userId: String) {
         guard let user = userModel.getUser(userId: userId) else { errorMessage(); fatalError() }
@@ -135,6 +145,15 @@ extension ShareViewController: AccountsProtocol {
         accountConfig.value = "\(user.username)@\(user.instance)"
     }
 }
+
+extension ShareViewController: VisibilityProtocol {
+    func switchVisibility(_ visibility: Visibility) {
+        currentVisibility = visibility
+        visibilityConfig.value = visibility.rawValue
+    }
+}
+
+// MARK: UIColor
 
 extension UIColor {
     convenience init(hex: String, alpha: CGFloat) {
