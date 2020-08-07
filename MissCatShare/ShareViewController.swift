@@ -136,6 +136,9 @@ class ShareViewController: SLComposeServiceViewController {
     
     private func errorMessage(_ message: String = "データの取得に失敗しました。") {
         let alert = UIAlertController(title: "エラー", message: message, preferredStyle: UIAlertController.Style.alert)
+        let dismissAction = UIAlertAction(title: "閉じる", style: .cancel, handler: nil)
+        
+        alert.addAction(dismissAction)
         present(alert, animated: true, completion: nil)
     }
 }
