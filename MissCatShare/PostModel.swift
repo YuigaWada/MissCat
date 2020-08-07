@@ -30,11 +30,11 @@ class PostModel {
                     completion(isSuccess)
                 }
             }
-        }
-        
-        misskey?.notes.createNote(visibility: visibility, text: note, fileIds: []) { post, error in
-            let isSuccess = post != nil && error == nil
-            completion(isSuccess)
+        } else { // 画像の添付がない場合
+            misskey?.notes.createNote(visibility: visibility, text: note, fileIds: []) { post, error in
+                let isSuccess = post != nil && error == nil
+                completion(isSuccess)
+            }
         }
     }
     
