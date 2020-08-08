@@ -41,7 +41,11 @@ class NotificationsModel {
         
         return Observable.create { observer in
             self.misskey?.notifications.get(limit: option.limit, untilId: option.untilId ?? "", following: false) { results, error in
-                guard results != nil, results!.count > 0, error == nil else { return }
+                guard results != nil, results!.count > 0, error == nil else {
+                    guard let error = error else { return }
+                    observer.onError(error)
+                    return
+                }
                 
                 var notifs = results!
                 if let notificationId = notifs[0].id {

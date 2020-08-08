@@ -7,10 +7,13 @@
 //
 
 import MisskeyKit
+import RxCocoa
 import RxSwift
 
 class NotificationsViewModel {
     let notes: PublishSubject<[NotificationCell.Section]> = .init()
+    let showErrorTrigger: PublishRelay<(MisskeyKitError, SecureUser)> = .init()
+    
     var dataSource: NotificationDataSource?
     var cellCount: Int { return cellsModel.count }
     
@@ -75,6 +78,12 @@ class NotificationsViewModel {
             self.shapeModel(cellModel)
             self.removeDuplicated(with: cellModel, array: &tempCells)
             tempCells.insert(cellModel, at: 0)
+            
+        }, onError: { error in
+            if let error = error as? MisskeyKitError {
+                guard let owner = self.owner else { return }
+                self.showErrorTrigger.accept((error, owner))
+            }
             
         }, onCompleted: {
             if untilId == nil {

@@ -92,6 +92,12 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
         viewModel.notes.asDriver(onErrorDriveWith: Driver.empty())
             .drive(mainTableView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)
+        
+        viewModel.showErrorTrigger.subscribe(onNext: { error, owner in
+            self.homeViewController?.showNotificationBanner(title: error.errorMessage,
+                                                            body: error.description,
+                                                            owner: owner)
+        }).disposed(by: disposeBag)
     }
     
     // MARK: Setup Cell
