@@ -69,7 +69,7 @@ class NotificationsViewModel {
     }
     
     func loadNotification(untilId: String? = nil, lastNotifId: String? = nil, completion: (() -> Void)? = nil) {
-        let option: NotificationsModel.LoadOption = .init(limit: 20, untilId: untilId, lastNotifId: lastNotifId)
+        let option: NotificationsModel.LoadOption = .init(limit: 10, untilId: untilId, lastNotifId: lastNotifId)
         
         var tempCells: [NotificationCell.Model] = []
         model.loadNotification(with: option, reversed: true).subscribe(onNext: { notification in
