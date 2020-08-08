@@ -2,6 +2,11 @@ use_frameworks!
 plugin 'cocoapods-binary'
 enable_bitcode_for_prebuilt_frameworks!
 
+target 'MissCatShare' do
+pod 'MisskeyKit'
+pod 'KeychainAccess', :binary => true
+end
+
 
 target 'MissCat' do
 

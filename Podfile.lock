@@ -140,7 +140,7 @@ DEPENDENCIES:
   - XLPagerTabStrip
 
 SPEC REPOS:
-  https://github.com/cocoapods/specs.git:
+  https://github.com/CocoaPods/Specs.git:
     - Agrume
     - APNGKit
     - Cache
@@ -235,6 +235,6 @@ SPEC CHECKSUMS:
   XLActionController: f1f2226d2c6629db197d4a41f2da907085a4cb9d
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
 
-PODFILE CHECKSUM: e219ffbd6b3e2d3ce6166d509144333a7e423ac0
+PODFILE CHECKSUM: 73acd675fe93d32822a3571fa7612a967fed743d
 
-COCOAPODS: 1.7.1
+COCOAPODS: 1.9.3
