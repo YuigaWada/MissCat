@@ -19,6 +19,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     
     var window: UIWindow?
     private let gcmMessageIDKey = "gcm.message_id"
+    private var rootViewController: UIViewController? {
+        if #available(iOS 13, *) {
+            let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene
+            return scene?.windows.first?.rootViewController
+        } else {
+            return window?.rootViewController
+        }
+    }
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
@@ -113,7 +121,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// バナー通知を表示する: サーバーから送られてくるデータは、どのユーザー宛かの情報と通知のid
     /// - Parameter raw: userInfo
     private func showNotificationBanner(with contents: NotificationData) {
-        guard let children = window?.rootViewController?.children,
+        guard let children = rootViewController?.children,
             children.count > 0,
             let homeVC = children[0] as? HomeViewController,
             let owner = Cache.UserDefaults.shared.getUser(userId: contents.ownerId) // どのユーザー宛の通知か
