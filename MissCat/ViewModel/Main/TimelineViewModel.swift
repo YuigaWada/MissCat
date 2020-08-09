@@ -38,6 +38,9 @@ class TimelineViewModel: ViewModelType {
         let connectedStream: PublishRelay<Bool> = .init()
         
         let reserveLockTrigger: PublishRelay<Void> = .init()
+        let openSafariTrigger: PublishRelay<URL> = .init()
+        let shareLinksTrigger: PublishRelay<URL> = .init()
+        let showErrorTrigger: PublishRelay<(MisskeyKitError, SecureUser)> = .init()
     }
     
     class State {
@@ -73,7 +76,7 @@ class TimelineViewModel: ViewModelType {
     private var _isLoading: Bool = false
     var state: State {
         return .init(cellCount: { cellsModel.count }(),
-                     renoteeCellCount: { cellsModel.filter { $0.isRenoteeCell }.count }(),
+                     renoteeCellCount: { cellsModel.filter { $0.type == .renotee }.count }(),
                      isLoading: _isLoading,
                      loadLimit: input.loadLimit,
                      hasSkeltonCell: hasSkeltonCell,
@@ -126,6 +129,16 @@ class TimelineViewModel: ViewModelType {
         loadNotes().subscribe(onError: { error in
             if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty, self.input.type == .Home {
                 self.initialFollow()
+            }
+            
+            if let error = error as? MisskeyKitError {
+                self.output.showErrorTrigger.accept((error, self.input.owner))
+                if error == .ForbiddonError { // 連携が解除されている場合はSkeltonCellを非表示にする
+                    self.hasSkeltonCell = true
+                    DispatchQueue.main.async {
+                        self.removeSkeltonCell()
+                    }
+                }
             }
             
             print(error)
@@ -211,14 +224,14 @@ class TimelineViewModel: ViewModelType {
         findNoteIndex(noteId: targetNoteId).forEach { targetIndex in
             
             if let externalEmoji = externalEmoji {
-                self.cellsModel[targetIndex].emojis?.append(externalEmoji) // 絵文字を追加しておく
+                self.cellsModel[targetIndex].noteEntity.emojis?.append(externalEmoji) // 絵文字を追加しておく
             }
             
-            let existReactionCount = self.cellsModel[targetIndex].reactions.filter { $0.name == rawReaction }
+            let existReactionCount = self.cellsModel[targetIndex].noteEntity.reactions.filter { $0.name == rawReaction }
             let hasThisReaction = existReactionCount.count > 0
             
             if hasThisReaction { // 別のユーザーがリアクションしていた場合
-                self.cellsModel[targetIndex].reactions = self.cellsModel[targetIndex].reactions.map { counter in
+                self.cellsModel[targetIndex].noteEntity.reactions = self.cellsModel[targetIndex].noteEntity.reactions.map { counter in
                     var newReactionCounter = counter
                     if counter.name == rawReaction, let count = counter.count {
                         let mustRemove = count == "1" && !plus
@@ -231,15 +244,15 @@ class TimelineViewModel: ViewModelType {
                 }.compactMap { $0 }
             } else {
                 let newReaction = ReactionCount(name: rawReaction, count: "1")
-                self.cellsModel[targetIndex].reactions.append(newReaction)
+                self.cellsModel[targetIndex].noteEntity.reactions.append(newReaction)
             }
             
             // My reaction...?
             if isMyReaction {
-                self.cellsModel[targetIndex].myReaction = rawReaction
+                self.cellsModel[targetIndex].noteEntity.myReaction = rawReaction
             }
             
-            self.cellsModel[targetIndex].shapedReactions = self.cellsModel[targetIndex].getReactions(with: self.cellsModel[targetIndex].emojis)
+            self.cellsModel[targetIndex].shapedReactions = self.cellsModel[targetIndex].getReactions(with: self.cellsModel[targetIndex].noteEntity.emojis)
             
             if needReloading {
                 self.updateNotes(new: self.cellsModel)
@@ -251,7 +264,7 @@ class TimelineViewModel: ViewModelType {
     /// 特定ユーザーの投稿をすべてTLから削除
     /// - Parameter userId: userId
     private func removeUser(of userId: String) {
-        cellsModel.filter { $0.userId == userId }
+        cellsModel.filter { $0.noteEntity.userId == userId }
             .map { cellsModel.firstIndex(of: $0) }
             .compactMap { $0 }
             .forEach { targetIndex in
@@ -264,7 +277,7 @@ class TimelineViewModel: ViewModelType {
     /// 指定されたnoteIdを持つ投稿のindexを返します
     /// - Parameter noteId: noteId
     private func findNoteIndex(noteId: String) -> [Int] {
-        return cellsModel.filter { $0.noteId == noteId }
+        return cellsModel.filter { $0.noteEntity.noteId == noteId }
             .map { cellsModel.firstIndex(of: $0) }
             .compactMap { $0 }
     }
@@ -273,7 +286,7 @@ class TimelineViewModel: ViewModelType {
     
     // 古い投稿から順にfetchしてくる
     func loadUntilNotes() -> Observable<NoteCell.Model> {
-        guard let untilId = cellsModel[cellsModel.count - 1].noteId else {
+        guard let untilId = cellsModel[cellsModel.count - 1].noteEntity.noteId else {
             return Observable.create { _ in
                 Disposables.create()
             }
@@ -314,14 +327,14 @@ class TimelineViewModel: ViewModelType {
         model.vote(choice: choice, to: noteId) // API叩く
         
         cellsModel = cellsModel.map { // セルのモデルを変更する
-            guard $0.noteId == noteId,
-                let poll = $0.poll,
+            guard $0.noteEntity.noteId == noteId,
+                let poll = $0.noteEntity.poll,
                 let choices = poll.choices,
                 let votes = choices[choice]?.votes else { return $0 }
             
             let cellModel = $0
-            cellModel.poll?.choices?[choice]?.votes = votes + 1
-            cellModel.poll?.choices?[choice]?.isVoted = true
+            cellModel.noteEntity.poll?.choices?[choice]?.votes = votes + 1
+            cellModel.noteEntity.poll?.choices?[choice]?.isVoted = true
             return cellModel
         }
     }
@@ -367,6 +380,42 @@ class TimelineViewModel: ViewModelType {
         }).disposed(by: disposeBag)
     }
     
+    // MARK: Misc
+    
+    func copyContents(_ note: NoteCell.Model) {
+        UIPasteboard.general.string = note.noteEntity.original?.text
+    }
+    
+    func copyLink(_ note: NoteCell.Model) {
+        guard let noteUrl = getNoteUrl(note) else { return }
+        UIPasteboard.general.string = noteUrl
+    }
+    
+    func openSafari(_ note: NoteCell.Model) {
+        guard let rawUrl = getNoteUrl(note),
+            let noteUrl = URL(string: rawUrl) else { return }
+        
+        output.openSafariTrigger.accept(noteUrl)
+    }
+    
+    func shareLinks(_ note: NoteCell.Model) {
+        guard let rawUrl = getNoteUrl(note),
+            let noteUrl = URL(string: rawUrl) else { return }
+        
+        output.shareLinksTrigger.accept(noteUrl)
+    }
+    
+    // MARK: Utilities
+    
+    private func getNoteUrl(_ note: NoteCell.Model) -> String? {
+        guard let noteId = note.noteEntity.noteId else { return nil }
+        
+        // 他インスタンスでの投稿はインスタンスごとにnoteIdが違うため、自インスタンスのurlを作成することにする
+        let host = input.owner.instance
+        
+        return "http://\(host)/notes/\(noteId)"
+    }
+    
     // dataSourceからnoteを探してtargetのindexの下にreactiongencell入れる
     func tappedReaction(noteId: String, hasMarked: Bool) {
         guard cellsModel.filter({ $0.baseNoteId == noteId }).count == 0 else {
@@ -383,12 +432,12 @@ class TimelineViewModel: ViewModelType {
         guard cellsModel.count > 0 else { return nil }
         
         let lastNote = cellsModel[0]
-        if lastNote.isRenoteeCell || lastNote.isReplyTarget || lastNote.isPromotionCell { // RN/リプライ/RRの場合はRenoteeCellのModelが送られてくるので次のモデルを参照する
+        if lastNote.type == .renotee || lastNote.type == .promote || lastNote.isReplyTarget { // RN/リプライ/RRの場合はRenoteeCellのModelが送られてくるので次のモデルを参照する
             guard cellsModel.count > 1 else { return nil }
-            return cellsModel[1].noteId
+            return cellsModel[1].noteEntity.noteId
         }
         
-        return lastNote.noteId
+        return lastNote.noteEntity.noteId
     }
     
     // MARK: RxSwift

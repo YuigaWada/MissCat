@@ -15,10 +15,10 @@ class ProfileModel {
         self.misskey = misskey
     }
     
-    func getUser(userId: String, completion: @escaping (UserModel?) -> Void) {
+    func getUser(userId: String, completion: @escaping (UserEntity?) -> Void) {
         misskey?.users.showUser(userId: userId) { user, error in
-            guard error == nil else { completion(nil); return }
-            completion(user)
+            guard error == nil, let user = user else { completion(nil); return }
+            completion(UserEntity(from: user))
         }
     }
     

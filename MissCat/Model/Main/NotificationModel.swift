@@ -41,7 +41,11 @@ class NotificationsModel {
         
         return Observable.create { observer in
             self.misskey?.notifications.get(limit: option.limit, untilId: option.untilId ?? "", following: false) { results, error in
-                guard results != nil, results!.count > 0, error == nil else { return }
+                guard results != nil, results!.count > 0, error == nil else {
+                    guard let error = error else { return }
+                    observer.onError(error)
+                    return
+                }
                 
                 var notifs = results!
                 if let notificationId = notifs[0].id {
@@ -106,19 +110,23 @@ class NotificationsModel {
     }
     
     func getModel(notification: NotificationModel) -> NotificationCell.Model? {
-        guard let id = notification.id, let type = notification.type, let user = notification.user else { return nil }
+        guard let id = notification.id,
+            let actionType = notification.type,
+            let user = notification.user,
+            let type = NotificationCell.ModelType(from: actionType) else { return nil }
         
+        let userEntity = UserEntity(from: user)
         if type == .follow {
             return NotificationCell.Model(notificationId: id,
                                           type: type,
                                           myNote: nil,
                                           replyNote: nil,
-                                          fromUser: user,
+                                          fromUser: userEntity,
                                           reaction: nil,
                                           ago: notification.createdAt ?? "")
         }
         
-        return getNoteModel(notification: notification, id: id, type: type, user: user)
+        return getNoteModel(notification: notification, id: id, type: type, user: userEntity)
     }
     
     // 任意のresponseからNotificationCell.Modelを生成する
@@ -137,7 +145,7 @@ class NotificationsModel {
         }
     }
     
-    private func getNoteModel(notification: NotificationModel, id: String, type: ActionType, user: UserModel) -> NotificationCell.Model? {
+    private func getNoteModel(notification: NotificationModel, id: String, type: NotificationCell.ModelType, user: UserEntity) -> NotificationCell.Model? {
         guard let note = notification.note else { return nil }
         let isReply = type == .reply
         let isMention = type == .mention
@@ -191,7 +199,7 @@ class NotificationsModel {
                                       type: .reply,
                                       myNote: myNote?.getNoteCellModel(owner: owner), // メンションの場合myNoteが存在しない
                                       replyNote: note.getNoteCellModel(owner: owner),
-                                      fromUser: fromUser,
+                                      fromUser: UserEntity(from: fromUser),
                                       reaction: nil,
                                       ago: note.createdAt ?? "")
     }
@@ -199,25 +207,27 @@ class NotificationsModel {
     private func convertNotification(_ target: Any) -> NotificationCell.Model? {
         guard let target = target as? StreamingModel, let fromUser = target.user else { return nil }
         
-        var type: ActionType
+        var actionType: ActionType
         var targetNote: NoteModel? = target.note
         if target.reaction != nil {
-            type = .reaction
+            actionType = .reaction
         } else if target.type == "follow" {
-            type = .follow
+            actionType = .follow
         } else if target.type == "renote" {
-            type = .renote
+            actionType = .renote
             targetNote = target.note?.renote // renoteの場合は相手の投稿(=target.note)のrenote内に自分の投稿が含まれている
         } else {
             return nil
         }
+        
+        guard let type = NotificationCell.ModelType(from: actionType) else { return nil }
         
         let externalEmojis = getExternalEmojis(target)
         return NotificationCell.Model(notificationId: target.id ?? "",
                                       type: type,
                                       myNote: targetNote?.getNoteCellModel(owner: owner),
                                       replyNote: nil,
-                                      fromUser: fromUser,
+                                      fromUser: UserEntity(from: fromUser),
                                       reaction: target.reaction,
                                       emojis: externalEmojis,
                                       ago: target.createdAt ?? "")

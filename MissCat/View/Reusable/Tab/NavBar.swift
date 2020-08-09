@@ -137,6 +137,12 @@ class NavBar: UIView {
         }
     }
     
+    func changeUser(to user: SecureUser) {
+        setUserIcon(of: user)
+        Cache.UserDefaults.shared.changeCurrentUser(userId: user.userId)
+        delegate?.changeUser(user)
+    }
+    
     private func setupGesture() {
         userIconView.setTapGesture(disposeBag, closure: {
             self.showAccountsMenu()
@@ -169,9 +175,7 @@ class NavBar: UIView {
         let selected = delegate?.showAccountMenu(sourceRect: userIconView.frame)
         
         selected?.subscribe(onNext: { user in
-            self.setUserIcon(of: user)
-            Cache.UserDefaults.shared.changeCurrentUser(userId: user.userId)
-            self.delegate?.changeUser(user)
+            self.changeUser(to: user)
         }).disposed(by: disposeBag)
     }
 }

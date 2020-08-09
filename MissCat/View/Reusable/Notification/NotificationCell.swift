@@ -230,7 +230,7 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
         // リアクションした者のプロフィールを表示
         for aboutReactee in [nameTextView, iconImageView, emojiView, followButton] {
             aboutReactee?.setTapGesture(disposeBag, closure: {
-                guard let userId = item.fromUser?.id, let owner = item.owner else { return }
+                guard let userId = item.fromUser?.userId, let owner = item.owner else { return }
                 self.delegate?.move2Profile(userId: userId, owner: owner)
             })
         }
@@ -264,9 +264,25 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
 // MARK: NotificationCell.Model
 
 extension NotificationCell {
-    class Model: IdentifiableType, Equatable {
-        internal init(isMock: Bool = false, notificationId: String, type: ActionType = .reply, shapedDisplayName: MFMString? = nil, myNote: NoteCell.Model?, replyNote: NoteCell.Model?, fromUser: UserModel?, reaction: String?, emojis: [EmojiModel] = [], ago: String) {
-            self.isMock = isMock
+    struct CustomModel {
+        let awesomeColor: UIColor
+        let awesomeIcon: String
+        let miniTitle: String
+        
+        let title: String
+        let body: String
+        let iconType: IconType
+        let icon: URL?
+        
+        enum IconType {
+            case original
+            case error
+        }
+    }
+    
+    class Model: CellModel {
+        init(notificationId: String, type: ModelType, shapedDisplayName: MFMString? = nil, myNote: NoteCell.Model?, replyNote: NoteCell.Model?, fromUser: UserEntity?, reaction: String?, emojis: [EmojiModel] = [], ago: String) {
+            self.type = type
             self.notificationId = notificationId
             self.type = type
             self.shapedDisplayName = shapedDisplayName
@@ -278,14 +294,16 @@ extension NotificationCell {
             self.ago = ago
         }
         
-        typealias Identity = String
-        let identity: String = String(Float.random(in: 1 ..< 100))
+        convenience init(notificationId: String, custom: CustomModel) {
+            self.init(notificationId: notificationId, type: .custom, myNote: nil, replyNote: nil, fromUser: nil, reaction: nil, ago: "")
+            self.custom = custom
+        }
         
-        var isMock: Bool = false
+        var type: ModelType
+        var custom: CustomModel? // Misskeyから送られてきた通知以外の通知モデル
         
         var owner: SecureUser?
         var notificationId: String
-        var type: ActionType = .reply
         
         var shapedDisplayName: MFMString?
         var shapedDescritpion: MFMString?
@@ -293,15 +311,41 @@ extension NotificationCell {
         let myNote: NoteCell.Model? // 自分のどの投稿に対してか
         let replyNote: NoteCell.Model? // 相手の投稿
         
-        let fromUser: UserModel?
+        let fromUser: UserEntity?
         
         let reaction: String?
         var emojis: [EmojiModel]
         
         let ago: String
+    }
+    
+    enum ModelType: String, Codable {
+        case follow
+        case mention
+        case reply
+        case renote
+        case quote
+        case reaction
+        case mock
+        case custom
         
-        static func == (lhs: NotificationCell.Model, rhs: NotificationCell.Model) -> Bool {
-            return lhs.identity == rhs.identity
+        init?(from actionType: ActionType) {
+            switch actionType {
+            case .follow:
+                self = .follow
+            case .mention:
+                self = .mention
+            case .reply:
+                self = .reply
+            case .renote:
+                self = .renote
+            case .quote:
+                self = .quote
+            case .reaction:
+                self = .reaction
+            default:
+                return nil
+            }
         }
     }
     

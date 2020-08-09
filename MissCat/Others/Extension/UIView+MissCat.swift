@@ -68,6 +68,46 @@ extension UIView {
         tableView.deselectRow(at: indexPathForSelectedRow, animated: true)
     }
     
+    // MARK: AutoLayout
+    
+    /// AutoLayoutでviewを全く同じサイズにする
+    /// - Parameter view:
+    func makeSameLayout(to view: UIView) {
+        addConstraints([
+            NSLayoutConstraint(item: self,
+                               attribute: .width,
+                               relatedBy: .equal,
+                               toItem: view,
+                               attribute: .width,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: self,
+                               attribute: .height,
+                               relatedBy: .equal,
+                               toItem: view,
+                               attribute: .height,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: self,
+                               attribute: .centerX,
+                               relatedBy: .equal,
+                               toItem: view,
+                               attribute: .centerX,
+                               multiplier: 1.0,
+                               constant: 0),
+            
+            NSLayoutConstraint(item: self,
+                               attribute: .centerY,
+                               relatedBy: .equal,
+                               toItem: view,
+                               attribute: .centerY,
+                               multiplier: 1.0,
+                               constant: 0)
+        ])
+    }
+    
     // MARK: Vibrate
     
     func vibrated(vibrated: Bool, view: UIView, radians: Float = 5.0, duration: Double = 0.05) {

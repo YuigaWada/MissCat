@@ -67,7 +67,7 @@ class UserListViewModel: ViewModelType {
         guard !hasSkeltonCell else { return }
         
         for _ in 0 ..< 10 {
-            let skeltonCellModel = UserCell.Model.fakeSkeltonCell()
+            let skeltonCellModel = UserCell.Model(type: .skelton)
             cellsModel.append(skeltonCellModel)
         }
         
@@ -86,11 +86,7 @@ class UserListViewModel: ViewModelType {
     // MARK: Load
     
     func loadUntilUsers() -> Observable<UserCell.Model> {
-        guard let untilId = cellsModel[cellsModel.count - 1].userId else {
-            return Observable.create { _ in
-                Disposables.create()
-            }
-        }
+        let untilId = cellsModel[cellsModel.count - 1].entity.userId
         
         return loadUsers(untilId: untilId).do(onCompleted: {
             self.updateUsers(new: self.cellsModel)

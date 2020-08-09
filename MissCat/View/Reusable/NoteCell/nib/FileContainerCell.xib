@@ -18,7 +18,7 @@
                     <rect key="frame" x="0.0" y="44" width="414" height="818"/>
                 </imageView>
             </subviews>
-            <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
             <constraints>
                 <constraint firstItem="F23-Wa-ZJa" firstAttribute="trailing" secondItem="TyK-lU-ixV" secondAttribute="trailing" id="3O8-Px-5UQ"/>
                 <constraint firstItem="F23-Wa-ZJa" firstAttribute="bottom" secondItem="TyK-lU-ixV" secondAttribute="bottom" id="AGr-18-ql0"/>

@@ -16,12 +16,12 @@ extension Error {
 }
 
 extension MisskeyKitError {
-    var description: String {
+    var errorMessage: String {
         switch self {
         case .ClientError:
-            return "サーバー側の問題が発生しました"
+            return "ClientError"
         case .AuthenticationError:
-            return "認証エラーが発生しました"
+            return "認証AuthenticationError"
         case .ForbiddonError:
             return "ForbiddonError"
         case .ImAI:
@@ -31,6 +31,35 @@ extension MisskeyKitError {
         case .InternalServerError:
             return "InternalServerError"
         case .CannotConnectStream:
+            return "CannotConnectStream"
+        case .NoStreamConnection:
+            return "NoStreamConnection"
+        case .FailedToDecodeJson:
+            return "FailedToDecodeJson"
+        case .FailedToCommunicateWithServer:
+            return "FailedToCommunicateWithServer"
+        case .UnknownTypeResponse:
+            return "UnknownTypeResponse"
+        case .ResponseIsNull:
+            return "ResponseIsNull"
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .ClientError:
+            return "サーバー側の問題が発生しました"
+        case .AuthenticationError:
+            return "認証エラーが発生しました"
+        case .ForbiddonError:
+            return "アカウント連携が解除されている可能性があります"
+        case .ImAI:
+            return "ImAI"
+        case .TooManyError:
+            return "TooManyError"
+        case .InternalServerError:
+            return "サーバー側の問題が発生しました"
+        case .CannotConnectStream:
             return "Streaming接続に失敗しました"
         case .NoStreamConnection:
             return "NoStreamConnection"
@@ -39,9 +68,9 @@ extension MisskeyKitError {
         case .FailedToCommunicateWithServer:
             return "サーバーとの通信に失敗しました"
         case .UnknownTypeResponse:
-            return "UnknownTypeResponse"
+            return "不明なレスポンス"
         case .ResponseIsNull:
-            return "ResponseIsNull"
+            return "レスポンスが空です"
         }
     }
 }

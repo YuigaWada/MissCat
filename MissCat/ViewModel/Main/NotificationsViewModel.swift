@@ -7,10 +7,13 @@
 //
 
 import MisskeyKit
+import RxCocoa
 import RxSwift
 
 class NotificationsViewModel {
     let notes: PublishSubject<[NotificationCell.Section]> = .init()
+    let showErrorTrigger: PublishRelay<(MisskeyKitError, SecureUser)> = .init()
+    
     var dataSource: NotificationDataSource?
     var cellCount: Int { return cellsModel.count }
     
@@ -66,7 +69,7 @@ class NotificationsViewModel {
     }
     
     func loadNotification(untilId: String? = nil, lastNotifId: String? = nil, completion: (() -> Void)? = nil) {
-        let option: NotificationsModel.LoadOption = .init(limit: 20, untilId: untilId, lastNotifId: lastNotifId)
+        let option: NotificationsModel.LoadOption = .init(limit: 10, untilId: untilId, lastNotifId: lastNotifId)
         
         var tempCells: [NotificationCell.Model] = []
         model.loadNotification(with: option, reversed: true).subscribe(onNext: { notification in
@@ -75,6 +78,12 @@ class NotificationsViewModel {
             self.shapeModel(cellModel)
             self.removeDuplicated(with: cellModel, array: &tempCells)
             tempCells.insert(cellModel, at: 0)
+            
+        }, onError: { error in
+            if let error = error as? MisskeyKitError {
+                guard let owner = self.owner else { return }
+                self.showErrorTrigger.accept((error, owner))
+            }
             
         }, onCompleted: {
             if untilId == nil {
@@ -125,15 +134,15 @@ class NotificationsViewModel {
     // MARK: Utilities
     
     private func shapeModel(_ cellModel: NotificationCell.Model) {
+        // 先にowner詰めとく
+        cellModel.owner = owner
+        
+        // Shape!
         if cellModel.type == .mention || cellModel.type == .reply || cellModel.type == .quote,
             let replyNote = cellModel.replyNote {
             MFMEngine.shapeModel(replyNote)
         } else {
             MFMEngine.shapeModel(cellModel)
-        }
-        
-        if let owner = owner {
-            cellModel.owner = owner
         }
     }
     
@@ -141,14 +150,14 @@ class NotificationsViewModel {
     private func removeDuplicated(with cellModel: NotificationCell.Model, array: inout [NotificationCell.Model]) {
         // 例えば、何度もリアクションを変更されたりすると重複して送られてくる
         let duplicated = array.filter {
-            guard let fromUserId = $0.fromUser?.id, let myNoteId = $0.myNote?.noteId else { return false }
+            guard let fromUserId = $0.fromUser?.userId, let myNoteId = $0.myNote?.noteEntity.noteId else { return false }
             
-            let sameUser = fromUserId == cellModel.fromUser?.id
-            let sameMyNote = myNoteId == cellModel.myNote?.noteId
+            let sameUser = fromUserId == cellModel.fromUser?.userId
+            let sameMyNote = myNoteId == cellModel.myNote?.noteEntity.noteId
             let sameType = $0.type == cellModel.type
             
             if let replyNote = $0.replyNote, let _replyNote = cellModel.replyNote {
-                let sameReplyNote = replyNote.noteId == _replyNote.noteId
+                let sameReplyNote = replyNote.noteEntity.noteId == _replyNote.noteEntity.noteId
                 return sameUser && sameMyNote && sameType && sameReplyNote
             }
             

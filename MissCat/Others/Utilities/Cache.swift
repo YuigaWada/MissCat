@@ -31,11 +31,11 @@ class Cache {
     private var icon: [String: UIImage] = [:] // key: username
     private var uiImage: [String: UIImage] = [:] // key: url
     private var dataOnUrl: [String: Data] = [:] // key: url
-    private var urlPreview: [String: Response] = [:] // key: url
+    private var urlPreview: [String: UrlSummalyEntity] = [:] // key: url
     
     private var userInfo: [UserInfo] = []
     
-    private var me: UserModel?
+    private var me: UserEntity?
     
     private lazy var applicationSupportDir = CreateApplicationSupportDir()
     
@@ -62,7 +62,7 @@ class Cache {
         }
     }
     
-    func saveUrlPreview(response: Response, on rawUrl: String) {
+    func saveUrlPreview(_ response: UrlSummalyEntity, on rawUrl: String) {
         urlPreview[rawUrl] = response
     }
     
@@ -89,7 +89,7 @@ class Cache {
         return dataOnUrl[rawUrl]
     }
     
-    func getUrlPreview(on rawUrl: String) -> Response? {
+    func getUrlPreview(on rawUrl: String) -> UrlSummalyEntity? {
         guard urlPreview.keys.contains(rawUrl) else { return nil }
         return urlPreview[rawUrl]
     }
@@ -152,8 +152,22 @@ extension Cache {
     class UserDefaults {
         static var shared: Cache.UserDefaults = .init()
         
-        private lazy var keychain = Keychain(service: "yuwd.MissCat") // indexをuseridとして、valueをapiKeyとする
-//        private var currentUser: SecureUser?
+        // MARK: Stores
+        
+        // ShareExtensionとUserDefaults情報を共有するためappGroupsのUserDefaultsを用いる
+        private lazy var userDefaults: Foundation.UserDefaults = {
+            guard let userDefaults = Foundation.UserDefaults(suiteName: "group.yuwd.MissCat") else { fatalError() }
+            migrateUserDefaultsToAppGroups(userDefaults)
+            return userDefaults
+        }()
+        
+        private lazy var keychain: Keychain = { // indexをuseridとして、valueをapiKeyとする
+            let keychain = Keychain(service: "yuwd.MissCat", accessGroup: "group.yuwd.MissCat")
+            migrateKeyChainToAppGroups(keychain)
+            return keychain
+        }()
+        
+        // MARK: Keys
         
         private let latestNotificationKey = "latest-notification"
         
@@ -164,11 +178,11 @@ extension Cache {
         // MARK: Notification
         
         func getLatestNotificationId() -> String? {
-            return Foundation.UserDefaults.standard.string(forKey: latestNotificationKey)
+            return userDefaults.string(forKey: latestNotificationKey)
         }
         
         func setLatestNotificationId(_ id: String) {
-            Foundation.UserDefaults.standard.set(id, forKey: latestNotificationKey)
+            userDefaults.set(id, forKey: latestNotificationKey)
         }
         
         // MARK: User
@@ -177,7 +191,7 @@ extension Cache {
             let savedUser = getUsers().filter { $0.userId != userId } // 保存済みのユーザー情報からターゲットのみ除外する
             guard let usersData = try? JSONEncoder().encode(savedUser) else { return }
             
-            Foundation.UserDefaults.standard.set(usersData, forKey: savedUserKey)
+            userDefaults.set(usersData, forKey: savedUserKey)
             do { try keychain.remove(userId) }
             catch {}
             
@@ -206,13 +220,13 @@ extension Cache {
             
             keychain[user.userId] = user.apiKey // apiKeyはキーチェーンに保存
             user.apiKey = nil // apikeyは隠蔽する
-            Foundation.UserDefaults.standard.set(usersData, forKey: savedUserKey) // instance情報とuserIdはそのままUserDefaultsへ
+            userDefaults.set(usersData, forKey: savedUserKey) // instance情報とuserIdはそのままUserDefaultsへ
             return true
         }
         
         /// 保存されている全てのユーザー情報を取得する
         func getUsers() -> [SecureUser] {
-            guard let data = Foundation.UserDefaults.standard.data(forKey: savedUserKey),
+            guard let data = userDefaults.data(forKey: savedUserKey),
                 let users = try? JSONDecoder().decode([SecureUser].self, from: data),
                 users.count > 0 else { return [] }
             
@@ -226,7 +240,7 @@ extension Cache {
             
             if noApiKeyUserIds.count > 0 { // apiKeyを持っていないユーザーは削除する
                 guard let usersData = try? JSONEncoder().encode(users.filter { !noApiKeyUserIds.contains($0.userId) }) else { return _users }
-                Foundation.UserDefaults.standard.set(usersData, forKey: savedUserKey)
+                userDefaults.set(usersData, forKey: savedUserKey)
             }
             
             return _users
@@ -245,12 +259,12 @@ extension Cache {
         
         /// 現在ログイン中のユーザー情報を変更する
         func changeCurrentUser(userId id: String) {
-            Foundation.UserDefaults.standard.set(id, forKey: currentUserIdKey)
+            userDefaults.set(id, forKey: currentUserIdKey)
         }
         
         /// 現在ログイン中のユーザーのuserIdを取得する
         func getCurrentUserId() -> String? {
-            return Foundation.UserDefaults.standard.string(forKey: currentUserIdKey)
+            return userDefaults.string(forKey: currentUserIdKey)
         }
         
         /// 現在ログイン中のユーザーデータを取得する
@@ -266,6 +280,19 @@ extension Cache {
             usernameRefill(with: currentUser)
             return currentUser
         }
+        
+        // MARK: Visibility
+        
+        func getCurrentVisibility() -> Visibility? {
+            guard let raw = userDefaults.string(forKey: currentVisibilityKey) else { return nil }
+            return Visibility(rawValue: raw)
+        }
+        
+        func setCurrentVisibility(_ visibility: Visibility) {
+            userDefaults.set(visibility.rawValue, forKey: currentVisibilityKey)
+        }
+        
+        // MARK: Migrates
         
         /// ユーザーデータの保持構造が変わったので、v1.1.0以前のバージョンから乗り換えた場合、ユーザーデータを詰め替える
         func userRefill() {
@@ -299,15 +326,44 @@ extension Cache {
             }
         }
         
-        // MARK: Visibility
-        
-        func getCurrentVisibility() -> Visibility? {
-            guard let raw = Foundation.UserDefaults.standard.string(forKey: currentVisibilityKey) else { return nil }
-            return Visibility(rawValue: raw)
+        // Thanks. https://gist.github.com/dougdiego/945fd2e33769cf5f1338
+        func migrateUserDefaultsToAppGroups(_ newUserDefaults: Foundation.UserDefaults) {
+            // User Defaults - Old
+            let userDefaults = Foundation.UserDefaults.standard
+            
+            // App Groups Default - New
+            let groupDefaults = newUserDefaults
+            
+            // Key to track if we migrated
+            let didMigrateToAppGroups = "DidMigrateToAppGroups"
+            
+            if !groupDefaults.bool(forKey: didMigrateToAppGroups) {
+                for key in userDefaults.dictionaryRepresentation().keys {
+                    groupDefaults.set(userDefaults.dictionaryRepresentation()[key], forKey: key)
+                }
+                groupDefaults.set(true, forKey: didMigrateToAppGroups)
+                groupDefaults.synchronize()
+                print("Successfully migrated defaults")
+            } else {
+                print("No need to migrate defaults")
+            }
         }
         
-        func setCurrentVisibility(_ visibility: Visibility) {
-            Foundation.UserDefaults.standard.set(visibility.rawValue, forKey: currentVisibilityKey)
+        func migrateKeyChainToAppGroups(_ new: Keychain) {
+            let old = Keychain(service: "yuwd.MissCat")
+            
+            // Key to track if we migrated
+            let didMigrateToAppGroups = "DidMigrateToAppGroups"
+            
+            if !new.allKeys().contains(didMigrateToAppGroups) {
+                for key in old.allKeys() {
+                    new[key] = old[key]
+                }
+                new[didMigrateToAppGroups] = "true"
+                print("Successfully migrated defaults")
+            } else {
+                print("No need to migrate defaults")
+            }
         }
     }
 }

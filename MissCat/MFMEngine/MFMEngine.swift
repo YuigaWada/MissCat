@@ -19,16 +19,21 @@ struct MFMString {
 }
 
 class MFMEngine {
+    struct CustomEmojiAttachments {
+        let url: String
+        let attachment: NSTextAttachment
+    }
+    
+    // MARK: Format
+    
     private var lineHeight: CGFloat = 30
+    static var usernameFont = UIFont.systemFont(ofSize: 11.0)
+    
+    // MARK: Emoji
     
     private let original: String
     private let emojiTargets: [String]
-    
-    // 　この２つは順序が等しくなるよう気をつけて格納していく
-    private var customEmojis: [String] = []
-    private var attachments: [NSTextAttachment] = []
-    
-    static var usernameFont = UIFont.systemFont(ofSize: 11.0)
+    private var customEmojis: [CustomEmojiAttachments] = []
     
     // MARK: Init
     
@@ -65,19 +70,19 @@ class MFMEngine {
             
             // カスタム絵文字を適切な形に変換していく
             switch converted.type {
-            case "default":
+            case .default:
                 shaped.append(NSAttributedString(string: converted.emoji))
                 
-            case "custom":
+            case .custom:
                 let (attachmentString, attachment) = YanagiText.getAttachmentString(size: CGSize(width: lineHeight, height: lineHeight))
                 if let attachmentString = attachmentString {
                     shaped.append(attachmentString)
                     
-                    customEmojis.append(converted.emoji)
-                    attachments.append(attachment)
+                    let customEmoji = CustomEmojiAttachments(url: converted.emoji, attachment: attachment)
+                    customEmojis.append(customEmoji)
                 }
             default:
-                return
+                break
             }
             
             rest = String(rest[range.upperBound...])
@@ -91,16 +96,12 @@ class MFMEngine {
     /// カスタム絵文字を表示するViewを生成し、YanagiTextへAddする
     /// - Parameter yanagi: YanagiText
     func renderCustomEmojis(on yanagi: YanagiText) {
-        guard customEmojis.count == attachments.count else { return }
-        
-        for index in 0 ..< customEmojis.count {
-            let customEmoji = customEmojis[index]
-            let attachment = attachments[index]
+        customEmojis.forEach { customEmoji in
             
-            let targetView = MFMEngine.generateAsyncImageView(imageUrl: customEmoji, lineHeight: lineHeight)
+            let targetView = MFMEngine.generateAsyncImageView(imageUrl: customEmoji.url, lineHeight: lineHeight)
             let yanagiAttachment = YanagiText.Attachment(view: targetView, size: targetView.frame.size)
             
-            yanagi.addAttachment(ns: attachment, yanagi: yanagiAttachment)
+            yanagi.addAttachment(ns: customEmoji.attachment, yanagi: yanagiAttachment)
         }
     }
     
@@ -157,12 +158,12 @@ class MFMEngine {
     /// NoteCell.Modelのうち、投稿を整形する
     /// - Parameter cellModel: NoteCell.Model
     private static func shapeNote(_ cellModel: NoteCell.Model) -> MFMString {
-        return shapeString(owner: cellModel.owner, needReplyMark: cellModel.isReply, text: cellModel.note, emojis: cellModel.emojis)
+        return shapeString(owner: cellModel.owner, needReplyMark: cellModel.isReply, text: cellModel.noteEntity.note, emojis: cellModel.noteEntity.emojis)
     }
     
     private static func shapedCw(_ cellModel: NoteCell.Model) -> MFMString? {
-        guard let cw = cellModel.cw else { return nil }
-        var shaped = shapeString(owner: cellModel.owner, needReplyMark: cellModel.isReply, text: cw, emojis: cellModel.emojis)
+        guard let cw = cellModel.noteEntity.cw else { return nil }
+        var shaped = shapeString(owner: cellModel.owner, needReplyMark: cellModel.isReply, text: cw, emojis: cellModel.noteEntity.emojis)
         
         if let attributed = shaped.attributed {
             shaped.attributed = attributed + generatePlaneString(string: "\n > タップで詳細表示",
@@ -195,12 +196,12 @@ class MFMEngine {
     /// 名前を整形
     /// - Parameter cellModel: NoteCell.Model
     private static func shapeDisplayName(_ cellModel: NoteCell.Model) -> MFMString {
-        return shapeDisplayName(owner: cellModel.owner, name: cellModel.displayName, username: cellModel.username, emojis: cellModel.emojis)
+        return shapeDisplayName(owner: cellModel.owner, name: cellModel.noteEntity.displayName, username: cellModel.noteEntity.username, emojis: cellModel.noteEntity.emojis)
     }
     
     /// 名前を整形
-    /// - Parameter user: UserModel
-    static func shapeDisplayName(owner: SecureUser?, user: UserModel?) -> MFMString? {
+    /// - Parameter user: UserEntity
+    static func shapeDisplayName(owner: SecureUser?, user: UserEntity?) -> MFMString? {
         guard let user = user else { return nil }
         return shapeDisplayName(owner: owner, name: user.name, username: user.username, emojis: user.emojis)
     }
@@ -372,13 +373,6 @@ class MFMEngine {
 
 // 装飾関係
 extension String {
-    ///  Emoji形式":hogehoge:"をデフォルト絵文字 / カスタム絵文字のurl/imgに変更
-    /// - Parameter externalEmojis: 外インスタンスのカスタム絵文字
-    func emojiEncoder(owner: SecureUser, externalEmojis: [EmojiModel?]?) -> String {
-        guard let handler = EmojiHandler.getHandler(owner: owner) else { return "" }
-        return handler.emojiEncoder(note: self, externalEmojis: externalEmojis)
-    }
-    
     /// カスタム絵文字以外のMFM処理を行う
     func mfmPreTransform() -> String {
         return MFMEngine.preTransform(string: self)

@@ -99,10 +99,10 @@
                     </subviews>
                 </stackView>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="3Lx-a5-D3Q">
-                    <rect key="frame" x="0.0" y="0.0" width="414" height="1"/>
+                    <rect key="frame" x="0.0" y="0.0" width="414" height="0.5"/>
                     <color key="backgroundColor" red="0.78431372549019607" green="0.77647058823529413" blue="0.78431372549019607" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     <constraints>
-                        <constraint firstAttribute="height" constant="1" id="M1D-Z1-FKx"/>
+                        <constraint firstAttribute="height" constant="0.29999999999999999" id="M1D-Z1-FKx"/>
                     </constraints>
                 </view>
             </subviews>

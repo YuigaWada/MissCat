@@ -22,5 +22,6 @@ class PromotionCell: UITableViewCell {
         iconLabel.font = .awesomeSolid(fontSize: 15.0)
         iconLabel.textColor = mainColor
         promotionLabel.textColor = mainColor
+        backgroundColor = Theme.shared.currentModel?.colorPattern.ui.base ?? .white
     }
 }

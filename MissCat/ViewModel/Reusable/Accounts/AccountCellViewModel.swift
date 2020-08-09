@@ -65,7 +65,8 @@ class AccountCellViewModel: ViewModelType {
             _ = info.avatarUrl?.toUIImage { image in
                 guard let image = image else { return }
                 self.output.iconImage.accept(image)
-                self.cache(user: user, userModel: info, image: image)
+                let userEntity = UserEntity(from: info)
+                self.cache(user: user, userModel: userEntity, image: image)
             }
             
             // text
@@ -85,7 +86,7 @@ class AccountCellViewModel: ViewModelType {
         }
     }
     
-    private func cache(user: SecureUser, userModel info: UserModel, image: UIImage) {
+    private func cache(user: SecureUser, userModel info: UserEntity, image: UIImage) {
         let username = info.username ?? ""
         let cache = Cache.UserInfo(user: user,
                                    name: info.name ?? username,

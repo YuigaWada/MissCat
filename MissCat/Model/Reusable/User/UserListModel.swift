@@ -34,8 +34,8 @@ class UserListModel {
         self.owner = owner
     }
     
-    private func transformUser(with observer: AnyObserver<UserCell.Model>, user: UserModel, reverse: Bool) {
-        let userModel = user.getUserCellModel()
+    private func transformUser(with observer: AnyObserver<UserCell.Model>, user: UserEntity, reverse: Bool) {
+        let userModel = UserCell.Model(user: user)
         
         userModel.shapedName = MFMEngine.shapeDisplayName(owner: owner, user: user)
         userModel.shapedDescritpion = MFMEngine.shapeString(owner: owner,
@@ -60,7 +60,7 @@ class UserListModel {
                 
                 DispatchQueue.global().async {
                     posts.forEach { user in
-                        self.transformUser(with: observer, user: user, reverse: false)
+                        self.transformUser(with: observer, user: UserEntity(from: user), reverse: false)
                     }
                     observer.onCompleted()
                 }

@@ -13,6 +13,7 @@ import SwiftLinkPreview
 class UrlPreviewerViewModel: ViewModelType {
     struct Input {
         let url: String
+        let owner: SecureUser?
     }
     
     struct Output {
@@ -47,22 +48,13 @@ class UrlPreviewerViewModel: ViewModelType {
     
     /// プレビューを取得
     private func getPreview() {
-        model.getPreview(of: input.url) { res in
+        model.getPreview(of: input.url, instance: input.owner?.instance ?? "misskey.io") { res in
             self.output.title.accept(res.title ?? "No Title")
             self.output.description.accept(res.description ?? "No Description")
-            if let imageUrl = self.searchImageUrl(res) {
+            if let imageUrl = res.thumbnail {
                 self.getImage(from: imageUrl)
             }
         }
-    }
-    
-    private func searchImageUrl(_ response: Response) -> String? {
-        guard let url = response.finalUrl?.absoluteURL.absoluteString else { return response.image }
-        if url.contains("github.com") {
-            return response.icon
-        }
-        
-        return response.image
     }
     
     /// urlからプレビューimageを取得

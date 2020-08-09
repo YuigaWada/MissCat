@@ -23,7 +23,7 @@ protocol TimelineDelegate { // For HomeViewController
     
     func successInitialLoading(_ success: Bool)
     func changedStreamState(success: Bool)
-    func showNotificationBanner(icon: NotificationBanner.IconType, notification: String)
+    func showNanoBanner(icon: NanoNotificationBanner.IconType, notification: String)
 }
 
 typealias NotesDataSource = RxTableViewSectionedAnimatedDataSource<NoteCell.Section>
@@ -192,6 +192,22 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             self.mainTableView.reserveLock() // 次にセルがupdateされた時にスクロールを固定し直す
         }).disposed(by: disposeBag)
         
+        output.openSafariTrigger.subscribe(onNext: { url in
+            guard UIApplication.shared.canOpenURL(url) else { return }
+            UIApplication.shared.open(url)
+        }).disposed(by: disposeBag)
+        
+        output.shareLinksTrigger.subscribe(onNext: { url in
+            let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+            self.present(activityVC, animated: true, completion: nil)
+        }).disposed(by: disposeBag)
+        
+        output.showErrorTrigger.subscribe(onNext: { error, owner in
+            self.homeViewController?.showNotificationBanner(title: error.errorMessage,
+                                                            body: error.description,
+                                                            owner: owner)
+        }).disposed(by: disposeBag)
+        
         mainTableView.lockScroll = output.lockTableScroll.asObservable()
     }
     
@@ -223,11 +239,11 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         let item = viewModel.cellsModel[index]
         
         // View側で NoteCell / RenoteeCell / PromotionCell を区別する
-        if item.isPromotionCell {
+        if item.type == .promote {
             let prCell = tableView.dequeueReusableCell(withIdentifier: "PromotionCell", for: indexPath)
             prCell.selectionStyle = UITableViewCell.SelectionStyle.none
             return prCell
-        } else if item.isRenoteeCell {
+        } else if item.type == .renotee {
             guard let renoteeCell = tableView.dequeueReusableCell(withIdentifier: "RenoteeCell", for: indexPath) as? RenoteeCell
             else { return RenoteeCell() }
             
@@ -235,7 +251,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             renoteeCell.setRenotee(item.renotee ?? "")
             
             renoteeCell.setTapGesture(disposeBag) {
-                self.openUser(username: item.username, owner: viewModel.state.owner)
+                self.openUser(username: item.noteEntity.username, owner: viewModel.state.owner)
             }
             
             return renoteeCell
@@ -270,7 +286,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         
         let id = viewModel.cellsModel[index].identity
         guard let height = cellHeightCache[id] else {
-            return viewModel.cellsModel[index].isRenoteeCell ? 25 : UITableView.automaticDimension
+            return viewModel.cellsModel[index].type == .renotee ? 25 : UITableView.automaticDimension
         }
         return height
     }
@@ -304,7 +320,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         
         // 再計算しないでいいようにセルの高さをキャッシュ
         if cellHeightCache.keys.contains(id) != true {
-            cellHeightCache[id] = cellModel.isRenoteeCell || cellModel.isPromotionCell ? 25 : cell.frame.height
+            cellHeightCache[id] = cellModel.type == .renotee || cellModel.type == .promote ? 25 : cell.frame.height
         }
         
         // 下位4分の1のcellでセル更新
@@ -314,7 +330,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         print("loadUntilNotes...")
         viewModel.loadUntilNotes().subscribe(onError: { error in
             if let error = error as? TimelineModel.NotesLoadingError, error == .NotesEmpty { return }
-            self.homeViewController?.showNotificationBanner(icon: .Failed, notification: error.description)
+            self.homeViewController?.showNanoBanner(icon: .Failed, notification: error.description)
         }).disposed(by: disposeBag)
     }
     
@@ -322,7 +338,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         let index = indexPath.row
         guard let item = viewModel?.cellsModel[index] else { return indexPath }
         
-        if item.isPromotionCell { //  PromotionCellはタップできないように
+        if item.type == .promote { //  PromotionCellはタップできないように
             return nil
         }
         
@@ -440,16 +456,22 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         guard let owner = viewModel?.state.owner else { return }
         // ユーザーをブロック・投稿を通報する
         // 投稿の削除
-        note.userId.isMe(owner: owner) { isMe in
-            if isMe { self.showDeletePanel(note); return }
-            self.showReportPanel(note)
+        note.noteEntity.userId.isMe(owner: owner) { isMe in
+            if isMe { self.showOtherMenuForMe(note); return }
+            self.showOtherMenuForOthers(note)
         }
     }
     
-    private func showReportPanel(_ note: NoteCell.Model) {
+    /// 他人の投稿に対する...ボタン(三点リーダーボタン)の挙動
+    private func showOtherMenuForOthers(_ note: NoteCell.Model) {
         let panelMenu = PanelMenuViewController()
-        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "ユーザーをブロック", awesomeIcon: "angry", order: 0),
-                                                             .init(title: "投稿を通報する", awesomeIcon: "ban", order: 1)]
+        let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "詳細", awesomeIcon: "angry", order: 0),
+                                                             .init(title: "内容をコピー", awesomeIcon: "angry", order: 1),
+                                                             .init(title: "投稿のリンクをコピー", awesomeIcon: "angry", order: 2),
+                                                             .init(title: "safariで表示", awesomeIcon: "angry", order: 3),
+                                                             .init(title: "投稿を共有", awesomeIcon: "angry", order: 4),
+                                                             .init(title: "ユーザーをブロック", awesomeIcon: "angry", order: 5),
+                                                             .init(title: "投稿を通報する", awesomeIcon: "ban", order: 6)]
         
         panelMenu.setupMenu(items: menuItems)
         panelMenu.tapTrigger.asDriver(onErrorDriveWith: Driver.empty()).drive(onNext: { order in // どのメニューがタップされたのか
@@ -457,9 +479,19 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
             panelMenu.dismiss(animated: true, completion: nil)
             
             switch order {
-            case 0: // Block
+            case 0: // 詳細
+                self.showDetailView(item: note)
+            case 1: // 内容コピー
+                self.viewModel?.copyContents(note)
+            case 2: // リンクコピー
+                self.viewModel?.copyLink(note)
+            case 3: // safariで表示
+                self.viewModel?.openSafari(note)
+            case 4: // 共有
+                self.viewModel?.shareLinks(note)
+            case 5: // Block
                 self.showBlockAlert(note)
-            case 1: // Report
+            case 6: // Report
                 self.showReportAlert(note)
             default:
                 break
@@ -469,7 +501,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         present(panelMenu, animated: true, completion: nil)
     }
     
-    private func showDeletePanel(_ note: NoteCell.Model) {
+    /// 自分の投稿に対する...ボタン(三点リーダーボタン)の挙動
+    private func showOtherMenuForMe(_ note: NoteCell.Model) {
         let panelMenu = PanelMenuViewController()
         let menuItems: [PanelMenuViewController.MenuItem] = [.init(title: "投稿を削除する", awesomeIcon: "trash-alt", order: 0)]
         
@@ -492,7 +525,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     private func showBlockAlert(_ note: NoteCell.Model) {
         showAlert(title: "ブロック", message: "本当にこのユーザーをブロックしますか？", yesOption: "ブロック") { yes in
             guard yes else { return }
-            self.viewModel?.block(userId: note.userId)
+            self.viewModel?.block(userId: note.noteEntity.userId)
         }
     }
     
@@ -502,14 +535,14 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         showTextAlert(title: "迷惑行為の詳細を記述してください", placeholder: "例: 著作権侵害/不適切な投稿など") { message in
             self.showAlert(title: "通報", message: "本当にこの投稿を通報しますか？", yesOption: "通報") { yes in
                 guard yes else { return }
-                self.viewModel?.report(message: message, userId: note.userId)
+                self.viewModel?.report(message: message, userId: note.noteEntity.userId)
             }
         }
     }
     
     private func showDeleteAlert(_ note: NoteCell.Model) {
         showAlert(title: "削除", message: "本当にこの投稿を削除しますか？", yesOption: "削除") { okay in
-            guard let noteId = note.noteId, okay else { return }
+            guard let noteId = note.noteEntity.noteId, okay else { return }
             self.viewModel?.deleteMyNote(noteId: noteId)
         }
     }

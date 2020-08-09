@@ -15,111 +15,46 @@ import UIKit
 // MARK: NoteCell.Model
 
 extension NoteCell {
-    class Model: IdentifiableType, Equatable {
+    class Model: CellModel {
+        // MARK: Main
+        
+        var type: ModelType
+        var owner: SecureUser?
+        var noteEntity: NoteEntity
+        
         // MARK: Flag
         
-        var isSkelton = false
-        var isReactionGenCell = false
-        var isRenoteeCell = false
-        var isPromotionCell = false
         var renotee: String?
         var baseNoteId: String? // どのcellに対するReactionGenCellなのか
         var isReply: Bool = false // リプライであるかどうか
         var isReplyTarget: Bool = false // リプライ先の投稿であるかどうか
         var fileVisible: Bool = true // ファイルを表示するか
         var onOtherNote: Bool = false // 引用RNはNoteCellの上にNoteCellが乗るという二重構造になっているので、内部のNoteCellかどうかを判別する
-        var owner: SecureUser?
-        
-        // MARK: Id
-        
-        typealias Identity = String
-        let identity: String = String(Float.random(in: 1 ..< 100))
-        let noteId: String?
-        let userId: String
-        
-        // MARK: Icon
-        
-        let iconImageUrl: String?
-        var iconImage: UIImage?
-        let isCat: Bool
         
         // MARK: Name
         
-        let displayName: String
-        let username: String
-        let hostInstance: String
         var shapedDisplayName: MFMString?
         
         // MARK: CW
         
-        var hasCw: Bool { return cw != nil }
-        let cw: String?
         var shapedCw: MFMString?
         
         // MARK: Note
         
-        let note: String
         var shapedNote: MFMString?
-        var original: NoteModel?
+        var shapedReactions: [NoteCell.Reaction] = []
         var commentRNTarget: NoteCell.Model?
         
-        // MARK: Reactions
-        
-        var reactions: [ReactionCount]
-        var shapedReactions: [NoteCell.Reaction]
-        var myReaction: String?
-        
-        // MARK: Files
-        
-        var files: [File]
-        
-        // MARK: Poll
-        
-        var poll: Poll?
-        
-        // MARK: Meta
-        
-        var emojis: [EmojiModel]?
-        let ago: String
-        let replyCount: Int
-        let renoteCount: Int
-        
-        init(owner: SecureUser?, isSkelton: Bool = false, isReactionGenCell: Bool = false, isRenoteeCell: Bool = false, isPromotionCell: Bool = false, renotee: String? = nil, baseNoteId: String? = nil, isReply: Bool = false, isReplyTarget: Bool = false, noteId: String? = nil, iconImageUrl: String? = nil, iconImage: UIImage? = nil, isCat: Bool = false, userId: String, displayName: String, username: String, hostInstance: String = "", note: String, ago: String, replyCount: Int, renoteCount: Int, reactions: [ReactionCount], shapedReactions: [NoteCell.Reaction], myReaction: String? = nil, files: [File], emojis: [EmojiModel]? = nil, commentRNTarget: NoteCell.Model? = nil, original: NoteModel? = nil, onOtherNote: Bool = false, poll: Poll? = nil, cw: String? = nil) {
+        init(type: NoteCell.ModelType = .model, owner: SecureUser?, entity: NoteEntity = .mock, commentRNTarget: NoteCell.Model? = nil, renotee: String? = nil, baseNoteId: String? = nil, shapedDisplayName: MFMString? = nil, shapedCw: MFMString? = nil, shapedNote: MFMString? = nil) {
+            self.type = type
             self.owner = owner
-            self.isSkelton = isSkelton
-            self.isReactionGenCell = isReactionGenCell
-            self.isRenoteeCell = isRenoteeCell
-            self.isPromotionCell = isPromotionCell
+            noteEntity = entity
+            self.commentRNTarget = commentRNTarget
             self.renotee = renotee
             self.baseNoteId = baseNoteId
-            self.isReply = isReply
-            self.isReplyTarget = isReplyTarget
-            self.noteId = noteId
-            self.iconImageUrl = iconImageUrl
-            self.iconImage = iconImage
-            self.isCat = isCat
-            self.userId = userId
-            self.displayName = displayName
-            self.username = username
-            self.hostInstance = hostInstance
-            self.note = note
-            self.ago = ago
-            self.replyCount = replyCount
-            self.renoteCount = renoteCount
-            self.reactions = reactions
-            self.shapedReactions = shapedReactions
-            self.myReaction = myReaction
-            self.files = files
-            self.emojis = emojis
-            self.commentRNTarget = commentRNTarget
-            self.original = original
-            self.onOtherNote = onOtherNote
-            self.poll = poll
-            self.cw = cw
-        }
-        
-        static func == (lhs: NoteCell.Model, rhs: NoteCell.Model) -> Bool {
-            return lhs.identity == rhs.identity
+            self.shapedDisplayName = shapedDisplayName
+            self.shapedCw = shapedCw
+            self.shapedNote = shapedNote
         }
         
         // MARK: Statics
@@ -130,95 +65,39 @@ extension NoteCell {
                 renotee = String(renotee.prefix(10)) + "..."
             }
             
-            return NoteCell.Model(owner: nil,
-                                  isRenoteeCell: true,
+            return NoteCell.Model(type: .renotee,
+                                  owner: nil,
+                                  entity: NoteEntity(username: renoteeUserName),
                                   renotee: renotee,
-                                  baseNoteId: baseNoteId,
-                                  noteId: "",
-                                  iconImageUrl: "",
-                                  iconImage: nil,
-                                  userId: "",
-                                  displayName: "",
-                                  username: renoteeUserName,
-                                  note: "",
-                                  ago: "",
-                                  replyCount: 0,
-                                  renoteCount: 0,
-                                  reactions: [],
-                                  shapedReactions: [],
-                                  myReaction: nil,
-                                  files: [],
-                                  emojis: [],
-                                  commentRNTarget: nil,
-                                  poll: nil)
+                                  baseNoteId: baseNoteId)
         }
         
         static func fakePromotioncell(baseNoteId: String) -> NoteCell.Model {
-            return NoteCell.Model(owner: nil,
-                                  isPromotionCell: true,
-                                  baseNoteId: baseNoteId,
-                                  noteId: "",
-                                  iconImageUrl: "",
-                                  iconImage: nil,
-                                  userId: "",
-                                  displayName: "",
-                                  username: "",
-                                  note: "",
-                                  ago: "",
-                                  replyCount: 0,
-                                  renoteCount: 0,
-                                  reactions: [],
-                                  shapedReactions: [],
-                                  myReaction: nil,
-                                  files: [],
-                                  emojis: [],
-                                  commentRNTarget: nil,
-                                  poll: nil)
+            return NoteCell.Model(type: .promote, owner: nil, baseNoteId: baseNoteId)
         }
         
         static func fakeSkeltonCell() -> NoteCell.Model {
-            return NoteCell.Model(owner: nil,
-                                  isSkelton: true,
-                                  isRenoteeCell: false,
-                                  renotee: "",
-                                  baseNoteId: "",
-                                  noteId: "",
-                                  iconImageUrl: "",
-                                  iconImage: nil,
-                                  userId: "",
-                                  displayName: "",
-                                  username: "",
-                                  note: "",
-                                  ago: "",
-                                  replyCount: 0,
-                                  renoteCount: 0,
-                                  reactions: [],
-                                  shapedReactions: [],
-                                  myReaction: nil,
-                                  files: [],
-                                  emojis: [],
-                                  commentRNTarget: nil,
-                                  poll: nil)
+            return NoteCell.Model(type: .skelton, owner: nil)
         }
+    }
+    
+    enum ModelType {
+        case model
+        case skelton
+        case promote
+        case renotee
     }
     
     struct Section {
         var items: [Model]
     }
     
-    struct Reaction: IdentifiableType, Equatable {
-        typealias Identity = String
-        var identity: String
-        var noteId: String
+    class Reaction: CellModel {
+        let entity: ReactionEntity
         
-        var url: String?
-        
-        var rawEmoji: String?
-        var emoji: String?
-        
-        var isMyReaction: Bool
-        
-        var count: String
+        init(from entity: ReactionEntity) {
+            self.entity = entity
+        }
         
         struct Section {
             var items: [Reaction]
@@ -257,57 +136,13 @@ extension NoteCell.Reaction.Section: AnimatableSectionModelType {
 extension NoteCell.Model {
     /// ReactionCountをNoteCell.Reactionに変換する
     func getReactions(with externalEmojis: [EmojiModel?]?) -> [NoteCell.Reaction] {
-        return reactions.map { reaction in
-            guard let count = reaction.count, count != "0" else { return nil }
-            
-            let rawEmoji = reaction.name ?? ""
-            let isMyReaction = rawEmoji == self.myReaction
-            
-            guard rawEmoji != "",
-                let owner = owner,
-                let handler = EmojiHandler.getHandler(owner: owner),
-                let convertedEmojiData = handler.convertEmoji(raw: rawEmoji, external: externalEmojis) else {
-                // If being not converted
-                let reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
-                                                      noteId: self.noteId ?? "",
-                                                      url: nil,
-                                                      rawEmoji: rawEmoji,
-                                                      isMyReaction: isMyReaction,
-                                                      count: count)
-                return reactionModel
-            }
-            
-            var reactionModel: NoteCell.Reaction
-            switch convertedEmojiData.type {
-            case "default":
-                reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
-                                                  noteId: self.noteId ?? "",
-                                                  url: nil,
-                                                  rawEmoji: rawEmoji,
-                                                  emoji: convertedEmojiData.emoji,
-                                                  isMyReaction: isMyReaction,
-                                                  count: count)
-            case "custom":
-                reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
-                                                  noteId: self.noteId ?? "",
-                                                  url: convertedEmojiData.emoji,
-                                                  rawEmoji: rawEmoji,
-                                                  emoji: convertedEmojiData.emoji,
-                                                  isMyReaction: isMyReaction,
-                                                  count: count)
-            case "non-colon":
-                reactionModel = NoteCell.Reaction(identity: UUID().uuidString,
-                                                  noteId: self.noteId ?? "",
-                                                  url: nil,
-                                                  rawEmoji: convertedEmojiData.emoji,
-                                                  emoji: convertedEmojiData.emoji,
-                                                  isMyReaction: isMyReaction,
-                                                  count: count)
-            default:
-                return nil
-            }
-            
-            return reactionModel
-        }.compactMap { $0 } // nil除去
+        guard let owner = owner, let noteId = noteEntity.noteId else { return [] }
+        
+        return noteEntity.reactions.compactMap {
+            ReactionEntity(from: $0, with: externalEmojis, myReaction: noteEntity.myReaction, noteId: noteId, owner: owner)
+        }
+        .compactMap {
+            NoteCell.Reaction(from: $0)
+        }
     }
 }
