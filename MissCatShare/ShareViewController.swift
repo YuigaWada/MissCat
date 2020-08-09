@@ -46,11 +46,11 @@ class ShareViewController: SLComposeServiceViewController {
         navigationController?.navigationBar.setBackgroundImage(UIImage(named: "back"), for: .default)
         
         let controller = navigationController!.viewControllers.first!
-        let missCatImage = UIImageView(image: UIImage(named: "MissCat"))
+//        let missCatImage = UIImageView(image: UIImage(named: "MissCat"))
         
-        missCatImage.contentMode = .scaleAspectFit
+//        missCatImage.contentMode = .scaleAspectFit
         controller.navigationItem.rightBarButtonItem!.title = "投稿"
-        controller.navigationItem.titleView = missCatImage
+//        controller.navigationItem.titleView = missCatImage
     }
     
     private func setupMenu() {
