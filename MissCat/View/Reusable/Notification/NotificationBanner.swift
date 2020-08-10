@@ -140,14 +140,10 @@ class NotificationBanner: UIView, UITextViewDelegate {
     }
     
     private func setTheme() {
-//        if let mainColorHex = Theme.shared.currentModel?.mainColorHex {
-//            mainColor = UIColor(hex: mainColorHex)
-//        }
-        if let colorPattern = Theme.shared.currentModel?.colorPattern.ui {
-            backgroundColor = .darkGray
-            layer.borderColor = colorPattern.sub1.cgColor
-            typeLabel.textColor = colorPattern.text
-        }
+        guard let theme = Theme.shared.currentModel else { return }
+        
+        typeLabel.textColor = theme.colorPattern.ui.text
+        backgroundColor = theme.colorPattern.ui.base
     }
     
     // MARK: Setup

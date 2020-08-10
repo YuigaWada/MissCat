@@ -217,7 +217,7 @@ class DesignSettingsViewController: FormViewController {
         Theme.shared.save(with: newModel)
         
         if needAllRelaunch {
-            homeViewController?.relaunchView(start: .profile)
+            homeViewController?.relaunchView(start: .main)
         }
         
         return newModel
