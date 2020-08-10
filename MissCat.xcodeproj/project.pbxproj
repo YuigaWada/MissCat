@@ -1647,9 +1647,11 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 79B7AD7D002BC8FC43933AF9 /* Pods-MissCatShare.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = MissCatShare/MissCatShare.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1.1.2;
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
 				INFOPLIST_FILE = MissCatShare/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
@@ -1658,6 +1660,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
+				MARKETING_VERSION = 1.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCat.MissCatShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1670,9 +1673,11 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 3454BE3D06D0C12BCA775B4B /* Pods-MissCatShare.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CODE_SIGN_ENTITLEMENTS = MissCatShare/MissCatShare.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1.1.2;
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
 				INFOPLIST_FILE = MissCatShare/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
@@ -1681,6 +1686,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
+				MARKETING_VERSION = 1.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCat.MissCatShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
