@@ -544,12 +544,21 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     }
     
     private func setupNotificationBanner(_ banner: NotificationBanner) {
+        let shadowColor = Theme.shared.currentModel?.colorPattern.ui.text ?? UIColor.black
+        
+        // layer
         banner.translatesAutoresizingMaskIntoConstraints = false
         banner.layer.cornerRadius = 8
+        
+        // shadow
+        banner.layer.shadowColor = shadowColor.cgColor
+        banner.layer.shadowOpacity = 0.2
+        banner.layer.shadowRadius = 3
+        banner.layer.shadowOffset = CGSize(width: 0, height: 0)
+        
+        // view
         view.addSubview(banner)
-        
         banner.setAutoLayout(on: view, widthScale: 0.9, height: footerTabHeight * 2, bottom: footerTabHeight + 10)
-        
         view.bringSubviewToFront(banner)
     }
     

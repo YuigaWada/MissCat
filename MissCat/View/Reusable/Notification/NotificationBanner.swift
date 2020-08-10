@@ -143,7 +143,7 @@ class NotificationBanner: UIView, UITextViewDelegate {
         guard let theme = Theme.shared.currentModel else { return }
         
         typeLabel.textColor = theme.colorPattern.ui.text
-        backgroundColor = theme.colorMode == .light ? theme.colorPattern.ui.sub3 : .darkGray
+        backgroundColor = theme.colorPattern.ui.base
     }
     
     // MARK: Setup
