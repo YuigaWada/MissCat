@@ -180,6 +180,7 @@
 		8DEB422D2478FCA500994439 /* DropdownMenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEB422C2478FCA500994439 /* DropdownMenuViewController.swift */; };
 		8DEFF31C239BD45700142802 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEFF31B239BD45700142802 /* ProfileViewModel.swift */; };
 		8DEFF31E239BD4F200142802 /* ProfileModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEFF31D239BD4F200142802 /* ProfileModel.swift */; };
+		8DF0F68F25049F6C00CEAA03 /* UIViewController+NavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DF0F68E25049F6C00CEAA03 /* UIViewController+NavigationController.swift */; };
 		8DF49FA224445B0500C4D2B2 /* TrendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DF49FA124445B0500C4D2B2 /* TrendViewController.swift */; };
 		8DF7E3CE24DDEC6500D29018 /* ShareAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8DF7E3CD24DDEC6500D29018 /* ShareAssets.xcassets */; };
 		8DF7E3D024DDF03F00D29018 /* AccountsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DF7E3CF24DDF03F00D29018 /* AccountsViewController.swift */; };
@@ -410,6 +411,7 @@
 		8DEB422C2478FCA500994439 /* DropdownMenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropdownMenuViewController.swift; sourceTree = "<group>"; };
 		8DEFF31B239BD45700142802 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		8DEFF31D239BD4F200142802 /* ProfileModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileModel.swift; sourceTree = "<group>"; };
+		8DF0F68E25049F6C00CEAA03 /* UIViewController+NavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+NavigationController.swift"; sourceTree = "<group>"; };
 		8DF49FA124445B0500C4D2B2 /* TrendViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendViewController.swift; sourceTree = "<group>"; };
 		8DF7E3CD24DDEC6500D29018 /* ShareAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = ShareAssets.xcassets; sourceTree = "<group>"; };
 		8DF7E3CF24DDF03F00D29018 /* AccountsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsViewController.swift; sourceTree = "<group>"; };
@@ -563,6 +565,7 @@
 				8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */,
 				8D2D52462443DA2A00712F48 /* UserModel+MissCat.swift */,
 				8DAE90C9248A257E008391A3 /* MisskeyKit+MissCat.swift */,
+				8DF0F68E25049F6C00CEAA03 /* UIViewController+NavigationController.swift */,
 			);
 			path = Extension;
 			sourceTree = "<group>";
@@ -1450,6 +1453,7 @@
 			files = (
 				8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */,
 				8D5D2C4A24487C6E00D15974 /* DirectMessageViewModel.swift in Sources */,
+				8DF0F68F25049F6C00CEAA03 /* UIViewController+NavigationController.swift in Sources */,
 				8D9702D1248DF86B0000524A /* AccountCellViewModel.swift in Sources */,
 				8D3036F62385DA8900BA6D38 /* PostViewModel.swift in Sources */,
 				8D3037002388F71E00BA6D38 /* MisskeyTextView.swift in Sources */,

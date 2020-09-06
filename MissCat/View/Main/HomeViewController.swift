@@ -31,7 +31,7 @@ extension HomeViewController {
     }
 }
 
-class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate {
+class HomeViewController: PolioPagerViewController {
     private var isXSeries = UIScreen.main.bounds.size.height > 811
     private let footerTabHeight: CGFloat = 55
     private var initialized: Bool = false
@@ -222,18 +222,6 @@ class HomeViewController: PolioPagerViewController, UIGestureRecognizerDelegate 
     
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
-    }
-    
-    // たまにnavigationControllerが機能しなくなってフリーズするため、フリーズしないように
-    // 参考→　https://stackoverflow.com/a/36637556
-    func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
-        if navigationController.viewControllers.count > 1 {
-            self.navigationController?.interactivePopGestureRecognizer?.delegate = self
-            navigationController.interactivePopGestureRecognizer?.isEnabled = true
-        } else {
-            self.navigationController?.interactivePopGestureRecognizer?.delegate = nil
-            navigationController.interactivePopGestureRecognizer?.isEnabled = false
-        }
     }
     
     // MARK: Design
