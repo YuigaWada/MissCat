@@ -1655,7 +1655,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCatShare/MissCatShare.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.1.2;
+				CURRENT_PROJECT_VERSION = 1.1.3;
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
 				INFOPLIST_FILE = MissCatShare/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
@@ -1664,7 +1664,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.2;
+				MARKETING_VERSION = 1.1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCat.MissCatShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1681,7 +1681,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCatShare/MissCatShare.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.1.2;
+				CURRENT_PROJECT_VERSION = 1.1.3;
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
 				INFOPLIST_FILE = MissCatShare/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
@@ -1690,7 +1690,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.2;
+				MARKETING_VERSION = 1.1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCat.MissCatShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1826,7 +1826,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.1.2;
+				CURRENT_PROJECT_VERSION = 1.1.3;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -1841,7 +1841,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.2;
+				MARKETING_VERSION = 1.1.3;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",
@@ -1906,7 +1906,7 @@
 				CODE_SIGN_ENTITLEMENTS = MissCat/MissCat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1.1.2;
+				CURRENT_PROJECT_VERSION = 1.1.3;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
@@ -1921,7 +1921,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.2;
+				MARKETING_VERSION = 1.1.3;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"xml2\"",
