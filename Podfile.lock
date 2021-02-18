@@ -1,91 +1,82 @@
 PODS:
-  - Agrume (5.6.7):
+  - Agrume (5.6.12):
     - SwiftyGif
-  - APNGKit (1.1.3)
-  - Cache (5.2.0)
+  - APNGKit (1.2.2)
+  - Cache (6.0.0)
   - ChromaColorPicker (2.0.2)
-  - CocoaLumberjack (3.6.1):
-    - CocoaLumberjack/Core (= 3.6.1)
-  - CocoaLumberjack/Core (3.6.1)
+  - CocoaLumberjack (3.7.0):
+    - CocoaLumberjack/Core (= 3.7.0)
+  - CocoaLumberjack/Core (3.7.0)
   - Differentiator (4.0.1)
-  - Eureka (5.2.1)
-  - Firebase/CoreOnly (6.23.0):
-    - FirebaseCore (= 6.6.7)
-  - Firebase/Messaging (6.23.0):
+  - Eureka (5.3.2)
+  - Firebase/CoreOnly (7.6.0):
+    - FirebaseCore (= 7.6.0)
+  - Firebase/Messaging (7.6.0):
     - Firebase/CoreOnly
-    - FirebaseMessaging (~> 4.3.1)
-  - FirebaseAnalyticsInterop (1.5.0)
-  - FirebaseCore (6.6.7):
-    - FirebaseCoreDiagnostics (~> 1.2)
-    - FirebaseCoreDiagnosticsInterop (~> 1.2)
-    - GoogleUtilities/Environment (~> 6.5)
-    - GoogleUtilities/Logger (~> 6.5)
-  - FirebaseCoreDiagnostics (1.2.4):
-    - FirebaseCoreDiagnosticsInterop (~> 1.2)
-    - GoogleDataTransportCCTSupport (~> 3.0)
-    - GoogleUtilities/Environment (~> 6.5)
-    - GoogleUtilities/Logger (~> 6.5)
-    - nanopb (~> 0.3.901)
-  - FirebaseCoreDiagnosticsInterop (1.2.0)
-  - FirebaseInstallations (1.2.0):
-    - FirebaseCore (~> 6.6)
-    - GoogleUtilities/Environment (~> 6.6)
-    - GoogleUtilities/UserDefaults (~> 6.6)
+    - FirebaseMessaging (~> 7.6.0)
+  - FirebaseCore (7.6.0):
+    - FirebaseCoreDiagnostics (~> 7.4)
+    - GoogleUtilities/Environment (~> 7.0)
+    - GoogleUtilities/Logger (~> 7.0)
+  - FirebaseCoreDiagnostics (7.6.0):
+    - GoogleDataTransport (~> 8.0)
+    - GoogleUtilities/Environment (~> 7.0)
+    - GoogleUtilities/Logger (~> 7.0)
+    - nanopb (~> 2.30907.0)
+  - FirebaseInstallations (7.6.0):
+    - FirebaseCore (~> 7.0)
+    - GoogleUtilities/Environment (~> 7.0)
+    - GoogleUtilities/UserDefaults (~> 7.0)
     - PromisesObjC (~> 1.2)
-  - FirebaseInstanceID (4.3.4):
-    - FirebaseCore (~> 6.6)
-    - FirebaseInstallations (~> 1.0)
-    - GoogleUtilities/Environment (~> 6.5)
-    - GoogleUtilities/UserDefaults (~> 6.5)
-  - FirebaseMessaging (4.3.1):
-    - FirebaseAnalyticsInterop (~> 1.5)
-    - FirebaseCore (~> 6.6)
-    - FirebaseInstanceID (~> 4.3)
-    - GoogleUtilities/AppDelegateSwizzler (~> 6.5)
-    - GoogleUtilities/Environment (~> 6.5)
-    - GoogleUtilities/Reachability (~> 6.5)
-    - GoogleUtilities/UserDefaults (~> 6.5)
-    - Protobuf (>= 3.9.2, ~> 3.9)
+  - FirebaseInstanceID (7.6.0):
+    - FirebaseCore (~> 7.0)
+    - FirebaseInstallations (~> 7.0)
+    - GoogleUtilities/Environment (~> 7.0)
+    - GoogleUtilities/UserDefaults (~> 7.0)
+  - FirebaseMessaging (7.6.0):
+    - FirebaseCore (~> 7.0)
+    - FirebaseInstanceID (~> 7.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 7.0)
+    - GoogleUtilities/Environment (~> 7.0)
+    - GoogleUtilities/Reachability (~> 7.0)
+    - GoogleUtilities/UserDefaults (~> 7.0)
   - FloatingPanel (1.7.4)
-  - Gifu (3.2.0)
-  - GoogleDataTransport (6.0.0)
-  - GoogleDataTransportCCTSupport (3.0.0):
-    - GoogleDataTransport (~> 6.0)
-    - nanopb (~> 0.3.901)
-  - GoogleUtilities/AppDelegateSwizzler (6.6.0):
+  - Gifu (3.3)
+  - GoogleDataTransport (8.2.0):
+    - nanopb (~> 2.30907.0)
+  - GoogleUtilities/AppDelegateSwizzler (7.2.2):
     - GoogleUtilities/Environment
     - GoogleUtilities/Logger
     - GoogleUtilities/Network
-  - GoogleUtilities/Environment (6.6.0):
+  - GoogleUtilities/Environment (7.2.2):
     - PromisesObjC (~> 1.2)
-  - GoogleUtilities/Logger (6.6.0):
+  - GoogleUtilities/Logger (7.2.2):
     - GoogleUtilities/Environment
-  - GoogleUtilities/Network (6.6.0):
+  - GoogleUtilities/Network (7.2.2):
     - GoogleUtilities/Logger
     - "GoogleUtilities/NSData+zlib"
     - GoogleUtilities/Reachability
-  - "GoogleUtilities/NSData+zlib (6.6.0)"
-  - GoogleUtilities/Reachability (6.6.0):
+  - "GoogleUtilities/NSData+zlib (7.2.2)"
+  - GoogleUtilities/Reachability (7.2.2):
     - GoogleUtilities/Logger
-  - GoogleUtilities/UserDefaults (6.6.0):
+  - GoogleUtilities/UserDefaults (7.2.2):
     - GoogleUtilities/Logger
-  - InputBarAccessoryView (4.3.2):
-    - InputBarAccessoryView/Core (= 4.3.2)
-  - InputBarAccessoryView/Core (4.3.2)
+  - InputBarAccessoryView (5.1.0):
+    - InputBarAccessoryView/Core (= 5.1.0)
+  - InputBarAccessoryView/Core (5.1.0)
   - iOSPhotoEditor (1.0.0)
-  - KeychainAccess (4.2.0)
-  - MessageKit (3.1.0):
-    - InputBarAccessoryView (~> 4.3.0)
+  - KeychainAccess (4.2.1)
+  - MessageKit (3.3.0):
+    - InputBarAccessoryView (~> 5.1.0)
   - MisskeyKit (3.0.4):
     - Starscream (= 3.1.1)
-  - nanopb (0.3.9011):
-    - nanopb/decode (= 0.3.9011)
-    - nanopb/encode (= 0.3.9011)
-  - nanopb/decode (0.3.9011)
-  - nanopb/encode (0.3.9011)
-  - PolioPager (2.5)
-  - PromisesObjC (1.2.8)
-  - Protobuf (3.11.4)
+  - nanopb (2.30907.0):
+    - nanopb/decode (= 2.30907.0)
+    - nanopb/encode (= 2.30907.0)
+  - nanopb/decode (2.30907.0)
+  - nanopb/encode (2.30907.0)
+  - PolioPager (2.6)
+  - PromisesObjC (1.2.12)
   - RxCocoa (5.1.1):
     - RxRelay (~> 5)
     - RxSwift (~> 5)
@@ -100,15 +91,15 @@ PODS:
   - Starscream (3.1.1)
   - SVGKit (2.1.0):
     - CocoaLumberjack (~> 3.0)
-  - SwiftFormat/CLI (0.44.7)
+  - SwiftFormat/CLI (0.47.11)
   - SwiftLinkPreview (3.1.0)
-  - SwiftyGif (5.2.0)
-  - XLActionController (5.0.2):
-    - XLActionController/Core (= 5.0.2)
-  - XLActionController/Core (5.0.2)
-  - XLActionController/Tweetbot (5.0.2):
+  - SwiftyGif (5.4.0)
+  - XLActionController (5.1.0):
+    - XLActionController/Core (= 5.1.0)
+  - XLActionController/Core (5.1.0)
+  - XLActionController/Tweetbot (5.1.0):
     - XLActionController/Core
-  - XLActionController/Twitter (5.0.2):
+  - XLActionController/Twitter (5.1.0):
     - XLActionController/Core
   - XLPagerTabStrip (9.0.0)
 
@@ -119,7 +110,7 @@ DEPENDENCIES:
   - ChromaColorPicker
   - Eureka
   - Firebase/Messaging
-  - FloatingPanel
+  - FloatingPanel (= 1.7.4)
   - Gifu
   - iOSPhotoEditor
   - KeychainAccess
@@ -141,8 +132,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   https://cdn.cocoapods.org/:
-    - KeychainAccess
-  https://github.com/CocoaPods/Specs.git:
     - Agrume
     - APNGKit
     - Cache
@@ -151,26 +140,23 @@ SPEC REPOS:
     - Differentiator
     - Eureka
     - Firebase
-    - FirebaseAnalyticsInterop
     - FirebaseCore
     - FirebaseCoreDiagnostics
-    - FirebaseCoreDiagnosticsInterop
     - FirebaseInstallations
     - FirebaseInstanceID
     - FirebaseMessaging
     - FloatingPanel
     - Gifu
     - GoogleDataTransport
-    - GoogleDataTransportCCTSupport
     - GoogleUtilities
     - InputBarAccessoryView
     - iOSPhotoEditor
+    - KeychainAccess
     - MessageKit
     - MisskeyKit
     - nanopb
     - PolioPager
     - PromisesObjC
-    - Protobuf
     - RxCocoa
     - RxDataSources
     - RxRelay
@@ -190,52 +176,48 @@ EXTERNAL SOURCES:
 
 CHECKOUT OPTIONS:
   SVGKit:
-    :commit: 8560ef56bd61e34d5cd8d9739954f9765e3ac794
+    :commit: 11b6d774d2710a8b1c0493146be5d56e56961946
     :git: https://github.com/SVGKit/SVGKit.git
 
 SPEC CHECKSUMS:
-  Agrume: 1440351654f1d8669f240b5e7f1c76bafa15cd02
-  APNGKit: fbf5270804a2861f451ca27cf1cce0893b13fbf5
-  Cache: 807c5d86d01a177f06ede9865add3aea269bbfd4
+  Agrume: d60f7ead4aad9720564148f7e9cbe0b225b1d814
+  APNGKit: 939475205746e11a212c265f39dbb9dca70011e8
+  Cache: 4ca7e00363fca5455f26534e5607634c820ffc2d
   ChromaColorPicker: 307585f2dc23d4d72f24cad320c1e08825cb5c09
-  CocoaLumberjack: b17ae15142558d08bbacf69775fa10c4abbebcc9
+  CocoaLumberjack: e8955b9d337ac307103b0a34fd141c32f27e53c5
   Differentiator: 886080237d9f87f322641dedbc5be257061b0602
-  Eureka: c883105488e05bc65539f583246ecf9657cabbfe
-  Firebase: 585ae467b3edda6a5444e788fda6888f024d8d6f
-  FirebaseAnalyticsInterop: 3f86269c38ae41f47afeb43ebf32a001f58fcdae
-  FirebaseCore: a2788a0d5f6c1dff17b8f79b4a73654a8d4bfdbd
-  FirebaseCoreDiagnostics: b59c024493a409f8aecba02c99928d0d8431d159
-  FirebaseCoreDiagnosticsInterop: 296e2c5f5314500a850ad0b83e9e7c10b011a850
-  FirebaseInstallations: 2119fb3e46b0a88bfdbf12562f855ee3252462fa
-  FirebaseInstanceID: cef67c4967c7cecb56ea65d8acbb4834825c587b
-  FirebaseMessaging: 828e66eb357a893e3cebd9ee0f6bc1941447cc94
+  Eureka: 1c2b8b5892bfb0e972d0fe05f8c09fd89f8625ec
+  Firebase: e1e089d9aac215a52442583f818ab61de3c4581b
+  FirebaseCore: 0a43b7f1c5b36f3358cd703011ca4c7e0df55870
+  FirebaseCoreDiagnostics: ee1184d51da3293335b83355aad20f537acc24cf
+  FirebaseInstallations: 6e4e77396559bc2ae0504823837ed737b1c7e47f
+  FirebaseInstanceID: cf243611700eddc916b093353adbd4da822cfa63
+  FirebaseMessaging: 4b9b2850fcfcaac2820097ee3703ba6cfff3df84
   FloatingPanel: 3c9d0e30fe350e1613157557769d2ec97f76b96b
-  Gifu: 7bcb6427457d85e0b4dff5a84ec5947ac19a93ea
-  GoogleDataTransport: 061fe7d9b476710e3cd8ea51e8e07d8b67c2b420
-  GoogleDataTransportCCTSupport: 0f39025e8cf51f168711bd3fb773938d7e62ddb5
-  GoogleUtilities: 39530bc0ad980530298e9c4af8549e991fd033b1
-  InputBarAccessoryView: 7985d418040a05fe894bd4b8328dd43ab35517c3
+  Gifu: 97c2a3c3865fbc834ab13f797e2e8e7729a1853c
+  GoogleDataTransport: 1024b1a4dfbd7a0e92cb20d7e0a6f1fb66b449a4
+  GoogleUtilities: 31c5b01f978a70c6cff2afc6272b3f1921614b43
+  InputBarAccessoryView: 19953f486a23e846e9487099f92bbe3456e46ce5
   iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
-  KeychainAccess: 3f760109aa99b05d0f231e28b22642da7153e38a
-  MessageKit: 3beb578737a5aa2bba25cc27c7b6d6faa09af5a7
+  KeychainAccess: 9b07f665298d13c3a85881bd3171f6f49b8151c1
+  MessageKit: 1f07618183be6d92b648ba7a384aafa097362a00
   MisskeyKit: 1cb91ffb613a9ecdbb1f05788c1c69ade345d806
-  nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
-  PolioPager: ccb4e382fef0c3c0ee52bdec3d9e9794eafa510a
-  PromisesObjC: c119f3cd559f50b7ae681fa59dc1acd19173b7e6
-  Protobuf: 176220c526ad8bd09ab1fb40a978eac3fef665f7
+  nanopb: 59221d7f958fb711001e6a449489542d92ae113e
+  PolioPager: 37df4822f91022764e4a896fd568f489da997e94
+  PromisesObjC: 3113f7f76903778cf4a0586bd1ab89329a0b7b97
   RxCocoa: 32065309a38d29b5b0db858819b5bf9ef038b601
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
   RxRelay: d77f7d771495f43c556cbc43eebd1bb54d01e8e9
   RxSwift: 81470a2074fa8780320ea5fe4102807cb7118178
   SkeletonView: bb27c39857e5492136f02ee8a3aa78de55d12ecd
   Starscream: 4bb2f9942274833f7b4d296a55504dcfc7edb7b0
-  SVGKit: 8a2fc74258bdb2abb54d3b65f3dd68b0277a9c4d
-  SwiftFormat: fd97e27b8de5a46c9d1988bf1db1dc92e79f86a3
+  SVGKit: 132b010efbf57ec345309fe4a7f627c0a40c5d63
+  SwiftFormat: 6f2fd4689e09959ba5b690ab950279e33eb6441e
   SwiftLinkPreview: 3d924eeaae8d17410a827a4b37675713af1a0a8a
-  SwiftyGif: b85c6b33a9411859d9e1db998b6a8214aea942df
-  XLActionController: f1f2226d2c6629db197d4a41f2da907085a4cb9d
+  SwiftyGif: 5d4af95df24caf1c570dbbcb32a3b8a0763bc6d7
+  XLActionController: 24140d835ab9e260270711afebc5efabebe9d392
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
 
-PODFILE CHECKSUM: 73acd675fe93d32822a3571fa7612a967fed743d
+PODFILE CHECKSUM: 98020e51df75c28466beea29b3b8da6173187100
 
-COCOAPODS: 1.9.3
+COCOAPODS: 1.10.1

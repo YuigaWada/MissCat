@@ -1,6 +1,6 @@
 use_frameworks!
-plugin 'cocoapods-binary'
-enable_bitcode_for_prebuilt_frameworks!
+# plugin 'cocoapods-binary'
+# enable_bitcode_for_prebuilt_frameworks!
 
 target 'MissCatShare' do
 pod 'MisskeyKit'
@@ -23,7 +23,7 @@ pod 'RxDataSources', :binary => true
 pod 'Agrume', :binary => true
 pod 'SVGKit', :git => 'https://github.com/SVGKit/SVGKit.git', :branch => '3.x', :binary => true
 pod "SkeletonView",'1.8.2', :binary => true
-pod 'FloatingPanel', :binary => true
+pod 'FloatingPanel', '1.7.4', :binary => true
 pod 'Gifu', :binary => true
 pod 'iOSPhotoEditor', :binary => true
 pod 'XLPagerTabStrip', :binary => true
