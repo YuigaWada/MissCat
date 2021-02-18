@@ -78,7 +78,7 @@ extension UIViewController: UIImagePickerControllerDelegate, UINavigationControl
             showPhotoEditor(with: originalImage).subscribe(onNext: { editedImage in // 画像エディタを表示
                 guard let editedImage = editedImage else { return }
                 completion(originalImage, editedImage, nil)
-              }).disposed(by: disposeBag)
+            }).disposed(by: disposeBag)
             
             return
         }

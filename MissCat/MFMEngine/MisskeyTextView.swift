@@ -105,8 +105,8 @@ open class YanagiText: UITextView {
             self.selectedRange = range
             
             guard let attachment = value as? NSTextAttachment,
-                let yanagiAttachment = self.findYanagiAttachment(nsAttachment: attachment),
-                let selectedTextRange = self.selectedTextRange else { return }
+                  let yanagiAttachment = self.findYanagiAttachment(nsAttachment: attachment),
+                  let selectedTextRange = self.selectedTextRange else { return }
             
             let targetView = yanagiAttachment.view
             
@@ -153,8 +153,8 @@ open class YanagiText: UITextView {
             self.selectedRange = nextLineRange
             
             guard let attachment = value as? NSTextAttachment,
-                let selectedTextRange = selectedTextRange,
-                let yanagiAttachment = self.findYanagiAttachment(nsAttachment: attachment) else { return }
+                  let selectedTextRange = selectedTextRange,
+                  let yanagiAttachment = self.findYanagiAttachment(nsAttachment: attachment) else { return }
             
             let targetView = yanagiAttachment.view
             
@@ -239,8 +239,9 @@ class MisskeyTextView: YanagiText {
     // リンクタップのみ許可する
     override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
         guard super.point(inside: point, with: event),
-            let position = closestPosition(to: point),
-            let range = tokenizer.rangeEnclosingPosition(position, with: .character, inDirection: UITextDirection(rawValue: UITextLayoutDirection.left.rawValue)) else {
+              let position = closestPosition(to: point),
+              let range = tokenizer.rangeEnclosingPosition(position, with: .character, inDirection: UITextDirection(rawValue: UITextLayoutDirection.left.rawValue))
+        else {
             return false
         }
         let startIndex = offset(from: beginningOfDocument, to: range.start)

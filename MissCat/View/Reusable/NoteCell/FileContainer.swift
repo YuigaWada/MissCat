@@ -242,7 +242,7 @@ private class MosaicLayout: UICollectionViewLayout {
         
         // Find any cell that sits within the query rect.
         guard let lastIndex = cachedAttributes.indices.last,
-            let firstMatchIndex = binSearch(rect, start: 0, end: lastIndex) else { return attributesArray }
+              let firstMatchIndex = binSearch(rect, start: 0, end: lastIndex) else { return attributesArray }
         
         // Starting from the match, loop up and down through the array until all the attributes
         // have been added within the query rect.

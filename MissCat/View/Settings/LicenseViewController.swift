@@ -141,7 +141,7 @@ class LicenseTableViewController: FormViewController {
         SOFTWARE.
         
         """,
-                "YanagiText": """
+        "YanagiText": """
         MIT License
         
         Copyright (c) 2019 YuigaWada
@@ -165,7 +165,7 @@ class LicenseTableViewController: FormViewController {
         SOFTWARE.
         
         """,
-                "PolioPager": """
+        "PolioPager": """
         MIT License
         
         Copyright (c) 2019 YuigaWada
@@ -189,7 +189,7 @@ class LicenseTableViewController: FormViewController {
         SOFTWARE.
         
         """,
-                "Starscream": """
+        "Starscream": """
                                       Apache License
                                    Version 2.0, January 2004
                                 http://www.apache.org/licenses/
@@ -367,7 +367,7 @@ class LicenseTableViewController: FormViewController {
               incurred by, or claims asserted against, such Contributor by reason
               of your accepting any such warranty or additional liability.
         """,
-                "RxSwift": """
+        "RxSwift": """
         **The MIT License**
         **Copyright © 2015 Krunoslav Zaher**
         **All rights reserved.**
@@ -378,7 +378,7 @@ class LicenseTableViewController: FormViewController {
         
         THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         """,
-                "RxCocoa": """
+        "RxCocoa": """
         Copyright (c) 2017 - present RxSwiftCommunity
         
         Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -400,7 +400,7 @@ class LicenseTableViewController: FormViewController {
         THE SOFTWARE.
         
         """,
-                "RxDataSources": """
+        "RxDataSources": """
         MIT License
         
         Copyright (c) 2017 RxSwift Community
@@ -424,7 +424,7 @@ class LicenseTableViewController: FormViewController {
         SOFTWARE.
         
         """,
-                "Agrume": """
+        "Agrume": """
         The MIT License (MIT)
         
         Copyright (c) 2015 Jan Gorman
@@ -448,7 +448,7 @@ class LicenseTableViewController: FormViewController {
         SOFTWARE.
         
         """,
-                "SkeletonView": """
+        "SkeletonView": """
         The MIT License (MIT)
         
         Copyright (c) 2017 Juanpe Catalán
@@ -473,7 +473,7 @@ class LicenseTableViewController: FormViewController {
         
         
         """,
-                "FloatingPanel": """
+        "FloatingPanel": """
         MIT License
         
         Copyright (c) 2018 Shin Yamamoto
@@ -496,7 +496,7 @@ class LicenseTableViewController: FormViewController {
         OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
         SOFTWARE.
         """,
-                "Gifu": """
+        "Gifu": """
         The MIT License (MIT)
         
         Copyright (c) 2014-2018 Reda Lemeden.
@@ -523,7 +523,7 @@ class LicenseTableViewController: FormViewController {
         
         
         """,
-                "photo-editor": """
+        "photo-editor": """
         MIT License
         
         Copyright (c) 2017 Mohamed Hamed
@@ -547,7 +547,7 @@ class LicenseTableViewController: FormViewController {
         SOFTWARE.
         
         """,
-                "XLPagerTabStrip": """
+        "XLPagerTabStrip": """
         The MIT License (MIT)
         
         Copyright (c) 2019 Xmartlabs SRL
@@ -571,7 +571,7 @@ class LicenseTableViewController: FormViewController {
         SOFTWARE.
         
         """,
-                "APNGKit": """
+        "APNGKit": """
         The MIT License (MIT)
         
         Copyright (c) 2015 Wei Wang
@@ -595,7 +595,7 @@ class LicenseTableViewController: FormViewController {
         SOFTWARE.
         
         """,
-                "SwiftLinkPreview": """
+        "SwiftLinkPreview": """
         The MIT License (MIT)
         
         Copyright (c) 2016 Leonardo Cardoso
@@ -618,7 +618,7 @@ class LicenseTableViewController: FormViewController {
         OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
         SOFTWARE.
         """,
-                "Cache": """
+        "Cache": """
         Licensed under the **MIT** license
         
         > Copyright (c) 2015 Hyper Interaktiv AS
@@ -643,7 +643,7 @@ class LicenseTableViewController: FormViewController {
         > SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         
         """,
-                "MessageKit": """
+        "MessageKit": """
         MIT License
         
         Copyright (c) 2017-2019 MessageKit
@@ -667,7 +667,7 @@ class LicenseTableViewController: FormViewController {
         SOFTWARE.
         
         """,
-                "Eureka": """
+        "Eureka": """
         The MIT License (MIT)
         
         Copyright (c) 2019 XMARTLABS
@@ -691,7 +691,7 @@ class LicenseTableViewController: FormViewController {
         SOFTWARE.
         
         """,
-                "ChromaColorPicker": """
+        "ChromaColorPicker": """
         MIT License
         
         Copyright (c) 2016 Jonathan Cardasis
@@ -715,7 +715,7 @@ class LicenseTableViewController: FormViewController {
         SOFTWARE.
         
         """,
-                "XLActionController": """
+        "XLActionController": """
         The MIT License (MIT)
         
         Copyright (c) 2019 XMARTLABS (http://xmartlabs.com)

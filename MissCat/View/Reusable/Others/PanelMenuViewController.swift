@@ -15,7 +15,7 @@ class PanelMenuViewController: TweetbotActionController {
     private var disposeBag = DisposeBag()
     var tapTrigger: PublishRelay<Int> = .init() // タップされたらどの選択肢がおされたのか(=order)を流す
     
-    public override init(nibName nibNameOrNil: String? = nil, bundle nibBundleOrNil: Bundle? = nil) {
+    override public init(nibName nibNameOrNil: String? = nil, bundle nibBundleOrNil: Bundle? = nil) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
         
         // TweetbotActionControllerのonConfigureCellForActionを書き換えて色を変更する

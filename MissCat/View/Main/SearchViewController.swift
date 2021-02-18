@@ -195,8 +195,8 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     private func animateTab(next: Tab, completion: (() -> Void)? = nil) {
         guard selected != .moving,
-            let nextTab = next == .note ? noteTab : userTab,
-            let previousTab = next == .note ? userTab : noteTab else { return }
+              let nextTab = next == .note ? noteTab : userTab,
+              let previousTab = next == .note ? userTab : noteTab else { return }
         
         selected = .moving
         let nextVC = next == .note ? timelineVC : userListVC
@@ -268,8 +268,8 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     private func generateTimelineVC(query: String) -> TimelineViewController? {
         guard !query.isEmpty,
-            let viewController = getViewController(name: "timeline") as? TimelineViewController,
-            let owner = Cache.UserDefaults.shared.getCurrentUser() else { return nil }
+              let viewController = getViewController(name: "timeline") as? TimelineViewController,
+              let owner = Cache.UserDefaults.shared.getCurrentUser() else { return nil }
         
         viewController.setup(owner: owner, type: .NoteSearch, query: query, lockScroll: false, withTopShadow: true)
         viewController.view.frame = timelineView.frame
@@ -283,8 +283,8 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     private func generateUserListVC(query: String) -> UserListViewController? {
         guard !query.isEmpty,
-            let viewController = getViewController(name: "user-list") as? UserListViewController,
-            let owner = Cache.UserDefaults.shared.getCurrentUser() else { return nil }
+              let viewController = getViewController(name: "user-list") as? UserListViewController,
+              let owner = Cache.UserDefaults.shared.getCurrentUser() else { return nil }
         
         viewController.setup(type: .search, owner: owner, query: query, lockScroll: false, withTopShadow: true)
         viewController.view.frame = timelineView.frame

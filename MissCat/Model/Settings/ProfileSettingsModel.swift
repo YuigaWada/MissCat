@@ -37,8 +37,8 @@ class ProfileSettingsModel {
     /// 画像をdriveへとアップロードする
     private func uploadImage(_ image: UIImage?, completion: @escaping (String?) -> Void) {
         guard let image = image,
-            let resizedImage = image.resized(widthUnder: 1024),
-            let targetImage = resizedImage.jpegData(compressionQuality: 0.5) else { completion(nil); return }
+              let resizedImage = image.resized(widthUnder: 1024),
+              let targetImage = resizedImage.jpegData(compressionQuality: 0.5) else { completion(nil); return }
         
         misskey?.drive.createFile(fileData: targetImage, fileType: "image/jpeg", name: UUID().uuidString + ".jpeg", force: false) { result, error in
             guard let result = result, error == nil else { return }

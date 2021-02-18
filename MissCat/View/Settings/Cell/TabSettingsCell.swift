@@ -36,12 +36,12 @@ public class TabSettingsCell: Cell<Theme.Tab>, CellType {
         return tabKind != nil
     }
     
-    public override func setup() {
+    override public func setup() {
         super.setup()
         setTheme()
     }
     
-    public override func layoutSubviews() {
+    override public func layoutSubviews() {
         super.layoutSubviews()
         
         if !tabSelected, !beingRemoved {

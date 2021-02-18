@@ -458,7 +458,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         
         urlPreviewer.setTapGesture(disposeBag) {
             guard let previewdUrl = viewModel.state.previewedUrl,
-                let owner = self.owner else { return }
+                  let owner = self.owner else { return }
             self.delegate?.tappedLink(text: previewdUrl, owner: owner)
         }
     }
@@ -470,8 +470,8 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
             guard let view = $0 else { return }
             view.setTapGesture(disposeBag) {
                 guard let delegate = self.delegate,
-                    let userId = self.userId,
-                    let owner = self.owner else { return }
+                      let userId = self.userId,
+                      let owner = self.owner else { return }
                 delegate.move2Profile(userId: userId, owner: owner)
             }
         }
@@ -699,10 +699,10 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     
     @IBAction func tappedReaction(_ sender: Any) {
         guard let delegate = delegate,
-            let owner = owner,
-            let noteId = self.noteId,
-            let viewModel = viewModel,
-            !viewModel.state.isMe else { return }
+              let owner = owner,
+              let noteId = self.noteId,
+              let viewModel = viewModel,
+              !viewModel.state.isMe else { return }
         
         delegate.tappedReaction(owner: owner,
                                 reactioned: viewModel.state.reactioned,

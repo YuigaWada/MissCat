@@ -91,9 +91,9 @@ class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigationDelegat
         MisskeyKit.shared.changeInstance(instance: misskeyInstance) // インスタンスを変更
         MisskeyKit.shared.auth.startSession(appSecret: appSecret) { auth, error in
             guard let auth = auth,
-                let token = auth.token,
-                error == nil,
-                let url = URL(string: token.url) else { /* Error */ return }
+                  let token = auth.token,
+                  error == nil,
+                  let url = URL(string: token.url) else { /* Error */ return }
             
             self.currentUrl = url
             if self.webView != nil {

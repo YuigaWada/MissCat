@@ -142,7 +142,7 @@ extension AccountCell {
         }
         
         typealias Identity = String
-        let identity: String = String(Float.random(in: 1 ..< 100))
+        let identity = String(Float.random(in: 1 ..< 100))
         
         var owner: SecureUser
         

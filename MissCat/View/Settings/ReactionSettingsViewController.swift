@@ -202,7 +202,7 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
         let isHeader = item is EmojiViewHeader
         if isHeader {
             guard let headerInfo = item as? EmojiViewHeader,
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ReactionCollectionHeader", for: indexPath) as? ReactionCollectionHeader else { fatalError("Internal Error.") }
+                  let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ReactionCollectionHeader", for: indexPath) as? ReactionCollectionHeader else { fatalError("Internal Error.") }
             
             cell.contentMode = .left
             cell.backgroundColor = .clear
@@ -244,7 +244,7 @@ class ReactionSettingsViewController: UIViewController, UICollectionViewDelegate
     
     private func showReactionGen() {
         guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController,
-            let owner = owner else { return }
+              let owner = owner else { return }
         
         reactionGen.setOwner(owner)
         reactionGen.onPostViewController = true

@@ -94,7 +94,7 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         theme
             .map { $0.colorPattern.ui.sub3 }.subscribe(onNext: { textColor in
                 self.displayNameLabel.textColor = textColor
-        }).disposed(by: disposeBag)
+            }).disposed(by: disposeBag)
         
         theme.filter { $0.colorMode == .light }.subscribe(onNext: { _ in
             self.searchBar.resetColor()
@@ -103,7 +103,7 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         theme.filter { $0.colorMode == .dark }
             .map { $0.colorPattern.ui }.subscribe(onNext: { colorPattern in
                 self.searchBar.changeColor(background: colorPattern.sub1, text: colorPattern.sub3, placeholder: colorPattern.sub3)
-        }).disposed(by: disposeBag)
+            }).disposed(by: disposeBag)
     }
     
     private func setTheme() {
@@ -238,7 +238,7 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         let isHeader = item is EmojiViewHeader
         if isHeader {
             guard let headerInfo = item as? EmojiViewHeader,
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ReactionCollectionHeader", for: indexPath) as? ReactionCollectionHeader else { fatalError("Internal Error.") }
+                  let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ReactionCollectionHeader", for: indexPath) as? ReactionCollectionHeader else { fatalError("Internal Error.") }
             
             cell.backgroundColor = .clear
             cell.contentMode = .left

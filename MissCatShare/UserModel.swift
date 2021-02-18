@@ -40,8 +40,8 @@ class UserModel {
     /// 保存されている全てのユーザー情報を取得する
     func getUsers() -> [SecureUser] {
         guard let data = userDefaults.data(forKey: savedUserKey),
-            let users = try? JSONDecoder().decode([SecureUser].self, from: data),
-            users.count > 0 else { return [] }
+              let users = try? JSONDecoder().decode([SecureUser].self, from: data),
+              users.count > 0 else { return [] }
         
         var noApiKeyUserIds: [String] = []
         

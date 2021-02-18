@@ -136,11 +136,11 @@ class DesignSettingsViewController: FormViewController {
         let currentColor = UIColor(hex: theme.mainColorHex)
         return Section("テーマ設定")
             <<< SegmentedRow<String>() {
-                $0.tag = "color-mode"
-                $0.options = ["Light", "Dark"]
-                $0.value = theme.colorMode == .light ? "Light" : "Dark"
-                $0.baseCell.backgroundColor = self.getCellBackgroundColor()
-            }
+            $0.tag = "color-mode"
+            $0.options = ["Light", "Dark"]
+            $0.value = theme.colorMode == .light ? "Light" : "Dark"
+            $0.baseCell.backgroundColor = self.getCellBackgroundColor()
+        }
             <<< ColorPickerRow {
                 $0.tag = "main-color"
                 $0.cell.setColor(currentColor)
@@ -246,7 +246,7 @@ class DesignSettingsViewController: FormViewController {
     
     private func getColorModeSettings() -> Theme.ColerMode {
         guard let colorModeRow = form.rowBy(tag: "color-mode") as? SegmentedRow<String>,
-            let colorMode = colorModeRow.value else { return .light }
+              let colorMode = colorModeRow.value else { return .light }
         
         return colorMode == "Light" ? .light : .dark
     }

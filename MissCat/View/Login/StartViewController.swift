@@ -100,7 +100,7 @@ class StartViewController: UIViewController {
     private func binding() {
         signupButton.rx.tap.subscribe(onNext: { _ in
             guard let navigationController = self.navigationController,
-                let tos = self.getViewController(name: "tos") as? TosViewController else { self.signup(); return }
+                  let tos = self.getViewController(name: "tos") as? TosViewController else { self.signup(); return }
             
             tos.agreed = self.signup
             navigationController.pushViewController(tos, animated: true)
@@ -108,7 +108,7 @@ class StartViewController: UIViewController {
         
         loginButton.rx.tap.subscribe(onNext: { _ in
             guard let navigationController = self.navigationController,
-                let tos = self.getViewController(name: "tos") as? TosViewController else { self.login(); return }
+                  let tos = self.getViewController(name: "tos") as? TosViewController else { self.login(); return }
             
             tos.agreed = self.login
             navigationController.pushViewController(tos, animated: true)
@@ -213,7 +213,8 @@ class StartViewController: UIViewController {
                 self.reloadTrigger.accept(()) // AccountsListViewControllerのリロードを促す
                 
                 if let navigationController = self.navigationController,
-                    !(navigationController.viewControllers[0] is StartViewController) { // navigationController由来の遷移の場合
+                   !(navigationController.viewControllers[0] is StartViewController)
+                { // navigationController由来の遷移の場合
                     navigationController.popViewController(animated: true)
                 } else { // present(_:)由来の遷移の場合
                     self.dismiss(animated: true, completion: nil)
@@ -277,7 +278,7 @@ class StartViewController: UIViewController {
     private func invalidUrlError() {
         DispatchQueue.main.async {
             let alert = UIAlertController(title: "エラー", message: "インスタンスに接続できません", preferredStyle: UIAlertController.Style.alert)
-            let cancelAction: UIAlertAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.destructive, handler: nil)
+            let cancelAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.destructive, handler: nil)
             
             alert.addAction(cancelAction)
             self.present(alert, animated: true, completion: nil)
@@ -287,7 +288,7 @@ class StartViewController: UIViewController {
     // MARK: Design
     
     private func setGradientLayer() {
-        let gradientLayer: CAGradientLayer = CAGradientLayer()
+        let gradientLayer = CAGradientLayer()
         
         gradientLayer.colors = [UIColor(hex: "4691a3").cgColor,
                                 UIColor(hex: "5AB0C5").cgColor,

@@ -111,9 +111,9 @@ class NotificationsModel {
     
     func getModel(notification: NotificationModel) -> NotificationCell.Model? {
         guard let id = notification.id,
-            let actionType = notification.type,
-            let user = notification.user,
-            let type = NotificationCell.ModelType(from: actionType) else { return nil }
+              let actionType = notification.type,
+              let user = notification.user,
+              let type = NotificationCell.ModelType(from: actionType) else { return nil }
         
         let userEntity = UserEntity(from: user)
         if type == .follow {

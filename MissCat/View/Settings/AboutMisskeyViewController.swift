@@ -112,7 +112,7 @@ class AboutMisskeyViewController: UIViewController {
     // MARK: Design
     
     private func setGradientLayer() {
-        let gradientLayer: CAGradientLayer = CAGradientLayer()
+        let gradientLayer = CAGradientLayer()
         
         gradientLayer.colors = [UIColor(hex: "4691a3").cgColor,
                                 UIColor(hex: "5AB0C5").cgColor,

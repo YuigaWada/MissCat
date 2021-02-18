@@ -97,7 +97,7 @@ extension UIViewController {
     
     func showAlert(title: String, message: String, yesOption: String? = nil, action: @escaping (Bool) -> Void) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertController.Style.alert)
-        let cancelAction: UIAlertAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.cancel, handler: {
+        let cancelAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.cancel, handler: {
             (_: UIAlertAction!) -> Void in
             action(yesOption == nil)
         })
@@ -105,7 +105,7 @@ extension UIViewController {
         alert.addAction(cancelAction)
         
         if let yesOption = yesOption {
-            let defaultAction: UIAlertAction = UIAlertAction(title: yesOption, style: UIAlertAction.Style.destructive, handler: {
+            let defaultAction = UIAlertAction(title: yesOption, style: UIAlertAction.Style.destructive, handler: {
                 (_: UIAlertAction!) -> Void in
                 action(true)
             })
@@ -146,7 +146,7 @@ extension UIViewController {
     func openLink(url: String) {
         // URLをデコードしておく
         guard let url = URL(string: url.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? url),
-            let rootVC = UIApplication.shared.windows[0].rootViewController else { return }
+              let rootVC = UIApplication.shared.windows[0].rootViewController else { return }
         let safari = SFSafariViewController(url: url)
         
         // i dont know why but it seems that we must launch a safari VC from the root VC.

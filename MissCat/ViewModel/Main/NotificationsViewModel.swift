@@ -139,7 +139,8 @@ class NotificationsViewModel {
         
         // Shape!
         if cellModel.type == .mention || cellModel.type == .reply || cellModel.type == .quote,
-            let replyNote = cellModel.replyNote {
+           let replyNote = cellModel.replyNote
+        {
             MFMEngine.shapeModel(replyNote)
         } else {
             MFMEngine.shapeModel(cellModel)

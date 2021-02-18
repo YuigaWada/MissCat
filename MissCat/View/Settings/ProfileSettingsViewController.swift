@@ -31,7 +31,7 @@ class ProfileSettingsViewController: FormViewController {
     
     // MARK: Row
     
-    private lazy var catSwitch: SwitchRow = SwitchRow { row in
+    private lazy var catSwitch = SwitchRow { row in
         row.tag = "cat-switch"
         row.title = "Catとして設定"
     }.cellUpdate { cell, _ in
@@ -239,7 +239,7 @@ class ProfileSettingsViewController: FormViewController {
             section.header = {
                 var header = HeaderFooterView<UIView>(.callback {
                     self.getHeader()
-                    })
+                })
                 header.height = { self.headerHeight }
                 return header
             }()
@@ -282,7 +282,7 @@ class ProfileSettingsViewController: FormViewController {
     /// - Parameter viewWithText: UITextInput
     private func showReactionGen(target viewWithText: UITextInput) {
         guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController,
-            let owner = owner else { return }
+              let owner = owner else { return }
         
         reactionGen.setOwner(owner)
         reactionGen.onPostViewController = true

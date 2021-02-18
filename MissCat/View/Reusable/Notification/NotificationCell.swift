@@ -167,7 +167,7 @@ class NotificationCell: UITableViewCell, UITextViewDelegate {
                 self.selectedBackgroundView = UIView()
                 self.selectedBackgroundView?.backgroundColor = selectedBackgroundColor
                 self.contentView.backgroundColor = nil
-               })
+            })
             .disposed(by: disposeBag)
         
         // emoji

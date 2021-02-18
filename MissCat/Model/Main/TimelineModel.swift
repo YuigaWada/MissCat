@@ -240,9 +240,9 @@ class TimelineModel {
         let noteType = checkNoteType(post)
         if noteType == .Renote { // renoteの場合 ヘッダーとなるrenoteecellとnotecell、２つのモデルを送る
             guard let renoteId = post.renoteId,
-                let user = post.user,
-                let renote = post.renote,
-                let renoteModel = renote.getNoteCellModel(owner: owner, withRN: checkNoteType(renote) == .CommentRenote) else { return }
+                  let user = post.user,
+                  let renote = post.renote,
+                  let renoteModel = renote.getNoteCellModel(owner: owner, withRN: checkNoteType(renote) == .CommentRenote) else { return }
             
             let renoteeModel = NoteCell.Model.fakeRenoteecell(renotee: user.name ?? user.username ?? "",
                                                               renoteeUserName: user.username ?? "",
@@ -257,7 +257,7 @@ class TimelineModel {
             }
         } else if noteType == .Promotion { // PR投稿
             guard let noteId = post.id,
-                let cellModel = post.getNoteCellModel(owner: owner, withRN: checkNoteType(post) == .CommentRenote) else { return }
+                  let cellModel = post.getNoteCellModel(owner: owner, withRN: checkNoteType(post) == .CommentRenote) else { return }
             
             let prModel = NoteCell.Model.fakePromotioncell(baseNoteId: noteId)
             var cellModels = [prModel, cellModel]
@@ -319,8 +319,8 @@ class TimelineModel {
         }
         
         guard let _ = channel,
-            let typeString = typeString,
-            self.handleTargetType.contains(typeString) else { return }
+              let typeString = typeString,
+              self.handleTargetType.contains(typeString) else { return }
         
         // captureした投稿に対して更新が行われた場合
         if typeString == "CapturedNoteUpdated" {
@@ -353,7 +353,7 @@ class TimelineModel {
                 
             case .deleted:
                 guard let targetNoteId = updateContents.targetNoteId else { return }
-                self.removeTargetTrigger.onNext(targetNoteId)
+                removeTargetTrigger.onNext(targetNoteId)
             }
         }
         
@@ -362,7 +362,7 @@ class TimelineModel {
             DispatchQueue.main.async {
                 self.transformNote(with: observer, post: post, owner: owner, reverse: true)
             }
-            self.captureNote(noteId: post.id)
+            captureNote(noteId: post.id)
         }
     }
     

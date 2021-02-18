@@ -300,7 +300,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         
         let topColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0)
         let bottomColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.7)
-        let gradientLayer: CAGradientLayer = CAGradientLayer()
+        let gradientLayer = CAGradientLayer()
         
         gradientLayer.colors = [topColor.cgColor, bottomColor.cgColor]
         gradientLayer.frame = CGRect(x: 0,
@@ -347,11 +347,11 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     private func showUnfollowAlert() {
         let alert = UIAlertController(title: "フォロー解除", message: "本当にフォロー解除しますか？", preferredStyle: UIAlertController.Style.alert)
         
-        let defaultAction: UIAlertAction = UIAlertAction(title: "Unfollow", style: UIAlertAction.Style.destructive, handler: {
+        let defaultAction = UIAlertAction(title: "Unfollow", style: UIAlertAction.Style.destructive, handler: {
             (_: UIAlertAction!) -> Void in
             self.viewModel.unfollow()
         })
-        let cancelAction: UIAlertAction = UIAlertAction(title: "いいえ", style: UIAlertAction.Style.cancel, handler: nil)
+        let cancelAction = UIAlertAction(title: "いいえ", style: UIAlertAction.Style.cancel, handler: nil)
         
         alert.addAction(cancelAction)
         alert.addAction(defaultAction)
@@ -448,7 +448,7 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
     
     private func generateTimelineVC(xlTitle: IndicatorInfo, userId: String, includeReplies: Bool, onlyFiles: Bool, scrollable: Bool, loadLimit: Int) -> TimelineViewController {
         guard let viewController = getViewController(name: "timeline") as? TimelineViewController,
-            let owner = owner else { fatalError("Internal Error.") }
+              let owner = owner else { fatalError("Internal Error.") }
         
         viewController.setup(owner: owner,
                              type: .OneUser,
@@ -484,8 +484,8 @@ class ProfileViewController: ButtonBarPagerTabStripViewController, UITextViewDel
         
         let scroll = scrollView.contentOffset.y - scrollBegining
         guard childVCs.count > currentIndex,
-            let blurAnimator = blurAnimator,
-            let tlScrollView = childVCs[currentIndex].mainTableView else { return }
+              let blurAnimator = blurAnimator,
+              let tlScrollView = childVCs[currentIndex].mainTableView else { return }
         
         var needContainerScroll: Bool = true
         // tlScrollViewをスクロール

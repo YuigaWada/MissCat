@@ -297,7 +297,7 @@ class NoteCellViewModel: ViewModelType {
     
     func updateVote(choices: [Int]) {
         guard let poll = input.cellModel.noteEntity.poll,
-            let currentChoices = poll.choices else { return }
+              let currentChoices = poll.choices else { return }
         
         choices.forEach { choiceIndex in
             guard choiceIndex >= 0, choiceIndex < currentChoices.count else { return }

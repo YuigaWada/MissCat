@@ -328,9 +328,9 @@ class TimelineViewModel: ViewModelType {
         
         cellsModel = cellsModel.map { // セルのモデルを変更する
             guard $0.noteEntity.noteId == noteId,
-                let poll = $0.noteEntity.poll,
-                let choices = poll.choices,
-                let votes = choices[choice]?.votes else { return $0 }
+                  let poll = $0.noteEntity.poll,
+                  let choices = poll.choices,
+                  let votes = choices[choice]?.votes else { return $0 }
             
             let cellModel = $0
             cellModel.noteEntity.poll?.choices?[choice]?.votes = votes + 1
@@ -393,14 +393,14 @@ class TimelineViewModel: ViewModelType {
     
     func openSafari(_ note: NoteCell.Model) {
         guard let rawUrl = getNoteUrl(note),
-            let noteUrl = URL(string: rawUrl) else { return }
+              let noteUrl = URL(string: rawUrl) else { return }
         
         output.openSafariTrigger.accept(noteUrl)
     }
     
     func shareLinks(_ note: NoteCell.Model) {
         guard let rawUrl = getNoteUrl(note),
-            let noteUrl = URL(string: rawUrl) else { return }
+              let noteUrl = URL(string: rawUrl) else { return }
         
         output.shareLinksTrigger.accept(noteUrl)
     }

@@ -100,7 +100,7 @@ class UserListViewController: NoteDisplay, UITableViewDelegate {
     
     private func setupTopShadow() {
         guard withTopShadow,
-            let target = mainTableView else { return }
+              let target = mainTableView else { return }
         
         let path = UIBezierPath(rect: CGRect(x: -5.0, y: -5.0, width: target.bounds.size.width + 5.0, height: 3.0))
         let innerLayer = CALayer()

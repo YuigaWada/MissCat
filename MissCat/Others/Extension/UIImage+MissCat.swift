@@ -31,7 +31,7 @@ extension UIImage {
         
         while imageSizeKB > 5000 { // ! Or use 1024 if you need KB but not kB
             guard let resizedImage = resizingImage.resized(withPercentage: 0.9),
-                let imageData = resizedImage.pngData()
+                  let imageData = resizedImage.pngData()
             else { return nil }
             
             resizingImage = resizedImage

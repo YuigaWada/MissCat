@@ -9,7 +9,7 @@
 import Foundation
 
 internal typealias ResponseCallBack = (HTTPURLResponse?, String?) -> Void
-internal class Requestor {
+internal enum Requestor {
     private static let boundary = UUID().uuidString
     
     // MARK: GET
@@ -56,7 +56,7 @@ internal class Requestor {
         
         let session = URLSession(configuration: URLSessionConfiguration.default)
         let uuid = UUID().uuidString
-        var bodyData: Data = Data()
+        var bodyData = Data()
         
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         

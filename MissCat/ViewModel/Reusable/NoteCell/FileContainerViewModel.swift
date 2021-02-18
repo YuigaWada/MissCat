@@ -43,8 +43,8 @@ class FileContainerViewModel: ViewModelType {
             let fileType = checkFileType(file.type)
             
             guard fileType != .Unknown,
-                let thumbnailUrl = file.thumbnailUrl,
-                let original = file.url else { break }
+                  let thumbnailUrl = file.thumbnailUrl,
+                  let original = file.url else { break }
             
             if fileType == .Audio {
             } else {

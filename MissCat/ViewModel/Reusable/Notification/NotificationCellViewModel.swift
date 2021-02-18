@@ -148,7 +148,7 @@ class NotificationCellViewModel: ViewModelType {
     
     private func setNote(_ item: NotificationCell.Model) {
         guard let myNote = item.myNote,
-            let shapedNote = myNote.shapedNote else { return }
+              let shapedNote = myNote.shapedNote else { return }
         
         // file
         let fileCount = myNote.noteEntity.files.count
@@ -177,7 +177,7 @@ class NotificationCellViewModel: ViewModelType {
         // reaction
         else if let reaction = item.reaction {
             guard let owner = input.item.owner,
-                let handler = EmojiHandler.getHandler(owner: owner) else { return }
+                  let handler = EmojiHandler.getHandler(owner: owner) else { return }
             output.typeIconString.accept("heart")
             output.typeString.accept("Reaction")
             output.needEmoji.accept(true)

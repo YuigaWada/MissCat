@@ -47,7 +47,7 @@ class HomeViewController: PolioPagerViewController {
     private lazy var search = self.generateSearchVC()
     private var setViewControllers: [UIViewController] = []
     
-    private lazy var navBar: NavBar = NavBar()
+    private lazy var navBar = NavBar()
     private lazy var footerTab = FooterTabBar(with: disposeBag)
     
     // Flag
@@ -78,7 +78,7 @@ class HomeViewController: PolioPagerViewController {
         // Theme.Tab → HomeViewController.Tabへと詰め替える
         let transformed: [Tab] = tabs.compactMap {
             guard let userId = $0.userId ?? Cache.UserDefaults.shared.getCurrentUserId(),
-                let owner = Cache.UserDefaults.shared.getUser(userId: userId) else { return nil }
+                  let owner = Cache.UserDefaults.shared.getUser(userId: userId) else { return nil }
             
             // Homeタブがデフォルト値だったら修正しておく(userRefillが完了すれば、次の起動では正常に表示されるはず)
             if $0.name == "___Home___" {
@@ -306,8 +306,9 @@ class HomeViewController: PolioPagerViewController {
     
     private func userAuth() {
         guard let currentUser = Cache.UserDefaults.shared.getCurrentUser(),
-            let apiKey = currentUser.apiKey,
-            !apiKey.isEmpty else {
+              let apiKey = currentUser.apiKey,
+              !apiKey.isEmpty
+        else {
             showStartingViewController() // ApiKeyが確認できない場合はStartViewControllerへ
             return
         }
@@ -371,7 +372,7 @@ class HomeViewController: PolioPagerViewController {
     private func setupFavVC() {
         if favViewController == nil {
             guard let storyboard = self.storyboard,
-                let favViewController = storyboard.instantiateViewController(withIdentifier: "messages") as? MessageListViewController
+                  let favViewController = storyboard.instantiateViewController(withIdentifier: "messages") as? MessageListViewController
             else { return }
             
             favViewController.homeViewController = self
@@ -388,7 +389,7 @@ class HomeViewController: PolioPagerViewController {
     private func setupAccountListVC() {
         if accountsListViewController == nil {
             guard let storyboard = self.storyboard,
-                let accountsListViewController = storyboard.instantiateViewController(withIdentifier: "accounts-list") as? AccountsListViewController else { return }
+                  let accountsListViewController = storyboard.instantiateViewController(withIdentifier: "accounts-list") as? AccountsListViewController else { return }
             
             accountsListViewController.homeViewController = self
             accountsListViewController.view.layoutIfNeeded()
@@ -419,7 +420,7 @@ class HomeViewController: PolioPagerViewController {
     
     private func showProfileView(userId: String, owner: SecureUser) {
         guard let storyboard = self.storyboard,
-            let profileViewController = storyboard.instantiateViewController(withIdentifier: "profile") as? ProfileViewController else { return }
+              let profileViewController = storyboard.instantiateViewController(withIdentifier: "profile") as? ProfileViewController else { return }
         
         profileViewController.setUserId(userId, owner: owner)
         profileViewController.view.frame = getDisplayRect(needNavBar: false)
@@ -597,7 +598,7 @@ extension HomeViewController: NoteCellDelegate {
             default:
                 break
             }
-       }).disposed(by: disposeBag)
+        }).disposed(by: disposeBag)
         
         present(panelMenu, animated: true, completion: nil)
     }
@@ -643,7 +644,7 @@ extension HomeViewController: NoteCellDelegate {
         
         present(playerController, animated: true, completion: {
             videoPlayer.play()
-       })
+        })
     }
 }
 
@@ -695,7 +696,7 @@ extension HomeViewController: FooterTabBarDelegate {
     
     func tappedPost() {
         guard let postViewController = storyboard?.instantiateViewController(withIdentifier: "post") as? PostViewController,
-            let owner = Cache.UserDefaults.shared.getCurrentUser() else { return }
+              let owner = Cache.UserDefaults.shared.getCurrentUser() else { return }
         
         postViewController.setup(owner: owner)
         presentOnFullScreen(postViewController, animated: true, completion: nil)
@@ -823,8 +824,8 @@ extension HomeViewController: TimelineDelegate {
     
     func openSettings() {
         guard let storyboard = self.storyboard,
-            let settingsViewController = storyboard.instantiateViewController(withIdentifier: "settings")
-            as? SettingsViewController else { return }
+              let settingsViewController = storyboard.instantiateViewController(withIdentifier: "settings")
+              as? SettingsViewController else { return }
         
         settingsViewController.homeViewController = self
         navigationController?.pushViewController(settingsViewController, animated: true)
@@ -832,7 +833,7 @@ extension HomeViewController: TimelineDelegate {
     
     func openPost(item: NoteCell.Model, type: PostViewController.PostType) {
         guard let postViewController = storyboard?.instantiateViewController(withIdentifier: "post") as? PostViewController,
-            let owner = item.owner else { return }
+              let owner = item.owner else { return }
         
         postViewController.setup(owner: owner, note: item, type: type)
         presentOnFullScreen(postViewController, animated: true, completion: nil)

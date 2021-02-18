@@ -1207,7 +1207,6 @@
 				8D4A2A10237437BE00503685 /* Resources */,
 				8D10B7BF23F2BE1100FFD9DA /* SwiftFormat */,
 				8C739A5D3A37D7C2A426ECC7 /* [CP] Embed Pods Frameworks */,
-				8B9CC6DDD98A244177B80DA4 /* [CP] Copy Pods Resources */,
 				8D1A4C0524DD7BFF00EFD826 /* Embed App Extensions */,
 			);
 			buildRules = (
@@ -1336,23 +1335,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		8B9CC6DDD98A244177B80DA4 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-MissCat/Pods-MissCat-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-MissCat/Pods-MissCat-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MissCat/Pods-MissCat-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		8C739A5D3A37D7C2A426ECC7 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;

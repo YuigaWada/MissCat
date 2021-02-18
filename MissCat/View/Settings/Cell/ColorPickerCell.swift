@@ -21,7 +21,7 @@ public class ColorPickerCell: Cell<String>, CellType {
     
     var value: String { return currentColor.hex }
     
-    public override func setup() {
+    override public func setup() {
         super.setup()
         setupTapGesture()
         setTheme()
@@ -30,7 +30,7 @@ public class ColorPickerCell: Cell<String>, CellType {
         colorIndicator.layer.borderColor = UIColor.lightGray.cgColor
     }
     
-    public override func layoutSubviews() {
+    override public func layoutSubviews() {
         super.layoutSubviews()
         colorIndicator.layoutIfNeeded()
         colorIndicator.layer.cornerRadius = colorIndicator.frame.width / 2

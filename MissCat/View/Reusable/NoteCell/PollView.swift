@@ -257,6 +257,7 @@ extension PollView {
             isUserInteractionEnabled = !finishVoting
         }
         
+        @available(*, unavailable)
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
@@ -284,7 +285,7 @@ extension PollView {
             
             // AutoLayoutを再設定
             guard let progressConstraint = progressConstraint,
-                let pollNameConstraint = pollNameConstraint else { return }
+                  let pollNameConstraint = pollNameConstraint else { return }
             
             removeConstraint(progressConstraint)
             removeConstraint(pollNameConstraint)

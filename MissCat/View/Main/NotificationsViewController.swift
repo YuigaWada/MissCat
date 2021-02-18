@@ -168,8 +168,8 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
         let index = indexPath.row
         
         guard let cellModel = viewModel?.cellsModel[index],
-            let replyNote = cellModel.replyNote,
-            cellModel.type == .mention || cellModel.type == .reply || cellModel.type == .quote else { return }
+              let replyNote = cellModel.replyNote,
+              cellModel.type == .mention || cellModel.type == .reply || cellModel.type == .quote else { return }
         showDetailView(item: replyNote)
     }
     
@@ -188,7 +188,8 @@ class NotificationsViewController: NoteDisplay, UITableViewDelegate, FooterTabBa
         
         // セルが存在しないと落ちるので制約をつける
         if mainTableView.numberOfSections > zeroIndexPath.section,
-            mainTableView.numberOfRows(inSection: zeroIndexPath.section) > zeroIndexPath.row {
+           mainTableView.numberOfRows(inSection: zeroIndexPath.section) > zeroIndexPath.row
+        {
             mainTableView.scrollToRow(at: zeroIndexPath, at: .top, animated: true)
         }
     }

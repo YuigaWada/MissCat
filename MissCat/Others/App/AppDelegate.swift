@@ -53,7 +53,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     
     // foreground時に通知が飛んできたらこれがよばれる
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
-                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void)
+    {
         if let contents = extractPayload(from: userInfo) {
             showNotificationBanner(with: contents) // アプリ内通知を表示
         }
@@ -122,9 +123,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// - Parameter raw: userInfo
     private func showNotificationBanner(with contents: NotificationData) {
         guard let children = rootViewController?.children,
-            children.count > 0,
-            let homeVC = children[0] as? HomeViewController,
-            let owner = Cache.UserDefaults.shared.getUser(userId: contents.ownerId) // どのユーザー宛の通知か
+              children.count > 0,
+              let homeVC = children[0] as? HomeViewController,
+              let owner = Cache.UserDefaults.shared.getUser(userId: contents.ownerId) // どのユーザー宛の通知か
         else { return }
         
         let misskey = MisskeyKit(from: owner)
@@ -142,7 +143,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// - Parameter payload: [String:String]
     private func extractPayload(from payload: [AnyHashable: Any]) -> NotificationData? {
         guard let notificationId = payload["notification_id"] as? String,
-            let ownerId = payload["owner_id"] as? String else { return nil }
+              let ownerId = payload["owner_id"] as? String else { return nil }
         
         return NotificationData(ownerId: ownerId, notificationId: notificationId)
     }

@@ -14,7 +14,7 @@ import RxSwift
 // RxDataSources等でIdentifiableType && Equatableを求められるモデルクラスはこれを継承する
 class CellModel: IdentifiableType, Equatable {
     typealias Identity = String
-    let identity: String = String(Float.random(in: 1 ..< 100))
+    let identity = String(Float.random(in: 1 ..< 100))
     
     static func == (lhs: CellModel, rhs: CellModel) -> Bool {
         return lhs.identity == rhs.identity

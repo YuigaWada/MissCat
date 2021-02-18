@@ -24,8 +24,8 @@ class PostDetailModel {
     func goBackReplies(id: String, completion: @escaping ([NoteCell.Model]) -> Void) {
         misskey?.notes.showNote(noteId: id) { note, error in
             guard error == nil,
-                let note = note,
-                let shaped = note.getNoteCellModel(owner: self.owner) else { completion(self.backReplies); return }
+                  let note = note,
+                  let shaped = note.getNoteCellModel(owner: self.owner) else { completion(self.backReplies); return }
             
             shaped.isReplyTarget = true
             MFMEngine.shapeModel(shaped)

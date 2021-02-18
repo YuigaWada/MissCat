@@ -120,7 +120,7 @@ class PostDetailViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDe
         let isDetailMode = item.identity == mainItem?.identity // リプライはDetailModeにしない
         
         guard let noteCell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath) as? NoteCell,
-            let owner = item.owner else { return NoteCell() }
+              let owner = item.owner else { return NoteCell() }
         
         let shapedCell = noteCell.transform(with: .init(item: item, isDetailMode: isDetailMode, delegate: self, owner: owner))
         

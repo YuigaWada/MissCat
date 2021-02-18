@@ -78,7 +78,7 @@ class ReactionGenModel {
         
         init(from owner: SecureUser?) {
             guard let owner = owner,
-                let handler = EmojiHandler.getHandler(owner: owner) else { return }
+                  let handler = EmojiHandler.getHandler(owner: owner) else { return }
             
             categorizedDefault = handler.categorizedDefaultEmojis
             categorizedCustom = handler.categorizedCustomEmojis

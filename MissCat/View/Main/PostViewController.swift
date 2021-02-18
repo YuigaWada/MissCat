@@ -397,7 +397,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     
     private func showReactionGen() {
         guard let reactionGen = getViewController(name: "reaction-gen") as? ReactionGenViewController,
-            let owner = owner else { return }
+              let owner = owner else { return }
         
         reactionGen.setOwner(owner)
         reactionGen.onPostViewController = true
@@ -638,7 +638,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     
     @objc private func keyboardWillShow(_ notification: Notification) {
         guard let userInfo = notification.userInfo as? [String: Any],
-            let keyboardInfo = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+              let keyboardInfo = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
         
         let keyboardSize = keyboardInfo.cgRectValue.size
         fitToKeyboard(keyboardHeight: keyboardSize.height)

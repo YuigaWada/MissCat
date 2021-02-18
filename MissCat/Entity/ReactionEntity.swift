@@ -27,8 +27,9 @@ class ReactionEntity {
         let isMyReaction = rawEmoji == myReaction
         
         guard rawEmoji != "",
-            let handler = EmojiHandler.getHandler(owner: owner),
-            let convertedEmojiData = handler.convertEmoji(raw: rawEmoji, external: externalEmojis) else {
+              let handler = EmojiHandler.getHandler(owner: owner),
+              let convertedEmojiData = handler.convertEmoji(raw: rawEmoji, external: externalEmojis)
+        else {
             // If being not converted
             
             self.noteId = noteId

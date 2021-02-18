@@ -57,11 +57,11 @@ class AccountViewController: UITableViewController {
     private func showLogoutAlert() {
         let alert = UIAlertController(title: "ログアウト", message: "本当にログアウトしますか？", preferredStyle: UIAlertController.Style.alert)
         
-        let defaultAction: UIAlertAction = UIAlertAction(title: "ログアウト", style: UIAlertAction.Style.destructive, handler: {
+        let defaultAction = UIAlertAction(title: "ログアウト", style: UIAlertAction.Style.destructive, handler: {
             (_: UIAlertAction!) -> Void in
             self.logout()
         })
-        let cancelAction: UIAlertAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.cancel, handler: nil)
+        let cancelAction = UIAlertAction(title: "閉じる", style: UIAlertAction.Style.cancel, handler: nil)
         
         alert.addAction(cancelAction)
         alert.addAction(defaultAction)
@@ -71,7 +71,7 @@ class AccountViewController: UITableViewController {
     
     private func logout() {
         guard let startViewController = getViewController(name: "start") as? StartViewController,
-            let currentUserId = Cache.UserDefaults.shared.getCurrentUserId() else { return }
+              let currentUserId = Cache.UserDefaults.shared.getCurrentUserId() else { return }
         
         Cache.UserDefaults.shared.removeUser(userId: currentUserId)
         Cache.shared.resetMyCache()

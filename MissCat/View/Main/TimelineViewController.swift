@@ -80,7 +80,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
                lockScroll: Bool = true,
                withTopShadow: Bool = false,
                loadLimit: Int = 40,
-               xlTitle: IndicatorInfo? = nil) {
+               xlTitle: IndicatorInfo? = nil)
+    {
         let input = ViewModel.Input(owner: owner,
                                     dataSource: dataSource,
                                     type: type,
@@ -370,7 +371,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     
     private func setupTopShadow() {
         guard withTopShadow,
-            let target = mainTableView else { return }
+              let target = mainTableView else { return }
         
         let path = UIBezierPath(rect: CGRect(x: -5.0, y: -5.0, width: target.bounds.size.width + 5.0, height: 3.0))
         let innerLayer = CALayer()
@@ -394,7 +395,8 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
         
         // セルが存在しないと落ちるので制約をつける
         if mainTableView.numberOfSections > zeroIndexPath.section,
-            mainTableView.numberOfRows(inSection: zeroIndexPath.section) > zeroIndexPath.row {
+           mainTableView.numberOfRows(inSection: zeroIndexPath.section) > zeroIndexPath.row
+        {
             mainTableView.scrollToRow(at: zeroIndexPath, at: .top, animated: true)
         }
     }

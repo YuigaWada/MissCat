@@ -66,7 +66,7 @@ class MissCatTableView: PlaceholderTableView {
                 self.contentOffset = CGPoint(x: 0, y: self.contentSize.height - bottomOffset)
                 completion?(finished)
                 CATransaction.commit()
-        })
+            })
         #else
             super.performBatchUpdates(updates, completion: completion)
         #endif

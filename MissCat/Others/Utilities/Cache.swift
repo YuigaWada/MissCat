@@ -227,8 +227,8 @@ extension Cache {
         /// 保存されている全てのユーザー情報を取得する
         func getUsers() -> [SecureUser] {
             guard let data = userDefaults.data(forKey: savedUserKey),
-                let users = try? JSONDecoder().decode([SecureUser].self, from: data),
-                users.count > 0 else { return [] }
+                  let users = try? JSONDecoder().decode([SecureUser].self, from: data),
+                  users.count > 0 else { return [] }
             
             var noApiKeyUserIds: [String] = []
             
@@ -301,8 +301,8 @@ extension Cache {
             let currentLoginedInstance = "current-logined-instance"
             
             guard let apiKey = Foundation.UserDefaults.standard.string(forKey: currentLoginedApiKey),
-                let userId = Foundation.UserDefaults.standard.string(forKey: currentLoginedUserId),
-                let instance = Foundation.UserDefaults.standard.string(forKey: currentLoginedInstance) else { return }
+                  let userId = Foundation.UserDefaults.standard.string(forKey: currentLoginedUserId),
+                  let instance = Foundation.UserDefaults.standard.string(forKey: currentLoginedInstance) else { return }
             
             // 詰め替える
             _ = saveUser(.init(userId: userId, username: "", instance: instance, apiKey: apiKey))
@@ -317,7 +317,7 @@ extension Cache {
         /// userRefill()で詰めきれなかったusernameを非同期で詰める
         func usernameRefill(with user: SecureUser) {
             guard user.username.isEmpty,
-                let apiKey = user.apiKey else { return }
+                  let apiKey = user.apiKey else { return }
             let misskey = MisskeyKit(from: user)
             misskey?.users.i { info, _ in
                 guard let info = info else { return }

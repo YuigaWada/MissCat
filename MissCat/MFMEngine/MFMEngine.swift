@@ -57,12 +57,12 @@ class MFMEngine {
         let shaped = NSMutableAttributedString()
         
         guard let owner = owner,
-            let handler = EmojiHandler.getHandler(owner: owner) else { return MFMEngine.generatePlaneString(string: rest, font: font, textHex: textHex) }
+              let handler = EmojiHandler.getHandler(owner: owner) else { return MFMEngine.generatePlaneString(string: rest, font: font, textHex: textHex) }
         
         // カスタム絵文字の候補をそれぞれ確認していく
         emojiTargets.forEach { target in
             guard let converted = handler.convertEmoji(raw: target, external: externalEmojis),
-                let range = rest.range(of: target) else { return }
+                  let range = rest.range(of: target) else { return }
             
             // カスタム絵文字を支点に文章を分割していく
             let plane = String(rest[rest.startIndex ..< range.lowerBound])
@@ -222,7 +222,8 @@ class MFMEngine {
                                  nameFont: UIFont? = nil,
                                  usernameFont _usernameFont: UIFont? = nil,
                                  nameHex: String? = nil,
-                                 usernameColor: UIColor? = nil) -> MFMString {
+                                 usernameColor: UIColor? = nil) -> MFMString
+    {
         let displayName = name ?? ""
         let font = nameFont ?? UIFont(name: "Helvetica", size: 10.0) ?? .systemFont(ofSize: 10.0)
         

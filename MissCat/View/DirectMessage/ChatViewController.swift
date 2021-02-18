@@ -97,7 +97,7 @@ class ChatViewController: MessagesViewController, MessagesDataSource {
     
     private func setupColor() {
         guard let flowLayout = messagesCollectionView.collectionViewLayout as? MessagesCollectionViewFlowLayout,
-            let colorPattern = Theme.shared.currentModel?.colorPattern.ui else { return }
+              let colorPattern = Theme.shared.currentModel?.colorPattern.ui else { return }
         
         flowLayout.collectionView?.backgroundColor = colorPattern.base
         messageInputBar.inputTextView.textColor = colorPattern.sub0

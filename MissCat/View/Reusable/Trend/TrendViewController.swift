@@ -27,7 +27,7 @@ class TrendViewController: UIViewController, UITableViewDelegate, UITableViewDat
     private lazy var owner: SecureUser? = Cache.UserDefaults.shared.getCurrentUser()
     private var instance: String {
         guard let instance = owner?.instance,
-            instance.count > 0 else { return "このインスタンス" }
+              instance.count > 0 else { return "このインスタンス" }
         
         return instance.prefix(1).uppercased() + instance.suffix(instance.count - 1)
     }

@@ -120,12 +120,12 @@ class ReactionCell: UICollectionViewCell, ComponentType {
                                self.changeCounter(plus: self.isMyReaction)
                            }, completion: { _ in
                                guard let delegate = self.delegate,
-                                   let noteId = self.noteId,
-                                   let rawReaction = self.rawReaction else { return }
+                                     let noteId = self.noteId,
+                                     let rawReaction = self.rawReaction else { return }
                                
                                delegate.tappedReaction(noteId: noteId, reaction: rawReaction, isRegister: self.isMyReaction)
                                
-            })
+                           })
         }.disposed(by: disposeBag)
         
         view.addGestureRecognizer(tapGesture)

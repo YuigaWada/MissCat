@@ -77,7 +77,7 @@ class ShareViewController: SLComposeServiceViewController {
     
     override func didSelectPost() {
         guard let extensionItem = extensionContext?.inputItems.first as? NSExtensionItem,
-            let itemProvider = extensionItem.attachments?.first else { return }
+              let itemProvider = extensionItem.attachments?.first else { return }
         
         let puclicURL = kUTTypeURL as String
         let typeImage = kUTTypeImage as String

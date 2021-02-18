@@ -158,7 +158,7 @@ protocol HexColorPattern {
 }
 
 extension Theme {
-    class Color {
+    enum Color {
         struct Light: ColorPattern {
             var ui: UIColorPattern = UI()
             var hex: HexColorPattern = Hex()
@@ -166,9 +166,9 @@ extension Theme {
             struct UI: UIColorPattern {
                 var base: UIColor = .white
                 var sub0: UIColor = .darkGray // 濃
-                var sub1: UIColor = UIColor(hex: "C6C6C6")
+                var sub1 = UIColor(hex: "C6C6C6")
                 var sub2: UIColor = .lightGray // 淡
-                var sub3: UIColor = UIColor(hex: "f0f0f0")
+                var sub3 = UIColor(hex: "f0f0f0")
                 
                 var text: UIColor = .black
             }
@@ -189,11 +189,11 @@ extension Theme {
             var hex: HexColorPattern = Hex()
             
             struct UI: UIColorPattern {
-                var base: UIColor = UIColor(hex: "1f1f1f")
-                var sub0: UIColor = UIColor(hex: "c5c5c5") // 淡
-                var sub1: UIColor = UIColor(hex: "adadad")
-                var sub2: UIColor = UIColor(hex: "555555")
-                var sub3: UIColor = UIColor(hex: "303030") // 濃 (Lightと逆なので注意)
+                var base = UIColor(hex: "1f1f1f")
+                var sub0 = UIColor(hex: "c5c5c5") // 淡
+                var sub1 = UIColor(hex: "adadad")
+                var sub2 = UIColor(hex: "555555")
+                var sub3 = UIColor(hex: "303030") // 濃 (Lightと逆なので注意)
                 
                 var text: UIColor = .white
             }
@@ -213,13 +213,13 @@ extension Theme {
 
 // MARK: Theme Model
 
-extension Theme {
-    enum ColerMode: String, Codable {
+public extension Theme {
+    internal enum ColerMode: String, Codable {
         case light
         case dark
     }
     
-    public enum TabKind: String, Codable {
+    enum TabKind: String, Codable {
         case home
         case local
         case global
@@ -228,7 +228,7 @@ extension Theme {
         case list
     }
     
-    public struct Tab: Codable, Equatable {
+    struct Tab: Codable, Equatable {
         var name: String
         var kind: TabKind
         
@@ -236,7 +236,7 @@ extension Theme {
         var listId: String?
     }
     
-    public class Model: Codable {
+    class Model: Codable {
         var tab: [Tab]
         var mainColorHex: String
         var colorMode: ColerMode
@@ -257,7 +257,7 @@ extension Theme {
             let new = self
             
             guard new.mainColorHex == old.mainColorHex,
-                new.colorMode == old.colorMode else { return false }
+                  new.colorMode == old.colorMode else { return false }
             
             return hasEqualTabs(to: old)
         }
@@ -286,7 +286,7 @@ extension Theme {
         static func get() -> Model? {
             let key = getKey()
             guard let data = UserDefaults.standard.data(forKey: key),
-                let model = try? JSONDecoder().decode(Model.self, from: data) else { return nil }
+                  let model = try? JSONDecoder().decode(Model.self, from: data) else { return nil }
             
             // userIdが存在しなかったら現在ログイン中のアカウントのuserIdを詰める
             let currentUser = Cache.UserDefaults.shared.getCurrentUser()

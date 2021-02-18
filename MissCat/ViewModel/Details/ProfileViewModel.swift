@@ -260,9 +260,9 @@ class ProfileViewModel: ViewModelType {
     }
 }
 
-extension UserEntity {
+private extension UserEntity {
     /// UserEntityをProfileViewModel.Profileに変更
-    fileprivate func getProfile() -> ProfileViewModel.Profile {
+    func getProfile() -> ProfileViewModel.Profile {
         return .init(bannerUrl: bannerUrl ?? "",
                      iconUrl: avatarUrl ?? "",
                      name: name ?? "",
