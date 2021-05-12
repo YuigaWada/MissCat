@@ -8,7 +8,6 @@
 
 import CoreData
 import FirebaseCore
-import FirebaseInstanceID
 import FirebaseMessaging
 import MisskeyKit
 import UIKit

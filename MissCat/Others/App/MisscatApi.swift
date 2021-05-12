@@ -6,7 +6,7 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
-import FirebaseInstanceID
+import FirebaseMessaging
 import MisskeyKit
 
 protocol ApiKeyManagerProtocol {
@@ -40,9 +40,9 @@ class MisscatApi {
               !currentUser.userId.isEmpty else { return }
         
         misskey?.auth.setAPIKey(apiKey)
-        InstanceID.instanceID().instanceID { result, error in
+        Messaging.messaging().token { token, error in
             guard error == nil else { print("Error fetching remote instance ID: \(error!)"); return }
-            if let token = result?.token {
+            if let token = token {
                 self.registerSw(userId: currentUser.userId, token: token)
             }
         }
