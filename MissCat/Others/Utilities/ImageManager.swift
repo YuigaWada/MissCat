@@ -33,7 +33,7 @@ class ImageManager {
                 DispatchQueue.main.async { viewController?.present(picker, animated: true) }
             })
             // 選択された画像のストリームをResultで
-            .flatMap { (picker, delegate) -> Observable<Result<UIImage, Error>> in
+            .flatMap { picker, delegate -> Observable<Result<UIImage, Error>> in
                 delegate.pickedResultSubject
                     .do(onNext: { _ in picker.dismiss(animated: true) })
                     .map { result -> Result<UIImage, Error> in
