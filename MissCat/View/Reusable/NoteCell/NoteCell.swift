@@ -104,7 +104,7 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     // MARK: Private Var
     
     private let disposeBag = DisposeBag()
-    private lazy var reactionsDataSource = self.setupDataSource()
+    private var reactionsDataSource: ReactionsDataSource?
     private var viewModel: ViewModel?
     
     private var renoteTarget: NoteCell.Model?
@@ -258,23 +258,27 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
     
     private func binding(viewModel: ViewModel, noteId: String) {
         let output = viewModel.output
-        
+            
         // reaction
-        output.reactions
-            .asDriver(onErrorDriveWith: Driver.empty())
-            .drive(reactionsCollectionView.rx.items(dataSource: reactionsDataSource))
-            .disposed(by: disposeBag)
-        
+        if reactionsDataSource == nil {
+            let dataSource = setupDataSource()
+            output.reactions
+                .asDriver(onErrorDriveWith: Driver.empty())
+                .drive(reactionsCollectionView.rx.items(dataSource: dataSource))
+                .disposed(by: disposeBag)
+            reactionsDataSource = dataSource
+        }
+
         output.reactions.asDriver(onErrorDriveWith: Driver.empty()).map { // リアクションの数が0のときはreactionsCollectionViewを非表示に
             guard $0.count == 1 else { return true }
             return $0[0].items.count == 0
         }.drive(reactionsCollectionView.rx.isHidden).disposed(by: disposeBag)
-        
+//
         output.reactions.asDriver(onErrorDriveWith: Driver.empty()).map { // リアクションの数によってreactionsCollectionViewの高さを調節
             guard $0.count == 1 else { return 30 }
             let count = $0[0].items.count
             let step = ceil(Double(count) / 5)
-            
+
             return CGFloat(step * 40)
         }.drive(reactionCollectionHeightConstraint.rx.constant).disposed(by: disposeBag)
         
