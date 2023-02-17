@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="21507" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21505"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -15,35 +15,31 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Retweet" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nXK-RP-pqn">
-                    <rect key="frame" x="0.0" y="10" width="83" height="17"/>
-                    <constraints>
-                        <constraint firstAttribute="height" constant="17" id="QZm-Yp-rl8"/>
-                    </constraints>
+                    <rect key="frame" x="0.0" y="8" width="41.5" height="19"/>
                     <fontDescription key="fontDescription" type="system" pointSize="14"/>
                     <nil key="textColor"/>
                     <nil key="highlightedColor"/>
                 </label>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="〇〇さんがRenote" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="evQ-M5-neF">
-                    <rect key="frame" x="91" y="11" width="303" height="16"/>
-                    <constraints>
-                        <constraint firstAttribute="height" constant="16" id="yfW-rC-5Zw"/>
-                    </constraints>
-                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                    <rect key="frame" x="49.5" y="8" width="344.5" height="19"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="11"/>
                     <nil key="textColor"/>
                     <nil key="highlightedColor"/>
                 </label>
             </subviews>
+            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
             <constraints>
+                <constraint firstItem="evQ-M5-neF" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="8" id="9Eu-A4-RcL"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="evQ-M5-neF" secondAttribute="bottom" id="KdB-P8-FSR"/>
                 <constraint firstAttribute="trailing" secondItem="evQ-M5-neF" secondAttribute="trailing" constant="20" id="R2g-9Z-I8d"/>
                 <constraint firstItem="nXK-RP-pqn" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="VDI-fQ-y33"/>
-                <constraint firstItem="nXK-RP-pqn" firstAttribute="width" secondItem="iN0-l3-epB" secondAttribute="width" multiplier="0.200483" id="pvY-el-OAc"/>
+                <constraint firstItem="nXK-RP-pqn" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="8" id="VtB-4E-66o"/>
+                <constraint firstItem="nXK-RP-pqn" firstAttribute="width" secondItem="iN0-l3-epB" secondAttribute="width" multiplier="0.1" id="pvY-el-OAc"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="nXK-RP-pqn" secondAttribute="bottom" id="uiF-5f-H9m"/>
                 <constraint firstItem="evQ-M5-neF" firstAttribute="leading" secondItem="nXK-RP-pqn" secondAttribute="trailing" constant="8" id="vUc-nh-XP3"/>
             </constraints>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
-            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
             <connections>
                 <outlet property="renoteMarkLabel" destination="nXK-RP-pqn" id="EfB-LM-YGh"/>
                 <outlet property="renoteeLabel" destination="evQ-M5-neF" id="MAm-gR-gGJ"/>
