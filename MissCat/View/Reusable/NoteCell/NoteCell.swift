@@ -260,14 +260,14 @@ class NoteCell: UITableViewCell, UITextViewDelegate, ReactionCellDelegate, UICol
         let output = viewModel.output
             
         // reaction
-        if reactionsDataSource == nil {
-            let dataSource = setupDataSource()
-            output.reactions
-                .asDriver(onErrorDriveWith: Driver.empty())
-                .drive(reactionsCollectionView.rx.items(dataSource: dataSource))
-                .disposed(by: disposeBag)
-            reactionsDataSource = dataSource
-        }
+        reactionsCollectionView.delegate = nil
+        reactionsCollectionView.dataSource = nil
+        
+        let dataSource = setupDataSource()
+        output.reactions
+            .asDriver(onErrorDriveWith: Driver.empty())
+            .drive(reactionsCollectionView.rx.items(dataSource: dataSource))
+            .disposed(by: disposeBag)
 
         output.reactions.asDriver(onErrorDriveWith: Driver.empty()).map { // リアクションの数が0のときはreactionsCollectionViewを非表示に
             guard $0.count == 1 else { return true }
