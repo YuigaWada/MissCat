@@ -29,7 +29,7 @@ class ReactionCell: UICollectionViewCell, ComponentType {
     var nonselectedBackGroundColor: UIColor
     
     var selectedTextColor = UIColor.white
-    var nonselectedTextColor = UIColor(hex: "666666")
+    var nonselectedTextColor = UIColor.white
     
     private var isMyReaction: Bool = false
     private var rawReaction: String?
@@ -40,12 +40,12 @@ class ReactionCell: UICollectionViewCell, ComponentType {
     // MARK: Life Cycle
     
     override init(frame: CGRect) {
-        nonselectedBackGroundColor = Theme.shared.currentModel?.colorPattern.ui.sub1 ?? UIColor(hex: "C6C6C6")
+        nonselectedBackGroundColor = Theme.shared.currentModel?.colorPattern.ui.sub3 ?? UIColor(hex: "C6C6C6")
         super.init(frame: frame)
     }
     
     required init?(coder: NSCoder) {
-        nonselectedBackGroundColor = Theme.shared.currentModel?.colorPattern.ui.sub1 ?? UIColor(hex: "C6C6C6")
+        nonselectedBackGroundColor = Theme.shared.currentModel?.colorPattern.ui.sub3 ?? UIColor(hex: "C6C6C6")
         super.init(coder: coder)
     }
     
