@@ -29,7 +29,7 @@ class ReactionCell: UICollectionViewCell, ComponentType {
     var nonselectedBackGroundColor: UIColor
     
     var selectedTextColor = UIColor.white
-    var nonselectedTextColor = UIColor.white
+    var nonselectedTextColor = Theme.shared.currentModel?.colorMode ?? .light == .light ? UIColor.black : UIColor.white
     
     private var isMyReaction: Bool = false
     private var rawReaction: String?
