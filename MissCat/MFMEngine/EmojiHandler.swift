@@ -82,6 +82,8 @@ class EmojiHandler {
     ///   - external: 他インスタンス由来の絵文字配列
     func convertEmoji(raw: String, external: [EmojiModel?]? = nil) -> RawEmoji? {
         // 自インスタンス由来のEmoji
+        let rawEmoji = raw.regexMatches(pattern: ":(.+)@.*:").map { $0[1] }
+        let raw = rawEmoji.isEmpty ? raw : rawEmoji[0]
         let encoded = encodeEmoji(raw: raw)
         
         if let defaultEmoji = encoded as? DefaultEmojiModel, let emoji = defaultEmoji.char {
