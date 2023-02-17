@@ -26,9 +26,13 @@ class MisscatApi {
         return apiKeyManager.baseUrl
     }
     
+    static var name2emojis: [String: EmojiModel] = [:]
+    static var emojis: [EmojiModel] = []
+
     init(apiKeyManager: ApiKeyManagerProtocol, and user: SecureUser) {
         self.apiKeyManager = apiKeyManager
         misskey = MisskeyKit(from: user)
+        fetchEmojis()
     }
     
     /// 適切なendpointを生成し、sw/registerを叩く
@@ -48,6 +52,17 @@ class MisscatApi {
         }
     }
     
+    private func fetchEmojis() {
+        misskey?.notes.getEmojis { emojis, _ in
+            MisscatApi.emojis = emojis ?? []
+            MisscatApi.emojis.forEach { emoji in
+                if let name = emoji.name {
+                    MisscatApi.name2emojis[name] = emoji
+                }
+            }
+        }
+    }
+    
     private func registerSw(userId: String, token: String) {
         let endpoint = generateEndpoint(with: userId, and: token)
         
@@ -62,5 +77,18 @@ class MisscatApi {
         let endpoint = "\(baseApiUrl)/api/v1/push/\(currentLang)/\(userId)/\(token)"
         
         return endpoint
+    }
+}
+
+public extension EmojiModel {
+    static func convert(from dict: [String: String]?) -> [EmojiModel]? {
+        let emojis = dict?.compactMap { EmojiModel(id: "", aliases: [], name: $0.key, url: $0.value, uri: $0.value, category: "other-instance") } ?? []
+        MisscatApi.emojis += emojis
+        emojis.forEach { emoji in
+            if let name = emoji.name {
+                MisscatApi.name2emojis[name] = emoji
+            }
+        }
+        return MisscatApi.emojis
     }
 }

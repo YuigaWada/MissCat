@@ -153,8 +153,8 @@ class ProfileViewModel: ViewModelType {
         
         setRelation(targetUserId: user.userId)
         setIcon(from: user)
-        setName(name: user.name, username: user.username, externalEmojis: user.emojis)
-        setDesc(user.description, externalEmojis: user.emojis, owner: input.owner)
+        setName(name: user.name, username: user.username, externalEmojis: EmojiModel.convert(from: user.emojis))
+        setDesc(user.description, externalEmojis: EmojiModel.convert(from: user.emojis), owner: input.owner)
         setBanner(from: user)
         
         output.isCat.accept(user.isCat ?? false)

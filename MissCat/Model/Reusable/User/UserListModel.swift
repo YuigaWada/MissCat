@@ -41,7 +41,7 @@ class UserListModel {
         userModel.shapedDescritpion = MFMEngine.shapeString(owner: owner,
                                                             needReplyMark: false,
                                                             text: user.description?.mfmPreTransform() ?? "自己紹介文はありません",
-                                                            emojis: user.emojis)
+                                                            emojis: user.emojis?.compactMap { EmojiModel(id: "", aliases: [], name: $0.key, url: $0.value, uri: $0.value, category: "") })
         
         observer.onNext(userModel)
     }

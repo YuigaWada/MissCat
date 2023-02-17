@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		552FF854616F36CC7803886D /* Pods_MissCatShare.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F412ED176465DBF0296E756B /* Pods_MissCatShare.framework */; };
 		8D00BD5A249371560049FFE0 /* InstanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D00BD59249371560049FFE0 /* InstanceViewController.swift */; };
 		8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */; };
 		8D065B17237AC3D0003DFB7C /* TimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */; };
@@ -150,6 +149,7 @@
 		8DAF3017241975030041BB85 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAF3016241975030041BB85 /* SettingsViewController.swift */; };
 		8DAF30192419842D0041BB85 /* AboutMisskeyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAF30182419842C0041BB85 /* AboutMisskeyViewController.swift */; };
 		8DAF301B241B599B0041BB85 /* LicenseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAF301A241B599B0041BB85 /* LicenseViewController.swift */; };
+		8DB0A3DC26BD6D82009194A3 /* Pods_MissCatShare.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F412ED176465DBF0296E756B /* Pods_MissCatShare.framework */; };
 		8DBC7A45241245A800D8FEA5 /* AVKit+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DBC7A44241245A800D8FEA5 /* AVKit+MissCat.swift */; };
 		8DBDD58C244197840014E77F /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DBDD58B244197840014E77F /* SearchViewModel.swift */; };
 		8DBDD58E244198C90014E77F /* SearchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DBDD58D244198C90014E77F /* SearchModel.swift */; };
@@ -429,7 +429,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				552FF854616F36CC7803886D /* Pods_MissCatShare.framework in Frameworks */,
+				8DB0A3DC26BD6D82009194A3 /* Pods_MissCatShare.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1244,7 +1244,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1130;
-				LastUpgradeCheck = 1120;
+				LastUpgradeCheck = 1250;
 				ORGANIZATIONNAME = "Yuiga Wada";
 				TargetAttributes = {
 					8D1A4BF924DD7BFF00EFD826 = {
@@ -1638,7 +1638,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
 				INFOPLIST_FILE = MissCatShare/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1661,7 +1661,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4LMTSU8RLS;
 				INFOPLIST_FILE = MissCatShare/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1702,6 +1702,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1727,7 +1728,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1764,6 +1765,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1783,7 +1785,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -1812,7 +1814,7 @@
 					"$(PROJECT_DIR)/Pods/_Prebuild/GeneratedFrameworks/AWSCognito",
 				);
 				INFOPLIST_FILE = MissCat/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1892,7 +1894,7 @@
 					"$(PROJECT_DIR)/Pods/_Prebuild/GeneratedFrameworks/AWSCognito",
 				);
 				INFOPLIST_FILE = MissCat/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

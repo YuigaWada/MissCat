@@ -24,7 +24,7 @@ extension NoteModel {
         guard let user = post.user else { return nil }
         
         let displayName = (user.name ?? "") == "" ? user.username : user.name // user.nameがnilか""ならusernameで代替
-        let emojis = (post.emojis ?? []) + (user.emojis ?? []) // 絵文字情報を統合する
+        let emojis = (EmojiModel.convert(from: post.emojis) ?? []) + (EmojiModel.convert(from: user.emojis) ?? []) // 絵文字情報を統合する
         
         let entity = NoteEntity(noteId: post.id,
                                 iconImageUrl: user.avatarUrl,
@@ -52,7 +52,7 @@ extension NoteModel {
                                        entity: entity,
                                        commentRNTarget: commentRNTarget)
         
-        cellModel.shapedReactions = cellModel.getReactions(with: emojis)
+        cellModel.shapedReactions = cellModel.getReactions(with: emojis) // ココ
         cellModel.isReply = post.reply != nil
         return cellModel
     }

@@ -237,12 +237,12 @@ class NotificationsModel {
     /// - Parameter notifications: NotificationModel
     private func getExternalEmojis(_ notification: NotificationModel) -> [EmojiModel] {
         // 仕様上、他インスタンスの絵文字情報はnoteに含まれるっぽい
-        return notification.note?.emojis?.compactMap { $0 } ?? []
+        return EmojiModel.convert(from: notification.note?.emojis) ?? []
     }
     
     /// 流れてきた他インスタンスの絵文字を取得
     /// - Parameter notifications: NotificationModel
     private func getExternalEmojis(_ notification: StreamingModel) -> [EmojiModel] {
-        return notification.note?.emojis?.compactMap { $0 } ?? []
+        return EmojiModel.convert(from: notification.note?.emojis) ?? []
     }
 }

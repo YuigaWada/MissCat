@@ -111,11 +111,11 @@ class MFMImageView: MissCatImageView {
     ///   - imageView: set対象のGIFImageView
     private func setGifuImage(with data: Data) {
         DispatchQueue.main.async {
-            self.gifView?.animate(withGIFData: data) {
+            self.gifView?.animate(withGIFData: data, animationBlock: {
                 DispatchQueue.main.async {
                     self.backgroundColor = .clear
                 }
-            }
+            })
         }
     }
     

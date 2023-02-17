@@ -97,6 +97,10 @@ extension NoteCell {
         
         init(from entity: ReactionEntity) {
             self.entity = entity
+            let rawEmoji = entity.rawEmoji?.regexMatches(pattern: ":(.+)@.*:").map { $0[1] }
+            if let rawEmoji = rawEmoji, !rawEmoji.isEmpty {
+                self.entity.url = MisscatApi.name2emojis[rawEmoji[0]]?.url
+            }
         }
         
         struct Section {

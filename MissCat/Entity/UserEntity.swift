@@ -16,11 +16,11 @@ class UserEntity {
     public var host: String?
     public var avatarUrl: String?
     public var isCat: Bool?
-    public var emojis: [EmojiModel?]?
+    public var emojis: [String: String]?
     public var bannerUrl: String?
     public var followersCount, followingCount, notesCount: Int?
     
-    init(id: String, name: String? = nil, username: String? = nil, description: String? = nil, host: String? = nil, avatarUrl: String? = nil, isCat: Bool? = nil, emojis: [EmojiModel?]? = nil, bannerUrl: String? = nil, followersCount: Int? = nil, followingCount: Int? = nil, notesCount: Int? = nil) {
+    init(id: String, name: String? = nil, username: String? = nil, description: String? = nil, host: String? = nil, avatarUrl: String? = nil, isCat: Bool? = nil, emojis: [String: String]? = nil, bannerUrl: String? = nil, followersCount: Int? = nil, followingCount: Int? = nil, notesCount: Int? = nil) {
         userId = id
         self.name = name
         self.username = username
@@ -43,7 +43,7 @@ class UserEntity {
         host = user.host
         avatarUrl = user.avatarUrl
         isCat = user.isCat
-        emojis = user.emojis
+//        emojis = user.emojis
         bannerUrl = user.bannerUrl
         followersCount = user.followersCount
         followingCount = user.followingCount
