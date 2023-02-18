@@ -93,6 +93,27 @@ extension UIViewController {
         return reactionGen
     }
     
+    func presentLoader() -> UIViewController {
+        let alert = UIAlertController(title: nil, message: "", preferredStyle: .alert)
+        let activityIndicator = UIActivityIndicatorView(style: .large)
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        activityIndicator.isUserInteractionEnabled = false
+        activityIndicator.color = .black
+        activityIndicator.startAnimating()
+                   
+        alert.view.addSubview(activityIndicator)
+           
+        NSLayoutConstraint.activate([
+            alert.view.heightAnchor.constraint(equalToConstant: 95),
+            alert.view.widthAnchor.constraint(equalToConstant: 95),
+            activityIndicator.centerXAnchor.constraint(equalTo: alert.view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: alert.view.centerYAnchor)
+        ])
+           
+        present(alert, animated: true)
+        return alert
+    }
+    
     // MARK: Alert
     
     func showAlert(title: String, message: String, yesOption: String? = nil, action: @escaping (Bool) -> Void) {

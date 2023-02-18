@@ -13,7 +13,6 @@ import UIKit
 import WebKit
 
 class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigationDelegate {
-    @IBOutlet weak var returnButton: UIButton!
     @IBOutlet weak var webView: WKWebView!
     
     var completion: PublishRelay<String> = .init()
@@ -30,8 +29,6 @@ class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigationDelegat
     override func viewDidLoad() {
         super.viewDidLoad()
         setupWebView()
-        setupReturnButton()
-        
         removeWebKitCache()
         if let url = currentUrl {
             loadPage(url: url)
@@ -43,12 +40,6 @@ class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigationDelegat
         webView.navigationDelegate = self
         
         webView.configuration.websiteDataStore = WKWebsiteDataStore.default() // LocalStorageを許可
-    }
-    
-    private func setupReturnButton() {
-        returnButton.rx.tap.subscribe(onNext: {
-            self.dismiss(animated: true, completion: nil)
-        }).disposed(by: disposeBag)
     }
     
     private func removeWebKitCache() {
@@ -123,10 +114,13 @@ class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigationDelegat
     
     /// ApiKeyを取得し、StartViewControllerへと流す(comletion→StartViewController)
     private func getApiKey() {
+        let loader = presentLoader()
         MisskeyKit.shared.auth.getAccessToken { auth, _ in
             guard auth != nil, let apiKey = MisskeyKit.shared.auth.getAPIKey() else { return }
             
             DispatchQueue.main.async {
+                loader.dismiss(animated: true)
+                self.navigationController?.popViewController(animated: true)
                 self.dismiss(animated: true, completion: nil)
                 self.completion.accept(apiKey)
             }

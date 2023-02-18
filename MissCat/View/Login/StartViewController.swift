@@ -122,14 +122,14 @@ class StartViewController: UIViewController {
     private func signup() {
         generateAppSecret { appSecret in
             guard let authViewController = self.getAuthViewController(type: .Signup, appSecret: appSecret) else { return }
-            self.presentOnFullScreen(authViewController, animated: true, completion: nil)
+            self.navigationController?.pushViewController(authViewController, animated: true)
         }
     }
     
     private func login() {
         generateAppSecret { appSecret in
             guard let authViewController = self.getAuthViewController(type: .Login, appSecret: appSecret) else { return }
-            self.presentOnFullScreen(authViewController, animated: true, completion: nil)
+            self.navigationController?.pushViewController(authViewController, animated: true)
         }
     }
     
