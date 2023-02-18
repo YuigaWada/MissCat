@@ -203,7 +203,7 @@ class MFMEngine {
     /// - Parameter user: UserEntity
     static func shapeDisplayName(owner: SecureUser?, user: UserEntity?) -> MFMString? {
         guard let user = user else { return nil }
-        return shapeDisplayName(owner: owner, name: user.name, username: user.username, emojis: user.emojis?.compactMap { EmojiModel(id: "", aliases: [], name: $0.key, url: $0.value, uri: $0.value, category: "") })
+        return shapeDisplayName(owner: owner, name: user.name, username: user.username, emojis: EmojiModel.convert(from: user.emojis))
     }
     
     /// 名前を整形

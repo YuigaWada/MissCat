@@ -237,12 +237,16 @@ class NotificationsModel {
     /// - Parameter notifications: NotificationModel
     private func getExternalEmojis(_ notification: NotificationModel) -> [EmojiModel] {
         // 仕様上、他インスタンスの絵文字情報はnoteに含まれるっぽい
-        return EmojiModel.convert(from: notification.note?.emojis) ?? []
+        let emojisFromNote = EmojiModel.convert(from: notification.note?.emojis) ?? []
+        let emojisFromUser = EmojiModel.convert(from: notification.user?.emojis) ?? []
+        return emojisFromNote + emojisFromUser
     }
     
     /// 流れてきた他インスタンスの絵文字を取得
     /// - Parameter notifications: NotificationModel
     private func getExternalEmojis(_ notification: StreamingModel) -> [EmojiModel] {
-        return EmojiModel.convert(from: notification.note?.emojis) ?? []
+        let emojisFromNote = EmojiModel.convert(from: notification.note?.emojis) ?? []
+        let emojisFromUser = EmojiModel.convert(from: notification.user?.emojis) ?? []
+        return emojisFromNote + emojisFromUser
     }
 }
