@@ -41,19 +41,33 @@ class FileContainerCell: UICollectionViewCell {
     
     func transform(with fileModel: FileContainer.Model, and delegate: NoteCellDelegate?) {
         initialize()
-        if let thumbnail = Cache.shared.getUiImage(url: fileModel.thumbnailUrl) {
-            setImage(image: thumbnail,
+        
+        let cached = Cache.shared.getUiImage(url: fileModel.originalUrl) ?? Cache.shared.getUiImage(url: fileModel.thumbnailUrl)
+        if let cached = cached {
+            setImage(image: cached,
                      originalUrl: fileModel.originalUrl,
                      isVideo: fileModel.isVideo,
                      isSensitive: fileModel.isSensitive)
             return
         }
+
         // キャッシュが存在しない場合
         
         fileModel.thumbnailUrl.toUIImage { image in
             guard let image = image else { return }
             
             Cache.shared.saveUiImage(image, url: fileModel.thumbnailUrl)
+            
+            self.setImage(image: image,
+                          originalUrl: fileModel.originalUrl,
+                          isVideo: fileModel.isVideo,
+                          isSensitive: fileModel.isSensitive)
+        }
+        
+        fileModel.originalUrl.toUIImage { image in
+            guard let image = image else { return }
+            
+            Cache.shared.saveUiImage(image, url: fileModel.originalUrl)
             
             self.setImage(image: image,
                           originalUrl: fileModel.originalUrl,
