@@ -148,10 +148,14 @@ class ReactionGenModel {
         return Observable.create { [unowned self] observer in
             // カスタム→デフォルトの順に表示したいので、この順に取り出していく
             for categorized in [self.emojis.categorizedCustom, self.emojis.categorizedDefault] {
-                categorized.forEach { category, emojiModels in // カテゴリーによってセクションを切り分ける(擬似的にヘッダーを作る)
+                let categories = categorized.map { $0.key }.sorted { $0 < $1 } // 順番を固定するように
+                
+                categories.forEach { category in // カテゴリーによってセクションを切り分ける(擬似的にヘッダーを作る)
+                    guard let emojiModels = categorized[category] else {
+                        return
+                    }
                     observer.onNext(EmojiViewHeader(title: category)) // 疑似ヘッダーのモデル
                     emojiModels.forEach { observer.onNext($0) }
-                    
                     self.fakeCellPadding(observer: observer, count: emojiModels.count)
                 }
             }
