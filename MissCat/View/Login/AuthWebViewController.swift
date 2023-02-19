@@ -40,6 +40,12 @@ class AuthWebViewController: UIViewController, WKUIDelegate, WKNavigationDelegat
         webView.navigationDelegate = self
         
         webView.configuration.websiteDataStore = WKWebsiteDataStore.default() // LocalStorageを許可
+        let reloadButton = UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(reload))
+        navigationItem.rightBarButtonItems = [reloadButton]
+    }
+    
+    @objc func reload() {
+        webView.reload()
     }
     
     private func removeWebKitCache() {
