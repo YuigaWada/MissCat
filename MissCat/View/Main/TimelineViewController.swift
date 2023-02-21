@@ -158,7 +158,7 @@ class TimelineViewController: NoteDisplay, UITableViewDelegate, FooterTabBarDele
     
     private func setupDataSource() -> NotesDataSource {
         let dataSource = NotesDataSource(
-            animationConfiguration: AnimationConfiguration(insertAnimation: .fade, reloadAnimation: .none, deleteAnimation: .fade),
+            animationConfiguration: AnimationConfiguration(insertAnimation: .none, reloadAnimation: .none, deleteAnimation: .none),
             configureCell: { dataSource, _, indexPath, _ in
                 self.setupCell(dataSource, self.mainTableView, indexPath)
             }

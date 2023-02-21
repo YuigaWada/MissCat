@@ -48,29 +48,29 @@ class MissCatTableView: PlaceholderTableView {
         hasReseverd = true
     }
     
-    /// このperformBatchUpdatesにラッピングされたメソッドはすべてスクロール位置を固定された状態で実行されます
-    override func performBatchUpdates(_ updates: (() -> Void)?, completion: ((Bool) -> Void)? = nil) {
-        #if !targetEnvironment(simulator)
-            let bottomOffset = contentSize.height - contentOffset.y
-            
-            if needLock { stopAnimation() }
-            super.performBatchUpdates(updates, completion: { finished in
-                guard finished, self.needLock else { // ロックが不要・updateに失敗した場合
-                    completion?(finished)
-                    if self.hasReseverd { // ロック予約があればロックする
-                        self._lockScroll = true
-                        self.hasReseverd = false
-                    }
-                    return
-                }
-                self.contentOffset = CGPoint(x: 0, y: self.contentSize.height - bottomOffset)
-                completion?(finished)
-                CATransaction.commit()
-            })
-        #else
-            super.performBatchUpdates(updates, completion: completion)
-        #endif
-    }
+//    /// このperformBatchUpdatesにラッピングされたメソッドはすべてスクロール位置を固定された状態で実行されます
+//    override func performBatchUpdates(_ updates: (() -> Void)?, completion: ((Bool) -> Void)? = nil) {
+//        #if !targetEnvironment(simulator)
+//            let bottomOffset = contentSize.height - contentOffset.y
+//
+//            if needLock { stopAnimation() }
+//            super.performBatchUpdates(updates, completion: { finished in
+//                guard finished, self.needLock else { // ロックが不要・updateに失敗した場合
+//                    completion?(finished)
+//                    if self.hasReseverd { // ロック予約があればロックする
+//                        self._lockScroll = true
+//                        self.hasReseverd = false
+//                    }
+//                    return
+//                }
+//                self.contentOffset = CGPoint(x: 0, y: self.contentSize.height - bottomOffset)
+//                completion?(finished)
+//                CATransaction.commit()
+//            })
+//        #else
+//            super.performBatchUpdates(updates, completion: completion)
+//        #endif
+//    }
     
     private func stopAnimation() {
         CATransaction.begin()
