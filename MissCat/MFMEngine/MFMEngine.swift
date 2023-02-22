@@ -271,6 +271,14 @@ class MFMEngine {
         return imageView
     }
     
+    static func getTwemojiURL(for target: String) -> String {
+        let scalars = String(target).unicodeScalars
+        let filtered = scalars.filter { $0.value != 0xFE0F } // Remove VS16 from variants, including keycaps.
+        let mapped = filtered.map { String($0.value, radix: 16) }
+        let imageName = mapped.joined(separator: "-")
+        return "https://twemoji.maxcdn.com/v/latest/svg/\(imageName).svg"
+    }
+    
     // MARK: Pre-Transform
     
     /// リンク化する

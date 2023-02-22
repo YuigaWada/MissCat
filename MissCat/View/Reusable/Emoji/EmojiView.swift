@@ -67,23 +67,25 @@ class EmojiView: UIView {
         emojiImageView.isHidden = false
         
         emojiImageView.backgroundColor = isFake ? .clear : .lightGray
-        emojiLabel.backgroundColor = isFake ? .clear : .lightGray
+        emojiLabel.backgroundColor = .clear
     }
     
     // MARK: Emojis
-    
+        
     private func setEmoji() {
         guard let emoji = emoji else { return }
         
         initialize()
-        emojiLabel.isHidden = !emoji.isDefault
-        emojiImageView.isHidden = emoji.isDefault
+        emojiImageView.isHidden = false
         
-        if emoji.isDefault {
-            emojiLabel.text = emoji.defaultEmoji
-            emojiLabel.backgroundColor = .clear
-        } else {
-            guard let customEmojiUrl = emoji.customEmojiUrl else { return }
+        var customEmojiUrl = emoji.customEmojiUrl
+        if emoji.isDefault,
+           let defaultEmoji = emoji.defaultEmoji
+        {
+            customEmojiUrl = MFMEngine.getTwemojiURL(for: defaultEmoji)
+        }
+        
+        if let customEmojiUrl = customEmojiUrl {
             emojiImageView.setImage(url: customEmojiUrl, cachedToStorage: true) // イメージをset
         }
     }

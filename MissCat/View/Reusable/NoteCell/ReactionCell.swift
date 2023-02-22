@@ -69,7 +69,7 @@ class ReactionCell: UICollectionViewCell, ComponentType {
         } else {
             setup(noteId: item.entity.noteId,
                   count: item.entity.count,
-                  rawDefaultEmoji: rawEmoji,
+                  customEmoji: MFMEngine.getTwemojiURL(for: rawEmoji),
                   isMyReaction: item.entity.isMyReaction,
                   rawReaction: rawEmoji)
         }
