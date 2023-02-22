@@ -16,6 +16,7 @@ class MFMImageView: MissCatImageView {
     
     private var apngView: APNGImageView?
     private var gifView: GIFImageView?
+    private var imageUrl: String?
     
     // MARK: LifeCycle
     
@@ -52,13 +53,20 @@ class MFMImageView: MissCatImageView {
     ///  キャッシュを考慮してURLから画像データを取得し、非同期でsetされるようなUIImageViewを返す
     /// - Parameter imageUrl: 画像データのurl (アニメGIF / SVGも可)
     func setImage(url imageUrl: String, cachedToStorage: Bool = false) {
-        if let cachedData = Cache.shared.getUrlData(on: imageUrl) { // キャッシュが存在する時
+        self.imageUrl = imageUrl
+        if let cachedData = Cache.shared.getUrlData(on: imageUrl), // キャッシュが存在する時
+           imageUrl == self.imageUrl
+        {
             setImage(data: cachedData)
         } else { // キャッシュが存在しない場合
             imageUrl.getData { data in
-                guard let data = data else { return }
-                Cache.shared.saveUrlData(data, on: imageUrl, toStorage: cachedToStorage) // キャッシュする
-                self.setImage(data: data)
+                guard let data = data else {
+                    return
+                }
+                if self.imageUrl == imageUrl { // 二回呼び出されて別の画像を表示しようとしてないか？
+                    Cache.shared.saveUrlData(data, on: imageUrl, toStorage: cachedToStorage) // キャッシュする
+                    self.setImage(data: data)
+                }
             }
         }
     }
