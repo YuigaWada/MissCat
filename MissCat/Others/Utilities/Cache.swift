@@ -28,11 +28,11 @@ class Cache {
     
     // MARK: Var
     
-    private var icon: [String: UIImage] = [:] // key: username
-    private var uiImage: [String: UIImage] = [:] // key: url
-    private var dataOnUrl: [String: Data] = [:] // key: url
-    private var urlPreview: [String: UrlSummalyEntity] = [:] // key: url
-    
+    private let iconCache = NSCache<NSString, UIImage>()
+    private let imageCache = NSCache<NSString, UIImage>()
+    private let dataCache = NSCache<NSString, NSData>()
+    private let urlPreviewCache = NSCache<NSString, UrlSummalyEntity>()
+
     private var userInfo: [UserInfo] = []
     
     private var me: UserEntity?
@@ -48,22 +48,22 @@ class Cache {
     // MARK: Save
     
     func saveIcon(username: String, image: UIImage) {
-        icon[username] = image
+        iconCache.setObject(image, forKey: NSString(string: username))
     }
     
     func saveUiImage(_ image: UIImage, url: String) {
-        uiImage[url] = image
+        imageCache.setObject(image, forKey: NSString(string: url))
     }
     
     func saveUrlData(_ data: Data, on rawUrl: String, toStorage: Bool = false) {
-        dataOnUrl[rawUrl] = data
+        dataCache.setObject(NSData(data: data), forKey: NSString(string: rawUrl))
         if toStorage {
             saveToStorage(data: data, url: rawUrl)
         }
     }
     
     func saveUrlPreview(_ response: UrlSummalyEntity, on rawUrl: String) {
-        urlPreview[rawUrl] = response
+        urlPreviewCache.setObject(response, forKey: NSString(string: rawUrl))
     }
     
     func saveUserInfo(info: UserInfo) {
@@ -73,25 +73,26 @@ class Cache {
     // MARK: Get
     
     func getIcon(username: String) -> UIImage? {
-        return icon[username]
+        return iconCache.object(forKey: NSString(string: username))
     }
     
     func getUiImage(url: String) -> UIImage? {
-        return uiImage[url]
+        return imageCache.object(forKey: NSString(string: url))
     }
     
     func getUrlData(on rawUrl: String) -> Data? {
-        if !dataOnUrl.keys.contains(rawUrl), let savedOnStorage = getFromStorage(url: rawUrl) {
+        if let data = dataCache.object(forKey: NSString(string: rawUrl)) {
+            return Data(referencing: data)
+        }
+        if let savedOnStorage = getFromStorage(url: rawUrl) {
             saveUrlData(savedOnStorage, on: rawUrl) // RAM上に載せる
             return savedOnStorage
         }
-        
-        return dataOnUrl[rawUrl]
+        return nil
     }
     
     func getUrlPreview(on rawUrl: String) -> UrlSummalyEntity? {
-        guard urlPreview.keys.contains(rawUrl) else { return nil }
-        return urlPreview[rawUrl]
+        return urlPreviewCache.object(forKey: NSString(string: rawUrl))
     }
     
     func getUserInfo(user: SecureUser) -> UserInfo? {
