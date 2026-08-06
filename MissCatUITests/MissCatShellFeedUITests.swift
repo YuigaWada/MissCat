@@ -16,6 +16,7 @@ final class MissCatShellFeedUITests: XCTestCase {
     func testTimelineTabsSupportTapAndSwipe() {
         launchFixture()
         waitForReady(page: "home")
+        captureStableFixture(page: "home", name: "shell-populated")
 
         app.buttons["main.timeline.local"].tap()
         waitForPagerSelection("local")
