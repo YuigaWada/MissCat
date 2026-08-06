@@ -80,6 +80,10 @@ final class MissCatAuthenticationService {
         "write:favorites",
         "read:following",
         "write:following",
+        // Keep both permission families: current Misskey chat endpoints require
+        // read/write:chat, while older instances still expose messaging/*.
+        "read:chat",
+        "write:chat",
         "read:messaging",
         "write:messaging",
         "read:mutes",

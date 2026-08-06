@@ -348,6 +348,16 @@ final class MiAuthAuthenticationTests: XCTestCase {
         XCTAssertTrue(url.absoluteString.contains("permission=read:account"))
     }
 
+    func testAuthorizationPermissionsCoverCurrentAndLegacyChatContracts() {
+        let permissions = MissCatAuthenticationService.appPermissions
+
+        XCTAssertEqual(Set(permissions).count, permissions.count)
+        XCTAssertTrue(permissions.contains("read:chat"))
+        XCTAssertTrue(permissions.contains("write:chat"))
+        XCTAssertTrue(permissions.contains("read:messaging"))
+        XCTAssertTrue(permissions.contains("write:messaging"))
+    }
+
     func testEveryLoginAttemptUsesAFreshUUID() async throws {
         let fixture = makeFixture(sessionIDs: [firstSession, secondSession])
 
