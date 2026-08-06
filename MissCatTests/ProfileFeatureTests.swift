@@ -169,6 +169,45 @@ final class MissCatProfileTransportContractTests: XCTestCase {
         XCTAssertEqual(Set(capturedBody.keys), ["i", "name"])
     }
 
+    func testProfileImageUpdateDistinguishesUnchangedReplacementAndExplicitRemoval() async throws {
+        var capturedBodies: [[String: Any]] = []
+        ProfileURLProtocolStub.handler = { request in
+            capturedBodies.append(try XCTUnwrap(request.profileBodyData).jsonObject)
+            return Self.response(for: request, json: Self.userJSON(id: "me", username: "alice"))
+        }
+        let subject = MissCatRESTProfileRepository(account: account, session: session)
+
+        _ = try await subject.updateProfile(
+            patch: .init(avatarImage: .replace(fileID: "new-avatar"))
+        )
+        _ = try await subject.updateProfile(
+            patch: .init(avatarImage: .remove, bannerImage: .remove)
+        )
+
+        XCTAssertEqual(capturedBodies[0]["avatarId"] as? String, "new-avatar")
+        XCTAssertNil(capturedBodies[0]["bannerId"])
+        XCTAssertTrue(capturedBodies[1]["avatarId"] is NSNull)
+        XCTAssertTrue(capturedBodies[1]["bannerId"] is NSNull)
+        XCTAssertEqual(Set(capturedBodies[1].keys), ["i", "avatarId", "bannerId"])
+    }
+
+    func testDeleteUploadedProfileImageUsesCurrentDriveEndpointAndAccountToken() async throws {
+        var capturedRequest: URLRequest?
+        ProfileURLProtocolStub.handler = { request in
+            capturedRequest = request
+            return Self.response(for: request, json: [:])
+        }
+        let subject = MissCatRESTProfileRepository(account: account, session: session)
+
+        try await subject.deleteProfileImage(fileID: "orphan-file")
+
+        XCTAssertEqual(capturedRequest?.url?.path, "/api/drive/files/delete")
+        let body = try XCTUnwrap(capturedRequest?.profileBodyData).jsonObject
+        XCTAssertEqual(body["i"] as? String, "account-token")
+        XCTAssertEqual(body["fileId"] as? String, "orphan-file")
+        XCTAssertEqual(Set(body.keys), ["i", "fileId"])
+    }
+
     func testHTTPFailureSurfacesMisskeyMessage() async {
         ProfileURLProtocolStub.handler = { request in
             Self.response(for: request, status: 401, json: ["error": ["message": "Invalid token"]])
@@ -343,6 +382,107 @@ final class MissCatProfileEditorAndUserListTests: XCTestCase {
         XCTAssertEqual(store.uploadProgress, 1)
     }
 
+    func testResettingSelectedImageRestoresUnchangedPatch() async {
+        let repository = ProfileRepositorySpy(account: account)
+        let baseline = makeUser(id: "me")
+        repository.profileValue = baseline
+        let store = MissCatProfileEditorStore(account: account, profile: baseline, repositoryFactory: { _ in repository })
+
+        store.setAvatarData(Data([1]))
+        XCTAssertTrue(store.hasAvatarChange)
+        store.resetAvatar()
+        XCTAssertFalse(store.hasAvatarChange)
+
+        store.save()
+        await waitUntil { store.phase == .loaded }
+
+        XCTAssertTrue(repository.uploadFilenames.isEmpty)
+        XCTAssertTrue(repository.updatePatches.isEmpty)
+    }
+
+    func testRemovingExistingImagesSendsExplicitRemovalWithoutUpload() async {
+        let repository = ProfileRepositorySpy(account: account)
+        repository.profileValue = makeUser(id: "me")
+        let baseline = MissCatProfileUser(
+            id: "me",
+            username: "me",
+            avatarURL: URL(string: "https://example.invalid/avatar.jpg"),
+            bannerURL: URL(string: "https://example.invalid/banner.jpg")
+        )
+        let store = MissCatProfileEditorStore(account: account, profile: baseline, repositoryFactory: { _ in repository })
+
+        store.removeAvatar()
+        store.removeBanner()
+        store.save()
+        await waitUntil { store.phase == .loaded }
+
+        XCTAssertEqual(
+            repository.updatePatches,
+            [.init(avatarImage: .remove, bannerImage: .remove)]
+        )
+        XCTAssertTrue(repository.uploadFilenames.isEmpty)
+    }
+
+    func testCancelAfterUploadStartsDeletesReturnedOrphan() async {
+        let repository = ProfileRepositorySpy(account: account)
+        repository.profileValue = makeUser(id: "me")
+        repository.uploadIDs = ["cancelled-upload"]
+        repository.uploadDelayNanoseconds = 150_000_000
+        let store = MissCatProfileEditorStore(account: account, profile: makeUser(id: "me"), repositoryFactory: { _ in repository })
+        store.setAvatarData(Data([1]))
+
+        store.save()
+        await waitUntil { repository.uploadFilenames == ["avatar.jpg"] }
+        store.cancelSave()
+        await waitUntil { repository.deletedFileIDs == ["cancelled-upload"] }
+
+        XCTAssertEqual(store.phase, .idle)
+        XCTAssertTrue(repository.updatePatches.isEmpty)
+        XCTAssertEqual(store.avatarData, Data([1]))
+    }
+
+    func testSupersedingInFlightUploadCleansOldFileAndSavesReplacement() async {
+        let repository = ProfileRepositorySpy(account: account)
+        repository.profileValue = makeUser(id: "me")
+        repository.uploadIDs = ["superseded-upload", "replacement-upload"]
+        repository.uploadDelayNanoseconds = 150_000_000
+        let store = MissCatProfileEditorStore(account: account, profile: makeUser(id: "me"), repositoryFactory: { _ in repository })
+        store.setAvatarData(Data([1]))
+
+        store.save()
+        await waitUntil { repository.uploadFilenames.count == 1 }
+        store.setAvatarData(Data([2]))
+        await waitUntil { repository.deletedFileIDs == ["superseded-upload"] }
+        repository.uploadDelayNanoseconds = 0
+        store.save()
+        await waitUntil { store.phase == .loaded }
+
+        XCTAssertEqual(repository.deletedFileIDs, ["superseded-upload"])
+        XCTAssertEqual(repository.uploadData, [Data([1]), Data([2])])
+        XCTAssertEqual(repository.updatePatches, [.init(avatarID: "replacement-upload")])
+    }
+
+    func testProfileUpdateFailureDeletesEveryUploadedFileAndKeepsDraftForRetry() async {
+        let repository = ProfileRepositorySpy(account: account)
+        repository.profileValue = makeUser(id: "me")
+        repository.uploadIDs = ["failed-avatar", "failed-banner"]
+        repository.updateError = StubError.failed
+        let store = MissCatProfileEditorStore(account: account, profile: makeUser(id: "me"), repositoryFactory: { _ in repository })
+        store.setAvatarData(Data([1]))
+        store.setBannerData(Data([2]))
+
+        store.save()
+        await waitUntil { store.phase.isFailed }
+
+        XCTAssertEqual(repository.deletedFileIDs, ["failed-avatar", "failed-banner"])
+        XCTAssertEqual(store.avatarData, Data([1]))
+        XCTAssertEqual(store.bannerData, Data([2]))
+        XCTAssertEqual(
+            repository.updatePatches,
+            [.init(avatarID: "failed-avatar", bannerID: "failed-banner")]
+        )
+    }
+
     func testEditorFailureCanRetryWithoutLosingDraft() async {
         let repository = ProfileRepositorySpy(account: account)
         repository.profileValue = makeUser(id: "me", name: "After")
@@ -402,7 +542,11 @@ private final class ProfileRepositorySpy: MissCatProfileRepository {
     var followDelayNanoseconds: UInt64 = 0
     var followError: Error?
     var uploadFilenames: [String] = []
+    var uploadData: [Data] = []
+    var uploadIDs: [String] = ["uploaded-file"]
+    var uploadDelayNanoseconds: UInt64 = 0
     var uploadError: Error?
+    var deletedFileIDs: [String] = []
     var updatePatches: [MissCatProfileUpdatePatch] = []
     var updateError: Error?
 
@@ -440,10 +584,16 @@ private final class ProfileRepositorySpy: MissCatProfileRepository {
 
     func uploadProfileImage(data: Data, filename: String, progress: @escaping (Double) -> Void) async throws -> String {
         uploadFilenames.append(filename)
+        uploadData.append(data)
         progress(0.5)
+        if uploadDelayNanoseconds > 0 { try await Task.sleep(nanoseconds: uploadDelayNanoseconds) }
         if let uploadError { throw uploadError }
         progress(1)
-        return "uploaded-file"
+        return uploadIDs.isEmpty ? "uploaded-file" : uploadIDs.removeFirst()
+    }
+
+    func deleteProfileImage(fileID: String) async throws {
+        deletedFileIDs.append(fileID)
     }
 
     func updateProfile(patch: MissCatProfileUpdatePatch) async throws -> MissCatProfileUser {
