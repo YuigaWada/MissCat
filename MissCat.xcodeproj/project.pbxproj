@@ -47,6 +47,7 @@
 		D0D000000000000000000007 /* MissCatNotificationsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D000000000000000000008 /* MissCatNotificationsViews.swift */; };
 		D0D000000000000000000009 /* MissCatMessagingViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D00000000000000000000A /* MissCatMessagingViews.swift */; };
 		D0D00000000000000000000B /* MissCatNotificationMessageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D00000000000000000000C /* MissCatNotificationMessageTests.swift */; };
+		D0D00000000000000000000F /* MissCatNotificationMessageBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D00000000000000000000E /* MissCatNotificationMessageBridge.swift */; };
 		A91000000000000000000001 /* MissCatFeedRepositoryContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91000000000000000000002 /* MissCatFeedRepositoryContractTests.swift */; };
 		E0DE00000000000000000002 /* MissCatSettingsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DE00000000000000000001 /* MissCatSettingsModels.swift */; };
 		E0DE00000000000000000004 /* MissCatSettingsStores.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DE00000000000000000003 /* MissCatSettingsStores.swift */; };
@@ -314,6 +315,7 @@
 		D0D000000000000000000008 /* MissCatNotificationsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatNotificationsViews.swift; sourceTree = "<group>"; };
 		D0D00000000000000000000A /* MissCatMessagingViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatMessagingViews.swift; sourceTree = "<group>"; };
 		D0D00000000000000000000C /* MissCatNotificationMessageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatNotificationMessageTests.swift; sourceTree = "<group>"; };
+		D0D00000000000000000000E /* MissCatNotificationMessageBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatNotificationMessageBridge.swift; sourceTree = "<group>"; };
 		3454BE3D06D0C12BCA775B4B /* Pods-MissCatShare.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCatShare.release.xcconfig"; path = "Target Support Files/Pods-MissCatShare/Pods-MissCatShare.release.xcconfig"; sourceTree = "<group>"; };
 		49D674DA4870479FF355F58B /* Pods_MissCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MissCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		79B7AD7D002BC8FC43933AF9 /* Pods-MissCatShare.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCatShare.debug.xcconfig"; path = "Target Support Files/Pods-MissCatShare/Pods-MissCatShare.debug.xcconfig"; sourceTree = "<group>"; };
@@ -644,6 +646,7 @@
 				D0D000000000000000000006 /* MissCatNotificationMessageStores.swift */,
 				D0D000000000000000000008 /* MissCatNotificationsViews.swift */,
 				D0D00000000000000000000A /* MissCatMessagingViews.swift */,
+				D0D00000000000000000000E /* MissCatNotificationMessageBridge.swift */,
 			);
 			path = NotificationsMessages;
 			sourceTree = "<group>";
@@ -1660,6 +1663,7 @@
 				D0D000000000000000000005 /* MissCatNotificationMessageStores.swift in Sources */,
 				D0D000000000000000000007 /* MissCatNotificationsViews.swift in Sources */,
 				D0D000000000000000000009 /* MissCatMessagingViews.swift in Sources */,
+				D0D00000000000000000000F /* MissCatNotificationMessageBridge.swift in Sources */,
 				8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */,
 				8D5D2C4A24487C6E00D15974 /* DirectMessageViewModel.swift in Sources */,
 				8DF0F68F25049F6C00CEAA03 /* UIViewController+NavigationController.swift in Sources */,

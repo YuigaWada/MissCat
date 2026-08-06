@@ -1,4 +1,16 @@
+import Combine
 import SwiftUI
+
+@MainActor
+public final class MissCatNotificationScrollCoordinator: ObservableObject {
+    @Published public private(set) var request = 0
+
+    public init() {}
+
+    public func scrollToTop() {
+        request &+= 1
+    }
+}
 
 public struct MissCatNotificationNavigationActions {
     public var open: (MissCatNotificationRoute) -> Void
@@ -13,15 +25,32 @@ public struct MissCatNotificationsView: View {
 
     private let palette: MissCatVisualPalette
     private let navigationActions: MissCatNotificationNavigationActions
+    private let scrollCoordinator: MissCatNotificationScrollCoordinator
 
+    @MainActor
     public init(
         repository: MissCatNotificationsRepository,
         palette: MissCatVisualPalette = .legacyLight,
-        navigationActions: MissCatNotificationNavigationActions = .init()
+        navigationActions: MissCatNotificationNavigationActions = .init(),
+        scrollCoordinator: MissCatNotificationScrollCoordinator? = nil
     ) {
         _store = StateObject(wrappedValue: MissCatNotificationsStore(repository: repository))
         self.palette = palette
         self.navigationActions = navigationActions
+        self.scrollCoordinator = scrollCoordinator ?? .init()
+    }
+
+    @MainActor
+    public init(
+        store: MissCatNotificationsStore,
+        palette: MissCatVisualPalette = .legacyLight,
+        navigationActions: MissCatNotificationNavigationActions = .init(),
+        scrollCoordinator: MissCatNotificationScrollCoordinator? = nil
+    ) {
+        _store = StateObject(wrappedValue: store)
+        self.palette = palette
+        self.navigationActions = navigationActions
+        self.scrollCoordinator = scrollCoordinator ?? .init()
     }
 
     public var body: some View {
@@ -95,28 +124,35 @@ public struct MissCatNotificationsView: View {
     }
 
     private var list: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                ForEach(store.notifications) { notification in
-                    Button {
-                        navigationActions.open(notification.preferredRoute)
-                    } label: {
-                        MissCatNotificationRow(notification: notification, palette: palette)
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(store.notifications) { notification in
+                        Button {
+                            navigationActions.open(notification.preferredRoute)
+                        } label: {
+                            MissCatNotificationRow(notification: notification, palette: palette)
+                        }
+                        .buttonStyle(.plain)
+                        .id(notification.id)
+                        .accessibilityIdentifier("notification.row.\(notification.id)")
+                        .task {
+                            await store.loadNextPageIfNeeded(currentID: notification.id)
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("notification.row.\(notification.id)")
-                    .task {
-                        await store.loadNextPageIfNeeded(currentID: notification.id)
-                    }
-                }
 
-                if store.isLoadingMore {
-                    ProgressView()
-                        .tint(palette.accent)
-                        .frame(height: 48)
-                        .frame(maxWidth: .infinity)
-                        .accessibilityIdentifier("notifications.pagination.loading")
+                    if store.isLoadingMore {
+                        ProgressView()
+                            .tint(palette.accent)
+                            .frame(height: 48)
+                            .frame(maxWidth: .infinity)
+                            .accessibilityIdentifier("notifications.pagination.loading")
+                    }
                 }
+            }
+            .onReceive(scrollCoordinator.$request.dropFirst()) { _ in
+                guard let firstID = store.notifications.first?.id else { return }
+                withAnimation { proxy.scrollTo(firstID, anchor: .top) }
             }
         }
         .refreshable { await store.refresh() }

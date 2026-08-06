@@ -147,8 +147,12 @@ public struct MissCatPushEnvelope: Equatable, Sendable {
     }
 
     public init?(payload: [AnyHashable: Any]) {
-        let owner = payload["ownerId"] as? String ?? payload["ownerAccountId"] as? String
+        let owner = payload["ownerId"] as? String
+            ?? payload["ownerAccountId"] as? String
+            ?? payload["owner_id"] as? String
+            ?? payload["owner_account_id"] as? String
         let notification = payload["notificationId"] as? String
+            ?? payload["notification_id"] as? String
         guard let owner, !owner.isEmpty, let notification, !notification.isEmpty else { return nil }
         self.init(ownerAccountID: owner, notificationID: notification)
     }

@@ -19,6 +19,7 @@ struct MockApiKeyManager: ApiKeyManagerProtocol {
 
 class MisscatApi {
     private let misskey: MisskeyKit?
+    private let owner: SecureUser
     private let apiKeyManager: ApiKeyManagerProtocol
     private let authSecret = "Q8Zgu-WDvN5EDT_emFGovQ"
     private let publicKey = "BJNAJpIOIJnXVVgCTAd4geduXEsNKre0XVvz0j-E_z-8CbGI6VaRPsVI7r-hF88MijMBZApurU2HmSNQ4e-cTmA"
@@ -31,23 +32,23 @@ class MisscatApi {
 
     init(apiKeyManager: ApiKeyManagerProtocol, and user: SecureUser) {
         self.apiKeyManager = apiKeyManager
+        owner = user
         misskey = MisskeyKit(from: user)
         fetchEmojis()
     }
     
     /// 適切なendpointを生成し、sw/registerを叩く
     func registerSw() {
-        guard let currentUser = Cache.UserDefaults.shared.getCurrentUser(),
-              let apiKey = currentUser.apiKey,
+        guard let apiKey = owner.apiKey,
               !baseApiUrl.isEmpty,
               !apiKey.isEmpty,
-              !currentUser.userId.isEmpty else { return }
+              !owner.userId.isEmpty else { return }
         
         misskey?.auth.setAPIKey(apiKey)
         Messaging.messaging().token { token, error in
             guard error == nil else { print("Error fetching remote instance ID: \(error!)"); return }
             if let token = token {
-                self.registerSw(userId: currentUser.userId, token: token)
+                self.registerSw(userId: self.owner.userId, token: token)
             }
         }
     }
@@ -67,8 +68,7 @@ class MisscatApi {
         let endpoint = generateEndpoint(with: userId, and: token)
         
         misskey?.serviceWorker.register(endpoint: endpoint, auth: authSecret, publicKey: publicKey, result: { state, error in
-            guard error == nil, let state = state else { return }
-            print(state)
+            guard error == nil, state != nil else { return }
         })
     }
     

@@ -37,9 +37,9 @@ class HomeViewController: PolioPagerViewController {
     private var initialized: Bool = false
     
     // ViewController
-    private var notificationsViewController: NotificationsViewController?
+    private var notificationsViewController: MissCatNotificationsHostingController?
     private var detailViewController: UIViewController?
-    private var favViewController: MessageListViewController?
+    private var favViewController: MissCatMessageHistoryHostingController?
     
     private var accountsListViewController: AccountsListViewController?
     
@@ -358,8 +358,11 @@ class HomeViewController: PolioPagerViewController {
     
     private func setupNotificationsVC() {
         if notificationsViewController == nil {
-            guard let storyboard = self.storyboard, let notificationsViewController = storyboard.instantiateViewController(withIdentifier: "notifications") as? NotificationsViewController else { return }
-            notificationsViewController.homeViewController = self
+            guard let owner = Cache.UserDefaults.shared.getCurrentUser(),
+                  let notificationsViewController = MissCatNotificationMessageBridge.makeNotificationsController(
+                      owner: owner,
+                      home: self
+                  ) else { return }
             self.notificationsViewController = notificationsViewController
             
             navBar.barTitle = "Notifications"
@@ -371,11 +374,11 @@ class HomeViewController: PolioPagerViewController {
     
     private func setupFavVC() {
         if favViewController == nil {
-            guard let storyboard = self.storyboard,
-                  let favViewController = storyboard.instantiateViewController(withIdentifier: "messages") as? MessageListViewController
-            else { return }
-            
-            favViewController.homeViewController = self
+            guard let owner = Cache.UserDefaults.shared.getCurrentUser(),
+                  let favViewController = MissCatNotificationMessageBridge.makeMessagesController(
+                      owner: owner,
+                      home: self
+                  ) else { return }
             self.favViewController = favViewController
             
             navBar.barTitle = "Chat"
@@ -568,6 +571,14 @@ class HomeViewController: PolioPagerViewController {
         navBar.changeUser(to: owner) // ユーザーを変更しておく
         emulateFooterTabTap(tab: .notifications)
     }
+
+    func handlePush(_ envelope: MissCatPushEnvelope, opensRoute: Bool) {
+        setupNotificationsVC()
+        guard let notificationsViewController else { return }
+        Task { @MainActor in
+            await notificationsViewController.handlePush(envelope, opensRoute: opensRoute)
+        }
+    }
 }
 
 // MARK: NoteCell Delegate
@@ -682,8 +693,7 @@ extension HomeViewController: FooterTabBarDelegate {
         guard let notificationsViewController = notificationsViewController else { return }
         
         if nowPage == .notifications {
-            guard let notificationsView = notificationsViewController as? FooterTabBarDelegate else { return }
-            notificationsView.tappedNotifications()
+            notificationsViewController.tappedNotifications()
         } else {
             DispatchQueue.main.async {
                 self.hideView(without: .notifications)

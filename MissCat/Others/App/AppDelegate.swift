@@ -9,14 +9,12 @@
 import CoreData
 import FirebaseCore
 import FirebaseMessaging
-import MisskeyKit
 import UIKit
 
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
     // MARK: Main
     
     var window: UIWindow?
-    private let gcmMessageIDKey = "gcm.message_id"
     private var rootViewController: UIViewController? {
         if #available(iOS 13, *) {
             let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene
@@ -42,22 +40,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any]) {
-        if let messageID = userInfo[gcmMessageIDKey] {
-            print("Message ID: \(messageID)")
-        }
-        
-        print(userInfo)
+        guard let envelope = MissCatPushEnvelope(payload: userInfo) else { return }
+        routePush(envelope, opensRoute: false)
     }
     
     // foreground時に通知が飛んできたらこれがよばれる
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
                      fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void)
     {
-        if let contents = extractPayload(from: userInfo) {
-            showNotificationBanner(with: contents) // アプリ内通知を表示
+        if let envelope = MissCatPushEnvelope(payload: userInfo) {
+            routePush(envelope, opensRoute: false)
         }
-        
-        print(userInfo)
         completionHandler(UIBackgroundFetchResult.newData)
     }
     
@@ -117,31 +110,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         })
     }
     
-    /// バナー通知を表示する: サーバーから送られてくるデータは、どのユーザー宛かの情報と通知のid
-    /// - Parameter raw: userInfo
-    private func showNotificationBanner(with contents: NotificationData) {
-        guard let homeVC = rootViewController?.descendant(of: HomeViewController.self),
-              let owner = Cache.UserDefaults.shared.getUser(userId: contents.ownerId) // どのユーザー宛の通知か
-        else { return }
-        
-        let misskey = MisskeyKit(from: owner)
-        misskey?.notifications.get(markAsRead: false) { notifications, _ in
-            guard let notifications = notifications else { return }
-            
-            notifications.forEach {
-                guard $0.id == contents.notificationId else { return }
-                homeVC.showNotificationBanner(with: $0, owner: owner)
-            }
-        }
+    private func routePush(_ envelope: MissCatPushEnvelope, opensRoute: Bool) {
+        guard let home = rootViewController?.descendant(of: HomeViewController.self) else { return }
+        home.handlePush(envelope, opensRoute: opensRoute)
     }
-    
-    /// ペイロードからメッセージ等を抽出する
-    /// - Parameter payload: [String:String]
-    private func extractPayload(from payload: [AnyHashable: Any]) -> NotificationData? {
-        guard let notificationId = payload["notification_id"] as? String,
-              let ownerId = payload["owner_id"] as? String else { return nil }
-        
-        return NotificationData(ownerId: ownerId, notificationId: notificationId)
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        if let envelope = MissCatPushEnvelope(payload: notification.request.content.userInfo) {
+            routePush(envelope, opensRoute: false)
+        }
+        completionHandler([])
+    }
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        if let envelope = MissCatPushEnvelope(payload: response.notification.request.content.userInfo) {
+            routePush(envelope, opensRoute: true)
+        }
+        completionHandler()
     }
 }
 

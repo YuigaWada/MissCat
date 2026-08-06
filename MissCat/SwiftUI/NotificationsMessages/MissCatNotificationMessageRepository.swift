@@ -105,6 +105,7 @@ public final class MissCatNativeNotificationMessagingRepository:
     private let transport: MissCatHTTPTransport
     private let webSocketSession: URLSession
     private let decoder: JSONDecoder
+    private let capabilityCache = MissCatEndpointCapabilityCache()
 
     public init(
         accountScope: MissCatAccountScope,
@@ -291,8 +292,25 @@ public final class MissCatNativeNotificationMessagingRepository:
     }
 
     public func endpointCapabilities() async throws -> MissCatAPIEndpointCapabilities {
-        let values: [String] = try await post("endpoints", body: [:], authenticated: false)
-        return MissCatAPIEndpointCapabilities(endpoints: Set(values))
+        try await capabilityCache.value { [weak self] in
+            guard let self else { throw CancellationError() }
+            let values: [String] = try await self.post("endpoints", body: [:], authenticated: false)
+            return MissCatAPIEndpointCapabilities(endpoints: Set(values))
+        }
+    }
+
+    public func resolvePerson(acct: String) async throws -> MissCatPerson {
+        let normalized = acct.trimmingCharacters(in: CharacterSet(charactersIn: "@"))
+        let components = normalized.split(separator: "@", maxSplits: 1).map(String.init)
+        guard let username = components.first, !username.isEmpty else {
+            throw MissCatNotificationMessagingError.missingConversationPeer
+        }
+        var body: [String: Any] = ["username": username]
+        if components.count == 2, !components[1].isEmpty {
+            body["host"] = components[1]
+        }
+        let user: APIUser = try await post("users/show", body: body)
+        return user.domainValue
     }
 
     private func post<Response: Decodable>(
@@ -320,6 +338,19 @@ public final class MissCatNativeNotificationMessagingRepository:
         } catch {
             throw MissCatNotificationMessagingError.invalidResponse
         }
+    }
+}
+
+private actor MissCatEndpointCapabilityCache {
+    private var cached: MissCatAPIEndpointCapabilities?
+
+    func value(
+        loader: @Sendable () async throws -> MissCatAPIEndpointCapabilities
+    ) async throws -> MissCatAPIEndpointCapabilities {
+        if let cached { return cached }
+        let loaded = try await loader()
+        cached = loaded
+        return loaded
     }
 }
 
