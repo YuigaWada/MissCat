@@ -19,6 +19,21 @@ public enum MissCatSettingsLegacyMetrics {
     public static let aboutDeveloperRowHeight: CGFloat = 70
 }
 
+private struct MissCatSettingsVisualReadyMarker: View {
+    let ready: Bool
+    let identifier: String
+
+    var body: some View {
+        Text(ready ? "ready" : "waiting")
+            .font(.system(size: 1))
+            .frame(width: 1, height: 1)
+            .opacity(0.01)
+            .accessibilityLabel("visualReady")
+            .accessibilityValue(ready ? "true" : "false")
+            .accessibilityIdentifier(identifier)
+    }
+}
+
 public struct MissCatSettingsEmptyState: View {
     public let title: String
     public let message: String
@@ -201,6 +216,12 @@ public struct MissCatAccountsScreen: View {
             Button("閉じる", role: .cancel) { store.dismissPresentation() }
         } message: {
             if case let .error(_, message) = store.presentation { Text(message) }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            MissCatSettingsVisualReadyMarker(
+                ready: store.phase != .idle && store.phase != .loading,
+                identifier: "accounts.visualReady"
+            )
         }
         .accessibilityIdentifier("accounts.screen")
     }
@@ -397,6 +418,9 @@ public struct MissCatSettingsRootView: View {
                 }
             }
             .accessibilityIdentifier("settings.root")
+            .overlay(alignment: .bottomTrailing) {
+                MissCatSettingsVisualReadyMarker(ready: true, identifier: "settings.root.visualReady")
+            }
         }
         .tint(palette.accent)
     }
@@ -486,9 +510,16 @@ public struct MissCatDesignSettingsScreen: View {
             "エラー",
             isPresented: errorIsPresented
         ) {
+            Button("再試行") { store.retrySave() }
             Button("閉じる", role: .cancel) { store.dismissPresentation() }
         } message: {
             errorMessage
+        }
+        .overlay(alignment: .bottomTrailing) {
+            MissCatSettingsVisualReadyMarker(
+                ready: store.isReady && !store.isSaving,
+                identifier: "settings.design.visualReady"
+            )
         }
         .accessibilityIdentifier("settings.design.screen")
     }
@@ -497,7 +528,7 @@ public struct MissCatDesignSettingsScreen: View {
         List {
             tabSettingsSection
             Section(header: Text("テーマ設定"), footer: EmptyView()) {
-                Picker("カラーモード", selection: $store.mode) {
+                Picker("カラーモード", selection: modeBinding) {
                     ForEach(MissCatThemeMode.allCases) { mode in
                         Text(mode.rawValue).tag(mode)
                     }
@@ -514,6 +545,8 @@ public struct MissCatDesignSettingsScreen: View {
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
                         .multilineTextAlignment(.trailing)
+                        .submitLabel(.done)
+                        .onSubmit { _ = store.commitAccentHexDraft() }
                         .accessibilityIdentifier("settings.design.color-hex")
                 }
             }
@@ -593,9 +626,13 @@ public struct MissCatDesignSettingsScreen: View {
 
     private var accentHexBinding: Binding<String> {
         Binding(
-            get: { store.accentHex },
-            set: { store.setAccentHex($0) }
+            get: { store.accentHexDraft },
+            set: { store.updateAccentHexDraft($0) }
         )
+    }
+
+    private var modeBinding: Binding<MissCatThemeMode> {
+        Binding(get: { store.mode }, set: store.updateMode)
     }
 
     private func tabNameBinding(for tab: MissCatSettingsTab) -> Binding<String> {
@@ -679,6 +716,12 @@ public struct MissCatReactionInstanceScreen: View {
         .navigationTitle("お気に入りの絵文字")
         .navigationBarTitleDisplayMode(.inline)
         .task { store.loadAccounts() }
+        .overlay(alignment: .bottomTrailing) {
+            MissCatSettingsVisualReadyMarker(
+                ready: !store.isLoading,
+                identifier: "settings.reactions.instances.visualReady"
+            )
+        }
         .accessibilityIdentifier("settings.reactions.instances")
     }
 }
@@ -756,7 +799,30 @@ public struct MissCatReactionSettingsScreen: View {
         .task { store.load(accountID: accountID) }
         .onDisappear { store.saveIfNeeded() }
         .sheet(isPresented: $store.showsPicker) {
-            MissCatReactionPicker(items: store.available, palette: palette, onSelect: store.add)
+            MissCatReactionPicker(
+                sections: store.pickerSections,
+                searchQuery: $store.searchQuery,
+                palette: palette,
+                onSelect: store.add
+            )
+        }
+        .alert(
+            "エラー",
+            isPresented: Binding(
+                get: { if case .error = store.presentation { return true }; return false },
+                set: { if !$0 { store.dismissPresentation() } }
+            )
+        ) {
+            Button("再試行") { store.retrySave() }
+            Button("閉じる", role: .cancel) { store.dismissPresentation() }
+        } message: {
+            if case let .error(_, message) = store.presentation { Text(message) }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            MissCatSettingsVisualReadyMarker(
+                ready: !store.isLoading && store.snapshot != nil && !store.isSaving,
+                identifier: "settings.reactions.visualReady"
+            )
         }
         .accessibilityIdentifier("settings.reactions.screen")
     }
@@ -767,11 +833,7 @@ public struct MissCatReactionSettingsScreen: View {
         } label: {
             Group {
                 if let url = item.imageURL {
-                    AsyncImage(url: url) { image in
-                        image.resizable().scaledToFit()
-                    } placeholder: {
-                        ProgressView().controlSize(.small)
-                    }
+                    MissCatReactionImage(url: url)
                 } else {
                     Text(item.displayValue ?? item.rawValue)
                         .font(.system(size: 30))
@@ -819,16 +881,19 @@ private struct MissCatReactionDropDelegate: DropDelegate {
 
 public struct MissCatReactionPicker: View {
     @Environment(\.dismiss) private var dismiss
-    public let items: [MissCatReactionItem]
+    public let sections: [MissCatReactionSection]
+    @Binding public var searchQuery: String
     public let palette: MissCatVisualPalette
     public let onSelect: (MissCatReactionItem) -> Void
 
     public init(
-        items: [MissCatReactionItem],
+        sections: [MissCatReactionSection],
+        searchQuery: Binding<String>,
         palette: MissCatVisualPalette,
         onSelect: @escaping (MissCatReactionItem) -> Void
     ) {
-        self.items = items
+        self.sections = sections
+        _searchQuery = searchQuery
         self.palette = palette
         self.onSelect = onSelect
     }
@@ -836,26 +901,38 @@ public struct MissCatReactionPicker: View {
     public var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVGrid(
-                    columns: Array(repeating: GridItem(.flexible()), count: 7),
-                    spacing: 8
-                ) {
-                    ForEach(items) { item in
-                        Button {
-                            onSelect(item)
-                            dismiss()
-                        } label: {
-                            Group {
-                                if let url = item.imageURL {
-                                    AsyncImage(url: url) { image in image.resizable().scaledToFit() } placeholder: { ProgressView() }
-                                } else {
-                                    Text(item.displayValue ?? item.rawValue).font(.system(size: 28))
+                LazyVStack(alignment: .leading, spacing: 14) {
+                    ForEach(sections) { section in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(section.title)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(palette.muted)
+                                .accessibilityIdentifier("settings.reactions.section.\(section.id)")
+                            LazyVGrid(
+                                columns: Array(repeating: GridItem(.flexible()), count: 7),
+                                spacing: 8
+                            ) {
+                                ForEach(section.items) { item in
+                                    Button {
+                                        onSelect(item)
+                                        dismiss()
+                                    } label: {
+                                        Group {
+                                            if let url = item.imageURL {
+                                                MissCatReactionImage(url: url)
+                                            } else {
+                                                Text(item.displayValue ?? item.rawValue).font(.system(size: 28))
+                                            }
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .aspectRatio(1, contentMode: .fit)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel(item.rawValue)
+                                    .accessibilityIdentifier("settings.reactions.picker.item.\(item.id)")
                                 }
                             }
-                            .frame(maxWidth: .infinity)
-                            .aspectRatio(1, contentMode: .fit)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
                 .padding(10)
@@ -863,13 +940,39 @@ public struct MissCatReactionPicker: View {
             .background(palette.base)
             .navigationTitle("リアクションを追加")
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchQuery, prompt: "絵文字を検索")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("閉じる") { dismiss() }
                 }
             }
         }
+        .overlay(alignment: .bottomTrailing) {
+            MissCatSettingsVisualReadyMarker(ready: true, identifier: "settings.reactions.picker.visualReady")
+        }
         .accessibilityIdentifier("settings.reactions.picker")
+    }
+}
+
+/// The existing decoder understands static images plus animated GIF/APNG and SVG.
+/// Keeping it behind this SwiftUI bridge avoids flattening custom reactions through
+/// AsyncImage's static-image-only rendering path.
+private struct MissCatReactionImage: UIViewRepresentable {
+    let url: URL
+
+    func makeUIView(context: Context) -> MFMImageView {
+        let view = MFMImageView(frame: .zero)
+        view.contentMode = .scaleAspectFit
+        view.backgroundColor = .clear
+        return view
+    }
+
+    func updateUIView(_ view: MFMImageView, context: Context) {
+        view.setImage(url: url.absoluteString)
+    }
+
+    static func dismantleUIView(_ view: MFMImageView, coordinator: Void) {
+        view.prepareForReuse()
     }
 }
 
@@ -913,6 +1016,9 @@ public struct MissCatLicensesScreen: View {
         .foregroundStyle(palette.text)
         .navigationTitle("LICENSE")
         .navigationBarTitleDisplayMode(.inline)
+        .overlay(alignment: .bottomTrailing) {
+            MissCatSettingsVisualReadyMarker(ready: true, identifier: "settings.licenses.visualReady")
+        }
         .accessibilityIdentifier("settings.licenses.screen")
     }
 }
@@ -938,6 +1044,9 @@ public struct MissCatLicenseDetailScreen: View {
         .background(palette.base.ignoresSafeArea())
         .navigationTitle(entry?.name ?? "LICENSE")
         .navigationBarTitleDisplayMode(.inline)
+        .overlay(alignment: .bottomTrailing) {
+            MissCatSettingsVisualReadyMarker(ready: true, identifier: "settings.license.detail.visualReady")
+        }
         .accessibilityIdentifier("settings.license.detail")
     }
 }
@@ -1027,6 +1136,9 @@ public struct MissCatAboutScreen: View {
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             withAnimation(.easeInOut(duration: 0.7)) { appeared = true }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            MissCatSettingsVisualReadyMarker(ready: appeared, identifier: "settings.about.visualReady")
         }
         .accessibilityIdentifier("settings.about.screen")
     }

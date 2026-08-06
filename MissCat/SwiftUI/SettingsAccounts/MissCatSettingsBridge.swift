@@ -5,7 +5,12 @@ import UIKit
 @MainActor
 enum MissCatSettingsBridge {
     static func makeSettingsController(home: HomeViewController) -> UIViewController {
-        let repository = MissCatLegacySettingsRepository()
+        let repository: any MissCatDesignSettingsManaging & MissCatReactionSettingsManaging
+        if MissCatSettingsFixtureRepository.isEnabled {
+            repository = MissCatSettingsFixtureRepository()
+        } else {
+            repository = MissCatLegacySettingsRepository()
+        }
         let designStore = MissCatDesignSettingsStore(repository: repository)
         let reactionStore = MissCatReactionSettingsStore(repository: repository)
         let licenses = LicenseTableViewController.getOssDescription().map {
@@ -37,7 +42,12 @@ enum MissCatSettingsBridge {
         in container: UIViewController,
         home: HomeViewController?
     ) -> UIHostingController<AnyView> {
-        let repository = MissCatLegacySettingsRepository()
+        let repository: any MissCatAccountManaging
+        if MissCatSettingsFixtureRepository.isEnabled {
+            repository = MissCatSettingsFixtureRepository()
+        } else {
+            repository = MissCatLegacySettingsRepository()
+        }
         let store = MissCatAccountStore(repository: repository)
         let palette = currentPalette
         let view = MissCatAccountsScreen(
