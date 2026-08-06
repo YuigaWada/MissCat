@@ -18,6 +18,7 @@ final class MockMissCatFeedRepository: MissCatFeedRepository {
     var failingActions: [MissCatFeedAction] = []
     var actionDelayNanoseconds: UInt64 = 0
     var realtimeContinuation: AsyncStream<MissCatRealtimeEvent>.Continuation?
+    var realtimeRequestCount = 0
 
     func fetchPage(
         source: MissCatFeedSource,
@@ -39,7 +40,8 @@ final class MockMissCatFeedRepository: MissCatFeedRepository {
         source: MissCatFeedSource,
         capturing noteIDs: [String]
     ) -> AsyncStream<MissCatRealtimeEvent> {
-        AsyncStream { realtimeContinuation = $0 }
+        realtimeRequestCount += 1
+        return AsyncStream { realtimeContinuation = $0 }
     }
 
     func perform(_ action: MissCatFeedAction) async throws {
@@ -390,6 +392,111 @@ final class MissCatFeedStoreTests: XCTestCase {
         XCTAssertEqual(state.lastOrigin, .pagesChanged)
     }
 
+    func testAccountScopeNormalizesInstanceAndNeverCollidesAcrossInstances() {
+        let first = MissCatShellAccountScope(
+            instance: " HTTPS://Social.Example/ ",
+            userID: "same-user",
+            username: "cat"
+        )
+        let same = MissCatShellAccountScope(
+            instance: "https://social.example",
+            userID: "same-user",
+            username: "cat"
+        )
+        let other = MissCatShellAccountScope(
+            instance: "https://other.example",
+            userID: "same-user",
+            username: "cat"
+        )
+
+        XCTAssertEqual(first, same)
+        XCTAssertNotEqual(first, other)
+        XCTAssertEqual(Set([first, same, other]).count, 2)
+    }
+
+    func testFiveFooterDestinationsShareSelectionAndReselectContract() {
+        var state = MissCatFooterSelectionState()
+
+        XCTAssertEqual(state.activate(.home), .reselected(.home))
+        XCTAssertEqual(state.activate(.notifications), .selected(.notifications))
+        XCTAssertEqual(state.activate(.notifications), .reselected(.notifications))
+        XCTAssertEqual(state.activate(.compose), .composeRequested)
+        XCTAssertEqual(state.selectedSection, .notifications)
+        XCTAssertEqual(state.activate(.messages), .selected(.messages))
+        XCTAssertEqual(state.activate(.profile), .selected(.profile))
+        XCTAssertEqual(state.selectedSection, .profile)
+    }
+
+    func testShellStorePersistsTapAndSwipeAgainstInstanceUserScope() async {
+        let provider = MockShellConfigurationProvider()
+        let store = MissCatShellStore(provider: provider)
+        await store.load()
+
+        store.selectTimeline("local", origin: .tap)
+        await store.waitForPendingPersistence()
+        store.selectTimeline("home", origin: .swipe)
+        await store.waitForPendingPersistence()
+
+        XCTAssertEqual(store.selectedTimelineID, "home")
+        XCTAssertEqual(store.timelineSelectionOrigin, .swipe)
+        XCTAssertEqual(provider.savedSelections.map(\.selectedID), ["local", "home"])
+        XCTAssertEqual(provider.savedSelections.map(\.scope), [provider.primaryScope, provider.primaryScope])
+    }
+
+    func testShellStoreSwitchesExactScopeAndResetsConfiguredSelection() async {
+        let provider = MockShellConfigurationProvider()
+        let store = MissCatShellStore(provider: provider)
+        await store.load()
+        store.selectTimeline("local", origin: .tap)
+        await store.waitForPendingPersistence()
+
+        await store.switchAccount(to: provider.secondaryScope)
+
+        XCTAssertEqual(store.configuration?.currentScope, provider.secondaryScope)
+        XCTAssertEqual(store.selectedTimelineID, "secondary-home")
+        XCTAssertEqual(provider.switchedScopes, [provider.secondaryScope])
+    }
+
+    func testShellStoreEmitsOnlyHomeAndNotificationScrollToTopSignals() async {
+        let store = MissCatShellStore(provider: MockShellConfigurationProvider())
+        await store.load()
+
+        XCTAssertEqual(store.activateFooter(.home), .reselected(.home))
+        XCTAssertEqual(store.homeScrollToTopGeneration, 1)
+        XCTAssertEqual(store.activateFooter(.notifications), .selected(.notifications))
+        XCTAssertEqual(store.activateFooter(.notifications), .reselected(.notifications))
+        XCTAssertEqual(store.notificationsScrollToTopGeneration, 1)
+        XCTAssertEqual(store.activateFooter(.messages), .selected(.messages))
+        XCTAssertEqual(store.activateFooter(.messages), .reselected(.messages))
+        XCTAssertEqual(store.homeScrollToTopGeneration, 1)
+        XCTAssertEqual(store.notificationsScrollToTopGeneration, 1)
+    }
+
+    func testCancelledInitialLoadReturnsToIdleWithoutError() async {
+        let repository = MockMissCatFeedRepository()
+        repository.fetchError = CancellationError()
+        let store = MissCatFeedStore(source: .home, repository: repository)
+
+        await store.loadInitial()
+
+        XCTAssertEqual(store.phase, .idle)
+        XCTAssertNil(store.actionErrorMessage)
+    }
+
+    func testLoadedFeedRestartsRealtimeAfterViewLifetimeCancellation() async {
+        let repository = MockMissCatFeedRepository()
+        repository.pages = [.init(notes: [note("one")], hasMore: false)]
+        let store = MissCatFeedStore(source: .home, repository: repository)
+        await store.loadInitial()
+        await waitUntil { repository.realtimeRequestCount == 1 }
+
+        store.stopRealtime()
+        await store.loadInitial()
+        await waitUntil { repository.realtimeRequestCount == 2 }
+
+        XCTAssertEqual(repository.realtimeRequestCount, 2)
+    }
+
     private func waitForRealtimeContinuation(_ repository: MockMissCatFeedRepository) async {
         for _ in 0 ..< 20 where repository.realtimeContinuation == nil {
             await Task.yield()
@@ -409,6 +516,56 @@ final class MissCatFeedStoreTests: XCTestCase {
             id: id,
             author: MissCatNoteAuthor(id: "author", name: "Miss Cat", username: "misscat"),
             text: "note \(id)"
+        )
+    }
+}
+
+@MainActor
+private final class MockShellConfigurationProvider: MissCatShellConfigurationProviding {
+    struct SavedSelection: Equatable {
+        let selectedID: String
+        let scope: MissCatShellAccountScope
+    }
+
+    let primaryScope = MissCatShellAccountScope(instance: "one.example", userID: "shared", username: "cat")
+    let secondaryScope = MissCatShellAccountScope(instance: "two.example", userID: "shared", username: "cat")
+    var savedSelections: [SavedSelection] = []
+    var switchedScopes: [MissCatShellAccountScope] = []
+    private let feedRepository = MockMissCatFeedRepository()
+
+    func loadConfiguration() async throws -> MissCatShellConfiguration {
+        configuration(scope: primaryScope, pageIDs: ["home", "local"])
+    }
+
+    func switchAccount(to scope: MissCatShellAccountScope) async throws -> MissCatShellConfiguration {
+        switchedScopes.append(scope)
+        guard scope == secondaryScope else { throw MissCatShellConfigurationError.accountNotFound }
+        return configuration(scope: secondaryScope, pageIDs: ["secondary-home", "secondary-global"])
+    }
+
+    func saveSelectedTimelineID(_ selectedID: String, for scope: MissCatShellAccountScope) async throws {
+        savedSelections.append(.init(selectedID: selectedID, scope: scope))
+    }
+
+    func repository(for scope: MissCatShellAccountScope) throws -> any MissCatFeedRepository {
+        feedRepository
+    }
+
+    private func configuration(
+        scope: MissCatShellAccountScope,
+        pageIDs: [String]
+    ) -> MissCatShellConfiguration {
+        MissCatShellConfiguration(
+            currentScope: scope,
+            accounts: [
+                MissCatShellAccount(scope: primaryScope),
+                MissCatShellAccount(scope: secondaryScope)
+            ],
+            timelinePages: pageIDs.map {
+                MissCatTimelinePage(id: $0, title: $0, source: .home, accountScope: scope)
+            },
+            selectedTimelineID: pageIDs[0],
+            appearance: .init(isDark: false, accentHex: "2F7CF6")
         )
     }
 }

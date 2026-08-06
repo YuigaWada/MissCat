@@ -91,6 +91,33 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         XCTAssertNil(hashtag["untilId"])
     }
 
+    func testUserAndListFeedsUseScopedNativeRequestShapes() async throws {
+        var requests: [URLRequest] = []
+        FeedURLProtocolStub.handler = { request in
+            requests.append(request)
+            return Self.response(for: request, json: [])
+        }
+        let subject = makeSubject()
+
+        _ = try await subject.fetchPage(source: .user(userID: "remote-user"), cursor: "older-user", limit: 12)
+        _ = try await subject.fetchPage(source: .list(listID: "cats-list"), cursor: "older-list", limit: 13)
+
+        XCTAssertEqual(
+            requests.compactMap { $0.url?.path },
+            ["/api/users/notes", "/api/notes/user-list-timeline"]
+        )
+        let user = try XCTUnwrap(requests[0].feedBodyData).feedJSONObject
+        XCTAssertEqual(user["i"] as? String, "account-token")
+        XCTAssertEqual(user["userId"] as? String, "remote-user")
+        XCTAssertEqual(user["untilId"] as? String, "older-user")
+        XCTAssertEqual(user["limit"] as? Int, 12)
+        let list = try XCTUnwrap(requests[1].feedBodyData).feedJSONObject
+        XCTAssertEqual(list["i"] as? String, "account-token")
+        XCTAssertEqual(list["listId"] as? String, "cats-list")
+        XCTAssertEqual(list["untilId"] as? String, "older-list")
+        XCTAssertEqual(list["limit"] as? Int, 13)
+    }
+
     func testFavoritesDecodeWrapperAndPageByFavoriteID() async throws {
         var capturedRequest: URLRequest?
         FeedURLProtocolStub.handler = { request in
