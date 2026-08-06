@@ -12,6 +12,7 @@ import XCTest
 
 class MFMTests: XCTestCase {
     private let mockUser: SecureUser = .init(userId: "", username: "", instance: "", apiKey: nil)
+    private let testFont = UIFont.systemFont(ofSize: 15)
     override func setUp() {}
     
     override func tearDown() {
@@ -23,7 +24,7 @@ class MFMTests: XCTestCase {
     func testLinkHttps() {
         let https = "https://misskey.io"
         let preHttps = https.mfmPreTransform()
-        let attributedHttps = preHttps.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributedHttps = preHttps.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributedHttps)
         XCTAssertEqual(attributedHttps!.cleanup(), "https://misskey.io")
@@ -32,7 +33,7 @@ class MFMTests: XCTestCase {
     func testLinkHttp() {
         let http = "http://misskey.io"
         let preHttp = http.mfmPreTransform()
-        let attributedHttp = preHttp.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributedHttp = preHttp.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributedHttp)
         XCTAssertEqual(attributedHttp!.cleanup(), "http://misskey.io")
@@ -41,7 +42,7 @@ class MFMTests: XCTestCase {
     func testLinkHttpsMd() {
         let httpsMd = "[MISSKEY1](https://misskey.io)"
         let preHttpsMd = httpsMd.mfmPreTransform()
-        let attributedHttpsMd = preHttpsMd.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributedHttpsMd = preHttpsMd.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributedHttpsMd)
         XCTAssertEqual(attributedHttpsMd!.cleanup(), "MISSKEY1")
@@ -50,7 +51,7 @@ class MFMTests: XCTestCase {
     func testLinkHttpMd() {
         let httpMd = "[MISSKEY2](http://misskey.io)"
         let preHttpMd = httpMd.mfmPreTransform()
-        let attributedHttpMd = preHttpMd.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributedHttpMd = preHttpMd.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributedHttpMd)
         XCTAssertEqual(attributedHttpMd!.cleanup(), "MISSKEY2")
@@ -61,7 +62,7 @@ class MFMTests: XCTestCase {
     func testHyperHashtag() {
         let tag = "#TEST"
         let preTag = tag.mfmPreTransform()
-        let attributedTag = preTag.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributedTag = preTag.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributedTag)
         XCTAssertEqual(attributedTag!.cleanup(), "#TEST")
@@ -70,7 +71,7 @@ class MFMTests: XCTestCase {
     func testHyperJPHashtag() {
         let tag = "#てすと"
         let preTag = tag.mfmPreTransform()
-        let attributedTag = preTag.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributedTag = preTag.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributedTag)
         XCTAssertEqual(attributedTag!.cleanup(), "#てすと")
@@ -81,7 +82,7 @@ class MFMTests: XCTestCase {
     func testHyperUser() {
         let user = "@wada@misskey.io"
         let pre = user.mfmPreTransform()
-        let attributed = pre.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributed = pre.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributed)
         XCTAssertEqual(attributed!.cleanup(), "@wada@misskey.io")
@@ -92,7 +93,7 @@ class MFMTests: XCTestCase {
     func testIgnoreMotionTag() {
         let tag = "<motion>test test</motion>"
         let preTag = tag.mfmPreTransform()
-        let attributedTag = preTag.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributedTag = preTag.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributedTag)
         XCTAssertEqual(attributedTag!.cleanup(), "test test")
@@ -101,7 +102,7 @@ class MFMTests: XCTestCase {
     func testIgnoreFlipTag() {
         let tag = "<flip>test test</flip>"
         let preTag = tag.mfmPreTransform()
-        let attributedTag = preTag.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributedTag = preTag.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributedTag)
         XCTAssertEqual(attributedTag!.cleanup(), "test test")
@@ -110,7 +111,7 @@ class MFMTests: XCTestCase {
     func testIgnoreSpinTag() {
         let tag = "<spin>test test</spin>"
         let preTag = tag.mfmPreTransform()
-        let attributedTag = preTag.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributedTag = preTag.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributedTag)
         XCTAssertEqual(attributedTag!.cleanup(), "test test")
@@ -119,7 +120,7 @@ class MFMTests: XCTestCase {
     func testIgnoreJumpTag() {
         let tag = "<jump>test test</jump>"
         let preTag = tag.mfmPreTransform()
-        let attributedTag = preTag.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributedTag = preTag.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributedTag)
         XCTAssertEqual(attributedTag!.cleanup(), "test test")
@@ -128,7 +129,7 @@ class MFMTests: XCTestCase {
     func testIgnoreSmallTag() {
         let tag = "<small>test test</small>"
         let preTag = tag.mfmPreTransform()
-        let attributedTag = preTag.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributedTag = preTag.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributedTag)
         XCTAssertEqual(attributedTag!.cleanup(), "test test")
@@ -137,7 +138,7 @@ class MFMTests: XCTestCase {
     func testIgnoreThreeAsta() {
         let tag = "***test test***"
         let preTag = tag.mfmPreTransform()
-        let attributedTag = preTag.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributedTag = preTag.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributedTag)
         XCTAssertEqual(attributedTag!.cleanup(), "test test")
@@ -146,7 +147,7 @@ class MFMTests: XCTestCase {
     func testIgnoreThreeBrackets() {
         let tag = "(((test test)))"
         let preTag = tag.mfmPreTransform()
-        let attributedTag = preTag.mfmTransform(owner: mockUser, font: .init()).attributed?.string
+        let attributedTag = preTag.mfmTransform(owner: mockUser, font: testFont).attributed?.string
         
         XCTAssertNotNil(attributedTag)
         XCTAssertEqual(attributedTag!.cleanup(), "test test")
