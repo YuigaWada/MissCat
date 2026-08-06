@@ -461,6 +461,8 @@ Integration-green is different from acceptance-green: incomplete visuals may be 
 
 The user-designated `MissCat Manual Preview` simulator is overwritten only at a green milestone after the integrated commit has passed its relevant tests. Never reinstall a known broken auth candidate merely because it builds. Record the installed commit and runtime outside credential-bearing logs. A failed Manual Preview run returns to the feature clone for repair; it does not redefine the gate.
 
+Manual Preview and authentication E2E builds must retain their signed Keychain and application-group entitlements. Build the Simulator app with local ad-hoc signing enabled (the Xcode default for Simulator builds), never with `CODE_SIGNING_ALLOWED=NO`, and run `scripts/verify-simulator-keychain-entitlements.sh /path/to/MissCat.app` before installation. Unit-test-only unsigned products do not qualify as installable authentication evidence.
+
 ## Current-state audit at `cdf01f1`
 
 ### Proven integrated
