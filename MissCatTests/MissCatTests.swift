@@ -26,6 +26,22 @@ class MissCatTests: XCTestCase {
     }
 }
 
+final class AccountsListStoryboardRegressionTests: XCTestCase {
+    func testAccountsListSceneInstantiatesAndLoadsWithoutStaleOutlets() {
+        XCTAssertTrue(Thread.isMainThread)
+
+        let storyboard = UIStoryboard(
+            name: "Main",
+            bundle: Bundle(for: AccountsListViewController.self)
+        )
+        let viewController = storyboard.instantiateViewController(withIdentifier: "accounts-list")
+
+        XCTAssertTrue(viewController is AccountsListViewController)
+        viewController.loadViewIfNeeded()
+        XCTAssertNotNil(viewController.view)
+    }
+}
+
 final class WelcomeVisualLayoutTests: XCTestCase {
     func testReferenceStoryboardFramesAreRecoveredFromSafeAreaLayout() {
         let safeTop: CGFloat = 48

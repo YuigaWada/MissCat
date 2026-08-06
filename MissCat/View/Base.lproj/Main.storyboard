@@ -333,11 +333,6 @@
                             <constraint firstItem="G5M-EF-jbU" firstAttribute="top" secondItem="bln-ec-ujz" secondAttribute="top" id="nGq-bA-Ly0"/>
                         </constraints>
                     </view>
-                    <connections>
-                        <outlet property="editButton" destination="1OT-b9-g3D" id="GcJ-qN-3jT"/>
-                        <outlet property="loginButton" destination="uQH-pn-s88" id="sxC-sr-Tzy"/>
-                        <outlet property="mainTableView" destination="NYd-Vc-8hN" id="Oug-eB-sjO"/>
-                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="mT9-vT-TbD" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
