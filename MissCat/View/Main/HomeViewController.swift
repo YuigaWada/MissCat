@@ -821,11 +821,7 @@ extension HomeViewController: TimelineDelegate {
     }
     
     func openSettings() {
-        guard let storyboard = self.storyboard,
-              let settingsViewController = storyboard.instantiateViewController(withIdentifier: "settings")
-              as? SettingsViewController else { return }
-        
-        settingsViewController.homeViewController = self
+        let settingsViewController = MissCatSettingsBridge.makeSettingsController(home: self)
         navigationController?.pushViewController(settingsViewController, animated: true)
     }
     

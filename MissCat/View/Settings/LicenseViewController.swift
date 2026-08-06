@@ -13,7 +13,7 @@ import UIKit
 
 class LicenseTableViewController: FormViewController {
     private var disposeBag: DisposeBag = .init()
-    private lazy var ossDesc: [String: String] = getOssDescription()
+    private lazy var ossDesc: [String: String] = Self.getOssDescription()
     
     // MARK: LifeCycle
     
@@ -116,7 +116,7 @@ class LicenseTableViewController: FormViewController {
     
     // MARK: Const
     
-    private func getOssDescription() -> [String: String] {
+    static func getOssDescription() -> [String: String] {
         return ["MisskeyKit": """
         MIT License
         
