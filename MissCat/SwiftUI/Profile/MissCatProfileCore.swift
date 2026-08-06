@@ -250,12 +250,18 @@ public enum MissCatUserListKind: Equatable, Sendable {
     }
 }
 
+public enum MissCatProfileImagePatch: Equatable, Sendable {
+    case unchanged
+    case replace(fileID: String)
+    case remove
+}
+
 public struct MissCatProfileUpdatePatch: Encodable, Equatable, Sendable {
     public var name: String?
     public var description: String?
     public var isCat: Bool?
-    public var avatarID: String?
-    public var bannerID: String?
+    public var avatarImage: MissCatProfileImagePatch
+    public var bannerImage: MissCatProfileImagePatch
 
     enum CodingKeys: String, CodingKey {
         case name, description, isCat
@@ -268,17 +274,24 @@ public struct MissCatProfileUpdatePatch: Encodable, Equatable, Sendable {
         description: String? = nil,
         isCat: Bool? = nil,
         avatarID: String? = nil,
-        bannerID: String? = nil
+        bannerID: String? = nil,
+        avatarImage: MissCatProfileImagePatch = .unchanged,
+        bannerImage: MissCatProfileImagePatch = .unchanged
     ) {
         self.name = name
         self.description = description
         self.isCat = isCat
-        self.avatarID = avatarID
-        self.bannerID = bannerID
+        self.avatarImage = avatarImage == .unchanged
+            ? avatarID.map { .replace(fileID: $0) } ?? .unchanged
+            : avatarImage
+        self.bannerImage = bannerImage == .unchanged
+            ? bannerID.map { .replace(fileID: $0) } ?? .unchanged
+            : bannerImage
     }
 
     public var isEmpty: Bool {
-        name == nil && description == nil && isCat == nil && avatarID == nil && bannerID == nil
+        name == nil && description == nil && isCat == nil
+            && avatarImage == .unchanged && bannerImage == .unchanged
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -286,8 +299,23 @@ public struct MissCatProfileUpdatePatch: Encodable, Equatable, Sendable {
         try values.encodeIfPresent(name, forKey: .name)
         try values.encodeIfPresent(description, forKey: .description)
         try values.encodeIfPresent(isCat, forKey: .isCat)
-        try values.encodeIfPresent(avatarID, forKey: .avatarID)
-        try values.encodeIfPresent(bannerID, forKey: .bannerID)
+        try Self.encode(avatarImage, to: &values, forKey: .avatarID)
+        try Self.encode(bannerImage, to: &values, forKey: .bannerID)
+    }
+
+    private static func encode(
+        _ patch: MissCatProfileImagePatch,
+        to values: inout KeyedEncodingContainer<CodingKeys>,
+        forKey key: CodingKeys
+    ) throws {
+        switch patch {
+        case .unchanged:
+            break
+        case let .replace(fileID):
+            try values.encode(fileID, forKey: key)
+        case .remove:
+            try values.encodeNil(forKey: key)
+        }
     }
 }
 
@@ -321,6 +349,7 @@ public protocol MissCatProfileRepository {
     func users(kind: MissCatUserListKind, cursor: String?, limit: Int) async throws -> MissCatProfilePage<MissCatProfileUser>
     func setFollowing(_ following: Bool, userID: String) async throws
     func uploadProfileImage(data: Data, filename: String, progress: @escaping (Double) -> Void) async throws -> String
+    func deleteProfileImage(fileID: String) async throws
     func updateProfile(patch: MissCatProfileUpdatePatch) async throws -> MissCatProfileUser
 }
 
@@ -429,6 +458,13 @@ public final class MissCatRESTProfileRepository: MissCatProfileRepository {
         return file.id
     }
 
+    public func deleteProfileImage(fileID: String) async throws {
+        let _: EmptyResponse = try await post(
+            "drive/files/delete",
+            body: DriveFileDeleteBody(i: account.token, fileId: fileID)
+        )
+    }
+
     public func updateProfile(patch: MissCatProfileUpdatePatch) async throws -> MissCatProfileUser {
         let body = UpdateBody(token: account.token, patch: patch)
         return try await post("i/update", body: body)
@@ -491,6 +527,11 @@ private extension Data {
 private struct UserBody: Encodable {
     let i: String
     let userId: String
+}
+
+private struct DriveFileDeleteBody: Encodable {
+    let i: String
+    let fileId: String
 }
 
 private struct NotesBody: Encodable {
@@ -572,8 +613,23 @@ private struct UpdateBody: Encodable {
         try values.encodeIfPresent(patch.name, forKey: .name)
         try values.encodeIfPresent(patch.description, forKey: .description)
         try values.encodeIfPresent(patch.isCat, forKey: .isCat)
-        try values.encodeIfPresent(patch.avatarID, forKey: .avatarID)
-        try values.encodeIfPresent(patch.bannerID, forKey: .bannerID)
+        try Self.encode(patch.avatarImage, to: &values, forKey: .avatarID)
+        try Self.encode(patch.bannerImage, to: &values, forKey: .bannerID)
+    }
+
+    private static func encode(
+        _ patch: MissCatProfileImagePatch,
+        to values: inout KeyedEncodingContainer<CodingKeys>,
+        forKey key: CodingKeys
+    ) throws {
+        switch patch {
+        case .unchanged:
+            break
+        case let .replace(fileID):
+            try values.encode(fileID, forKey: key)
+        case .remove:
+            try values.encodeNil(forKey: key)
+        }
     }
 
     enum CodingKeys: String, CodingKey {
@@ -937,6 +993,8 @@ public final class MissCatProfileEditorStore: ObservableObject {
     @Published public var isCat: Bool
     @Published public private(set) var avatarData: Data?
     @Published public private(set) var bannerData: Data?
+    @Published public private(set) var avatarRemoved = false
+    @Published public private(set) var bannerRemoved = false
     @Published public private(set) var phase: MissCatLoadPhase = .idle
     @Published public private(set) var uploadProgress = 0.0
     @Published public private(set) var savedProfile: MissCatProfileUser?
@@ -947,6 +1005,13 @@ public final class MissCatProfileEditorStore: ObservableObject {
     private var repository: MissCatProfileRepository
     private var saveTask: Task<Void, Never>?
     private var generation = UUID()
+
+    public var existingAvatarURL: URL? { avatarRemoved ? nil : baseline.avatarURL }
+    public var existingBannerURL: URL? { bannerRemoved ? nil : baseline.bannerURL }
+    public var hasAvatar: Bool { avatarData != nil || existingAvatarURL != nil }
+    public var hasBanner: Bool { bannerData != nil || existingBannerURL != nil }
+    public var hasAvatarChange: Bool { avatarData != nil || avatarRemoved }
+    public var hasBannerChange: Bool { bannerData != nil || bannerRemoved }
 
     public init(
         account: MissCatProfileAccount,
@@ -964,8 +1029,49 @@ public final class MissCatProfileEditorStore: ObservableObject {
 
     deinit { saveTask?.cancel() }
 
-    public func setAvatarData(_ data: Data?) { avatarData = data }
-    public func setBannerData(_ data: Data?) { bannerData = data }
+    public func setAvatarData(_ data: Data?) {
+        guard let data else {
+            resetAvatar()
+            return
+        }
+        prepareForDraftMutation()
+        avatarData = data
+        avatarRemoved = false
+    }
+
+    public func setBannerData(_ data: Data?) {
+        guard let data else {
+            resetBanner()
+            return
+        }
+        prepareForDraftMutation()
+        bannerData = data
+        bannerRemoved = false
+    }
+
+    public func removeAvatar() {
+        prepareForDraftMutation()
+        avatarData = nil
+        avatarRemoved = true
+    }
+
+    public func removeBanner() {
+        prepareForDraftMutation()
+        bannerData = nil
+        bannerRemoved = true
+    }
+
+    public func resetAvatar() {
+        prepareForDraftMutation()
+        avatarData = nil
+        avatarRemoved = false
+    }
+
+    public func resetBanner() {
+        prepareForDraftMutation()
+        bannerData = nil
+        bannerRemoved = false
+    }
 
     public func save() {
         guard phase != .loading else { return }
@@ -979,8 +1085,23 @@ public final class MissCatProfileEditorStore: ObservableObject {
         let isCat = self.isCat
         let avatarData = self.avatarData
         let bannerData = self.bannerData
+        let avatarRemoved = self.avatarRemoved
+        let bannerRemoved = self.bannerRemoved
         let baseline = self.baseline
         saveTask = Task { [weak self] in
+            var newlyUploadedIDs: [String] = []
+            var uploadedImagesWereAdopted = false
+
+            func cleanUpUploads() async {
+                guard !newlyUploadedIDs.isEmpty else { return }
+                let cleanupTask = Task {
+                    for fileID in newlyUploadedIDs {
+                        try? await repository.deleteProfileImage(fileID: fileID)
+                    }
+                }
+                await cleanupTask.value
+            }
+
             do {
                 var patch = MissCatProfileUpdatePatch(
                     name: name == (baseline.name ?? "") ? nil : name,
@@ -990,36 +1111,69 @@ public final class MissCatProfileEditorStore: ObservableObject {
                 let uploadCount = [avatarData, bannerData].compactMap { $0 }.count
                 var completedUploads = 0
 
-                if let avatarData {
-                    patch.avatarID = try await repository.uploadProfileImage(data: avatarData, filename: "avatar.jpg") { value in
-                        Task { @MainActor [weak self] in
-                            guard let self, self.generation == generation else { return }
-                            self.uploadProgress = (Double(completedUploads) + value) / Double(max(1, uploadCount))
+                if avatarRemoved {
+                    patch.avatarImage = .remove
+                } else if let avatarData {
+                    let uploadTask = Task {
+                        try await repository.uploadProfileImage(data: avatarData, filename: "avatar.jpg") { value in
+                            Task { @MainActor [weak self] in
+                                guard let self, self.generation == generation else { return }
+                                self.uploadProgress = (Double(completedUploads) + value) / Double(max(1, uploadCount))
+                            }
                         }
                     }
+                    let fileID = try await uploadTask.value
+                    newlyUploadedIDs.append(fileID)
+                    try Task.checkCancellation()
+                    guard let self, self.generation == generation else { throw CancellationError() }
+                    patch.avatarImage = .replace(fileID: fileID)
                     completedUploads += 1
                 }
-                if let bannerData {
-                    patch.bannerID = try await repository.uploadProfileImage(data: bannerData, filename: "banner.jpg") { value in
-                        Task { @MainActor [weak self] in
-                            guard let self, self.generation == generation else { return }
-                            self.uploadProgress = (Double(completedUploads) + value) / Double(max(1, uploadCount))
+                if bannerRemoved {
+                    patch.bannerImage = .remove
+                } else if let bannerData {
+                    let uploadTask = Task {
+                        try await repository.uploadProfileImage(data: bannerData, filename: "banner.jpg") { value in
+                            Task { @MainActor [weak self] in
+                                guard let self, self.generation == generation else { return }
+                                self.uploadProgress = (Double(completedUploads) + value) / Double(max(1, uploadCount))
+                            }
                         }
                     }
+                    let fileID = try await uploadTask.value
+                    newlyUploadedIDs.append(fileID)
+                    try Task.checkCancellation()
+                    guard let self, self.generation == generation else { throw CancellationError() }
+                    patch.bannerImage = .replace(fileID: fileID)
                 }
 
                 try Task.checkCancellation()
-                let updated = patch.isEmpty ? baseline : try await repository.updateProfile(patch: patch)
-                try Task.checkCancellation()
-                guard let self, self.generation == generation else { return }
+                let updated: MissCatProfileUser
+                if patch.isEmpty {
+                    updated = baseline
+                } else {
+                    // Do not cancel an in-flight profile commit: the server may already
+                    // have adopted the uploaded IDs even if the editor is dismissed.
+                    let updateTask = Task {
+                        try await repository.updateProfile(patch: patch)
+                    }
+                    updated = try await updateTask.value
+                    uploadedImagesWereAdopted = true
+                }
+
+                guard !Task.isCancelled, let self, self.generation == generation else { return }
                 self.savedProfile = updated
                 self.baseline = updated
                 self.avatarData = nil
                 self.bannerData = nil
+                self.avatarRemoved = false
+                self.bannerRemoved = false
                 self.uploadProgress = uploadCount == 0 ? 0 : 1
                 self.phase = .loaded
             } catch is CancellationError {
+                if !uploadedImagesWereAdopted { await cleanUpUploads() }
             } catch {
+                if !uploadedImagesWereAdopted { await cleanUpUploads() }
                 guard let self, self.generation == generation else { return }
                 self.phase = .failed(error.localizedDescription)
             }
@@ -1028,9 +1182,29 @@ public final class MissCatProfileEditorStore: ObservableObject {
 
     public func retry() { save() }
 
+    public func cancelSave() {
+        guard phase == .loading else { return }
+        invalidateSave()
+        phase = .idle
+        uploadProgress = 0
+    }
+
+    public func discardPendingChanges() {
+        invalidateSave()
+        name = baseline.name ?? ""
+        biography = baseline.description ?? ""
+        isCat = baseline.isCat
+        avatarData = nil
+        bannerData = nil
+        avatarRemoved = false
+        bannerRemoved = false
+        uploadProgress = 0
+        savedProfile = nil
+        phase = .idle
+    }
+
     public func switchAccount(_ account: MissCatProfileAccount, profile: MissCatProfileUser) {
-        saveTask?.cancel()
-        generation = UUID()
+        invalidateSave()
         self.account = account
         repository = repositoryFactory(account)
         baseline = profile
@@ -1039,8 +1213,23 @@ public final class MissCatProfileEditorStore: ObservableObject {
         isCat = profile.isCat
         avatarData = nil
         bannerData = nil
+        avatarRemoved = false
+        bannerRemoved = false
         uploadProgress = 0
         savedProfile = nil
         phase = .idle
+    }
+
+    private func prepareForDraftMutation() {
+        if phase == .loading { invalidateSave() }
+        phase = .idle
+        uploadProgress = 0
+        savedProfile = nil
+    }
+
+    private func invalidateSave() {
+        generation = UUID()
+        saveTask?.cancel()
+        saveTask = nil
     }
 }

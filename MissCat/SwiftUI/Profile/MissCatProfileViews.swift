@@ -779,6 +779,8 @@ public struct MissCatProfileEditorScreen: View {
                     ProgressView(value: store.uploadProgress)
                         .accessibilityValue("\(Int(store.uploadProgress * 100))パーセント")
                         .accessibilityIdentifier("profile.edit.uploadProgress")
+                    Button("キャンセル", action: store.cancelSave)
+                        .accessibilityIdentifier("profile.edit.cancelUpload")
                 }
             }
 
@@ -795,7 +797,12 @@ public struct MissCatProfileEditorScreen: View {
         .navigationTitle("プロフィール編集")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) { Button("閉じる") { dismiss() } }
+            ToolbarItem(placement: .cancellationAction) {
+                Button("閉じる") {
+                    store.discardPendingChanges()
+                    dismiss()
+                }
+            }
             ToolbarItem(placement: .confirmationAction) {
                 Button("保存", action: store.save)
                     .disabled(store.phase == .loading)
@@ -806,6 +813,9 @@ public struct MissCatProfileEditorScreen: View {
         .onChange(of: bannerItem) { _, item in load(item, target: .banner) }
         .onChange(of: store.savedProfile) { _, profile in
             if let profile { onSaved(profile) }
+        }
+        .onDisappear {
+            if store.phase == .loading { store.cancelSave() }
         }
         .sheet(item: $cameraTarget) { target in
             MissCatProfileCameraPicker { data in
@@ -827,6 +837,12 @@ public struct MissCatProfileEditorScreen: View {
             Group {
                 if let data = store.bannerData, let image = UIImage(data: data) {
                     Image(uiImage: image).resizable().scaledToFill()
+                } else if let url = store.existingBannerURL {
+                    AsyncImage(url: url) { image in
+                        image.resizable().scaledToFill()
+                    } placeholder: {
+                        palette.muted
+                    }
                 } else {
                     palette.muted
                 }
@@ -839,6 +855,14 @@ public struct MissCatProfileEditorScreen: View {
                 Group {
                     if let data = store.avatarData, let image = UIImage(data: data) {
                         Image(uiImage: image).resizable().scaledToFill()
+                    } else if let url = store.existingAvatarURL {
+                        AsyncImage(url: url) { image in
+                            image.resizable().scaledToFill()
+                        } placeholder: {
+                            Image(systemName: "person.crop.circle.fill")
+                                .resizable()
+                                .foregroundStyle(.white, palette.strong)
+                        }
                     } else {
                         Image(systemName: "person.crop.circle.fill")
                             .resizable()
@@ -866,6 +890,20 @@ public struct MissCatProfileEditorScreen: View {
             if UIImagePickerController.isSourceTypeAvailable(.camera) {
                 Button { cameraTarget = target } label: { Label("カメラ", systemImage: "camera") }
             }
+            if hasImage(target) {
+                Button(role: .destructive) {
+                    removeImage(target)
+                } label: {
+                    Label("画像を削除", systemImage: "trash")
+                }
+            }
+            if hasImageChange(target) {
+                Button {
+                    resetImage(target)
+                } label: {
+                    Label("変更を元に戻す", systemImage: "arrow.uturn.backward")
+                }
+            }
         } label: {
             Text(title)
                 .font(.system(size: 12, weight: .semibold))
@@ -874,7 +912,36 @@ public struct MissCatProfileEditorScreen: View {
                 .frame(height: 30)
                 .background(.black.opacity(0.65), in: Capsule())
         }
+        .disabled(store.phase == .loading)
         .accessibilityIdentifier("profile.edit.\(target.rawValue)")
+    }
+
+    private func hasImage(_ target: CameraTarget) -> Bool {
+        switch target {
+        case .avatar: return store.hasAvatar
+        case .banner: return store.hasBanner
+        }
+    }
+
+    private func hasImageChange(_ target: CameraTarget) -> Bool {
+        switch target {
+        case .avatar: return store.hasAvatarChange
+        case .banner: return store.hasBannerChange
+        }
+    }
+
+    private func removeImage(_ target: CameraTarget) {
+        switch target {
+        case .avatar: store.removeAvatar()
+        case .banner: store.removeBanner()
+        }
+    }
+
+    private func resetImage(_ target: CameraTarget) {
+        switch target {
+        case .avatar: store.resetAvatar()
+        case .banner: store.resetBanner()
+        }
     }
 
     private func load(_ item: PhotosPickerItem?, target: CameraTarget) {
