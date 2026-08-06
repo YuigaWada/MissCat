@@ -37,10 +37,10 @@ final class ApplicationState: ObservableObject {
     @Published private(set) var root: Root = .resolvingSession
     @Published private(set) var isCompletingAuthentication = false
     @Published private(set) var canRetryAuthentication = false
+    @Published private(set) var authenticationFlowGeneration = 0
     @Published var errorMessage: String?
 
     private let authenticationService = MissCatAuthenticationService()
-    private var callbackURLToRetry: URL?
 
     func resolveInitialRoute() {
         guard root == .resolvingSession else { return }
@@ -85,7 +85,6 @@ final class ApplicationState: ObservableObject {
 
     func completeAuthentication(callbackURL: URL) {
         guard !isCompletingAuthentication else { return }
-        callbackURLToRetry = callbackURL
         canRetryAuthentication = false
         isCompletingAuthentication = true
 
@@ -93,7 +92,6 @@ final class ApplicationState: ObservableObject {
             defer { isCompletingAuthentication = false }
             do {
                 _ = try await authenticationService.completeAuthentication(callbackURL: callbackURL)
-                callbackURLToRetry = nil
                 root = .legacyApplication
             } catch {
                 present(error)
@@ -103,9 +101,23 @@ final class ApplicationState: ObservableObject {
     }
 
     func retryAuthentication() {
-        guard let callbackURLToRetry else { return }
+        guard canRetryAuthentication else { return }
+        restartAuthenticationFlow()
+    }
+
+    func dismissAuthenticationError() {
+        if canRetryAuthentication {
+            restartAuthenticationFlow()
+        } else {
+            errorMessage = nil
+        }
+    }
+
+    private func restartAuthenticationFlow() {
+        authenticationService.invalidatePendingAuthentication()
         errorMessage = nil
-        completeAuthentication(callbackURL: callbackURLToRetry)
+        canRetryAuthentication = false
+        authenticationFlowGeneration += 1
     }
 
     func present(_ error: Error) {
@@ -136,6 +148,7 @@ struct MissCatRootView: View {
                     onCallback: applicationState.completeAuthentication,
                     onFailure: applicationState.present
                 )
+                .id(applicationState.authenticationFlowGeneration)
             case .legacyApplication:
                 LegacyApplicationView()
                     .ignoresSafeArea()
@@ -161,7 +174,7 @@ struct MissCatRootView: View {
                 "閉じる",
                 role: applicationState.canRetryAuthentication ? .cancel : .destructive
             ) {
-                applicationState.errorMessage = nil
+                applicationState.dismissAuthenticationError()
             }
         } message: {
             Text(applicationState.errorMessage ?? "")

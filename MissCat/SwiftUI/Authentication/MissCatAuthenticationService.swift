@@ -1,13 +1,75 @@
 import Foundation
 import MisskeyKit
 
+enum MissCatAuthenticationCallbackMatcher {
+    static func matches(
+        _ candidate: URL,
+        expectedURLString: String,
+        expectedSessionID: UUID
+    ) -> Bool {
+        guard let expected = URLComponents(string: expectedURLString),
+              let actual = URLComponents(url: candidate, resolvingAgainstBaseURL: false),
+              let queryItems = actual.queryItems,
+              queryItems.count == 1,
+              queryItems[0].name == "session",
+              queryItems[0].value == expectedSessionID.uuidString.lowercased(),
+              actual.user == nil,
+              actual.password == nil,
+              actual.fragment == nil,
+              actual.percentEncodedHost?.contains("%") != true,
+              actual.percentEncodedQuery?.contains("%") != true
+        else { return false }
+
+        return normalizedScheme(actual) == normalizedScheme(expected)
+            && normalizedHost(actual) == normalizedHost(expected)
+            && normalizedPort(actual) == normalizedPort(expected)
+            && normalizedPath(actual) == normalizedPath(expected)
+    }
+
+    private static func normalizedScheme(_ components: URLComponents) -> String? {
+        components.scheme?.lowercased()
+    }
+
+    private static func normalizedHost(_ components: URLComponents) -> String? {
+        guard let host = components.host?.lowercased(),
+              !host.isEmpty,
+              !host.hasSuffix(".")
+        else { return nil }
+        return host
+    }
+
+    private static func normalizedPort(_ components: URLComponents) -> Int? {
+        if let port = components.port {
+            return port
+        }
+
+        switch normalizedScheme(components) {
+        case "https":
+            return 443
+        case "http":
+            return 80
+        default:
+            return nil
+        }
+    }
+
+    private static func normalizedPath(_ components: URLComponents) -> String {
+        components.percentEncodedPath.isEmpty ? "/" : components.percentEncodedPath
+    }
+}
+
+protocol MissCatAuthenticationAccountStoring: AnyObject {
+    func saveUser(_ user: SecureUser) -> Bool
+    func changeCurrentUser(userId id: String)
+    func getUser(userId: String) -> SecureUser?
+}
+
+extension Cache.UserDefaults: MissCatAuthenticationAccountStoring {}
+
 @MainActor
 final class MissCatAuthenticationService {
     static let callbackURLString = "https://misscat.dev"
-
-    private let misskey: MisskeyKit
-    private let misskeyIOAppSecret = "0fRSNkKKl9hcZTGrUSyZOb19n8UUVkxw"
-    private let appPermissions = [
+    static let appPermissions = [
         "read:account",
         "write:account",
         "read:blocks",
@@ -36,163 +98,187 @@ final class MissCatAuthenticationService {
         "write:user-groups"
     ]
 
-    private var pendingAppSecret: String?
-    private var pendingInstance: String?
+    private enum PendingState: Equatable {
+        case awaitingCallback
+        case checking
+    }
 
-    init(misskey: MisskeyKit = .shared) {
+    private struct PendingSession {
+        let instance: MissCatInstance
+        let id: UUID
+        var state: PendingState
+    }
+
+    private let misskey: MisskeyKit
+    private let transport: MissCatMiAuthTransport
+    private let uuidGenerator: () -> UUID
+    private let accountStore: MissCatAuthenticationAccountStoring
+    private let performsPostLoginActions: Bool
+
+    private var pendingSignUpInstance: MissCatInstance?
+    private var pendingSession: PendingSession?
+
+    init(
+        misskey: MisskeyKit = .shared,
+        transport: MissCatMiAuthTransport = MissCatURLSessionMiAuthTransport(),
+        uuidGenerator: @escaping () -> UUID = UUID.init,
+        accountStore: MissCatAuthenticationAccountStoring = Cache.UserDefaults.shared,
+        performsPostLoginActions: Bool = true
+    ) {
         self.misskey = misskey
+        self.transport = transport
+        self.uuidGenerator = uuidGenerator
+        self.accountStore = accountStore
+        self.performsPostLoginActions = performsPostLoginActions
     }
 
     func makeAuthorizationRequest(
         intent: MissCatAuthenticationIntent,
         instance: String
     ) async throws -> URLRequest {
-        let normalizedInstance = MissCatInstanceEditorView.normalize(instance)
-        guard let instanceURL = URL(string: "https://\(normalizedInstance)"),
-              instanceURL.host != nil
-        else {
-            throw AuthenticationError.invalidInstance
-        }
-
+        let normalizedInstance = try MissCatInstance.normalize(instance)
+        invalidatePendingAuthentication()
         misskey.auth.setAPIKey("")
-        misskey.changeInstance(instance: normalizedInstance)
-
-        let appSecret = try await fetchAppSecret(for: normalizedInstance)
-        pendingInstance = normalizedInstance
-        pendingAppSecret = appSecret
+        misskey.changeInstance(instance: normalizedInstance.identifier)
 
         switch intent {
         case .signUp:
-            return URLRequest(url: instanceURL)
+            pendingSignUpInstance = normalizedInstance
+            return URLRequest(url: normalizedInstance.origin)
         case .logIn:
-            return try await startLoginSession(appSecret: appSecret)
+            return try makeFreshLoginRequest(instance: normalizedInstance)
         }
     }
 
     func makeLoginRequestAfterSignUp(instance: String) async throws -> URLRequest {
-        let normalizedInstance = MissCatInstanceEditorView.normalize(instance)
-        guard pendingInstance == normalizedInstance,
-              let pendingAppSecret
-        else {
+        let normalizedInstance = try MissCatInstance.normalize(instance)
+        guard pendingSignUpInstance == normalizedInstance else {
             throw AuthenticationError.expiredSession
         }
-
-        misskey.changeInstance(instance: normalizedInstance)
-        return try await startLoginSession(appSecret: pendingAppSecret)
+        return try makeFreshLoginRequest(instance: normalizedInstance)
     }
 
     func callbackMatches(_ url: URL) -> Bool {
-        url.absoluteString.contains(Self.callbackURLString)
+        guard let pendingSession,
+              pendingSession.state == .awaitingCallback
+        else { return false }
+
+        return MissCatAuthenticationCallbackMatcher.matches(
+            url,
+            expectedURLString: Self.callbackURLString,
+            expectedSessionID: pendingSession.id
+        )
     }
 
     func completeAuthentication(callbackURL: URL) async throws -> SecureUser {
-        guard callbackMatches(callbackURL),
-              let instance = pendingInstance
+        guard var session = pendingSession,
+              session.state == .awaitingCallback,
+              MissCatAuthenticationCallbackMatcher.matches(
+                  callbackURL,
+                  expectedURLString: Self.callbackURLString,
+                  expectedSessionID: session.id
+              )
         else {
             throw AuthenticationError.invalidCallback
         }
 
-        let apiKey = try await exchangeAccessToken()
-        misskey.changeInstance(instance: instance)
-        misskey.auth.setAPIKey(apiKey)
-        let user = try await fetchCurrentUser()
+        // A MiAuth session is one-shot. Mark it before the first suspension so
+        // concurrent or replayed callbacks can never issue a second check.
+        session.state = .checking
+        pendingSession = session
+        defer { pendingSession = nil }
+
+        let request = try MissCatMiAuthRequestBuilder.checkRequest(
+            instance: session.instance,
+            sessionID: session.id
+        )
+        let httpResponse: MissCatMiAuthHTTPResponse
+        do {
+            httpResponse = try await transport.send(request)
+        } catch {
+            throw AuthenticationError.requestFailed
+        }
+
+        guard (200 ..< 300).contains(httpResponse.statusCode) else {
+            throw AuthenticationError.serverRejected(statusCode: httpResponse.statusCode)
+        }
+
+        let response: MissCatMiAuthCheckResponse
+        do {
+            response = try JSONDecoder().decode(
+                MissCatMiAuthCheckResponse.self,
+                from: httpResponse.data
+            )
+        } catch {
+            throw AuthenticationError.invalidServerResponse
+        }
+
+        guard response.ok else {
+            throw AuthenticationError.authorizationDenied
+        }
+        guard let apiKey = response.token, !apiKey.isEmpty else {
+            throw AuthenticationError.missingAccessToken
+        }
+        guard let user = response.user,
+              !user.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !user.username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else {
+            throw AuthenticationError.missingUser
+        }
 
         let secureUser = SecureUser(
             userId: user.id,
-            username: user.username ?? "",
-            instance: instance,
+            username: user.username,
+            instance: session.instance.identifier,
             apiKey: apiKey
         )
-        guard Cache.UserDefaults.shared.saveUser(secureUser) else {
+        guard accountStore.saveUser(secureUser) else {
             throw AuthenticationError.couldNotPersistAccount
         }
 
-        Cache.UserDefaults.shared.changeCurrentUser(userId: user.id)
-        secureUser.apiKey = apiKey
-
-        guard let persistedUser = Cache.UserDefaults.shared.getUser(userId: user.id),
-              let persistedAPIKey = persistedUser.apiKey,
-              !persistedAPIKey.isEmpty
+        accountStore.changeCurrentUser(userId: user.id)
+        guard let persistedUser = accountStore.getUser(userId: user.id),
+              persistedUser.userId == user.id,
+              persistedUser.instance == session.instance.identifier,
+              persistedUser.apiKey == apiKey
         else {
             throw AuthenticationError.couldNotPersistAccount
         }
 
-        EmojiHandler.setHandler(owner: persistedUser)
-        registerPushNotifications(for: persistedUser)
-        Theme.shared.reset()
-        Theme.shared.set()
+        misskey.changeInstance(instance: session.instance.identifier)
+        misskey.auth.setAPIKey(apiKey)
 
-        pendingAppSecret = nil
-        pendingInstance = nil
+        if performsPostLoginActions {
+            EmojiHandler.setHandler(owner: persistedUser)
+            registerPushNotifications(for: persistedUser)
+            Theme.shared.reset()
+            Theme.shared.set()
+        }
+
         return persistedUser
     }
 
-    private func fetchAppSecret(for instance: String) async throws -> String {
-        guard instance != "misskey.io" else { return misskeyIOAppSecret }
-
-        return try await withCheckedThrowingContinuation { continuation in
-            misskey.app.create(
-                name: "MissCat",
-                description: "MissCat is a flexible Misskey client for iOS!",
-                permission: appPermissions,
-                callbackUrl: Self.callbackURLString
-            ) { app, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else if let secret = app?.secret, !secret.isEmpty {
-                    continuation.resume(returning: secret)
-                } else {
-                    continuation.resume(throwing: AuthenticationError.missingServerResponse)
-                }
-            }
-        }
+    func invalidatePendingAuthentication() {
+        pendingSignUpInstance = nil
+        pendingSession = nil
     }
 
-    private func startLoginSession(appSecret: String) async throws -> URLRequest {
-        try await withCheckedThrowingContinuation { continuation in
-            misskey.auth.startSession(appSecret: appSecret) { auth, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else if let urlString = auth?.token?.url,
-                          let url = URL(string: urlString)
-                {
-                    continuation.resume(returning: URLRequest(url: url))
-                } else {
-                    continuation.resume(throwing: AuthenticationError.missingServerResponse)
-                }
-            }
-        }
-    }
+    private func makeFreshLoginRequest(instance: MissCatInstance) throws -> URLRequest {
+        let sessionID = uuidGenerator()
+        pendingSignUpInstance = nil
+        pendingSession = PendingSession(
+            instance: instance,
+            id: sessionID,
+            state: .awaitingCallback
+        )
 
-    private func exchangeAccessToken() async throws -> String {
-        try await withCheckedThrowingContinuation { continuation in
-            misskey.auth.getAccessToken { auth, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else if auth != nil,
-                          let apiKey = self.misskey.auth.getAPIKey(),
-                          !apiKey.isEmpty
-                {
-                    continuation.resume(returning: apiKey)
-                } else {
-                    continuation.resume(throwing: AuthenticationError.missingServerResponse)
-                }
-            }
-        }
-    }
-
-    private func fetchCurrentUser() async throws -> UserModel {
-        try await withCheckedThrowingContinuation { continuation in
-            misskey.users.i { user, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else if let user {
-                    continuation.resume(returning: user)
-                } else {
-                    continuation.resume(throwing: AuthenticationError.missingServerResponse)
-                }
-            }
-        }
+        let url = try MissCatMiAuthRequestBuilder.authorizationURL(
+            instance: instance,
+            sessionID: sessionID,
+            callbackURLString: Self.callbackURLString,
+            permissions: Self.appPermissions
+        )
+        return URLRequest(url: url)
     }
 
     private func registerPushNotifications(for user: SecureUser) {
@@ -205,11 +291,16 @@ final class MissCatAuthenticationService {
 }
 
 extension MissCatAuthenticationService {
-    enum AuthenticationError: LocalizedError {
+    enum AuthenticationError: LocalizedError, Equatable {
         case invalidInstance
         case expiredSession
         case invalidCallback
-        case missingServerResponse
+        case requestFailed
+        case serverRejected(statusCode: Int)
+        case invalidServerResponse
+        case authorizationDenied
+        case missingAccessToken
+        case missingUser
         case couldNotPersistAccount
 
         var errorDescription: String? {
@@ -220,8 +311,18 @@ extension MissCatAuthenticationService {
                 "認証セッションの有効期限が切れました。もう一度お試しください"
             case .invalidCallback:
                 "認証結果を確認できませんでした"
-            case .missingServerResponse:
-                "サーバーから認証情報を取得できませんでした"
+            case .requestFailed:
+                "認証サーバーに接続できませんでした"
+            case let .serverRejected(statusCode):
+                "認証サーバーがエラーを返しました（HTTP \(statusCode)）"
+            case .invalidServerResponse:
+                "認証サーバーから不正な応答を受信しました"
+            case .authorizationDenied:
+                "アクセスが許可されませんでした。もう一度お試しください"
+            case .missingAccessToken:
+                "認証サーバーからアクセストークンを取得できませんでした"
+            case .missingUser:
+                "認証サーバーからユーザー情報を取得できませんでした"
             case .couldNotPersistAccount:
                 "アカウント情報を安全に保存できませんでした"
             }

@@ -36,6 +36,7 @@
 		C0DE0000000000000000002A /* MissCatFeedScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000002B /* MissCatFeedScreens.swift */; };
 		C0DE0000000000000000002C /* MissCatFeedStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000002D /* MissCatFeedStoreTests.swift */; };
 		C0DE0000000000000000002E /* MissCatTimelinePager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000002F /* MissCatTimelinePager.swift */; };
+		C0DE00000000000000000030 /* MissCatMiAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000031 /* MissCatMiAuth.swift */; };
 		8D00BD5A249371560049FFE0 /* InstanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D00BD59249371560049FFE0 /* InstanceViewController.swift */; };
 		8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */; };
 		8D065B17237AC3D0003DFB7C /* TimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */; };
@@ -278,6 +279,7 @@
 		C0DE0000000000000000002B /* MissCatFeedScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatFeedScreens.swift; sourceTree = "<group>"; };
 		C0DE0000000000000000002D /* MissCatFeedStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatFeedStoreTests.swift; sourceTree = "<group>"; };
 		C0DE0000000000000000002F /* MissCatTimelinePager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatTimelinePager.swift; sourceTree = "<group>"; };
+		C0DE00000000000000000031 /* MissCatMiAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatMiAuth.swift; sourceTree = "<group>"; };
 		3454BE3D06D0C12BCA775B4B /* Pods-MissCatShare.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCatShare.release.xcconfig"; path = "Target Support Files/Pods-MissCatShare/Pods-MissCatShare.release.xcconfig"; sourceTree = "<group>"; };
 		49D674DA4870479FF355F58B /* Pods_MissCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MissCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		79B7AD7D002BC8FC43933AF9 /* Pods-MissCatShare.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCatShare.debug.xcconfig"; path = "Target Support Files/Pods-MissCatShare/Pods-MissCatShare.debug.xcconfig"; sourceTree = "<group>"; };
@@ -536,6 +538,7 @@
 				C0DE00000000000000000006 /* MissCatAuthenticationBrowserView.swift */,
 				C0DE00000000000000000008 /* MissCatAuthenticationFlowView.swift */,
 				C0DE0000000000000000001A /* MissCatAuthenticationService.swift */,
+				C0DE00000000000000000031 /* MissCatMiAuth.swift */,
 				C0DE0000000000000000000A /* MissCatInstanceEditorView.swift */,
 				C0DE0000000000000000000C /* MissCatLaunchView.swift */,
 				C0DE0000000000000000000E /* MissCatTermsContent.swift */,
@@ -1568,6 +1571,7 @@
 				C0DE00000000000000000028 /* MissCatNoteRow.swift in Sources */,
 				C0DE0000000000000000002A /* MissCatFeedScreens.swift in Sources */,
 				C0DE0000000000000000002E /* MissCatTimelinePager.swift in Sources */,
+				C0DE00000000000000000030 /* MissCatMiAuth.swift in Sources */,
 				8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */,
 				8D5D2C4A24487C6E00D15974 /* DirectMessageViewModel.swift in Sources */,
 				8DF0F68F25049F6C00CEAA03 /* UIViewController+NavigationController.swift in Sources */,

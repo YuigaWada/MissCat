@@ -20,6 +20,25 @@ struct MissCatAuthenticationCallbackGate {
     }
 }
 
+enum MissCatAuthenticationOriginMatcher {
+    static func matches(_ candidate: URL, origin: URL) -> Bool {
+        guard let actual = URLComponents(url: candidate, resolvingAgainstBaseURL: false),
+              let expected = URLComponents(url: origin, resolvingAgainstBaseURL: false),
+              actual.scheme?.lowercased() == "https",
+              actual.user == nil,
+              actual.password == nil,
+              actual.percentEncodedHost?.contains("%") != true
+        else { return false }
+
+        return actual.host?.lowercased() == expected.host?.lowercased()
+            && normalizedPort(actual) == normalizedPort(expected)
+    }
+
+    private static func normalizedPort(_ components: URLComponents) -> Int {
+        components.port ?? 443
+    }
+}
+
 /// A WKWebView-backed authentication surface matching the legacy full-safe-area browser.
 /// Token exchange stays in the authentication service; this view only reports callback URLs.
 public struct MissCatAuthenticationBrowserView: View {
@@ -143,8 +162,6 @@ private struct MissCatWebView: UIViewRepresentable {
         }
 
         func clearWebsiteDataAndLoad(_ request: URLRequest, in webView: WKWebView) {
-            URLSession.shared.reset {}
-
             let dataStore = WKWebsiteDataStore.default()
             let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
             dataStore.fetchDataRecords(ofTypes: dataTypes) { records in
@@ -161,20 +178,36 @@ private struct MissCatWebView: UIViewRepresentable {
             decidePolicyFor navigationAction: WKNavigationAction,
             decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void
         ) {
+            if callbackGate.hasReportedCallback {
+                decisionHandler(.cancel)
+                return
+            }
+
             if let url = navigationAction.request.url,
-               callbackGate.shouldReport(url, matching: callbackMatches) {
-                onCallback(url)
+               callbackMatches(url) {
+                if callbackGate.shouldReport(url, matching: callbackMatches) {
+                    onCallback(url)
+                }
+                decisionHandler(.cancel)
+                return
             }
             decisionHandler(.allow)
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation?) {
             guard !requestedLoginAfterSignUp,
-                  let makeLoginRequestAfterSignUp
+                  let makeLoginRequestAfterSignUp,
+                  let signUpOrigin = loadedURL,
+                  let currentURL = webView.url,
+                  MissCatAuthenticationOriginMatcher.matches(currentURL, origin: signUpOrigin)
             else { return }
 
-            webView.evaluateJavaScript("localStorage.getItem(\"i\")") { result, _ in
-                guard let apiKey = result as? String, !apiKey.isEmpty else { return }
+            // The legacy web flow used the localStorage token itself as a signal.
+            // Only inspect a boolean on the selected instance origin; the token
+            // never leaves the web content process or enters native logs/state.
+            let script = "(() => { try { return localStorage.getItem('i') !== null; } catch (_) { return false; } })()"
+            webView.evaluateJavaScript(script) { result, _ in
+                guard result as? Bool == true else { return }
                 self.requestedLoginAfterSignUp = true
 
                 Task { @MainActor in
