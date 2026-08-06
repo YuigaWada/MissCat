@@ -130,7 +130,7 @@ public struct MissCatAccountsScreen: View {
     @ObservedObject private var store: MissCatAccountStore
     private let palette: MissCatVisualPalette
     private let onAddAccount: () -> Void
-    private let onOpenProfile: (String) -> Void
+    private let onOpenProfile: (MissCatAccountSummary) -> Void
     private let onAccountSwitched: () -> Void
     private let onConfiguredTabsChanged: () -> Void
     private let onAllAccountsDeleted: () -> Void
@@ -139,7 +139,7 @@ public struct MissCatAccountsScreen: View {
         store: MissCatAccountStore,
         palette: MissCatVisualPalette = .legacyLight,
         onAddAccount: @escaping () -> Void,
-        onOpenProfile: @escaping (String) -> Void,
+        onOpenProfile: @escaping (MissCatAccountSummary) -> Void,
         onAccountSwitched: @escaping () -> Void,
         onConfiguredTabsChanged: @escaping () -> Void,
         onAllAccountsDeleted: @escaping () -> Void
@@ -253,7 +253,7 @@ public struct MissCatAccountsScreen: View {
     private func accountCard(_ account: MissCatAccountSummary) -> some View {
         let isCurrent = store.currentAccountID == account.id
         return HStack(spacing: 13) {
-            Button { onOpenProfile(account.id) } label: {
+            Button { onOpenProfile(account) } label: {
                 HStack(spacing: 13) {
                     avatar(account)
                     VStack(alignment: .leading, spacing: 4) {

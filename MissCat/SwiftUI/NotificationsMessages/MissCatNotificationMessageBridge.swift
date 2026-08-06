@@ -161,7 +161,7 @@ final class MissCatNotificationsHostingController: UIHostingController<AnyView> 
     private let palette: MissCatVisualPalette
     private let scrollCoordinator = MissCatNotificationScrollCoordinator()
 
-    var ownerID: String { owner.userId }
+    var ownerID: String { owner.accountIdentifier }
 
     init(
         owner: SecureUser,
@@ -185,7 +185,7 @@ final class MissCatNotificationsHostingController: UIHostingController<AnyView> 
     }
 
     func changeUser(_ user: SecureUser) {
-        guard user.userId != owner.userId,
+        guard user.accountIdentifier != owner.accountIdentifier,
               let scope = MissCatNotificationMessageBridge.accountScope(from: user) else { return }
         owner = user
         repository = MissCatNativeNotificationMessagingRepository(accountScope: scope)
@@ -231,7 +231,7 @@ final class MissCatMessageHistoryHostingController: UIHostingController<AnyView>
     private var repository: MissCatNativeNotificationMessagingRepository
     private let palette: MissCatVisualPalette
 
-    var ownerID: String { owner.userId }
+    var ownerID: String { owner.accountIdentifier }
 
     init(
         owner: SecureUser,
@@ -254,7 +254,7 @@ final class MissCatMessageHistoryHostingController: UIHostingController<AnyView>
     }
 
     func changeUser(_ user: SecureUser) {
-        guard user.userId != owner.userId,
+        guard user.accountIdentifier != owner.accountIdentifier,
               let scope = MissCatNotificationMessageBridge.accountScope(from: user) else { return }
         owner = user
         repository = MissCatNativeNotificationMessagingRepository(accountScope: scope)

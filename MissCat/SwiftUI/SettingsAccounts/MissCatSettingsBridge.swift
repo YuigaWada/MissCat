@@ -50,9 +50,10 @@ enum MissCatSettingsBridge {
                     home.relaunchView(start: .profile)
                 }
             },
-            onOpenProfile: { [weak home] userID in
+            onOpenProfile: { [weak home] account in
                 guard let home,
-                      let owner = Cache.UserDefaults.shared.getUser(userId: userID)
+                      let owner = Cache.UserDefaults.shared.getUser(userId: account.id),
+                      let userID = profileUserID(for: account, owner: owner)
                 else { return }
                 home.move2Profile(userId: userID, owner: owner)
             },
@@ -82,6 +83,15 @@ enum MissCatSettingsBridge {
         ])
         host.didMove(toParent: container)
         return host
+    }
+
+    static func profileUserID(
+        for account: MissCatAccountSummary,
+        owner: SecureUser
+    ) -> String? {
+        guard account.id == owner.accountIdentifier,
+              account.userID == owner.userId else { return nil }
+        return owner.userId
     }
 
     private static func presentAddAccount(

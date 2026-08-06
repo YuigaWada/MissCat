@@ -215,6 +215,7 @@ final class MissCatLegacySettingsRepository:
         let cached = Cache.shared.getUserInfo(user: user)
         let fallback = MissCatAccountSummary(
             id: user.accountIdentifier,
+            userID: user.userId,
             username: user.username,
             displayName: cached?.name,
             instance: user.instance
@@ -238,6 +239,7 @@ final class MissCatLegacySettingsRepository:
             guard profile.id == user.userId else { return fallback }
             return MissCatAccountSummary(
                 id: user.accountIdentifier,
+                userID: user.userId,
                 username: profile.username ?? user.username,
                 displayName: profile.name ?? cached?.name,
                 instance: user.instance,
@@ -254,6 +256,7 @@ final class MissCatLegacySettingsRepository:
                 let cached = Cache.shared.getUserInfo(user: user)
                 return MissCatAccountSummary(
                     id: user.accountIdentifier,
+                    userID: user.userId,
                     username: user.username,
                     displayName: cached?.name,
                     instance: user.instance

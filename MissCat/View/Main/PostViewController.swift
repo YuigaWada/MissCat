@@ -388,7 +388,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
     private func showAccountsMenu() {
         let selected = presentAccountsDropdownMenu(sourceRect: iconImageView.frame)
         selected?.subscribe(onNext: { user in
-            guard user.userId != self.owner?.userId else { return } // 同じアカウントへの切り替えを防ぐ
+            guard user.accountIdentifier != self.owner?.accountIdentifier else { return }
             self.owner = user
             self.viewModel?.changeUser(user)
             Cache.UserDefaults.shared.changeCurrentUser(user)

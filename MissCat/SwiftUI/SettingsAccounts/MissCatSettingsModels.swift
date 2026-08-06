@@ -1,7 +1,10 @@
 import Foundation
 
 public struct MissCatAccountSummary: Identifiable, Equatable, Sendable {
+    /// Stable instance-scoped identifier used only for local selection and persistence.
     public let id: String
+    /// Misskey's server-side user identifier used only in API and navigation requests.
+    public let userID: String
     public let username: String
     public let displayName: String
     public let instance: String
@@ -9,12 +12,14 @@ public struct MissCatAccountSummary: Identifiable, Equatable, Sendable {
 
     public init(
         id: String,
+        userID: String? = nil,
         username: String,
         displayName: String? = nil,
         instance: String,
         avatarURL: URL? = nil
     ) {
         self.id = id
+        self.userID = userID ?? id
         self.username = username
         self.displayName = displayName?.isEmpty == false ? displayName! : "@\(username)"
         self.instance = instance
@@ -235,4 +240,3 @@ public enum MissCatSettingsPresentation: Equatable, Sendable {
     case error(title: String, message: String)
     case banner(message: String)
 }
-
