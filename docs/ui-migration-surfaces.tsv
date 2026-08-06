@@ -10,7 +10,7 @@ id	area	surface	runtime_owner	migration_state	evidence	note
 04	Login	Start	swiftui	migrating	MissCat/SwiftUI/Authentication/MissCatWelcomeView.swift	Ordinary logged-out route is SwiftUI; live login and >=90% visual gate are not yet accepted.
 05	Login	Terms	swiftui	migrating	MissCat/SwiftUI/Authentication/MissCatTermsView.swift	Ordinary logged-out route is SwiftUI; E2E and visual gates remain.
 06	Login	Instance selector	swiftui	migrating	MissCat/SwiftUI/Authentication/MissCatInstanceEditorView.swift	Ordinary logged-out route is SwiftUI; E2E and visual gates remain.
-07	Login	Auth web	swiftui	migrating	MissCat/SwiftUI/Authentication/MissCatAuthenticationBrowserView.swift	SwiftUI hosts the browser route; restored MiAuth must be integrated and verified.
+07	Login	Auth web	swiftui	migrating	MissCat/SwiftUI/Authentication/MissCatAuthenticationBrowserView.swift;MissCat/SwiftUI/Authentication/MissCatMiAuth.swift	MiAuth is integrated at 88c3fab; Manual Preview E2E and >=90% visual gates remain.
 08	Timeline	Home / Local / Social / Global	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatFeedScreens.swift	Native SwiftUI feed family exists but authenticated root still uses UIKit.
 09	Timeline	Configured tabs	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatTimelinePager.swift	Tap/swipe pager exists but is not wired to the persisted tab configuration on the ordinary route.
 10	Timeline	User/list/search modes	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatFeedModels.swift	Search feed support exists; the complete user/list/search contract is not wired.
