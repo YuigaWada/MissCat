@@ -1,0 +1,3 @@
+# Paths are repository-relative. One accepted record is required for every expanded visual requirement.
+# reviewer must be accepted; evidence_commit must be an ancestor of the revision being verified.
+surface_id	state	appearance	device	baseline	candidate	diff_dir	reviewer	evidence_commit

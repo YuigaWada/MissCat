@@ -83,3 +83,35 @@ The shell self-test generates tiny fixtures, including paths containing spaces, 
 ```sh
 scripts/test-compare-screenshots.sh
 ```
+
+## Complete acceptance inventory
+
+`docs/visual-acceptance-requirements.tsv` is the fixed visual contract joined to
+the 45-row migration ledger. It expands each rendered surface across its required
+states, light/dark appearances, and both the current safe-area reference device
+and smallest supported width. Surface 43 is a removal-only route audit and does
+not invent a screenshot for a controller that must be absent from ordinary use.
+
+`docs/visual-acceptance-evidence.tsv` records only immutable evidence. Every row
+maps one expanded case to repository-relative baseline, candidate, and diff paths,
+an explicit reviewer decision, and the commit that produced the evidence. The
+verifier checks input hashes against `summary.json`, both independent 0.90 gates,
+unrelaxed thresholds, all diff artifacts, reviewer acceptance, and commit ancestry.
+
+Validate the inventory while migration evidence is still incomplete:
+
+```sh
+scripts/verify-visual-acceptance.sh --inventory
+```
+
+The release/acceptance gate is intentionally strict and fails until every required
+case exists and the removal-only surface is SwiftUI-owned and accepted:
+
+```sh
+scripts/verify-visual-acceptance.sh --require-complete
+scripts/test-verify-visual-acceptance.sh
+```
+
+Do not add a weaker or duplicate evidence row to make the gate green. Add the
+missing deterministic fixture/capture instead, then have reviewer inspect the
+100% overlay before changing its evidence state to `accepted`.

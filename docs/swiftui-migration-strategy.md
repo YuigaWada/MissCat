@@ -401,7 +401,11 @@ For all eleven historic states and all additional states in `docs/migration-test
 8. emit baseline, candidate, amplified diff, overlay/side-by-side, and JSON metrics;
 9. have a reviewer inspect the overlay at 100% even after numerical pass.
 
-The current comparator is not a release gate yet: it calculates changed ratio and RMSE but not required SSIM, and its documentation still contains superseded exact-default language. Extend the comparator, its self-tests, and a 45-ID/baseline manifest before the first accepted visual row.
+The comparator calculates changed-pixel similarity and SSIM independently. The
+45-ID requirement inventory expands the states/devices/appearances and the
+evidence verifier rejects missing captures, hash drift, relaxed thresholds,
+unreviewed overlays, or non-ancestor evidence commits. Keep every surface in
+`migrating` until that strict gate and its functional requirements both pass.
 
 ### Mandatory tab and account behavior suite
 
@@ -470,7 +474,8 @@ Manual Preview and authentication E2E builds must retain their signed Keychain a
 - SwiftUI `@main` launch and logged-out authentication presentation exist.
 - SwiftUI share-composer content is hosted by the extension.
 - acceptance, functional inventory, test matrix, and reviewer audit documents exist.
-- a changed-pixel/RMSE comparator and deterministic self-test exist.
+- a changed-pixel/SSIM comparator, deterministic self-test, and fixed visual
+  acceptance inventory exist.
 - compose domain/service/controls/screens and 21 compose test methods are on main.
 - feed domain/repository/store/note row/screens/pager and 11 feed test methods are on main.
 - 64 XCTest methods are present in source across current test files, including one no-op example.
@@ -494,7 +499,8 @@ These are source facts, not claims that all tests or user flows pass.
 - share content remains behind `MainInterface.storyboard`, duplicates account persistence, and uses MisskeyKit;
 - no UI-test or snapshot target, fixture server, `visualReady` implementation, batch visual manifest, or current CI release gate exists;
 - current GitHub Actions selects Xcode 11.3.1/iOS 13.3, incompatible with the present iOS 17.0 project target;
-- comparator output lacks required SSIM and changed-pixel-similarity gate semantics;
+- the evidence inventory remains incomplete even though the comparator and strict
+  gate semantics now exist;
 - Storyboards, XIBs, UIKit controllers, Rx code, patched Pods, and old build settings remain in the shipping targets.
 
 ### Test evidence boundary
