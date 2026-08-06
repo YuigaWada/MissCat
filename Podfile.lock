@@ -88,7 +88,6 @@ PODS:
   - Starscream (3.1.1)
   - SVGKit (2.1.0):
     - CocoaLumberjack (~> 3.0)
-  - SwiftFormat/CLI (0.48.1)
   - SwiftLinkPreview (3.1.0)
   - SwiftyGif (5.4.0)
   - XLActionController (5.1.0):
@@ -120,7 +119,6 @@ DEPENDENCIES:
   - SkeletonView (= 1.8.2)
   - Starscream (= 3.1.1)
   - SVGKit (from `https://github.com/SVGKit/SVGKit.git`, branch `3.x`)
-  - SwiftFormat/CLI
   - SwiftLinkPreview (~> 3.1.0)
   - XLActionController
   - XLActionController/Tweetbot
@@ -128,7 +126,7 @@ DEPENDENCIES:
   - XLPagerTabStrip
 
 SPEC REPOS:
-  https://cdn.cocoapods.org/:
+  trunk:
     - Agrume
     - APNGKit
     - Cache
@@ -159,7 +157,6 @@ SPEC REPOS:
     - RxSwift
     - SkeletonView
     - Starscream
-    - SwiftFormat
     - SwiftLinkPreview
     - SwiftyGif
     - XLActionController
@@ -207,12 +204,11 @@ SPEC CHECKSUMS:
   SkeletonView: bb27c39857e5492136f02ee8a3aa78de55d12ecd
   Starscream: 4bb2f9942274833f7b4d296a55504dcfc7edb7b0
   SVGKit: 132b010efbf57ec345309fe4a7f627c0a40c5d63
-  SwiftFormat: 094c5e2e6c36dafdd128d04cff4a0a7d87492e73
   SwiftLinkPreview: 3d924eeaae8d17410a827a4b37675713af1a0a8a
   SwiftyGif: 5d4af95df24caf1c570dbbcb32a3b8a0763bc6d7
   XLActionController: 24140d835ab9e260270711afebc5efabebe9d392
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
 
-PODFILE CHECKSUM: 98020e51df75c28466beea29b3b8da6173187100
+PODFILE CHECKSUM: 04ac0f3a9fe4ee97637ab78c8262426480a8fddd
 
-COCOAPODS: 1.10.1
+COCOAPODS: 1.16.2

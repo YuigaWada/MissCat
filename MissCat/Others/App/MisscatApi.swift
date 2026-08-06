@@ -53,7 +53,7 @@ class MisscatApi {
     }
     
     private func fetchEmojis() {
-        misskey?.notes.getEmojis { emojis, _ in
+        misskey?.emojis.getCustom { emojis in
             MisscatApi.emojis = emojis ?? []
             MisscatApi.emojis.forEach { emoji in
                 if let name = emoji.name {
@@ -73,7 +73,7 @@ class MisscatApi {
     }
     
     private func generateEndpoint(with userId: String, and token: String) -> String {
-        let currentLang = Locale.current.languageCode?.description ?? "ja"
+        let currentLang = Locale.current.language.languageCode?.identifier ?? "ja"
         let endpoint = "\(baseApiUrl)/api/v1/push/\(currentLang)/\(userId)/\(token)"
         
         return endpoint
@@ -81,6 +81,19 @@ class MisscatApi {
 }
 
 public extension EmojiModel {
+    /// Normalizes the array representation returned by MisskeyKit 3.x while
+    /// retaining the cache behavior used by the legacy rendering pipeline.
+    static func convert(from models: [EmojiModel?]?) -> [EmojiModel]? {
+        let emojis = models?.compactMap { $0 } ?? []
+        MisscatApi.emojis += emojis
+        emojis.forEach { emoji in
+            if let name = emoji.name {
+                MisscatApi.name2emojis[name] = emoji
+            }
+        }
+        return MisscatApi.emojis
+    }
+
     static func convert(from dict: [String: String]?) -> [EmojiModel]? {
         let emojis = dict?.compactMap { EmojiModel(id: "", aliases: [], name: $0.key, url: $0.value, uri: $0.value, category: "other-instance") } ?? []
         MisscatApi.emojis += emojis
