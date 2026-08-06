@@ -21,6 +21,8 @@
 		C0DE0000000000000000001B /* ShareCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001C /* ShareCore.swift */; };
 		C0DE0000000000000000001D /* ShareInputLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001E /* ShareInputLoader.swift */; };
 		C0DE0000000000000000001F /* ShareComposerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000020 /* ShareComposerView.swift */; };
+		C0DE00000000000000000021 /* ShareCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001C /* ShareCore.swift */; };
+		C0DE00000000000000000023 /* ShareExtensionCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000022 /* ShareExtensionCoreTests.swift */; };
 		8D00BD5A249371560049FFE0 /* InstanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D00BD59249371560049FFE0 /* InstanceViewController.swift */; };
 		8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */; };
 		8D065B17237AC3D0003DFB7C /* TimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */; };
@@ -249,6 +251,7 @@
 		C0DE0000000000000000001C /* ShareCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCore.swift; sourceTree = "<group>"; };
 		C0DE0000000000000000001E /* ShareInputLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareInputLoader.swift; sourceTree = "<group>"; };
 		C0DE00000000000000000020 /* ShareComposerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareComposerView.swift; sourceTree = "<group>"; };
+		C0DE00000000000000000022 /* ShareExtensionCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareExtensionCoreTests.swift; sourceTree = "<group>"; };
 		3454BE3D06D0C12BCA775B4B /* Pods-MissCatShare.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCatShare.release.xcconfig"; path = "Target Support Files/Pods-MissCatShare/Pods-MissCatShare.release.xcconfig"; sourceTree = "<group>"; };
 		49D674DA4870479FF355F58B /* Pods_MissCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MissCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		79B7AD7D002BC8FC43933AF9 /* Pods-MissCatShare.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCatShare.debug.xcconfig"; path = "Target Support Files/Pods-MissCatShare/Pods-MissCatShare.debug.xcconfig"; sourceTree = "<group>"; };
@@ -756,6 +759,7 @@
 				8D4A2A2C237437C100503685 /* MissCatTests.swift */,
 				8D4A2A2E237437C100503685 /* Info.plist */,
 				8D2279ED24468FD100FA87A2 /* MFMTests.swift */,
+				C0DE00000000000000000022 /* ShareExtensionCoreTests.swift */,
 			);
 			path = MissCatTests;
 			sourceTree = "<group>";
@@ -1648,6 +1652,8 @@
 			files = (
 				8D2279EE24468FD100FA87A2 /* MFMTests.swift in Sources */,
 				8D4A2A2D237437C100503685 /* MissCatTests.swift in Sources */,
+				C0DE00000000000000000021 /* ShareCore.swift in Sources */,
+				C0DE00000000000000000023 /* ShareExtensionCoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
