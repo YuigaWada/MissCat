@@ -17,7 +17,6 @@ struct MissCatApp: App {
         WindowGroup {
             MissCatRootView()
                 .environmentObject(applicationState)
-                .ignoresSafeArea()
         }
     }
 }
@@ -30,19 +29,138 @@ struct MissCatApp: App {
 @MainActor
 final class ApplicationState: ObservableObject {
     enum Root: Equatable {
+        case resolvingSession
+        case authentication
         case legacyApplication
     }
 
-    @Published var root: Root = .legacyApplication
+    @Published private(set) var root: Root = .resolvingSession
+    @Published private(set) var isCompletingAuthentication = false
+    @Published private(set) var canRetryAuthentication = false
+    @Published var errorMessage: String?
+
+    private let authenticationService = MissCatAuthenticationService()
+    private var callbackURLToRetry: URL?
+
+    func resolveInitialRoute() {
+        guard root == .resolvingSession else { return }
+
+        let cache = Cache.UserDefaults.shared
+        guard let currentUser = cache.getCurrentUser(),
+              !currentUser.userId.isEmpty,
+              !currentUser.instance.isEmpty,
+              let apiKey = currentUser.apiKey,
+              !apiKey.isEmpty
+        else {
+            root = .authentication
+            return
+        }
+
+        // getCurrentUser() falls back to the first saved account when the
+        // persisted current ID is absent or stale. Persist that fallback so
+        // the legacy Theme tab resolver sees the same account.
+        cache.changeCurrentUser(userId: currentUser.userId)
+        Theme.shared.reset()
+        Theme.shared.set()
+        root = .legacyApplication
+    }
+
+    func makeAuthorizationRequest(
+        intent: MissCatAuthenticationIntent,
+        instance: String
+    ) async throws -> URLRequest {
+        try await authenticationService.makeAuthorizationRequest(
+            intent: intent,
+            instance: instance
+        )
+    }
+
+    func makeLoginRequestAfterSignUp(instance: String) async throws -> URLRequest {
+        try await authenticationService.makeLoginRequestAfterSignUp(instance: instance)
+    }
+
+    func callbackMatches(_ url: URL) -> Bool {
+        authenticationService.callbackMatches(url)
+    }
+
+    func completeAuthentication(callbackURL: URL) {
+        guard !isCompletingAuthentication else { return }
+        callbackURLToRetry = callbackURL
+        canRetryAuthentication = false
+        isCompletingAuthentication = true
+
+        Task { @MainActor in
+            defer { isCompletingAuthentication = false }
+            do {
+                _ = try await authenticationService.completeAuthentication(callbackURL: callbackURL)
+                callbackURLToRetry = nil
+                root = .legacyApplication
+            } catch {
+                present(error)
+                canRetryAuthentication = true
+            }
+        }
+    }
+
+    func retryAuthentication() {
+        guard let callbackURLToRetry else { return }
+        errorMessage = nil
+        completeAuthentication(callbackURL: callbackURLToRetry)
+    }
+
+    func present(_ error: Error) {
+        canRetryAuthentication = false
+        errorMessage = error.description
+    }
 }
 
 struct MissCatRootView: View {
     @EnvironmentObject private var applicationState: ApplicationState
 
     var body: some View {
-        switch applicationState.root {
-        case .legacyApplication:
-            LegacyApplicationView()
+        ZStack {
+            switch applicationState.root {
+            case .resolvingSession:
+                MissCatLaunchView()
+            case .authentication:
+                MissCatAuthenticationFlowView(
+                    makeAuthorizationRequest: applicationState.makeAuthorizationRequest,
+                    makeLoginRequestAfterSignUp: applicationState.makeLoginRequestAfterSignUp,
+                    callbackMatches: applicationState.callbackMatches,
+                    onCallback: applicationState.completeAuthentication,
+                    onFailure: applicationState.present
+                )
+            case .legacyApplication:
+                LegacyApplicationView()
+                    .ignoresSafeArea()
+            }
+
+            if applicationState.isCompletingAuthentication {
+                ZStack {
+                    Color.black.opacity(0.18).ignoresSafeArea()
+                    ProgressView()
+                        .controlSize(.large)
+                        .padding(22)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                        .accessibilityLabel("認証情報を保存中")
+                }
+                .accessibilityIdentifier("authentication.completing")
+            }
+        }
+        .task { applicationState.resolveInitialRoute() }
+        .alert(
+            "エラー",
+            isPresented: Binding(
+                get: { applicationState.errorMessage != nil },
+                set: { if !$0 { applicationState.errorMessage = nil } }
+            )
+        ) {
+            if applicationState.canRetryAuthentication {
+                Button("再試行") { applicationState.retryAuthentication() }
+            }
+            Button("閉じる") { applicationState.errorMessage = nil }
+        } message: {
+            Text(applicationState.errorMessage ?? "")
         }
     }
 }
