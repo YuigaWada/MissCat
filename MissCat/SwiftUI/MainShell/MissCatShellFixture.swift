@@ -6,7 +6,9 @@ enum MissCatShellFixtureLaunch {
     enum Mode {
         case populated
         case empty
+        case loading
         case error
+        case offline
     }
 
     static let launchArgument = "--swiftui-shell-fixture"
@@ -14,9 +16,17 @@ enum MissCatShellFixtureLaunch {
 
     static var mode: Mode {
         if CommandLine.arguments.contains("--swiftui-shell-fixture-empty") { return .empty }
+        if CommandLine.arguments.contains("--swiftui-shell-fixture-loading") { return .loading }
         if CommandLine.arguments.contains("--swiftui-shell-fixture-error") { return .error }
+        if CommandLine.arguments.contains("--swiftui-shell-fixture-offline") { return .offline }
         return .populated
     }
+
+    static var rejectsPersistence: Bool {
+        CommandLine.arguments.contains("--swiftui-shell-fixture-persistence-error")
+    }
+
+    static let referenceDate = Date(timeIntervalSince1970: 1_596_289_200)
 }
 
 private enum MissCatShellFixtureRoute: String, Identifiable {
@@ -32,7 +42,10 @@ struct MissCatShellFixtureView: View {
     @State private var presentedRoute: MissCatShellFixtureRoute?
 
     init() {
-        let provider = MissCatShellFixtureProvider(mode: MissCatShellFixtureLaunch.mode)
+        let provider = MissCatShellFixtureProvider(
+            mode: MissCatShellFixtureLaunch.mode,
+            rejectsPersistence: MissCatShellFixtureLaunch.rejectsPersistence
+        )
         _store = StateObject(wrappedValue: MissCatShellStore(provider: provider))
     }
 
@@ -85,6 +98,7 @@ struct MissCatShellFixtureView: View {
             avatar: Image(systemName: "cat.fill"),
             accounts: configuration.accounts,
             currentAccountID: configuration.currentScope.id,
+            bannerMessage: store.bannerMessage,
             onSearch: { presentedRoute = .search },
             onCompose: { presentedRoute = .compose },
             onSettings: { presentedRoute = .settings },
@@ -94,7 +108,8 @@ struct MissCatShellFixtureView: View {
             onTimelineSelection: store.selectTimeline,
             onReselect: { section in
                 _ = store.activateFooter(destination(for: section))
-            }
+            },
+            onDismissBanner: store.dismissBanner
         ) { section in
             switch section {
             case .home:
@@ -105,6 +120,15 @@ struct MissCatShellFixtureView: View {
                     repositoryProvider: store.repository,
                     palette: palette,
                     scrollToTopTrigger: store.homeScrollToTopGeneration,
+                    relativeDateReference: MissCatShellFixtureLaunch.referenceDate,
+                    visualReadyPrefix: "migration.shell-feed.visual-ready",
+                    allowsLoadingVisualReady: MissCatShellFixtureLaunch.mode == .loading,
+                    scrollPosition: { key in
+                        Binding(
+                            get: { store.timelineScrollPosition(for: key) },
+                            set: { store.setTimelineScrollPosition($0, for: key) }
+                        )
+                    },
                     onSelection: store.selectTimeline
                 )
             case .notifications:
@@ -120,13 +144,7 @@ struct MissCatShellFixtureView: View {
                 fixtureSection(title: "Accounts", symbol: "person.2.fill", value: configuration.currentScope.id, palette: palette)
             }
         }
-        .overlay(alignment: .bottomTrailing) {
-            Text("shell-feed-bundle-ready-v1")
-                .font(.system(size: 1))
-                .opacity(0.01)
-                .frame(width: 1, height: 1)
-                .accessibilityIdentifier("migration.shell-feed.ready")
-        }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("migration.shell-feed.fixture")
     }
 
@@ -186,13 +204,15 @@ struct MissCatShellFixtureView: View {
 @MainActor
 private final class MissCatShellFixtureProvider: MissCatShellConfigurationProviding {
     private let mode: MissCatShellFixtureLaunch.Mode
+    private let rejectsPersistence: Bool
     private let accounts: [MissCatShellAccount]
     private var currentScope: MissCatShellAccountScope
     private var selections: [MissCatShellAccountScope: String] = [:]
     private var repositories: [MissCatShellAccountScope: MissCatShellFixtureRepository] = [:]
 
-    init(mode: MissCatShellFixtureLaunch.Mode) {
+    init(mode: MissCatShellFixtureLaunch.Mode, rejectsPersistence: Bool = false) {
         self.mode = mode
+        self.rejectsPersistence = rejectsPersistence
         let primary = MissCatShellAccountScope(instance: "fixture.example", userID: "fixture-cat", username: "misscat")
         let secondary = MissCatShellAccountScope(instance: "social.example", userID: "fixture-cat", username: "misscat")
         currentScope = primary
@@ -215,6 +235,7 @@ private final class MissCatShellFixtureProvider: MissCatShellConfigurationProvid
     }
 
     func saveSelectedTimelineID(_ selectedID: String, for scope: MissCatShellAccountScope) async throws {
+        if rejectsPersistence { throw MissCatShellFixtureError.persistence }
         selections[scope] = selectedID
     }
 
@@ -249,11 +270,15 @@ private final class MissCatShellFixtureRepository: MissCatFeedRepository {
     }
 
     func fetchPage(source: MissCatFeedSource, cursor: String?, limit: Int) async throws -> MissCatFeedPage {
+        if mode == .loading {
+            try await Task.sleep(nanoseconds: UInt64.max)
+            throw CancellationError()
+        }
         if mode == .error { throw MissCatShellFixtureError.expected }
         if mode == .empty || cursor != nil { return MissCatFeedPage(notes: [], hasMore: false) }
         let prefix = source.accessibilityName
         return MissCatFeedPage(
-            notes: (0 ..< min(limit, 8)).map { index in
+            notes: (0 ..< min(limit, 30)).map { index in
                 MissCatNote(
                     id: "\(prefix)-\(index)",
                     author: MissCatNoteAuthor(
@@ -282,7 +307,13 @@ private final class MissCatShellFixtureRepository: MissCatFeedRepository {
         capturing noteIDs: [String]
     ) -> AsyncStream<MissCatRealtimeEvent> {
         AsyncStream { continuation in
-            continuation.yield(.connected(true))
+            if mode == .offline {
+                continuation.yield(.connected(false))
+                continuation.yield(.failed(message: "Fixture offline"))
+                continuation.finish()
+            } else {
+                continuation.yield(.connected(true))
+            }
         }
     }
 
@@ -291,7 +322,13 @@ private final class MissCatShellFixtureRepository: MissCatFeedRepository {
 
 private enum MissCatShellFixtureError: LocalizedError {
     case expected
+    case persistence
 
-    var errorDescription: String? { "Fixture network error" }
+    var errorDescription: String? {
+        switch self {
+        case .expected: "Fixture network error"
+        case .persistence: "Fixture persistence error"
+        }
+    }
 }
 #endif

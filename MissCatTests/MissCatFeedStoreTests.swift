@@ -497,6 +497,96 @@ final class MissCatFeedStoreTests: XCTestCase {
         XCTAssertEqual(repository.realtimeRequestCount, 2)
     }
 
+    func testCancelledStoreRejectsLateNonCooperativeInitialResult() async {
+        let repository = NonCooperativeFeedRepository()
+        let scope = MissCatShellAccountScope(
+            instance: "one.example",
+            userID: "shared-user",
+            username: "cat"
+        )
+        let store = MissCatFeedStore(source: .home, repository: repository, accountScope: scope)
+
+        let load = Task { await store.loadInitial() }
+        await waitUntil { repository.hasPendingPage }
+        store.cancelAllFeedTasks()
+        repository.resumePage(.init(notes: [note("stale")], hasMore: false))
+        await load.value
+
+        XCTAssertEqual(store.phase, .idle)
+        XCTAssertTrue(store.notes.isEmpty)
+        XCTAssertFalse(store.isRealtimeConnected)
+    }
+
+    func testCancelledStoreRejectsLateNonCooperativePaginationAndRefresh() async {
+        let repository = NonCooperativeFeedRepository()
+        let scope = MissCatShellAccountScope(
+            instance: "one.example",
+            userID: "shared-user",
+            username: "cat"
+        )
+        let store = MissCatFeedStore(source: .home, repository: repository, accountScope: scope)
+
+        let initial = Task { await store.loadInitial() }
+        await waitUntil { repository.hasPendingPage }
+        repository.resumePage(.init(notes: [note("current")], hasMore: true))
+        await initial.value
+
+        let pagination = Task {
+            await store.loadNextPageIfNeeded(currentNoteID: "current")
+        }
+        await waitUntil { repository.hasPendingPage }
+        store.cancelAllFeedTasks()
+        repository.resumePage(.init(notes: [note("stale-page")], hasMore: false))
+        await pagination.value
+        XCTAssertEqual(store.notes.map(\.id), ["current"])
+
+        let refresh = Task { await store.refresh() }
+        await waitUntil { repository.hasPendingPage }
+        store.cancelAllFeedTasks()
+        repository.resumePage(.init(notes: [note("stale-refresh")], hasMore: false))
+        await refresh.value
+        XCTAssertEqual(store.notes.map(\.id), ["current"])
+        XCTAssertFalse(store.isRefreshing)
+        XCTAssertFalse(store.isLoadingNextPage)
+    }
+
+    func testScrollPositionsRestoreByCompositeAccountIdentity() {
+        let firstScope = MissCatShellAccountScope(
+            instance: "one.example",
+            userID: "shared-user",
+            username: "cat"
+        )
+        let secondScope = MissCatShellAccountScope(
+            instance: "two.example",
+            userID: "shared-user",
+            username: "cat"
+        )
+        let firstKey = MissCatTimelineScrollKey(accountScope: firstScope, pageID: "home")
+        let secondKey = MissCatTimelineScrollKey(accountScope: secondScope, pageID: "home")
+        var positions = MissCatTimelineScrollPositionState()
+
+        positions.setPosition("first-note", for: firstKey)
+        positions.setPosition("second-note", for: secondKey)
+
+        XCTAssertEqual(positions.position(for: firstKey), "first-note")
+        XCTAssertEqual(positions.position(for: secondKey), "second-note")
+        XCTAssertNotEqual(firstKey, secondKey)
+    }
+
+    func testShellPersistenceFailurePublishesDismissibleBanner() async {
+        let provider = MockShellConfigurationProvider()
+        provider.saveError = TestFeedError.failed
+        let store = MissCatShellStore(provider: provider)
+        await store.load()
+
+        store.selectTimeline("local", origin: .tap)
+        await store.waitForPendingPersistence()
+
+        XCTAssertEqual(store.bannerMessage, "test failure")
+        store.dismissBanner()
+        XCTAssertNil(store.bannerMessage)
+    }
+
     private func waitForRealtimeContinuation(_ repository: MockMissCatFeedRepository) async {
         for _ in 0 ..< 20 where repository.realtimeContinuation == nil {
             await Task.yield()
@@ -520,6 +610,41 @@ final class MissCatFeedStoreTests: XCTestCase {
     }
 }
 
+private final class NonCooperativeFeedRepository: MissCatFeedRepository {
+    private var pageContinuation: CheckedContinuation<MissCatFeedPage, Never>?
+
+    var hasPendingPage: Bool { pageContinuation != nil }
+
+    func resumePage(_ page: MissCatFeedPage) {
+        let continuation = pageContinuation
+        pageContinuation = nil
+        continuation?.resume(returning: page)
+    }
+
+    func fetchPage(
+        source: MissCatFeedSource,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatFeedPage {
+        await withCheckedContinuation { continuation in
+            pageContinuation = continuation
+        }
+    }
+
+    func fetchThread(noteID: String, replyLimit: Int) async throws -> MissCatNoteThread {
+        throw TestFeedError.failed
+    }
+
+    func realtimeEvents(
+        source: MissCatFeedSource,
+        capturing noteIDs: [String]
+    ) -> AsyncStream<MissCatRealtimeEvent> {
+        AsyncStream { $0.finish() }
+    }
+
+    func perform(_ action: MissCatFeedAction) async throws {}
+}
+
 @MainActor
 private final class MockShellConfigurationProvider: MissCatShellConfigurationProviding {
     struct SavedSelection: Equatable {
@@ -531,6 +656,7 @@ private final class MockShellConfigurationProvider: MissCatShellConfigurationPro
     let secondaryScope = MissCatShellAccountScope(instance: "two.example", userID: "shared", username: "cat")
     var savedSelections: [SavedSelection] = []
     var switchedScopes: [MissCatShellAccountScope] = []
+    var saveError: Error?
     private let feedRepository = MockMissCatFeedRepository()
 
     func loadConfiguration() async throws -> MissCatShellConfiguration {
@@ -544,6 +670,7 @@ private final class MockShellConfigurationProvider: MissCatShellConfigurationPro
     }
 
     func saveSelectedTimelineID(_ selectedID: String, for scope: MissCatShellAccountScope) async throws {
+        if let saveError { throw saveError }
         savedSelections.append(.init(selectedID: selectedID, scope: scope))
     }
 
