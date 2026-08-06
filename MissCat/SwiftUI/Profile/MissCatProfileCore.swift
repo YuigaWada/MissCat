@@ -108,6 +108,7 @@ public struct MissCatProfileNote: Decodable, Equatable, Identifiable, Sendable {
     public let files: [MissCatProfileNoteFile]
     public let repliesCount: Int
     public let renoteCount: Int
+    public let reactions: [String: Int]
     public let reactionCount: Int
 
     enum CodingKeys: String, CodingKey {
@@ -123,7 +124,7 @@ public struct MissCatProfileNote: Decodable, Equatable, Identifiable, Sendable {
         files: [MissCatProfileNoteFile] = [],
         repliesCount: Int = 0,
         renoteCount: Int = 0,
-        reactionCount: Int = 0
+        reactions: [String: Int] = [:]
     ) {
         self.id = id
         self.createdAt = createdAt
@@ -133,7 +134,8 @@ public struct MissCatProfileNote: Decodable, Equatable, Identifiable, Sendable {
         self.files = files
         self.repliesCount = repliesCount
         self.renoteCount = renoteCount
-        self.reactionCount = reactionCount
+        self.reactions = reactions
+        reactionCount = reactions.values.reduce(0, +)
     }
 
     public init(from decoder: Decoder) throws {
@@ -146,7 +148,7 @@ public struct MissCatProfileNote: Decodable, Equatable, Identifiable, Sendable {
         files = try values.decodeIfPresent([MissCatProfileNoteFile].self, forKey: .files) ?? []
         repliesCount = try values.decodeIfPresent(Int.self, forKey: .repliesCount) ?? 0
         renoteCount = try values.decodeIfPresent(Int.self, forKey: .renoteCount) ?? 0
-        let reactions = try values.decodeIfPresent([String: Int].self, forKey: .reactions) ?? [:]
+        reactions = try values.decodeIfPresent([String: Int].self, forKey: .reactions) ?? [:]
         reactionCount = reactions.values.reduce(0, +)
     }
 }

@@ -447,6 +447,7 @@ public struct MissCatProfileTimelinePage: View {
 public struct MissCatProfileNoteRow: View {
     public let note: MissCatProfileNote
     public let palette: MissCatVisualPalette
+    @State private var showsCWContent = false
 
     public var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -461,13 +462,42 @@ public struct MissCatProfileNoteRow: View {
                 }
 
                 if let cw = note.cw, !cw.isEmpty {
-                    Text(cw).font(.system(size: 13, weight: .semibold))
+                    Button {
+                        showsCWContent.toggle()
+                    } label: {
+                        HStack {
+                            Text(cw).font(.system(size: 13, weight: .semibold))
+                            Spacer()
+                            Text(showsCWContent ? "隠す" : "もっと見る")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(palette.accent)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("profile.note.\(note.id).cw")
                 }
-                if let text = note.text, !text.isEmpty {
-                    Text(text).font(.system(size: 14)).fixedSize(horizontal: false, vertical: true)
+                if note.cw == nil || showsCWContent,
+                   let text = note.text,
+                   !text.isEmpty {
+                    Text(text.missCatLinkified).font(.system(size: 14)).fixedSize(horizontal: false, vertical: true)
                 }
-                if !note.files.isEmpty {
+                if (note.cw == nil || showsCWContent), !note.files.isEmpty {
                     MissCatProfileMediaGrid(files: note.files)
+                }
+
+                if !note.reactions.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 5) {
+                            ForEach(note.reactions.keys.sorted(), id: \.self) { reaction in
+                                Text("\(reaction) \(note.reactions[reaction] ?? 0)")
+                                    .font(.system(size: 12))
+                                    .padding(.horizontal, 8)
+                                    .frame(height: 30)
+                                    .background(palette.muted.opacity(0.8), in: RoundedRectangle(cornerRadius: 5))
+                            }
+                        }
+                    }
+                    .accessibilityIdentifier("profile.note.\(note.id).reactions")
                 }
 
                 HStack {
