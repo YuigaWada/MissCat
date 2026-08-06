@@ -84,29 +84,40 @@ public class Theme {
         if currentModel == nil { set() }
         
         if let currentModel = currentModel {
-            let currentTabCount = currentModel.tab.count
             let hasAnotherLegacyMatch = Cache.UserDefaults.shared.getUsers().contains {
                 $0.userId == user.userId && $0.accountIdentifier != user.accountIdentifier
             }
-            currentModel.tab = currentModel.tab.filter { tab in
+            let filtered = currentModel.tab.filter { tab in
                 guard tab.userId != user.accountIdentifier else { return false }
                 // Old themes stored bare user IDs. Remove that legacy reference
                 // only when it identifies one account unambiguously.
                 return hasAnotherLegacyMatch || tab.userId != user.userId
             }
-            
-            // タブが0個になったらデフォルトのタブに戻しておく
-            if currentModel.tab.count == 0 {
-                currentModel.tab = Model.getDefault()?.tab ?? []
-            }
+            let defaults = Model.getDefault()?.tab ?? []
+            let repaired = filtered.isEmpty ? defaults : filtered
+            let result = (tabs: repaired, changed: repaired != currentModel.tab)
+            currentModel.tab = result.tabs
             
             Model.save(with: currentModel)
             self.currentModel = currentModel
             
-            return currentTabCount != currentModel.tab.count // remove後もタブ数が同じならタブは変更していない
+            // Three account-bound tabs are replaced by the three defaults. Comparing
+            // only the count reports that as unchanged and prevents the main shell
+            // from rebuilding with the repaired configuration.
+            return result.changed
         }
         
         return false
+    }
+
+    static func removingTabs(
+        for userID: String,
+        from tabs: [Theme.Tab],
+        defaults: [Theme.Tab]
+    ) -> (tabs: [Theme.Tab], changed: Bool) {
+        let filtered = tabs.filter { $0.userId != userID }
+        let repaired = filtered.isEmpty ? defaults : filtered
+        return (repaired, repaired != tabs)
     }
     
     /// viewの再launchが必要か

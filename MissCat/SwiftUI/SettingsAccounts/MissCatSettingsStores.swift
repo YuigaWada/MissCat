@@ -2,6 +2,12 @@ import Combine
 import Foundation
 
 @MainActor
+private enum MissCatSettingsSaveRecovery {
+    static var design: MissCatDesignSettingsSnapshot?
+    static var reactions: [String: MissCatReactionSettingsSnapshot] = [:]
+}
+
+@MainActor
 public final class MissCatAccountStore: ObservableObject {
     public enum Phase: Equatable {
         case idle
@@ -137,6 +143,7 @@ public final class MissCatDesignSettingsStore: ObservableObject {
     @Published public var tabs: [MissCatSettingsTab] = []
     @Published public var mode: MissCatThemeMode = .light
     @Published public var accentHex = "2F7CF6"
+    @Published public var accentHexDraft = "2F7CF6"
     @Published public private(set) var accounts: [MissCatAccountSummary] = []
     @Published public var presentation: MissCatSettingsPresentation?
 
@@ -144,10 +151,15 @@ public final class MissCatDesignSettingsStore: ObservableObject {
     private var loadTask: Task<Void, Never>?
     private var saveTask: Task<Void, Never>?
     private var hasLoaded = false
+    private var isDirty = false
+    private var failedSave: MissCatDesignSettingsSnapshot?
+    private var failedSaveCallback: (() -> Void)?
 
     public init(repository: any MissCatDesignSettingsManaging) {
         self.repository = repository
     }
+
+    public var isReady: Bool { hasLoaded && !isLoading }
 
     deinit {
         loadTask?.cancel()
@@ -164,11 +176,20 @@ public final class MissCatDesignSettingsStore: ObservableObject {
             do {
                 let snapshot = try await repository.loadDesignSettings()
                 try Task.checkCancellation()
-                tabs = snapshot.tabs
+                tabs = Self.repairInvalidOwners(in: snapshot.tabs, accounts: snapshot.accounts)
                 mode = snapshot.mode
                 accentHex = Self.normalizedHex(snapshot.accentHex)
+                accentHexDraft = accentHex
                 accounts = snapshot.accounts
                 hasLoaded = true
+                isDirty = false
+                if let recovery = MissCatSettingsSaveRecovery.design {
+                    failedSave = recovery
+                    presentation = .error(
+                        title: "エラー",
+                        message: "前回保存できなかったデザイン設定があります"
+                    )
+                }
             } catch is CancellationError {
                 return
             } catch {
@@ -181,6 +202,7 @@ public final class MissCatDesignSettingsStore: ObservableObject {
         let owner = accounts.first(where: { $0.id == accountID })
         let name = kind == .home ? "@\(owner?.username ?? "")" : kind.defaultName
         tabs.append(MissCatSettingsTab(name: name, kind: kind, accountID: owner?.id))
+        isDirty = true
     }
 
     public func removeTabs(at offsets: IndexSet) {
@@ -189,15 +211,18 @@ public final class MissCatDesignSettingsStore: ObservableObject {
             tabs = Self.defaultTabs(accountID: accounts.first?.id)
             presentation = .banner(message: "既定のタブ構成に戻しました")
         }
+        isDirty = true
     }
 
     public func moveTabs(from source: IndexSet, to destination: Int) {
         tabs.move(fromOffsets: source, toOffset: destination)
+        isDirty = true
     }
 
     public func updateName(id: UUID, name: String) {
         guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
         tabs[index].name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        isDirty = true
     }
 
     public func updateOwner(tabID: UUID, accountID: String) {
@@ -208,23 +233,62 @@ public final class MissCatDesignSettingsStore: ObservableObject {
         if tabs[index].kind == .home {
             tabs[index].name = "@\(account.username)"
         }
+        isDirty = true
+    }
+
+    public func updateMode(_ value: MissCatThemeMode) {
+        mode = value
+        isDirty = true
     }
 
     public func setAccentHex(_ value: String) {
-        accentHex = Self.normalizedHex(value)
+        let normalized = Self.normalizedHex(value)
+        accentHex = normalized
+        accentHexDraft = normalized
+        isDirty = true
+    }
+
+    public func updateAccentHexDraft(_ value: String) {
+        accentHexDraft = String(value.uppercased().filter { $0.isHexDigit }.prefix(6))
+        isDirty = true
+    }
+
+    @discardableResult
+    public func commitAccentHexDraft() -> Bool {
+        guard let value = Self.validatedHex(accentHexDraft) else {
+            presentation = .error(title: "エラー", message: "HEXは6桁の16進数で入力してください")
+            return false
+        }
+        accentHex = value
+        accentHexDraft = value
+        return true
     }
 
     public func save(onRootRelaunchRequired: @escaping () -> Void = {}) {
-        guard hasLoaded, !isSaving else { return }
-        saveTask?.cancel()
+        guard hasLoaded, !isSaving, commitAccentHexDraft() else { return }
         let snapshot = MissCatDesignSettingsSnapshot(
-            tabs: tabs,
+            tabs: Self.repairInvalidOwners(in: tabs, accounts: accounts),
             mode: mode,
-            accentHex: Self.normalizedHex(accentHex),
+            accentHex: accentHex,
             accounts: accounts
         )
-        saveTask = Task { @MainActor [weak self] in
-            guard let self else { return }
+        persist(snapshot, onRootRelaunchRequired: onRootRelaunchRequired)
+    }
+
+    public func retrySave() {
+        guard !isSaving, let snapshot = failedSave else { return }
+        let callback = failedSaveCallback ?? {}
+        presentation = nil
+        persist(snapshot, onRootRelaunchRequired: callback)
+    }
+
+    private func persist(
+        _ snapshot: MissCatDesignSettingsSnapshot,
+        onRootRelaunchRequired: @escaping () -> Void
+    ) {
+        failedSave = snapshot
+        failedSaveCallback = onRootRelaunchRequired
+        saveTask = Task { @MainActor in
             isSaving = true
             defer { isSaving = false }
             do {
@@ -233,11 +297,17 @@ public final class MissCatDesignSettingsStore: ObservableObject {
                 tabs = result.snapshot.tabs
                 mode = result.snapshot.mode
                 accentHex = Self.normalizedHex(result.snapshot.accentHex)
+                accentHexDraft = accentHex
+                isDirty = false
+                failedSave = nil
+                failedSaveCallback = nil
+                MissCatSettingsSaveRecovery.design = nil
                 presentation = .banner(message: "デザイン設定を保存しました")
                 if result.requiresRootRelaunch { onRootRelaunchRequired() }
             } catch is CancellationError {
                 return
             } catch {
+                MissCatSettingsSaveRecovery.design = snapshot
                 presentation = .error(title: "エラー", message: Self.message(for: error))
             }
         }
@@ -256,9 +326,28 @@ public final class MissCatDesignSettingsStore: ObservableObject {
     }
 
     public static func normalizedHex(_ value: String) -> String {
+        validatedHex(value) ?? "2F7CF6"
+    }
+
+    public static func validatedHex(_ value: String) -> String? {
         let filtered = value.uppercased().filter { $0.isHexDigit }
-        guard filtered.count == 6 else { return "2F7CF6" }
+        guard filtered.count == 6 else { return nil }
         return filtered
+    }
+
+    public static func repairInvalidOwners(
+        in tabs: [MissCatSettingsTab],
+        accounts: [MissCatAccountSummary]
+    ) -> [MissCatSettingsTab] {
+        guard let fallback = accounts.first?.id else { return tabs }
+        let valid = Set(accounts.map(\.id))
+        return tabs.map { tab in
+            var repaired = tab
+            if tab.accountID.map({ !valid.contains($0) }) ?? true {
+                repaired.accountID = fallback
+            }
+            return repaired
+        }
     }
 
     private static func message(for error: Error) -> String {
@@ -276,18 +365,23 @@ public final class MissCatReactionSettingsStore: ObservableObject {
     @Published public private(set) var isSaving = false
     @Published public var isEditing = false
     @Published public var showsPicker = false
+    @Published public var searchQuery = ""
     @Published public var presentation: MissCatSettingsPresentation?
 
     private let repository: any MissCatReactionSettingsManaging
-    private var operation: Task<Void, Never>?
+    private var accountsTask: Task<Void, Never>?
+    private var loadTask: Task<Void, Never>?
+    private var saveTask: Task<Void, Never>?
     private var isDirty = false
+    private var failedSave: MissCatReactionSettingsSnapshot?
 
     public init(repository: any MissCatReactionSettingsManaging) {
         self.repository = repository
     }
 
     deinit {
-        operation?.cancel()
+        accountsTask?.cancel()
+        loadTask?.cancel()
     }
 
     public var favorites: [MissCatReactionItem] {
@@ -298,8 +392,22 @@ public final class MissCatReactionSettingsStore: ObservableObject {
         snapshot?.available ?? []
     }
 
+    public var pickerSections: [MissCatReactionSection] {
+        guard let snapshot else { return [] }
+        let explicit = snapshot.sections
+        let base = explicit.isEmpty
+            ? [MissCatReactionSection(id: "available", title: "絵文字", kind: .standard, items: snapshot.available)]
+            : explicit
+        return base.compactMap { section in
+            let items = section.items.filter { $0.matches(searchQuery) }
+            guard !items.isEmpty else { return nil }
+            return MissCatReactionSection(id: section.id, title: section.title, kind: section.kind, items: items)
+        }
+    }
+
     public func loadAccounts() {
-        replaceOperation { [weak self] in
+        accountsTask?.cancel()
+        accountsTask = Task { @MainActor [weak self] in
             guard let self else { return }
             isLoading = true
             defer { isLoading = false }
@@ -316,8 +424,16 @@ public final class MissCatReactionSettingsStore: ObservableObject {
     }
 
     public func load(accountID: String) {
-        replaceOperation { [weak self] in
+        loadTask?.cancel()
+        loadTask = Task { @MainActor [weak self] in
             guard let self else { return }
+            if let saveTask {
+                await saveTask.value
+            }
+            guard !isDirty else {
+                presentation = .error(title: "エラー", message: "保存できなかったお気に入りを再試行してください")
+                return
+            }
             isLoading = true
             defer { isLoading = false }
             do {
@@ -325,6 +441,13 @@ public final class MissCatReactionSettingsStore: ObservableObject {
                 try Task.checkCancellation()
                 snapshot = value
                 isDirty = false
+                if let recovery = MissCatSettingsSaveRecovery.reactions[accountID] {
+                    failedSave = recovery
+                    presentation = .error(
+                        title: "エラー",
+                        message: "前回保存できなかったお気に入りがあります"
+                    )
+                }
             } catch is CancellationError {
                 return
             } catch {
@@ -358,18 +481,33 @@ public final class MissCatReactionSettingsStore: ObservableObject {
 
     public func saveIfNeeded() {
         guard isDirty, let value = snapshot, !isSaving else { return }
-        replaceOperation { [weak self] in
-            guard let self else { return }
+        persist(value)
+    }
+
+    public func retrySave() {
+        guard !isSaving, let value = failedSave else { return }
+        presentation = nil
+        snapshot = value
+        isDirty = true
+        persist(value)
+    }
+
+    private func persist(_ value: MissCatReactionSettingsSnapshot) {
+        failedSave = value
+        saveTask = Task { @MainActor in
             isSaving = true
             defer { isSaving = false }
             do {
                 try Task.checkCancellation()
                 try await repository.saveReactions(value)
-                isDirty = false
+                if snapshot == value { isDirty = false }
+                failedSave = nil
+                MissCatSettingsSaveRecovery.reactions[value.account.id] = nil
                 presentation = .banner(message: "お気に入りを保存しました")
             } catch is CancellationError {
                 return
             } catch {
+                MissCatSettingsSaveRecovery.reactions[value.account.id] = value
                 presentation = .error(title: "エラー", message: Self.message(for: error))
             }
         }
@@ -377,11 +515,6 @@ public final class MissCatReactionSettingsStore: ObservableObject {
 
     public func dismissPresentation() {
         presentation = nil
-    }
-
-    private func replaceOperation(_ body: @escaping @MainActor () async -> Void) {
-        operation?.cancel()
-        operation = Task { @MainActor in await body() }
     }
 
     private static func message(for error: Error) -> String {

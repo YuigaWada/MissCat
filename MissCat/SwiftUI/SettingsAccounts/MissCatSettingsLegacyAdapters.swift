@@ -109,11 +109,13 @@ final class MissCatLegacySettingsRepository:
         try Task.checkCancellation()
         let old = Theme.shared.currentModel
         let availableIDs = Set(snapshot.accounts.map(\.id))
+        let fallbackOwnerID = snapshot.accounts.first?.id
         let tabs = snapshot.tabs.map { tab in
             Theme.Tab(
                 name: tab.name.isEmpty ? tab.kind.defaultName : tab.name,
                 kind: legacyKind(from: tab.kind),
-                userId: tab.accountID.flatMap { availableIDs.contains($0) ? $0 : nil },
+                userId: tab.accountID.flatMap { availableIDs.contains($0) ? $0 : fallbackOwnerID }
+                    ?? fallbackOwnerID,
                 listId: tab.listID
             )
         }
@@ -126,9 +128,7 @@ final class MissCatLegacySettingsRepository:
         Theme.shared.save(with: newModel)
 
         guard let persisted = Theme.Model.get(),
-              persisted.mainColorHex == newModel.mainColorHex,
-              persisted.colorMode == newModel.colorMode,
-              persisted.tab.count == newModel.tab.count
+              Self.persistedThemeMatches(persisted, expected: newModel)
         else {
             throw MissCatAccountManagementError.accountPersistenceFailed
         }
@@ -159,6 +159,7 @@ final class MissCatLegacySettingsRepository:
         }
 
         let saved = EmojiView.EmojiModel.getEmojis(type: .favs, owner: owner) ?? []
+        let history = Array((EmojiView.EmojiModel.getEmojis(type: .history, owner: owner) ?? []).prefix(14))
         let favoriteModels: [EmojiView.EmojiModel]
         if saved.isEmpty {
             favoriteModels = MissCatReactionSettingsStore.legacyDefaults.map {
@@ -176,13 +177,25 @@ final class MissCatLegacySettingsRepository:
         let defaultChoices = MissCatReactionSettingsStore.legacyDefaults.map {
             MissCatReactionItem(rawValue: $0, displayValue: $0)
         }
-        let handlerChoices = availableEmojiModels(for: owner).map(reactionItem(from:))
-        let available = unique(defaultChoices + handlerChoices)
+        let favoriteItems = favoriteModels.map { reactionItem(from: $0) }
+        let historyItems = history.map { reactionItem(from: $0) }
+        let categorized = categorizedReactionSections(for: owner)
+        let available = unique(defaultChoices + categorized.flatMap(\.items))
+        var sections: [MissCatReactionSection] = []
+        if !favoriteItems.isEmpty {
+            sections.append(.init(id: "favorites", title: "お気に入り", kind: .favorites, items: favoriteItems))
+        }
+        if !historyItems.isEmpty {
+            sections.append(.init(id: "history", title: "履歴", kind: .history, items: historyItems))
+        }
+        sections.append(contentsOf: categorized)
 
         return MissCatReactionSettingsSnapshot(
             account: MissCatReactionAccount(id: owner.accountIdentifier, instance: owner.instance),
-            favorites: favoriteModels.map(reactionItem(from:)),
-            available: available
+            favorites: favoriteItems,
+            available: available,
+            history: historyItems,
+            sections: sections
         )
     }
 
@@ -297,22 +310,176 @@ final class MissCatLegacySettingsRepository:
         }
     }
 
-    private func availableEmojiModels(for owner: SecureUser) -> [EmojiView.EmojiModel] {
-        guard let handler = EmojiHandler.getHandler(owner: owner) else { return [] }
-        return handler.categorizedDefaultEmojis.keys.sorted().flatMap { handler.categorizedDefaultEmojis[$0] ?? [] }
-            + handler.categorizedCustomEmojis.keys.sorted().flatMap { handler.categorizedCustomEmojis[$0] ?? [] }
+    private func categorizedReactionSections(for owner: SecureUser) -> [MissCatReactionSection] {
+        guard let handler = EmojiHandler.getHandler(owner: owner) else {
+            return [MissCatReactionSection(
+                id: "standard-defaults",
+                title: "標準絵文字",
+                kind: .standard,
+                items: MissCatReactionSettingsStore.legacyDefaults.map {
+                    MissCatReactionItem(rawValue: $0, displayValue: $0)
+                }
+            )]
+        }
+
+        let custom = handler.categorizedCustomEmojis.keys.sorted().compactMap { category -> MissCatReactionSection? in
+            let items = (handler.categorizedCustomEmojis[category] ?? []).map {
+                reactionItem(from: $0, searchTerms: [category])
+            }
+            guard !items.isEmpty else { return nil }
+            return .init(
+                id: "custom-\(category)",
+                title: category.isEmpty ? "カスタム" : category,
+                kind: .custom,
+                items: items
+            )
+        }
+        let standard = handler.categorizedDefaultEmojis.keys.sorted().compactMap { category -> MissCatReactionSection? in
+            let items = (handler.categorizedDefaultEmojis[category] ?? []).map {
+                reactionItem(from: $0, searchTerms: [category])
+            }
+            guard !items.isEmpty else { return nil }
+            return .init(
+                id: "standard-\(category)",
+                title: category.isEmpty ? "標準絵文字" : category,
+                kind: .standard,
+                items: items
+            )
+        }
+        return custom + standard
     }
 
-    private func reactionItem(from model: EmojiView.EmojiModel) -> MissCatReactionItem {
+    private func reactionItem(
+        from model: EmojiView.EmojiModel,
+        searchTerms: [String] = []
+    ) -> MissCatReactionItem {
         MissCatReactionItem(
             rawValue: model.rawEmoji,
             displayValue: model.defaultEmoji,
-            imageURL: model.customEmojiUrl.flatMap(URL.init(string:))
+            imageURL: model.customEmojiUrl.flatMap(URL.init(string:)),
+            searchTerms: searchTerms
         )
     }
 
     private func unique(_ items: [MissCatReactionItem]) -> [MissCatReactionItem] {
         var seen: Set<String> = []
         return items.filter { seen.insert($0.id).inserted }
+    }
+
+    static func persistedThemeMatches(_ persisted: Theme.Model, expected: Theme.Model) -> Bool {
+        persisted.mainColorHex == expected.mainColorHex
+            && persisted.colorMode == expected.colorMode
+            && persisted.tab == expected.tab
+    }
+}
+
+/// Deterministic, credential-free data used by UI automation and screenshot jobs.
+/// It is opt-in through a debug-only launch argument and never reaches the network.
+@MainActor
+final class MissCatSettingsFixtureRepository:
+    MissCatAccountManaging,
+    MissCatDesignSettingsManaging,
+    MissCatReactionSettingsManaging
+{
+    static var isEnabled: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("--misscat-settings-fixture")
+        #else
+        false
+        #endif
+    }
+
+    private var accountSnapshot: MissCatAccountSnapshot
+    private var designSnapshot: MissCatDesignSettingsSnapshot
+    private var reactionSnapshots: [String: MissCatReactionSettingsSnapshot]
+
+    init() {
+        let first = MissCatAccountSummary(
+            id: "fixture-wada",
+            username: "wada",
+            displayName: "だわくん",
+            instance: "misskey.example"
+        )
+        let second = MissCatAccountSummary(
+            id: "fixture-sub",
+            username: "sub",
+            displayName: "Sub Account",
+            instance: "social.example"
+        )
+        accountSnapshot = .init(accounts: [first, second], currentAccountID: first.id)
+        designSnapshot = .init(
+            tabs: [
+                .init(name: "@wada", kind: .home, accountID: first.id),
+                .init(name: "Local", kind: .local, accountID: first.id),
+                .init(name: "Friends", kind: .list, accountID: first.id, listID: "fixture-list")
+            ],
+            mode: .light,
+            accentHex: "2F7CF6",
+            accounts: [first, second]
+        )
+
+        let account = MissCatReactionAccount(id: first.id, instance: first.instance)
+        let favorites = MissCatReactionSettingsStore.legacyDefaults.prefix(8).map {
+            MissCatReactionItem(rawValue: $0, displayValue: $0)
+        }
+        let custom = MissCatReactionItem(
+            rawValue: ":misscat:",
+            imageURL: URL(string: "https://example.invalid/misscat.gif"),
+            searchTerms: ["custom", "cat"]
+        )
+        reactionSnapshots = [
+            first.id: .init(
+                account: account,
+                favorites: favorites,
+                available: favorites + [custom],
+                history: Array(favorites.prefix(4)),
+                sections: [
+                    .init(id: "favorites", title: "お気に入り", kind: .favorites, items: favorites),
+                    .init(id: "history", title: "履歴", kind: .history, items: Array(favorites.prefix(4))),
+                    .init(id: "custom-fixture", title: "Custom", kind: .custom, items: [custom]),
+                    .init(id: "standard-fixture", title: "People", kind: .standard, items: favorites)
+                ]
+            )
+        ]
+    }
+
+    func loadAccounts() async throws -> MissCatAccountSnapshot { accountSnapshot }
+
+    func switchAccount(id: String) async throws -> MissCatAccountSnapshot {
+        guard accountSnapshot.accounts.contains(where: { $0.id == id }) else {
+            throw MissCatAccountManagementError.accountNotFound
+        }
+        accountSnapshot.currentAccountID = id
+        return accountSnapshot
+    }
+
+    func deleteAccount(id: String) async throws -> MissCatAccountDeletionResult {
+        accountSnapshot.accounts.removeAll { $0.id == id }
+        if accountSnapshot.currentAccountID == id {
+            accountSnapshot.currentAccountID = accountSnapshot.accounts.first?.id
+        }
+        return .init(snapshot: accountSnapshot, removedConfiguredTabs: true)
+    }
+
+    func loadDesignSettings() async throws -> MissCatDesignSettingsSnapshot { designSnapshot }
+
+    func saveDesignSettings(_ snapshot: MissCatDesignSettingsSnapshot) async throws -> MissCatDesignSaveResult {
+        designSnapshot = snapshot
+        return .init(snapshot: snapshot, requiresRootRelaunch: false)
+    }
+
+    func loadReactionAccounts() async throws -> [MissCatReactionAccount] {
+        reactionSnapshots.values.map(\.account).sorted { $0.instance < $1.instance }
+    }
+
+    func loadReactions(accountID: String) async throws -> MissCatReactionSettingsSnapshot {
+        guard let snapshot = reactionSnapshots[accountID] else {
+            throw MissCatAccountManagementError.accountNotFound
+        }
+        return snapshot
+    }
+
+    func saveReactions(_ snapshot: MissCatReactionSettingsSnapshot) async throws {
+        reactionSnapshots[snapshot.account.id] = snapshot
     }
 }
