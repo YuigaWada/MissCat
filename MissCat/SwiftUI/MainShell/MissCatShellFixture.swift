@@ -65,6 +65,7 @@ struct MissCatShellFixtureView: View {
             }
         }
         .task { await store.load() }
+        .onDisappear { store.cancelConfigurationTasks() }
         .sheet(item: $presentedRoute) { route in
             NavigationStack {
                 VStack(spacing: 12) {
@@ -103,7 +104,7 @@ struct MissCatShellFixtureView: View {
             onCompose: { presentedRoute = .compose },
             onSettings: { presentedRoute = .settings },
             onAccountSelected: { scope in
-                Task { await store.switchAccount(to: scope) }
+                store.switchAccount(to: scope)
             },
             onTimelineSelection: store.selectTimeline,
             onReselect: { section in

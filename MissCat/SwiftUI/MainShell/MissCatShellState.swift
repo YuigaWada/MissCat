@@ -189,6 +189,10 @@ public final class MissCatShellStore: ObservableObject {
     private let provider: any MissCatShellConfigurationProviding
     private var footerState = MissCatFooterSelectionState()
     private var persistenceTask: Task<Void, Never>?
+    private var configurationLoadTask: Task<Void, Never>?
+    private var accountSwitchTask: Task<Void, Never>?
+    private var configurationGeneration = 0
+    private var accountSwitchTarget: MissCatShellAccountScope?
     private var repositories: [MissCatShellAccountScope: any MissCatFeedRepository] = [:]
     @Published private var timelineScrollPositions = MissCatTimelineScrollPositionState()
 
@@ -198,21 +202,40 @@ public final class MissCatShellStore: ObservableObject {
 
     deinit {
         persistenceTask?.cancel()
+        configurationLoadTask?.cancel()
+        accountSwitchTask?.cancel()
     }
 
     public func load() async {
-        guard phase == .idle || isFailed else { return }
-        phase = .loading
-        do {
-            let configuration = try await provider.loadConfiguration()
-            try Task.checkCancellation()
-            apply(configuration)
-            phase = .loaded
-        } catch is CancellationError {
-            phase = .idle
-        } catch {
-            phase = .failed(Self.message(for: error))
+        if let configurationLoadTask {
+            await configurationLoadTask.value
+            return
         }
+        guard phase == .idle || isFailed else { return }
+        configurationGeneration &+= 1
+        let generation = configurationGeneration
+        phase = .loading
+        let task = Task { @MainActor [weak self, provider] in
+            do {
+                let configuration = try await provider.loadConfiguration()
+                guard let self,
+                      self.configurationGeneration == generation,
+                      !Task.isCancelled else { return }
+                self.configurationLoadTask = nil
+                self.apply(configuration)
+                self.phase = .loaded
+            } catch is CancellationError {
+                guard let self, self.configurationGeneration == generation else { return }
+                self.configurationLoadTask = nil
+                self.phase = .idle
+            } catch {
+                guard let self, self.configurationGeneration == generation else { return }
+                self.configurationLoadTask = nil
+                self.phase = .failed(Self.message(for: error))
+            }
+        }
+        configurationLoadTask = task
+        await task.value
     }
 
     public func retry() async {
@@ -263,21 +286,61 @@ public final class MissCatShellStore: ObservableObject {
         return activation
     }
 
-    public func switchAccount(to scope: MissCatShellAccountScope) async {
-        guard scope != configuration?.currentScope else { return }
-        persistenceTask?.cancel()
-        phase = .loading
-        do {
-            let configuration = try await provider.switchAccount(to: scope)
-            try Task.checkCancellation()
-            apply(configuration)
-            phase = .loaded
-        } catch is CancellationError {
+    public func switchAccount(to scope: MissCatShellAccountScope) {
+        if scope == configuration?.currentScope {
+            guard accountSwitchTask != nil else { return }
+            accountSwitchTask?.cancel()
+            accountSwitchTask = nil
+            accountSwitchTarget = nil
+            configurationGeneration &+= 1
             phase = configuration == nil ? .idle : .loaded
-        } catch {
-            phase = configuration == nil ? .failed(Self.message(for: error)) : .loaded
-            bannerMessage = Self.message(for: error)
+            return
         }
+        guard scope != accountSwitchTarget else { return }
+        persistenceTask?.cancel()
+        configurationLoadTask?.cancel()
+        configurationLoadTask = nil
+        accountSwitchTask?.cancel()
+        configurationGeneration &+= 1
+        let generation = configurationGeneration
+        accountSwitchTarget = scope
+        phase = .loading
+        accountSwitchTask = Task { @MainActor [weak self, provider] in
+            do {
+                let configuration = try await provider.switchAccount(to: scope)
+                guard let self,
+                      self.configurationGeneration == generation,
+                      !Task.isCancelled else { return }
+                guard configuration.currentScope == scope else {
+                    throw MissCatShellConfigurationError.accountIdentityMismatch
+                }
+                self.accountSwitchTask = nil
+                self.accountSwitchTarget = nil
+                self.apply(configuration)
+                self.phase = .loaded
+            } catch is CancellationError {
+                guard let self, self.configurationGeneration == generation else { return }
+                self.accountSwitchTask = nil
+                self.accountSwitchTarget = nil
+                self.phase = self.configuration == nil ? .idle : .loaded
+            } catch {
+                guard let self, self.configurationGeneration == generation else { return }
+                self.accountSwitchTask = nil
+                self.accountSwitchTarget = nil
+                self.phase = self.configuration == nil ? .failed(Self.message(for: error)) : .loaded
+                self.bannerMessage = Self.message(for: error)
+            }
+        }
+    }
+
+    public func cancelConfigurationTasks() {
+        configurationGeneration &+= 1
+        configurationLoadTask?.cancel()
+        accountSwitchTask?.cancel()
+        configurationLoadTask = nil
+        accountSwitchTask = nil
+        accountSwitchTarget = nil
+        phase = configuration == nil ? .idle : .loaded
     }
 
     public func repository(for scope: MissCatShellAccountScope) -> (any MissCatFeedRepository)? {
@@ -306,6 +369,10 @@ public final class MissCatShellStore: ObservableObject {
 
     func waitForPendingPersistence() async {
         await persistenceTask?.value
+    }
+
+    func waitForPendingAccountSwitch() async {
+        await accountSwitchTask?.value
     }
 
     private var isFailed: Bool {
@@ -413,17 +480,16 @@ final class MissCatLegacyShellConfigurationProvider: MissCatShellConfigurationPr
         users: [SecureUser],
         currentScope: MissCatShellAccountScope
     ) -> [MissCatTimelinePage] {
+        let scopes = users.map {
+            MissCatShellAccountScope(instance: $0.instance, userID: $0.userId, username: $0.username)
+        }
         var occurrenceCounts: [String: Int] = [:]
         let pages = (theme?.tab ?? []).enumerated().compactMap { index, tab -> MissCatTimelinePage? in
-            let owner = users.first { user in
-                user.userId == (tab.userId ?? currentScope.userID)
-            }
-            guard let owner else { return nil }
-            let scope = MissCatShellAccountScope(
-                instance: owner.instance,
-                userID: owner.userId,
-                username: owner.username
-            )
+            guard let scope = resolvePageOwnerScope(
+                userID: tab.userId,
+                among: scopes,
+                currentScope: currentScope
+            ) else { return nil }
             let source: MissCatFeedSource
             switch tab.kind {
             case .home: source = .home
@@ -455,6 +521,20 @@ final class MissCatLegacyShellConfigurationProvider: MissCatShellConfigurationPr
             .init(id: "\(currentScope.id)|local|0", title: "Local", source: .local, accountScope: currentScope, accessibilityID: "configured-1-local"),
             .init(id: "\(currentScope.id)|global|0", title: "Global", source: .global, accountScope: currentScope, accessibilityID: "configured-2-global")
         ]
+    }
+
+    static func resolvePageOwnerScope(
+        userID: String?,
+        among scopes: [MissCatShellAccountScope],
+        currentScope: MissCatShellAccountScope
+    ) -> MissCatShellAccountScope? {
+        let requestedUserID = userID ?? currentScope.userID
+        if requestedUserID == currentScope.userID {
+            return scopes.contains(currentScope) ? currentScope : nil
+        }
+
+        let matches = scopes.filter { $0.userID == requestedUserID }
+        return matches.count == 1 ? matches[0] : nil
     }
 
     private func exactUser(for target: MissCatShellAccountScope) -> SecureUser? {
