@@ -165,7 +165,7 @@ public struct MissCatInAppNotificationBanner: Identifiable, Equatable, Sendable 
     }
 }
 
-public enum MissCatLoadPhase: Equatable, Sendable {
+public enum MissCatNotificationMessageLoadPhase: Equatable, Sendable {
     case idle
     case loading
     case loaded
@@ -293,4 +293,3 @@ public enum MissCatMessageLinkParser {
         }
     }
 }
-

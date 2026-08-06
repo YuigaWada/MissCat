@@ -141,12 +141,13 @@ public final class MissCatNativeNotificationMessagingRepository:
     }
 
     public func realtimeNotifications() -> AsyncStream<MissCatNotificationRealtimeEvent> {
-        guard var components = URLComponents(), !accountScope.host.isEmpty else {
+        guard !accountScope.host.isEmpty else {
             return AsyncStream { continuation in
                 continuation.yield(.failed(message: MissCatNotificationMessagingError.invalidInstance.localizedDescription))
                 continuation.finish()
             }
         }
+        var components = URLComponents()
         components.scheme = "wss"
         components.host = accountScope.host
         components.path = "/streaming"
@@ -440,4 +441,3 @@ private enum MissCatAPIDateParser {
 
     private static let plain = ISO8601DateFormatter()
 }
-

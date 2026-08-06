@@ -3,7 +3,7 @@ import Foundation
 
 @MainActor
 public final class MissCatNotificationsStore: ObservableObject {
-    @Published public private(set) var phase: MissCatLoadPhase = .idle
+    @Published public private(set) var phase: MissCatNotificationMessageLoadPhase = .idle
     @Published public private(set) var notifications: [MissCatNotification] = []
     @Published public private(set) var canLoadMore = true
     @Published public private(set) var isLoadingMore = false
@@ -17,6 +17,7 @@ public final class MissCatNotificationsStore: ObservableObject {
     private let pageSize: Int
     private var scopeGeneration = UUID()
     private var realtimeTask: Task<Void, Never>?
+    private var nextPageCursor: String?
 
     public init(repository: MissCatNotificationsRepository, pageSize: Int = 30) {
         self.repository = repository
@@ -38,7 +39,8 @@ public final class MissCatNotificationsStore: ObservableObject {
             let page = try await repository.fetchNotifications(cursor: nil, limit: pageSize)
             guard generation == scopeGeneration, !Task.isCancelled else { return }
             notifications = Self.normalized(page.notifications)
-            canLoadMore = page.hasMore
+            nextPageCursor = page.notifications.last?.id
+            canLoadMore = page.hasMore && nextPageCursor != nil
             phase = notifications.isEmpty ? .empty : .loaded
             startRealtime(generation: generation)
         } catch {
@@ -55,11 +57,15 @@ public final class MissCatNotificationsStore: ObservableObject {
 
     public func refresh() async {
         let generation = scopeGeneration
+        let wasEmpty = notifications.isEmpty
         do {
             let page = try await repository.fetchNotifications(cursor: nil, limit: pageSize)
             guard generation == scopeGeneration, !Task.isCancelled else { return }
             notifications = Self.normalized(page.notifications + notifications)
-            canLoadMore = canLoadMore || page.hasMore
+            if wasEmpty {
+                nextPageCursor = page.notifications.last?.id
+                canLoadMore = page.hasMore && nextPageCursor != nil
+            }
             phase = notifications.isEmpty ? .empty : .loaded
         } catch {
             guard generation == scopeGeneration, !Task.isCancelled else { return }
@@ -70,6 +76,7 @@ public final class MissCatNotificationsStore: ObservableObject {
     public func loadNextPageIfNeeded(currentID: String) async {
         guard canLoadMore,
               !isLoadingMore,
+              let nextPageCursor,
               notifications.suffix(3).contains(where: { $0.id == currentID }) else { return }
         let generation = scopeGeneration
         isLoadingMore = true
@@ -77,12 +84,13 @@ public final class MissCatNotificationsStore: ObservableObject {
 
         do {
             let page = try await repository.fetchNotifications(
-                cursor: notifications.last?.id,
+                cursor: nextPageCursor,
                 limit: pageSize
             )
             guard generation == scopeGeneration, !Task.isCancelled else { return }
             notifications = Self.normalized(notifications + page.notifications)
-            canLoadMore = page.hasMore
+            self.nextPageCursor = page.notifications.last?.id
+            canLoadMore = page.hasMore && self.nextPageCursor != nil
         } catch {
             guard generation == scopeGeneration, !Task.isCancelled else { return }
             actionErrorMessage = Self.message(for: error)
@@ -95,6 +103,7 @@ public final class MissCatNotificationsStore: ObservableObject {
         self.repository = repository
         accountScope = repository.accountScope
         notifications = []
+        nextPageCursor = nil
         canLoadMore = true
         isLoadingMore = false
         actionErrorMessage = nil
@@ -181,7 +190,7 @@ public final class MissCatNotificationsStore: ObservableObject {
 
 @MainActor
 public final class MissCatMessageHistoryStore: ObservableObject {
-    @Published public private(set) var phase: MissCatLoadPhase = .idle
+    @Published public private(set) var phase: MissCatNotificationMessageLoadPhase = .idle
     @Published public private(set) var conversations: [MissCatConversation] = []
 
     public private(set) var accountScope: MissCatAccountScope
@@ -216,6 +225,11 @@ public final class MissCatMessageHistoryStore: ObservableObject {
         await load()
     }
 
+    public func refresh() async {
+        phase = .idle
+        await load()
+    }
+
     public func switchAccount(to repository: MissCatMessagingRepository) {
         scopeGeneration = UUID()
         self.repository = repository
@@ -245,7 +259,7 @@ public final class MissCatMessageHistoryStore: ObservableObject {
 @MainActor
 public final class MissCatConversationStore: ObservableObject {
     @Published public var draft = ""
-    @Published public private(set) var phase: MissCatLoadPhase = .idle
+    @Published public private(set) var phase: MissCatNotificationMessageLoadPhase = .idle
     @Published public private(set) var messages: [MissCatDirectMessage] = []
     @Published public private(set) var canLoadOlder = true
     @Published public private(set) var isLoadingOlder = false
@@ -395,4 +409,3 @@ public final class MissCatConversationStore: ObservableObject {
         return value.isEmpty ? "通信に失敗しました。" : value
     }
 }
-
