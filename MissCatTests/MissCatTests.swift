@@ -131,6 +131,22 @@ final class AccountPersistenceTests: XCTestCase {
         XCTAssertNil(data.range(of: Data(testAPIKey.utf8)))
     }
 
+    func testLegacyPlaintextKeyIsScrubbedWhenKeyStoreReadFails() throws {
+        let testAPIKey = "legacy-test-key-not-a-credential"
+        defaults.set(try JSONEncoder().encode([makeUser(id: "user-a", apiKey: testAPIKey)]),
+                     forKey: "saved-user")
+        keyStore.readShouldFail = true
+
+        XCTAssertThrowsError(try subject.getUsersThrowing())
+
+        let data = try XCTUnwrap(defaults.data(forKey: "saved-user"))
+        let metadata = try JSONDecoder().decode([SecureUser].self, from: data)
+        XCTAssertEqual(metadata.map { $0.userId }, ["user-a"])
+        XCTAssertNil(metadata.first?.apiKey)
+        XCTAssertNil(data.range(of: Data(testAPIKey.utf8)))
+        XCTAssertTrue(keyStore.values.isEmpty)
+    }
+
     func testRemovingAccountsRepairsAndThenClearsCurrentUserId() {
         XCTAssertTrue(subject.saveUser(makeUser(id: "user-a")))
         XCTAssertTrue(subject.saveUser(makeUser(id: "user-b")))
@@ -141,6 +157,20 @@ final class AccountPersistenceTests: XCTestCase {
 
         XCTAssertTrue(subject.removeUser(userId: "user-b"))
         XCTAssertNil(subject.getCurrentUserId())
+    }
+
+    func testRemoveFailureKeepsMetadataCredentialAndCurrentSelection() throws {
+        XCTAssertTrue(subject.saveUser(makeUser(id: "user-a")))
+        subject.changeCurrentUser(userId: "user-a")
+        keyStore.removeShouldFail = true
+
+        XCTAssertFalse(subject.removeUser(userId: "user-a"))
+
+        let data = try XCTUnwrap(defaults.data(forKey: "saved-user"))
+        let metadata = try JSONDecoder().decode([SecureUser].self, from: data)
+        XCTAssertEqual(metadata.map { $0.userId }, ["user-a"])
+        XCTAssertEqual(keyStore.values["user-a"], "test-key-not-a-credential")
+        XCTAssertEqual(subject.getCurrentUserId(), "user-a")
     }
 
     func testCurrentUserRepairsStaleIdentifierDeterministically() {
