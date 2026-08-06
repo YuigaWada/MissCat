@@ -111,14 +111,17 @@ final class MissCatFeedStoreTests: XCTestCase {
         repository.realtimeContinuation?.yield(
             .reaction(noteID: "one", reaction: "👍", delta: 1, isMine: true)
         )
-        await Task.yield()
+        await waitUntil {
+            store.notes.last?.myReaction == "👍"
+                && store.notes.last?.reactions.first?.count == 1
+        }
 
         XCTAssertEqual(store.notes.map(\.id), ["two", "one"])
         XCTAssertEqual(store.notes.last?.myReaction, "👍")
         XCTAssertEqual(store.notes.last?.reactions.first?.count, 1)
 
         repository.realtimeContinuation?.yield(.removed(noteID: "two"))
-        await Task.yield()
+        await waitUntil { store.notes.map(\.id) == ["one"] }
         XCTAssertEqual(store.notes.map(\.id), ["one"])
     }
 
@@ -243,6 +246,13 @@ final class MissCatFeedStoreTests: XCTestCase {
             await Task.yield()
         }
         XCTAssertNotNil(repository.realtimeContinuation)
+    }
+
+    private func waitUntil(_ condition: @escaping () -> Bool) async {
+        for _ in 0 ..< 100 {
+            if condition() { return }
+            try? await Task.sleep(nanoseconds: 1_000_000)
+        }
     }
 
     private func note(_ id: String) -> MissCatNote {
