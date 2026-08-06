@@ -64,6 +64,7 @@ final class ApplicationState: ObservableObject {
 #if DEBUG
         MissCatAuthenticationProbe.runIfRequested(user: currentUser)
 #endif
+
         Theme.shared.reset()
         Theme.shared.set()
         root = .legacyApplication
@@ -143,29 +144,34 @@ struct MissCatRootView: View {
 
     var body: some View {
         ZStack {
-            switch applicationState.root {
-            case .resolvingSession:
-                MissCatLaunchView()
-            case .authentication:
-                MissCatAuthenticationFlowView(
-                    makeAuthorizationRequest: applicationState.makeAuthorizationRequest,
-                    makeLoginRequestAfterSignUp: applicationState.makeLoginRequestAfterSignUp,
-                    callbackMatches: applicationState.callbackMatches,
-                    onCallback: applicationState.completeAuthentication,
-                    onFailure: applicationState.present
-                )
-                .id(applicationState.authenticationFlowGeneration)
-            case .legacyApplication:
-                LegacyApplicationView()
-                    .ignoresSafeArea()
+            #if DEBUG
+            if MissCatShellFixtureLaunch.isRequested {
+                MissCatShellFixtureView()
+            } else {
+                applicationRoot
             }
+            #else
+            applicationRoot
+            #endif
 
+            #if DEBUG
+            if !MissCatShellFixtureLaunch.isRequested, applicationState.isCompletingAuthentication {
+                MissCatAuthenticationLoadingOverlay(accessibilityLabel: "認証情報を保存中")
+                    .accessibilityIdentifier("authentication.completing")
+            }
+            #else
             if applicationState.isCompletingAuthentication {
                 MissCatAuthenticationLoadingOverlay(accessibilityLabel: "認証情報を保存中")
                     .accessibilityIdentifier("authentication.completing")
             }
+            #endif
         }
-        .task { applicationState.resolveInitialRoute() }
+        .task {
+            #if DEBUG
+            guard !MissCatShellFixtureLaunch.isRequested else { return }
+            #endif
+            applicationState.resolveInitialRoute()
+        }
         .alert(
             "エラー",
             isPresented: Binding(
@@ -184,6 +190,26 @@ struct MissCatRootView: View {
             }
         } message: {
             Text(applicationState.errorMessage ?? "")
+        }
+    }
+
+    @ViewBuilder
+    private var applicationRoot: some View {
+        switch applicationState.root {
+        case .resolvingSession:
+            MissCatLaunchView()
+        case .authentication:
+            MissCatAuthenticationFlowView(
+                makeAuthorizationRequest: applicationState.makeAuthorizationRequest,
+                makeLoginRequestAfterSignUp: applicationState.makeLoginRequestAfterSignUp,
+                callbackMatches: applicationState.callbackMatches,
+                onCallback: applicationState.completeAuthentication,
+                onFailure: applicationState.present
+            )
+            .id(applicationState.authenticationFlowGeneration)
+        case .legacyApplication:
+            LegacyApplicationView()
+                .ignoresSafeArea()
         }
     }
 }

@@ -17,6 +17,7 @@ public final class MissCatFeedStore: ObservableObject {
     private let repository: MissCatFeedRepository
     private let pageSize: Int
     private var realtimeTask: Task<Void, Never>?
+    private var realtimeGeneration = UUID()
     private var inFlightMutations = Set<MutationKey>()
 
     private enum MutationKey: Hashable {
@@ -41,6 +42,10 @@ public final class MissCatFeedStore: ObservableObject {
     }
 
     public func loadInitial() async {
+        if phase == .loaded || phase == .empty {
+            startRealtimeIfNeeded()
+            return
+        }
         guard phase == .idle || isFailed else { return }
         phase = .loading
         actionErrorMessage = nil
@@ -48,6 +53,8 @@ public final class MissCatFeedStore: ObservableObject {
         do {
             try await replaceWithInitialContent()
             startRealtimeIfNeeded()
+        } catch is CancellationError {
+            phase = notes.isEmpty ? .idle : .loaded
         } catch {
             phase = .failed(message: Self.message(for: error))
         }
@@ -77,6 +84,8 @@ public final class MissCatFeedStore: ObservableObject {
                 canLoadMore = canLoadMore || page.hasMore
                 phase = notes.isEmpty ? .empty : .loaded
             }
+        } catch is CancellationError {
+            return
         } catch {
             actionErrorMessage = Self.message(for: error)
         }
@@ -99,6 +108,8 @@ public final class MissCatFeedStore: ObservableObject {
             )
             notes = Self.appendingUnique(page.notes, to: notes)
             canLoadMore = page.hasMore
+        } catch is CancellationError {
+            return
         } catch {
             actionErrorMessage = Self.message(for: error)
         }
@@ -248,6 +259,7 @@ public final class MissCatFeedStore: ObservableObject {
     }
 
     public func stopRealtime() {
+        realtimeGeneration = UUID()
         realtimeTask?.cancel()
         realtimeTask = nil
         isRealtimeConnected = false
@@ -277,11 +289,17 @@ public final class MissCatFeedStore: ObservableObject {
     private func startRealtimeIfNeeded() {
         guard source.supportsRealtime, realtimeTask == nil else { return }
         let capturedIDs = notes.map(\.noteID)
+        let generation = UUID()
+        realtimeGeneration = generation
         realtimeTask = Task { [weak self] in
             guard let self else { return }
             for await event in repository.realtimeEvents(source: source, capturing: capturedIDs) {
                 guard !Task.isCancelled else { return }
                 apply(event)
+            }
+            if realtimeGeneration == generation {
+                realtimeTask = nil
+                isRealtimeConnected = false
             }
         }
     }

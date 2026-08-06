@@ -26,6 +26,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+
+#if DEBUG
+        // Visual/UI fixtures must not display system permission prompts, contact
+        // Firebase, or hydrate real cached accounts. Ordinary launches continue
+        // through the complete startup path below.
+        if MissCatShellFixtureLaunch.isRequested { return true }
+#endif
         
         setupMissCat()
         setupFirebase()

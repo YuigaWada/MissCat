@@ -34,6 +34,7 @@ public struct MissCatFeedView: View {
     private let palette: MissCatVisualPalette
     private let emptyTitle: String
     private let navigationActions: MissCatFeedNavigationActions
+    private let scrollToTopTrigger: Int
 
     public init(
         source: MissCatFeedSource,
@@ -41,6 +42,7 @@ public struct MissCatFeedView: View {
         palette: MissCatVisualPalette = .legacyLight,
         emptyTitle: String = "ノートがありません",
         scrollPositionID: Binding<String?> = .constant(nil),
+        scrollToTopTrigger: Int = 0,
         navigationActions: MissCatFeedNavigationActions = .init()
     ) {
         _store = StateObject(
@@ -49,6 +51,7 @@ public struct MissCatFeedView: View {
         _scrollPositionID = scrollPositionID
         self.palette = palette
         self.emptyTitle = emptyTitle
+        self.scrollToTopTrigger = scrollToTopTrigger
         self.navigationActions = navigationActions
     }
 
@@ -62,24 +65,32 @@ public struct MissCatFeedView: View {
             case let .failed(message):
                 failureView(message)
             case .empty:
-                emptyView
+                refreshableEmptyView
             case .loaded:
                 feedScrollView
             }
         }
         .task { await store.loadInitial() }
         .onDisappear { store.stopRealtime() }
-        .alert(
-            "エラー",
-            isPresented: Binding(
-                get: { store.actionErrorMessage != nil },
-                set: { if !$0 { store.dismissActionError() } }
-            )
-        ) {
-            Button("閉じる") { store.dismissActionError() }
-        } message: {
-            Text(store.actionErrorMessage ?? "")
+        .onChange(of: scrollToTopTrigger) { _, generation in
+            guard generation > 0, let firstID = store.notes.first?.id else { return }
+            withAnimation(.easeOut(duration: 0.2)) {
+                scrollPositionID = firstID
+            }
         }
+        .overlay(alignment: .top) {
+            if let message = store.actionErrorMessage {
+                MissCatFeedStatusBanner(
+                    message: message,
+                    palette: palette,
+                    onDismiss: store.dismissActionError
+                )
+                .padding(.horizontal, 10)
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: store.actionErrorMessage)
         .accessibilityIdentifier("feed.\(store.source.accessibilityName)")
     }
 
@@ -132,6 +143,7 @@ public struct MissCatFeedView: View {
         .refreshable { await store.refresh() }
         .background(palette.base)
         .accessibilityIdentifier("feed.scroll")
+        .accessibilityValue(store.isRealtimeConnected ? "realtime-connected" : "realtime-disconnected")
     }
 
     private var loadingView: some View {
@@ -155,6 +167,17 @@ public struct MissCatFeedView: View {
         .accessibilityIdentifier("feed.empty")
     }
 
+    private var refreshableEmptyView: some View {
+        ScrollView {
+            emptyView
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 360)
+        }
+        .scrollIndicators(.hidden)
+        .refreshable { await store.refresh() }
+        .accessibilityIdentifier("feed.empty.refreshable")
+    }
+
     private func failureView(_ message: String) -> some View {
         ContentUnavailableView {
             Label("読み込めませんでした", systemImage: "exclamationmark.triangle")
@@ -175,6 +198,50 @@ public struct MissCatFeedView: View {
     private func isThreadNote(at index: Int) -> Bool {
         guard case .noteDetail = store.source else { return false }
         return index < store.notes.count - 1
+    }
+}
+
+public struct MissCatFeedStatusBanner: View {
+    public let message: String
+    public let palette: MissCatVisualPalette
+    public let onDismiss: () -> Void
+
+    public init(
+        message: String,
+        palette: MissCatVisualPalette = .legacyLight,
+        onDismiss: @escaping () -> Void
+    ) {
+        self.message = message
+        self.palette = palette
+        self.onDismiss = onDismiss
+    }
+
+    public var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.white)
+            Text(message)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white)
+                .lineLimit(3)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 30, height: 30)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("閉じる")
+            .accessibilityIdentifier("feed.banner.dismiss")
+        }
+        .padding(.leading, 12)
+        .padding(.trailing, 5)
+        .padding(.vertical, 6)
+        .background(palette.strong.opacity(0.96), in: RoundedRectangle(cornerRadius: 8))
+        .shadow(color: .black.opacity(0.18), radius: 4, y: 2)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("feed.banner.error")
     }
 }
 
