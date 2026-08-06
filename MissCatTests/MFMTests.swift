@@ -12,8 +12,6 @@ import XCTest
 
 class MFMTests: XCTestCase {
     private let mockUser: SecureUser = .init(userId: "", username: "", instance: "", apiKey: nil)
-    // Never replace this with `UIFont()`: its inherited empty initializer does
-    // not create the CoreText backing that MFMEngine reads on current iOS.
     private let testFont = UIFont.systemFont(ofSize: 15)
     override func setUp() {}
     
@@ -169,6 +167,19 @@ class MFMTests: XCTestCase {
         XCTAssertEqual(font.familyName, expectedFamily)
         XCTAssertEqual(font.pointSize, expectedSize, accuracy: 0.01)
         XCTAssertEqual(renderedFont?.familyName, expectedFamily)
+        XCTAssertGreaterThan(renderedFont?.pointSize ?? 0, 0)
+    }
+
+    /// Regression for the EXC_BAD_ACCESS reported from `testIgnoreSpinTag` on
+    /// iOS 18: a bare UIFont has no CoreText backing and must never be inspected.
+    func testGeneratePlaneStringRejectsUnbackedUIFontWithoutCrashing() {
+        let attributed = MFMEngine.generatePlaneString(
+            string: "<spin>safe</spin>".mfmPreTransform(),
+            font: UIFont()
+        )
+        let renderedFont = attributed.attribute(.font, at: 0, effectiveRange: nil) as? UIFont
+
+        XCTAssertEqual(attributed.string.cleanup(), "safe")
         XCTAssertGreaterThan(renderedFont?.pointSize ?? 0, 0)
     }
     

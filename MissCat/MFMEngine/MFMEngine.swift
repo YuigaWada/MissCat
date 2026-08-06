@@ -19,6 +19,23 @@ struct MFMString {
 }
 
 class MFMEngine {
+    /// `UIFont()` is publicly constructible but does not contain the CoreText
+    /// backing used by properties such as `familyName` on current iOS.  The
+    /// legacy renderer used to dereference that object and crash in CoreText.
+    /// Keep all font inspection behind this boundary and replace the invalid
+    /// base-class instance before asking UIKit for any font metadata.
+    private struct SafeRenderFont {
+        let value: UIFont
+
+        init(candidate: UIFont?, fallbackSize: CGFloat = 15) {
+            guard let candidate, type(of: candidate) != UIFont.self else {
+                value = UIFont.systemFont(ofSize: fallbackSize)
+                return
+            }
+            value = candidate
+        }
+    }
+
     struct CustomEmojiAttachments {
         let url: String
         let attachment: NSTextAttachment
@@ -250,8 +267,9 @@ class MFMEngine {
     ///   - string: 対象のstring
     ///   - font: フォント
     static func generatePlaneString(string: String, font: UIFont?, textHex: String? = nil) -> NSAttributedString {
-        let fontName = font?.familyName ?? "Helvetica"
-        let fontSize = font?.pointSize ?? 15.0
+        let safeFont = SafeRenderFont(candidate: font)
+        let fontName = safeFont.value.familyName
+        let fontSize = safeFont.value.pointSize
         
         return string.toAttributedString(family: fontName, size: fontSize, textHex: textHex) ?? .init()
     }
