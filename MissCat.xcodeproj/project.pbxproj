@@ -18,6 +18,8 @@
 		C0DE00000000000000000011 /* MissCatWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000012 /* MissCatWelcomeView.swift */; };
 		C0DE00000000000000000013 /* MissCatMainShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000014 /* MissCatMainShellView.swift */; };
 		C0DE00000000000000000019 /* MissCatAuthenticationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001A /* MissCatAuthenticationService.swift */; };
+		C0DE0000000000000000001B /* ShareCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001C /* ShareCore.swift */; };
+		C0DE0000000000000000001D /* ShareInputLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001E /* ShareInputLoader.swift */; };
 		8D00BD5A249371560049FFE0 /* InstanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D00BD59249371560049FFE0 /* InstanceViewController.swift */; };
 		8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */; };
 		8D065B17237AC3D0003DFB7C /* TimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */; };
@@ -245,6 +247,8 @@
 		C0DE00000000000000000012 /* MissCatWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatWelcomeView.swift; sourceTree = "<group>"; };
 		C0DE00000000000000000014 /* MissCatMainShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatMainShellView.swift; sourceTree = "<group>"; };
 		C0DE0000000000000000001A /* MissCatAuthenticationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatAuthenticationService.swift; sourceTree = "<group>"; };
+		C0DE0000000000000000001C /* ShareCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCore.swift; sourceTree = "<group>"; };
+		C0DE0000000000000000001E /* ShareInputLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareInputLoader.swift; sourceTree = "<group>"; };
 		3454BE3D06D0C12BCA775B4B /* Pods-MissCatShare.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCatShare.release.xcconfig"; path = "Target Support Files/Pods-MissCatShare/Pods-MissCatShare.release.xcconfig"; sourceTree = "<group>"; };
 		49D674DA4870479FF355F58B /* Pods_MissCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MissCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		79B7AD7D002BC8FC43933AF9 /* Pods-MissCatShare.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCatShare.debug.xcconfig"; path = "Target Support Files/Pods-MissCatShare/Pods-MissCatShare.debug.xcconfig"; sourceTree = "<group>"; };
@@ -598,6 +602,8 @@
 			children = (
 				8D1A4C0F24DD9B4000EFD826 /* MissCatShare.entitlements */,
 				8D1A4BFC24DD7BFF00EFD826 /* ShareViewController.swift */,
+				C0DE0000000000000000001C /* ShareCore.swift */,
+				C0DE0000000000000000001E /* ShareInputLoader.swift */,
 				8D1A4BFE24DD7BFF00EFD826 /* MainInterface.storyboard */,
 				8D1A4C0124DD7BFF00EFD826 /* Info.plist */,
 				8D1A4C0924DD82CC00EFD826 /* PostModel.swift */,
@@ -1468,6 +1474,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D1A4BFD24DD7BFF00EFD826 /* ShareViewController.swift in Sources */,
+				C0DE0000000000000000001B /* ShareCore.swift in Sources */,
+				C0DE0000000000000000001D /* ShareInputLoader.swift in Sources */,
 				8D1A4C0E24DD95CA00EFD826 /* UserModel.swift in Sources */,
 				8DF7E3D024DDF03F00D29018 /* AccountsViewController.swift in Sources */,
 				8D1A4C0A24DD82CC00EFD826 /* PostModel.swift in Sources */,

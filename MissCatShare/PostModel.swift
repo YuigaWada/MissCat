@@ -1,92 +1,193 @@
-//
-//  PostModel.swift
-//  MissCatShare
-//
-//  Created by Yuiga Wada on 2020/08/07.
-//  Copyright © 2020 Yuiga Wada. All rights reserved.
-//
-
 import MisskeyKit
+import UIKit
 
-class PostModel {
+@MainActor
+final class SharePostService: SharePosting {
+    private let userModel: UserModel
+
+    init(userModel: UserModel) {
+        self.userModel = userModel
+    }
+
+    func submit(
+        draft: ShareDraft,
+        accountID: String,
+        visibility: ShareVisibility
+    ) async throws {
+        guard let user = userModel.getUser(userId: accountID) else {
+            throw PostModel.PostingError.accountUnavailable
+        }
+
+        let model = PostModel(user: user)
+        guard model.isAvailable else { throw PostModel.PostingError.accountUnavailable }
+        try await model.submitNote(draft: draft, visibility: visibility)
+    }
+}
+
+final class PostModel {
+    enum PostingError: LocalizedError {
+        case accountUnavailable
+        case emptyContent
+        case invalidImage
+        case imageEncodingFailed
+        case uploadFailed
+        case postFailed
+
+        var errorDescription: String? {
+            switch self {
+            case .accountUnavailable:
+                "投稿に使うアカウント情報を取得できませんでした"
+            case .emptyContent:
+                "投稿するテキストまたは画像がありません"
+            case .invalidImage:
+                "共有された画像を読み込めませんでした"
+            case .imageEncodingFailed:
+                "共有された画像を投稿用に変換できませんでした"
+            case .uploadFailed:
+                "画像のアップロードに失敗しました"
+            case .postFailed:
+                "送信に失敗しました。通信状態を確認して再試行してください"
+            }
+        }
+    }
+
     private let misskey: MisskeyKit?
-    
+
+    var isAvailable: Bool { misskey != nil }
+
     init(user: SecureUser) {
+        guard let apiKey = user.apiKey, !apiKey.isEmpty else {
+            misskey = nil
+            return
+        }
+
         let misskey = MisskeyKit()
         misskey.changeInstance(instance: user.instance)
-        misskey.auth.setAPIKey(user.apiKey!)
+        misskey.auth.setAPIKey(apiKey)
         self.misskey = misskey
     }
-    
-    /// 投稿する
-    func submitNote(_ note: String?, image: UIImage?, visibility: Visibility, completion: @escaping (Bool) -> Void) {
-        guard let note = note else { return }
-        
-        if let image = image { // 画像が添付されている場合
-            uploadFile(image, nsfw: false) { id in
-                guard let id = id else { completion(false); return }
-                self.misskey?.notes.createNote(visibility: visibility, text: note, fileIds: [id]) { post, error in
-                    let isSuccess = post != nil && error == nil
-                    completion(isSuccess)
+
+    func submitNote(draft: ShareDraft, visibility: ShareVisibility) async throws {
+        guard misskey != nil else { throw PostingError.accountUnavailable }
+        guard draft.hasContent else { throw PostingError.emptyContent }
+
+        var fileIDs: [String] = []
+        for imageData in draft.imageData {
+            fileIDs.append(try await uploadImage(imageData))
+        }
+
+        try await createNote(
+            text: draft.text,
+            fileIDs: fileIDs,
+            visibility: visibility.misskeyVisibility
+        )
+    }
+
+    /// Compatibility entry point for the storyboard controller while the
+    /// SwiftUI compose view is integrated in the next commit.
+    func submitNote(
+        _ note: String?,
+        image: UIImage?,
+        visibility: Visibility,
+        completion: @escaping (Bool) -> Void
+    ) {
+        let visibility = ShareVisibility(rawValue: visibility.rawValue) ?? .public
+        let draft = ShareDraft(
+            text: note ?? "",
+            imageData: image.flatMap { $0.pngData() }.map { [$0] } ?? []
+        )
+
+        Task {
+            do {
+                try await submitNote(draft: draft, visibility: visibility)
+                completion(true)
+            } catch {
+                completion(false)
+            }
+        }
+    }
+
+    private func uploadImage(_ data: Data) async throws -> String {
+        guard let image = UIImage(data: data) else { throw PostingError.invalidImage }
+        guard let resizedImage = image.resized(widthUnder: 1024),
+              let targetData = resizedImage.jpegData(compressionQuality: 0.5)
+        else {
+            throw PostingError.imageEncodingFailed
+        }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            guard let misskey else {
+                continuation.resume(throwing: PostingError.accountUnavailable)
+                return
+            }
+            misskey.drive.createFile(
+                fileData: targetData,
+                fileType: "image/jpeg",
+                name: UUID().uuidString + ".jpeg",
+                isSensitive: false,
+                force: false
+            ) { result, error in
+                if error != nil {
+                    continuation.resume(throwing: PostingError.uploadFailed)
+                } else if let id = result?.id, !id.isEmpty {
+                    continuation.resume(returning: id)
+                } else {
+                    continuation.resume(throwing: PostingError.uploadFailed)
                 }
             }
-        } else { // 画像の添付がない場合
-            misskey?.notes.createNote(visibility: visibility, text: note, fileIds: []) { post, error in
-                let isSuccess = post != nil && error == nil
-                completion(isSuccess)
+        }
+    }
+
+    private func createNote(
+        text: String,
+        fileIDs: [String],
+        visibility: Visibility
+    ) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            guard let misskey else {
+                continuation.resume(throwing: PostingError.accountUnavailable)
+                return
             }
-        }
-    }
-    
-    /// 画像ファイルをアップデートする
-    func uploadFile(_ image: UIImage, nsfw: Bool, completion: @escaping (String?) -> Void) {
-        guard let resizedImage = image.resized(widthUnder: 1024), let targetImage = resizedImage.jpegData(compressionQuality: 0.5) else { return }
-        
-        misskey?.drive.createFile(fileData: targetImage, fileType: "image/jpeg", name: UUID().uuidString + ".jpeg", isSensitive: nsfw, force: false) { result, error in
-            guard let result = result, error == nil else { return }
-            
-            completion(result.id)
-        }
-    }
-    
-    /// 動画ファイルをアップロードする
-    func uploadFile(_ videoData: Data, nsfw: Bool, completion: @escaping (String?) -> Void) {
-        misskey?.drive.createFile(fileData: videoData, fileType: "video/mp4", name: UUID().uuidString + ".mp4", isSensitive: nsfw, force: false) { result, error in
-            guard let result = result, error == nil else { return }
-            
-            completion(result.id)
+            misskey.notes.createNote(
+                visibility: visibility,
+                text: text,
+                fileIds: fileIDs
+            ) { post, error in
+                if post != nil, error == nil {
+                    continuation.resume(returning: ())
+                } else {
+                    continuation.resume(throwing: PostingError.postFailed)
+                }
+            }
         }
     }
 }
 
-extension UIImage {
-    func resized(widthUnder: CGFloat) -> UIImage? {
-        return resized(withPercentage: widthUnder / size.width)
+private extension ShareVisibility {
+    var misskeyVisibility: Visibility {
+        switch self {
+        case .public:
+            .public
+        case .home:
+            .home
+        case .followers:
+            .followers
+        }
     }
-    
+}
+
+private extension UIImage {
+    func resized(widthUnder maximumWidth: CGFloat) -> UIImage? {
+        guard size.width > maximumWidth else { return self }
+        return resized(withPercentage: maximumWidth / size.width)
+    }
+
     func resized(withPercentage percentage: CGFloat) -> UIImage? {
+        guard percentage > 0 else { return nil }
         let canvasSize = CGSize(width: size.width * percentage, height: size.height * percentage)
         UIGraphicsBeginImageContextWithOptions(canvasSize, false, scale)
         defer { UIGraphicsEndImageContext() }
         draw(in: CGRect(origin: .zero, size: canvasSize))
         return UIGraphicsGetImageFromCurrentImageContext()
-    }
-    
-    func resizedTo5MB() -> UIImage? {
-        guard let imageData = pngData() else { return nil }
-        
-        var resizingImage = self
-        var imageSizeKB = Double(imageData.count) / 1000.0 // ! Or devide for 1024 if you need KB but not kB
-        
-        while imageSizeKB > 5000 { // ! Or use 1024 if you need KB but not kB
-            guard let resizedImage = resizingImage.resized(withPercentage: 0.9),
-                  let imageData = resizedImage.pngData()
-            else { return nil }
-            
-            resizingImage = resizedImage
-            imageSizeKB = Double(imageData.count) / 1000.0 // ! Or devide for 1024 if you need KB but not kB
-        }
-        
-        return resizingImage
     }
 }
