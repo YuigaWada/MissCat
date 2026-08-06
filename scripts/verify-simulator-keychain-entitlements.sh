@@ -23,8 +23,34 @@ fi
 
 entitlements=$(/usr/bin/codesign -d --entitlements :- "$app_path" 2>&1 || true)
 
+# Xcode 16 keeps Simulator-only entitlements in the executable's
+# __TEXT,__entitlements section instead of the normal code-signature blob.
+# `simctl install` needs that section, so inspect it when codesign reports an
+# empty entitlement dictionary.
 if [[ "$entitlements" != *"keychain-access-groups"* ]]; then
-    echo "error: app has no signed keychain-access-groups entitlement" >&2
+    executable_name=$(/usr/bin/plutil -extract CFBundleExecutable raw "$info_plist")
+    executable_path="$app_path/$executable_name"
+    section_details=$(/usr/bin/otool -l "$executable_path")
+    section_offset=$(awk '
+        $1 == "sectname" && $2 == "__entitlements" { found = 1; next }
+        found && $1 == "offset" { print $2; exit }
+    ' <<< "$section_details")
+    section_size=$(awk '
+        $1 == "sectname" && $2 == "__entitlements" { found = 1; next }
+        found && $1 == "size" { print $2; exit }
+    ' <<< "$section_details")
+
+    if [[ -n "$section_offset" && -n "$section_size" ]]; then
+        entitlements_file=$(mktemp)
+        trap 'rm -f "$entitlements_file"' EXIT
+        /bin/dd if="$executable_path" of="$entitlements_file" \
+            bs=1 skip="$section_offset" count="$((section_size))" status=none
+        entitlements=$(/usr/bin/plutil -convert xml1 -o - "$entitlements_file" 2>/dev/null || true)
+    fi
+fi
+
+if [[ "$entitlements" != *"keychain-access-groups"* ]]; then
+    echo "error: app has no Simulator keychain-access-groups entitlement" >&2
     echo "Build Simulator previews with code signing enabled; do not use CODE_SIGNING_ALLOWED=NO." >&2
     exit 78
 fi
