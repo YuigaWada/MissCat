@@ -25,6 +25,17 @@ assert_json_contains() {
     /usr/bin/grep -Fq "$expected" "$json_path" || fail "$json_path does not contain: $expected"
 }
 
+assert_json_integer() {
+    local json_path="$1"
+    local key_path="$2"
+    local expected="$3"
+    local actual
+    actual=$(/usr/bin/plutil -extract "$key_path" raw -expect integer -- "$json_path") || \
+        fail "$json_path does not contain integer $key_path"
+    [[ "$actual" == "$expected" ]] || \
+        fail "$json_path has $key_path=$actual, expected $expected"
+}
+
 [[ -x "$magick_bin" ]] || fail "ImageMagick is unavailable: $magick_bin"
 [[ -x "$compare_script" ]] || fail "comparison script is not executable: $compare_script"
 
@@ -99,5 +110,57 @@ dimension_status=0
 [[ "$dimension_status" -eq 2 ]] || fail "dimension mismatch should exit 2"
 /usr/bin/plutil -convert json -o /dev/null -- "$dimension_out/summary.json"
 assert_json_contains "$dimension_out/summary.json" '"status": "dimension_mismatch"'
+
+large_baseline="$fixture_dir/large baseline.png"
+large_changed="$fixture_dir/large changed.png"
+scientific_magick="$fixture_dir/scientific magick wrapper.sh"
+scientific_marker="$fixture_dir/scientific count marker.txt"
+"$magick_bin" -size 1206x2622 xc:white "$large_baseline"
+"$magick_bin" -size 1206x2622 xc:black "$large_changed"
+cat > "$scientific_magick" <<'WRAPPER'
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+: "${REAL_MAGICK:?}"
+: "${SCIENTIFIC_MARKER:?}"
+
+is_pixel_count=false
+for argument in "$@"; do
+    if [[ "$argument" == '%[fx:round(mean*w*h)]' ]]; then
+        is_pixel_count=true
+        break
+    fi
+done
+
+if [[ "$is_pixel_count" == true ]]; then
+    exact_value=$("$REAL_MAGICK" "$@")
+    scientific_value=$(awk -v value="$exact_value" 'BEGIN { printf "%.12e", value + 0 }')
+    printf '%s' "$scientific_value"
+    printf '%s\n' "$scientific_value" >> "$SCIENTIFIC_MARKER"
+    exit 0
+fi
+
+exec "$REAL_MAGICK" "$@"
+WRAPPER
+chmod +x "$scientific_magick"
+
+large_out="$fixture_dir/large scientific output"
+large_status=0
+REAL_MAGICK="$magick_bin" SCIENTIFIC_MARKER="$scientific_marker" \
+    "$compare_script" --magick "$scientific_magick" --threshold 0.999999 \
+    --out "$large_out" "$large_baseline" "$large_changed" || large_status=$?
+[[ "$large_status" -eq 1 ]] || fail "large changed image should exceed a nonzero threshold"
+/usr/bin/grep -Fxq '3.162132000000e+06' "$scientific_marker" || \
+    fail "large fixture did not exercise exact scientific notation"
+/usr/bin/plutil -convert json -o /dev/null -- "$large_out/summary.json"
+assert_json_contains "$large_out/summary.json" '"status": "threshold_exceeded"'
+assert_json_contains "$large_out/summary.json" '"max_changed_ratio": 0.999999'
+assert_json_contains "$large_out/summary.json" '"changed_ratio_exceeded": true'
+assert_json_integer "$large_out/summary.json" 'comparison.changed_pixels' '3162132'
+assert_json_integer "$large_out/summary.json" 'comparison.evaluated_pixels' '3162132'
+assert_file "$large_out/diff-heatmap.png"
+assert_file "$large_out/side-by-side.png"
+assert_file "$large_out/overlay.png"
 
 printf 'visual diff self-test passed (%s)\n' "$fixture_dir"

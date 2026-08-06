@@ -81,6 +81,17 @@ normalize_number() {
     awk -v value="$1" 'BEGIN { printf "%.12g", value + 0 }'
 }
 
+normalize_pixel_count() {
+    local value="$1"
+    local maximum="$2"
+    LC_ALL=C awk -v value="$value" -v maximum="$maximum" 'BEGIN {
+        if (value !~ /^[0-9]+([.][0-9]+)?([eE][+-]?[0-9]+)?$/) exit 1
+        numeric = value + 0
+        if (numeric < 0 || numeric > maximum || numeric != int(numeric)) exit 1
+        printf "%.0f", numeric
+    }'
+}
+
 write_validation_report() {
     local status="$1"
     local detail="$2"
@@ -270,8 +281,10 @@ if [[ -n "$mask" ]]; then
     effective_baseline="$temporary_dir/baseline-masked.png"
     effective_candidate="$temporary_dir/candidate-masked.png"
     "$magick_bin" "$mask" -alpha off -colorspace Gray -threshold 50% "$effective_mask"
-    evaluated_pixels=$("$magick_bin" "$effective_mask" -format '%[fx:round(w*h*mean)]' info:)
-    [[ "$evaluated_pixels" =~ ^[0-9]+$ ]] || fail "could not count mask pixels"
+    evaluated_pixels_output=$("$magick_bin" -precision 20 "$effective_mask" \
+        -format '%[fx:round(w*h*mean)]' info:)
+    evaluated_pixels=$(normalize_pixel_count "$evaluated_pixels_output" "$total_pixels") || \
+        fail "could not count mask pixels: $evaluated_pixels_output"
     [[ "$evaluated_pixels" -gt 0 ]] || fail "mask ignores every screenshot pixel"
     ignored_pixels=$((total_pixels - evaluated_pixels))
 
@@ -286,9 +299,10 @@ binary_status=0
 "$magick_bin" compare -fuzz "$fuzz" -highlight-color white -lowlight-color black \
     "$effective_baseline" "$effective_candidate" "$binary_diff" >/dev/null 2>&1 || binary_status=$?
 [[ "$binary_status" -le 1 ]] || fail "ImageMagick pixel comparison failed"
-changed_pixels=$("$magick_bin" "$binary_diff" -alpha off -colorspace Gray -threshold 50% \
-    -format '%[fx:round(mean*w*h)]' info:)
-[[ "$changed_pixels" =~ ^[0-9]+$ ]] || fail "could not count changed pixels"
+changed_pixels_output=$("$magick_bin" -precision 20 "$binary_diff" -alpha off -colorspace Gray \
+    -threshold 50% -format '%[fx:round(mean*w*h)]' info:)
+changed_pixels=$(normalize_pixel_count "$changed_pixels_output" "$evaluated_pixels") || \
+    fail "could not count changed pixels: $changed_pixels_output"
 changed_ratio=$(awk -v changed="$changed_pixels" -v total="$evaluated_pixels" \
     'BEGIN { printf "%.12g", changed / total }')
 
