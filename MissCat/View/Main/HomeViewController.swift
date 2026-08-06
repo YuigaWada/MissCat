@@ -419,13 +419,11 @@ class HomeViewController: PolioPagerViewController {
     }
     
     private func showProfileView(userId: String, owner: SecureUser) {
-        guard let storyboard = self.storyboard,
-              let profileViewController = storyboard.instantiateViewController(withIdentifier: "profile") as? ProfileViewController else { return }
-        
-        profileViewController.setUserId(userId, owner: owner)
-        profileViewController.view.frame = getDisplayRect(needNavBar: false)
-        profileViewController.homeViewController = self
-        
+        guard let profileViewController = MissCatProfileBridge.makeProfileController(
+            userID: userId,
+            owner: owner,
+            home: self
+        ) else { return }
         navigationController?.pushViewController(profileViewController, animated: true)
     }
     

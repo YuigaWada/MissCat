@@ -47,7 +47,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     var homeViewController: HomeViewController?
     private var trendVC: TrendViewController?
     private var timelineVC: TimelineViewController?
-    private var userListVC: UserListViewController?
+    private var userListVC: UIViewController?
     
     private var selected: Tab = .note
     
@@ -281,12 +281,15 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
         return viewController
     }
     
-    private func generateUserListVC(query: String) -> UserListViewController? {
+    private func generateUserListVC(query: String) -> UIViewController? {
         guard !query.isEmpty,
-              let viewController = getViewController(name: "user-list") as? UserListViewController,
-              let owner = Cache.UserDefaults.shared.getCurrentUser() else { return nil }
-        
-        viewController.setup(type: .search, owner: owner, query: query, lockScroll: false, withTopShadow: true)
+              let owner = Cache.UserDefaults.shared.getCurrentUser(),
+              let viewController = MissCatProfileBridge.makeSearchResultsController(
+                  query: query,
+                  owner: owner,
+                  home: homeViewController
+              ) else { return nil }
+
         viewController.view.frame = timelineView.frame
         viewController.view.translatesAutoresizingMaskIntoConstraints = false
         timelineView.addSubview(viewController.view)
