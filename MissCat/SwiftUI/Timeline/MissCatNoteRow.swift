@@ -279,8 +279,11 @@ public struct MissCatNoteRow: View {
             if sensitiveIsHidden {
                 revealedSensitiveAttachmentIDs.insert(attachment.id)
             } else {
-                selectedAttachment = attachment
-                onOpenAttachment(attachment)
+                MissCatNoteMediaTapRouter.route(
+                    attachment,
+                    presentNatively: { selectedAttachment = $0 },
+                    legacyPresentation: onOpenAttachment
+                )
             }
         } label: {
             ZStack {
@@ -541,4 +544,24 @@ public struct MissCatNoteRow: View {
         formatter.unitsStyle = .abbreviated
         return formatter
     }()
+}
+
+enum MissCatNoteMediaPresentationOwner: Equatable {
+    case nativeSwiftUIPager
+}
+
+/// Migrated note rows own media presentation. The legacy callback remains in
+/// the navigation action value for source compatibility while routes move in
+/// batches, but it must never start Agrume for a SwiftUI row.
+enum MissCatNoteMediaTapRouter {
+    @discardableResult
+    static func route(
+        _ attachment: MissCatNoteAttachment,
+        presentNatively: (MissCatNoteAttachment) -> Void,
+        legacyPresentation: (MissCatNoteAttachment) -> Void
+    ) -> MissCatNoteMediaPresentationOwner {
+        presentNatively(attachment)
+        _ = legacyPresentation
+        return .nativeSwiftUIPager
+    }
 }

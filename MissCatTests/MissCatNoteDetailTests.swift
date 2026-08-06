@@ -2,6 +2,30 @@
 import XCTest
 
 final class MissCatNoteDetailTests: XCTestCase {
+    func testProductionSwiftUINoteMediaTapUsesOneNativeOwnerAndNeverInvokesLegacyViewer() {
+        let attachment = MissCatNoteAttachment(
+            id: "media",
+            name: "fixture image",
+            kind: .image,
+            url: URL(string: "https://example.invalid/image.png")
+        )
+        var nativePresentations = 0
+        var legacyPresentations = 0
+
+        let owner = MissCatNoteMediaTapRouter.route(
+            attachment,
+            presentNatively: { selected in
+                XCTAssertEqual(selected.id, attachment.id)
+                nativePresentations += 1
+            },
+            legacyPresentation: { _ in legacyPresentations += 1 }
+        )
+
+        XCTAssertEqual(owner, .nativeSwiftUIPager)
+        XCTAssertEqual(nativePresentations, 1)
+        XCTAssertEqual(legacyPresentations, 0)
+    }
+
     private var session: URLSession!
 
     override func setUp() {

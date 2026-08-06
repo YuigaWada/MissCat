@@ -133,10 +133,6 @@ enum MissCatNotificationMessageBridge {
                 guard let home else { return }
                 openNotificationRoute(.note(noteID), owner: owner, home: home)
             },
-            openAttachment: { [weak home] attachment in
-                guard let url = attachment.url else { return }
-                home?.showImage([url], start: 0)
-            },
             openHashtag: { [weak home] tag in home?.searchHashtag(tag: tag) }
         )
     }
