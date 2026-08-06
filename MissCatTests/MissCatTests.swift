@@ -24,6 +24,61 @@ class MissCatTests: XCTestCase {
     }
 }
 
+final class WelcomeVisualLayoutTests: XCTestCase {
+    func testReferenceStoryboardFramesAreRecoveredFromSafeAreaLayout() {
+        let safeTop: CGFloat = 48
+        let layout = MissCatWelcomeLayout(
+            contentSize: CGSize(width: 414, height: 814),
+            safeTop: safeTop,
+            safeBottom: 34
+        )
+
+        XCTAssertEqual(layout.canvasHeight, 896, accuracy: 0.001)
+        XCTAssertEqual(layout.backgroundOffsetY, -48, accuracy: 0.001)
+        XCTAssertEqual(layout.logoCenterY + safeTop, 340, accuracy: 0.001)
+        XCTAssertEqual(layout.taglineCenterY + safeTop, 409.5, accuracy: 0.001)
+        XCTAssertEqual(layout.buttonHeight, 51, accuracy: 0.001)
+        XCTAssertEqual(layout.buttonsTopY + safeTop, 711, accuracy: 0.001)
+        XCTAssertEqual(layout.changeInstanceCenterY + safeTop, 797, accuracy: 0.001)
+        XCTAssertEqual(layout.instanceCenterY + safeTop, 843, accuracy: 0.001)
+    }
+
+    func testIPhone16ProUsesFullCanvasForProportionalButtonHeight() {
+        let safeTop: CGFloat = 62
+        let layout = MissCatWelcomeLayout(
+            contentSize: CGSize(width: 402, height: 778),
+            safeTop: safeTop,
+            safeBottom: 34
+        )
+
+        XCTAssertEqual(layout.canvasHeight, 874, accuracy: 0.001)
+        XCTAssertEqual(layout.buttonHeight, 49.7477, accuracy: 0.001)
+        XCTAssertEqual(layout.buttonsTopY + safeTop, 690.2523, accuracy: 0.001)
+        XCTAssertEqual(layout.changeInstanceCenterY + safeTop, 775, accuracy: 0.001)
+        XCTAssertEqual(layout.instanceCenterY + safeTop, 821, accuracy: 0.001)
+        XCTAssertEqual(MissCatLegacyMetrics.welcomeButtonFontSize, 15, accuracy: 0.001)
+        XCTAssertEqual(MissCatLegacyMetrics.welcomeChangeInstanceFontSize, 15, accuracy: 0.001)
+    }
+}
+
+final class OnboardingVisualTokenTests: XCTestCase {
+    func testTermsMetricsMatchLegacyStoryboard() {
+        XCTAssertEqual(MissCatLegacyMetrics.termsTextFontSize, 11, accuracy: 0.001)
+        XCTAssertEqual(MissCatLegacyMetrics.termsTextHorizontalInset, 5, accuracy: 0.001)
+        XCTAssertEqual(MissCatLegacyMetrics.termsTextVerticalInset, 8, accuracy: 0.001)
+        XCTAssertEqual(MissCatLegacyMetrics.termsAgreementTopGap, 15, accuracy: 0.001)
+        XCTAssertEqual(MissCatLegacyMetrics.termsAgreementTrailingInset, 20, accuracy: 0.001)
+        XCTAssertEqual(MissCatLegacyMetrics.termsAgreementHeight, 30, accuracy: 0.001)
+        XCTAssertEqual(MissCatLegacyMetrics.termsAgreementFontSize, 15, accuracy: 0.001)
+    }
+
+    func testAuthenticationChromeMatchesLegacyUIKitValues() {
+        XCTAssertEqual(MissCatLegacyColorHex.authenticationBrowserBackground, "5C6367")
+        XCTAssertEqual(MissCatLegacyMetrics.authenticationLoadingDialogSize, 95, accuracy: 0.001)
+        XCTAssertEqual(MissCatLegacyMetrics.authenticationModalScrimOpacity, 0.20, accuracy: 0.001)
+    }
+}
+
 private enum FakeAPIKeyStoreError: Error {
     case readFailed
     case writeFailed

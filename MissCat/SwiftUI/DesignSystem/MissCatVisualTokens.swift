@@ -13,9 +13,26 @@ public enum MissCatLegacyMetrics {
     public static let welcomeLogoHeight: CGFloat = 112
     public static let welcomeLogoTopFromSafeArea: CGFloat = 236
     public static let welcomeTaglineGap: CGFloat = 3
+    public static let welcomeTaglineHeight: CGFloat = 21
+    public static let welcomeButtonFontSize: CGFloat = 15
+    public static let welcomeChangeInstanceFontSize: CGFloat = 15
+    public static let welcomeChangeInstanceHeight: CGFloat = 30
     public static let welcomeChangeInstanceGap: CGFloat = 20
     public static let welcomeChangeInstanceBottomFromSafeArea: CGFloat = 50
+    public static let welcomeInstanceHeight: CGFloat = 18
     public static let welcomeInstanceBottomFromSafeArea: CGFloat = 10
+
+    public static let termsTextFontSize: CGFloat = 11
+    public static let termsTextHorizontalInset: CGFloat = 5
+    public static let termsTextVerticalInset: CGFloat = 8
+    public static let termsAgreementTopGap: CGFloat = 15
+    public static let termsAgreementTrailingInset: CGFloat = 20
+    public static let termsAgreementHeight: CGFloat = 30
+    public static let termsAgreementFontSize: CGFloat = 15
+
+    public static let authenticationLoadingDialogSize: CGFloat = 95
+    public static let authenticationLoadingCornerRadius: CGFloat = 14
+    public static let authenticationModalScrimOpacity = 0.20
 
     public static let timelineTabsHeight: CGFloat = 43
     public static let timelineSelectionHeight: CGFloat = 2
@@ -36,11 +53,65 @@ public enum MissCatLegacyMetrics {
     }
 }
 
+/// Converts the safe-area-sized SwiftUI proposal back into the coordinate
+/// system used by the legacy full-screen storyboard constraints.
+struct MissCatWelcomeLayout {
+    let contentSize: CGSize
+    let safeTop: CGFloat
+    let safeBottom: CGFloat
+
+    var canvasHeight: CGFloat {
+        contentSize.height + safeTop + safeBottom
+    }
+
+    var backgroundOffsetY: CGFloat {
+        -safeTop
+    }
+
+    var logoCenterY: CGFloat {
+        MissCatLegacyMetrics.welcomeLogoTopFromSafeArea
+            + MissCatLegacyMetrics.welcomeLogoHeight / 2
+    }
+
+    var taglineCenterY: CGFloat {
+        MissCatLegacyMetrics.welcomeLogoTopFromSafeArea
+            + MissCatLegacyMetrics.welcomeLogoHeight
+            + MissCatLegacyMetrics.welcomeTaglineGap
+            + MissCatLegacyMetrics.welcomeTaglineHeight / 2
+    }
+
+    var buttonHeight: CGFloat {
+        MissCatLegacyMetrics.welcomeButtonHeight(canvasHeight: canvasHeight)
+    }
+
+    var changeInstanceBottomY: CGFloat {
+        contentSize.height - MissCatLegacyMetrics.welcomeChangeInstanceBottomFromSafeArea
+    }
+
+    var buttonsTopY: CGFloat {
+        changeInstanceBottomY
+            - MissCatLegacyMetrics.welcomeChangeInstanceHeight
+            - MissCatLegacyMetrics.welcomeChangeInstanceGap
+            - buttonHeight
+    }
+
+    var changeInstanceCenterY: CGFloat {
+        changeInstanceBottomY - MissCatLegacyMetrics.welcomeChangeInstanceHeight / 2
+    }
+
+    var instanceCenterY: CGFloat {
+        contentSize.height
+            - MissCatLegacyMetrics.welcomeInstanceBottomFromSafeArea
+            - MissCatLegacyMetrics.welcomeInstanceHeight / 2
+    }
+}
+
 public enum MissCatLegacyColorHex {
     public static let accent = "2F7CF6"
     public static let welcomeGradientBottomLeading = "4691A3"
     public static let welcomeGradientMiddle = "5AB0C5"
     public static let welcomeGradientTopTrailing = "89D5E8"
+    public static let authenticationBrowserBackground = "5C6367"
 
     public static let lightBase = "FFFFFF"
     public static let lightStrong = "555555"
@@ -106,10 +177,47 @@ public struct MissCatVisualPalette: Sendable {
 
 public enum MissCatTypography {
     public static let welcomeTagline = Font.system(size: 17)
-    public static let welcomeButton = Font.system(size: 17)
+    public static let welcomeButton = Font.system(size: MissCatLegacyMetrics.welcomeButtonFontSize)
     public static let welcomeInstance = Font.system(size: 15)
+    public static let termsText = Font.custom("Helvetica", size: MissCatLegacyMetrics.termsTextFontSize)
+    public static let termsAgreement = Font.system(size: MissCatLegacyMetrics.termsAgreementFontSize)
     public static let timelineTab = Font.system(size: 17)
     public static let navigationTitle = Font.system(size: 17, weight: .medium)
+}
+
+struct MissCatAuthenticationLoadingOverlay: View {
+    let accessibilityLabel: String
+
+    var body: some View {
+        ZStack {
+            Color.black
+                .opacity(MissCatLegacyMetrics.authenticationModalScrimOpacity)
+                .ignoresSafeArea()
+
+            ProgressView()
+                .controlSize(.large)
+                .tint(.black)
+                .frame(
+                    width: MissCatLegacyMetrics.authenticationLoadingDialogSize,
+                    height: MissCatLegacyMetrics.authenticationLoadingDialogSize
+                )
+                .background(
+                    .regularMaterial,
+                    in: RoundedRectangle(
+                        cornerRadius: MissCatLegacyMetrics.authenticationLoadingCornerRadius,
+                        style: .continuous
+                    )
+                )
+                .accessibilityLabel(accessibilityLabel)
+        }
+    }
+}
+
+extension View {
+    func missCatLegacyOnboardingNavigationBar() -> some View {
+        toolbarBackground(Color(uiColor: .systemBackground), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+    }
 }
 
 public extension Color {
