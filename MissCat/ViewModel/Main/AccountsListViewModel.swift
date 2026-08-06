@@ -8,8 +8,13 @@
 
 import MisskeyKit
 import RxCocoa
+import RxDataSources
 import RxSwift
 import UIKit
+
+// Retained only so the retired UIKit view model continues to compile while the
+// storyboard scene is removed in the authenticated-root cutover.
+typealias AccountsListDataSource = RxTableViewSectionedAnimatedDataSource<AccountCell.Section>
 
 class AccountsListViewModel: ViewModelType {
     struct Input {

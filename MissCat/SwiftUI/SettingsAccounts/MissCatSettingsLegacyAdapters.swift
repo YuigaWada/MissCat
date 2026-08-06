@@ -56,7 +56,9 @@ final class MissCatLegacySettingsRepository:
         Cache.shared.resetMyCache()
         Theme.shared.reset()
         Theme.shared.set()
-        return try await loadAccounts()
+        // Once the persisted current account changes, do not introduce another
+        // suspension/cancellation point before returning the verified state.
+        return metadataSnapshot()
     }
 
     func deleteAccount(id: String) async throws -> MissCatAccountDeletionResult {
@@ -72,7 +74,9 @@ final class MissCatLegacySettingsRepository:
         }
         let tabsChanged = Theme.shared.removeUserTabs(for: user)
         Cache.shared.resetMyCache()
-        let snapshot = try await loadAccounts()
+        // Credential removal is the persistence boundary. Build the resulting
+        // state synchronously so cancellation cannot hide a committed deletion.
+        let snapshot = metadataSnapshot()
         return MissCatAccountDeletionResult(
             snapshot: snapshot,
             removedConfiguredTabs: tabsChanged
@@ -81,7 +85,7 @@ final class MissCatLegacySettingsRepository:
 
     func loadDesignSettings() async throws -> MissCatDesignSettingsSnapshot {
         if Theme.shared.currentModel == nil { Theme.shared.set() }
-        let accounts = try await loadAccounts().accounts
+        let accounts = metadataSnapshot().accounts
         guard let model = Theme.shared.currentModel ?? Theme.Model.getDefault() else {
             return MissCatDesignSettingsSnapshot(
                 tabs: MissCatDesignSettingsStore.defaultTabs(accountID: accounts.first?.id),
@@ -244,6 +248,21 @@ final class MissCatLegacySettingsRepository:
         }
     }
 
+    private func metadataSnapshot() -> MissCatAccountSnapshot {
+        MissCatAccountSnapshot(
+            accounts: cache.getUsers().map { user in
+                let cached = Cache.shared.getUserInfo(user: user)
+                return MissCatAccountSummary(
+                    id: user.userId,
+                    username: user.username,
+                    displayName: cached?.name,
+                    instance: user.instance
+                )
+            },
+            currentAccountID: cache.getCurrentUserId()
+        )
+    }
+
     private func settingsTab(from tab: Theme.Tab) -> MissCatSettingsTab {
         MissCatSettingsTab(
             name: tab.name,
@@ -294,4 +313,3 @@ final class MissCatLegacySettingsRepository:
         return items.filter { seen.insert($0.id).inserted }
     }
 }
-
