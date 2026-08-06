@@ -21,8 +21,8 @@
 		C0DE0000000000000000001B /* ShareCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001C /* ShareCore.swift */; };
 		C0DE0000000000000000001D /* ShareInputLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001E /* ShareInputLoader.swift */; };
 		C0DE0000000000000000001F /* ShareComposerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000020 /* ShareComposerView.swift */; };
-		C0DE00000000000000000021 /* ShareCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001C /* ShareCore.swift */; };
-		C0DE00000000000000000023 /* ShareExtensionCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000022 /* ShareExtensionCoreTests.swift */; };
+		5A5A00000000000000000001 /* ShareCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001C /* ShareCore.swift */; };
+		5A5A00000000000000000003 /* ShareExtensionCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5A00000000000000000002 /* ShareExtensionCoreTests.swift */; };
 		C05E00000000000000000002 /* MissCatComposeCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05E00000000000000000001 /* MissCatComposeCore.swift */; };
 		C05E00000000000000000004 /* MissCatComposeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05E00000000000000000003 /* MissCatComposeService.swift */; };
 		C05E00000000000000000006 /* MissCatComposeControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05E00000000000000000005 /* MissCatComposeControls.swift */; };
@@ -265,7 +265,7 @@
 		C0DE0000000000000000001C /* ShareCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCore.swift; sourceTree = "<group>"; };
 		C0DE0000000000000000001E /* ShareInputLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareInputLoader.swift; sourceTree = "<group>"; };
 		C0DE00000000000000000020 /* ShareComposerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareComposerView.swift; sourceTree = "<group>"; };
-		C0DE00000000000000000022 /* ShareExtensionCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareExtensionCoreTests.swift; sourceTree = "<group>"; };
+		5A5A00000000000000000002 /* ShareExtensionCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareExtensionCoreTests.swift; sourceTree = "<group>"; };
 		C05E00000000000000000001 /* MissCatComposeCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatComposeCore.swift; sourceTree = "<group>"; };
 		C05E00000000000000000003 /* MissCatComposeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatComposeService.swift; sourceTree = "<group>"; };
 		C05E00000000000000000005 /* MissCatComposeControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatComposeControls.swift; sourceTree = "<group>"; };
@@ -816,7 +816,7 @@
 				C0DE0000000000000000002D /* MissCatFeedStoreTests.swift */,
 				8D4A2A2E237437C100503685 /* Info.plist */,
 				8D2279ED24468FD100FA87A2 /* MFMTests.swift */,
-				C0DE00000000000000000022 /* ShareExtensionCoreTests.swift */,
+				5A5A00000000000000000002 /* ShareExtensionCoreTests.swift */,
 				C05E0000000000000000000C /* MissCatComposeTests.swift */,
 			);
 			path = MissCatTests;
@@ -1722,8 +1722,8 @@
 			files = (
 				8D2279EE24468FD100FA87A2 /* MFMTests.swift in Sources */,
 				8D4A2A2D237437C100503685 /* MissCatTests.swift in Sources */,
-				C0DE00000000000000000021 /* ShareCore.swift in Sources */,
-				C0DE00000000000000000023 /* ShareExtensionCoreTests.swift in Sources */,
+				5A5A00000000000000000001 /* ShareCore.swift in Sources */,
+				5A5A00000000000000000003 /* ShareExtensionCoreTests.swift in Sources */,
 				C05E0000000000000000000D /* MissCatComposeTests.swift in Sources */,
 				C0DE0000000000000000002C /* MissCatFeedStoreTests.swift in Sources */,
 			);
