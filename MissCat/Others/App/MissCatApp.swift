@@ -5,6 +5,7 @@
 //  SwiftUI application entry point and migration boundary.
 //
 
+import Foundation
 import SwiftUI
 import UIKit
 
@@ -60,6 +61,9 @@ final class ApplicationState: ObservableObject {
         // persisted current ID is absent or stale. Persist that fallback so
         // the legacy Theme tab resolver sees the same account.
         cache.changeCurrentUser(userId: currentUser.userId)
+#if DEBUG
+        MissCatAuthenticationProbe.runIfRequested(user: currentUser)
+#endif
         Theme.shared.reset()
         Theme.shared.set()
         root = .legacyApplication
@@ -198,3 +202,81 @@ struct LegacyApplicationView: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
+
+#if DEBUG
+private enum MissCatAuthenticationProbe {
+    private static let launchArgument = "--auth-api-probe"
+    private static let appGroup = "group.yuwd.MissCat"
+    private static let resultKey = "auth-api-probe-result"
+
+    private struct APIResponse: Decodable {
+        let id: String
+    }
+
+    static func runIfRequested(user: SecureUser) {
+        guard CommandLine.arguments.contains(launchArgument),
+              let apiKey = user.apiKey,
+              !apiKey.isEmpty,
+              let defaults = UserDefaults(suiteName: appGroup)
+        else { return }
+
+        defaults.removeObject(forKey: resultKey)
+        let savedUserID = user.userId
+        let instance = user.instance.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+
+        Task {
+            let result = await requestIdentity(
+                instance: instance,
+                apiKey: apiKey,
+                savedUserID: savedUserID
+            )
+            defaults.set(result, forKey: resultKey)
+            defaults.synchronize()
+        }
+    }
+
+    private static func requestIdentity(
+        instance: String,
+        apiKey: String,
+        savedUserID: String
+    ) async -> [String: Any] {
+        guard let url = URL(string: "https://\(instance)/api/i") else {
+            return result(status: 0, decodeSuccess: false, savedUserIDMatches: false)
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["i": apiKey])
+
+        let session = URLSession(configuration: .ephemeral)
+        defer { session.invalidateAndCancel() }
+
+        do {
+            let (data, response) = try await session.data(for: request)
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            let responseID = try? JSONDecoder().decode(APIResponse.self, from: data).id
+            return result(
+                status: status,
+                decodeSuccess: responseID != nil,
+                savedUserIDMatches: responseID == savedUserID
+            )
+        } catch {
+            return result(status: 0, decodeSuccess: false, savedUserIDMatches: false)
+        }
+    }
+
+    private static func result(
+        status: Int,
+        decodeSuccess: Bool,
+        savedUserIDMatches: Bool
+    ) -> [String: Any] {
+        [
+            "status": status,
+            "decodeSuccess": decodeSuccess,
+            "savedUserIDMatches": savedUserIDMatches,
+            "completedAt": Date().timeIntervalSince1970
+        ]
+    }
+}
+#endif
