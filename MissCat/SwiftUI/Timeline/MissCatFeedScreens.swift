@@ -337,6 +337,76 @@ public struct MissCatSearchResultsView: View {
     }
 }
 
+/// The three legacy profile timeline modes now share the same native feed
+/// renderer and current `users/notes` transport.
+public struct MissCatUserTimelineView: View {
+    public let userID: String
+    public let includesReplies: Bool
+    public let onlyFiles: Bool
+    private let repository: MissCatFeedRepository
+    private let palette: MissCatVisualPalette
+    private let navigationActions: MissCatFeedNavigationActions
+
+    public init(
+        userID: String,
+        includesReplies: Bool = false,
+        onlyFiles: Bool = false,
+        repository: MissCatFeedRepository,
+        palette: MissCatVisualPalette = .legacyLight,
+        navigationActions: MissCatFeedNavigationActions = .init()
+    ) {
+        self.userID = userID
+        self.includesReplies = includesReplies
+        self.onlyFiles = onlyFiles
+        self.repository = repository
+        self.palette = palette
+        self.navigationActions = navigationActions
+    }
+
+    public var body: some View {
+        MissCatFeedView(
+            source: .user(
+                userID: userID,
+                includeReplies: includesReplies,
+                withFiles: onlyFiles
+            ),
+            repository: repository,
+            palette: palette,
+            navigationActions: navigationActions
+        )
+    }
+}
+
+/// User-list timelines use the same pagination, note actions, and row renderer
+/// as every other SwiftUI feed.
+public struct MissCatUserListTimelineView: View {
+    public let listID: String
+    private let repository: MissCatFeedRepository
+    private let palette: MissCatVisualPalette
+    private let navigationActions: MissCatFeedNavigationActions
+
+    public init(
+        listID: String,
+        repository: MissCatFeedRepository,
+        palette: MissCatVisualPalette = .legacyLight,
+        navigationActions: MissCatFeedNavigationActions = .init()
+    ) {
+        self.listID = listID
+        self.repository = repository
+        self.palette = palette
+        self.navigationActions = navigationActions
+    }
+
+    public var body: some View {
+        MissCatFeedView(
+            source: .userList(listID: listID),
+            repository: repository,
+            palette: palette,
+            navigationActions: navigationActions
+        )
+    }
+}
+
 public struct MissCatHashtagResultsView: View {
     public let tag: String
     private let repository: MissCatFeedRepository

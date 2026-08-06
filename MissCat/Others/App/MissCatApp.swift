@@ -153,7 +153,9 @@ struct MissCatRootView: View {
     @ViewBuilder
     var body: some View {
 #if DEBUG
-        if MissCatNoteDetailFixtureConfiguration.isEnabled {
+        if MissCatDiscoveryFixtureConfiguration.isEnabled {
+            MissCatDiscoveryFixtureRoot()
+        } else if MissCatNoteDetailFixtureConfiguration.isEnabled {
             MissCatNoteDetailFixtureRoot()
         } else {
             applicationRoot

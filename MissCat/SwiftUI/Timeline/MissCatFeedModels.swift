@@ -28,6 +28,8 @@ public enum MissCatFeedSource: Equatable, Sendable {
     case favorites
     case search(query: String)
     case hashtag(tag: String)
+    case user(userID: String, includeReplies: Bool, withFiles: Bool)
+    case userList(listID: String)
     case noteDetail(noteID: String)
 
     public var accessibilityName: String {
@@ -39,6 +41,8 @@ public enum MissCatFeedSource: Equatable, Sendable {
         case .favorites: "favorites"
         case .search: "search-results"
         case .hashtag: "hashtag-results"
+        case .user: "user-timeline"
+        case .userList: "user-list-timeline"
         case .noteDetail: "note-detail"
         }
     }
@@ -51,7 +55,7 @@ public enum MissCatFeedSource: Equatable, Sendable {
     public var supportsRealtime: Bool {
         switch self {
         case .home, .local, .social, .global: true
-        case .favorites, .search, .hashtag, .noteDetail: false
+        case .favorites, .search, .hashtag, .user, .userList, .noteDetail: false
         }
     }
 

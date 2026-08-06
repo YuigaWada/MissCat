@@ -31,7 +31,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Automated tests must not trigger notification permission UI,
         // Firebase registration, or saved-account network side effects. The
         // ordinary application launch path below remains unchanged.
-        if MissCatNoteDetailFixtureConfiguration.isAutomatedTestRun {
+        if MissCatNoteDetailFixtureConfiguration.isAutomatedTestRun
+            || MissCatDiscoveryFixtureConfiguration.isAutomatedTestRun {
             setupMissCat()
             return true
         }

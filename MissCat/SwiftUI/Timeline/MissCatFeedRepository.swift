@@ -208,6 +208,33 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
                     untilId: cursor
                 )
             )
+        case let .user(userID, includeReplies, withFiles):
+            guard !(includeReplies && withFiles) else {
+                throw MissCatFeedRepositoryError.unsupportedSource
+            }
+            notes = try await post(
+                "users/notes",
+                body: FeedUserTimelineRequest(
+                    i: account.apiKey,
+                    userId: userID,
+                    withReplies: includeReplies,
+                    withRenotes: true,
+                    withFiles: withFiles,
+                    limit: boundedLimit,
+                    untilId: cursor
+                )
+            )
+        case let .userList(listID):
+            notes = try await post(
+                "notes/user-list-timeline",
+                body: FeedUserListTimelineRequest(
+                    i: account.apiKey,
+                    listId: listID,
+                    limit: boundedLimit,
+                    untilId: cursor,
+                    allowPartial: true
+                )
+            )
         case .favorites:
             preconditionFailure("Favorites are handled before the source switch")
         case .noteDetail:
@@ -513,7 +540,7 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
         case .local: "localTimeline"
         case .social: "hybridTimeline"
         case .global: "globalTimeline"
-        case .favorites, .search, .hashtag, .noteDetail: nil
+        case .favorites, .search, .hashtag, .user, .userList, .noteDetail: nil
         }
     }
 
@@ -970,6 +997,24 @@ private struct FeedTagRequest: Encodable {
     let tag: String
     let limit: Int
     let untilId: String?
+}
+
+private struct FeedUserTimelineRequest: Encodable {
+    let i: String
+    let userId: String
+    let withReplies: Bool
+    let withRenotes: Bool
+    let withFiles: Bool
+    let limit: Int
+    let untilId: String?
+}
+
+private struct FeedUserListTimelineRequest: Encodable {
+    let i: String
+    let listId: String
+    let limit: Int
+    let untilId: String?
+    let allowPartial: Bool
 }
 
 private struct FeedNoteRequest: Encodable {
