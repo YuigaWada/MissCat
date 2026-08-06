@@ -28,10 +28,10 @@ id	area	surface	runtime_owner	migration_state	evidence	note
 22	Detail	Detail actions	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatNoteRow.swift	Some SwiftUI actions exist; the full detail action contract remains incomplete and unwired.
 23	Search	Trends	uikit	legacy	MissCat/View/Search/TrendViewController.swift	No native SwiftUI trends screen is integrated.
 24	Search	Note/user search	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatFeedScreens.swift	SwiftUI note search exists; user search and ordinary-route wiring remain.
-25	Users	User result/list	uikit	legacy	MissCat/View/UserList/UserListViewController.swift	No integrated SwiftUI user list is present on main.
-26	Profile	Profile	uikit	legacy	MissCat/View/Profile/ProfileViewController.swift	Profile SwiftUI work is still isolated from main.
-27	Profile	Relationship/list navigation	uikit	legacy	MissCat/View/Profile/ProfileViewController.swift	Profile relationship/list SwiftUI work is still isolated from main.
-28	Profile	Edit profile	uikit	legacy	MissCat/View/ProfileSettings/ProfileSettingsViewController.swift	Profile edit SwiftUI work is still isolated from main.
+25	Users	User result/list	swiftui	migrating	MissCat/SwiftUI/Profile/MissCatProfileBridge.swift;MissCat/SwiftUI/Profile/MissCatProfileViews.swift	The ordinary user-search route now hosts SwiftUI; authenticated E2E and >=90% visual gates remain.
+26	Profile	Profile	swiftui	migrating	MissCat/SwiftUI/Profile/MissCatProfileBridge.swift;MissCat/SwiftUI/Profile/MissCatProfileViews.swift	The ordinary profile route now hosts SwiftUI; live account behavior and visual parity remain unaccepted.
+27	Profile	Relationship/list navigation	swiftui	migrating	MissCat/SwiftUI/Profile/MissCatProfileViews.swift;MissCat/SwiftUI/Profile/MissCatProfileCore.swift	Followers, following, and relationship navigation are native SwiftUI; live E2E and visual gates remain.
+28	Profile	Edit profile	swiftui	migrating	MissCat/SwiftUI/Profile/MissCatProfileViews.swift;MissCat/SwiftUI/Profile/MissCatProfileCore.swift	Profile editing is reachable through the SwiftUI profile route; camera/upload E2E and visual gates remain.
 29	Compose	Normal/reply/quote	uikit	migrating	MissCat/SwiftUI/Compose/MissCatComposeScreens.swift	Native compose modes exist but the ordinary app route still presents UIKit.
 30	Compose	Media	uikit	migrating	MissCat/SwiftUI/Compose/MissCatComposeMediaViews.swift	Native media workflow exists but is not wired or E2E accepted.
 31	Compose	CW / now playing / emoji	uikit	migrating	MissCat/SwiftUI/Compose/MissCatComposeScreens.swift	Native controls exist but are not wired or E2E accepted.
