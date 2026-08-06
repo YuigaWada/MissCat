@@ -357,12 +357,14 @@ private struct MultipartBody {
         data fileData: Data
     ) -> MultipartBody {
         var copy = self
-        let safeFilename = filename.map { character -> Character in
-            character == "\"" || character == "\\" || character.isNewline ? "_" : character
-        }
+        let unsafeFilenameCharacters = CharacterSet.controlCharacters
+            .union(CharacterSet(charactersIn: "\"\\"))
+        let safeFilename = filename.unicodeScalars.map { scalar in
+            unsafeFilenameCharacters.contains(scalar) ? "_" : String(scalar)
+        }.joined()
         copy.append("--\(boundary)\r\n")
         copy.append(
-            "Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(String(safeFilename))\"\r\n"
+            "Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(safeFilename)\"\r\n"
         )
         copy.append("Content-Type: \(mimeType)\r\n\r\n")
         copy.data.append(fileData)

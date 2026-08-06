@@ -99,6 +99,7 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
         defer { isSubmitting = false }
 
         guard let user = userProvider(submission.accountID),
+              user.accountIdentifier == submission.accountID,
               let apiKey = user.apiKey,
               !apiKey.isEmpty
         else {
@@ -141,10 +142,9 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
                 expiredAfter: $0.expiresAfterMilliseconds
             )
         }
-        let visibility = MissCatComposeAPIVisibility(rawValue: submission.visibility.rawValue) ?? .public
         _ = try await client.createNote(
             MissCatComposeAPINote(
-                visibility: visibility,
+                visibility: submission.visibility.composeAPIVisibility,
                 visibleUserIDs: submission.visibleUserIDs,
                 text: submission.text,
                 contentWarning: submission.contentWarning,
@@ -226,6 +226,17 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
             throw ServiceError.unsupportedMedia
         }
         return converted
+    }
+}
+
+private extension MissCatComposeVisibility {
+    var composeAPIVisibility: MissCatComposeAPIVisibility {
+        switch self {
+        case .public: .public
+        case .home: .home
+        case .followers: .followers
+        case .specified: .specified
+        }
     }
 }
 

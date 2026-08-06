@@ -18,11 +18,11 @@ final class ShareViewController: UIViewController {
     private func installSwiftUIComposer() {
         let users = userModel.getUsers()
         let accounts = users.map {
-            ShareAccount(id: $0.userId, username: $0.username, instance: $0.instance)
+            ShareAccount(userID: $0.userId, username: $0.username, instance: $0.instance)
         }
-        let currentUserID = userModel.getCurrentUser()?.userId
-        let selectedAccountID = accounts.contains(where: { $0.id == currentUserID })
-            ? currentUserID
+        let currentAccountID = userModel.getCurrentUser()?.accountIdentifier
+        let selectedAccountID = accounts.contains(where: { $0.id == currentAccountID })
+            ? currentAccountID
             : accounts.first?.id
         let visibility = userModel.getCurrentVisibility()
             .flatMap { ShareVisibility(rawValue: $0.rawValue) }

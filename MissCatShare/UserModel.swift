@@ -24,28 +24,7 @@ class SecureUser: Codable {
     }
 }
 
-private enum MissCatAccountIdentity {
-    static func normalizedInstance(_ rawValue: String) -> String {
-        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        let candidate = trimmed.contains("://") ? trimmed : "https://\(trimmed)"
-        if let components = URLComponents(string: candidate),
-           let host = components.host?.lowercased(),
-           !host.isEmpty
-        {
-            if let port = components.port, port != 443 { return "\(host):\(port)" }
-            return host
-        }
-        return trimmed.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-    }
-
-    static func storageKey(instance: String, userId: String) -> String {
-        let instanceValue = Data(normalizedInstance(instance).utf8).base64EncodedString()
-        let userValue = Data(userId.utf8).base64EncodedString()
-        return "misscat-account-v2:\(instanceValue):\(userValue)"
-    }
-}
-
-private extension SecureUser {
+extension SecureUser {
     var accountIdentifier: String {
         MissCatAccountIdentity.storageKey(instance: instance, userId: userId)
     }
@@ -141,9 +120,20 @@ class UserModel {
         return resolveUser(identifier: currentUserId, in: savedUsers)
     }
     
-    /// 指定されたuserIdのユーザーを取得する
-    func getUser(userId: String) -> SecureUser? {
-        resolveUser(identifier: userId, in: getUsers())
+    /// 複合アカウントIDに一致するユーザーを取得する
+    func getUser(accountIdentifier: String) -> SecureUser? {
+        getUsers().first { $0.accountIdentifier == accountIdentifier }
+    }
+
+    /// A credential-free hook for signed-extension verification. Callers can
+    /// prove that the extension read the exact composite account's Keychain
+    /// entry without receiving, logging, or serializing the token.
+    func credentialReadProof(accountIdentifier: String) -> ShareCredentialReadProof {
+        let exactUser = getUsers().first { $0.accountIdentifier == accountIdentifier }
+        return ShareCredentialReadProof(
+            accountIdentifier: accountIdentifier,
+            credentialAvailable: exactUser?.apiKey?.isEmpty == false
+        )
     }
     
     /// 現在ログイン中のユーザーのuserIdを取得する

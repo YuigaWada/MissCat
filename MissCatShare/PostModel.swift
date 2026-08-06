@@ -28,7 +28,7 @@ final class SharePostService: SharePosting {
         isSubmitting = true
         defer { isSubmitting = false }
 
-        guard let user = userModel.getUser(userId: accountID) else {
+        guard let user = userModel.getUser(accountIdentifier: accountID) else {
             throw PostModel.PostingError.accountUnavailable
         }
 
@@ -75,7 +75,7 @@ final class PostModel {
         }
         client = MissCatNativeComposeAPIClient(
             scope: try MissCatComposeAccountScope(
-                accountID: user.userId,
+                accountID: user.accountIdentifier,
                 instance: user.instance,
                 accessToken: apiKey
             ),

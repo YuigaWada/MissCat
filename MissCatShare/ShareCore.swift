@@ -1,13 +1,59 @@
 import Combine
 import Foundation
 
+enum MissCatAccountIdentity {
+    private static let prefix = "misscat-account-v2"
+
+    static func normalizedInstance(_ rawValue: String) -> String {
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let candidate = trimmed.contains("://") ? trimmed : "https://\(trimmed)"
+        if let components = URLComponents(string: candidate),
+           let host = components.host?.lowercased(),
+           !host.isEmpty
+        {
+            if let port = components.port, port != 443 { return "\(host):\(port)" }
+            return host
+        }
+        return trimmed.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    }
+
+    static func storageKey(instance: String, userId: String) -> String {
+        let instanceValue = Data(normalizedInstance(instance).utf8).base64EncodedString()
+        let userValue = Data(userId.utf8).base64EncodedString()
+        return "\(prefix):\(instanceValue):\(userValue)"
+    }
+}
+
 struct ShareAccount: Identifiable, Equatable, Sendable {
     let id: String
     let username: String
     let instance: String
 
+    init(id: String, username: String, instance: String) {
+        self.id = id
+        self.username = username
+        self.instance = instance
+    }
+
+    init(userID: String, username: String, instance: String) {
+        id = MissCatAccountIdentity.storageKey(instance: instance, userId: userID)
+        self.username = username
+        self.instance = MissCatAccountIdentity.normalizedInstance(instance)
+    }
+
     var displayName: String {
         "\(username)@\(instance)"
+    }
+}
+
+/// Safe result for a signed-extension credential-read check. It intentionally
+/// cannot carry or describe the credential itself.
+struct ShareCredentialReadProof: Equatable, Sendable, CustomStringConvertible {
+    let accountIdentifier: String
+    let credentialAvailable: Bool
+
+    var description: String {
+        "ShareCredentialReadProof(accountIdentifier: \(accountIdentifier), credentialAvailable: \(credentialAvailable))"
     }
 }
 
