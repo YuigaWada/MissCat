@@ -182,7 +182,11 @@ extension Cache {
 
         private static let appGroup = "group.yuwd.MissCat"
         private static let keychainService = "yuwd.MissCat"
-        private static let keychainAccessGroup = "4LMTSU8RLS.yuwd.MissCat"
+        private static var keychainAccessGroup: String {
+            guard let accessGroup = Bundle.main.object(forInfoDictionaryKey: "MissCatKeychainAccessGroup") as? String,
+                  !accessGroup.isEmpty else { fatalError("Missing shared Keychain access group") }
+            return accessGroup
+        }
 
         private let injectedUserDefaults: Foundation.UserDefaults?
         private let injectedAPIKeyStore: AccountAPIKeyStoring?

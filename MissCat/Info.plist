@@ -28,6 +28,8 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>MissCatKeychainAccessGroup</key>
+	<string>$(DEVELOPMENT_TEAM).yuwd.MissCat</string>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>#nowplaying投稿に必要です</string>
 	<key>NSCameraUsageDescription</key>
