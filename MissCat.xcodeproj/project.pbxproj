@@ -24,6 +24,7 @@
 		C0DE0000000000000000001D /* ShareInputLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001E /* ShareInputLoader.swift */; };
 		C0DE0000000000000000001F /* ShareComposerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000020 /* ShareComposerView.swift */; };
 		5A5A00000000000000000001 /* ShareCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001C /* ShareCore.swift */; };
+		5A5A00000000000000000005 /* PostModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1A4C0924DD82CC00EFD826 /* PostModel.swift */; };
 		5A5A00000000000000000003 /* ShareExtensionCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5A00000000000000000002 /* ShareExtensionCoreTests.swift */; };
 		5A5A00000000000000000005 /* ShareSubmissionOutcomeError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5A00000000000000000004 /* ShareSubmissionOutcomeError.swift */; };
 		5A5A00000000000000000006 /* ShareSubmissionOutcomeError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5A00000000000000000004 /* ShareSubmissionOutcomeError.swift */; };
@@ -1852,6 +1853,7 @@
 				8D4A2A2D237437C100503685 /* MissCatTests.swift in Sources */,
 				5A5A00000000000000000007 /* ShareSubmissionOutcomeError.swift in Sources */,
 				5A5A00000000000000000001 /* ShareCore.swift in Sources */,
+				5A5A00000000000000000005 /* PostModel.swift in Sources */,
 				5A5A00000000000000000003 /* ShareExtensionCoreTests.swift in Sources */,
 				C05E0000000000000000000D /* MissCatComposeTests.swift in Sources */,
 				C0DE0000000000000000002C /* MissCatFeedStoreTests.swift in Sources */,
@@ -2246,6 +2248,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCatTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) MISSCAT_TESTS";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MissCat.app/MissCat";
@@ -2268,6 +2271,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCatTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) MISSCAT_TESTS";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MissCat.app/MissCat";
