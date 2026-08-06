@@ -51,13 +51,51 @@ final class MissCatProfileTransportContractTests: XCTestCase {
 
         XCTAssertEqual(requests.map { $0.url?.path }, Array(repeating: "/api/users/notes", count: 3))
         let bodies = try requests.map { try XCTUnwrap($0.profileBodyData).jsonObject }
-        XCTAssertEqual(bodies[0]["includeReplies"] as? Bool, false)
+        XCTAssertEqual(bodies[0]["withReplies"] as? Bool, false)
         XCTAssertEqual(bodies[0]["withFiles"] as? Bool, false)
-        XCTAssertEqual(bodies[1]["includeReplies"] as? Bool, true)
+        XCTAssertEqual(bodies[1]["withReplies"] as? Bool, true)
         XCTAssertEqual(bodies[1]["withFiles"] as? Bool, false)
-        XCTAssertEqual(bodies[2]["includeReplies"] as? Bool, false)
+        XCTAssertEqual(bodies[2]["withReplies"] as? Bool, false)
         XCTAssertEqual(bodies[2]["withFiles"] as? Bool, true)
+        XCTAssertTrue(bodies.allSatisfy { $0["withRenotes"] as? Bool == true })
+        XCTAssertTrue(bodies.allSatisfy { $0["includeReplies"] == nil })
         XCTAssertTrue(bodies.allSatisfy { $0["i"] as? String == "account-token" && $0["untilId"] as? String == "older" })
+    }
+
+    func testPureRenoteDecodesCurrentNestedNoteInsteadOfRenderingAnEmptyRow() throws {
+        let json: [String: Any] = [
+            "id": "outer-renote",
+            "createdAt": "2026-08-07T00:00:01.000Z",
+            "text": NSNull(),
+            "user": Self.userJSON(id: "renoter", username: "renoter"),
+            "renote": [
+                "id": "original-note",
+                "createdAt": "2026-08-07T00:00:00.000Z",
+                "text": "original body",
+                "user": Self.userJSON(id: "author", username: "author"),
+                "files": [],
+                "repliesCount": 2,
+                "renoteCount": 3,
+                "reactions": ["👍": 4]
+            ]
+        ]
+
+        let note = try JSONDecoder().decode(
+            MissCatProfileNote.self,
+            from: JSONSerialization.data(withJSONObject: json)
+        )
+
+        XCTAssertEqual(note.id, "outer-renote")
+        XCTAssertEqual(note.text, "original body")
+        XCTAssertEqual(note.user.id, "author")
+        XCTAssertEqual(note.renotedBy?.id, "renoter")
+        XCTAssertEqual(note.reactionCount, 4)
+    }
+
+    func testProfileDateParserAcceptsCurrentFractionalAndCompatiblePlainISO8601() {
+        XCTAssertNotNil(MissCatProfileAPIDateParser.date(from: "2026-08-07T00:00:00.000Z"))
+        XCTAssertNotNil(MissCatProfileAPIDateParser.date(from: "2026-08-07T00:00:00Z"))
+        XCTAssertNil(MissCatProfileAPIDateParser.date(from: "not-a-date"))
     }
 
     func testFollowersAndFollowingDecodeModernRelationshipEdges() async throws {
@@ -192,6 +230,15 @@ final class MissCatProfileStoreTests: XCTestCase {
 
         XCTAssertFalse(store.isFollowing)
         XCTAssertEqual(repository.followCalls, [true])
+        XCTAssertNotNil(store.followErrorMessage)
+
+        repository.followError = nil
+        store.retryFollowing()
+        await waitUntil { store.followPhase == .loaded }
+
+        XCTAssertTrue(store.isFollowing)
+        XCTAssertNil(store.followErrorMessage)
+        XCTAssertEqual(repository.followCalls, [true, true])
     }
 
     func testAccountSwitchCancelsOldTasksAndUsesNewAccount() async {

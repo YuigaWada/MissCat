@@ -110,9 +110,10 @@ public struct MissCatProfileNote: Decodable, Equatable, Identifiable, Sendable {
     public let renoteCount: Int
     public let reactions: [String: Int]
     public let reactionCount: Int
+    public let renotedBy: MissCatProfileUser?
 
     enum CodingKeys: String, CodingKey {
-        case id, createdAt, text, cw, user, files, repliesCount, renoteCount, reactions
+        case id, createdAt, text, cw, user, files, repliesCount, renoteCount, reactions, renote
     }
 
     public init(
@@ -124,7 +125,8 @@ public struct MissCatProfileNote: Decodable, Equatable, Identifiable, Sendable {
         files: [MissCatProfileNoteFile] = [],
         repliesCount: Int = 0,
         renoteCount: Int = 0,
-        reactions: [String: Int] = [:]
+        reactions: [String: Int] = [:],
+        renotedBy: MissCatProfileUser? = nil
     ) {
         self.id = id
         self.createdAt = createdAt
@@ -136,12 +138,56 @@ public struct MissCatProfileNote: Decodable, Equatable, Identifiable, Sendable {
         self.renoteCount = renoteCount
         self.reactions = reactions
         reactionCount = reactions.values.reduce(0, +)
+        self.renotedBy = renotedBy
     }
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         id = try values.decode(String.self, forKey: .id)
         createdAt = try values.decodeIfPresent(String.self, forKey: .createdAt) ?? ""
+        let outerText = try values.decodeIfPresent(String.self, forKey: .text)
+        let outerUser = try values.decode(MissCatProfileUser.self, forKey: .user)
+        let renote = try values.decodeIfPresent(MissCatProfileRenoteContent.self, forKey: .renote)
+        let isPureRenote = renote != nil && (outerText ?? "").isEmpty
+
+        if isPureRenote, let renote {
+            text = renote.text
+            cw = renote.cw
+            user = renote.user
+            files = renote.files
+            repliesCount = renote.repliesCount
+            renoteCount = renote.renoteCount
+            reactions = renote.reactions
+            renotedBy = outerUser
+        } else {
+            text = outerText
+            cw = try values.decodeIfPresent(String.self, forKey: .cw)
+            user = outerUser
+            files = try values.decodeIfPresent([MissCatProfileNoteFile].self, forKey: .files) ?? []
+            repliesCount = try values.decodeIfPresent(Int.self, forKey: .repliesCount) ?? 0
+            renoteCount = try values.decodeIfPresent(Int.self, forKey: .renoteCount) ?? 0
+            reactions = try values.decodeIfPresent([String: Int].self, forKey: .reactions) ?? [:]
+            renotedBy = nil
+        }
+        reactionCount = reactions.values.reduce(0, +)
+    }
+}
+
+private struct MissCatProfileRenoteContent: Decodable {
+    let text: String?
+    let cw: String?
+    let user: MissCatProfileUser
+    let files: [MissCatProfileNoteFile]
+    let repliesCount: Int
+    let renoteCount: Int
+    let reactions: [String: Int]
+
+    enum CodingKeys: String, CodingKey {
+        case text, cw, user, files, repliesCount, renoteCount, reactions
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
         text = try values.decodeIfPresent(String.self, forKey: .text)
         cw = try values.decodeIfPresent(String.self, forKey: .cw)
         user = try values.decode(MissCatProfileUser.self, forKey: .user)
@@ -149,7 +195,15 @@ public struct MissCatProfileNote: Decodable, Equatable, Identifiable, Sendable {
         repliesCount = try values.decodeIfPresent(Int.self, forKey: .repliesCount) ?? 0
         renoteCount = try values.decodeIfPresent(Int.self, forKey: .renoteCount) ?? 0
         reactions = try values.decodeIfPresent([String: Int].self, forKey: .reactions) ?? [:]
-        reactionCount = reactions.values.reduce(0, +)
+    }
+}
+
+enum MissCatProfileAPIDateParser {
+    static func date(from value: String) -> Date? {
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = fractional.date(from: value) { return date }
+        return ISO8601DateFormatter().date(from: value)
     }
 }
 
@@ -304,7 +358,8 @@ public final class MissCatRESTProfileRepository: MissCatProfileRepository {
         let body = NotesBody(
             i: account.token,
             userId: userID,
-            includeReplies: tab.includesReplies,
+            withReplies: tab.includesReplies,
+            withRenotes: true,
             withFiles: tab.onlyFiles,
             limit: limit,
             untilId: cursor
@@ -441,7 +496,8 @@ private struct UserBody: Encodable {
 private struct NotesBody: Encodable {
     let i: String
     let userId: String
-    let includeReplies: Bool
+    let withReplies: Bool
+    let withRenotes: Bool
     let withFiles: Bool
     let limit: Int
     let untilId: String?
@@ -588,6 +644,10 @@ public final class MissCatProfileStore: ObservableObject {
     @Published public private(set) var userID: String
 
     public var isCurrentUser: Bool { account.userID == userID }
+    public var followErrorMessage: String? {
+        guard case let .failed(message) = followPhase else { return nil }
+        return message
+    }
 
     private let repositoryFactory: (MissCatProfileAccount) -> MissCatProfileRepository
     private var repository: MissCatProfileRepository
@@ -697,6 +757,17 @@ public final class MissCatProfileStore: ObservableObject {
                 self.followPhase = .failed(error.localizedDescription)
             }
         }
+    }
+
+    public func dismissFollowError() {
+        guard case .failed = followPhase else { return }
+        followPhase = .loaded
+    }
+
+    public func retryFollowing() {
+        guard case .failed = followPhase else { return }
+        followPhase = .loaded
+        setFollowing(!isFollowing)
     }
 
     public func switchAccount(_ account: MissCatProfileAccount) {

@@ -104,6 +104,18 @@ public struct MissCatProfileScreen: View {
         } message: {
             Text("本当にフォロー解除しますか？")
         }
+        .alert(
+            "フォロー操作に失敗しました",
+            isPresented: Binding(
+                get: { store.followErrorMessage != nil },
+                set: { if !$0 { store.dismissFollowError() } }
+            )
+        ) {
+            Button("再試行") { store.retryFollowing() }
+            Button("閉じる", role: .cancel) { store.dismissFollowError() }
+        } message: {
+            Text(store.followErrorMessage ?? "")
+        }
         .overlay(alignment: .topLeading) {
             MissCatVisualReadyMarker(
                 ready: store.profilePhase == .loaded && store.timelines[store.selectedTab]?.phase.isTerminal == true,
@@ -454,6 +466,13 @@ public struct MissCatProfileNoteRow: View {
             CircleImage(url: note.user.avatarURL, diameter: 42)
 
             VStack(alignment: .leading, spacing: 7) {
+                if let renotedBy = note.renotedBy {
+                    Label("\(renotedBy.displayName)がRenote", systemImage: "arrow.2.squarepath")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(palette.strong)
+                        .accessibilityIdentifier("profile.note.\(note.id).renoted-by")
+                }
+
                 HStack(spacing: 5) {
                     Text(note.user.displayName).font(.system(size: 14, weight: .semibold)).lineLimit(1)
                     Text(note.user.acct).font(.system(size: 11)).foregroundStyle(palette.strong).lineLimit(1)
@@ -1048,7 +1067,7 @@ private extension String {
     }
 
     var legacyRelativeDateLabel: String {
-        guard let date = ISO8601DateFormatter().date(from: self) else { return self }
+        guard let date = MissCatProfileAPIDateParser.date(from: self) else { return self }
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: date, relativeTo: Date())
