@@ -15,13 +15,19 @@ final class MissCatLegacySettingsRepository:
 
     private let cache: Cache.UserDefaults
     private let session: URLSession
+    private let theme: Theme
+    private let emojiStorage: EmojiArchiveStorage
 
     init(
         cache: Cache.UserDefaults = .shared,
-        session: URLSession = .shared
+        session: URLSession = .shared,
+        theme: Theme = .shared,
+        emojiStorage: EmojiArchiveStorage = .standard
     ) {
         self.cache = cache
         self.session = session
+        self.theme = theme
+        self.emojiStorage = emojiStorage
     }
 
     func loadAccounts() async throws -> MissCatAccountSnapshot {
@@ -54,8 +60,8 @@ final class MissCatLegacySettingsRepository:
         }
 
         Cache.shared.resetMyCache()
-        Theme.shared.reset()
-        Theme.shared.set()
+        theme.reset()
+        theme.set()
         // Once the persisted current account changes, do not introduce another
         // suspension/cancellation point before returning the verified state.
         return metadataSnapshot()
@@ -72,7 +78,7 @@ final class MissCatLegacySettingsRepository:
         guard cache.removeUser(userId: id) else {
             throw MissCatAccountManagementError.accountPersistenceFailed
         }
-        let tabsChanged = Theme.shared.removeUserTabs(for: user)
+        let tabsChanged = theme.removeUserTabs(for: user)
         Cache.shared.resetMyCache()
         // Credential removal is the persistence boundary. Build the resulting
         // state synchronously so cancellation cannot hide a committed deletion.
@@ -84,9 +90,9 @@ final class MissCatLegacySettingsRepository:
     }
 
     func loadDesignSettings() async throws -> MissCatDesignSettingsSnapshot {
-        if Theme.shared.currentModel == nil { Theme.shared.set() }
+        if theme.currentModel == nil { theme.set() }
         let accounts = metadataSnapshot().accounts
-        guard let model = Theme.shared.currentModel ?? Theme.Model.getDefault() else {
+        guard let model = theme.currentModel ?? Theme.Model.getDefault() else {
             return MissCatDesignSettingsSnapshot(
                 tabs: MissCatDesignSettingsStore.defaultTabs(accountID: accounts.first?.id),
                 mode: .light,
@@ -107,7 +113,7 @@ final class MissCatLegacySettingsRepository:
         _ snapshot: MissCatDesignSettingsSnapshot
     ) async throws -> MissCatDesignSaveResult {
         try Task.checkCancellation()
-        let old = Theme.shared.currentModel
+        let old = theme.currentModel
         let availableIDs = Set(snapshot.accounts.map(\.id))
         let fallbackOwnerID = snapshot.accounts.first?.id
         let tabs = snapshot.tabs.map { tab in
@@ -125,11 +131,10 @@ final class MissCatLegacySettingsRepository:
             colorMode: snapshot.mode == .light ? .light : .dark
         )
         let requiresRootRelaunch = old.map { Theme.needAllRelaunch(between: $0, and: newModel) } ?? false
-        Theme.shared.save(with: newModel)
-
-        guard let persisted = Theme.Model.get(),
-              Self.persistedThemeMatches(persisted, expected: newModel)
-        else {
+        let persisted: Theme.Model
+        do {
+            persisted = try theme.saveAtomically(with: newModel)
+        } catch {
             throw MissCatAccountManagementError.accountPersistenceFailed
         }
 
@@ -158,8 +163,16 @@ final class MissCatLegacySettingsRepository:
             throw MissCatAccountManagementError.accountNotFound
         }
 
-        let saved = EmojiView.EmojiModel.getEmojis(type: .favs, owner: owner) ?? []
-        let history = Array((EmojiView.EmojiModel.getEmojis(type: .history, owner: owner) ?? []).prefix(14))
+        let saved = EmojiView.EmojiModel.getEmojis(
+            type: .favs,
+            owner: owner,
+            storage: emojiStorage
+        ) ?? []
+        let history = Array((EmojiView.EmojiModel.getEmojis(
+            type: .history,
+            owner: owner,
+            storage: emojiStorage
+        ) ?? []).prefix(14))
         let favoriteModels: [EmojiView.EmojiModel]
         if saved.isEmpty {
             favoriteModels = MissCatReactionSettingsStore.legacyDefaults.map {
@@ -215,13 +228,21 @@ final class MissCatLegacySettingsRepository:
                 customEmojiUrl: item.imageURL?.absoluteString
             )
         }
-        EmojiView.EmojiModel.saveEmojis(with: models, type: .favs, owner: owner)
-        EmojiRepository.shared.updateUserEmojis(to: .favs, owner: owner, new: models)
-
-        let persisted = EmojiView.EmojiModel.getEmojis(type: .favs, owner: owner) ?? []
-        guard persisted.map(\.rawEmoji) == models.map(\.rawEmoji) else {
+        let persisted: [EmojiView.EmojiModel]
+        do {
+            persisted = try EmojiView.EmojiModel.saveEmojisChecked(
+                with: models,
+                type: .favs,
+                owner: owner,
+                storage: emojiStorage
+            )
+        } catch {
             throw MissCatAccountManagementError.accountPersistenceFailed
         }
+        guard EmojiView.EmojiModel.archiveFieldsEqual(persisted, models) else {
+            throw MissCatAccountManagementError.accountPersistenceFailed
+        }
+        EmojiRepository.shared.updateUserEmojis(to: .favs, owner: owner, new: persisted)
     }
 
     private func summary(for user: SecureUser) async -> MissCatAccountSummary {
@@ -422,21 +443,33 @@ final class MissCatSettingsFixtureRepository:
         let favorites = MissCatReactionSettingsStore.legacyDefaults.prefix(8).map {
             MissCatReactionItem(rawValue: $0, displayValue: $0)
         }
-        let custom = MissCatReactionItem(
-            rawValue: ":misscat:",
-            imageURL: URL(string: "https://example.invalid/misscat.gif"),
-            searchTerms: ["custom", "cat"]
-        )
+        let custom = [
+            MissCatReactionItem(
+                rawValue: ":fixture_gif:",
+                imageURL: Self.mediaFixtureURL(extension: "gif"),
+                searchTerms: ["custom", "gif"]
+            ),
+            MissCatReactionItem(
+                rawValue: ":fixture_apng:",
+                imageURL: Self.mediaFixtureURL(extension: "apng"),
+                searchTerms: ["custom", "apng"]
+            ),
+            MissCatReactionItem(
+                rawValue: ":fixture_svg:",
+                imageURL: Self.mediaFixtureURL(extension: "svg"),
+                searchTerms: ["custom", "svg"]
+            )
+        ]
         reactionSnapshots = [
             first.id: .init(
                 account: account,
                 favorites: favorites,
-                available: favorites + [custom],
+                available: favorites + custom,
                 history: Array(favorites.prefix(4)),
                 sections: [
                     .init(id: "favorites", title: "お気に入り", kind: .favorites, items: favorites),
                     .init(id: "history", title: "履歴", kind: .history, items: Array(favorites.prefix(4))),
-                    .init(id: "custom-fixture", title: "Custom", kind: .custom, items: [custom]),
+                    .init(id: "custom-fixture", title: "Custom", kind: .custom, items: custom),
                     .init(id: "standard-fixture", title: "People", kind: .standard, items: favorites)
                 ]
             )
@@ -481,5 +514,15 @@ final class MissCatSettingsFixtureRepository:
 
     func saveReactions(_ snapshot: MissCatReactionSettingsSnapshot) async throws {
         reactionSnapshots[snapshot.account.id] = snapshot
+    }
+
+    private static func mediaFixtureURL(extension fileExtension: String) -> URL {
+        guard let url = Bundle.main.url(
+            forResource: "reaction-fixture",
+            withExtension: fileExtension
+        ) else {
+            preconditionFailure("Missing bundled reaction \(fileExtension) fixture")
+        }
+        return url
     }
 }

@@ -34,6 +34,36 @@ private struct MissCatSettingsVisualReadyMarker: View {
     }
 }
 
+@MainActor
+final class MissCatReactionMediaReadiness: ObservableObject {
+    @Published private(set) var isReady = false
+
+    private var pending: Set<String> = []
+    private var completed: Set<String> = []
+    private var registrationPassCompleted = false
+
+    func register(_ id: String) {
+        guard !completed.contains(id) else { return }
+        pending.insert(id)
+        isReady = false
+    }
+
+    func complete(_ id: String) {
+        completed.insert(id)
+        pending.remove(id)
+        updateReadiness()
+    }
+
+    func finishInitialRegistrationPass() {
+        registrationPassCompleted = true
+        updateReadiness()
+    }
+
+    private func updateReadiness() {
+        isReady = registrationPassCompleted && pending.isEmpty
+    }
+}
+
 public struct MissCatSettingsEmptyState: View {
     public let title: String
     public let message: String
@@ -881,6 +911,7 @@ private struct MissCatReactionDropDelegate: DropDelegate {
 
 public struct MissCatReactionPicker: View {
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var mediaReadiness = MissCatReactionMediaReadiness()
     public let sections: [MissCatReactionSection]
     @Binding public var searchQuery: String
     public let palette: MissCatVisualPalette
@@ -913,13 +944,17 @@ public struct MissCatReactionPicker: View {
                                 spacing: 8
                             ) {
                                 ForEach(section.items) { item in
+                                    let renderedMediaID = "\(section.id)|\(item.id)"
                                     Button {
                                         onSelect(item)
                                         dismiss()
                                     } label: {
                                         Group {
                                             if let url = item.imageURL {
-                                                MissCatReactionImage(url: url)
+                                                MissCatReactionImage(url: url) { _ in
+                                                    mediaReadiness.complete(renderedMediaID)
+                                                }
+                                                .onAppear { mediaReadiness.register(renderedMediaID) }
                                             } else {
                                                 Text(item.displayValue ?? item.rawValue).font(.system(size: 28))
                                             }
@@ -947,8 +982,18 @@ public struct MissCatReactionPicker: View {
                 }
             }
         }
+        .task {
+            // Allow the first lazy layout pass to register every custom-media cell
+            // that SwiftUI actually rendered before exposing screenshot readiness.
+            await Task.yield()
+            await Task.yield()
+            mediaReadiness.finishInitialRegistrationPass()
+        }
         .overlay(alignment: .bottomTrailing) {
-            MissCatSettingsVisualReadyMarker(ready: true, identifier: "settings.reactions.picker.visualReady")
+            MissCatSettingsVisualReadyMarker(
+                ready: mediaReadiness.isReady,
+                identifier: "settings.reactions.picker.visualReady"
+            )
         }
         .accessibilityIdentifier("settings.reactions.picker")
     }
@@ -959,6 +1004,18 @@ public struct MissCatReactionPicker: View {
 /// AsyncImage's static-image-only rendering path.
 private struct MissCatReactionImage: UIViewRepresentable {
     let url: URL
+    var onLoad: ((Bool) -> Void)?
+
+    init(url: URL, onLoad: ((Bool) -> Void)? = nil) {
+        self.url = url
+        self.onLoad = onLoad
+    }
+
+    final class Coordinator {
+        var loadedURL: URL?
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIView(context: Context) -> MFMImageView {
         let view = MFMImageView(frame: .zero)
@@ -968,10 +1025,12 @@ private struct MissCatReactionImage: UIViewRepresentable {
     }
 
     func updateUIView(_ view: MFMImageView, context: Context) {
-        view.setImage(url: url.absoluteString)
+        guard context.coordinator.loadedURL != url else { return }
+        context.coordinator.loadedURL = url
+        view.setImage(url: url.absoluteString, completion: onLoad)
     }
 
-    static func dismantleUIView(_ view: MFMImageView, coordinator: Void) {
+    static func dismantleUIView(_ view: MFMImageView, coordinator: Coordinator) {
         view.prepareForReuse()
     }
 }
@@ -1055,6 +1114,7 @@ public struct MissCatAboutScreen: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
     @State private var appeared = false
+    @State private var animationCompleted = false
     public let appVersion: String
 
     public init(appVersion: String) {
@@ -1135,10 +1195,18 @@ public struct MissCatAboutScreen: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
-            withAnimation(.easeInOut(duration: 0.7)) { appeared = true }
+            animationCompleted = false
+            withAnimation(.easeInOut(duration: 0.7), completionCriteria: .logicallyComplete) {
+                appeared = true
+            } completion: {
+                animationCompleted = true
+            }
         }
         .overlay(alignment: .bottomTrailing) {
-            MissCatSettingsVisualReadyMarker(ready: appeared, identifier: "settings.about.visualReady")
+            MissCatSettingsVisualReadyMarker(
+                ready: animationCompleted,
+                identifier: "settings.about.visualReady"
+            )
         }
         .accessibilityIdentifier("settings.about.screen")
     }

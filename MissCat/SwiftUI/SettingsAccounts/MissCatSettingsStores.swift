@@ -154,6 +154,7 @@ public final class MissCatDesignSettingsStore: ObservableObject {
     private var isDirty = false
     private var failedSave: MissCatDesignSettingsSnapshot?
     private var failedSaveCallback: (() -> Void)?
+    private var failedSaveSuccessMessage = "デザイン設定を保存しました"
 
     public init(repository: any MissCatDesignSettingsManaging) {
         self.repository = repository
@@ -265,29 +266,51 @@ public final class MissCatDesignSettingsStore: ObservableObject {
     }
 
     public func save(onRootRelaunchRequired: @escaping () -> Void = {}) {
-        guard hasLoaded, !isSaving, commitAccentHexDraft() else { return }
+        guard hasLoaded, !isSaving else { return }
+        let successMessage: String
+        if let value = Self.validatedHex(accentHexDraft) {
+            accentHex = value
+            accentHexDraft = value
+            successMessage = "デザイン設定を保存しました"
+        } else {
+            // Navigating back must not discard valid tab or mode edits just because
+            // the user left a partial HEX value in the text field. Keep the last
+            // committed accent and visibly explain what was preserved.
+            accentHexDraft = accentHex
+            successMessage = "HEX入力が未完了のため、色は変更せず他の設定を保存しました"
+        }
         let snapshot = MissCatDesignSettingsSnapshot(
             tabs: Self.repairInvalidOwners(in: tabs, accounts: accounts),
             mode: mode,
             accentHex: accentHex,
             accounts: accounts
         )
-        persist(snapshot, onRootRelaunchRequired: onRootRelaunchRequired)
+        persist(
+            snapshot,
+            successMessage: successMessage,
+            onRootRelaunchRequired: onRootRelaunchRequired
+        )
     }
 
     public func retrySave() {
         guard !isSaving, let snapshot = failedSave else { return }
         let callback = failedSaveCallback ?? {}
         presentation = nil
-        persist(snapshot, onRootRelaunchRequired: callback)
+        persist(
+            snapshot,
+            successMessage: failedSaveSuccessMessage,
+            onRootRelaunchRequired: callback
+        )
     }
 
     private func persist(
         _ snapshot: MissCatDesignSettingsSnapshot,
+        successMessage: String,
         onRootRelaunchRequired: @escaping () -> Void
     ) {
         failedSave = snapshot
         failedSaveCallback = onRootRelaunchRequired
+        failedSaveSuccessMessage = successMessage
         saveTask = Task { @MainActor in
             isSaving = true
             defer { isSaving = false }
@@ -301,8 +324,9 @@ public final class MissCatDesignSettingsStore: ObservableObject {
                 isDirty = false
                 failedSave = nil
                 failedSaveCallback = nil
+                failedSaveSuccessMessage = "デザイン設定を保存しました"
                 MissCatSettingsSaveRecovery.design = nil
-                presentation = .banner(message: "デザイン設定を保存しました")
+                presentation = .banner(message: successMessage)
                 if result.requiresRootRelaunch { onRootRelaunchRequired() }
             } catch is CancellationError {
                 return

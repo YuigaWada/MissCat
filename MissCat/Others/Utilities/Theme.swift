@@ -10,29 +10,59 @@ import Foundation
 import RxCocoa
 import RxSwift
 
+struct ThemeModelStorage {
+    let data: (_ key: String) -> Data?
+    let setData: (_ data: Data?, _ key: String) -> Void
+
+    static let standard = ThemeModelStorage(
+        data: { UserDefaults.standard.data(forKey: $0) },
+        setData: { data, key in
+            if let data {
+                UserDefaults.standard.set(data, forKey: key)
+            } else {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
+    )
+}
+
 // MARK: Theme
 
 public class Theme {
     static var shared: Theme = .init()
-    
+
+    enum PersistenceError: Error {
+        case writeOrReadbackFailed
+        case rollbackFailed
+    }
+
     var currentModel: Theme.Model?
     var theme: PublishRelay<Theme.Model> = .init()
-    
+
+    private let modelStorage: ThemeModelStorage
+    private let persistencePublishObserver: ((Theme.Model) -> Void)?
+
+    init(
+        modelStorage: ThemeModelStorage = .standard,
+        persistencePublishObserver: ((Theme.Model) -> Void)? = nil
+    ) {
+        self.modelStorage = modelStorage
+        self.persistencePublishObserver = persistencePublishObserver
+    }
+
     /// currentModelをsetします
     func set() {
-        var currentModel = Model.get()
-        if currentModel == nil {
+        var candidate = Model.get(storage: modelStorage)
+        if candidate == nil {
             guard let defaultModel = Model.getDefault() else { return }
-            Model.save(with: defaultModel) // 存在しない場合はデフォルトの設定を保存しておく
-            currentModel = defaultModel
+            candidate = defaultModel
         }
-        
-        currentModel?.tab = checkTabs(currentModel?.tab) // 有効なフォーマットかチェックしておく
-        self.currentModel = currentModel
-        
-        if let currentModel = currentModel {
-            Model.save(with: currentModel)
-        }
+
+        guard let candidate else { return }
+        let normalized = candidate.copy()
+        normalized.tab = checkTabs(normalized.tab) // 有効なフォーマットかチェックしておく
+        guard let persisted = try? Model.saveChecked(with: normalized, storage: modelStorage) else { return }
+        currentModel = persisted
     }
     
     func reset() {
@@ -69,13 +99,11 @@ public class Theme {
     /// currentModelのタブ情報を全て削除する
     func removeAllTabs() {
         if currentModel == nil { set() }
-        
-        if let currentModel = currentModel {
-            currentModel.tab = Model.getDefault()?.tab ?? [] // デフォルトのタブに戻す
-            
-            Model.save(with: currentModel)
-            self.currentModel = currentModel
-        }
+
+        guard let currentModel else { return }
+        let candidate = currentModel.copy()
+        candidate.tab = Model.getDefault()?.tab ?? [] // デフォルトのタブに戻す
+        _ = try? saveAtomically(with: candidate)
     }
     
     /// 削除しようとしているアカウントが紐付けられたタブを削除しておく
@@ -83,23 +111,20 @@ public class Theme {
     func removeUserTabs(for user: SecureUser) -> Bool {
         if currentModel == nil { set() }
         
-        if let currentModel = currentModel {
+        if let currentModel {
             let hasAnotherLegacyMatch = Cache.UserDefaults.shared.getUsers().contains {
                 $0.userId == user.userId && $0.accountIdentifier != user.accountIdentifier
             }
-            let filtered = currentModel.tab.filter { tab in
-                guard tab.userId != user.accountIdentifier else { return false }
-                // Old themes stored bare user IDs. Remove that legacy reference
-                // only when it identifies one account unambiguously.
-                return hasAnotherLegacyMatch || tab.userId != user.userId
-            }
-            let defaults = Model.getDefault()?.tab ?? []
-            let repaired = filtered.isEmpty ? defaults : filtered
-            let result = (tabs: repaired, changed: repaired != currentModel.tab)
-            currentModel.tab = result.tabs
-            
-            Model.save(with: currentModel)
-            self.currentModel = currentModel
+            let result = Self.removingTabs(
+                forAccountIdentifier: user.accountIdentifier,
+                legacyUserID: hasAnotherLegacyMatch ? nil : user.userId,
+                from: currentModel.tab,
+                defaults: Model.getDefault()?.tab ?? []
+            )
+            let candidate = currentModel.copy()
+            candidate.tab = result.tabs
+
+            guard (try? saveAtomically(with: candidate)) != nil else { return false }
             
             // Three account-bound tabs are replaced by the three defaults. Comparing
             // only the count reports that as unchanged and prevents the main shell
@@ -115,7 +140,25 @@ public class Theme {
         from tabs: [Theme.Tab],
         defaults: [Theme.Tab]
     ) -> (tabs: [Theme.Tab], changed: Bool) {
-        let filtered = tabs.filter { $0.userId != userID }
+        removingTabs(
+            forAccountIdentifier: userID,
+            legacyUserID: nil,
+            from: tabs,
+            defaults: defaults
+        )
+    }
+
+    static func removingTabs(
+        forAccountIdentifier accountIdentifier: String,
+        legacyUserID: String?,
+        from tabs: [Theme.Tab],
+        defaults: [Theme.Tab]
+    ) -> (tabs: [Theme.Tab], changed: Bool) {
+        let filtered = tabs.filter { tab in
+            guard tab.userId != accountIdentifier else { return false }
+            guard let legacyUserID else { return true }
+            return tab.userId != legacyUserID
+        }
         let repaired = filtered.isEmpty ? defaults : filtered
         return (repaired, repaired != tabs)
     }
@@ -133,19 +176,41 @@ public class Theme {
         return !sameColorMode
     }
     
-    /// 新しいモデルを保存します
-    /// - Parameter newModel: Theme.Model
+    /// Compatibility entry point for legacy callers that cannot surface persistence
+    /// failures. New settings code must use `saveAtomically(with:)`.
     func save(with newModel: Theme.Model) {
-        // 同じならばsaveしない
-        if let currentModel = currentModel, currentModel.isEqual(to: newModel) {
-            return
+        _ = try? saveAtomically(with: newModel)
+    }
+
+    /// Writes, reads back, and verifies the complete theme before publishing it.
+    /// A failed write restores the exact previous bytes and leaves runtime state
+    /// untouched. If restoration itself cannot be verified, a distinct error is
+    /// returned so callers never mistake the candidate for committed state.
+    @discardableResult
+    func saveAtomically(with newModel: Theme.Model) throws -> Theme.Model {
+        let oldPersistedData = modelStorage.data(Model.storageKey)
+        let oldRuntimeModel = currentModel
+        let normalized = newModel.copy()
+        normalized.tab = checkTabs(normalized.tab)
+
+        do {
+            let persisted = try Model.saveChecked(with: normalized, storage: modelStorage)
+            let changed = oldRuntimeModel.map { !$0.isEqual(to: persisted) } ?? true
+            currentModel = persisted
+            if changed {
+                theme.accept(persisted)
+                persistencePublishObserver?(persisted)
+            }
+            return persisted
+        } catch {
+            modelStorage.setData(oldPersistedData, Model.storageKey)
+            guard modelStorage.data(Model.storageKey) == oldPersistedData else {
+                currentModel = oldRuntimeModel
+                throw PersistenceError.rollbackFailed
+            }
+            currentModel = oldRuntimeModel
+            throw PersistenceError.writeOrReadbackFailed
         }
-        
-        newModel.tab = checkTabs(newModel.tab) // 有効なフォーマットかチェックしておく
-        Model.save(with: newModel)
-        
-        currentModel = newModel
-        theme.accept(newModel)
     }
 }
 
@@ -299,13 +364,20 @@ public extension Theme {
             }
             return true
         }
+
+        func copy() -> Model {
+            Model(tab: tab, mainColorHex: mainColorHex, colorMode: colorMode)
+        }
         
         // MARK: GET/SET
         
         static func get() -> Model? {
-            let key = getKey()
-            guard let data = UserDefaults.standard.data(forKey: key),
-                  let model = try? JSONDecoder().decode(Model.self, from: data) else { return nil }
+            get(storage: .standard)
+        }
+
+        static func get(storage: ThemeModelStorage) -> Model? {
+            guard let data = storage.data(storageKey),
+                  let model = decode(data) else { return nil }
             
             // userIdが存在しなかったら現在ログイン中のアカウントのuserIdを詰める
             let currentUser = Cache.UserDefaults.shared.getCurrentUser()
@@ -317,21 +389,37 @@ public extension Theme {
             }
             
             if hasNonUserTab {
-                save(with: model)
+                _ = try? saveChecked(with: model, storage: storage)
             }
             
             return model
         }
         
         static func save(with target: Model) {
-            let key = getKey()
-            let data = try? JSONEncoder().encode(target)
-            UserDefaults.standard.set(data, forKey: key)
+            _ = try? saveChecked(with: target, storage: .standard)
         }
-        
-        private static func getKey() -> String {
-            return "theme-key"
+
+        @discardableResult
+        static func saveChecked(
+            with target: Model,
+            storage: ThemeModelStorage
+        ) throws -> Model {
+            let encoded = try JSONEncoder().encode(target)
+            storage.setData(encoded, storageKey)
+            guard let readback = storage.data(storageKey),
+                  let decoded = decode(readback),
+                  decoded.isEqual(to: target)
+            else {
+                throw Theme.PersistenceError.writeOrReadbackFailed
+            }
+            return decoded
         }
+
+        static func decode(_ data: Data) -> Model? {
+            try? JSONDecoder().decode(Model.self, from: data)
+        }
+
+        static let storageKey = "theme-key"
         
         static func getDefault() -> Model? {
             guard let data = defaultJson.data(using: .utf8) else { return nil }

@@ -284,6 +284,34 @@ final class MissCatDesignSettingsStoreTests: XCTestCase {
         XCTAssertEqual(store.accentHex, "12ABEF")
     }
 
+    func testNavigatingBackWithPartialHexSavesOtherEditsUsingLastValidAccent() async {
+        let owner = account("owner")
+        let repository = FakeDesignRepository(snapshot: .init(
+            tabs: [.init(name: "Home", kind: .home, accountID: owner.id)],
+            mode: .light,
+            accentHex: "2F7CF6",
+            accounts: [owner]
+        ))
+        let store = MissCatDesignSettingsStore(repository: repository)
+        store.load()
+        await eventually { store.isReady }
+
+        store.updateMode(.dark)
+        store.addTab(kind: .global, accountID: owner.id)
+        store.updateAccentHexDraft("12A")
+        store.save()
+        await eventually { repository.savedSnapshots.count == 1 && !store.isSaving }
+
+        XCTAssertEqual(repository.savedSnapshots[0].mode, .dark)
+        XCTAssertEqual(repository.savedSnapshots[0].tabs.map(\.kind), [.home, .global])
+        XCTAssertEqual(repository.savedSnapshots[0].accentHex, "2F7CF6")
+        XCTAssertEqual(store.accentHexDraft, "2F7CF6")
+        XCTAssertEqual(
+            store.presentation,
+            .banner(message: "HEX入力が未完了のため、色は変更せず他の設定を保存しました")
+        )
+    }
+
     func testLoadRepairsInvalidOwnersWithoutChangingOrderedTabIdentityFields() async {
         let owner = account("valid")
         let tabs: [MissCatSettingsTab] = [
@@ -546,6 +574,166 @@ final class MissCatEmojiArchiveTests: XCTestCase {
 
         XCTAssertEqual(EmojiView.EmojiModel.decodeStoredEmojis(legacy)?.map(\.rawEmoji), ["👍"])
     }
+
+    func testLegacyDecoderRejectsAnArchiveContainingAnUnapprovedClass() throws {
+        let hostile = try NSKeyedArchiver.archivedData(
+            withRootObject: [HostileEmojiArchiveObject()],
+            requiringSecureCoding: false
+        )
+
+        XCTAssertNil(EmojiView.EmojiModel.decodeStoredEmojis(hostile))
+    }
+
+    func testExactArchiveComparisonCoversOrderAndAllPersistedFields() {
+        let expected = [
+            EmojiView.EmojiModel(
+                rawEmoji: ":cat:",
+                isDefault: false,
+                defaultEmoji: nil,
+                customEmojiUrl: "https://example.test/cat.gif"
+            ),
+            EmojiView.EmojiModel(
+                rawEmoji: "👍",
+                isDefault: true,
+                defaultEmoji: "👍",
+                customEmojiUrl: nil
+            )
+        ]
+        let exact = expected.map {
+            EmojiView.EmojiModel(
+                rawEmoji: $0.rawEmoji,
+                isDefault: $0.isDefault,
+                defaultEmoji: $0.defaultEmoji,
+                customEmojiUrl: $0.customEmojiUrl
+            )
+        }
+        let wrongDefaultFlag = [
+            EmojiView.EmojiModel(
+                rawEmoji: ":cat:",
+                isDefault: true,
+                defaultEmoji: nil,
+                customEmojiUrl: "https://example.test/cat.gif"
+            ),
+            exact[1]
+        ]
+        let wrongDefaultEmoji = [
+            exact[0],
+            EmojiView.EmojiModel(
+                rawEmoji: "👍",
+                isDefault: true,
+                defaultEmoji: "👎",
+                customEmojiUrl: nil
+            )
+        ]
+        let wrongURL = [
+            EmojiView.EmojiModel(
+                rawEmoji: ":cat:",
+                isDefault: false,
+                defaultEmoji: nil,
+                customEmojiUrl: "https://example.test/other.gif"
+            ),
+            exact[1]
+        ]
+
+        XCTAssertTrue(EmojiView.EmojiModel.archiveFieldsEqual(exact, expected))
+        XCTAssertFalse(EmojiView.EmojiModel.archiveFieldsEqual(Array(exact.reversed()), expected))
+        XCTAssertFalse(EmojiView.EmojiModel.archiveFieldsEqual(wrongDefaultFlag, expected))
+        XCTAssertFalse(EmojiView.EmojiModel.archiveFieldsEqual(wrongDefaultEmoji, expected))
+        XCTAssertFalse(EmojiView.EmojiModel.archiveFieldsEqual(wrongURL, expected))
+    }
+
+    func testFailedReactionReadbackRestoresPreviousArchiveAndVersion() throws {
+        let owner = SecureUser(
+            userId: "fixture-account",
+            username: "fixture",
+            instance: "example.test",
+            apiKey: nil
+        )
+        let previous = [EmojiView.EmojiModel(
+            rawEmoji: "👍",
+            isDefault: true,
+            defaultEmoji: "👍",
+            customEmojiUrl: nil
+        )]
+        let replacement = [EmojiView.EmojiModel(
+            rawEmoji: ":cat:",
+            isDefault: false,
+            defaultEmoji: nil,
+            customEmojiUrl: "https://example.test/cat.gif"
+        )]
+        let key = EmojiView.EmojiModel.getKey(type: .favs, owner: owner)
+        let storage = InMemoryEmojiArchiveStorage(
+            data: [key: try EmojiView.EmojiModel.archiveEmojis(previous)],
+            versions: ["\(key).secure-archive-version": 2]
+        )
+        storage.corruptNextDataWrite = true
+
+        XCTAssertThrowsError(try EmojiView.EmojiModel.saveEmojisChecked(
+            with: replacement,
+            type: .favs,
+            owner: owner,
+            storage: storage.interface
+        ))
+
+        let restoredData = try XCTUnwrap(storage.data[key])
+        let restored = try XCTUnwrap(EmojiView.EmojiModel.decodeStoredEmojis(restoredData))
+        XCTAssertTrue(EmojiView.EmojiModel.archiveFieldsEqual(restored, previous))
+        XCTAssertEqual(storage.versions["\(key).secure-archive-version"], 2)
+    }
+
+    func testLegacyInstanceSpellingMovesOnceToCanonicalSecureKeyWithoutAccountSecrets() throws {
+        let owner = SecureUser(
+            userId: "https://example.test|same-server-user-id",
+            username: "fixture",
+            instance: "example.test",
+            apiKey: "fixture-token-must-not-be-persisted"
+        )
+        let item = EmojiView.EmojiModel(
+            rawEmoji: ":cat:",
+            isDefault: false,
+            defaultEmoji: nil,
+            customEmojiUrl: "https://example.test/cat.svg"
+        )
+        let legacyKey = "favs-HTTPS://Example.TEST/"
+        let legacyData = try NSKeyedArchiver.archivedData(
+            withRootObject: [item],
+            requiringSecureCoding: false
+        )
+        let storage = InMemoryEmojiArchiveStorage(
+            data: [legacyKey: legacyData],
+            versions: ["\(legacyKey).secure-archive-version": 1]
+        )
+
+        let migrated = EmojiView.EmojiModel.getEmojis(
+            type: .favs,
+            owner: owner,
+            storage: storage.interface
+        )
+        let canonicalKey = EmojiView.EmojiModel.getKey(type: .favs, owner: owner)
+
+        XCTAssertEqual(migrated?.map(\.rawEmoji), [":cat:"])
+        XCTAssertNil(storage.data[legacyKey])
+        XCTAssertNil(storage.versions["\(legacyKey).secure-archive-version"])
+        XCTAssertNotNil(storage.data[canonicalKey])
+        XCTAssertEqual(storage.versions["\(canonicalKey).secure-archive-version"], 2)
+        XCTAssertFalse(storage.keys.contains { $0.contains(owner.userId) })
+        for forbidden in [owner.userId, owner.apiKey].compactMap({ $0 }) {
+            XCTAssertFalse(storage.keys.contains { $0.contains(forbidden) })
+            XCTAssertTrue(storage.data.values.allSatisfy { data in
+                data.range(of: Data(forbidden.utf8)) == nil
+                    && data.range(of: forbidden.data(using: .utf16LittleEndian) ?? Data()) == nil
+            })
+        }
+
+        let firstCanonicalData = storage.data[canonicalKey]
+        let secondRead = EmojiView.EmojiModel.getEmojis(
+            type: .favs,
+            owner: owner,
+            storage: storage.interface
+        )
+        XCTAssertEqual(secondRead?.map(\.rawEmoji), [":cat:"])
+        XCTAssertEqual(storage.data[canonicalKey], firstCanonicalData)
+    }
 }
 
 final class MissCatThemeProductionContractTests: XCTestCase {
@@ -589,6 +777,70 @@ final class MissCatThemeProductionContractTests: XCTestCase {
         XCTAssertFalse(MissCatLegacySettingsRepository.persistedThemeMatches(wrongOwner, expected: expected))
         XCTAssertFalse(MissCatLegacySettingsRepository.persistedThemeMatches(wrongList, expected: expected))
     }
+
+    func testProductionThemeSaveRollsBackBytesAndRuntimeWithoutPublishingOnReadbackMismatch() throws {
+        let old = Theme.Model(
+            tab: [Theme.Tab(name: "Local", kind: .local, userId: "owner", listId: nil)],
+            mainColorHex: "2F7CF6",
+            colorMode: .light
+        )
+        let oldData = try JSONEncoder().encode(old)
+        let storage = InMemoryThemeStorage(data: oldData)
+        var publications = 0
+        let theme = Theme(
+            modelStorage: storage.interface,
+            persistencePublishObserver: { _ in publications += 1 }
+        )
+        theme.currentModel = old
+        storage.corruptNextWrite = true
+        let candidate = Theme.Model(
+            tab: [Theme.Tab(name: "World", kind: .global, userId: "owner", listId: "list-42")],
+            mainColorHex: "ABCDEF",
+            colorMode: .dark
+        )
+
+        XCTAssertThrowsError(try theme.saveAtomically(with: candidate))
+
+        XCTAssertEqual(storage.data, oldData)
+        XCTAssertTrue(theme.currentModel === old)
+        XCTAssertTrue(try XCTUnwrap(Theme.Model.decode(storage.data ?? Data())).isEqual(to: old))
+        XCTAssertEqual(publications, 0)
+    }
+
+    @MainActor
+    func testProductionDesignAdapterSurfacesInjectedReadbackFailureAfterRollback() async throws {
+        let old = Theme.Model(
+            tab: [Theme.Tab(name: "Local", kind: .local, userId: "owner", listId: nil)],
+            mainColorHex: "2F7CF6",
+            colorMode: .light
+        )
+        let oldData = try JSONEncoder().encode(old)
+        let storage = InMemoryThemeStorage(data: oldData)
+        let theme = Theme(modelStorage: storage.interface)
+        theme.currentModel = old
+        storage.corruptNextWrite = true
+        let repository = MissCatLegacySettingsRepository(theme: theme)
+        let owner = account("owner")
+        let snapshot = MissCatDesignSettingsSnapshot(
+            tabs: [.init(name: "World", kind: .global, accountID: owner.id)],
+            mode: .dark,
+            accentHex: "ABCDEF",
+            accounts: [owner]
+        )
+
+        do {
+            _ = try await repository.saveDesignSettings(snapshot)
+            XCTFail("The adapter accepted an unpersisted theme")
+        } catch {
+            XCTAssertEqual(
+                error as? MissCatAccountManagementError,
+                .accountPersistenceFailed
+            )
+        }
+
+        XCTAssertEqual(storage.data, oldData)
+        XCTAssertTrue(theme.currentModel === old)
+    }
 }
 
 final class MissCatSettingsVisualContractTests: XCTestCase {
@@ -605,14 +857,21 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
         XCTAssertEqual(MissCatSettingsLegacyMetrics.aboutDeveloperRowHeight, 70)
     }
 
-    func testLicenseCatalogExactlyMatchesPodfileLockInventory() {
+    func testLicenseCatalogExactlyMatchesBundledCocoaPodsAcknowledgementContent() throws {
         let catalog = LicenseTableViewController.getOssDescription()
         let expected = LicenseTableViewController.podfileLockDependencyNames
+        let authoritative = try XCTUnwrap(
+            LicenseTableViewController.bundledAcknowledgementCatalog(
+                in: Bundle(for: LicenseTableViewController.self)
+            )
+        )
 
         XCTAssertEqual(catalog.keys.sorted(), expected.sorted())
+        XCTAssertEqual(catalog, authoritative)
         XCTAssertEqual(catalog.count, 22)
-        XCTAssertTrue(catalog.values.allSatisfy { $0.count > 200 })
-        XCTAssertTrue(catalog.values.joined(separator: "\n").contains("License"))
+        for name in expected {
+            XCTAssertEqual(catalog[name], authoritative[name], "Acknowledgement text differs for \(name)")
+        }
     }
 
     func testSettingsRoutesCoverAllLegacyDestinations() {
@@ -625,6 +884,43 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
             .about
         ]
         XCTAssertEqual(Set(routes).count, 6)
+    }
+
+    @MainActor
+    func testReactionPickerReadinessWaitsForEveryRegisteredMediaCell() {
+        let readiness = MissCatReactionMediaReadiness()
+        readiness.register("gif")
+        readiness.register("apng")
+        readiness.finishInitialRegistrationPass()
+
+        XCTAssertFalse(readiness.isReady)
+        readiness.complete("gif")
+        XCTAssertFalse(readiness.isReady)
+        readiness.complete("apng")
+        XCTAssertTrue(readiness.isReady)
+
+        readiness.register("svg")
+        XCTAssertFalse(readiness.isReady)
+        readiness.complete("svg")
+        XCTAssertTrue(readiness.isReady)
+    }
+
+    func testReactionVisualFixturesAreBundledGIFAPNGAndSVGFiles() throws {
+        let bundle = Bundle(for: MissCatLegacySettingsRepository.self)
+        let gif = try XCTUnwrap(bundle.url(forResource: "reaction-fixture", withExtension: "gif"))
+        let apng = try XCTUnwrap(bundle.url(forResource: "reaction-fixture", withExtension: "apng"))
+        let svg = try XCTUnwrap(bundle.url(forResource: "reaction-fixture", withExtension: "svg"))
+        let gifData = try Data(contentsOf: gif)
+        let apngData = try Data(contentsOf: apng)
+        let svgData = try Data(contentsOf: svg)
+
+        XCTAssertTrue(String(data: gifData.prefix(6), encoding: .ascii)?.hasPrefix("GIF") == true)
+        XCTAssertNotNil(apngData.range(of: Data("acTL".utf8)))
+        XCTAssertTrue(String(data: svgData, encoding: .utf8)?.contains("<svg") == true)
+        XCTAssertEqual(MFMImageView.imageFormat(gifData), .gif)
+        XCTAssertEqual(MFMImageView.imageFormat(apngData), .apng)
+        XCTAssertEqual(MFMImageView.imageFormat(svgData), .other)
+        XCTAssertTrue([gif, apng, svg].allSatisfy(\.isFileURL))
     }
 }
 
@@ -726,6 +1022,78 @@ private final class FakeReactionRepository: MissCatReactionSettingsManaging {
         if let saveError { throw saveError }
         savedSnapshots.append(snapshot)
         self.snapshot = snapshot
+    }
+}
+
+@objc(HostileEmojiArchiveObject)
+private final class HostileEmojiArchiveObject: NSObject, NSSecureCoding {
+    static var supportsSecureCoding: Bool { true }
+
+    override init() {
+        super.init()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init()
+    }
+
+    func encode(with coder: NSCoder) {}
+}
+
+private final class InMemoryThemeStorage {
+    var data: Data?
+    var corruptNextWrite = false
+
+    init(data: Data?) {
+        self.data = data
+    }
+
+    var interface: ThemeModelStorage {
+        ThemeModelStorage(
+            data: { [weak self] _ in self?.data },
+            setData: { [weak self] data, _ in
+                guard let self else { return }
+                if corruptNextWrite {
+                    corruptNextWrite = false
+                    self.data = Data([0x00, 0x01, 0x02])
+                } else {
+                    self.data = data
+                }
+            }
+        )
+    }
+}
+
+private final class InMemoryEmojiArchiveStorage {
+    var data: [String: Data]
+    var versions: [String: Int]
+    var corruptNextDataWrite = false
+
+    init(data: [String: Data] = [:], versions: [String: Int] = [:]) {
+        self.data = data
+        self.versions = versions
+    }
+
+    var keys: [String] {
+        Array(Set(data.keys).union(versions.keys))
+    }
+
+    var interface: EmojiArchiveStorage {
+        EmojiArchiveStorage(
+            data: { [weak self] in self?.data[$0] },
+            version: { [weak self] in self?.versions[$0] },
+            setData: { [weak self] value, key in
+                guard let self else { return }
+                if corruptNextDataWrite {
+                    corruptNextDataWrite = false
+                    data[key] = Data([0x00, 0x01, 0x02])
+                } else {
+                    data[key] = value
+                }
+            },
+            setVersion: { [weak self] value, key in self?.versions[key] = value },
+            keys: { [weak self] in self?.keys ?? [] }
+        )
     }
 }
 

@@ -125,8 +125,46 @@ class LicenseTableViewController: FormViewController {
         "RxSwift", "SkeletonView", "Starscream", "SVGKit", "SwiftLinkPreview",
         "XLActionController", "XLPagerTabStrip"
     ]
+
+    /// Reads the CocoaPods-generated acknowledgement artifact copied into the app
+    /// bundle. The UI therefore displays the authoritative full text rather than a
+    /// hand-maintained approximation. The explicit direct-dependency filter preserves
+    /// the historical settings inventory while still proving every displayed byte.
+    static func bundledAcknowledgementCatalog(
+        in bundle: Bundle = Bundle(for: LicenseTableViewController.self)
+    ) -> [String: String]? {
+        guard let url = bundle.url(
+            forResource: "ThirdPartyAcknowledgements",
+            withExtension: "plist"
+        ),
+        let data = try? Data(contentsOf: url),
+        let propertyList = try? PropertyListSerialization.propertyList(
+            from: data,
+            options: [],
+            format: nil
+        ),
+        let root = propertyList as? [String: Any],
+        let specifiers = root["PreferenceSpecifiers"] as? [[String: Any]]
+        else { return nil }
+
+        let required = Set(podfileLockDependencyNames)
+        let catalog = specifiers.reduce(into: [String: String]()) { result, specifier in
+            guard let title = specifier["Title"] as? String,
+                  required.contains(title),
+                  let text = specifier["FooterText"] as? String
+            else { return }
+            result[title] = text
+        }
+        guard Set(catalog.keys) == required else { return nil }
+        return catalog
+    }
     
     static func getOssDescription() -> [String: String] {
+        if let bundled = bundledAcknowledgementCatalog() {
+            return bundled
+        }
+
+        // Development fallback for contexts that do not process app resources.
         var catalog = ["MisskeyKit": """
         MIT License
         

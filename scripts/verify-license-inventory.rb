@@ -1,12 +1,15 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require "json"
+
 root = File.expand_path("..", __dir__)
 lock = File.read(File.join(root, "Podfile.lock"), encoding: "UTF-8")
 source = File.read(
   File.join(root, "MissCat/View/Settings/LicenseViewController.swift"),
   encoding: "UTF-8"
 )
+acknowledgements_path = File.join(root, "MissCat/Resources/ThirdPartyAcknowledgements.plist")
 
 dependency_block = lock[/^DEPENDENCIES:\n(?<body>.*?)(?=^[A-Z][A-Z ]+:)/m, :body]
 abort "Could not parse DEPENDENCIES from Podfile.lock" unless dependency_block
@@ -30,4 +33,21 @@ unless locked == generated
   exit 1
 end
 
-puts "License inventory matches #{locked.count} Podfile.lock dependencies."
+acknowledgements_json = IO.popen(
+  ["plutil", "-convert", "json", "-o", "-", acknowledgements_path],
+  &:read
+)
+acknowledgements = JSON.parse(acknowledgements_json)
+authoritative = acknowledgements.fetch("PreferenceSpecifiers").each_with_object({}) do |entry, result|
+  title = entry["Title"]
+  text = entry["FooterText"]
+  result[title] = text if locked.include?(title) && text
+end
+
+unless authoritative.keys.sort == locked && authoritative.values.all? { |text| !text.empty? }
+  warn "Bundled CocoaPods acknowledgement content is incomplete."
+  warn "Missing: #{(locked - authoritative.keys).join(", ")}"
+  exit 1
+end
+
+puts "License inventory and bundled acknowledgement text match #{locked.count} Podfile.lock dependencies."
