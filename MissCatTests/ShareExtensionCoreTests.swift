@@ -65,6 +65,9 @@ final class ShareComposerViewModelTests: XCTestCase {
 
         XCTAssertEqual(viewModel.phase, .posting)
         XCTAssertFalse(submission.isCancelled)
+        let duplicateSucceeded = await viewModel.submit()
+        XCTAssertFalse(duplicateSucceeded)
+        XCTAssertEqual(posting.submissions.count, 1)
 
         posting.succeed()
         let didSubmit = await submission.value
@@ -110,6 +113,53 @@ final class ShareComposerViewModelTests: XCTestCase {
         let overlongDraftSucceeded = await viewModel.submit()
         XCTAssertFalse(overlongDraftSucceeded)
         XCTAssertTrue(posting.submissions.isEmpty)
+    }
+
+    func testCompositeAccountSelectionSeparatesSameUserIDAcrossInstances() async throws {
+        let first = ShareAccount(userID: "same-user", username: "cat", instance: "one.example")
+        let second = ShareAccount(
+            userID: "same-user",
+            username: "cat",
+            instance: "HTTPS://TWO.EXAMPLE:443/"
+        )
+        XCTAssertNotEqual(first.id, second.id)
+        XCTAssertEqual(second.instance, "two.example")
+        XCTAssertEqual(
+            second.id,
+            MissCatAccountIdentity.storageKey(instance: "two.example", userId: "same-user")
+        )
+        let posting = SequencedSharePosting(results: [.success(())])
+        let viewModel = ShareComposerViewModel(
+            accounts: [first, second],
+            selectedAccountID: first.id,
+            visibility: .home,
+            posting: posting
+        )
+        viewModel.load(ShareDraft(text: "second instance", imageData: []))
+
+        viewModel.selectedAccountID = second.id
+        let didSubmit = await viewModel.submit()
+
+        XCTAssertTrue(didSubmit)
+        XCTAssertEqual(posting.submissions.count, 1)
+        XCTAssertEqual(posting.submissions.first?.1, second.id)
+        XCTAssertEqual(viewModel.selectedAccount?.instance, "two.example")
+    }
+
+    func testCredentialReadProofContainsNoCredentialPayload() {
+        let accountID = MissCatAccountIdentity.storageKey(
+            instance: "proof.example",
+            userId: "same-user"
+        )
+        let proof = ShareCredentialReadProof(
+            accountIdentifier: accountID,
+            credentialAvailable: true
+        )
+
+        XCTAssertEqual(proof.accountIdentifier, accountID)
+        XCTAssertTrue(proof.credentialAvailable)
+        XCTAssertFalse(proof.description.localizedCaseInsensitiveContains("token"))
+        XCTAssertFalse(proof.description.localizedCaseInsensitiveContains("secret"))
     }
 
     private func makeViewModel(

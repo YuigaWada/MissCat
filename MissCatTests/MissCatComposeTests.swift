@@ -1,5 +1,6 @@
 @testable import MissCat
 import Foundation
+import UIKit
 import XCTest
 
 final class MissCatComposeSubmissionBuilderTests: XCTestCase {
@@ -116,11 +117,11 @@ final class MissCatComposeSubmissionBuilderTests: XCTestCase {
 
         draft.text = "投稿"
         draft.hasContentWarning = true
-        draft.contentWarning = String(repeating: "a", count: 1_501)
+        draft.contentWarning = String(repeating: "a", count: 101)
         XCTAssertThrowsError(
             try MissCatComposeSubmissionBuilder.build(mode: .note, draft: draft, accountID: accountID)
         ) { error in
-            XCTAssertEqual(error as? MissCatComposeValidationError, .contentWarningTooLong(limit: 1_500))
+            XCTAssertEqual(error as? MissCatComposeValidationError, .contentWarningTooLong(limit: 100))
         }
     }
 
@@ -194,6 +195,17 @@ final class MissCatComposeSubmissionBuilderTests: XCTestCase {
         )
         assertPollError(
             MissCatPollDraft(
+                choices: [
+                    MissCatPollChoice(text: String(repeating: "a", count: 51)),
+                    MissCatPollChoice(text: "B")
+                ],
+                allowsMultiple: false,
+                expiry: .never
+            ),
+            equals: .pollChoiceTooLong(limit: 50)
+        )
+        assertPollError(
+            MissCatPollDraft(
                 choices: [MissCatPollChoice(text: "A"), MissCatPollChoice(text: "B")],
                 allowsMultiple: false,
                 expiry: .at(.distantPast)
@@ -235,8 +247,8 @@ final class MissCatComposeSubmissionBuilderTests: XCTestCase {
         ]
         assertBuildError(draft, equals: .videoMustBeAlone)
 
-        draft.media = [makeMedia(index: 0, altText: String(repeating: "a", count: 1_501))]
-        assertBuildError(draft, equals: .altTextTooLong(limit: 1_500))
+        draft.media = [makeMedia(index: 0, altText: String(repeating: "a", count: 513))]
+        assertBuildError(draft, equals: .altTextTooLong(limit: 512))
     }
 
     private func assertPollError(_ poll: MissCatPollDraft, equals expected: MissCatComposeValidationError) {
@@ -279,6 +291,375 @@ final class MissCatComposeTextInsertionTests: XCTestCase {
             "draft"
         )
         XCTAssertEqual(MissCatComposeTextInsertion.appendingHashtag("#", to: "draft"), "draft")
+    }
+}
+
+@MainActor
+final class MissCatNativeComposeAPIContractTests: XCTestCase {
+    private var urlSession: URLSession!
+
+    override func setUp() {
+        super.setUp()
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [ComposeURLProtocolStub.self]
+        urlSession = URLSession(configuration: configuration)
+    }
+
+    override func tearDown() {
+        ComposeURLProtocolStub.handler = nil
+        urlSession.invalidateAndCancel()
+        urlSession = nil
+        super.tearDown()
+    }
+
+    func testNoteCreateUsesBearerAccountScopeAndCurrentBodyShapes() async throws {
+        let recorder = ComposeRequestRecorder()
+        ComposeURLProtocolStub.handler = { request in
+            recorder.record(request)
+            return (202, Data(#"{"createdNote":{"id":"created-note"}}"#.utf8))
+        }
+        let client = try makeClient(token: "account-token")
+
+        let firstID = try await client.createNote(
+            MissCatComposeAPINote(
+                visibility: .specified,
+                visibleUserIDs: ["recipient-a", "recipient-b"],
+                text: "reply text",
+                contentWarning: "spoiler",
+                localOnly: true,
+                noExtractMentions: true,
+                noExtractHashtags: true,
+                noExtractEmojis: false,
+                fileIDs: ["file-a", "file-b"],
+                replyID: "reply-note",
+                poll: MissCatComposeAPIPoll(
+                    choices: ["Cat", "Dog"],
+                    multiple: true,
+                    expiresAt: 1_900_000_000_000,
+                    expiredAfter: nil
+                )
+            )
+        )
+        let renoteID = try await client.createNote(
+            MissCatComposeAPINote(
+                visibility: .public,
+                text: "",
+                renoteID: "renote-target"
+            )
+        )
+
+        XCTAssertEqual(firstID, "created-note")
+        XCTAssertEqual(renoteID, "created-note")
+        let requests = recorder.snapshot()
+        XCTAssertEqual(requests.count, 2)
+        for request in requests {
+            XCTAssertEqual(request.request.url?.absoluteString, "https://example.invalid/api/notes/create")
+            XCTAssertEqual(request.request.httpMethod, "POST")
+            XCTAssertEqual(request.request.value(forHTTPHeaderField: "Authorization"), "Bearer account-token")
+            XCTAssertEqual(request.request.value(forHTTPHeaderField: "Content-Type"), "application/json")
+            XCTAssertEqual(request.request.timeoutInterval, 9)
+            XCTAssertNil(request.body.range(of: Data("account-token".utf8)))
+        }
+
+        let reply = try requests[0].jsonBody
+        XCTAssertNil(reply["i"])
+        XCTAssertEqual(reply["visibility"] as? String, "specified")
+        XCTAssertEqual(reply["visibleUserIds"] as? [String], ["recipient-a", "recipient-b"])
+        XCTAssertEqual(reply["text"] as? String, "reply text")
+        XCTAssertEqual(reply["cw"] as? String, "spoiler")
+        XCTAssertEqual(reply["localOnly"] as? Bool, true)
+        XCTAssertEqual(reply["noExtractMentions"] as? Bool, true)
+        XCTAssertEqual(reply["noExtractHashtags"] as? Bool, true)
+        XCTAssertEqual(reply["noExtractEmojis"] as? Bool, false)
+        XCTAssertEqual(reply["fileIds"] as? [String], ["file-a", "file-b"])
+        XCTAssertEqual(reply["replyId"] as? String, "reply-note")
+        XCTAssertNil(reply["renoteId"])
+        let poll = try XCTUnwrap(reply["poll"] as? [String: Any])
+        XCTAssertEqual(poll["choices"] as? [String], ["Cat", "Dog"])
+        XCTAssertEqual(poll["multiple"] as? Bool, true)
+        XCTAssertEqual((poll["expiresAt"] as? NSNumber)?.int64Value, 1_900_000_000_000)
+        XCTAssertNil(poll["expiredAfter"])
+
+        let renote = try requests[1].jsonBody
+        XCTAssertEqual(renote["renoteId"] as? String, "renote-target")
+        XCTAssertNil(renote["text"])
+        XCTAssertNil(renote["fileIds"])
+        XCTAssertNil(renote["replyId"])
+        XCTAssertNil(renote["poll"])
+    }
+
+    func testMultipartUploadPreservesMetadataWithoutPuttingTokenInBody() async throws {
+        let recorder = ComposeRequestRecorder()
+        ComposeURLProtocolStub.handler = { request in
+            recorder.record(request)
+            return (201, Data(#"{"id":"drive-file"}"#.utf8))
+        }
+        let client = try makeClient(token: "upload-token")
+        let fileData = Data([0x00, 0xCA, 0xFE, 0xFF])
+
+        let fileID = try await client.upload(
+            MissCatComposeAPIUpload(
+                data: fileData,
+                mimeType: "image/jpeg",
+                filename: "cat photo.jpeg",
+                comment: "sleeping cat",
+                isSensitive: true
+            )
+        )
+
+        XCTAssertEqual(fileID, "drive-file")
+        let request = try XCTUnwrap(recorder.snapshot().first)
+        XCTAssertEqual(request.request.url?.path, "/api/drive/files/create")
+        XCTAssertEqual(request.request.value(forHTTPHeaderField: "Authorization"), "Bearer upload-token")
+        XCTAssertEqual(request.request.value(forHTTPHeaderField: "Accept"), "application/json")
+        XCTAssertTrue(request.request.value(forHTTPHeaderField: "Content-Type")?.hasPrefix("multipart/form-data; boundary=MissCat-") == true)
+        XCTAssertEqual(Int(request.request.value(forHTTPHeaderField: "Content-Length") ?? ""), request.body.count)
+        XCTAssertNil(request.body.range(of: Data("upload-token".utf8)))
+        XCTAssertNotNil(request.body.range(of: fileData))
+
+        let body = String(decoding: request.body, as: UTF8.self)
+        XCTAssertTrue(body.contains("name=\"name\"\r\n\r\ncat photo.jpeg\r\n"))
+        XCTAssertTrue(body.contains("name=\"comment\"\r\n\r\nsleeping cat\r\n"))
+        XCTAssertTrue(body.contains("name=\"isSensitive\"\r\n\r\ntrue\r\n"))
+        XCTAssertTrue(body.contains("name=\"force\"\r\n\r\nfalse\r\n"))
+        XCTAssertTrue(body.contains("name=\"file\"; filename=\"cat photo.jpeg\""))
+        XCTAssertTrue(body.contains("Content-Type: image/jpeg"))
+    }
+
+    func testComposeServiceKeepsMultipleUploadOrderAndMetadata() async throws {
+        let recorder = ComposeRequestRecorder()
+        ComposeURLProtocolStub.handler = { request in
+            let pathIndex = recorder.record(request)
+            if request.url?.path == "/api/drive/files/create" {
+                return (200, Data("{\"id\":\"file-\(pathIndex)\"}".utf8))
+            }
+            return (200, Data(#"{"createdNote":{"id":"note"}}"#.utf8))
+        }
+        let user = SecureUser(
+            userId: "same-user",
+            username: "cat",
+            instance: "example.invalid",
+            apiKey: "service-token"
+        )
+        let service = MissCatComposePostService(
+            userProvider: { identifier in
+                identifier == user.accountIdentifier ? user : nil
+            },
+            transport: MissCatComposeURLSessionTransport(session: urlSession),
+            requestTimeout: 12
+        )
+        let first = makeValidJPEG(red: 1, green: 0)
+        let second = makeValidJPEG(red: 0, green: 1)
+        let submission = MissCatComposeSubmission(
+            accountID: user.accountIdentifier,
+            mode: .note,
+            text: "two images",
+            contentWarning: nil,
+            visibility: .home,
+            visibleUserIDs: [],
+            localOnly: false,
+            noExtractMentions: false,
+            noExtractHashtags: false,
+            media: [
+                MissCatComposeMedia(
+                    kind: .image,
+                    data: first,
+                    filename: "first.png",
+                    mimeType: "image/png",
+                    altText: "first alt",
+                    isSensitive: false
+                ),
+                MissCatComposeMedia(
+                    kind: .image,
+                    data: second,
+                    filename: "second.png",
+                    mimeType: "image/png",
+                    altText: "second alt",
+                    isSensitive: true
+                )
+            ],
+            poll: nil
+        )
+        var progress: [MissCatComposeUploadProgress] = []
+
+        try await service.submit(submission) { progress.append($0) }
+
+        let requests = recorder.snapshot()
+        XCTAssertEqual(requests.map { $0.request.url?.path }, [
+            "/api/drive/files/create",
+            "/api/drive/files/create",
+            "/api/notes/create"
+        ])
+        XCTAssertEqual(progress, [
+            MissCatComposeUploadProgress(completed: 1, total: 2),
+            MissCatComposeUploadProgress(completed: 2, total: 2)
+        ])
+        let firstBody = String(decoding: requests[0].body, as: UTF8.self)
+        let secondBody = String(decoding: requests[1].body, as: UTF8.self)
+        XCTAssertTrue(firstBody.contains("first.jpeg"))
+        XCTAssertTrue(firstBody.contains("first alt"))
+        XCTAssertTrue(firstBody.contains("name=\"isSensitive\"\r\n\r\nfalse"))
+        XCTAssertTrue(secondBody.contains("second.jpeg"))
+        XCTAssertTrue(secondBody.contains("second alt"))
+        XCTAssertTrue(secondBody.contains("name=\"isSensitive\"\r\n\r\ntrue"))
+        let noteBody = try requests[2].jsonBody
+        XCTAssertEqual(noteBody["fileIds"] as? [String], ["file-1", "file-2"])
+    }
+
+    func testNon2xxPropagatesRedactedMisskeyErrorAndMalformed2xxFails() async throws {
+        ComposeURLProtocolStub.handler = { _ in
+            (
+                422,
+                Data(#"{"error":{"message":"bad secret-token value","code":"INVALID_PARAM","id":"error-id"}}"#.utf8)
+            )
+        }
+        let client = try makeClient(token: "secret-token")
+
+        do {
+            _ = try await client.createNote(MissCatComposeAPINote(visibility: .public, text: "hello"))
+            XCTFail("Expected server error")
+        } catch let error as MissCatNativeComposeAPIError {
+            XCTAssertEqual(
+                error,
+                .server(
+                    status: 422,
+                    code: "INVALID_PARAM",
+                    message: "bad <redacted> value",
+                    id: "error-id"
+                )
+            )
+            XCTAssertFalse(error.localizedDescription.contains("secret-token"))
+        }
+
+        ComposeURLProtocolStub.handler = { _ in (204, Data()) }
+        do {
+            _ = try await client.upload(
+                MissCatComposeAPIUpload(
+                    data: Data([1]),
+                    mimeType: "image/jpeg",
+                    filename: "cat.jpeg",
+                    comment: nil,
+                    isSensitive: false
+                )
+            )
+            XCTFail("Expected response decoding error")
+        } catch let error as MissCatNativeComposeAPIError {
+            XCTAssertEqual(error, .invalidResponse(endpoint: "drive/files/create"))
+        }
+    }
+
+    func testTimeoutAndCancellationPropagateWithoutRetry() async throws {
+        let recorder = ComposeRequestRecorder()
+        ComposeURLProtocolStub.handler = { request in
+            recorder.record(request)
+            throw URLError(.timedOut)
+        }
+        let client = try makeClient(token: "timeout-token")
+        do {
+            _ = try await client.createNote(MissCatComposeAPINote(visibility: .public, text: "hello"))
+            XCTFail("Expected timeout")
+        } catch let error as URLError {
+            XCTAssertEqual(error.code, .timedOut)
+        }
+        XCTAssertEqual(recorder.snapshot().count, 1)
+        XCTAssertEqual(recorder.snapshot().first?.request.timeoutInterval, 9)
+
+        let suspended = SuspendedComposeHTTPTransport()
+        let cancellableClient = MissCatNativeComposeAPIClient(
+            scope: try makeScope(token: "cancel-token"),
+            transport: suspended,
+            timeout: 20
+        )
+        let task = Task {
+            try await cancellableClient.createNote(
+                MissCatComposeAPINote(visibility: .public, text: "cancel me")
+            )
+        }
+        await suspended.waitUntilRequested()
+        task.cancel()
+        do {
+            _ = try await task.value
+            XCTFail("Expected cancellation")
+        } catch is CancellationError {
+            // Expected: cancellation stays cancellation rather than becoming a generic post error.
+        }
+        let cancellationRequestCount = await suspended.requestCount
+        XCTAssertEqual(cancellationRequestCount, 1)
+    }
+
+    func testServiceRejectsConcurrentDuplicateAndAllowsNextAttemptAfterCompletion() async throws {
+        let suspended = SuspendedComposeHTTPTransport()
+        let user = SecureUser(
+            userId: "user",
+            username: "cat",
+            instance: "example.invalid",
+            apiKey: "exact-once-token"
+        )
+        let service = MissCatComposePostService(
+            userProvider: { _ in user },
+            transport: suspended
+        )
+        let submission = MissCatComposeSubmission(
+            accountID: user.accountIdentifier,
+            mode: .note,
+            text: "one post",
+            contentWarning: nil,
+            visibility: .public,
+            visibleUserIDs: [],
+            localOnly: false,
+            noExtractMentions: false,
+            noExtractHashtags: false,
+            media: [],
+            poll: nil
+        )
+        let first = Task { @MainActor in
+            try await service.submit(submission) { _ in }
+        }
+        await suspended.waitUntilRequested()
+
+        do {
+            try await service.submit(submission) { _ in }
+            XCTFail("Expected exact-once guard")
+        } catch let error as MissCatNativeComposeAPIError {
+            XCTAssertEqual(error, .alreadySubmitting)
+        }
+        let duplicateRequestCount = await suspended.requestCount
+        XCTAssertEqual(duplicateRequestCount, 1)
+
+        await suspended.succeed(with: Data(#"{"createdNote":{"id":"note-1"}}"#.utf8))
+        try await first.value
+        let second = Task { @MainActor in
+            try await service.submit(submission) { _ in }
+        }
+        await suspended.waitUntilRequestCount(2)
+        await suspended.succeed(with: Data(#"{"createdNote":{"id":"note-2"}}"#.utf8))
+        try await second.value
+        let finalRequestCount = await suspended.requestCount
+        XCTAssertEqual(finalRequestCount, 2)
+    }
+
+    private func makeClient(token: String) throws -> MissCatNativeComposeAPIClient {
+        MissCatNativeComposeAPIClient(
+            scope: try makeScope(token: token),
+            transport: MissCatComposeURLSessionTransport(session: urlSession),
+            timeout: 9
+        )
+    }
+
+    private func makeScope(token: String) throws -> MissCatComposeAccountScope {
+        try MissCatComposeAccountScope(
+            accountID: "account-id",
+            instance: "HTTPS://EXAMPLE.INVALID:443/",
+            accessToken: token
+        )
+    }
+
+    private func makeValidJPEG(red: CGFloat, green: CGFloat) -> Data {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 2, height: 2))
+        return renderer.image { context in
+            UIColor(red: red, green: green, blue: 0, alpha: 1).setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 2, height: 2))
+        }.jpegData(compressionQuality: 1)!
     }
 }
 
@@ -567,4 +948,143 @@ private func makeMedia(
         altText: altText,
         isSensitive: sensitive
     )
+}
+
+private struct RecordedComposeRequest {
+    let request: URLRequest
+    let body: Data
+
+    var jsonBody: [String: Any] {
+        get throws {
+            try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        }
+    }
+}
+
+private final class ComposeRequestRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private var requests: [RecordedComposeRequest] = []
+
+    @discardableResult
+    func record(_ request: URLRequest) -> Int {
+        lock.lock()
+        defer { lock.unlock() }
+        requests.append(
+            RecordedComposeRequest(
+                request: request,
+                body: request.composeBodyData ?? Data()
+            )
+        )
+        return requests.count
+    }
+
+    func snapshot() -> [RecordedComposeRequest] {
+        lock.lock()
+        defer { lock.unlock() }
+        return requests
+    }
+}
+
+private final class ComposeURLProtocolStub: URLProtocol {
+    static var handler: ((URLRequest) throws -> (status: Int, data: Data))?
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    override func startLoading() {
+        guard let handler = Self.handler else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
+            return
+        }
+        do {
+            let result = try handler(request)
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: result.status,
+                httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: result.data)
+            client?.urlProtocolDidFinishLoading(self)
+        } catch {
+            client?.urlProtocol(self, didFailWithError: error)
+        }
+    }
+
+    override func stopLoading() {}
+}
+
+private actor SuspendedComposeHTTPTransport: MissCatComposeHTTPTransport {
+    private(set) var requestCount = 0
+    private var request: URLRequest?
+    private var continuation: CheckedContinuation<(Data, HTTPURLResponse), Error>?
+    private var countWaiters: [(count: Int, continuation: CheckedContinuation<Void, Never>)] = []
+
+    func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        requestCount += 1
+        self.request = request
+        let readyWaiters = countWaiters.filter { requestCount >= $0.count }
+        countWaiters.removeAll { requestCount >= $0.count }
+        readyWaiters.forEach { $0.continuation.resume() }
+
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation = $0 }
+        } onCancel: {
+            Task { await self.cancelPendingRequest() }
+        }
+    }
+
+    func waitUntilRequested() async {
+        await waitUntilRequestCount(1)
+    }
+
+    func waitUntilRequestCount(_ count: Int) async {
+        if requestCount >= count { return }
+        await withCheckedContinuation { continuation in
+            countWaiters.append((count, continuation))
+        }
+    }
+
+    func succeed(with data: Data, status: Int = 200) {
+        guard let request,
+              let url = request.url,
+              let response = HTTPURLResponse(
+                url: url,
+                statusCode: status,
+                httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+              )
+        else { return }
+        let continuation = self.continuation
+        self.continuation = nil
+        self.request = nil
+        continuation?.resume(returning: (data, response))
+    }
+
+    private func cancelPendingRequest() {
+        let continuation = self.continuation
+        self.continuation = nil
+        request = nil
+        continuation?.resume(throwing: CancellationError())
+    }
+}
+
+private extension URLRequest {
+    var composeBodyData: Data? {
+        if let httpBody { return httpBody }
+        guard let httpBodyStream else { return nil }
+
+        httpBodyStream.open()
+        defer { httpBodyStream.close() }
+        var body = Data()
+        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: 4_096)
+        defer { buffer.deallocate() }
+        while httpBodyStream.hasBytesAvailable {
+            let read = httpBodyStream.read(buffer, maxLength: 4_096)
+            guard read > 0 else { break }
+            body.append(buffer, count: read)
+        }
+        return body
+    }
 }
