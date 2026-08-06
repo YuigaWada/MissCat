@@ -111,8 +111,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
     
     private func routePush(_ envelope: MissCatPushEnvelope, opensRoute: Bool) {
+        let users = Cache.UserDefaults.shared.getUsers()
+        let identities = users.map {
+            MissCatPushAccountIdentity(
+                accountIdentifier: $0.accountIdentifier,
+                apiUserID: $0.userId,
+                instance: $0.instance
+            )
+        }
+        guard let resolved = MissCatPushOwnerResolver.resolve(envelope, accounts: identities),
+              let owner = users.first(where: {
+                  $0.accountIdentifier == resolved.ownerAccountIdentifier
+              })
+        else { return }
         guard let home = rootViewController?.descendant(of: HomeViewController.self) else { return }
-        home.handlePush(envelope, opensRoute: opensRoute)
+        home.handlePush(resolved, owner: owner, opensRoute: opensRoute)
     }
 
     func userNotificationCenter(

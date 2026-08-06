@@ -194,7 +194,15 @@ final class MissCatNotificationsHostingController: UIHostingController<AnyView> 
         rebuildRoot()
     }
 
-    func handlePush(_ envelope: MissCatPushEnvelope, opensRoute: Bool) async {
+    func handlePush(
+        _ envelope: MissCatResolvedPushEnvelope,
+        owner resolvedOwner: SecureUser,
+        opensRoute: Bool
+    ) async {
+        if resolvedOwner.accountIdentifier != owner.accountIdentifier {
+            changeUser(resolvedOwner)
+        }
+        guard envelope.ownerAccountIdentifier == owner.accountIdentifier else { return }
         await store.handleForegroundPush(envelope)
         guard opensRoute,
               let route = store.takeBannerRoute(),

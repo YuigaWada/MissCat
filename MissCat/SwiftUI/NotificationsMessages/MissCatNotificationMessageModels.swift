@@ -138,23 +138,94 @@ public enum MissCatNotificationRealtimeEvent: Equatable, Sendable {
 }
 
 public struct MissCatPushEnvelope: Equatable, Sendable {
-    public let ownerAccountID: String
+    /// Untrusted identifier supplied by push transport. New payloads may use
+    /// an instance-scoped account identifier; legacy payloads contain only the
+    /// Misskey API user ID and must be resolved against saved accounts.
+    public let ownerIdentifier: String
+    public let ownerInstance: String?
     public let notificationID: String
 
-    public init(ownerAccountID: String, notificationID: String) {
-        self.ownerAccountID = ownerAccountID
+    public init(ownerIdentifier: String, ownerInstance: String? = nil, notificationID: String) {
+        self.ownerIdentifier = ownerIdentifier
+        self.ownerInstance = ownerInstance
         self.notificationID = notificationID
     }
 
     public init?(payload: [AnyHashable: Any]) {
-        let owner = payload["ownerId"] as? String
-            ?? payload["ownerAccountId"] as? String
-            ?? payload["owner_id"] as? String
+        // Prefer the explicit account field when both current and legacy keys
+        // are present. Resolution still verifies it against saved metadata.
+        let owner = payload["ownerAccountId"] as? String
             ?? payload["owner_account_id"] as? String
+            ?? payload["ownerId"] as? String
+            ?? payload["owner_id"] as? String
+        let instance = payload["ownerInstance"] as? String
+            ?? payload["owner_instance"] as? String
+            ?? payload["instance"] as? String
         let notification = payload["notificationId"] as? String
             ?? payload["notification_id"] as? String
         guard let owner, !owner.isEmpty, let notification, !notification.isEmpty else { return nil }
-        self.init(ownerAccountID: owner, notificationID: notification)
+        self.init(ownerIdentifier: owner, ownerInstance: instance, notificationID: notification)
+    }
+}
+
+public struct MissCatPushAccountIdentity: Equatable, Sendable {
+    public let accountIdentifier: String
+    public let apiUserID: String
+    public let instance: String
+
+    public init(accountIdentifier: String, apiUserID: String, instance: String) {
+        self.accountIdentifier = accountIdentifier
+        self.apiUserID = apiUserID
+        self.instance = instance
+    }
+}
+
+public struct MissCatResolvedPushEnvelope: Equatable, Sendable {
+    public let ownerAccountIdentifier: String
+    public let ownerAPIUserID: String
+    public let notificationID: String
+
+    public init(ownerAccountIdentifier: String, ownerAPIUserID: String, notificationID: String) {
+        self.ownerAccountIdentifier = ownerAccountIdentifier
+        self.ownerAPIUserID = ownerAPIUserID
+        self.notificationID = notificationID
+    }
+}
+
+public enum MissCatPushOwnerResolver {
+    public static func resolve(
+        _ envelope: MissCatPushEnvelope,
+        accounts: [MissCatPushAccountIdentity]
+    ) -> MissCatResolvedPushEnvelope? {
+        if let exact = accounts.first(where: {
+            $0.accountIdentifier == envelope.ownerIdentifier
+        }) {
+            return resolved(envelope, owner: exact)
+        }
+
+        let legacyMatches = accounts.filter { $0.apiUserID == envelope.ownerIdentifier }
+        if let claimedInstance = envelope.ownerInstance {
+            let normalizedClaim = MissCatAccountIdentity.normalizedInstance(claimedInstance)
+            let instanceMatches = legacyMatches.filter {
+                MissCatAccountIdentity.normalizedInstance($0.instance) == normalizedClaim
+            }
+            guard instanceMatches.count == 1, let owner = instanceMatches.first else { return nil }
+            return resolved(envelope, owner: owner)
+        }
+
+        guard legacyMatches.count == 1, let owner = legacyMatches.first else { return nil }
+        return resolved(envelope, owner: owner)
+    }
+
+    private static func resolved(
+        _ envelope: MissCatPushEnvelope,
+        owner: MissCatPushAccountIdentity
+    ) -> MissCatResolvedPushEnvelope {
+        MissCatResolvedPushEnvelope(
+            ownerAccountIdentifier: owner.accountIdentifier,
+            ownerAPIUserID: owner.apiUserID,
+            notificationID: envelope.notificationID
+        )
     }
 }
 

@@ -111,8 +111,8 @@ public final class MissCatNotificationsStore: ObservableObject {
         phase = .idle
     }
 
-    public func handleForegroundPush(_ envelope: MissCatPushEnvelope) async {
-        guard envelope.ownerAccountID == accountScope.accountID else { return }
+    public func handleForegroundPush(_ envelope: MissCatResolvedPushEnvelope) async {
+        guard envelope.ownerAPIUserID == accountScope.accountID else { return }
         let generation = scopeGeneration
         do {
             guard let resolved = try await repository.resolveNotification(id: envelope.notificationID),
