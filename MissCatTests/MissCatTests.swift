@@ -664,6 +664,7 @@ private final class FakeAccountDefaultsStore: AccountDefaultsStoring {
     var blockedSetKeys: Set<String> = []
     var blockedRemoveKeys: Set<String> = []
     var synchronizes = true
+    var synchronizeResults: [Bool] = []
 
     func object(forKey defaultName: String) -> Any? {
         values[defaultName]
@@ -691,7 +692,29 @@ private final class FakeAccountDefaultsStore: AccountDefaultsStoring {
         values.removeValue(forKey: defaultName)
     }
 
-    func synchronize() -> Bool { synchronizes }
+    func synchronize() -> Bool {
+        if !synchronizeResults.isEmpty { return synchronizeResults.removeFirst() }
+        return synchronizes
+    }
+}
+
+private struct LegacyAccountPersistenceRecoveryJournalFixture: Encodable {
+    enum Phase: String, Encodable {
+        case preparing
+        case rollbackRequired
+        case commitRequired
+    }
+
+    let transactionID: String
+    let accountID: String
+    let previousMetadata: Data?
+    let previousCurrentAccountID: String?
+    let desiredMetadata: Data
+    let desiredCurrentAccountID: String?
+    let hadPreviousAPIKey: Bool
+    let backupKey: String
+    let proposedKey: String
+    let phase: Phase
 }
 
 final class AccountPersistenceTests: XCTestCase {
@@ -816,6 +839,158 @@ final class AccountPersistenceTests: XCTestCase {
             "test-key-not-a-credential"
         )
         XCTAssertEqual(subject.getCurrentUserId(), makeUser(id: "user-a").accountIdentifier)
+    }
+
+    func testDeleteDefaultsFailureRollsBackCredentialMetadataAndCurrentSelection() throws {
+        let defaultsStore = FakeAccountDefaultsStore()
+        let store = FakeAPIKeyStore()
+        let localSubject = Cache.UserDefaults(defaultsStore: defaultsStore, apiKeyStore: store)
+        let user = makeUser(id: "delete-defaults")
+        XCTAssertTrue(localSubject.saveUser(user))
+        XCTAssertTrue(localSubject.changeCurrentUser(userId: user.accountIdentifier))
+        defaultsStore.blockedSetKeys = ["saved-user"]
+
+        XCTAssertFalse(localSubject.removeUser(userId: user.accountIdentifier))
+
+        defaultsStore.blockedSetKeys = []
+        let recovered = try localSubject.getUsersThrowing()
+        XCTAssertEqual(recovered.map(\.accountIdentifier), [user.accountIdentifier])
+        XCTAssertEqual(store.values[user.accountIdentifier], "test-key-not-a-credential")
+        XCTAssertEqual(localSubject.getCurrentUserId(), user.accountIdentifier)
+        XCTAssertNil(defaultsStore.values["account-persistence-recovery-v1"])
+    }
+
+    func testDeleteFalseSynchronizeRollsBackBeforeCanonicalCredentialDeletion() throws {
+        let defaultsStore = FakeAccountDefaultsStore()
+        let store = FakeAPIKeyStore()
+        let localSubject = Cache.UserDefaults(defaultsStore: defaultsStore, apiKeyStore: store)
+        let user = makeUser(id: "delete-sync")
+        XCTAssertTrue(localSubject.saveUser(user))
+        XCTAssertTrue(localSubject.changeCurrentUser(userId: user.accountIdentifier))
+        // preparing journal, rollback journal, then desired metadata/current.
+        defaultsStore.synchronizeResults = [true, true, false]
+
+        XCTAssertFalse(localSubject.removeUser(userId: user.accountIdentifier))
+
+        let recovered = try localSubject.getUsersThrowing()
+        XCTAssertEqual(recovered.map(\.accountIdentifier), [user.accountIdentifier])
+        XCTAssertEqual(store.values[user.accountIdentifier], "test-key-not-a-credential")
+        XCTAssertEqual(localSubject.getCurrentUserId(), user.accountIdentifier)
+    }
+
+    func testInterruptedDeletePreparingPhaseLeavesOriginalAccountIntact() throws {
+        let defaultsStore = FakeAccountDefaultsStore()
+        let store = FakeAPIKeyStore()
+        let localSubject = Cache.UserDefaults(defaultsStore: defaultsStore, apiKeyStore: store)
+        let user = makeUser(id: "delete-preparing")
+        XCTAssertTrue(localSubject.saveUser(user))
+        store.writeShouldFail = true
+
+        XCTAssertFalse(localSubject.removeUser(userId: user.accountIdentifier))
+
+        store.writeShouldFail = false
+        let recovered = try localSubject.getUsersThrowing()
+        XCTAssertEqual(recovered.map(\.accountIdentifier), [user.accountIdentifier])
+        XCTAssertEqual(store.values[user.accountIdentifier], "test-key-not-a-credential")
+    }
+
+    func testInterruptedCommittedDeleteFinishesWithoutCredentialResurrection() throws {
+        let defaultsStore = FakeAccountDefaultsStore()
+        let store = FakeAPIKeyStore()
+        let localSubject = Cache.UserDefaults(defaultsStore: defaultsStore, apiKeyStore: store)
+        let user = makeUser(id: "delete-commit")
+        XCTAssertTrue(localSubject.saveUser(user))
+        defaultsStore.blockedRemoveKeys = ["account-persistence-recovery-v1"]
+
+        XCTAssertFalse(localSubject.removeUser(userId: user.accountIdentifier))
+        XCTAssertNil(store.values[user.accountIdentifier])
+        let journal = try XCTUnwrap(defaultsStore.values["account-persistence-recovery-v1"] as? Data)
+        XCTAssertNil(journal.range(of: Data("test-key-not-a-credential".utf8)))
+
+        defaultsStore.blockedRemoveKeys = []
+        let resumed = Cache.UserDefaults(defaultsStore: defaultsStore, apiKeyStore: store)
+        XCTAssertTrue(try resumed.getUsersThrowing().isEmpty)
+        XCTAssertNil(store.values[user.accountIdentifier])
+        XCTAssertNil(defaultsStore.values["account-persistence-recovery-v1"])
+    }
+
+    func testCommittedDeleteStagingCleanupFailureRemainsFailClosedUntilRetry() throws {
+        let defaultsStore = FakeAccountDefaultsStore()
+        let store = FakeAPIKeyStore()
+        let localSubject = Cache.UserDefaults(defaultsStore: defaultsStore, apiKeyStore: store)
+        let user = makeUser(id: "delete-cleanup")
+        XCTAssertTrue(localSubject.saveUser(user))
+        var backupKey: String?
+        store.onSet = { accountID, _ in
+            guard accountID.hasPrefix("__MissCatAccountPersistenceStaging.v1."),
+                  accountID.hasSuffix(".backup") else { return }
+            backupKey = accountID
+            store.removeFailureAccountIDs.insert(accountID)
+        }
+
+        XCTAssertFalse(localSubject.removeUser(userId: user.accountIdentifier))
+        XCTAssertNil(store.values[user.accountIdentifier])
+        XCTAssertNotNil(defaultsStore.values["account-persistence-recovery-v1"])
+        XCTAssertTrue(localSubject.getUsers().isEmpty)
+        let stagedKey = try XCTUnwrap(backupKey)
+        XCTAssertNotNil(store.values[stagedKey])
+
+        store.onSet = nil
+        store.removeFailureAccountIDs = []
+        let resumed = Cache.UserDefaults(defaultsStore: defaultsStore, apiKeyStore: store)
+        XCTAssertTrue(try resumed.getUsersThrowing().isEmpty)
+        XCTAssertNil(store.values[stagedKey])
+        XCTAssertNil(defaultsStore.values["account-persistence-recovery-v1"])
+    }
+
+    func testLegacyJournalWithoutOperationReplaysAsUpsert() throws {
+        let defaultsStore = FakeAccountDefaultsStore()
+        let store = FakeAPIKeyStore()
+        let localSubject = Cache.UserDefaults(defaultsStore: defaultsStore, apiKeyStore: store)
+        let user = makeUser(id: "legacy-journal")
+        let desiredMetadata = try JSONEncoder().encode([
+            SecureUser(
+                userId: user.userId,
+                username: user.username,
+                instance: user.instance,
+                apiKey: nil
+            )
+        ])
+        let proposedKey = "misscat.persistence.staging.legacy.proposed"
+        let backupKey = "misscat.persistence.staging.legacy.backup"
+        store.values[proposedKey] = "legacy-proposed-key-not-a-credential"
+        let fixture = LegacyAccountPersistenceRecoveryJournalFixture(
+            transactionID: "legacy",
+            accountID: user.accountIdentifier,
+            previousMetadata: nil,
+            previousCurrentAccountID: nil,
+            desiredMetadata: desiredMetadata,
+            desiredCurrentAccountID: user.accountIdentifier,
+            hadPreviousAPIKey: false,
+            backupKey: backupKey,
+            proposedKey: proposedKey,
+            phase: .commitRequired
+        )
+        defaultsStore.values["account-persistence-recovery-v1"] = try JSONEncoder().encode(fixture)
+
+        let recovered = try localSubject.getUsersThrowing()
+
+        XCTAssertEqual(recovered.map(\.accountIdentifier), [user.accountIdentifier])
+        XCTAssertEqual(recovered.first?.apiKey, "legacy-proposed-key-not-a-credential")
+        XCTAssertNil(store.values[proposedKey])
+        XCTAssertNil(defaultsStore.values["account-persistence-recovery-v1"])
+    }
+
+    func testCurrentSelectionSynchronizeFailureRestoresPreviousValue() {
+        let defaultsStore = FakeAccountDefaultsStore()
+        let store = FakeAPIKeyStore()
+        let localSubject = Cache.UserDefaults(defaultsStore: defaultsStore, apiKeyStore: store)
+        let user = makeUser(id: "selection-sync")
+        XCTAssertTrue(localSubject.saveUser(user))
+        defaultsStore.synchronizes = false
+
+        XCTAssertFalse(localSubject.changeCurrentUser(userId: user.accountIdentifier))
+        XCTAssertNil(localSubject.getCurrentUserId())
     }
 
     func testCurrentUserRepairsStaleIdentifierDeterministically() {
@@ -1025,6 +1200,21 @@ final class AccountPersistenceTests: XCTestCase {
         let users = try resumed.getUsersThrowing()
         XCTAssertEqual(users.map(\.accountIdentifier), [candidate.accountIdentifier])
         XCTAssertEqual(users.first?.apiKey, apiKey)
+        XCTAssertNil(defaultsStore.values["account-persistence-recovery-v1"])
+    }
+
+    func testPersistTreatsFalseSynchronizeAsFailureAndRecoversPreparingJournal() throws {
+        let defaultsStore = FakeAccountDefaultsStore()
+        defaultsStore.synchronizes = false
+        let store = FakeAPIKeyStore()
+        let localSubject = Cache.UserDefaults(defaultsStore: defaultsStore, apiKeyStore: store)
+        let candidate = makeUser(id: "false-sync")
+
+        XCTAssertFalse(localSubject.saveUser(candidate))
+        XCTAssertNil(store.values[candidate.accountIdentifier])
+
+        defaultsStore.synchronizes = true
+        XCTAssertTrue(try localSubject.getUsersThrowing().isEmpty)
         XCTAssertNil(defaultsStore.values["account-persistence-recovery-v1"])
     }
 
