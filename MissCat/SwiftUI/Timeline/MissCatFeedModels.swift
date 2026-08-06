@@ -19,6 +19,7 @@ public struct MissCatFeedSession: Equatable, Sendable {
 public enum MissCatFeedSource: Equatable, Sendable {
     case home
     case local
+    case social
     case global
     case favorites
     case search(query: String)
@@ -29,6 +30,7 @@ public enum MissCatFeedSource: Equatable, Sendable {
         switch self {
         case .home: "home"
         case .local: "local"
+        case .social: "social"
         case .global: "global"
         case .favorites: "favorites"
         case .search: "search-results"
@@ -44,7 +46,7 @@ public enum MissCatFeedSource: Equatable, Sendable {
 
     public var supportsRealtime: Bool {
         switch self {
-        case .home, .local, .global: true
+        case .home, .local, .social, .global: true
         case .favorites, .search, .hashtag, .noteDetail: false
         }
     }

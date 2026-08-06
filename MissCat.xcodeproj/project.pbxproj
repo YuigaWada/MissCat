@@ -29,6 +29,13 @@
 		C05E00000000000000000008 /* MissCatComposeMediaViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05E00000000000000000007 /* MissCatComposeMediaViews.swift */; };
 		C05E0000000000000000000A /* MissCatComposeScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05E00000000000000000009 /* MissCatComposeScreens.swift */; };
 		C05E0000000000000000000D /* MissCatComposeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05E0000000000000000000C /* MissCatComposeTests.swift */; };
+		C0DE00000000000000000022 /* MissCatFeedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000023 /* MissCatFeedModels.swift */; };
+		C0DE00000000000000000024 /* MissCatFeedRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000025 /* MissCatFeedRepository.swift */; };
+		C0DE00000000000000000026 /* MissCatFeedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000027 /* MissCatFeedStore.swift */; };
+		C0DE00000000000000000028 /* MissCatNoteRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000029 /* MissCatNoteRow.swift */; };
+		C0DE0000000000000000002A /* MissCatFeedScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000002B /* MissCatFeedScreens.swift */; };
+		C0DE0000000000000000002C /* MissCatFeedStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000002D /* MissCatFeedStoreTests.swift */; };
+		C0DE0000000000000000002E /* MissCatTimelinePager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000002F /* MissCatTimelinePager.swift */; };
 		8D00BD5A249371560049FFE0 /* InstanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D00BD59249371560049FFE0 /* InstanceViewController.swift */; };
 		8D03BFEA245C19FF00F66E04 /* CustomNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D03BFE9245C19FF00F66E04 /* CustomNavigationController.swift */; };
 		8D065B17237AC3D0003DFB7C /* TimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D065B16237AC3D0003DFB7C /* TimelineViewModel.swift */; };
@@ -264,6 +271,13 @@
 		C05E00000000000000000007 /* MissCatComposeMediaViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatComposeMediaViews.swift; sourceTree = "<group>"; };
 		C05E00000000000000000009 /* MissCatComposeScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatComposeScreens.swift; sourceTree = "<group>"; };
 		C05E0000000000000000000C /* MissCatComposeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatComposeTests.swift; sourceTree = "<group>"; };
+		C0DE00000000000000000023 /* MissCatFeedModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatFeedModels.swift; sourceTree = "<group>"; };
+		C0DE00000000000000000025 /* MissCatFeedRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatFeedRepository.swift; sourceTree = "<group>"; };
+		C0DE00000000000000000027 /* MissCatFeedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatFeedStore.swift; sourceTree = "<group>"; };
+		C0DE00000000000000000029 /* MissCatNoteRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatNoteRow.swift; sourceTree = "<group>"; };
+		C0DE0000000000000000002B /* MissCatFeedScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatFeedScreens.swift; sourceTree = "<group>"; };
+		C0DE0000000000000000002D /* MissCatFeedStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatFeedStoreTests.swift; sourceTree = "<group>"; };
+		C0DE0000000000000000002F /* MissCatTimelinePager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatTimelinePager.swift; sourceTree = "<group>"; };
 		3454BE3D06D0C12BCA775B4B /* Pods-MissCatShare.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCatShare.release.xcconfig"; path = "Target Support Files/Pods-MissCatShare/Pods-MissCatShare.release.xcconfig"; sourceTree = "<group>"; };
 		49D674DA4870479FF355F58B /* Pods_MissCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MissCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		79B7AD7D002BC8FC43933AF9 /* Pods-MissCatShare.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MissCatShare.debug.xcconfig"; path = "Target Support Files/Pods-MissCatShare/Pods-MissCatShare.debug.xcconfig"; sourceTree = "<group>"; };
@@ -499,6 +513,7 @@
 				C05E0000000000000000000B /* Compose */,
 				C0DE00000000000000000017 /* DesignSystem */,
 				C0DE00000000000000000018 /* MainShell */,
+				C0DE00000000000000000021 /* Timeline */,
 			);
 			path = SwiftUI;
 			sourceTree = "<group>";
@@ -544,6 +559,19 @@
 				C0DE00000000000000000014 /* MissCatMainShellView.swift */,
 			);
 			path = MainShell;
+			sourceTree = "<group>";
+		};
+		C0DE00000000000000000021 /* Timeline */ = {
+			isa = PBXGroup;
+			children = (
+				C0DE0000000000000000002B /* MissCatFeedScreens.swift */,
+				C0DE00000000000000000023 /* MissCatFeedModels.swift */,
+				C0DE00000000000000000025 /* MissCatFeedRepository.swift */,
+				C0DE00000000000000000027 /* MissCatFeedStore.swift */,
+				C0DE00000000000000000029 /* MissCatNoteRow.swift */,
+				C0DE0000000000000000002F /* MissCatTimelinePager.swift */,
+			);
+			path = Timeline;
 			sourceTree = "<group>";
 		};
 		55E2552AB409AE8A0EA8AE7A /* Pods */ = {
@@ -782,6 +810,7 @@
 			isa = PBXGroup;
 			children = (
 				8D4A2A2C237437C100503685 /* MissCatTests.swift */,
+				C0DE0000000000000000002D /* MissCatFeedStoreTests.swift */,
 				8D4A2A2E237437C100503685 /* Info.plist */,
 				8D2279ED24468FD100FA87A2 /* MFMTests.swift */,
 				C0DE00000000000000000022 /* ShareExtensionCoreTests.swift */,
@@ -1533,6 +1562,12 @@
 				C0DE00000000000000000011 /* MissCatWelcomeView.swift in Sources */,
 				C0DE00000000000000000013 /* MissCatMainShellView.swift in Sources */,
 				C0DE00000000000000000019 /* MissCatAuthenticationService.swift in Sources */,
+				C0DE00000000000000000022 /* MissCatFeedModels.swift in Sources */,
+				C0DE00000000000000000024 /* MissCatFeedRepository.swift in Sources */,
+				C0DE00000000000000000026 /* MissCatFeedStore.swift in Sources */,
+				C0DE00000000000000000028 /* MissCatNoteRow.swift in Sources */,
+				C0DE0000000000000000002A /* MissCatFeedScreens.swift in Sources */,
+				C0DE0000000000000000002E /* MissCatTimelinePager.swift in Sources */,
 				8D16656923A0DB3100C03764 /* MFMEngine.swift in Sources */,
 				8D5D2C4A24487C6E00D15974 /* DirectMessageViewModel.swift in Sources */,
 				8DF0F68F25049F6C00CEAA03 /* UIViewController+NavigationController.swift in Sources */,
@@ -1686,6 +1721,7 @@
 				C0DE00000000000000000021 /* ShareCore.swift in Sources */,
 				C0DE00000000000000000023 /* ShareExtensionCoreTests.swift in Sources */,
 				C05E0000000000000000000D /* MissCatComposeTests.swift in Sources */,
+				C0DE0000000000000000002C /* MissCatFeedStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

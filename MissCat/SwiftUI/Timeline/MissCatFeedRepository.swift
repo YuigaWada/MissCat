@@ -80,6 +80,10 @@ public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
                     completion: callback
                 )
             }
+        case .social:
+            models = try await notes { callback in
+                self.misskey.notes.getHybridTimeline(limit: limit, untilId: cursor, completion: callback)
+            }
         case .global:
             models = try await notes { callback in
                 self.misskey.notes.getGlobalTimeline(limit: limit, untilId: cursor, completion: callback)
@@ -289,6 +293,7 @@ public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
         switch source {
         case .home: .homeTimeline
         case .local: .localTimeline
+        case .social: .hybridTimeline
         case .global: .globalTimeline
         case .favorites, .search, .hashtag, .noteDetail: nil
         }
