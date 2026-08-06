@@ -36,10 +36,10 @@ id	area	surface	runtime_owner	migration_state	evidence	note
 30	Compose	Media	uikit	migrating	MissCat/SwiftUI/Compose/MissCatComposeMediaViews.swift	Native media workflow exists but is not wired or E2E accepted.
 31	Compose	CW / now playing / emoji	uikit	migrating	MissCat/SwiftUI/Compose/MissCatComposeScreens.swift	Native controls exist but are not wired or E2E accepted.
 32	Compose	Poll/location	uikit	migrating	MissCat/SwiftUI/Compose/MissCatComposeControls.swift	SwiftUI poll support exists; location remains outside the accepted legacy contract and the route is unwired.
-33	Notifications	Notification list	uikit	legacy	MissCat/View/Notification/NotificationsViewController.swift	No integrated native SwiftUI notification list.
-34	Notifications	In-app push banner	uikit	legacy	MissCat/Others/App/AppDelegate.swift	No integrated native SwiftUI in-app push banner.
-35	Messages	History	uikit	legacy	MissCat/View/MessageList/MessageListViewController.swift	No integrated native SwiftUI message history.
-36	Messages	Conversation	uikit	legacy	MissCat/View/Message/DirectMessageViewController.swift	No integrated native SwiftUI conversation.
+33	Notifications	Notification list	uikit	migrating	MissCat/SwiftUI/NotificationsMessages/MissCatNotificationsViews.swift;MissCat/SwiftUI/NotificationsMessages/MissCatNotificationMessageRepository.swift	Native SwiftUI notification states and current REST/realtime contracts are integrated, but the ordinary root route still uses UIKit and visual/E2E gates remain.
+34	Notifications	In-app push banner	uikit	migrating	MissCat/SwiftUI/NotificationsMessages/MissCatNotificationsViews.swift;MissCat/SwiftUI/NotificationsMessages/MissCatNotificationMessageStores.swift	A native account-filtered banner and typed deep-link route are integrated but not connected to the ordinary app root.
+35	Messages	History	uikit	migrating	MissCat/SwiftUI/NotificationsMessages/MissCatMessagingViews.swift;docs/swiftui/notifications-messages-api-contract.md	Native history and capability-gated current/legacy adapters are integrated; misskey.io currently publishes neither DM endpoint family and the ordinary route remains UIKit.
+36	Messages	Conversation	uikit	migrating	MissCat/SwiftUI/NotificationsMessages/MissCatMessagingViews.swift;MissCat/SwiftUI/NotificationsMessages/MissCatNotificationMessageStores.swift	Native paging, send/retry/cancel, links, and keyboard-safe UI are integrated, but server capability, root wiring, E2E, and visual gates remain.
 37	Accounts	Account list	uikit	legacy	MissCat/View/AccountsList/AccountsListViewController.swift	No integrated native SwiftUI account list.
 38	Settings	Settings root	uikit	legacy	MissCat/View/Settings/SettingsViewController.swift	No integrated native SwiftUI settings root.
 39	Settings	Design	uikit	legacy	MissCat/View/Settings/DesignSettingsViewController.swift	No integrated native SwiftUI design settings.
