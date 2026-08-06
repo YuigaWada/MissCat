@@ -46,8 +46,8 @@ final class MissCatLegacySettingsRepository:
             throw MissCatAccountManagementError.accountNotFound
         }
 
-        cache.changeCurrentUser(userId: id)
-        guard cache.getCurrentUserId() == id,
+        guard cache.changeCurrentUser(userId: id),
+              cache.getCurrentUserId() == cache.getUser(userId: id)?.accountIdentifier,
               cache.getUser(userId: id) != nil
         else {
             throw MissCatAccountManagementError.currentAccountVerificationFailed
@@ -148,7 +148,7 @@ final class MissCatLegacySettingsRepository:
         var seen: Set<String> = []
         return cache.getUsers().compactMap { user in
             guard seen.insert(user.instance).inserted else { return nil }
-            return MissCatReactionAccount(id: user.userId, instance: user.instance)
+            return MissCatReactionAccount(id: user.accountIdentifier, instance: user.instance)
         }
     }
 
@@ -180,7 +180,7 @@ final class MissCatLegacySettingsRepository:
         let available = unique(defaultChoices + handlerChoices)
 
         return MissCatReactionSettingsSnapshot(
-            account: MissCatReactionAccount(id: owner.userId, instance: owner.instance),
+            account: MissCatReactionAccount(id: owner.accountIdentifier, instance: owner.instance),
             favorites: favoriteModels.map(reactionItem(from:)),
             available: available
         )
@@ -214,7 +214,7 @@ final class MissCatLegacySettingsRepository:
     private func summary(for user: SecureUser) async -> MissCatAccountSummary {
         let cached = Cache.shared.getUserInfo(user: user)
         let fallback = MissCatAccountSummary(
-            id: user.userId,
+            id: user.accountIdentifier,
             username: user.username,
             displayName: cached?.name,
             instance: user.instance
@@ -237,7 +237,7 @@ final class MissCatLegacySettingsRepository:
             let profile = try JSONDecoder().decode(CurrentAccountResponse.self, from: data)
             guard profile.id == user.userId else { return fallback }
             return MissCatAccountSummary(
-                id: user.userId,
+                id: user.accountIdentifier,
                 username: profile.username ?? user.username,
                 displayName: profile.name ?? cached?.name,
                 instance: user.instance,
@@ -253,7 +253,7 @@ final class MissCatLegacySettingsRepository:
             accounts: cache.getUsers().map { user in
                 let cached = Cache.shared.getUserInfo(user: user)
                 return MissCatAccountSummary(
-                    id: user.userId,
+                    id: user.accountIdentifier,
                     username: user.username,
                     displayName: cached?.name,
                     instance: user.instance

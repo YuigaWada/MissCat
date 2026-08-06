@@ -85,7 +85,15 @@ public class Theme {
         
         if let currentModel = currentModel {
             let currentTabCount = currentModel.tab.count
-            currentModel.tab = currentModel.tab.filter { $0.userId != user.userId }
+            let hasAnotherLegacyMatch = Cache.UserDefaults.shared.getUsers().contains {
+                $0.userId == user.userId && $0.accountIdentifier != user.accountIdentifier
+            }
+            currentModel.tab = currentModel.tab.filter { tab in
+                guard tab.userId != user.accountIdentifier else { return false }
+                // Old themes stored bare user IDs. Remove that legacy reference
+                // only when it identifies one account unambiguously.
+                return hasAnotherLegacyMatch || tab.userId != user.userId
+            }
             
             // タブが0個になったらデフォルトのタブに戻しておく
             if currentModel.tab.count == 0 {

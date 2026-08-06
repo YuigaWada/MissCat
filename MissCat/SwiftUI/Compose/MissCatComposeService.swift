@@ -16,13 +16,13 @@ final class MissCatComposeEnvironmentStore: MissCatComposeEnvironmentProviding {
         let users = cache.getUsers()
         let accounts = users.map {
             MissCatComposeAccount(
-                id: $0.userId,
+                id: $0.accountIdentifier,
                 username: $0.username,
                 instance: $0.instance,
                 avatarURL: nil
             )
         }
-        let currentID = cache.getCurrentUser()?.userId
+        let currentID = cache.getCurrentUserId()
         let visibility = cache.getCurrentVisibility()
             .flatMap { MissCatComposeVisibility(rawValue: $0.rawValue) }
             ?? .public

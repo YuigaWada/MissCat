@@ -36,7 +36,9 @@ class NavBarViewModel: ViewModelType {
     }
     
     func transform(user: SecureUser) {
-        let users = iconImages.filter { $0.owner.userId == user.userId } // アイコンのキャッシュを確認する
+        let users = iconImages.filter {
+            $0.owner.accountIdentifier == user.accountIdentifier
+        } // アイコンのキャッシュを確認する
         
         if users.count > 0 {
             output.userIcon.accept(users[0].image)

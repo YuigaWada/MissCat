@@ -295,26 +295,22 @@ private final class FakeAuthenticationAccountStore: MissCatAuthenticationAccount
     private(set) var savedUser: SecureUser?
     private(set) var currentUserID: String?
 
-    func saveUser(_ user: SecureUser) -> Bool {
-        guard saveShouldSucceed else { return false }
+    func installAuthenticatedUser(_ user: SecureUser) -> SecureUser? {
+        guard saveShouldSucceed else { return nil }
+        let previousUser = savedUser
+        let previousCurrentUserID = currentUserID
         savedUser = SecureUser(
             userId: user.userId,
             username: user.username,
             instance: user.instance,
             apiKey: user.apiKey
         )
-        return true
-    }
-
-    func changeCurrentUser(userId id: String) {
-        currentUserID = id
-    }
-
-    func getUser(userId: String) -> SecureUser? {
-        guard verificationShouldSucceed,
-              savedUser?.userId == userId,
-              let savedUser
-        else { return nil }
+        currentUserID = user.accountIdentifier
+        guard verificationShouldSucceed, let savedUser else {
+            self.savedUser = previousUser
+            currentUserID = previousCurrentUserID
+            return nil
+        }
         return SecureUser(
             userId: savedUser.userId,
             username: savedUser.username,
@@ -440,7 +436,10 @@ final class MiAuthAuthenticationTests: XCTestCase {
         XCTAssertEqual(user.username, "wada")
         XCTAssertEqual(user.instance, "misskey.io")
         XCTAssertEqual(user.apiKey, testToken)
-        XCTAssertEqual(fixture.store.currentUserID, "user-1")
+        XCTAssertEqual(
+            fixture.store.currentUserID,
+            MissCatAccountIdentity.storageKey(instance: "misskey.io", userId: "user-1")
+        )
         XCTAssertEqual(fixture.misskey.auth.getAPIKey(), testToken)
         XCTAssertEqual(fixture.transport.requests.count, 1)
         XCTAssertEqual(fixture.transport.requests.first?.httpMethod, "POST")
@@ -507,6 +506,8 @@ final class MiAuthAuthenticationTests: XCTestCase {
         }
 
         XCTAssertNil(fixture.misskey.auth.getAPIKey())
+        XCTAssertNil(fixture.store.savedUser)
+        XCTAssertNil(fixture.store.currentUserID)
         XCTAssertEqual(fixture.transport.requests.count, 1)
     }
 
@@ -614,20 +615,38 @@ private final class FakeAPIKeyStore: AccountAPIKeyStoring {
     var readShouldFail = false
     var writeShouldFail = false
     var removeShouldFail = false
+    var writeFailureAccountIDs: Set<String> = []
+    var listedAccountIDs: [String]?
+    var corruptAccountIDs: Set<String> = []
+    var readResults: [String: [String?]] = [:]
+    private(set) var setCounts: [String: Int] = [:]
 
-    func apiKey(for userId: String) throws -> String? {
+    func apiKey(for accountID: String) throws -> String? {
         if readShouldFail { throw FakeAPIKeyStoreError.readFailed }
-        return values[userId]
+        if corruptAccountIDs.contains(accountID) { return nil }
+        if var queued = readResults[accountID], !queued.isEmpty {
+            let result = queued.removeFirst()
+            readResults[accountID] = queued
+            return result
+        }
+        return values[accountID]
     }
 
-    func setAPIKey(_ apiKey: String, for userId: String) throws {
-        if writeShouldFail { throw FakeAPIKeyStoreError.writeFailed }
-        values[userId] = apiKey
+    func setAPIKey(_ apiKey: String, for accountID: String) throws {
+        if writeShouldFail || writeFailureAccountIDs.contains(accountID) {
+            throw FakeAPIKeyStoreError.writeFailed
+        }
+        setCounts[accountID, default: 0] += 1
+        values[accountID] = apiKey
     }
 
-    func removeAPIKey(for userId: String) throws {
+    func removeAPIKey(for accountID: String) throws {
         if removeShouldFail { throw FakeAPIKeyStoreError.removeFailed }
-        values.removeValue(forKey: userId)
+        values.removeValue(forKey: accountID)
+    }
+
+    func allAccountIDs() throws -> [String] {
+        listedAccountIDs ?? Array(values.keys)
     }
 }
 
@@ -665,7 +684,7 @@ final class AccountPersistenceTests: XCTestCase {
         XCTAssertEqual(metadata.map { $0.userId }, ["user-a"])
         XCTAssertNil(metadata.first?.apiKey)
         XCTAssertNil(data.range(of: Data(testAPIKey.utf8)))
-        XCTAssertEqual(keyStore.values["user-a"], testAPIKey)
+        XCTAssertEqual(keyStore.values[user.accountIdentifier], testAPIKey)
         XCTAssertNil(user.apiKey)
     }
 
@@ -703,7 +722,7 @@ final class AccountPersistenceTests: XCTestCase {
         let users = try subject.getUsersThrowing()
 
         XCTAssertEqual(users.first?.apiKey, testAPIKey)
-        XCTAssertEqual(keyStore.values["user-a"], testAPIKey)
+        XCTAssertEqual(keyStore.values[makeUser(id: "user-a").accountIdentifier], testAPIKey)
         let data = try XCTUnwrap(defaults.data(forKey: "saved-user"))
         let metadata = try JSONDecoder().decode([SecureUser].self, from: data)
         XCTAssertNil(metadata.first?.apiKey)
@@ -732,7 +751,7 @@ final class AccountPersistenceTests: XCTestCase {
         subject.changeCurrentUser(userId: "user-a")
 
         XCTAssertTrue(subject.removeUser(userId: "user-a"))
-        XCTAssertEqual(subject.getCurrentUserId(), "user-b")
+        XCTAssertEqual(subject.getCurrentUserId(), makeUser(id: "user-b").accountIdentifier)
 
         XCTAssertTrue(subject.removeUser(userId: "user-b"))
         XCTAssertNil(subject.getCurrentUserId())
@@ -748,8 +767,11 @@ final class AccountPersistenceTests: XCTestCase {
         let data = try XCTUnwrap(defaults.data(forKey: "saved-user"))
         let metadata = try JSONDecoder().decode([SecureUser].self, from: data)
         XCTAssertEqual(metadata.map { $0.userId }, ["user-a"])
-        XCTAssertEqual(keyStore.values["user-a"], "test-key-not-a-credential")
-        XCTAssertEqual(subject.getCurrentUserId(), "user-a")
+        XCTAssertEqual(
+            keyStore.values[makeUser(id: "user-a").accountIdentifier],
+            "test-key-not-a-credential"
+        )
+        XCTAssertEqual(subject.getCurrentUserId(), makeUser(id: "user-a").accountIdentifier)
     }
 
     func testCurrentUserRepairsStaleIdentifierDeterministically() {
@@ -758,13 +780,154 @@ final class AccountPersistenceTests: XCTestCase {
         subject.changeCurrentUser(userId: "missing-user")
 
         XCTAssertEqual(subject.getCurrentUser()?.userId, "user-a")
-        XCTAssertEqual(subject.getCurrentUserId(), "user-a")
+        XCTAssertEqual(subject.getCurrentUserId(), makeUser(id: "user-a").accountIdentifier)
     }
 
-    private func makeUser(id: String, apiKey: String = "test-key-not-a-credential") -> SecureUser {
+    func testInvalidAccountSwitchLeavesCurrentSelectionUnchanged() {
+        let existing = makeUser(id: "existing")
+        XCTAssertTrue(subject.saveUser(existing))
+        XCTAssertTrue(subject.changeCurrentUser(userId: existing.accountIdentifier))
+
+        XCTAssertFalse(subject.changeCurrentUser(userId: "missing-account"))
+
+        XCTAssertEqual(subject.getCurrentUserId(), existing.accountIdentifier)
+    }
+
+    func testSameUserIDOnDifferentInstancesUsesIsolatedMetadataKeysAndSelection() throws {
+        let first = makeUser(id: "shared-id", instance: "https://ONE.example:443/")
+        let second = makeUser(id: "shared-id", instance: "two.example", apiKey: "second-test-key")
+
+        XCTAssertTrue(subject.saveUser(first))
+        XCTAssertTrue(subject.saveUser(second))
+
+        let users = subject.getUsers()
+        XCTAssertEqual(Set(users.map(\.accountIdentifier)), Set([first.accountIdentifier, second.accountIdentifier]))
+        XCTAssertEqual(keyStore.values[first.accountIdentifier], "test-key-not-a-credential")
+        XCTAssertEqual(keyStore.values[second.accountIdentifier], "second-test-key")
+
+        subject.changeCurrentUser(userId: second.accountIdentifier)
+        XCTAssertEqual(subject.getCurrentUserId(), second.accountIdentifier)
+        XCTAssertEqual(subject.getCurrentUser()?.instance, "two.example")
+
+        XCTAssertTrue(subject.removeUser(userId: first.accountIdentifier))
+        XCTAssertEqual(subject.getUsers().map(\.accountIdentifier), [second.accountIdentifier])
+        XCTAssertEqual(keyStore.values[second.accountIdentifier], "second-test-key")
+    }
+
+    func testLegacyUserIDKeyAndCurrentSelectionMigrateToNormalizedCompoundIdentity() throws {
+        let legacy = makeUser(id: "legacy-id", instance: "https://EXAMPLE.invalid:443/")
+        defaults.set(try JSONEncoder().encode([legacy]), forKey: "saved-user")
+        defaults.set("legacy-id", forKey: "current-user-id")
+        keyStore.values["legacy-id"] = "legacy-key-not-a-credential"
+
+        let users = try subject.getUsersThrowing()
+        let migrated = try XCTUnwrap(users.first)
+
+        XCTAssertEqual(migrated.instance, "example.invalid")
+        XCTAssertEqual(keyStore.values[migrated.accountIdentifier], "legacy-key-not-a-credential")
+        XCTAssertEqual(subject.getCurrentUserId(), migrated.accountIdentifier)
+    }
+
+    func testNormalizedDuplicateMetadataKeepsLastEntryOnly() throws {
+        let first = makeUser(id: "same", instance: "https://EXAMPLE.invalid/")
+        let replacement = SecureUser(
+            userId: "same",
+            username: "replacement",
+            instance: "example.invalid",
+            apiKey: nil
+        )
+        defaults.set(try JSONEncoder().encode([first, replacement]), forKey: "saved-user")
+        keyStore.values[replacement.accountIdentifier] = "dedupe-key-not-a-credential"
+
+        let users = try subject.getUsersThrowing()
+
+        XCTAssertEqual(users.count, 1)
+        XCTAssertEqual(users.first?.username, "replacement")
+    }
+
+    func testAuthenticatedInstallRollsBackMetadataCurrentAndNewKeyWhenFinalReadBackFails() {
+        let existing = makeUser(id: "existing")
+        XCTAssertTrue(subject.saveUser(existing))
+        subject.changeCurrentUser(userId: existing.accountIdentifier)
+        let candidate = makeUser(id: "candidate", apiKey: "candidate-key-not-a-credential")
+        keyStore.readResults[candidate.accountIdentifier] = [
+            nil,
+            "candidate-key-not-a-credential",
+            "mismatched-read-back"
+        ]
+
+        XCTAssertNil(subject.installAuthenticatedUser(candidate))
+
+        XCTAssertEqual(subject.getUsers().map(\.accountIdentifier), [existing.accountIdentifier])
+        XCTAssertEqual(subject.getCurrentUserId(), existing.accountIdentifier)
+        XCTAssertNil(keyStore.values[candidate.accountIdentifier])
+    }
+
+    private func makeUser(
+        id: String,
+        instance: String = "example.invalid",
+        apiKey: String = "test-key-not-a-credential"
+    ) -> SecureUser {
         return SecureUser(userId: id,
                           username: "test-user",
-                          instance: "example.invalid",
+                          instance: instance,
                           apiKey: apiKey)
+    }
+}
+
+final class AccountKeychainMigrationTests: XCTestCase {
+    func testCopiesAndVerifiesEveryEntryBeforeWritingCompletionMarker() {
+        let old = FakeAPIKeyStore()
+        old.values = ["account-a": "value-a", "account-b": "value-b"]
+        let new = FakeAPIKeyStore()
+
+        XCTAssertTrue(AccountKeychainMigrator().migrate(from: old, to: new))
+        XCTAssertEqual(new.values["account-a"], "value-a")
+        XCTAssertEqual(new.values["account-b"], "value-b")
+        XCTAssertEqual(new.values[AccountKeychainMigrator.completionMarker], "true")
+    }
+
+    func testInterruptedMigrationLeavesMarkerAbsentAndResumesVerifiedEntries() {
+        let old = FakeAPIKeyStore()
+        old.values = ["account-a": "value-a", "account-b": "value-b"]
+        let new = FakeAPIKeyStore()
+        new.values["account-a"] = "value-a"
+        new.writeFailureAccountIDs = ["account-b"]
+
+        XCTAssertFalse(AccountKeychainMigrator().migrate(from: old, to: new))
+        XCTAssertNil(new.values[AccountKeychainMigrator.completionMarker])
+        XCTAssertEqual(new.setCounts["account-a"], nil)
+
+        new.writeFailureAccountIDs = []
+        XCTAssertTrue(AccountKeychainMigrator().migrate(from: old, to: new))
+        XCTAssertEqual(new.values["account-b"], "value-b")
+        XCTAssertEqual(new.values[AccountKeychainMigrator.completionMarker], "true")
+    }
+
+    func testMixedDestinationIsCorrectedBeforeCompletion() {
+        let old = FakeAPIKeyStore()
+        old.values = ["account-a": "source-a", "account-b": "source-b"]
+        let new = FakeAPIKeyStore()
+        new.values = ["account-a": "source-a", "account-b": "stale-b"]
+
+        XCTAssertTrue(AccountKeychainMigrator().migrate(from: old, to: new))
+        XCTAssertEqual(new.values["account-b"], "source-b")
+        XCTAssertEqual(new.values[AccountKeychainMigrator.completionMarker], "true")
+    }
+
+    func testCorruptListedSourceLeavesMigrationResumable() {
+        let old = FakeAPIKeyStore()
+        old.values = ["account-a": "value-a"]
+        old.listedAccountIDs = ["account-a", "corrupt-entry"]
+        let new = FakeAPIKeyStore()
+
+        XCTAssertFalse(AccountKeychainMigrator().migrate(from: old, to: new))
+        XCTAssertEqual(new.values["account-a"], "value-a")
+        XCTAssertNil(new.values[AccountKeychainMigrator.completionMarker])
+
+        old.values["corrupt-entry"] = "recovered-value"
+        XCTAssertTrue(AccountKeychainMigrator().migrate(from: old, to: new))
+        XCTAssertEqual(new.values["corrupt-entry"], "recovered-value")
+        XCTAssertEqual(new.values[AccountKeychainMigrator.completionMarker], "true")
     }
 }

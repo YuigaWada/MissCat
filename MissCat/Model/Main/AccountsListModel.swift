@@ -14,7 +14,7 @@ class AccountsListModel {
     }
     
     func removeUser(user: SecureUser) {
-        Cache.UserDefaults.shared.removeUser(userId: user.userId)
+        Cache.UserDefaults.shared.removeUser(userId: user.accountIdentifier)
     }
     
     /// 削除しようとしているアカウントが紐付けられたタブを削除しておく

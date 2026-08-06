@@ -391,7 +391,7 @@ class PostViewController: UIViewController, UITextViewDelegate, UICollectionView
             guard user.userId != self.owner?.userId else { return } // 同じアカウントへの切り替えを防ぐ
             self.owner = user
             self.viewModel?.changeUser(user)
-            Cache.UserDefaults.shared.changeCurrentUser(userId: user.userId)
+            Cache.UserDefaults.shared.changeCurrentUser(user)
         }).disposed(by: disposeBag)
     }
     

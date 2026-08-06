@@ -60,7 +60,7 @@ final class ApplicationState: ObservableObject {
         // getCurrentUser() falls back to the first saved account when the
         // persisted current ID is absent or stale. Persist that fallback so
         // the legacy Theme tab resolver sees the same account.
-        cache.changeCurrentUser(userId: currentUser.userId)
+        cache.changeCurrentUser(currentUser)
 #if DEBUG
         MissCatAuthenticationProbe.runIfRequested(user: currentUser)
 #endif

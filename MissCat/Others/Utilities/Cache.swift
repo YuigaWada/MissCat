@@ -15,9 +15,10 @@ import UIKit
 typealias Attachments = [NSTextAttachment: YanagiText.Attachment]
 
 protocol AccountAPIKeyStoring {
-    func apiKey(for userId: String) throws -> String?
-    func setAPIKey(_ apiKey: String, for userId: String) throws
-    func removeAPIKey(for userId: String) throws
+    func apiKey(for accountID: String) throws -> String?
+    func setAPIKey(_ apiKey: String, for accountID: String) throws
+    func removeAPIKey(for accountID: String) throws
+    func allAccountIDs() throws -> [String]
 }
 
 private struct KeychainAccountAPIKeyStore: AccountAPIKeyStoring {
@@ -27,16 +28,74 @@ private struct KeychainAccountAPIKeyStore: AccountAPIKeyStoring {
         self.keychain = keychain
     }
 
-    func apiKey(for userId: String) throws -> String? {
-        return try keychain.get(userId)
+    func apiKey(for accountID: String) throws -> String? {
+        return try keychain.get(accountID)
     }
 
-    func setAPIKey(_ apiKey: String, for userId: String) throws {
-        try keychain.set(apiKey, key: userId)
+    func setAPIKey(_ apiKey: String, for accountID: String) throws {
+        try keychain.set(apiKey, key: accountID)
     }
 
-    func removeAPIKey(for userId: String) throws {
-        try keychain.remove(userId)
+    func removeAPIKey(for accountID: String) throws {
+        try keychain.remove(accountID)
+    }
+
+    func allAccountIDs() throws -> [String] {
+        keychain.allKeys()
+    }
+}
+
+/// Copies the legacy, app-only Keychain into the shared access group. Every
+/// entry is read, copied, and read back independently. A failed or corrupt
+/// entry leaves the completion marker absent, so the next launch resumes and
+/// verifies already copied entries instead of silently declaring success.
+struct AccountKeychainMigrator {
+    static let completionMarker = "DidMigrateToAppGroups-v2"
+
+    @discardableResult
+    func migrate(from oldStore: AccountAPIKeyStoring, to newStore: AccountAPIKeyStoring) -> Bool {
+        do {
+            if try newStore.apiKey(for: Self.completionMarker) == "true" {
+                return true
+            }
+
+            let accountIDs = try oldStore.allAccountIDs()
+                .filter { $0 != Self.completionMarker && $0 != "DidMigrateToAppGroups" }
+                .sorted()
+            for accountID in accountIDs {
+                guard let value = try oldStore.apiKey(for: accountID) else {
+                    throw MigrationError.missingSourceEntry
+                }
+                if try newStore.apiKey(for: accountID) != value {
+                    try newStore.setAPIKey(value, for: accountID)
+                }
+                guard try newStore.apiKey(for: accountID) == value else {
+                    throw MigrationError.verificationFailed
+                }
+            }
+
+            // Re-verify all copied entries before writing the marker. This also
+            // protects a resumed migration whose earlier destination data was
+            // changed between launches.
+            for accountID in accountIDs {
+                guard let source = try oldStore.apiKey(for: accountID),
+                      try newStore.apiKey(for: accountID) == source
+                else { throw MigrationError.verificationFailed }
+            }
+
+            try newStore.setAPIKey("true", for: Self.completionMarker)
+            guard try newStore.apiKey(for: Self.completionMarker) == "true" else {
+                throw MigrationError.verificationFailed
+            }
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    private enum MigrationError: Error {
+        case missingSourceEntry
+        case verificationFailed
     }
 }
 
@@ -123,7 +182,7 @@ class Cache {
     }
     
     func getUserInfo(user: SecureUser) -> UserInfo? {
-        let info = userInfo.filter { $0.user.userId == user.userId }
+        let info = userInfo.filter { $0.user.accountIdentifier == user.accountIdentifier }
         return info.count > 0 ? info[0] : nil
     }
     
@@ -215,8 +274,9 @@ extension Cache {
             }
             let keychain = Keychain(service: Self.keychainService,
                                     accessGroup: Self.keychainAccessGroup)
-            migrateKeyChainToAppGroups(keychain)
-            return KeychainAccountAPIKeyStore(keychain: keychain)
+            let sharedStore = KeychainAccountAPIKeyStore(keychain: keychain)
+            migrateKeyChainToAppGroups(sharedStore)
+            return sharedStore
         }()
         
         // MARK: Keys
@@ -240,11 +300,13 @@ extension Cache {
         // MARK: User
         
         @discardableResult
-        func removeUser(userId: String) -> Bool {
+        func removeUser(userId identifier: String) -> Bool {
             do {
-                let savedUsers = try getUsersThrowing().filter { $0.userId != userId }
+                let users = try getUsersThrowing()
+                guard let target = resolveUser(identifier: identifier, in: users) else { return false }
+                let savedUsers = users.filter { $0.accountIdentifier != target.accountIdentifier }
                 let usersData = try encodeMetadata(savedUsers)
-                try apiKeyStore.removeAPIKey(for: userId)
+                try apiKeyStore.removeAPIKey(for: target.accountIdentifier)
                 userDefaults.set(usersData, forKey: savedUserKey)
                 repairCurrentUserId(availableUsers: savedUsers)
                 return true
@@ -255,29 +317,18 @@ extension Cache {
         
         /// ユーザーを保存する
         func saveUser(_ user: SecureUser) -> Bool {
-            guard let apiKey = user.apiKey else { return false }
-
-            do {
-                let savedUsers = try getUsersThrowing()
-                let newUsers: [SecureUser]
-                if savedUsers.contains(where: { $0.userId == user.userId }) {
-                    newUsers = savedUsers.map { $0.userId == user.userId ? user : $0 }
-                } else {
-                    newUsers = savedUsers + [user]
-                }
-
-                // Encode only sanitized metadata before touching the Keychain. This also
-                // guarantees that another account's hydrated key cannot enter UserDefaults.
-                let usersData = try encodeMetadata(newUsers)
-                try apiKeyStore.setAPIKey(apiKey, for: user.userId)
-                guard try apiKeyStore.apiKey(for: user.userId) == apiKey else { return false }
-
-                userDefaults.set(usersData, forKey: savedUserKey)
+            if persist(user, makeCurrent: false) != nil {
                 user.apiKey = nil // Preserve the existing caller contract after secure persistence succeeds.
                 return true
-            } catch {
-                return false
             }
+            return false
+        }
+
+        /// Atomically installs a freshly authenticated account and selects it.
+        /// The Keychain value, metadata, and current selection are restored to
+        /// their exact pre-call values if any final read-back check fails.
+        func installAuthenticatedUser(_ user: SecureUser) -> SecureUser? {
+            persist(user, makeCurrent: true)
         }
         
         /// 保存されている全てのユーザー情報を取得する
@@ -292,19 +343,38 @@ extension Cache {
                 return []
             }
 
-            let storedUsers = try JSONDecoder().decode([SecureUser].self, from: data)
+            let decodedUsers = try JSONDecoder().decode([SecureUser].self, from: data)
+            let storedUsers = deduplicatedMetadata(decodedUsers)
+            let legacyUserIDCounts = Dictionary(grouping: storedUsers, by: \.userId)
+                .mapValues(\.count)
             var availableUsers: [SecureUser] = []
             var availableMetadata: [SecureUser] = []
 
             do {
                 for storedUser in storedUsers {
-                    var apiKey = try apiKeyStore.apiKey(for: storedUser.userId)
+                    let accountID = storedUser.accountIdentifier
+                    var apiKey = try apiKeyStore.apiKey(for: accountID)
+
+                    // v1 keyed credentials by userId only. That key is safe to
+                    // adopt only when metadata has one account with that userId;
+                    // otherwise it cannot be attributed to an instance without
+                    // risking credential crossover.
+                    if apiKey == nil,
+                       legacyUserIDCounts[storedUser.userId] == 1,
+                       let legacyAPIKey = try apiKeyStore.apiKey(for: storedUser.userId)
+                    {
+                        try apiKeyStore.setAPIKey(legacyAPIKey, for: accountID)
+                        guard try apiKeyStore.apiKey(for: accountID) == legacyAPIKey else {
+                            throw AccountPersistenceError.keychainVerificationFailed
+                        }
+                        apiKey = legacyAPIKey
+                    }
 
                     // Older builds accidentally wrote the API key into the shared JSON.
                     // Move it into the shared Keychain before the JSON is scrubbed.
                     if apiKey == nil, let legacyAPIKey = storedUser.apiKey {
-                        try apiKeyStore.setAPIKey(legacyAPIKey, for: storedUser.userId)
-                        guard try apiKeyStore.apiKey(for: storedUser.userId) == legacyAPIKey else {
+                        try apiKeyStore.setAPIKey(legacyAPIKey, for: accountID)
+                        guard try apiKeyStore.apiKey(for: accountID) == legacyAPIKey else {
                             throw AccountPersistenceError.keychainVerificationFailed
                         }
                         apiKey = legacyAPIKey
@@ -313,9 +383,12 @@ extension Cache {
                     guard let resolvedAPIKey = apiKey else { continue }
                     availableUsers.append(SecureUser(userId: storedUser.userId,
                                                      username: storedUser.username,
-                                                     instance: storedUser.instance,
+                                                     instance: storedUser.normalizedInstance,
                                                      apiKey: resolvedAPIKey))
-                    availableMetadata.append(storedUser)
+                    availableMetadata.append(SecureUser(userId: storedUser.userId,
+                                                        username: storedUser.username,
+                                                        instance: storedUser.normalizedInstance,
+                                                        apiKey: nil))
                 }
             } catch {
                 // Even when Keychain access fails, remove any legacy plaintext key.
@@ -329,19 +402,23 @@ extension Cache {
         }
         
         /// 指定されたuserIdのユーザーを取得する
-        func getUser(userId: String) -> SecureUser? {
-            var user: SecureUser?
-            let savedUser = getUsers()
-            savedUser.forEach {
-                if userId == $0.userId { user = $0; return }
-            }
-            
-            return user
+        func getUser(userId identifier: String) -> SecureUser? {
+            resolveUser(identifier: identifier, in: getUsers())
         }
         
         /// 現在ログイン中のユーザー情報を変更する
-        func changeCurrentUser(userId id: String) {
-            userDefaults.set(id, forKey: currentUserIdKey)
+        @discardableResult
+        func changeCurrentUser(userId id: String) -> Bool {
+            guard let user = resolveUser(identifier: id, in: getUsers()) else { return false }
+            return persistCurrentSelection(user.accountIdentifier)
+        }
+
+        @discardableResult
+        func changeCurrentUser(_ user: SecureUser) -> Bool {
+            guard getUsers().contains(where: { $0.accountIdentifier == user.accountIdentifier }) else {
+                return false
+            }
+            return persistCurrentSelection(user.accountIdentifier)
         }
         
         /// 現在ログイン中のユーザーのuserIdを取得する
@@ -355,7 +432,7 @@ extension Cache {
 
             guard let savedUsers = try? getUsersThrowing() else { return nil }
             guard let currentUserId = getCurrentUserId(),
-                  let currentUser = savedUsers.first(where: { $0.userId == currentUserId }) else { return nil }
+                  let currentUser = resolveUser(identifier: currentUserId, in: savedUsers) else { return nil }
             
             usernameRefill(with: currentUser)
             return currentUser
@@ -363,29 +440,147 @@ extension Cache {
 
         private enum AccountPersistenceError: Error {
             case keychainVerificationFailed
+            case finalVerificationFailed
         }
 
         private func encodeMetadata(_ users: [SecureUser]) throws -> Data {
             let metadata = users.map {
                 SecureUser(userId: $0.userId,
                            username: $0.username,
-                           instance: $0.instance,
+                           instance: $0.normalizedInstance,
                            apiKey: nil)
             }
             return try JSONEncoder().encode(metadata)
         }
 
         private func repairCurrentUserId(availableUsers: [SecureUser]) {
-            let availableUserIds = availableUsers.map { $0.userId }
-            if let currentUserId = getCurrentUserId(), availableUserIds.contains(currentUserId) {
+            if let currentUserId = getCurrentUserId(),
+               let resolved = resolveUser(identifier: currentUserId, in: availableUsers)
+            {
+                if currentUserId != resolved.accountIdentifier {
+                    userDefaults.set(resolved.accountIdentifier, forKey: currentUserIdKey)
+                }
                 return
             }
 
-            if let replacementUserId = availableUserIds.first {
-                changeCurrentUser(userId: replacementUserId)
+            if let replacement = availableUsers.first {
+                userDefaults.set(replacement.accountIdentifier, forKey: currentUserIdKey)
             } else {
                 userDefaults.removeObject(forKey: currentUserIdKey)
             }
+        }
+
+        private func persist(_ user: SecureUser, makeCurrent: Bool) -> SecureUser? {
+            guard let apiKey = user.apiKey, !apiKey.isEmpty else { return nil }
+
+            let normalizedUser = SecureUser(userId: user.userId,
+                                            username: user.username,
+                                            instance: user.normalizedInstance,
+                                            apiKey: apiKey)
+            let accountID = normalizedUser.accountIdentifier
+            let previousMetadata = userDefaults.object(forKey: savedUserKey)
+            let previousCurrent = userDefaults.object(forKey: currentUserIdKey)
+            var previousAPIKey: String?
+            var didReadPreviousAPIKey = false
+
+            do {
+                previousAPIKey = try apiKeyStore.apiKey(for: accountID)
+                didReadPreviousAPIKey = true
+                let savedUsers = try getUsersThrowing()
+                let newUsers: [SecureUser]
+                if savedUsers.contains(where: { $0.accountIdentifier == accountID }) {
+                    newUsers = savedUsers.map { $0.accountIdentifier == accountID ? normalizedUser : $0 }
+                } else {
+                    newUsers = savedUsers + [normalizedUser]
+                }
+
+                let usersData = try encodeMetadata(newUsers)
+                try apiKeyStore.setAPIKey(apiKey, for: accountID)
+                guard try apiKeyStore.apiKey(for: accountID) == apiKey else {
+                    throw AccountPersistenceError.keychainVerificationFailed
+                }
+
+                userDefaults.set(usersData, forKey: savedUserKey)
+                if makeCurrent {
+                    userDefaults.set(accountID, forKey: currentUserIdKey)
+                }
+
+                guard metadataContains(accountID: accountID, in: userDefaults.data(forKey: savedUserKey)),
+                      try apiKeyStore.apiKey(for: accountID) == apiKey,
+                      !makeCurrent || userDefaults.string(forKey: currentUserIdKey) == accountID
+                else { throw AccountPersistenceError.finalVerificationFailed }
+
+                return SecureUser(userId: normalizedUser.userId,
+                                  username: normalizedUser.username,
+                                  instance: normalizedUser.instance,
+                                  apiKey: apiKey)
+            } catch {
+                restore(previousMetadata, forKey: savedUserKey)
+                restore(previousCurrent, forKey: currentUserIdKey)
+                do {
+                    guard didReadPreviousAPIKey else { return nil }
+                    if let previousAPIKey {
+                        try apiKeyStore.setAPIKey(previousAPIKey, for: accountID)
+                    } else {
+                        try apiKeyStore.removeAPIKey(for: accountID)
+                    }
+                } catch {
+                    // Metadata/current selection have still been rolled back.
+                    // A verified orphan Keychain item is never enumerated as an
+                    // account and will be overwritten by a later retry.
+                }
+                return nil
+            }
+        }
+
+        private func metadataContains(accountID: String, in data: Data?) -> Bool {
+            guard let data,
+                  let users = try? JSONDecoder().decode([SecureUser].self, from: data)
+            else { return false }
+            return users.contains { $0.accountIdentifier == accountID && $0.apiKey == nil }
+        }
+
+        private func restore(_ value: Any?, forKey key: String) {
+            if let value {
+                userDefaults.set(value, forKey: key)
+            } else {
+                userDefaults.removeObject(forKey: key)
+            }
+        }
+
+        private func deduplicatedMetadata(_ users: [SecureUser]) -> [SecureUser] {
+            var seen = Set<String>()
+            let deduplicated: [SecureUser] = users.reversed().compactMap { user -> SecureUser? in
+                guard seen.insert(user.accountIdentifier).inserted else { return nil }
+                return user
+            }
+            return Array(deduplicated.reversed())
+        }
+
+        private func resolveUser(identifier: String, in users: [SecureUser]) -> SecureUser? {
+            if let exact = users.first(where: { $0.accountIdentifier == identifier }) {
+                return exact
+            }
+
+            let matchingLegacyUsers = users.filter { $0.userId == identifier }
+            guard matchingLegacyUsers.count > 1 else { return matchingLegacyUsers.first }
+
+            if let current = userDefaults.string(forKey: currentUserIdKey),
+               let selected = matchingLegacyUsers.first(where: { $0.accountIdentifier == current })
+            {
+                return selected
+            }
+            return matchingLegacyUsers.first
+        }
+
+        private func persistCurrentSelection(_ accountID: String) -> Bool {
+            let previous = userDefaults.object(forKey: currentUserIdKey)
+            userDefaults.set(accountID, forKey: currentUserIdKey)
+            guard userDefaults.string(forKey: currentUserIdKey) == accountID else {
+                restore(previous, forKey: currentUserIdKey)
+                return false
+            }
+            return true
         }
         
         // MARK: Visibility
@@ -413,7 +608,7 @@ extension Cache {
             
             // 詰め替える
             guard saveUser(.init(userId: userId, username: "", instance: instance, apiKey: apiKey)) else { return }
-            changeCurrentUser(userId: userId)
+            changeCurrentUser(.init(userId: userId, username: "", instance: instance, apiKey: apiKey))
             
             // UserDefaultsに保存されているデータを削除
             Foundation.UserDefaults.standard.removeObject(forKey: currentLoginedApiKey)
@@ -459,21 +654,14 @@ extension Cache {
             }
         }
         
-        func migrateKeyChainToAppGroups(_ new: Keychain) {
-            let old = Keychain(service: Self.keychainService)
-            
-            // Key to track if we migrated
-            let didMigrateToAppGroups = "DidMigrateToAppGroups"
-            
-            if !new.allKeys().contains(didMigrateToAppGroups) {
-                for key in old.allKeys() {
-                    guard let value = try? old.get(key) else { continue }
-                    try? new.set(value, key: key)
-                }
-                try? new.set("true", key: didMigrateToAppGroups)
-                print("Successfully migrated defaults")
-            } else {
-                print("No need to migrate defaults")
+        func migrateKeyChainToAppGroups(_ newStore: AccountAPIKeyStoring) {
+            let oldStore = KeychainAccountAPIKeyStore(
+                keychain: Keychain(service: Self.keychainService)
+            )
+            if !AccountKeychainMigrator().migrate(from: oldStore, to: newStore) {
+                // No account IDs or values are logged. The absent marker makes
+                // the next initialization retry every unverified entry.
+                print("Shared Keychain migration is incomplete and will be retried")
             }
         }
     }

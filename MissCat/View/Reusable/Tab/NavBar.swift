@@ -139,7 +139,7 @@ class NavBar: UIView {
     
     func changeUser(to user: SecureUser) {
         setUserIcon(of: user)
-        Cache.UserDefaults.shared.changeCurrentUser(userId: user.userId)
+        Cache.UserDefaults.shared.changeCurrentUser(user)
         delegate?.changeUser(user)
     }
     
