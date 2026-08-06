@@ -713,8 +713,9 @@ final class MissCatNotificationMessageOrdinaryRouteTests: XCTestCase {
             MissCatNotificationMessageBridge.makeMessagesController(owner: owner, home: home)
         )
 
-        XCTAssertEqual(notifications.ownerID, "owner")
-        XCTAssertEqual(messages.ownerID, "owner")
+        XCTAssertEqual(notifications.ownerID, owner.accountIdentifier)
+        XCTAssertEqual(messages.ownerID, owner.accountIdentifier)
+        XCTAssertNotEqual(notifications.ownerID, owner.userId)
     }
 
     func testOrdinaryControllersRejectMissingCredentialsWithoutNetwork() {

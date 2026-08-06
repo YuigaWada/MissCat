@@ -134,7 +134,7 @@ struct MissCatComposeURLSessionTransport: MissCatComposeHTTPTransport, @unchecke
     }
 }
 
-enum MissCatNativeComposeAPIError: LocalizedError, Equatable {
+enum MissCatNativeComposeAPIError: LocalizedError, Equatable, ShareSubmissionOutcomeError {
     case invalidCredentials
     case invalidInstance
     case invalidUpload
@@ -144,6 +144,11 @@ enum MissCatNativeComposeAPIError: LocalizedError, Equatable {
     case alreadySubmitting
     case outcomeUnknown(endpoint: String)
     case alreadyCreated
+
+    var isSubmissionOutcomeUnknown: Bool {
+        if case .outcomeUnknown = self { return true }
+        return false
+    }
 
     var errorDescription: String? {
         switch self {

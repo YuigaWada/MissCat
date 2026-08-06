@@ -134,7 +134,7 @@ extension EmojiView {
     }
     
     @objc(EmojiModel) class EmojiModel: NSObject, NSSecureCoding {
-        static var supportsSecureCoding: Bool { true }
+        class var supportsSecureCoding: Bool { true }
 
         enum PersistenceError: Error {
             case writeOrReadbackFailed
@@ -262,6 +262,7 @@ extension EmojiView {
         }
 
         static func decodeStoredEmojis(_ data: Data) -> [EmojiModel]? {
+            guard hasExactArchiveClassGraph(data) else { return nil }
             let allowed: [AnyClass] = [NSArray.self, EmojiModel.self, NSString.self, NSNumber.self]
             if let secure = try? NSKeyedUnarchiver.unarchivedObject(ofClasses: allowed, from: data) as? [EmojiModel] {
                 return secure
@@ -277,6 +278,42 @@ extension EmojiView {
                 of: allowed,
                 forKey: NSKeyedArchiveRootObjectKey
             ) as? [EmojiModel]
+        }
+
+        /// Foundation's allowed-class APIs accept subclasses of an allowed base
+        /// class. Validate the keyed-archive class table before instantiation so
+        /// only the exact archive graph emitted for `[EmojiModel]` is accepted.
+        static func hasExactArchiveClassGraph(_ data: Data) -> Bool {
+            guard let propertyList = try? PropertyListSerialization.propertyList(
+                from: data,
+                options: [],
+                format: nil
+            ),
+            let archive = propertyList as? [String: Any],
+            archive["$archiver"] as? String == "NSKeyedArchiver",
+            (archive["$version"] as? NSNumber)?.intValue == 100_000,
+            archive["$top"] as? [String: Any] != nil,
+            let objects = archive["$objects"] as? [Any]
+            else { return false }
+
+            let exactClasses: [String: [String]] = [
+                "NSArray": ["NSArray", "NSObject"],
+                "EmojiModel": ["EmojiModel", "NSObject"]
+            ]
+            var sawArrayClass = false
+
+            for case let record as [String: Any] in objects {
+                let className = record["$classname"] as? String
+                let classes = record["$classes"] as? [String]
+                guard className != nil || classes != nil else { continue }
+                guard let className,
+                      let classes,
+                      exactClasses[className] == classes
+                else { return false }
+                sawArrayClass = sawArrayClass || className == "NSArray"
+            }
+
+            return sawArrayClass
         }
 
         static func archiveFieldsEqual(_ lhs: [EmojiModel], _ rhs: [EmojiModel]) -> Bool {

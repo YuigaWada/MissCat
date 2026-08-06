@@ -72,18 +72,39 @@ public class Theme {
     /// 有効なタブのみ取り出し、紐付けられたアカウント情報を詰めていく
     private func checkTabs(_ tabs: [Theme.Tab]?) -> [Theme.Tab] {
         guard let tabs = tabs else { return [] }
-        
+
+        let cache = Cache.UserDefaults.shared
+        let users = cache.getUsers()
+        let currentAccountIdentifier = cache.getCurrentUserId().flatMap { current in
+            users.first(where: { $0.accountIdentifier == current })?.accountIdentifier
+        } ?? users.first?.accountIdentifier
+
         let transformed: [Theme.Tab] = tabs.compactMap {
-            guard let userId = $0.userId ?? Cache.UserDefaults.shared.getCurrentUserId() else { return nil }
+            guard let accountIdentifier = Self.resolvedTabOwnerIdentifier(
+                $0.userId,
+                users: users,
+                fallbackAccountIdentifier: currentAccountIdentifier
+            ) else { return nil }
             
             // userIdを持たないhomeタブ、またはデフォルト値のhomeタブは名前を@usernameに変更する
             if $0.kind == .home, $0.userId == nil || $0.name == "___Home___" {
-                let username = Cache.UserDefaults.shared.getUser(userId: userId)?.username ?? ""
-                return Theme.Tab(name: "@\(username)", kind: $0.kind, userId: userId, listId: $0.listId)
+                let username = users.first {
+                    $0.accountIdentifier == accountIdentifier
+                }?.username ?? ""
+                return Theme.Tab(
+                    name: "@\(username)",
+                    kind: $0.kind,
+                    userId: accountIdentifier,
+                    listId: $0.listId
+                )
             }
             
-            // userIdを持たない場合はgetCurrentUserId()が代入される
-            return Theme.Tab(name: $0.name, kind: $0.kind, userId: userId, listId: $0.listId)
+            return Theme.Tab(
+                name: $0.name,
+                kind: $0.kind,
+                userId: accountIdentifier,
+                listId: $0.listId
+            )
         }
         
         // 有効なタブが存在しなかった場合
@@ -94,6 +115,28 @@ public class Theme {
         }
         
         return transformed
+    }
+
+    /// Theme archives historically stored a bare server user ID. Preserve exact
+    /// instance-scoped IDs, migrate a bare ID only when it has one match, and route
+    /// missing/ambiguous owners through the deterministic current-account fallback.
+    static func resolvedTabOwnerIdentifier(
+        _ storedIdentifier: String?,
+        users: [SecureUser],
+        fallbackAccountIdentifier: String?
+    ) -> String? {
+        let fallback = fallbackAccountIdentifier.flatMap { identifier in
+            users.first(where: { $0.accountIdentifier == identifier })?.accountIdentifier
+        } ?? users.first?.accountIdentifier
+
+        guard let storedIdentifier else { return fallback }
+        if let exact = users.first(where: { $0.accountIdentifier == storedIdentifier }) {
+            return exact.accountIdentifier
+        }
+
+        let legacyMatches = users.filter { $0.userId == storedIdentifier }
+        guard legacyMatches.count == 1 else { return fallback }
+        return legacyMatches[0].accountIdentifier
     }
     
     /// currentModelのタブ情報を全て削除する
@@ -379,16 +422,29 @@ public extension Theme {
             guard let data = storage.data(storageKey),
                   let model = decode(data) else { return nil }
             
-            // userIdが存在しなかったら現在ログイン中のアカウントのuserIdを詰める
-            let currentUser = Cache.UserDefaults.shared.getCurrentUser()
-            var hasNonUserTab: Bool = false
-            
+            let cache = Cache.UserDefaults.shared
+            let users = cache.getUsers()
+            let currentAccountIdentifier = cache.getCurrentUserId().flatMap { current in
+                users.first(where: { $0.accountIdentifier == current })?.accountIdentifier
+            } ?? users.first?.accountIdentifier
+            var migratedOwner = false
+
             model.tab = model.tab.map {
-                hasNonUserTab = ($0.userId == nil) || hasNonUserTab // userIdを持たないタブが存在したら記録しておく
-                return .init(name: $0.name, kind: $0.kind, userId: $0.userId ?? currentUser?.userId, listId: $0.listId)
+                let resolved = Theme.resolvedTabOwnerIdentifier(
+                    $0.userId,
+                    users: users,
+                    fallbackAccountIdentifier: currentAccountIdentifier
+                )
+                migratedOwner = migratedOwner || resolved != $0.userId
+                return .init(
+                    name: $0.name,
+                    kind: $0.kind,
+                    userId: resolved,
+                    listId: $0.listId
+                )
             }
             
-            if hasNonUserTab {
+            if migratedOwner {
                 _ = try? saveChecked(with: model, storage: storage)
             }
             

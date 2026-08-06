@@ -506,7 +506,7 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
         XCTAssertEqual(noteBody["fileIds"] as? [String], ["file-1", "file-2"])
     }
 
-    func testNon2xxPropagatesRedactedMisskeyErrorAndMalformed2xxFails() async throws {
+    func testNon2xxPropagatesRedactedMisskeyErrorAndMalformed2xxHasUnknownOutcome() async throws {
         ComposeURLProtocolStub.handler = { _ in
             (
                 422,
@@ -542,13 +542,13 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
                     isSensitive: false
                 )
             )
-            XCTFail("Expected response decoding error")
+            XCTFail("Expected unknown mutation outcome")
         } catch let error as MissCatNativeComposeAPIError {
-            XCTAssertEqual(error, .invalidResponse(endpoint: "drive/files/create"))
+            XCTAssertEqual(error, .outcomeUnknown(endpoint: "drive/files/create"))
         }
     }
 
-    func testTimeoutAndCancellationPropagateWithoutRetry() async throws {
+    func testTimeoutAndCancellationAfterDispatchHaveUnknownOutcomeWithoutRetry() async throws {
         let recorder = ComposeRequestRecorder()
         ComposeURLProtocolStub.handler = { request in
             recorder.record(request)
@@ -558,8 +558,8 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
         do {
             _ = try await client.createNote(MissCatComposeAPINote(visibility: .public, text: "hello"))
             XCTFail("Expected timeout")
-        } catch let error as URLError {
-            XCTAssertEqual(error.code, .timedOut)
+        } catch let error as MissCatNativeComposeAPIError {
+            XCTAssertEqual(error, .outcomeUnknown(endpoint: "notes/create"))
         }
         XCTAssertEqual(recorder.snapshot().count, 1)
         XCTAssertEqual(recorder.snapshot().first?.request.timeoutInterval, 9)
@@ -579,9 +579,9 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
         task.cancel()
         do {
             _ = try await task.value
-            XCTFail("Expected cancellation")
-        } catch is CancellationError {
-            // Expected: cancellation stays cancellation rather than becoming a generic post error.
+            XCTFail("Expected unknown mutation outcome")
+        } catch let error as MissCatNativeComposeAPIError {
+            XCTAssertEqual(error, .outcomeUnknown(endpoint: "notes/create"))
         }
         let cancellationRequestCount = await suspended.requestCount
         XCTAssertEqual(cancellationRequestCount, 1)
@@ -717,7 +717,7 @@ final class MissCatComposeViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.canSubmit)
     }
 
-    func testSubmitWaitsForUploadsAndPostCompletion() async {
+    func testCancelWinsWhileSubmitIsInFlight() async {
         let posting = SuspendedComposePosting()
         var draft = MissCatComposeDraft()
         draft.text = "投稿"
@@ -732,23 +732,17 @@ final class MissCatComposeViewModelTests: XCTestCase {
             .uploading(MissCatComposeUploadProgress(completed: 0, total: 2))
         )
         viewModel.cancel()
-        XCTAssertEqual(
-            viewModel.phase,
-            .uploading(MissCatComposeUploadProgress(completed: 0, total: 2))
-        )
+        XCTAssertEqual(viewModel.phase, .cancelled)
 
         posting.report(completed: 1, total: 2)
-        XCTAssertEqual(
-            viewModel.phase,
-            .uploading(MissCatComposeUploadProgress(completed: 1, total: 2))
-        )
+        XCTAssertEqual(viewModel.phase, .cancelled)
         posting.report(completed: 2, total: 2)
-        XCTAssertEqual(viewModel.phase, .submitting)
+        XCTAssertEqual(viewModel.phase, .cancelled)
 
         posting.succeed()
         let succeeded = await task.value
-        XCTAssertTrue(succeeded)
-        XCTAssertEqual(viewModel.phase, .completed)
+        XCTAssertFalse(succeeded)
+        XCTAssertEqual(viewModel.phase, .cancelled)
         XCTAssertEqual(posting.submissions.count, 1)
     }
 

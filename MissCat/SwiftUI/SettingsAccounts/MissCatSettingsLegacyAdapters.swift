@@ -48,13 +48,13 @@ final class MissCatLegacySettingsRepository:
 
     func switchAccount(id: String) async throws -> MissCatAccountSnapshot {
         try Task.checkCancellation()
-        guard cache.getUser(userId: id) != nil else {
+        guard let user = exactUser(accountIdentifier: id) else {
             throw MissCatAccountManagementError.accountNotFound
         }
 
-        guard cache.changeCurrentUser(userId: id),
-              cache.getCurrentUserId() == cache.getUser(userId: id)?.accountIdentifier,
-              cache.getUser(userId: id) != nil
+        guard cache.changeCurrentUser(userId: user.accountIdentifier),
+              cache.getCurrentUserId() == user.accountIdentifier,
+              exactUser(accountIdentifier: user.accountIdentifier) != nil
         else {
             throw MissCatAccountManagementError.currentAccountVerificationFailed
         }
@@ -69,13 +69,13 @@ final class MissCatLegacySettingsRepository:
 
     func deleteAccount(id: String) async throws -> MissCatAccountDeletionResult {
         try Task.checkCancellation()
-        guard let user = cache.getUser(userId: id) else {
+        guard let user = exactUser(accountIdentifier: id) else {
             throw MissCatAccountManagementError.accountNotFound
         }
 
         // Cache.UserDefaults owns the credential/metadata transaction. Do not update
         // tabs or UI state until it confirms that the Keychain entry was removed.
-        guard cache.removeUser(userId: id) else {
+        guard cache.removeUser(userId: user.accountIdentifier) else {
             throw MissCatAccountManagementError.accountPersistenceFailed
         }
         let tabsChanged = theme.removeUserTabs(for: user)
@@ -159,7 +159,7 @@ final class MissCatLegacySettingsRepository:
 
     func loadReactions(accountID: String) async throws -> MissCatReactionSettingsSnapshot {
         try Task.checkCancellation()
-        guard let owner = cache.getUser(userId: accountID) else {
+        guard let owner = exactUser(accountIdentifier: accountID) else {
             throw MissCatAccountManagementError.accountNotFound
         }
 
@@ -214,7 +214,7 @@ final class MissCatLegacySettingsRepository:
 
     func saveReactions(_ snapshot: MissCatReactionSettingsSnapshot) async throws {
         try Task.checkCancellation()
-        guard let owner = cache.getUser(userId: snapshot.account.id),
+        guard let owner = exactUser(accountIdentifier: snapshot.account.id),
               owner.instance == snapshot.account.instance
         else {
             throw MissCatAccountManagementError.accountNotFound
@@ -298,6 +298,10 @@ final class MissCatLegacySettingsRepository:
             },
             currentAccountID: cache.getCurrentUserId()
         )
+    }
+
+    private func exactUser(accountIdentifier: String) -> SecureUser? {
+        cache.getUsers().first { $0.accountIdentifier == accountIdentifier }
     }
 
     private func settingsTab(from tab: Theme.Tab) -> MissCatSettingsTab {
@@ -451,7 +455,7 @@ final class MissCatSettingsFixtureRepository:
             ),
             MissCatReactionItem(
                 rawValue: ":fixture_apng:",
-                imageURL: Self.mediaFixtureURL(extension: "apng"),
+                imageURL: Self.mediaFixtureURL(extension: "apngdata"),
                 searchTerms: ["custom", "apng"]
             ),
             MissCatReactionItem(

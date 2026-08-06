@@ -37,20 +37,28 @@ private struct MissCatSettingsVisualReadyMarker: View {
 @MainActor
 final class MissCatReactionMediaReadiness: ObservableObject {
     @Published private(set) var isReady = false
+    @Published private(set) var failureMessage: String?
 
     private var pending: Set<String> = []
     private var completed: Set<String> = []
+    private var failed: Set<String> = []
     private var registrationPassCompleted = false
 
     func register(_ id: String) {
-        guard !completed.contains(id) else { return }
+        guard !completed.contains(id), !failed.contains(id) else { return }
         pending.insert(id)
         isReady = false
     }
 
-    func complete(_ id: String) {
-        completed.insert(id)
+    func complete(_ id: String, succeeded: Bool) {
         pending.remove(id)
+        if succeeded {
+            completed.insert(id)
+            failed.remove(id)
+        } else {
+            failed.insert(id)
+            failureMessage = "リアクション画像を読み込めませんでした"
+        }
         updateReadiness()
     }
 
@@ -60,7 +68,7 @@ final class MissCatReactionMediaReadiness: ObservableObject {
     }
 
     private func updateReadiness() {
-        isReady = registrationPassCompleted && pending.isEmpty
+        isReady = registrationPassCompleted && pending.isEmpty && failed.isEmpty
     }
 }
 
@@ -951,8 +959,11 @@ public struct MissCatReactionPicker: View {
                                     } label: {
                                         Group {
                                             if let url = item.imageURL {
-                                                MissCatReactionImage(url: url) { _ in
-                                                    mediaReadiness.complete(renderedMediaID)
+                                                MissCatReactionImage(url: url) { succeeded in
+                                                    mediaReadiness.complete(
+                                                        renderedMediaID,
+                                                        succeeded: succeeded
+                                                    )
                                                 }
                                                 .onAppear { mediaReadiness.register(renderedMediaID) }
                                             } else {
@@ -994,6 +1005,18 @@ public struct MissCatReactionPicker: View {
                 ready: mediaReadiness.isReady,
                 identifier: "settings.reactions.picker.visualReady"
             )
+        }
+        .overlay(alignment: .bottom) {
+            if let failureMessage = mediaReadiness.failureMessage {
+                Text(failureMessage)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.red.opacity(0.92), in: Capsule())
+                    .padding(.bottom, 8)
+                    .accessibilityIdentifier("settings.reactions.picker.mediaError")
+            }
         }
         .accessibilityIdentifier("settings.reactions.picker")
     }

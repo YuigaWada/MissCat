@@ -31,6 +31,76 @@ final class MissCatAccountStoreTests: XCTestCase {
         )
     }
 
+    func testProductionSwitchPropagatesFailedCompositeSelectionWrite() async throws {
+        let defaults = SettingsIntegrationDefaultsStore()
+        let keyStore = SettingsIntegrationAPIKeyStore()
+        let cache = Cache.UserDefaults(defaultsStore: defaults, apiKeyStore: keyStore)
+        let first = SecureUser(
+            userId: "same-user",
+            username: "first",
+            instance: "first.example",
+            apiKey: "first-test-key"
+        )
+        let second = SecureUser(
+            userId: "same-user",
+            username: "second",
+            instance: "second.example",
+            apiKey: "second-test-key"
+        )
+        XCTAssertTrue(cache.saveUser(first))
+        XCTAssertTrue(cache.saveUser(second))
+        _ = cache.getUsers()
+        XCTAssertEqual(cache.getCurrentUserId(), first.accountIdentifier)
+        defaults.blockedSetKeys.insert("current-user-id")
+        let repository = MissCatLegacySettingsRepository(cache: cache)
+
+        do {
+            _ = try await repository.switchAccount(id: second.accountIdentifier)
+            XCTFail("The repository accepted a failed selection write")
+        } catch {
+            XCTAssertEqual(
+                error as? MissCatAccountManagementError,
+                .currentAccountVerificationFailed
+            )
+        }
+
+        XCTAssertEqual(cache.getCurrentUserId(), first.accountIdentifier)
+    }
+
+    func testProductionProfileResponseUsesServerUserIDWhileSummaryKeepsCompositeID() async throws {
+        let defaults = SettingsIntegrationDefaultsStore()
+        let keyStore = SettingsIntegrationAPIKeyStore()
+        let cache = Cache.UserDefaults(defaultsStore: defaults, apiKeyStore: keyStore)
+        let user = SecureUser(
+            userId: "server-user-id",
+            username: "cached-name",
+            instance: "profile.example",
+            apiKey: "profile-test-key"
+        )
+        XCTAssertTrue(cache.saveUser(user))
+
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [SettingsURLProtocolStub.self]
+        let session = URLSession(configuration: configuration)
+        SettingsURLProtocolStub.handler = { request in
+            XCTAssertEqual(request.url?.host, "profile.example")
+            XCTAssertEqual(request.url?.path, "/api/i")
+            return (200, Data("""
+            {"id":"server-user-id","username":"verified-name","name":"Verified","avatarUrl":null}
+            """.utf8))
+        }
+        defer { SettingsURLProtocolStub.handler = nil }
+        let repository = MissCatLegacySettingsRepository(cache: cache, session: session)
+
+        let snapshot = try await repository.loadAccounts()
+        let summary = try XCTUnwrap(snapshot.accounts.first)
+
+        XCTAssertEqual(summary.id, user.accountIdentifier)
+        XCTAssertEqual(summary.userID, user.userId)
+        XCTAssertEqual(summary.username, "verified-name")
+        XCTAssertEqual(snapshot.currentAccountID, user.accountIdentifier)
+    }
+
     func testLoadPreservesRepositoryOrderAndCurrentSelection() async {
         let first = account("first", username: "one")
         let second = account("second", username: "two")
@@ -584,6 +654,23 @@ final class MissCatEmojiArchiveTests: XCTestCase {
         XCTAssertNil(EmojiView.EmojiModel.decodeStoredEmojis(hostile))
     }
 
+    func testDecoderRejectsSecureCodingSubclassBeforeInstantiation() throws {
+        HostileEmojiModelSubclass.decodeCount = 0
+        let hostile = try NSKeyedArchiver.archivedData(
+            withRootObject: [HostileEmojiModelSubclass(
+                rawEmoji: ":hostile:",
+                isDefault: false,
+                defaultEmoji: nil,
+                customEmojiUrl: "https://example.test/hostile.svg"
+            )],
+            requiringSecureCoding: true
+        )
+
+        XCTAssertFalse(EmojiView.EmojiModel.hasExactArchiveClassGraph(hostile))
+        XCTAssertNil(EmojiView.EmojiModel.decodeStoredEmojis(hostile))
+        XCTAssertEqual(HostileEmojiModelSubclass.decodeCount, 0)
+    }
+
     func testExactArchiveComparisonCoversOrderAndAllPersistedFields() {
         let expected = [
             EmojiView.EmojiModel(
@@ -737,6 +824,102 @@ final class MissCatEmojiArchiveTests: XCTestCase {
 }
 
 final class MissCatThemeProductionContractTests: XCTestCase {
+    func testTabOwnerMigrationUsesCompositeIDsAndRepairsAmbiguousOrMissingOwners() {
+        let first = SecureUser(
+            userId: "same-user",
+            username: "first",
+            instance: "first.example",
+            apiKey: nil
+        )
+        let second = SecureUser(
+            userId: "same-user",
+            username: "second",
+            instance: "second.example",
+            apiKey: nil
+        )
+        let fallback = SecureUser(
+            userId: "fallback-user",
+            username: "fallback",
+            instance: "fallback.example",
+            apiKey: nil
+        )
+        let unique = SecureUser(
+            userId: "unique-user",
+            username: "unique",
+            instance: "unique.example",
+            apiKey: nil
+        )
+        let users = [first, second, fallback, unique]
+
+        XCTAssertEqual(
+            Theme.resolvedTabOwnerIdentifier(
+                second.accountIdentifier,
+                users: users,
+                fallbackAccountIdentifier: fallback.accountIdentifier
+            ),
+            second.accountIdentifier
+        )
+        XCTAssertEqual(
+            Theme.resolvedTabOwnerIdentifier(
+                unique.userId,
+                users: users,
+                fallbackAccountIdentifier: fallback.accountIdentifier
+            ),
+            unique.accountIdentifier
+        )
+        XCTAssertEqual(
+            Theme.resolvedTabOwnerIdentifier(
+                "same-user",
+                users: users,
+                fallbackAccountIdentifier: fallback.accountIdentifier
+            ),
+            fallback.accountIdentifier
+        )
+        XCTAssertEqual(
+            Theme.resolvedTabOwnerIdentifier(
+                nil,
+                users: users,
+                fallbackAccountIdentifier: fallback.accountIdentifier
+            ),
+            fallback.accountIdentifier
+        )
+        XCTAssertEqual(
+            Theme.resolvedTabOwnerIdentifier(
+                "missing-user",
+                users: users,
+                fallbackAccountIdentifier: fallback.accountIdentifier
+            ),
+            fallback.accountIdentifier
+        )
+    }
+
+    func testTabRemovalDropsBareLegacyOwnerOnlyWhenUnambiguous() {
+        let composite = "https://first.example|same-user"
+        let bare = "same-user"
+        let other = "https://second.example|same-user"
+        let tabs = [
+            Theme.Tab(name: "First", kind: .home, userId: composite, listId: nil),
+            Theme.Tab(name: "Legacy", kind: .local, userId: bare, listId: nil),
+            Theme.Tab(name: "Second", kind: .global, userId: other, listId: nil)
+        ]
+
+        let ambiguous = Theme.removingTabs(
+            forAccountIdentifier: composite,
+            legacyUserID: nil,
+            from: tabs,
+            defaults: []
+        )
+        XCTAssertEqual(ambiguous.tabs.map(\.userId), [bare, other])
+
+        let unique = Theme.removingTabs(
+            forAccountIdentifier: composite,
+            legacyUserID: bare,
+            from: tabs,
+            defaults: []
+        )
+        XCTAssertEqual(unique.tabs.map(\.userId), [other])
+    }
+
     func testRemovingThreeBoundTabsReportsChangeWhenDefaultsAlsoHaveThreeTabs() {
         let bound = [
             Theme.Tab(name: "A", kind: .home, userId: "owner", listId: nil),
@@ -894,21 +1077,33 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
         readiness.finishInitialRegistrationPass()
 
         XCTAssertFalse(readiness.isReady)
-        readiness.complete("gif")
+        readiness.complete("gif", succeeded: true)
         XCTAssertFalse(readiness.isReady)
-        readiness.complete("apng")
+        readiness.complete("apng", succeeded: true)
         XCTAssertTrue(readiness.isReady)
 
         readiness.register("svg")
         XCTAssertFalse(readiness.isReady)
-        readiness.complete("svg")
+        readiness.complete("svg", succeeded: true)
         XCTAssertTrue(readiness.isReady)
+    }
+
+    @MainActor
+    func testReactionPickerDecodeFailureIsTerminalVisibleAndNeverReady() {
+        let readiness = MissCatReactionMediaReadiness()
+        readiness.register("broken")
+        readiness.finishInitialRegistrationPass()
+
+        readiness.complete("broken", succeeded: false)
+
+        XCTAssertFalse(readiness.isReady)
+        XCTAssertEqual(readiness.failureMessage, "リアクション画像を読み込めませんでした")
     }
 
     func testReactionVisualFixturesAreBundledGIFAPNGAndSVGFiles() throws {
         let bundle = Bundle(for: MissCatLegacySettingsRepository.self)
         let gif = try XCTUnwrap(bundle.url(forResource: "reaction-fixture", withExtension: "gif"))
-        let apng = try XCTUnwrap(bundle.url(forResource: "reaction-fixture", withExtension: "apng"))
+        let apng = try XCTUnwrap(bundle.url(forResource: "reaction-fixture", withExtension: "apngdata"))
         let svg = try XCTUnwrap(bundle.url(forResource: "reaction-fixture", withExtension: "svg"))
         let gifData = try Data(contentsOf: gif)
         let apngData = try Data(contentsOf: apng)
@@ -921,6 +1116,38 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
         XCTAssertEqual(MFMImageView.imageFormat(apngData), .apng)
         XCTAssertEqual(MFMImageView.imageFormat(svgData), .other)
         XCTAssertTrue([gif, apng, svg].allSatisfy(\.isFileURL))
+    }
+
+    @MainActor
+    func testProductionImageViewDecodesEveryLocalFixtureAndRejectsInvalidFixture() async throws {
+        let bundle = Bundle(for: MissCatLegacySettingsRepository.self)
+        let valid = [
+            try XCTUnwrap(bundle.url(forResource: "reaction-fixture", withExtension: "gif")),
+            try XCTUnwrap(bundle.url(forResource: "reaction-fixture", withExtension: "apngdata")),
+            try XCTUnwrap(bundle.url(forResource: "reaction-fixture", withExtension: "svg"))
+        ]
+
+        for url in valid {
+            let loaded = expectation(description: "decode \(url.lastPathComponent)")
+            let imageView = MFMImageView(frame: CGRect(x: 0, y: 0, width: 32, height: 32))
+            imageView.setImage(url: url.absoluteString) { succeeded in
+                XCTAssertTrue(succeeded, "Production decoder rejected \(url.lastPathComponent)")
+                loaded.fulfill()
+            }
+            await fulfillment(of: [loaded], timeout: 3)
+            imageView.prepareForReuse()
+        }
+
+        let invalid = try XCTUnwrap(
+            bundle.url(forResource: "reaction-fixture", withExtension: "invalid")
+        )
+        let rejected = expectation(description: "reject invalid fixture")
+        let imageView = MFMImageView(frame: CGRect(x: 0, y: 0, width: 32, height: 32))
+        imageView.setImage(url: invalid.absoluteString) { succeeded in
+            XCTAssertFalse(succeeded)
+            rejected.fulfill()
+        }
+        await fulfillment(of: [rejected], timeout: 3)
     }
 }
 
@@ -1040,6 +1267,33 @@ private final class HostileEmojiArchiveObject: NSObject, NSSecureCoding {
     func encode(with coder: NSCoder) {}
 }
 
+@objc(HostileEmojiModelSubclass)
+private final class HostileEmojiModelSubclass: EmojiView.EmojiModel {
+    static var decodeCount = 0
+    override class var supportsSecureCoding: Bool { true }
+
+    override init(
+        rawEmoji: String,
+        isDefault: Bool,
+        defaultEmoji: String?,
+        customEmojiUrl: String?,
+        isFake: Bool = false
+    ) {
+        super.init(
+            rawEmoji: rawEmoji,
+            isDefault: isDefault,
+            defaultEmoji: defaultEmoji,
+            customEmojiUrl: customEmojiUrl,
+            isFake: isFake
+        )
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        Self.decodeCount += 1
+        super.init(coder: aDecoder)
+    }
+}
+
 private final class InMemoryThemeStorage {
     var data: Data?
     var corruptNextWrite = false
@@ -1095,6 +1349,65 @@ private final class InMemoryEmojiArchiveStorage {
             keys: { [weak self] in self?.keys ?? [] }
         )
     }
+}
+
+private final class SettingsIntegrationDefaultsStore: AccountDefaultsStoring {
+    var values: [String: Any] = [:]
+    var blockedSetKeys: Set<String> = []
+
+    func object(forKey defaultName: String) -> Any? { values[defaultName] }
+    func data(forKey defaultName: String) -> Data? { values[defaultName] as? Data }
+    func string(forKey defaultName: String) -> String? { values[defaultName] as? String }
+
+    func set(_ value: Any?, forKey defaultName: String) {
+        guard !blockedSetKeys.contains(defaultName) else { return }
+        values[defaultName] = value
+    }
+
+    func removeObject(forKey defaultName: String) {
+        values.removeValue(forKey: defaultName)
+    }
+
+    func synchronize() -> Bool { true }
+}
+
+private final class SettingsIntegrationAPIKeyStore: AccountAPIKeyStoring {
+    var values: [String: String] = [:]
+
+    func apiKey(for accountID: String) throws -> String? { values[accountID] }
+    func setAPIKey(_ apiKey: String, for accountID: String) throws { values[accountID] = apiKey }
+    func removeAPIKey(for accountID: String) throws { values.removeValue(forKey: accountID) }
+    func allAccountIDs() throws -> [String] { Array(values.keys) }
+}
+
+private final class SettingsURLProtocolStub: URLProtocol {
+    static var handler: ((URLRequest) throws -> (Int, Data))?
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    override func startLoading() {
+        guard let handler = Self.handler else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
+            return
+        }
+        do {
+            let (statusCode, data) = try handler(request)
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: statusCode,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: data)
+            client?.urlProtocolDidFinishLoading(self)
+        } catch {
+            client?.urlProtocol(self, didFailWithError: error)
+        }
+    }
+
+    override func stopLoading() {}
 }
 
 private func account(

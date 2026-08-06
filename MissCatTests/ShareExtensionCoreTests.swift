@@ -151,15 +151,30 @@ final class ShareComposerViewModelTests: XCTestCase {
             instance: "proof.example",
             userId: "same-user"
         )
+        let accountIdentifierHash = String(repeating: "a", count: 64)
         let proof = ShareCredentialReadProof(
-            accountIdentifier: accountID,
+            accountIdentifierHash: accountIdentifierHash,
             credentialAvailable: true
         )
 
-        XCTAssertEqual(proof.accountIdentifier, accountID)
+        XCTAssertEqual(proof.accountIdentifierHash, accountIdentifierHash)
         XCTAssertTrue(proof.credentialAvailable)
         XCTAssertFalse(proof.description.localizedCaseInsensitiveContains("token"))
         XCTAssertFalse(proof.description.localizedCaseInsensitiveContains("secret"))
+        XCTAssertFalse(proof.description.contains(accountID))
+    }
+
+    func testSharedOutcomeUnknownContractProducesTerminalNonRetryableState() async {
+        let posting = SequencedSharePosting(results: [.failure(ShareUnknownOutcomeError())])
+        let viewModel = makeViewModel(posting: posting)
+        viewModel.load(ShareDraft(text: "ambiguous result", imageData: []))
+
+        let didSubmit = await viewModel.submit()
+
+        XCTAssertFalse(didSubmit)
+        XCTAssertEqual(viewModel.phase, .outcomeUnknown)
+        XCTAssertNotNil(viewModel.errorMessage)
+        XCTAssertFalse(viewModel.canPost)
     }
 
     private func makeViewModel(
@@ -227,4 +242,9 @@ private enum TestError: LocalizedError {
     case expected
 
     var errorDescription: String? { "expected failure" }
+}
+
+private struct ShareUnknownOutcomeError: ShareSubmissionOutcomeError, LocalizedError {
+    let isSubmissionOutcomeUnknown = true
+    var errorDescription: String? { "送信結果を確認できません" }
 }

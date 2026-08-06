@@ -274,8 +274,8 @@ final class ShareComposerViewModel: ObservableObject {
                     visibility: visibility
                 )
                 return resolveTerminal(.completed, operationID: operationID)
-            } catch let error as MissCatNativeComposeAPIError {
-                if case .outcomeUnknown = error {
+            } catch let error as ShareSubmissionOutcomeError {
+                if error.isSubmissionOutcomeUnknown {
                     errorMessage = error.localizedDescription
                     _ = resolveTerminal(.outcomeUnknown, operationID: operationID)
                 } else if !isTerminal {
