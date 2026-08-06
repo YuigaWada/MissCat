@@ -45,7 +45,7 @@ final class ShareViewController: UIViewController {
             accounts: accounts,
             selectedAccountID: selectedAccountID,
             visibility: visibility,
-            posting: SharePostService(userModel: userModel)
+            posting: SharePostService(userProvider: userModel.getUser(accountIdentifier:))
         )
         self.viewModel = viewModel
 

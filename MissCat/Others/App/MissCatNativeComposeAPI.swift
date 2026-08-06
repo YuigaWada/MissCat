@@ -144,6 +144,7 @@ enum MissCatNativeComposeAPIError: LocalizedError, Equatable, ShareSubmissionOut
     case alreadySubmitting
     case outcomeUnknown(endpoint: String)
     case alreadyCreated
+    case journalUnavailable
 
     var isSubmissionOutcomeUnknown: Bool {
         if case .outcomeUnknown = self { return true }
@@ -176,6 +177,8 @@ enum MissCatNativeComposeAPIError: LocalizedError, Equatable, ShareSubmissionOut
             "送信結果を確認できません。重複を避けるため、この内容は再送できません"
         case .alreadyCreated:
             "この投稿は作成済みです。重複を避けるため再送しません"
+        case .journalUnavailable:
+            "安全な送信記録を保存できないため、投稿を開始しませんでした"
         }
     }
 }
@@ -202,6 +205,7 @@ struct MissCatComposeOperationRecord: Codable, Equatable, Sendable {
     enum Phase: String, Codable, Sendable {
         case preparing
         case uploading
+        case uploadRequestStarted
         case readyToCreateNote
         case noteRequestStarted
         case outcomeUnknown
@@ -234,8 +238,8 @@ struct MissCatComposeOperationRecord: Codable, Equatable, Sendable {
 
 protocol MissCatComposeOperationJournalStoring: AnyObject {
     func record(fingerprint: String) -> MissCatComposeOperationRecord?
-    func save(_ record: MissCatComposeOperationRecord)
-    func remove(fingerprint: String)
+    @discardableResult func save(_ record: MissCatComposeOperationRecord) -> Bool
+    @discardableResult func remove(fingerprint: String) -> Bool
 }
 
 final class MissCatComposeOperationJournal: MissCatComposeOperationJournalStoring, @unchecked Sendable {
@@ -249,16 +253,21 @@ final class MissCatComposeOperationJournal: MissCatComposeOperationJournalStorin
 
     func record(fingerprint: String) -> MissCatComposeOperationRecord? {
         guard let data = defaults.data(forKey: Self.keyPrefix + fingerprint) else { return nil }
-        return try? JSONDecoder().decode(MissCatComposeOperationRecord.self, from: data)
+        return (try? JSONDecoder().decode(MissCatComposeOperationRecord.self, from: data))
+            ?? MissCatComposeOperationRecord(fingerprint: fingerprint, phase: .outcomeUnknown)
     }
 
-    func save(_ record: MissCatComposeOperationRecord) {
-        guard let data = try? JSONEncoder().encode(record) else { return }
-        defaults.set(data, forKey: Self.keyPrefix + record.fingerprint)
+    func save(_ record: MissCatComposeOperationRecord) -> Bool {
+        guard let data = try? JSONEncoder().encode(record) else { return false }
+        let key = Self.keyPrefix + record.fingerprint
+        defaults.set(data, forKey: key)
+        return defaults.synchronize() && defaults.data(forKey: key) == data
     }
 
-    func remove(fingerprint: String) {
-        defaults.removeObject(forKey: Self.keyPrefix + fingerprint)
+    func remove(fingerprint: String) -> Bool {
+        let key = Self.keyPrefix + fingerprint
+        defaults.removeObject(forKey: key)
+        return defaults.synchronize() && defaults.data(forKey: key) == nil
     }
 }
 

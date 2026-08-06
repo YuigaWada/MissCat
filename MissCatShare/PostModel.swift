@@ -1,4 +1,14 @@
 import UIKit
+#if MISSCAT_TESTS
+@testable import MissCat
+#endif
+
+extension MissCatNativeComposeAPIError: ShareOutcomeUnknownError {
+    var isOutcomeUnknown: Bool {
+        if case .outcomeUnknown = self { return true }
+        return false
+    }
+}
 
 @MainActor
 final class SharePostService: SharePosting {
@@ -9,22 +19,10 @@ final class SharePostService: SharePosting {
     private var activeSubmissionTask: Task<Void, Error>?
 
     init(
-        userModel: UserModel,
+        userProvider: @escaping (String) -> SecureUser?,
         transport: any MissCatComposeHTTPTransport = MissCatComposeURLSessionTransport(),
         requestTimeout: TimeInterval = MissCatNativeComposeAPIClient.defaultTimeout,
         journal: MissCatComposeOperationJournalStoring = MissCatComposeOperationJournal()
-    ) {
-        userProvider = userModel.getUser(accountIdentifier:)
-        self.transport = transport
-        self.requestTimeout = requestTimeout
-        self.journal = journal
-    }
-
-    init(
-        userProvider: @escaping (String) -> SecureUser?,
-        transport: any MissCatComposeHTTPTransport,
-        requestTimeout: TimeInterval = MissCatNativeComposeAPIClient.defaultTimeout,
-        journal: MissCatComposeOperationJournalStoring
     ) {
         self.userProvider = userProvider
         self.transport = transport
@@ -129,18 +127,19 @@ final class PostModel {
             for imageData in draft.imageData.dropFirst(fileIDs.count) {
                 try Task.checkCancellation()
                 let upload = try preparedUpload(imageData)
-                record.phase = .uploading
-                journal.save(record)
+                record.phase = .uploadRequestStarted
+                try saveJournal(record)
                 fileIDs.append(try await client.upload(upload))
                 record.knownFileIDs = fileIDs
-                journal.save(record)
+                record.phase = .uploading
+                try saveJournal(record)
             }
 
             record.phase = .readyToCreateNote
-            journal.save(record)
+            try saveJournal(record)
             try Task.checkCancellation()
             record.phase = .noteRequestStarted
-            journal.save(record)
+            try saveJournal(record)
             let noteID = try await client.createNote(
                 MissCatComposeAPINote(
                     visibility: visibility.composeAPIVisibility,
@@ -150,13 +149,18 @@ final class PostModel {
             )
             record.createdNoteID = noteID
             record.phase = .noteCreated
-            journal.save(record)
+            try saveJournal(record)
             try Task.checkCancellation()
             journal.remove(fingerprint: fingerprint)
         } catch let error as MissCatNativeComposeAPIError {
-            if case .outcomeUnknown = error {
+            if case let .outcomeUnknown(endpoint) = error {
                 record.phase = .outcomeUnknown
-                journal.save(record)
+                _ = journal.save(record)
+                if endpoint == "drive/files/create" {
+                    _ = await compensateOrClean(record: &record)
+                    record.phase = .outcomeUnknown
+                    _ = journal.save(record)
+                }
             } else {
                 let cleanupIsUnknown = await compensateOrClean(record: &record)
                 if !cleanupIsUnknown { journal.remove(fingerprint: fingerprint) }
@@ -189,13 +193,21 @@ final class PostModel {
     private func resumableRecord(fingerprint: String) throws -> MissCatComposeOperationRecord {
         guard var existing = journal.record(fingerprint: fingerprint) else {
             let record = MissCatComposeOperationRecord(fingerprint: fingerprint)
-            journal.save(record)
+            try saveJournal(record)
             return record
         }
         switch existing.phase {
-        case .outcomeUnknown, .noteRequestStarted:
+        case .outcomeUnknown:
             existing.phase = .outcomeUnknown
-            journal.save(existing)
+            _ = journal.save(existing)
+            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: "notes/create")
+        case .uploadRequestStarted:
+            existing.phase = .outcomeUnknown
+            _ = journal.save(existing)
+            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: "drive/files/create")
+        case .noteRequestStarted:
+            existing.phase = .outcomeUnknown
+            _ = journal.save(existing)
             throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: "notes/create")
         case .noteCreated:
             throw MissCatNativeComposeAPIError.alreadyCreated
@@ -204,11 +216,17 @@ final class PostModel {
         }
     }
 
+    private func saveJournal(_ record: MissCatComposeOperationRecord) throws {
+        guard journal.save(record) else {
+            throw MissCatNativeComposeAPIError.journalUnavailable
+        }
+    }
+
     private func compensateOrClean(record: inout MissCatComposeOperationRecord) async -> Bool {
         if let noteID = record.createdNoteID {
             guard !record.noteDeleteAttempted else { return true }
             record.noteDeleteAttempted = true
-            journal.save(record)
+            guard journal.save(record) else { return true }
             let cleanup = Task { try await client.deleteNote(id: noteID) }
             if (try? await cleanup.value) == nil {
                 record.phase = .outcomeUnknown
@@ -220,7 +238,7 @@ final class PostModel {
 
         for fileID in record.knownFileIDs where !record.cleanupAttemptedFileIDs.contains(fileID) {
             record.cleanupAttemptedFileIDs.append(fileID)
-            journal.save(record)
+            guard journal.save(record) else { return true }
             let cleanup = Task { try await client.deleteFile(id: fileID) }
             _ = try? await cleanup.value
         }

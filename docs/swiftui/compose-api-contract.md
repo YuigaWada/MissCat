@@ -68,18 +68,67 @@ Uploads are awaited in media-array order, so `fileIds` deterministically match
 the UI order. The share extension uses the same transport with its existing
 JPEG filename/type, non-sensitive, and no-comment contract.
 
-## Errors, cancellation, timeout, and duplicate submission
+## Mutation outcome, cancellation, and duplicate prevention
 
 The official API dispatcher serializes failures as
 `{"error":{"message", "code", "id", ...}}`; see
 [`ApiCallService.send`](https://github.com/misskey-dev/misskey/blob/00f66349766dc61298c66129ded5fdeb29e93f41/packages/backend/src/server/api/ApiCallService.ts#L250-L268).
 MissCat preserves the HTTP status plus those minimal fields, without retaining
-the raw body. Transport errors such as offline and timeout errors propagate
-unchanged.
+the raw body.
+
+The pinned upstream endpoint contract has no idempotency-key request field or
+header for either `notes/create` or `drive/files/create`. MissCat therefore does
+not send an `Idempotency-Key` header and does **not** claim server-backed
+exactly-once delivery. Once either mutation has been dispatched, a transport
+failure, cancellation, timeout, or malformed `2xx` response means the server
+may already have committed the write. It is surfaced as `outcomeUnknown`, not
+as a safely retryable network error.
+
+Before dispatch, the app-group operation journal durably records a SHA-256
+fingerprint and the mutation phase. A record contains no access token, note
+body, attachment bytes, filename, alt text, or other draft material. It may
+contain only the fingerprint, known server file/note IDs, and compensation
+attempt markers. Failure to synchronize and read back that pre-dispatch record
+prevents the mutation from starting. Corrupt records fail closed as
+`outcomeUnknown`.
+
+On relaunch, a safely completed upload response can be resumed by reusing its
+known file ID. A request-started upload or note phase cannot be distinguished
+from a committed write and blocks the same operation without another network
+mutation. A definite note failure or pre-note cancellation deletes all known
+orphan uploads through
+[`drive/files/delete`](https://github.com/misskey-dev/misskey/blob/00f66349766dc61298c66129ded5fdeb29e93f41/packages/backend/src/server/api/endpoints/drive/files/delete.ts).
+If cancellation wins after a note ID is known, the journal first records one
+compensation attempt and then calls
+[`notes/delete`](https://github.com/misskey-dev/misskey/blob/00f66349766dc61298c66129ded5fdeb29e93f41/packages/backend/src/server/api/endpoints/notes/delete.ts)
+exactly once. An ambiguous compensation remains blocked as `outcomeUnknown`.
+
+Two irreducible boundaries remain without server idempotency: an ambiguous
+upload can leave an upload whose ID was never received, and an ambiguous note
+creation can leave a note whose ID was never received. Blind retry would risk a
+duplicate file or note, so MissCat keeps the durable block and tells the user
+that the result cannot be confirmed.
 
 Every request has a 60-second default timeout (injectable for tests). Native
 `URLSession.data(for:)` and video export both participate in Swift task
 cancellation. The app and share submission services reject a second concurrent
-submit while the first is active, reset that guard after success, failure, or
-cancellation, and do not perform an automatic write retry. This gives one
-network submission per user attempt while allowing an explicit later retry.
+submit while the first is active, retain and cancel the active transport task,
+and arbitrate terminal UI state so completion or cancellation wins only once.
+No mutation is automatically retried. A definite pre-commit failure may be
+retried explicitly; an unknown outcome may not.
+
+## Share credential proof and remaining MisskeyKit debt
+
+The signed share extension has an explicit DEBUG-only
+`--misscat-share-credential-proof` launch probe. It resolves the exact composite
+account ID through the production `UserModel`, reads that account's shared
+Keychain credential, and stores only a boolean availability result plus a
+SHA-256 account-ID hash in app-group defaults. The raw account ID and credential
+are not returned, serialized, sent over the network, or logged.
+
+Compose writes in both the app and share extension now use only the native
+transport described above. `MissCatComposeService.swift` still imports
+MisskeyKit solely to bridge its legacy persisted `Visibility` enum, and the
+share `UserModel.swift` does the same when reading the legacy visibility value.
+Neither import is used for upload or note mutations; removing them belongs to
+the later persistence-format retirement.

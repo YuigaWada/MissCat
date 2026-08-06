@@ -388,6 +388,7 @@ struct MissCatComposeScreen: View {
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
         .accessibilityIdentifier(identifier)
+        .allowsHitTesting(false)
     }
 
     private func toolbarButton(

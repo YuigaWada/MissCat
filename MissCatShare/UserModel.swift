@@ -131,7 +131,7 @@ class UserModel {
     func credentialReadProof(accountIdentifier: String) -> ShareCredentialReadProof {
         let exactUser = getUsers().first { $0.accountIdentifier == accountIdentifier }
         return ShareCredentialReadProof(
-            accountIdentifierHash: MissCatComposeOperationFingerprint.accountHash(accountIdentifier),
+            accountIdentifierHash: ShareCredentialReadProof.accountHash(accountIdentifier),
             credentialAvailable: exactUser?.apiKey?.isEmpty == false
         )
     }

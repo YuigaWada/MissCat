@@ -1,4 +1,5 @@
 import Combine
+import CryptoKit
 import Foundation
 
 enum MissCatAccountIdentity {
@@ -54,6 +55,12 @@ struct ShareCredentialReadProof: Equatable, Sendable, CustomStringConvertible {
 
     var description: String {
         "ShareCredentialReadProof(accountIdentifierHash: \(accountIdentifierHash), credentialAvailable: \(credentialAvailable))"
+    }
+
+    static func accountHash(_ accountIdentifier: String) -> String {
+        SHA256.hash(data: Data(accountIdentifier.utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
     }
 }
 
@@ -159,6 +166,10 @@ protocol SharePosting: AnyObject {
     func cancelActiveSubmission()
 }
 
+protocol ShareOutcomeUnknownError: Error {
+    var isOutcomeUnknown: Bool { get }
+}
+
 extension SharePosting {
     func cancelActiveSubmission() {}
 }
@@ -213,8 +224,16 @@ final class ShareComposerViewModel: ObservableObject {
             && ShareDraft(text: text, imageData: imageData).hasContent
     }
 
+    var canReloadInput: Bool {
+        phase == .failed && !accounts.isEmpty
+    }
+
     func beginLoading() {
-        guard phase != .posting, phase != .completed else { return }
+        guard phase != .posting,
+              phase != .outcomeUnknown,
+              phase != .completed,
+              phase != .cancelled
+        else { return }
         errorMessage = nil
         phase = .loading
     }
@@ -274,8 +293,8 @@ final class ShareComposerViewModel: ObservableObject {
                     visibility: visibility
                 )
                 return resolveTerminal(.completed, operationID: operationID)
-            } catch let error as ShareSubmissionOutcomeError {
-                if error.isSubmissionOutcomeUnknown {
+            } catch let error as ShareOutcomeUnknownError {
+                if error.isOutcomeUnknown {
                     errorMessage = error.localizedDescription
                     _ = resolveTerminal(.outcomeUnknown, operationID: operationID)
                 } else if !isTerminal {
