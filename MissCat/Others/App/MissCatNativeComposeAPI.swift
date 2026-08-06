@@ -134,7 +134,7 @@ struct MissCatComposeURLSessionTransport: MissCatComposeHTTPTransport, @unchecke
     }
 }
 
-enum MissCatNativeComposeAPIError: LocalizedError, Equatable, ShareSubmissionOutcomeError {
+enum MissCatNativeComposeAPIError: LocalizedError, Equatable {
     case invalidCredentials
     case invalidInstance
     case invalidUpload
@@ -145,11 +145,6 @@ enum MissCatNativeComposeAPIError: LocalizedError, Equatable, ShareSubmissionOut
     case outcomeUnknown(endpoint: String)
     case alreadyCreated
     case journalUnavailable
-
-    var isSubmissionOutcomeUnknown: Bool {
-        if case .outcomeUnknown = self { return true }
-        return false
-    }
 
     var errorDescription: String? {
         switch self {
@@ -202,37 +197,144 @@ enum MissCatComposeOperationFingerprint {
 }
 
 struct MissCatComposeOperationRecord: Codable, Equatable, Sendable {
+    struct Identity: Codable, Equatable, Sendable {
+        enum Operation: String, Codable, Sendable {
+            case note
+            case reply
+            case quote
+            case renote
+            case shareNote
+            case invalid
+        }
+
+        let fingerprint: String
+        let operation: Operation
+        let accountIdentifierHash: String
+        let instanceOriginHash: String
+        let mediaCount: Int
+
+        static func invalid(fingerprint: String) -> Self {
+            Self(
+                fingerprint: fingerprint,
+                operation: .invalid,
+                accountIdentifierHash: "",
+                instanceOriginHash: "",
+                mediaCount: -1
+            )
+        }
+    }
+
     enum Phase: String, Codable, Sendable {
         case preparing
         case uploading
         case uploadRequestStarted
         case readyToCreateNote
         case noteRequestStarted
+        case cleanupPending
         case outcomeUnknown
         case noteCreated
     }
 
-    let fingerprint: String
+    let identity: Identity
     var phase: Phase
     var knownFileIDs: [String]
     var createdNoteID: String?
     var cleanupAttemptedFileIDs: [String]
     var noteDeleteAttempted: Bool
+    var uncertainEndpoint: String?
+
+    var fingerprint: String { identity.fingerprint }
 
     init(
-        fingerprint: String,
+        identity: Identity,
         phase: Phase = .preparing,
         knownFileIDs: [String] = [],
         createdNoteID: String? = nil,
         cleanupAttemptedFileIDs: [String] = [],
-        noteDeleteAttempted: Bool = false
+        noteDeleteAttempted: Bool = false,
+        uncertainEndpoint: String? = nil
     ) {
-        self.fingerprint = fingerprint
+        self.identity = identity
         self.phase = phase
         self.knownFileIDs = knownFileIDs
         self.createdNoteID = createdNoteID
         self.cleanupAttemptedFileIDs = cleanupAttemptedFileIDs
         self.noteDeleteAttempted = noteDeleteAttempted
+        self.uncertainEndpoint = uncertainEndpoint
+    }
+
+    static func invalid(fingerprint: String) -> Self {
+        Self(
+            identity: .invalid(fingerprint: fingerprint),
+            phase: .outcomeUnknown,
+            uncertainEndpoint: "journal"
+        )
+    }
+
+    func isValid(for expectedIdentity: Identity) -> Bool {
+        guard identity == expectedIdentity,
+              Self.isSHA256(identity.fingerprint),
+              Self.isSHA256(identity.accountIdentifierHash),
+              Self.isSHA256(identity.instanceOriginHash),
+              identity.mediaCount >= 0,
+              knownFileIDs.count <= identity.mediaCount,
+              knownFileIDs.allSatisfy({ !$0.isEmpty }),
+              Set(knownFileIDs).count == knownFileIDs.count,
+              cleanupAttemptedFileIDs.allSatisfy({ knownFileIDs.contains($0) }),
+              Set(cleanupAttemptedFileIDs).count == cleanupAttemptedFileIDs.count,
+              createdNoteID.map({ !$0.isEmpty }) ?? true,
+              !noteDeleteAttempted || createdNoteID != nil
+        else { return false }
+
+        switch phase {
+        case .preparing:
+            return knownFileIDs.isEmpty && createdNoteID == nil
+                && cleanupAttemptedFileIDs.isEmpty && !noteDeleteAttempted
+                && uncertainEndpoint == nil
+        case .uploadRequestStarted:
+            return knownFileIDs.count < identity.mediaCount && createdNoteID == nil
+                && cleanupAttemptedFileIDs.isEmpty && !noteDeleteAttempted
+                && uncertainEndpoint == nil
+        case .uploading:
+            return !knownFileIDs.isEmpty && createdNoteID == nil
+                && cleanupAttemptedFileIDs.isEmpty && !noteDeleteAttempted
+                && uncertainEndpoint == nil
+        case .readyToCreateNote, .noteRequestStarted:
+            return knownFileIDs.count == identity.mediaCount && createdNoteID == nil
+                && cleanupAttemptedFileIDs.isEmpty && !noteDeleteAttempted
+                && uncertainEndpoint == nil
+        case .noteCreated:
+            return knownFileIDs.count == identity.mediaCount && createdNoteID != nil
+                && cleanupAttemptedFileIDs.isEmpty
+                && !noteDeleteAttempted && uncertainEndpoint == nil
+        case .cleanupPending:
+            let deletingNote = knownFileIDs.count == identity.mediaCount
+                && createdNoteID != nil && noteDeleteAttempted
+            let deletingFiles = createdNoteID == nil && !cleanupAttemptedFileIDs.isEmpty
+            return (deletingNote || deletingFiles) && uncertainEndpoint == nil
+        case .outcomeUnknown:
+            switch uncertainEndpoint {
+            case "journal":
+                return true
+            case "drive/files/create":
+                return createdNoteID == nil && knownFileIDs.count < identity.mediaCount
+                    && cleanupAttemptedFileIDs.isEmpty && !noteDeleteAttempted
+            case "notes/create":
+                return knownFileIDs.count == identity.mediaCount && createdNoteID == nil
+                    && cleanupAttemptedFileIDs.isEmpty && !noteDeleteAttempted
+            case "drive/files/delete":
+                return createdNoteID == nil && !cleanupAttemptedFileIDs.isEmpty
+            case "notes/delete":
+                return knownFileIDs.count == identity.mediaCount
+                    && createdNoteID != nil && noteDeleteAttempted
+            default:
+                return false
+            }
+        }
+    }
+
+    private static func isSHA256(_ value: String) -> Bool {
+        value.count == 64 && value.allSatisfy { $0.isHexDigit && !$0.isUppercase }
     }
 }
 
@@ -253,8 +355,10 @@ final class MissCatComposeOperationJournal: MissCatComposeOperationJournalStorin
 
     func record(fingerprint: String) -> MissCatComposeOperationRecord? {
         guard let data = defaults.data(forKey: Self.keyPrefix + fingerprint) else { return nil }
-        return (try? JSONDecoder().decode(MissCatComposeOperationRecord.self, from: data))
-            ?? MissCatComposeOperationRecord(fingerprint: fingerprint, phase: .outcomeUnknown)
+        guard let record = try? JSONDecoder().decode(MissCatComposeOperationRecord.self, from: data),
+              record.fingerprint == fingerprint
+        else { return .invalid(fingerprint: fingerprint) }
+        return record
     }
 
     func save(_ record: MissCatComposeOperationRecord) -> Bool {

@@ -358,6 +358,243 @@ final class SharePostServiceTraceTests: XCTestCase {
         XCTAssertNil(journalData.range(of: Data("unknown share body".utf8)))
     }
 
+    func testDisplayMetadataDriftStillBlocksSameShareOperationAfterRelaunch() async throws {
+        let originalUser = SecureUser(
+            userId: "share-drift",
+            username: "before",
+            instance: "drift.example",
+            apiKey: "share-drift-token"
+        )
+        let driftedUser = SecureUser(
+            userId: "share-drift",
+            username: "after",
+            instance: "drift.example",
+            apiKey: "share-drift-token"
+        )
+        let transport = ShareFailingTransport()
+        let journal = ShareMemoryJournal()
+        let draft = ShareDraft(text: "stable share request", imageData: [])
+
+        let originalService = SharePostService(
+            userProvider: { _ in originalUser },
+            transport: transport,
+            journal: journal
+        )
+        do {
+            try await originalService.submit(
+                draft: draft,
+                accountID: originalUser.accountIdentifier,
+                visibility: .home
+            )
+            XCTFail("Expected outcomeUnknown")
+        } catch let error as MissCatNativeComposeAPIError {
+            XCTAssertEqual(error, .outcomeUnknown(endpoint: "notes/create"))
+        }
+
+        let relaunchedService = SharePostService(
+            userProvider: { _ in driftedUser },
+            transport: transport,
+            journal: journal
+        )
+        do {
+            try await relaunchedService.submit(
+                draft: draft,
+                accountID: driftedUser.accountIdentifier,
+                visibility: .home
+            )
+            XCTFail("Expected durable outcomeUnknown")
+        } catch let error as MissCatNativeComposeAPIError {
+            XCTAssertEqual(error, .outcomeUnknown(endpoint: "notes/create"))
+        }
+
+        let requestCount = await transport.requestCount
+        XCTAssertEqual(requestCount, 1)
+    }
+
+    func testMismatchedShareJournalIdentityAndIllegalPhaseRejectBeforeMutation() async throws {
+        let user = SecureUser(
+            userId: "share-bound",
+            username: "cat",
+            instance: "share-bound.example",
+            apiKey: "share-bound-token"
+        )
+        let journal = ShareMemoryJournal()
+        let transport = ShareTraceTransport(responses: [])
+        let model = try PostModel(user: user, transport: transport, journal: journal)
+        let draft = ShareDraft(text: "bound share request", imageData: [])
+        let expected = model.operationIdentity(draft: draft, visibility: .followers)
+        let mismatches = [
+            MissCatComposeOperationRecord.Identity(
+                fingerprint: String(repeating: "0", count: 64),
+                operation: expected.operation,
+                accountIdentifierHash: expected.accountIdentifierHash,
+                instanceOriginHash: expected.instanceOriginHash,
+                mediaCount: expected.mediaCount
+            ),
+            MissCatComposeOperationRecord.Identity(
+                fingerprint: expected.fingerprint,
+                operation: .note,
+                accountIdentifierHash: expected.accountIdentifierHash,
+                instanceOriginHash: expected.instanceOriginHash,
+                mediaCount: expected.mediaCount
+            ),
+            MissCatComposeOperationRecord.Identity(
+                fingerprint: expected.fingerprint,
+                operation: expected.operation,
+                accountIdentifierHash: String(repeating: "1", count: 64),
+                instanceOriginHash: expected.instanceOriginHash,
+                mediaCount: expected.mediaCount
+            ),
+            MissCatComposeOperationRecord.Identity(
+                fingerprint: expected.fingerprint,
+                operation: expected.operation,
+                accountIdentifierHash: expected.accountIdentifierHash,
+                instanceOriginHash: String(repeating: "2", count: 64),
+                mediaCount: expected.mediaCount
+            )
+        ]
+
+        for mismatch in mismatches {
+            journal.set(
+                MissCatComposeOperationRecord(identity: mismatch),
+                for: expected.fingerprint
+            )
+            do {
+                try await model.submitNote(draft: draft, visibility: .followers)
+                XCTFail("Expected mismatched Share identity to fail closed")
+            } catch let error as MissCatNativeComposeAPIError {
+                XCTAssertEqual(error, .outcomeUnknown(endpoint: "journal"))
+            }
+        }
+
+        journal.set(
+            MissCatComposeOperationRecord(identity: expected, phase: .noteCreated),
+            for: expected.fingerprint
+        )
+        do {
+            try await model.submitNote(draft: draft, visibility: .followers)
+            XCTFail("Expected illegal Share phase to fail closed")
+        } catch let error as MissCatNativeComposeAPIError {
+            XCTAssertEqual(error, .outcomeUnknown(endpoint: "journal"))
+        }
+        let requests = await transport.requests
+        XCTAssertTrue(requests.isEmpty)
+    }
+
+    func testShareOrphanDeleteFailurePersistsAndBlocksRelaunch() async throws {
+        let user = SecureUser(
+            userId: "share-orphan",
+            username: "cat",
+            instance: "share-orphan.example",
+            apiKey: "share-orphan-token"
+        )
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 2, height: 2))
+        let imageData = renderer.image { context in
+            UIColor.systemOrange.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 2, height: 2))
+        }.pngData()!
+        let draft = ShareDraft(text: "share cleanup", imageData: [imageData])
+        let transport = ShareTraceTransport(responses: [
+            .success(status: 200, data: Data(#"{"id":"share-orphan-file"}"#.utf8)),
+            .success(status: 422, data: Data(#"{"error":{"code":"INVALID_PARAM"}}"#.utf8)),
+            .failure(.timedOut)
+        ])
+        let journal = ShareMemoryJournal()
+        let service = SharePostService(
+            userProvider: { _ in user },
+            transport: transport,
+            journal: journal
+        )
+
+        do {
+            try await service.submit(
+                draft: draft,
+                accountID: user.accountIdentifier,
+                visibility: .public
+            )
+            XCTFail("Expected server rejection")
+        } catch let error as MissCatNativeComposeAPIError {
+            guard case .server(status: 422, code: "INVALID_PARAM", message: nil, id: nil) = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+        }
+
+        let retained = try XCTUnwrap(journal.records.values.first)
+        XCTAssertEqual(retained.phase, .outcomeUnknown)
+        XCTAssertEqual(retained.uncertainEndpoint, "drive/files/delete")
+        XCTAssertEqual(retained.cleanupAttemptedFileIDs, ["share-orphan-file"])
+        do {
+            try await service.submit(
+                draft: draft,
+                accountID: user.accountIdentifier,
+                visibility: .public
+            )
+            XCTFail("Expected pending cleanup to block relaunch")
+        } catch let error as MissCatNativeComposeAPIError {
+            XCTAssertEqual(error, .outcomeUnknown(endpoint: "drive/files/delete"))
+        }
+        let requests = await transport.requests
+        XCTAssertEqual(requests.map { $0.url?.path }, [
+            "/api/drive/files/create", "/api/notes/create", "/api/drive/files/delete"
+        ])
+    }
+
+    func testShareNoteDeleteFailurePersistsAndBlocksRelaunch() async throws {
+        let user = SecureUser(
+            userId: "share-note-delete",
+            username: "cat",
+            instance: "share-note-delete.example",
+            apiKey: "share-note-delete-token"
+        )
+        let transport = ShareTraceTransport(responses: [
+            .success(status: 200, data: Data(#"{"createdNote":{"id":"share-retained-note"}}"#.utf8)),
+            .failure(.timedOut)
+        ])
+        let journal = ShareMemoryJournal()
+        var service: SharePostService!
+        service = SharePostService(
+            userProvider: { _ in user },
+            transport: transport,
+            journal: journal
+        )
+        let draft = ShareDraft(text: "share note cleanup", imageData: [])
+        journal.onSave = { record in
+            if record.phase == .noteCreated { service.cancelActiveSubmission() }
+        }
+
+        do {
+            try await service.submit(
+                draft: draft,
+                accountID: user.accountIdentifier,
+                visibility: .public
+            )
+            XCTFail("Expected cancellation")
+        } catch is CancellationError {
+            // Compensation was attempted before cancellation returned.
+        }
+        journal.onSave = nil
+
+        let retained = try XCTUnwrap(journal.records.values.first)
+        XCTAssertEqual(retained.phase, .outcomeUnknown)
+        XCTAssertEqual(retained.uncertainEndpoint, "notes/delete")
+        XCTAssertEqual(retained.createdNoteID, "share-retained-note")
+        XCTAssertTrue(retained.noteDeleteAttempted)
+        do {
+            try await service.submit(
+                draft: draft,
+                accountID: user.accountIdentifier,
+                visibility: .public
+            )
+            XCTFail("Expected pending cleanup to block relaunch")
+        } catch let error as MissCatNativeComposeAPIError {
+            XCTAssertEqual(error, .outcomeUnknown(endpoint: "notes/delete"))
+        }
+        let requests = await transport.requests
+        XCTAssertEqual(requests.map { $0.url?.path }, [
+            "/api/notes/create", "/api/notes/delete"
+        ])
+    }
+
     func testShareServiceCancellationReachesActiveTransport() async throws {
         let user = SecureUser(
             userId: "share-cancel",
@@ -461,6 +698,7 @@ private struct UnknownShareError: ShareOutcomeUnknownError, LocalizedError {
 
 private final class ShareMemoryJournal: MissCatComposeOperationJournalStoring {
     private(set) var records: [String: MissCatComposeOperationRecord] = [:]
+    var onSave: ((MissCatComposeOperationRecord) -> Void)?
 
     func record(fingerprint: String) -> MissCatComposeOperationRecord? {
         records[fingerprint]
@@ -468,7 +706,12 @@ private final class ShareMemoryJournal: MissCatComposeOperationJournalStoring {
 
     func save(_ record: MissCatComposeOperationRecord) -> Bool {
         records[record.fingerprint] = record
+        onSave?(record)
         return true
+    }
+
+    func set(_ record: MissCatComposeOperationRecord, for fingerprint: String) {
+        records[fingerprint] = record
     }
 
     func remove(fingerprint: String) -> Bool {
@@ -480,6 +723,7 @@ private final class ShareMemoryJournal: MissCatComposeOperationJournalStoring {
 private actor ShareTraceTransport: MissCatComposeHTTPTransport {
     enum Response: Sendable {
         case success(status: Int, data: Data)
+        case failure(URLError.Code)
     }
 
     private(set) var requests: [URLRequest] = []
@@ -504,6 +748,8 @@ private actor ShareTraceTransport: MissCatComposeHTTPTransport {
                     headerFields: ["Content-Type": "application/json"]
                 )!
             )
+        case let .failure(code):
+            throw URLError(code)
         }
     }
 }

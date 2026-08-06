@@ -709,6 +709,162 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
         XCTAssertEqual(recorder.snapshot().map { $0.request.url?.path }, ["/api/notes/create"])
     }
 
+    func testReplyQuoteAndRenoteMetadataDriftKeepsCanonicalFingerprintAndBlocksRelaunch() async throws {
+        let recorder = ComposeRequestRecorder()
+        ComposeURLProtocolStub.handler = { request in
+            recorder.record(request)
+            throw URLError(.timedOut)
+        }
+        let user = SecureUser(
+            userId: "metadata-user",
+            username: "cat",
+            instance: "metadata.example",
+            apiKey: "metadata-token"
+        )
+        let original = MissCatComposeTarget(
+            id: "target-id",
+            username: "before",
+            instance: "before.example",
+            text: "old display text",
+            avatarURL: URL(string: "https://before.example/avatar.png")
+        )
+        let drifted = MissCatComposeTarget(
+            id: "target-id",
+            username: "after",
+            instance: "after.example",
+            text: "new display text",
+            avatarURL: URL(string: "https://after.example/avatar.png")
+        )
+        let modePairs: [(MissCatComposeMode, MissCatComposeMode)] = [
+            (.reply(original), .reply(drifted)),
+            (.quote(original), .quote(drifted)),
+            (.renote(original), .renote(drifted))
+        ]
+
+        for (index, pair) in modePairs.enumerated() {
+            let journal = MemoryComposeJournal()
+            let service = MissCatComposePostService(
+                userProvider: { _ in user },
+                transport: MissCatComposeURLSessionTransport(session: urlSession),
+                journal: journal
+            )
+            let originalSubmission = makeSubmission(
+                user: user,
+                text: pair.0.isRenote ? "" : "body-\(index)",
+                mode: pair.0
+            )
+            let driftedSubmission = makeSubmission(
+                user: user,
+                text: pair.1.isRenote ? "" : "body-\(index)",
+                mode: pair.1
+            )
+            XCTAssertEqual(
+                service.operationFingerprint(for: originalSubmission),
+                service.operationFingerprint(for: driftedSubmission)
+            )
+
+            for submission in [originalSubmission, driftedSubmission] {
+                do {
+                    try await service.submit(submission) { _ in }
+                    XCTFail("Expected durable outcomeUnknown")
+                } catch let error as MissCatNativeComposeAPIError {
+                    XCTAssertEqual(error, .outcomeUnknown(endpoint: "notes/create"))
+                }
+            }
+        }
+
+        XCTAssertEqual(recorder.snapshot().count, modePairs.count)
+    }
+
+    func testMismatchedJournalIdentityAndIllegalPhaseRejectBeforeNetworkMutation() async throws {
+        let recorder = ComposeRequestRecorder()
+        ComposeURLProtocolStub.handler = { request in
+            recorder.record(request)
+            return (200, Data(#"{"createdNote":{"id":"must-not-exist"}}"#.utf8))
+        }
+        let user = SecureUser(
+            userId: "bound-user",
+            username: "cat",
+            instance: "bound.example",
+            apiKey: "bound-token"
+        )
+        let submission = makeSubmission(user: user, text: "bound request")
+        let scope = try MissCatComposeAccountScope(
+            accountID: user.accountIdentifier,
+            instance: user.instance,
+            accessToken: "bound-token"
+        )
+        let journal = MemoryComposeJournal()
+        let service = MissCatComposePostService(
+            userProvider: { _ in user },
+            transport: MissCatComposeURLSessionTransport(session: urlSession),
+            journal: journal
+        )
+        let expected = service.operationIdentity(for: submission, scope: scope)
+        let mismatches = [
+            MissCatComposeOperationRecord.Identity(
+                fingerprint: String(repeating: "0", count: 64),
+                operation: expected.operation,
+                accountIdentifierHash: expected.accountIdentifierHash,
+                instanceOriginHash: expected.instanceOriginHash,
+                mediaCount: expected.mediaCount
+            ),
+            MissCatComposeOperationRecord.Identity(
+                fingerprint: expected.fingerprint,
+                operation: .reply,
+                accountIdentifierHash: expected.accountIdentifierHash,
+                instanceOriginHash: expected.instanceOriginHash,
+                mediaCount: expected.mediaCount
+            ),
+            MissCatComposeOperationRecord.Identity(
+                fingerprint: expected.fingerprint,
+                operation: expected.operation,
+                accountIdentifierHash: String(repeating: "1", count: 64),
+                instanceOriginHash: expected.instanceOriginHash,
+                mediaCount: expected.mediaCount
+            ),
+            MissCatComposeOperationRecord.Identity(
+                fingerprint: expected.fingerprint,
+                operation: expected.operation,
+                accountIdentifierHash: expected.accountIdentifierHash,
+                instanceOriginHash: String(repeating: "2", count: 64),
+                mediaCount: expected.mediaCount
+            ),
+            MissCatComposeOperationRecord.Identity(
+                fingerprint: expected.fingerprint,
+                operation: expected.operation,
+                accountIdentifierHash: expected.accountIdentifierHash,
+                instanceOriginHash: expected.instanceOriginHash,
+                mediaCount: 1
+            )
+        ]
+
+        for mismatch in mismatches {
+            journal.set(
+                MissCatComposeOperationRecord(identity: mismatch),
+                for: expected.fingerprint
+            )
+            do {
+                try await service.submit(submission) { _ in }
+                XCTFail("Expected mismatched identity to fail closed")
+            } catch let error as MissCatNativeComposeAPIError {
+                XCTAssertEqual(error, .outcomeUnknown(endpoint: "journal"))
+            }
+        }
+
+        journal.set(
+            MissCatComposeOperationRecord(identity: expected, phase: .noteCreated),
+            for: expected.fingerprint
+        )
+        do {
+            try await service.submit(submission) { _ in }
+            XCTFail("Expected illegal phase to fail closed")
+        } catch let error as MissCatNativeComposeAPIError {
+            XCTAssertEqual(error, .outcomeUnknown(endpoint: "journal"))
+        }
+        XCTAssertTrue(recorder.snapshot().isEmpty)
+    }
+
     func testSafeRelaunchReusesKnownUploadIDWithoutUploadingAgain() async throws {
         let recorder = ComposeRequestRecorder()
         ComposeURLProtocolStub.handler = { request in
@@ -739,9 +895,14 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
                 )
             ]
         )
-        let fingerprint = service.operationFingerprint(for: submission)
+        let scope = try MissCatComposeAccountScope(
+            accountID: user.accountIdentifier,
+            instance: user.instance,
+            accessToken: "resume-token"
+        )
+        let identity = service.operationIdentity(for: submission, scope: scope)
         XCTAssertTrue(journal.save(MissCatComposeOperationRecord(
-            fingerprint: fingerprint,
+            identity: identity,
             phase: .uploading,
             knownFileIDs: ["known-file"]
         )))
@@ -808,6 +969,77 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
         XCTAssertEqual(try requests[2].jsonBody["fileId"] as? String, "orphan-file")
     }
 
+    func testOrphanDeleteFailureStaysPendingAndBlocksCleanupAndRepostAfterRelaunch() async throws {
+        let recorder = ComposeRequestRecorder()
+        ComposeURLProtocolStub.handler = { request in
+            recorder.record(request)
+            switch request.url?.path {
+            case "/api/drive/files/create":
+                return (200, Data(#"{"id":"retained-orphan"}"#.utf8))
+            case "/api/notes/create":
+                return (422, Data(#"{"error":{"code":"INVALID_PARAM"}}"#.utf8))
+            case "/api/drive/files/delete":
+                throw URLError(.timedOut)
+            default:
+                return (404, Data())
+            }
+        }
+        let user = SecureUser(
+            userId: "orphan-delete-user",
+            username: "cat",
+            instance: "orphan-delete.example",
+            apiKey: "orphan-delete-token"
+        )
+        let journal = MemoryComposeJournal()
+        let submission = makeSubmission(
+            user: user,
+            text: "cleanup must persist",
+            media: [
+                MissCatComposeMedia(
+                    kind: .image,
+                    data: makeValidJPEG(red: 1, green: 0),
+                    filename: "orphan.jpeg",
+                    mimeType: "image/jpeg"
+                )
+            ]
+        )
+        let firstService = MissCatComposePostService(
+            userProvider: { _ in user },
+            transport: MissCatComposeURLSessionTransport(session: urlSession),
+            journal: journal
+        )
+
+        do {
+            try await firstService.submit(submission) { _ in }
+            XCTFail("Expected server rejection")
+        } catch let error as MissCatNativeComposeAPIError {
+            guard case .server(status: 422, code: "INVALID_PARAM", message: nil, id: nil) = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+        }
+
+        let fingerprint = firstService.operationFingerprint(for: submission)
+        let retained = try XCTUnwrap(journal.record(fingerprint: fingerprint))
+        XCTAssertEqual(retained.phase, .outcomeUnknown)
+        XCTAssertEqual(retained.uncertainEndpoint, "drive/files/delete")
+        XCTAssertEqual(retained.cleanupAttemptedFileIDs, ["retained-orphan"])
+
+        let relaunched = MissCatComposePostService(
+            userProvider: { _ in user },
+            transport: MissCatComposeURLSessionTransport(session: urlSession),
+            journal: journal
+        )
+        do {
+            try await relaunched.submit(submission) { _ in }
+            XCTFail("Expected pending cleanup to block relaunch")
+        } catch let error as MissCatNativeComposeAPIError {
+            XCTAssertEqual(error, .outcomeUnknown(endpoint: "drive/files/delete"))
+        }
+        XCTAssertEqual(recorder.snapshot().map { $0.request.url?.path }, [
+            "/api/drive/files/create", "/api/notes/create", "/api/drive/files/delete"
+        ])
+    }
+
     func testCancellationAfterKnownNoteIDDeletesNoteExactlyOnce() async throws {
         let recorder = ComposeRequestRecorder()
         ComposeURLProtocolStub.handler = { request in
@@ -844,6 +1076,64 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
         let requests = recorder.snapshot()
         XCTAssertEqual(requests.map { $0.request.url?.path }, ["/api/notes/create", "/api/notes/delete"])
         XCTAssertEqual(try requests[1].jsonBody["noteId"] as? String, "known-note")
+    }
+
+    func testNoteDeleteFailureStaysPendingAndBlocksDeleteAndRepostAfterRelaunch() async throws {
+        let recorder = ComposeRequestRecorder()
+        ComposeURLProtocolStub.handler = { request in
+            recorder.record(request)
+            if request.url?.path == "/api/notes/create" {
+                return (200, Data(#"{"createdNote":{"id":"retained-note"}}"#.utf8))
+            }
+            throw URLError(.timedOut)
+        }
+        let user = SecureUser(
+            userId: "note-delete-user",
+            username: "cat",
+            instance: "note-delete.example",
+            apiKey: "note-delete-token"
+        )
+        let journal = MemoryComposeJournal()
+        var firstService: MissCatComposePostService!
+        firstService = MissCatComposePostService(
+            userProvider: { _ in user },
+            transport: MissCatComposeURLSessionTransport(session: urlSession),
+            journal: journal
+        )
+        let submission = makeSubmission(user: user, text: "note cleanup must persist")
+        journal.onSave = { record in
+            if record.phase == .noteCreated { firstService.cancelActiveSubmission() }
+        }
+
+        do {
+            try await firstService.submit(submission) { _ in }
+            XCTFail("Expected cancellation")
+        } catch is CancellationError {
+            // The cancellation is returned only after compensation is attempted.
+        }
+        journal.onSave = nil
+
+        let fingerprint = firstService.operationFingerprint(for: submission)
+        let retained = try XCTUnwrap(journal.record(fingerprint: fingerprint))
+        XCTAssertEqual(retained.phase, .outcomeUnknown)
+        XCTAssertEqual(retained.uncertainEndpoint, "notes/delete")
+        XCTAssertEqual(retained.createdNoteID, "retained-note")
+        XCTAssertTrue(retained.noteDeleteAttempted)
+
+        let relaunched = MissCatComposePostService(
+            userProvider: { _ in user },
+            transport: MissCatComposeURLSessionTransport(session: urlSession),
+            journal: journal
+        )
+        do {
+            try await relaunched.submit(submission) { _ in }
+            XCTFail("Expected pending note cleanup to block relaunch")
+        } catch let error as MissCatNativeComposeAPIError {
+            XCTAssertEqual(error, .outcomeUnknown(endpoint: "notes/delete"))
+        }
+        XCTAssertEqual(recorder.snapshot().map { $0.request.url?.path }, [
+            "/api/notes/create", "/api/notes/delete"
+        ])
     }
 
     func testSameBareUserIDDifferentInstanceBindsExactOriginAndToken() async throws {
@@ -911,10 +1201,17 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let journal = MissCatComposeOperationJournal(defaults: defaults)
-        let fingerprint = "fixture-fingerprint"
+        let fingerprint = String(repeating: "a", count: 64)
         let key = "native-compose-operation-v1.\(fingerprint)"
-        let record = MissCatComposeOperationRecord(
+        let identity = MissCatComposeOperationRecord.Identity(
             fingerprint: fingerprint,
+            operation: .note,
+            accountIdentifierHash: String(repeating: "b", count: 64),
+            instanceOriginHash: String(repeating: "c", count: 64),
+            mediaCount: 1
+        )
+        let record = MissCatComposeOperationRecord(
+            identity: identity,
             phase: .uploading,
             knownFileIDs: ["known-file-id"]
         )
@@ -925,11 +1222,30 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
         XCTAssertNil(stored.range(of: Data("private-draft-body".utf8)))
         XCTAssertNil(stored.range(of: Data("private-access-token".utf8)))
 
+        let otherFingerprint = String(repeating: "d", count: 64)
+        let mismatched = MissCatComposeOperationRecord(
+            identity: MissCatComposeOperationRecord.Identity(
+                fingerprint: otherFingerprint,
+                operation: .note,
+                accountIdentifierHash: identity.accountIdentifierHash,
+                instanceOriginHash: identity.instanceOriginHash,
+                mediaCount: 1
+            ),
+            phase: .uploading,
+            knownFileIDs: ["known-file-id"]
+        )
+        defaults.set(try JSONEncoder().encode(mismatched), forKey: key)
+        XCTAssertTrue(defaults.synchronize())
+        XCTAssertEqual(
+            journal.record(fingerprint: fingerprint),
+            MissCatComposeOperationRecord.invalid(fingerprint: fingerprint)
+        )
+
         defaults.set(Data("not-json".utf8), forKey: key)
         XCTAssertTrue(defaults.synchronize())
         XCTAssertEqual(
             journal.record(fingerprint: fingerprint),
-            MissCatComposeOperationRecord(fingerprint: fingerprint, phase: .outcomeUnknown)
+            MissCatComposeOperationRecord.invalid(fingerprint: fingerprint)
         )
         XCTAssertTrue(journal.remove(fingerprint: fingerprint))
         XCTAssertNil(defaults.data(forKey: key))
@@ -946,11 +1262,12 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
     private func makeSubmission(
         user: SecureUser,
         text: String,
-        media: [MissCatComposeMedia] = []
+        media: [MissCatComposeMedia] = [],
+        mode: MissCatComposeMode = .note
     ) -> MissCatComposeSubmission {
         MissCatComposeSubmission(
             accountID: user.accountIdentifier,
-            mode: .note,
+            mode: mode,
             text: text,
             contentWarning: nil,
             visibility: .public,
@@ -1427,6 +1744,10 @@ private final class MemoryComposeJournal: MissCatComposeOperationJournalStoring 
         records[record.fingerprint] = record
         onSave?(record)
         return true
+    }
+
+    func set(_ record: MissCatComposeOperationRecord, for fingerprint: String) {
+        records[fingerprint] = record
     }
 
     func remove(fingerprint: String) -> Bool {

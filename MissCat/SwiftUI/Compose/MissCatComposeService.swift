@@ -140,8 +140,9 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
             timeout: requestTimeout
         )
 
-        let fingerprint = operationFingerprint(for: submission)
-        var record = try resumableRecord(fingerprint: fingerprint)
+        let identity = operationIdentity(for: submission, scope: scope)
+        let fingerprint = identity.fingerprint
+        var record = try resumableRecord(identity: identity)
 
         do {
             var fileIDs = Array(record.knownFileIDs.prefix(submission.media.count))
@@ -152,6 +153,7 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
                 try Task.checkCancellation()
                 let upload = try await preparedUpload(for: media)
                 record.phase = .uploadRequestStarted
+                record.uncertainEndpoint = nil
                 try saveJournal(record)
                 let fileID = try await client.upload(
                     MissCatComposeAPIUpload(
@@ -165,6 +167,7 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
                 fileIDs.append(fileID)
                 record.knownFileIDs = fileIDs
                 record.phase = .uploading
+                record.uncertainEndpoint = nil
                 try saveJournal(record)
                 progress(MissCatComposeUploadProgress(completed: index + 1, total: submission.media.count))
             }
@@ -178,9 +181,11 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
                 )
             }
             record.phase = .readyToCreateNote
+            record.uncertainEndpoint = nil
             try saveJournal(record)
             try Task.checkCancellation()
             record.phase = .noteRequestStarted
+            record.uncertainEndpoint = nil
             try saveJournal(record)
             let noteID = try await client.createNote(
                 MissCatComposeAPINote(
@@ -200,49 +205,68 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
             )
             record.createdNoteID = noteID
             record.phase = .noteCreated
+            record.uncertainEndpoint = nil
             try saveJournal(record)
             try Task.checkCancellation()
-            journal.remove(fingerprint: fingerprint)
+            guard journal.remove(fingerprint: fingerprint) else {
+                throw MissCatNativeComposeAPIError.journalUnavailable
+            }
         } catch let error as MissCatNativeComposeAPIError {
             if case let .outcomeUnknown(endpoint) = error {
                 record.phase = .outcomeUnknown
+                record.uncertainEndpoint = endpoint
                 _ = journal.save(record)
-                if endpoint == "drive/files/create" {
-                    _ = await compensateOrClean(record: &record, client: client)
-                    record.phase = .outcomeUnknown
-                    _ = journal.save(record)
-                }
             } else {
                 let cleanupIsUnknown = await compensateOrClean(record: &record, client: client)
-                if !cleanupIsUnknown { journal.remove(fingerprint: fingerprint) }
+                if !cleanupIsUnknown { _ = journal.remove(fingerprint: fingerprint) }
             }
             throw error
         } catch {
             let cleanupIsUnknown = await compensateOrClean(record: &record, client: client)
-            if !cleanupIsUnknown { journal.remove(fingerprint: fingerprint) }
+            if !cleanupIsUnknown { _ = journal.remove(fingerprint: fingerprint) }
             throw error
         }
     }
 
-    private func resumableRecord(fingerprint: String) throws -> MissCatComposeOperationRecord {
-        guard var existing = journal.record(fingerprint: fingerprint) else {
-            let record = MissCatComposeOperationRecord(fingerprint: fingerprint)
+    private func resumableRecord(
+        identity: MissCatComposeOperationRecord.Identity
+    ) throws -> MissCatComposeOperationRecord {
+        guard var existing = journal.record(fingerprint: identity.fingerprint) else {
+            let record = MissCatComposeOperationRecord(identity: identity)
             try saveJournal(record)
             return record
         }
+        guard existing.isValid(for: identity) else {
+            let blocked = MissCatComposeOperationRecord(
+                identity: identity,
+                phase: .outcomeUnknown,
+                uncertainEndpoint: "journal"
+            )
+            _ = journal.save(blocked)
+            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: "journal")
+        }
         switch existing.phase {
         case .outcomeUnknown:
-            existing.phase = .outcomeUnknown
             _ = journal.save(existing)
-            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: "notes/create")
+            throw MissCatNativeComposeAPIError.outcomeUnknown(
+                endpoint: existing.uncertainEndpoint ?? "journal"
+            )
         case .uploadRequestStarted:
             existing.phase = .outcomeUnknown
+            existing.uncertainEndpoint = "drive/files/create"
             _ = journal.save(existing)
             throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: "drive/files/create")
         case .noteRequestStarted:
             existing.phase = .outcomeUnknown
+            existing.uncertainEndpoint = "notes/create"
             _ = journal.save(existing)
             throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: "notes/create")
+        case .cleanupPending:
+            let endpoint = existing.createdNoteID == nil ? "drive/files/delete" : "notes/delete"
+            existing.phase = .outcomeUnknown
+            existing.uncertainEndpoint = endpoint
+            _ = journal.save(existing)
+            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: endpoint)
         case .noteCreated:
             throw MissCatNativeComposeAPIError.alreadyCreated
         case .preparing, .uploading, .readyToCreateNote:
@@ -263,11 +287,14 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
         if let noteID = record.createdNoteID {
             guard !record.noteDeleteAttempted else { return true }
             record.noteDeleteAttempted = true
+            record.phase = .cleanupPending
+            record.uncertainEndpoint = nil
             guard journal.save(record) else { return true }
             let cleanup = Task { try await client.deleteNote(id: noteID) }
             if (try? await cleanup.value) == nil {
                 record.phase = .outcomeUnknown
-                journal.save(record)
+                record.uncertainEndpoint = "notes/delete"
+                _ = journal.save(record)
                 return true
             }
             return false
@@ -275,9 +302,16 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
 
         for fileID in record.knownFileIDs where !record.cleanupAttemptedFileIDs.contains(fileID) {
             record.cleanupAttemptedFileIDs.append(fileID)
+            record.phase = .cleanupPending
+            record.uncertainEndpoint = nil
             guard journal.save(record) else { return true }
             let cleanup = Task { try await client.deleteFile(id: fileID) }
-            _ = try? await cleanup.value
+            if (try? await cleanup.value) == nil {
+                record.phase = .outcomeUnknown
+                record.uncertainEndpoint = "drive/files/delete"
+                _ = journal.save(record)
+                return true
+            }
         }
         return false
     }
@@ -285,7 +319,7 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
     func operationFingerprint(for submission: MissCatComposeSubmission) -> String {
         var parts = [
             Data(submission.accountID.utf8),
-            Data(String(describing: submission.mode).utf8),
+            Data(operation(for: submission.mode).rawValue.utf8),
             Data(submission.text.utf8),
             Data((submission.contentWarning ?? "").utf8),
             Data(submission.visibility.rawValue.utf8),
@@ -303,6 +337,30 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
             parts.append(Data("\(poll.allowsMultiple)|\(poll.expiresAtMilliseconds ?? -1)|\(poll.expiresAfterMilliseconds ?? -1)".utf8))
         }
         return MissCatComposeOperationFingerprint.make(parts: parts)
+    }
+
+    func operationIdentity(
+        for submission: MissCatComposeSubmission,
+        scope: MissCatComposeAccountScope
+    ) -> MissCatComposeOperationRecord.Identity {
+        MissCatComposeOperationRecord.Identity(
+            fingerprint: operationFingerprint(for: submission),
+            operation: operation(for: submission.mode),
+            accountIdentifierHash: MissCatComposeOperationFingerprint.accountHash(submission.accountID),
+            instanceOriginHash: MissCatComposeOperationFingerprint.make(parts: [Data(scope.origin.absoluteString.utf8)]),
+            mediaCount: submission.media.count
+        )
+    }
+
+    private func operation(
+        for mode: MissCatComposeMode
+    ) -> MissCatComposeOperationRecord.Identity.Operation {
+        switch mode {
+        case .note: .note
+        case .reply: .reply
+        case .quote: .quote
+        case .renote: .renote
+        }
     }
 
     private func preparedUpload(for media: MissCatComposeMedia) async throws -> (data: Data, mimeType: String, filename: String) {
