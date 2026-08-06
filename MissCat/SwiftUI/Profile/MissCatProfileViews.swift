@@ -789,7 +789,7 @@ public struct MissCatProfileEditorScreen: View {
             if let profile { onSaved(profile) }
         }
         .sheet(item: $cameraTarget) { target in
-            MissCatCameraPicker { data in
+            MissCatProfileCameraPicker { data in
                 apply(data, target: target)
                 cameraTarget = nil
             } onCancel: {
@@ -880,7 +880,7 @@ public struct MissCatProfileEditorScreen: View {
     }
 }
 
-public struct MissCatCameraPicker: UIViewControllerRepresentable {
+public struct MissCatProfileCameraPicker: UIViewControllerRepresentable {
     public let onImage: (Data?) -> Void
     public let onCancel: () -> Void
 
@@ -901,8 +901,8 @@ public struct MissCatCameraPicker: UIViewControllerRepresentable {
     public func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
 
     public final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        private let parent: MissCatCameraPicker
-        init(parent: MissCatCameraPicker) { self.parent = parent }
+        private let parent: MissCatProfileCameraPicker
+        init(parent: MissCatProfileCameraPicker) { self.parent = parent }
 
         public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
             let image = info[.originalImage] as? UIImage
