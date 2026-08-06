@@ -66,6 +66,8 @@ struct ShareCredentialReadProof: Equatable, Sendable, CustomStringConvertible {
 
 enum ShareCredentialReadProbe {
     static let launchArgument = "--misscat-share-credential-proof"
+    static let appGroup = "group.yuwd.MissCat"
+    static let requestKey = "share-credential-proof.requested"
     static let resultKey = "share-credential-proof.available"
     static let accountHashKey = "share-credential-proof.account-hash"
 

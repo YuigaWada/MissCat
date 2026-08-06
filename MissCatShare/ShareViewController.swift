@@ -11,6 +11,11 @@ final class ShareViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+#if DEBUG
+        if installCredentialReadProofIfRequested() {
+            return
+        }
+#endif
         installSwiftUIComposer()
         loadSharedContent()
     }
@@ -27,19 +32,6 @@ final class ShareViewController: UIViewController {
         let visibility = userModel.getCurrentVisibility()
             .flatMap { ShareVisibility(rawValue: $0.rawValue) }
             ?? .public
-
-#if DEBUG
-        ShareCredentialReadProbe.invokeIfRequested(
-            arguments: ProcessInfo.processInfo.arguments,
-            accountIdentifier: selectedAccountID,
-            read: userModel.credentialReadProof(accountIdentifier:),
-            store: { proof in
-                let defaults = UserDefaults(suiteName: MissCatComposeOperationJournal.appGroup) ?? .standard
-                defaults.set(proof.credentialAvailable, forKey: ShareCredentialReadProbe.resultKey)
-                defaults.set(proof.accountIdentifierHash, forKey: ShareCredentialReadProbe.accountHashKey)
-            }
-        )
-#endif
 
         let viewModel = ShareComposerViewModel(
             accounts: accounts,
@@ -69,6 +61,61 @@ final class ShareViewController: UIViewController {
         ])
         hostingController.didMove(toParent: self)
     }
+
+#if DEBUG
+    /// Runs inside the signed Share extension process. The app-group flag is
+    /// used because extension processes do not inherit the containing app's
+    /// launch arguments. Neither the credential nor the raw account ID crosses
+    /// this boundary.
+    private func installCredentialReadProofIfRequested() -> Bool {
+        guard let defaults = UserDefaults(suiteName: ShareCredentialReadProbe.appGroup),
+              defaults.bool(forKey: ShareCredentialReadProbe.requestKey)
+        else { return false }
+
+        var proof: ShareCredentialReadProof?
+        let invoked = ShareCredentialReadProbe.invokeIfRequested(
+            arguments: ProcessInfo.processInfo.arguments + [ShareCredentialReadProbe.launchArgument],
+            accountIdentifier: userModel.getCurrentUserId(),
+            read: userModel.credentialReadProof(accountIdentifier:),
+            store: { proof = $0 }
+        )
+        guard invoked, let proof else { return false }
+
+        defaults.set(proof.credentialAvailable, forKey: ShareCredentialReadProbe.resultKey)
+        defaults.set(proof.accountIdentifierHash, forKey: ShareCredentialReadProbe.accountHashKey)
+        defaults.synchronize()
+
+        let title = UILabel()
+        title.font = .preferredFont(forTextStyle: .headline)
+        title.text = "Shared Keychain proof"
+
+        let available = UILabel()
+        available.accessibilityIdentifier = "share-keychain-proof.available"
+        available.font = .monospacedSystemFont(ofSize: 17, weight: .regular)
+        available.text = proof.credentialAvailable ? "true" : "false"
+
+        let accountHash = UILabel()
+        accountHash.accessibilityIdentifier = "share-keychain-proof.account-hash"
+        accountHash.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        accountHash.numberOfLines = 0
+        accountHash.text = proof.accountIdentifierHash
+
+        let stack = UIStackView(arrangedSubviews: [title, available, accountHash])
+        stack.axis = .vertical
+        stack.alignment = .fill
+        stack.spacing = 16
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        view.backgroundColor = .systemBackground
+        view.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 24),
+            stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -24),
+            stack.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor)
+        ])
+        return true
+    }
+#endif
 
     private func loadSharedContent() {
         guard terminalArbiter.terminal == nil, let viewModel else { return }
