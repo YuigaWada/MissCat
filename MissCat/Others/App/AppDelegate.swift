@@ -26,7 +26,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        
+
+#if DEBUG
+        // Automated tests must not trigger notification permission UI,
+        // Firebase registration, or saved-account network side effects. The
+        // ordinary application launch path below remains unchanged.
+        if MissCatNoteDetailFixtureConfiguration.isAutomatedTestRun {
+            setupMissCat()
+            return true
+        }
+#endif
+
         setupMissCat()
         setupFirebase()
         setupNotifications(with: application)

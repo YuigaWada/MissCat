@@ -150,7 +150,20 @@ final class ApplicationState: ObservableObject {
 struct MissCatRootView: View {
     @EnvironmentObject private var applicationState: ApplicationState
 
+    @ViewBuilder
     var body: some View {
+#if DEBUG
+        if MissCatNoteDetailFixtureConfiguration.isEnabled {
+            MissCatNoteDetailFixtureRoot()
+        } else {
+            applicationRoot
+        }
+#else
+        applicationRoot
+#endif
+    }
+
+    private var applicationRoot: some View {
         ZStack {
             switch applicationState.root {
             case .resolvingSession:

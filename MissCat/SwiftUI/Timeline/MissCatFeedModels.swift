@@ -14,6 +14,10 @@ public struct MissCatFeedSession: Equatable, Sendable {
         self.instance = instance
         self.apiKey = apiKey
     }
+
+    public var compositeAccountID: String {
+        MissCatAccountIdentity.storageKey(instance: instance, userId: accountID)
+    }
 }
 
 public enum MissCatFeedSource: Equatable, Sendable {
@@ -49,6 +53,11 @@ public enum MissCatFeedSource: Equatable, Sendable {
         case .home, .local, .social, .global: true
         case .favorites, .search, .hashtag, .noteDetail: false
         }
+    }
+
+    public var isNoteDetail: Bool {
+        if case .noteDetail = self { return true }
+        return false
     }
 }
 
@@ -282,6 +291,8 @@ public enum MissCatFeedAction: Equatable, Sendable {
     case removeReaction(noteID: String)
     case renote(noteID: String)
     case vote(noteID: String, choice: Int)
+    case delete(noteID: String)
+    case mute(userID: String)
 }
 
 public enum MissCatRealtimeEvent: Equatable, Sendable {

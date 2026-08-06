@@ -98,7 +98,7 @@ struct MissCatFeedRealtimeConfiguration: Equatable, Sendable {
 typealias MissCatFeedReconnectSleep = @Sendable (UInt64) async throws -> Void
 
 /// Account-scoped current Misskey REST and native WebSocket adapter.
-public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
+public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
     private let account: MissCatFeedSession
     private let urlSession: URLSession
     private let encoder = JSONEncoder()
@@ -339,7 +339,68 @@ public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
                 "notes/polls/vote",
                 body: FeedVoteRequest(i: account.apiKey, noteId: noteID, choice: choice)
             )
+        case let .delete(noteID):
+            try await postWrite(
+                "notes/delete",
+                body: FeedNoteRequest(i: account.apiKey, noteId: noteID)
+            )
+        case let .mute(userID):
+            try await postWrite(
+                "mute/create",
+                body: FeedUserRequest(i: account.apiKey, userId: userID)
+            )
         }
+    }
+
+    public var accountIdentifier: String { account.compositeAccountID }
+    public var currentServerUserID: String { account.accountID }
+
+    public func notePermalink(noteID: String) -> URL? {
+        guard let origin = try? normalizedInstanceOrigin() else { return nil }
+        return origin.appendingPathComponent("notes").appendingPathComponent(noteID)
+    }
+
+    public func fetchURLPreview(for url: URL) async throws -> MissCatURLPreview {
+        guard let scheme = url.scheme?.lowercased(), scheme == "https" || scheme == "http" else {
+            throw MissCatURLPreviewError.unsupportedURL
+        }
+        let origin = try normalizedInstanceOrigin()
+        guard var components = URLComponents(
+            url: origin.appendingPathComponent("url"),
+            resolvingAgainstBaseURL: false
+        ) else { throw MissCatURLPreviewError.invalidInstance }
+        components.queryItems = [URLQueryItem(name: "url", value: url.absoluteString)]
+        guard let endpoint = components.url else { throw MissCatURLPreviewError.invalidInstance }
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 20
+        request.setValue("MissCat/SwiftUI", forHTTPHeaderField: "User-Agent")
+        let (data, response) = try await urlSession.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw MissCatURLPreviewError.invalidResponse
+        }
+        guard (200 ..< 300).contains(http.statusCode) else {
+            throw MissCatURLPreviewError.http(http.statusCode)
+        }
+        let dto: FeedURLPreviewDTO
+        do {
+            dto = try decoder.decode(FeedURLPreviewDTO.self, from: data)
+        } catch {
+            throw MissCatURLPreviewError.invalidResponse
+        }
+        let resolvedURL = dto.url.flatMap(URL.init(string:)) ?? url
+        return MissCatURLPreview(
+            sourceURL: url,
+            resolvedURL: resolvedURL,
+            title: dto.title?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+                ?? resolvedURL.host
+                ?? url.absoluteString,
+            description: dto.description ?? "",
+            siteName: dto.sitename,
+            imageURL: dto.thumbnail.flatMap(URL.init(string:)),
+            isSensitive: dto.sensitive ?? false
+        )
     }
 
     private func post<Request: Encodable, Response: Decodable>(
@@ -385,6 +446,25 @@ public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("MissCat/SwiftUI", forHTTPHeaderField: "User-Agent")
         return request
+    }
+
+    private func normalizedInstanceOrigin() throws -> URL {
+        let raw = account.instance.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty else { throw MissCatURLPreviewError.invalidInstance }
+        let normalized = raw.contains("://") ? raw : "https://\(raw)"
+        guard let components = URLComponents(string: normalized),
+              components.user == nil,
+              components.password == nil,
+              components.query == nil,
+              components.fragment == nil,
+              let scheme = components.scheme?.lowercased(),
+              scheme == "https" || scheme == "http",
+              let host = components.host,
+              !host.isEmpty,
+              let origin = components.url else {
+            throw MissCatURLPreviewError.invalidInstance
+        }
+        return origin
     }
 
     private func makeStreamingRequest() throws -> URLRequest {
@@ -918,6 +998,24 @@ private struct FeedVoteRequest: Encodable {
     let i: String
     let noteId: String
     let choice: Int
+}
+
+private struct FeedUserRequest: Encodable {
+    let i: String
+    let userId: String
+}
+
+private struct FeedURLPreviewDTO: Decodable {
+    let title: String?
+    let description: String?
+    let thumbnail: String?
+    let sitename: String?
+    let sensitive: Bool?
+    let url: String?
+}
+
+private extension String {
+    var nilIfEmpty: String? { isEmpty ? nil : self }
 }
 
 private struct FeedFavoriteDTO: Decodable {
