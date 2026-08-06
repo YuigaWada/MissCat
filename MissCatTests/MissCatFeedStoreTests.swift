@@ -14,6 +14,9 @@ final class MockMissCatFeedRepository: MissCatFeedRepository {
     var performedActions: [MissCatFeedAction] = []
     var fetchError: Error?
     var actionError: Error?
+    var actionErrorsByIndex: [Int: Error] = [:]
+    var failingActions: [MissCatFeedAction] = []
+    var actionDelayNanoseconds: UInt64 = 0
     var realtimeContinuation: AsyncStream<MissCatRealtimeEvent>.Continuation?
 
     func fetchPage(
@@ -41,6 +44,12 @@ final class MockMissCatFeedRepository: MissCatFeedRepository {
 
     func perform(_ action: MissCatFeedAction) async throws {
         performedActions.append(action)
+        let actionIndex = performedActions.count - 1
+        if actionDelayNanoseconds > 0 {
+            try await Task.sleep(nanoseconds: actionDelayNanoseconds)
+        }
+        if let actionError = actionErrorsByIndex[actionIndex] { throw actionError }
+        if failingActions.contains(action) { throw TestFeedError.failed }
         if let actionError { throw actionError }
     }
 }
@@ -172,6 +181,146 @@ final class MissCatFeedStoreTests: XCTestCase {
         XCTAssertEqual(store.notes.first?.myReaction, "❤️")
         XCTAssertEqual(store.notes.first?.reactions.map(\.name), ["👍", "❤️"])
         XCTAssertEqual(store.notes.first?.reactions.first?.count, 1)
+    }
+
+    func testSwitchingReactionKeepsServerReconciledStateWhenAddFailsAfterRemove() async {
+        let repository = MockMissCatFeedRepository()
+        var reacted = note("one")
+        reacted.myReaction = "👍"
+        reacted.reactions = [.init(name: "👍", count: 2, isMine: true)]
+        repository.pages = [.init(notes: [reacted], hasMore: false)]
+        repository.actionErrorsByIndex = [1: TestFeedError.failed]
+        let store = MissCatFeedStore(source: .home, repository: repository)
+        await store.loadInitial()
+
+        await store.toggleReaction(noteID: "one", reaction: "❤️")
+
+        XCTAssertEqual(
+            repository.performedActions,
+            [.removeReaction(noteID: "one"), .addReaction(noteID: "one", reaction: "❤️")]
+        )
+        XCTAssertNil(store.notes.first?.myReaction)
+        XCTAssertEqual(store.notes.first?.reactions.map(\.name), ["👍"])
+        XCTAssertEqual(store.notes.first?.reactions.first?.count, 1)
+        XCTAssertEqual(store.actionErrorMessage, "test failure")
+    }
+
+    func testRapidDuplicateMutationsSubmitEachActionAtMostOnce() async {
+        let repository = MockMissCatFeedRepository()
+        var pollNote = note("one")
+        pollNote.poll = MissCatPoll(
+            choices: [.init(id: 0, text: "yes", votes: 0)],
+            allowsMultipleChoices: false
+        )
+        repository.pages = [.init(notes: [pollNote], hasMore: false)]
+        repository.actionDelayNanoseconds = 50_000_000
+        let store = MissCatFeedStore(source: .home, repository: repository)
+        await store.loadInitial()
+
+        async let favoriteA: Void = store.toggleFavorite(noteID: "one")
+        async let favoriteB: Void = store.toggleFavorite(noteID: "one")
+        _ = await (favoriteA, favoriteB)
+
+        async let reactionA: Void = store.toggleReaction(noteID: "one", reaction: "👍")
+        async let reactionB: Void = store.toggleReaction(noteID: "one", reaction: "👍")
+        _ = await (reactionA, reactionB)
+
+        async let renoteA: Void = store.renote(noteID: "one")
+        async let renoteB: Void = store.renote(noteID: "one")
+        _ = await (renoteA, renoteB)
+
+        async let voteA: Void = store.vote(noteID: "one", choice: 0)
+        async let voteB: Void = store.vote(noteID: "one", choice: 0)
+        _ = await (voteA, voteB)
+
+        XCTAssertEqual(
+            repository.performedActions,
+            [
+                .favorite(noteID: "one"),
+                .addReaction(noteID: "one", reaction: "👍"),
+                .renote(noteID: "one"),
+                .vote(noteID: "one", choice: 0)
+            ]
+        )
+    }
+
+    func testFailedMutationDoesNotRollBackSuccessfulMutationOnAnotherNote() async {
+        let repository = MockMissCatFeedRepository()
+        repository.pages = [.init(notes: [note("one"), note("two")], hasMore: false)]
+        repository.actionDelayNanoseconds = 50_000_000
+        repository.failingActions = [.favorite(noteID: "one")]
+        let store = MissCatFeedStore(source: .home, repository: repository)
+        await store.loadInitial()
+
+        async let failedFavorite: Void = store.toggleFavorite(noteID: "one")
+        async let successfulFavorite: Void = store.toggleFavorite(noteID: "two")
+        _ = await (failedFavorite, successfulFavorite)
+
+        XCTAssertFalse(try! XCTUnwrap(store.notes.first(where: { $0.noteID == "one" })).isFavorite)
+        XCTAssertTrue(try! XCTUnwrap(store.notes.first(where: { $0.noteID == "two" })).isFavorite)
+        XCTAssertEqual(repository.performedActions.count, 2)
+    }
+
+    func testMutationLockIsReleasedAfterFailure() async {
+        let repository = MockMissCatFeedRepository()
+        repository.pages = [.init(notes: [note("one")], hasMore: false)]
+        repository.actionErrorsByIndex = [0: TestFeedError.failed]
+        let store = MissCatFeedStore(source: .home, repository: repository)
+        await store.loadInitial()
+
+        await store.toggleFavorite(noteID: "one")
+        await store.toggleFavorite(noteID: "one")
+
+        XCTAssertEqual(
+            repository.performedActions,
+            [.favorite(noteID: "one"), .favorite(noteID: "one")]
+        )
+        XCTAssertTrue(try! XCTUnwrap(store.notes.first).isFavorite)
+    }
+
+    func testVoteRejectsExpiredOrAlreadyCompletedSingleChoicePoll() async {
+        let repository = MockMissCatFeedRepository()
+        var expired = note("expired")
+        expired.poll = MissCatPoll(
+            choices: [.init(id: 0, text: "yes", votes: 0)],
+            expiresAt: Date(timeIntervalSince1970: 1)
+        )
+        var completed = note("completed")
+        completed.poll = MissCatPoll(
+            choices: [
+                .init(id: 0, text: "yes", votes: 1, isVoted: true),
+                .init(id: 1, text: "no", votes: 0)
+            ]
+        )
+        repository.pages = [.init(notes: [expired, completed], hasMore: false)]
+        let store = MissCatFeedStore(source: .home, repository: repository)
+        await store.loadInitial()
+
+        await store.vote(noteID: "expired", choice: 0)
+        await store.vote(noteID: "completed", choice: 1)
+
+        XCTAssertTrue(repository.performedActions.isEmpty)
+    }
+
+    func testVoteRejectsDuplicateMultipleChoiceAndUnknownChoice() async {
+        let repository = MockMissCatFeedRepository()
+        var pollNote = note("one")
+        pollNote.poll = MissCatPoll(
+            choices: [
+                .init(id: 0, text: "yes", votes: 1, isVoted: true),
+                .init(id: 1, text: "no", votes: 0)
+            ],
+            allowsMultipleChoices: true
+        )
+        repository.pages = [.init(notes: [pollNote], hasMore: false)]
+        let store = MissCatFeedStore(source: .home, repository: repository)
+        await store.loadInitial()
+
+        await store.vote(noteID: "one", choice: 0)
+        await store.vote(noteID: "one", choice: 99)
+
+        XCTAssertTrue(repository.performedActions.isEmpty)
+        XCTAssertEqual(store.notes.first?.poll, pollNote.poll)
     }
 
     func testThreadFetchPreservesAncestorRootReplyOrderAndExpandsRoot() async {

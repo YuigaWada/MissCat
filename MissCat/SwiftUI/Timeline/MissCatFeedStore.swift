@@ -17,6 +17,14 @@ public final class MissCatFeedStore: ObservableObject {
     private let repository: MissCatFeedRepository
     private let pageSize: Int
     private var realtimeTask: Task<Void, Never>?
+    private var inFlightMutations = Set<MutationKey>()
+
+    private enum MutationKey: Hashable {
+        case favorite(String)
+        case reaction(String)
+        case renote(String)
+        case vote(String)
+    }
 
     public init(
         source: MissCatFeedSource,
@@ -105,8 +113,12 @@ public final class MissCatFeedStore: ObservableObject {
     }
 
     public func toggleFavorite(noteID: String) async {
+        let mutationKey = MutationKey.favorite(noteID)
+        guard inFlightMutations.insert(mutationKey).inserted else { return }
+        defer { inFlightMutations.remove(mutationKey) }
+
         guard let note = notes.first(where: { $0.noteID == noteID }) else { return }
-        let previousNotes = notes
+        let previousIndex = notes.firstIndex(where: { $0.noteID == noteID })
         let shouldFavorite = !note.isFavorite
 
         if source == .favorites, !shouldFavorite {
@@ -121,16 +133,24 @@ public final class MissCatFeedStore: ObservableObject {
                 shouldFavorite ? .favorite(noteID: noteID) : .unfavorite(noteID: noteID)
             )
         } catch {
-            notes = previousNotes
+            if let index = notes.firstIndex(where: { $0.noteID == noteID }) {
+                notes[index].isFavorite = note.isFavorite
+            } else if let previousIndex {
+                notes.insert(note, at: min(previousIndex, notes.endIndex))
+            }
             phase = notes.isEmpty ? .empty : .loaded
             actionErrorMessage = Self.message(for: error)
         }
     }
 
     public func toggleReaction(noteID: String, reaction: String) async {
+        let mutationKey = MutationKey.reaction(noteID)
+        guard inFlightMutations.insert(mutationKey).inserted else { return }
+        defer { inFlightMutations.remove(mutationKey) }
+
         guard let current = notes.first(where: { $0.noteID == noteID }) else { return }
-        let previousNotes = notes
         let previousReaction = current.myReaction
+        var removedPreviousReaction = false
 
         mutateNotes(noteID: noteID) { note in
             if let previousReaction {
@@ -147,6 +167,7 @@ public final class MissCatFeedStore: ObservableObject {
         do {
             if let previousReaction {
                 try await repository.perform(.removeReaction(noteID: noteID))
+                removedPreviousReaction = true
                 if previousReaction != reaction {
                     try await repository.perform(.addReaction(noteID: noteID, reaction: reaction))
                 }
@@ -154,25 +175,56 @@ public final class MissCatFeedStore: ObservableObject {
                 try await repository.perform(.addReaction(noteID: noteID, reaction: reaction))
             }
         } catch {
-            notes = previousNotes
+            if removedPreviousReaction, let previousReaction, previousReaction != reaction {
+                mutateNotes(noteID: noteID) { note in
+                    Self.changeReaction(reaction, delta: -1, isMine: false, in: &note)
+                    note.myReaction = nil
+                }
+            } else {
+                mutateNotes(noteID: noteID) { note in
+                    if previousReaction != reaction {
+                        Self.changeReaction(reaction, delta: -1, isMine: false, in: &note)
+                    }
+                    if let previousReaction {
+                        Self.changeReaction(previousReaction, delta: 1, isMine: true, in: &note)
+                        note.myReaction = previousReaction
+                    } else {
+                        note.myReaction = nil
+                    }
+                }
+            }
             actionErrorMessage = Self.message(for: error)
         }
     }
 
     public func renote(noteID: String) async {
-        let previousNotes = notes
+        let mutationKey = MutationKey.renote(noteID)
+        guard inFlightMutations.insert(mutationKey).inserted else { return }
+        defer { inFlightMutations.remove(mutationKey) }
+
         mutateNotes(noteID: noteID) { $0.renoteCount += 1 }
 
         do {
             try await repository.perform(.renote(noteID: noteID))
         } catch {
-            notes = previousNotes
+            mutateNotes(noteID: noteID) { $0.renoteCount = max(0, $0.renoteCount - 1) }
             actionErrorMessage = Self.message(for: error)
         }
     }
 
     public func vote(noteID: String, choice: Int) async {
-        let previousNotes = notes
+        let mutationKey = MutationKey.vote(noteID)
+        guard inFlightMutations.insert(mutationKey).inserted else { return }
+        defer { inFlightMutations.remove(mutationKey) }
+
+        guard let note = notes.first(where: { $0.noteID == noteID }),
+              let poll = note.poll,
+              poll.expiresAt.map({ $0 > Date() }) ?? true,
+              let selectedChoice = poll.choices.first(where: { $0.id == choice }),
+              !selectedChoice.isVoted,
+              poll.allowsMultipleChoices || !poll.choices.contains(where: \.isVoted)
+        else { return }
+
         mutateNotes(noteID: noteID) { note in
             guard var poll = note.poll,
                   let index = poll.choices.firstIndex(where: { $0.id == choice }) else { return }
@@ -184,7 +236,13 @@ public final class MissCatFeedStore: ObservableObject {
         do {
             try await repository.perform(.vote(noteID: noteID, choice: choice))
         } catch {
-            notes = previousNotes
+            mutateNotes(noteID: noteID) { note in
+                guard var poll = note.poll,
+                      let index = poll.choices.firstIndex(where: { $0.id == choice }) else { return }
+                poll.choices[index].votes = max(0, poll.choices[index].votes - 1)
+                poll.choices[index].isVoted = false
+                note.poll = poll
+            }
             actionErrorMessage = Self.message(for: error)
         }
     }
