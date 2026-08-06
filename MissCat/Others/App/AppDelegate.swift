@@ -12,7 +12,6 @@ import FirebaseMessaging
 import MisskeyKit
 import UIKit
 
-@UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
     // MARK: Main
     
@@ -121,9 +120,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// バナー通知を表示する: サーバーから送られてくるデータは、どのユーザー宛かの情報と通知のid
     /// - Parameter raw: userInfo
     private func showNotificationBanner(with contents: NotificationData) {
-        guard let children = rootViewController?.children,
-              children.count > 0,
-              let homeVC = children[0] as? HomeViewController,
+        guard let homeVC = rootViewController?.descendant(of: HomeViewController.self),
               let owner = Cache.UserDefaults.shared.getUser(userId: contents.ownerId) // どのユーザー宛の通知か
         else { return }
         
@@ -146,20 +143,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         
         return NotificationData(ownerId: ownerId, notificationId: notificationId)
     }
-    
-    // MARK: UISceneSession Lifecycle
-    
-    @available(iOS 13.0, *)
-    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
-        // Called when a new scene session is being created.
-        // Use this method to select a configuration to create the new scene with.
-        return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
-    }
-    
-    @available(iOS 13.0, *)
-    func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
-        // Called when the user discards a scene session.
-        // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
-        // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
+}
+
+private extension UIViewController {
+    func descendant<T: UIViewController>(of type: T.Type) -> T? {
+        if let match = self as? T {
+            return match
+        }
+
+        for child in children {
+            if let match = child.descendant(of: type) {
+                return match
+            }
+        }
+
+        if let presentedViewController,
+           let match = presentedViewController.descendant(of: type)
+        {
+            return match
+        }
+
+        return nil
     }
 }
