@@ -134,7 +134,7 @@ public struct MissCatReaction: Identifiable, Equatable, Sendable {
     }
 }
 
-public struct MissCatPollChoice: Identifiable, Equatable, Sendable {
+public struct MissCatFeedPollChoice: Identifiable, Equatable, Sendable {
     public let id: Int
     public let text: String
     public var votes: Int
@@ -149,12 +149,12 @@ public struct MissCatPollChoice: Identifiable, Equatable, Sendable {
 }
 
 public struct MissCatPoll: Equatable, Sendable {
-    public var choices: [MissCatPollChoice]
+    public var choices: [MissCatFeedPollChoice]
     public let allowsMultipleChoices: Bool
     public let expiresAt: Date?
 
     public init(
-        choices: [MissCatPollChoice],
+        choices: [MissCatFeedPollChoice],
         allowsMultipleChoices: Bool = false,
         expiresAt: Date? = nil
     ) {

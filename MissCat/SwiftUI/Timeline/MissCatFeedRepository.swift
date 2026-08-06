@@ -331,7 +331,7 @@ public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
             poll = MissCatPoll(
                 choices: (sourcePoll.choices ?? []).enumerated().compactMap { index, choice in
                     guard let choice else { return nil }
-                    return MissCatPollChoice(
+                    return MissCatFeedPollChoice(
                         id: index,
                         text: choice.text ?? "",
                         votes: choice.votes ?? 0,
