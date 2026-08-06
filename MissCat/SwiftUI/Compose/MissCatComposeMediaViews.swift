@@ -94,17 +94,33 @@ struct MissCatMediaPickerView: View {
         do {
             var loaded: [MissCatComposeMedia] = []
             for item in items {
-                guard let data = try await item.loadTransferable(type: Data.self), !data.isEmpty else {
-                    throw PickerError.unreadable
-                }
                 let type = item.supportedContentTypes.first
                 let isVideo = item.supportedContentTypes.contains { $0.conforms(to: .movie) }
+                let data: Data
+                if isVideo {
+                    guard let movie = try await item.loadTransferable(type: MissCatPickedMovie.self),
+                          !movie.data.isEmpty
+                    else {
+                        throw PickerError.unreadable
+                    }
+                    data = movie.data
+                } else {
+                    guard let imageData = try await item.loadTransferable(type: Data.self),
+                          !imageData.isEmpty
+                    else {
+                        throw PickerError.unreadable
+                    }
+                    data = imageData
+                }
+                let pathExtension = type?.preferredFilenameExtension ?? (isVideo ? "mov" : "jpg")
                 loaded.append(
                     MissCatComposeMedia(
                         kind: isVideo ? .video : .image,
                         data: data,
-                        previewData: isVideo ? Data() : data,
-                        filename: UUID().uuidString + "." + (type?.preferredFilenameExtension ?? (isVideo ? "mp4" : "jpg")),
+                        previewData: isVideo
+                            ? Self.videoThumbnailData(data: data, pathExtension: pathExtension)
+                            : data,
+                        filename: UUID().uuidString + "." + pathExtension,
                         mimeType: type?.preferredMIMEType ?? (isVideo ? "video/mp4" : "image/jpeg")
                     )
                 )
@@ -120,6 +136,28 @@ struct MissCatMediaPickerView: View {
     private enum PickerError: LocalizedError {
         case unreadable
         var errorDescription: String? { "選択したメディアを読み込めませんでした" }
+    }
+
+    private static func videoThumbnailData(data: Data, pathExtension: String) -> Data {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("misscat-preview-\(UUID().uuidString)")
+            .appendingPathExtension(pathExtension)
+        defer { try? FileManager.default.removeItem(at: url) }
+        guard (try? data.write(to: url, options: .atomic)) != nil else { return Data() }
+        let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url))
+        generator.appliesPreferredTrackTransform = true
+        guard let image = try? generator.copyCGImage(at: .zero, actualTime: nil) else { return Data() }
+        return UIImage(cgImage: image).jpegData(compressionQuality: 0.75) ?? Data()
+    }
+}
+
+private struct MissCatPickedMovie: Transferable {
+    let data: Data
+
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(importedContentType: .movie) { data in
+            MissCatPickedMovie(data: data)
+        }
     }
 }
 

@@ -1,3 +1,4 @@
+@preconcurrency import AVFoundation
 import Foundation
 import MediaPlayer
 import MisskeyKit
@@ -99,7 +100,7 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
 
         var fileIDs: [String] = []
         for (index, media) in submission.media.enumerated() {
-            let upload = try preparedUpload(for: media)
+            let upload = try await preparedUpload(for: media)
             let fileID = try await uploadFile(upload, media: media, using: misskey)
             fileIDs.append(fileID)
             progress(MissCatComposeUploadProgress(completed: index + 1, total: submission.media.count))
@@ -121,7 +122,7 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
         )
     }
 
-    private func preparedUpload(for media: MissCatComposeMedia) throws -> (data: Data, mimeType: String, filename: String) {
+    private func preparedUpload(for media: MissCatComposeMedia) async throws -> (data: Data, mimeType: String, filename: String) {
         switch media.kind {
         case .image:
             guard let image = UIImage(data: media.data) else { throw ServiceError.unsupportedMedia }
@@ -133,8 +134,54 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
             return (data, "image/jpeg", media.filename.replacingPathExtension(with: "jpeg"))
         case .video:
             guard !media.data.isEmpty else { throw ServiceError.unsupportedMedia }
-            return (media.data, media.mimeType, media.filename)
+            if media.mimeType == "video/mp4" || media.filename.lowercased().hasSuffix(".mp4") {
+                return (media.data, "video/mp4", media.filename.replacingPathExtension(with: "mp4"))
+            }
+            let converted = try await Self.convertToMP4(media.data)
+            return (converted, "video/mp4", media.filename.replacingPathExtension(with: "mp4"))
         }
+    }
+
+    private static func convertToMP4(_ data: Data) async throws -> Data {
+        let temporaryDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("misscat-compose-\(UUID().uuidString)", isDirectory: true)
+        let inputURL = temporaryDirectory.appendingPathComponent("input.mov")
+        let outputURL = temporaryDirectory.appendingPathComponent("output.mp4")
+        do {
+            try FileManager.default.createDirectory(at: temporaryDirectory, withIntermediateDirectories: true)
+            try data.write(to: inputURL, options: .atomic)
+        } catch {
+            try? FileManager.default.removeItem(at: temporaryDirectory)
+            throw ServiceError.unsupportedMedia
+        }
+        defer { try? FileManager.default.removeItem(at: temporaryDirectory) }
+
+        let asset = AVURLAsset(url: inputURL)
+        guard let exporter = AVAssetExportSession(
+            asset: asset,
+            presetName: AVAssetExportPresetHighestQuality
+        ) else {
+            throw ServiceError.unsupportedMedia
+        }
+        exporter.outputURL = outputURL
+        exporter.outputFileType = .mp4
+        exporter.shouldOptimizeForNetworkUse = true
+        let exporterBox = MissCatUncheckedSendableBox(exporter)
+
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            exporterBox.value.exportAsynchronously {
+                let exporter = exporterBox.value
+                if exporter.status == .completed {
+                    continuation.resume(returning: ())
+                } else {
+                    continuation.resume(throwing: ServiceError.unsupportedMedia)
+                }
+            }
+        }
+        guard let converted = try? Data(contentsOf: outputURL), !converted.isEmpty else {
+            throw ServiceError.unsupportedMedia
+        }
+        return converted
     }
 
     private func uploadFile(
@@ -211,6 +258,11 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
             }
         }
     }
+}
+
+private final class MissCatUncheckedSendableBox<Value>: @unchecked Sendable {
+    let value: Value
+    init(_ value: Value) { self.value = value }
 }
 
 private extension String {

@@ -315,6 +315,27 @@ final class MissCatComposeViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.draft.visibleUserIDs.isEmpty)
     }
 
+    func testPlainRenoteIgnoresSavedVisibility() async {
+        let target = makeTarget(id: "target")
+        let environment = FakeComposeEnvironment(
+            bootstrap: MissCatComposeBootstrap(
+                accounts: [makeAccount(id: "a")],
+                selectedAccountID: "a",
+                visibility: .followers
+            )
+        )
+        let viewModel = MissCatComposeViewModel(
+            mode: .renote(target),
+            environment: environment,
+            posting: SequencedComposePosting(results: [.success(())])
+        )
+
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.draft.visibility, .public)
+        XCTAssertTrue(viewModel.canSubmit)
+    }
+
     func testSubmitWaitsForUploadsAndPostCompletion() async {
         let posting = SuspendedComposePosting()
         var draft = MissCatComposeDraft()
@@ -325,6 +346,11 @@ final class MissCatComposeViewModelTests: XCTestCase {
 
         let task = Task { @MainActor in await viewModel.submit() }
         await posting.waitUntilCalled()
+        XCTAssertEqual(
+            viewModel.phase,
+            .uploading(MissCatComposeUploadProgress(completed: 0, total: 2))
+        )
+        viewModel.cancel()
         XCTAssertEqual(
             viewModel.phase,
             .uploading(MissCatComposeUploadProgress(completed: 0, total: 2))

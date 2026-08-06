@@ -501,7 +501,7 @@ final class MissCatComposeViewModel: ObservableObject {
             selectedAccountID = bootstrap.accounts.contains(where: { $0.id == bootstrap.selectedAccountID })
                 ? bootstrap.selectedAccountID
                 : bootstrap.accounts.first?.id
-            if draft.visibility == .public {
+            if !mode.isRenote, draft.visibility == .public {
                 draft.visibility = bootstrap.visibility
             }
             nowPlaying = nowPlayingProvider.current()
@@ -619,8 +619,12 @@ final class MissCatComposeViewModel: ObservableObject {
     }
 
     func cancel() {
-        guard phase != .submitting, phase != .completed else { return }
-        phase = .cancelled
+        switch phase {
+        case .ready, .failed:
+            phase = .cancelled
+        case .loading, .uploading, .submitting, .completed, .cancelled:
+            return
+        }
     }
 
     private func makeSubmission() throws -> MissCatComposeSubmission {

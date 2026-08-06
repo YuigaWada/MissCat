@@ -172,6 +172,7 @@ struct MissCatComposeScreen: View {
             Button(action: requestCancel) {
                 Image(systemName: "xmark").frame(width: 38, height: 38)
             }
+            .disabled(isBusy)
             .accessibilityLabel("キャンセル")
             .accessibilityIdentifier("compose.cancel")
 
