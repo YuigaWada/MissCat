@@ -8,11 +8,25 @@ readonly verifier="${script_dir}/verify-visual-acceptance.sh"
 readonly validator="${script_dir}/validate-visual-evidence-json.rb"
 readonly magick_bin="${MAGICK_BIN:-/opt/homebrew/bin/magick}"
 readonly expected_digest="8c119a005579a70d5f373d3d82a0b9a33f62eabb896cfadd820487d48a087c50"
+readonly production_capture_policy_digest="a4e8ae8bbfd9476a6e44c339b0e2a4f1d7c920936b6af86444af6c746b76b048"
 
 fail() {
     printf 'visual acceptance verifier self-test failed: %s\n' "$*" >&2
     exit 1
 }
+
+fixture_case_limit=710
+fixture_verification_mode="--require-complete"
+fixture_success_contract="visual_cases=710 recorded=710 missing=0 route_audits=1"
+fixture_success_label="710 unique cases"
+if [[ "${1:-}" == "--targeted" ]]; then
+    fixture_case_limit=2
+    fixture_verification_mode="--inventory"
+    fixture_success_contract="visual_cases=710 recorded=2 missing=708 route_audits=1"
+    fixture_success_label="2 targeted cases"
+    shift
+fi
+[[ $# -eq 0 ]] || fail "usage: scripts/test-verify-visual-acceptance.sh [--targeted]"
 
 [[ -x "$verifier" ]] || fail "verifier is not executable"
 [[ -x "$validator" ]] || fail "JSON validator is not executable"
@@ -36,6 +50,7 @@ $verifier --require-complete > /dev/null 2>&1 || incomplete_status=$?
     "${fixture_repository}/artifacts/visual-acceptance/masks"
 /bin/cp "${repository_root}/docs/visual-acceptance-requirements.tsv" "${fixture_repository}/docs/"
 /bin/cp "${repository_root}/docs/visual-acceptance-mask-policy.tsv" "${fixture_repository}/docs/"
+/bin/cp "${repository_root}/docs/visual-acceptance-mask-policy-approval.tsv" "${fixture_repository}/docs/"
 /bin/cp "${repository_root}/docs/visual-acceptance-capture-policy.tsv" "${fixture_repository}/docs/"
 /bin/cp "$verifier" "$validator" "${repository_root}/scripts/compare-screenshots.sh" "${fixture_repository}/scripts/"
 /bin/chmod +x "${fixture_repository}/scripts/verify-visual-acceptance.sh" \
@@ -61,6 +76,23 @@ $verifier --require-complete > /dev/null 2>&1 || incomplete_status=$?
     printf '%b\n' 'iphone-16-pro-ios18.6\tportrait\t4\t6'
     printf '%b\n' 'iphone-se-3-ios18.6\tportrait\t4\t6'
 } > "${fixture_repository}/docs/visual-acceptance-capture-policy.tsv"
+
+fixture_capture_policy_digest=$(/usr/bin/openssl dgst -sha256 -r \
+    "${fixture_repository}/docs/visual-acceptance-capture-policy.tsv" | awk '{ print $1 }')
+capture_policy_status=0
+capture_policy_output=$("${fixture_repository}/scripts/verify-visual-acceptance.sh" --inventory 2>&1) || \
+    capture_policy_status=$?
+[[ "$capture_policy_status" -eq 1 && \
+   "$capture_policy_output" == *"capture policy does not match the authoritative device profile"* ]] || \
+    fail "pre-evidence relaxed capture policy was not rejected by the production trust anchor"
+
+/usr/bin/ruby - "${fixture_repository}/scripts/verify-visual-acceptance.sh" \
+    "$production_capture_policy_digest" "$fixture_capture_policy_digest" <<'RUBY'
+path, production_digest, fixture_digest = ARGV
+source = File.binread(path)
+abort "production capture policy digest occurrence mismatch" unless source.scan(production_digest).length == 1
+File.binwrite(path, source.sub(production_digest, fixture_digest))
+RUBY
 
 git -C "$fixture_repository" init -q
 git -C "$fixture_repository" config user.name YuigaWada
@@ -96,8 +128,9 @@ fixture_policy_sha=$(/usr/bin/openssl dgst -sha256 -r \
 git -C "$fixture_repository" add docs/visual-acceptance-mask-policy-approval.tsv
 git -C "$fixture_repository" commit -qm '[test] approve synthetic mask policy independently'
 
-/usr/bin/ruby -rjson -rfileutils -rzlib - "${fixture_repository}" "${fixture_dir}" <<'RUBY'
-repository, fixture = ARGV
+/usr/bin/ruby -rjson -rfileutils -rzlib - "${fixture_repository}" "${fixture_dir}" \
+    "$fixture_case_limit" <<'RUBY'
+repository, fixture, case_limit = ARGV
 requirements = File.join(repository, "docs/visual-acceptance-requirements.tsv")
 cases = []
 File.foreach(requirements) do |line|
@@ -136,7 +169,7 @@ def write_solid_png(path, index)
 end
 
 case_rows = []
-cases.each_with_index do |(surface, group, state, appearance, device, locale, size), index|
+cases.first(Integer(case_limit)).each_with_index do |(surface, group, state, appearance, device, locale, size), index|
   case_id = [surface, state, appearance, device, locale, size].join("--")
   root_relative = "artifacts/visual-acceptance/cases/#{case_id}"
   root = File.join(repository, root_relative)
@@ -218,9 +251,9 @@ git -C "$fixture_repository" add docs/visual-acceptance-evidence.tsv artifacts
 git -C "$fixture_repository" commit -qm '[test] record later visual reviews'
 
 fixture_verifier="${fixture_repository}/scripts/verify-visual-acceptance.sh"
-complete_output=$($fixture_verifier --require-complete --magick "$magick_bin")
-[[ "$complete_output" == *"visual_cases=710 recorded=710 missing=0 route_audits=1"* ]] || \
-    fail "full fixture did not pass the 710-case complete gate"
+complete_output=$($fixture_verifier "$fixture_verification_mode" --magick "$magick_bin")
+[[ "$complete_output" == *"$fixture_success_contract"* ]] || \
+    fail "fixture did not pass its $fixture_success_label gate"
 
 duplicate_paths=$(/usr/bin/cut -f 9-12 "${fixture_repository}/docs/visual-acceptance-evidence.tsv" | \
     /usr/bin/tail -n +2 | /usr/bin/tr '\t' '\n' | LC_ALL=C /usr/bin/sort | /usr/bin/uniq -d | /usr/bin/head -n 1)
@@ -247,7 +280,7 @@ assert_failure() {
     local label="$1"
     local expected="$2"
     local output status=0
-    output=$($fixture_verifier --require-complete --magick "$magick_bin" 2>&1) || status=$?
+    output=$($fixture_verifier "$fixture_verification_mode" --magick "$magick_bin" 2>&1) || status=$?
     [[ "$status" -eq 1 ]] || fail "$label must fail with status 1 (received $status)"
     [[ "$output" == *"$expected"* ]] || fail "$label failed for the wrong reason: $output"
 }
@@ -358,6 +391,61 @@ assert_failure "cross-case image-content replay" "reused or replayed baseline im
 /bin/mv "${fixture_dir}/second-baseline.backup.png" "${fixture_repository}/${second_baseline}"
 /bin/mv "${fixture_dir}/second-candidate.backup.png" "${fixture_repository}/${second_candidate}"
 
+/bin/mv "${fixture_repository}/${second_baseline}" "${fixture_dir}/second-baseline-reencode.backup.png"
+/usr/bin/ruby -rzlib - "${fixture_repository}/${first_baseline}" \
+    "${fixture_repository}/${second_baseline}" <<'RUBY'
+source_path, destination_path = ARGV
+source = File.binread(source_path)
+signature = "\x89PNG\r\n\x1a\n".b
+abort "invalid source PNG" unless source.start_with?(signature)
+chunks = []
+offset = signature.bytesize
+while offset < source.bytesize
+  length = source.byteslice(offset, 4).unpack1("N")
+  type = source.byteslice(offset + 4, 4)
+  data = source.byteslice(offset + 8, length)
+  chunks << [type, data]
+  offset += 12 + length
+end
+decoded_scanlines = Zlib::Inflate.inflate(
+  chunks.select { |type, _| type == "IDAT" }.map(&:last).join
+)
+def png_chunk(type, data)
+  [data.bytesize].pack("N") + type + data + [Zlib.crc32(type + data)].pack("N")
+end
+output = signature.dup
+wrote_pixels = false
+chunks.each do |type, data|
+  if type == "IDAT"
+    next if wrote_pixels
+    output << png_chunk("tEXt".b, "Comment\0same decoded pixels, recompressed container".b)
+    output << png_chunk("IDAT".b, Zlib::Deflate.deflate(decoded_scanlines, Zlib::BEST_SPEED))
+    wrote_pixels = true
+  else
+    output << png_chunk(type, data)
+  end
+end
+abort "source PNG had no pixels" unless wrote_pixels
+File.binwrite(destination_path, output)
+RUBY
+first_baseline_sha=$(/usr/bin/openssl dgst -sha256 -r \
+    "${fixture_repository}/${first_baseline}" | awk '{ print $1 }')
+reencoded_baseline_sha=$(/usr/bin/openssl dgst -sha256 -r \
+    "${fixture_repository}/${second_baseline}" | awk '{ print $1 }')
+[[ "$first_baseline_sha" != "$reencoded_baseline_sha" ]] || \
+    fail "same-pixel replay fixture did not change PNG container bytes"
+pixel_difference=$("$magick_bin" compare -metric AE \
+    "${fixture_repository}/${first_baseline}" "${fixture_repository}/${second_baseline}" null: 2>&1) || true
+[[ "$pixel_difference" =~ ^0([[:space:]]|$) ]] || fail "same-pixel replay fixture changed decoded pixels"
+assert_failure "re-encoded same-pixel replay" "reused or replayed decoded pixel content"
+/bin/cp "${fixture_repository}/${second_baseline}" "${fixture_dir}/cross-role-reencoded.png"
+/bin/mv "${fixture_dir}/second-baseline-reencode.backup.png" "${fixture_repository}/${second_baseline}"
+
+/bin/mv "${fixture_repository}/${second_candidate}" "${fixture_dir}/second-candidate-cross-role.backup.png"
+/bin/cp "${fixture_dir}/cross-role-reencoded.png" "${fixture_repository}/${second_candidate}"
+assert_failure "cross-role image-content replay" "reused or replayed decoded pixel content"
+/bin/mv "${fixture_dir}/second-candidate-cross-role.backup.png" "${fixture_repository}/${second_candidate}"
+
 /bin/mv "${fixture_repository}/${first_baseline}" "${fixture_dir}/missing-baseline.png"
 assert_failure "missing artifact" "missing baseline"
 /bin/mv "${fixture_dir}/missing-baseline.png" "${fixture_repository}/${first_baseline}"
@@ -449,4 +537,4 @@ git -C "$fixture_repository" commit -qm '[test] attempt simultaneous evidence po
 rewrite_evidence commit "$(git -C "$fixture_repository" rev-parse HEAD)"
 assert_failure "simultaneous mask policy relaxation" "mask policy digest is not independently approved"
 
-printf 'visual acceptance verifier self-test passed (710 unique cases and 26 rejection contracts)\n'
+printf 'visual acceptance verifier self-test passed (%s and 29 rejection contracts)\n' "$fixture_success_label"
