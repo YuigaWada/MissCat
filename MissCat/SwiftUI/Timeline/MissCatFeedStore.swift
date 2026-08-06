@@ -307,11 +307,19 @@ public final class MissCatFeedStore: ObservableObject {
                     note.myReaction = delta > 0 ? reaction : nil
                 }
             }
-        case let .pollVote(noteID, choice):
+        case let .pollVote(noteID, choice, isMine):
             mutateNotes(noteID: noteID) { note in
                 guard var poll = note.poll,
                       let index = poll.choices.firstIndex(where: { $0.id == choice }) else { return }
                 poll.choices[index].votes += 1
+                if isMine {
+                    if !poll.allowsMultipleChoices {
+                        for choiceIndex in poll.choices.indices {
+                            poll.choices[choiceIndex].isVoted = false
+                        }
+                    }
+                    poll.choices[index].isVoted = true
+                }
                 note.poll = poll
             }
         case let .failed(message):

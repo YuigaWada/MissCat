@@ -1,5 +1,4 @@
 import Foundation
-import MisskeyKit
 
 public protocol MissCatFeedRepository: AnyObject {
     func fetchPage(
@@ -40,19 +39,99 @@ public enum MissCatFeedRepositoryError: LocalizedError, Equatable {
     }
 }
 
-/// Account-scoped current Misskey REST adapter. The bundled MisskeyKit remains
-/// isolated to streaming until that transport is migrated separately.
+protocol MissCatFeedWebSocket: AnyObject {
+    func resume()
+    func send(_ message: URLSessionWebSocketTask.Message) async throws
+    func receive() async throws -> URLSessionWebSocketTask.Message
+    func cancel(with closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?)
+}
+
+extension URLSessionWebSocketTask: MissCatFeedWebSocket {}
+
+protocol MissCatFeedWebSocketFactory: AnyObject {
+    func makeWebSocket(request: URLRequest) -> any MissCatFeedWebSocket
+}
+
+private final class MissCatURLSessionFeedWebSocketFactory: MissCatFeedWebSocketFactory {
+    private let urlSession: URLSession
+
+    init(urlSession: URLSession) {
+        self.urlSession = urlSession
+    }
+
+    func makeWebSocket(request: URLRequest) -> any MissCatFeedWebSocket {
+        urlSession.webSocketTask(with: request)
+    }
+}
+
+struct MissCatFeedRealtimeConfiguration: Equatable, Sendable {
+    let maximumReconnectAttempts: Int
+    let baseReconnectDelayNanoseconds: UInt64
+    let maximumReconnectDelayNanoseconds: UInt64
+    let resynchronizationLimit: Int
+
+    init(
+        maximumReconnectAttempts: Int = 6,
+        baseReconnectDelayNanoseconds: UInt64 = 500_000_000,
+        maximumReconnectDelayNanoseconds: UInt64 = 30_000_000_000,
+        resynchronizationLimit: Int = 100
+    ) {
+        self.maximumReconnectAttempts = max(0, maximumReconnectAttempts)
+        self.baseReconnectDelayNanoseconds = baseReconnectDelayNanoseconds
+        self.maximumReconnectDelayNanoseconds = max(
+            baseReconnectDelayNanoseconds,
+            maximumReconnectDelayNanoseconds
+        )
+        self.resynchronizationLimit = min(max(resynchronizationLimit, 1), 100)
+    }
+
+    func reconnectDelayNanoseconds(forAttempt attempt: Int) -> UInt64 {
+        let exponent = min(max(attempt - 1, 0), 63)
+        let multiplier = UInt64(1) << UInt64(exponent)
+        let (delay, overflow) = baseReconnectDelayNanoseconds.multipliedReportingOverflow(by: multiplier)
+        return min(overflow ? UInt64.max : delay, maximumReconnectDelayNanoseconds)
+    }
+
+    static let live = MissCatFeedRealtimeConfiguration()
+}
+
+typealias MissCatFeedReconnectSleep = @Sendable (UInt64) async throws -> Void
+
+/// Account-scoped current Misskey REST and native WebSocket adapter.
 public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
     private let account: MissCatFeedSession
     private let urlSession: URLSession
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
-    private let misskey: MisskeyKit
+    private let webSocketFactory: any MissCatFeedWebSocketFactory
+    private let realtimeConfiguration: MissCatFeedRealtimeConfiguration
+    private let makeStreamID: @Sendable () -> String
+    private let reconnectSleep: MissCatFeedReconnectSleep
 
-    public init(session: MissCatFeedSession, urlSession: URLSession = .shared) {
+    public convenience init(session: MissCatFeedSession, urlSession: URLSession = .shared) {
+        self.init(
+            session: session,
+            urlSession: urlSession,
+            webSocketFactory: MissCatURLSessionFeedWebSocketFactory(urlSession: urlSession)
+        )
+    }
+
+    init(
+        session: MissCatFeedSession,
+        urlSession: URLSession = .shared,
+        webSocketFactory: any MissCatFeedWebSocketFactory,
+        realtimeConfiguration: MissCatFeedRealtimeConfiguration = .live,
+        makeStreamID: @escaping @Sendable () -> String = { UUID().uuidString },
+        reconnectSleep: @escaping MissCatFeedReconnectSleep = { nanoseconds in
+            try await Task.sleep(nanoseconds: nanoseconds)
+        }
+    ) {
         account = session
         self.urlSession = urlSession
-        misskey = MisskeyKit(instance: session.instance, apiKey: session.apiKey)
+        self.webSocketFactory = webSocketFactory
+        self.realtimeConfiguration = realtimeConfiguration
+        self.makeStreamID = makeStreamID
+        self.reconnectSleep = reconnectSleep
     }
 
     convenience init?(user: SecureUser) {
@@ -186,79 +265,41 @@ public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
             return AsyncStream { $0.finish() }
         }
 
-        let misskey = self.misskey
-        let account = self.account
-        let initialIDs = Set(noteIDs)
+        let request: URLRequest
+        do {
+            request = try makeStreamingRequest()
+        } catch {
+            return AsyncStream { continuation in
+                continuation.yield(
+                    .failed(message: MissCatFeedRepositoryError.streamingUnavailable.localizedDescription)
+                )
+                continuation.finish()
+            }
+        }
+
+        let connection = MissCatFeedRealtimeConnection(
+            request: request,
+            channel: channel,
+            streamID: makeStreamID(),
+            accountID: account.accountID,
+            initialNoteIDs: Set(noteIDs.filter { !$0.isEmpty }),
+            webSocketFactory: webSocketFactory,
+            configuration: realtimeConfiguration,
+            reconnectSleep: reconnectSleep,
+            resynchronize: { [weak self] limit in
+                guard let self else { throw CancellationError() }
+                return try await self.fetchPage(source: source, cursor: nil, limit: limit)
+            }
+        )
 
         return AsyncStream { continuation in
-            let connected = misskey.streaming.connect(apiKey: account.apiKey, channels: [channel]) {
-                response,
-                responseChannel,
-                responseType,
-                error in
-                if let error {
-                    continuation.yield(.failed(message: error.localizedDescription))
-                    continuation.yield(.connected(false))
-                    return
-                }
-
-                if responseType == "onConnect" {
-                    continuation.yield(.connected(true))
-                    initialIDs.forEach { try? misskey.streaming.captureNote(noteId: $0) }
-                    return
-                }
-
-                if responseChannel == .CapturedNoteUpdated, let update = response as? NoteUpdatedModel {
-                    guard let noteID = update.targetNoteId else { return }
-                    switch update.type {
-                    case .reacted:
-                        guard let reaction = update.reaction else { return }
-                        continuation.yield(
-                            .reaction(
-                                noteID: noteID,
-                                reaction: reaction,
-                                delta: 1,
-                                isMine: update.userId == account.accountID
-                            )
-                        )
-                    case .unreacted:
-                        guard let reaction = update.reaction else { return }
-                        continuation.yield(
-                            .reaction(
-                                noteID: noteID,
-                                reaction: reaction,
-                                delta: -1,
-                                isMine: update.userId == account.accountID
-                            )
-                        )
-                    case .pollVoted:
-                        if let choice = update.choice {
-                            continuation.yield(.pollVote(noteID: noteID, choice: choice))
-                        }
-                    case .deleted:
-                        continuation.yield(.removed(noteID: noteID))
-                    case .none:
-                        break
-                    }
-                    return
-                }
-
-                // Current REST DTOs intentionally do not depend on MisskeyKit's
-                // 2019 NoteModel. Streaming compatibility is audited separately.
-                guard let model = response as? NoteModel else { return }
-                let converted = Self.convertLegacyStreamingNote(model)
-                try? misskey.streaming.captureNote(noteId: converted.noteID)
-                continuation.yield(.inserted(converted))
-            }
-
-            guard connected else {
-                continuation.yield(.failed(message: MissCatFeedRepositoryError.streamingUnavailable.localizedDescription))
-                continuation.finish()
-                return
+            let runner = Task {
+                await connection.run(continuation: continuation)
             }
 
             continuation.onTermination = { _ in
-                misskey.streaming.disconnect()
+                runner.cancel()
+                Task { await connection.stop() }
             }
         }
     }
@@ -346,6 +387,34 @@ public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
         return request
     }
 
+    private func makeStreamingRequest() throws -> URLRequest {
+        let raw = account.instance.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty else { throw MissCatFeedRepositoryError.invalidInstance }
+        let normalized = raw.contains("://") ? raw : "https://\(raw)"
+        guard var components = URLComponents(string: normalized),
+              components.scheme?.lowercased() == "https",
+              let host = components.host,
+              !host.isEmpty,
+              components.user == nil,
+              components.password == nil else {
+            throw MissCatFeedRepositoryError.invalidInstance
+        }
+
+        components.scheme = "wss"
+        components.path = "/streaming"
+        components.query = nil
+        components.fragment = nil
+        guard let url = components.url else {
+            throw MissCatFeedRepositoryError.invalidInstance
+        }
+
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 30
+        request.setValue("Bearer \(account.apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("MissCat/SwiftUI", forHTTPHeaderField: "User-Agent")
+        return request
+    }
+
     private func validate(_ response: URLResponse, data: Data) throws {
         guard let http = response as? HTTPURLResponse else {
             throw MissCatFeedRepositoryError.invalidResponse
@@ -358,17 +427,17 @@ public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
         }
     }
 
-    private static func channel(for source: MissCatFeedSource) -> SentStreamModel.Channel? {
+    private static func channel(for source: MissCatFeedSource) -> String? {
         switch source {
-        case .home: .homeTimeline
-        case .local: .localTimeline
-        case .social: .hybridTimeline
-        case .global: .globalTimeline
+        case .home: "homeTimeline"
+        case .local: "localTimeline"
+        case .social: "hybridTimeline"
+        case .global: "globalTimeline"
         case .favorites, .search, .hashtag, .noteDetail: nil
         }
     }
 
-    private static func convert(
+    fileprivate static func convert(
         _ outer: FeedNoteDTO,
         isFavorite: Bool = false,
         itemID: String? = nil
@@ -471,118 +540,6 @@ public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
         }
     }
 
-    private static func convertLegacyStreamingNote(_ outer: NoteModel) -> MissCatNote {
-        let isPureRenote = outer.renote != nil && (outer.text ?? "").isEmpty
-        let content = isPureRenote ? (outer.renote ?? outer) : outer
-        let myReaction = content.myReaction
-        let reactions = (content.reactions ?? []).compactMap { reaction -> MissCatReaction? in
-            guard let reaction, let name = reaction.name else { return nil }
-            return MissCatReaction(
-                name: name,
-                count: Int(reaction.count ?? "0") ?? 0,
-                isMine: name == myReaction
-            )
-        }
-
-        let quote: MissCatQuotedNote?
-        if !isPureRenote, let quoted = outer.renote, let quotedID = quoted.id {
-            quote = MissCatQuotedNote(
-                noteID: quotedID,
-                author: convertLegacyStreamingUser(quoted.user),
-                text: quoted.text ?? "",
-                cw: nonEmpty(quoted.cw),
-                attachments: convertLegacyStreamingFiles(quoted.files)
-            )
-        } else {
-            quote = nil
-        }
-
-        let poll: MissCatPoll?
-        if let sourcePoll = content.poll {
-            poll = MissCatPoll(
-                choices: (sourcePoll.choices ?? []).enumerated().compactMap { index, choice in
-                    guard let choice else { return nil }
-                    return MissCatFeedPollChoice(
-                        id: index,
-                        text: choice.text ?? "",
-                        votes: choice.votes ?? 0,
-                        isVoted: choice.isVoted ?? false
-                    )
-                },
-                allowsMultipleChoices: sourcePoll.multiple ?? false,
-                expiresAt: parseDate(sourcePoll.expiresAt)
-            )
-        } else {
-            poll = nil
-        }
-
-        let itemID = outer.id ?? content.id ?? UUID().uuidString
-        let canonicalID = content.id ?? itemID
-        return MissCatNote(
-            id: itemID,
-            noteID: canonicalID,
-            author: convertLegacyStreamingUser(content.user),
-            createdAt: parseDate(content.createdAt),
-            text: content.text ?? "",
-            cw: nonEmpty(content.cw),
-            visibility: content.visibility?.rawValue ?? "public",
-            attachments: convertLegacyStreamingFiles(content.files),
-            reactions: reactions,
-            repliesCount: content.repliesCount ?? 0,
-            renoteCount: content.renoteCount ?? 0,
-            replyID: nonEmpty(content.replyId),
-            tags: content.tags ?? [],
-            myReaction: myReaction,
-            isFavorite: false,
-            poll: poll,
-            quotedNote: quote,
-            renotedBy: isPureRenote ? convertLegacyStreamingUser(outer.user) : nil
-        )
-    }
-
-    private static func convertLegacyStreamingUser(_ model: UserModel?) -> MissCatNoteAuthor {
-        guard let model else {
-            return MissCatNoteAuthor(id: "unknown", name: "Unknown", username: "unknown")
-        }
-        return MissCatNoteAuthor(
-            id: model.id,
-            name: nonEmpty(model.name) ?? model.username ?? "Unknown",
-            username: model.username ?? "unknown",
-            host: nonEmpty(model.host),
-            avatarURL: URL(string: model.avatarUrl ?? ""),
-            isCat: model.isCat ?? false
-        )
-    }
-
-    private static func convertLegacyStreamingFiles(_ models: [File?]?) -> [MissCatNoteAttachment] {
-        (models ?? []).compactMap { model in
-            guard let model, let id = model.id else { return nil }
-            let type = model.type?.lowercased() ?? ""
-            let kind: MissCatAttachmentKind
-            if type == "image/gif" || type == "image/apng" {
-                kind = .animatedImage
-            } else if type.hasPrefix("image/") {
-                kind = .image
-            } else if type.hasPrefix("video/") {
-                kind = .video
-            } else if type.hasPrefix("audio/") {
-                kind = .audio
-            } else {
-                kind = .other
-            }
-            return MissCatNoteAttachment(
-                id: id,
-                name: model.name ?? "",
-                kind: kind,
-                url: URL(string: model.url ?? ""),
-                thumbnailURL: URL(string: model.thumbnailUrl ?? ""),
-                isSensitive: model.isSensitive ?? false,
-                width: model.properties?.width,
-                height: model.properties?.height
-            )
-        }
-    }
-
     private static func nonEmpty(_ value: String?) -> String? {
         guard let value, !value.isEmpty else { return nil }
         return value
@@ -601,6 +558,318 @@ public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
     }()
 
     private static let basicDateFormatter = ISO8601DateFormatter()
+}
+
+private actor MissCatFeedRealtimeConnection {
+    typealias Resynchronize = @Sendable (Int) async throws -> MissCatFeedPage
+
+    private let request: URLRequest
+    private let channel: String
+    private let streamID: String
+    private let accountID: String
+    private let webSocketFactory: any MissCatFeedWebSocketFactory
+    private let configuration: MissCatFeedRealtimeConfiguration
+    private let reconnectSleep: MissCatFeedReconnectSleep
+    private let resynchronize: Resynchronize
+    private let decoder = JSONDecoder()
+
+    private var capturedNoteIDs: Set<String>
+    private var activeSocket: (any MissCatFeedWebSocket)?
+    private var activeGeneration = 0
+    private var hasAcknowledgedConnection = false
+    private var stopped = false
+
+    init(
+        request: URLRequest,
+        channel: String,
+        streamID: String,
+        accountID: String,
+        initialNoteIDs: Set<String>,
+        webSocketFactory: any MissCatFeedWebSocketFactory,
+        configuration: MissCatFeedRealtimeConfiguration,
+        reconnectSleep: @escaping MissCatFeedReconnectSleep,
+        resynchronize: @escaping Resynchronize
+    ) {
+        self.request = request
+        self.channel = channel
+        self.streamID = streamID
+        self.accountID = accountID
+        capturedNoteIDs = initialNoteIDs
+        self.webSocketFactory = webSocketFactory
+        self.configuration = configuration
+        self.reconnectSleep = reconnectSleep
+        self.resynchronize = resynchronize
+    }
+
+    func run(continuation: AsyncStream<MissCatRealtimeEvent>.Continuation) async {
+        var reconnectAttempt = 0
+
+        while !stopped, !Task.isCancelled {
+            activeGeneration += 1
+            let generation = activeGeneration
+            let socket = webSocketFactory.makeWebSocket(request: request)
+            activeSocket = socket
+            var acknowledged = false
+
+            do {
+                socket.resume()
+                try await sendConnect(to: socket)
+
+                while !stopped, !Task.isCancelled, isCurrent(socket, generation: generation) {
+                    let message = try await socket.receive()
+                    guard isCurrent(socket, generation: generation),
+                          let envelope = Self.envelope(from: message) else { continue }
+
+                    if !acknowledged {
+                        guard Self.isAcknowledgement(envelope, streamID: streamID) else { continue }
+                        acknowledged = true
+                        reconnectAttempt = 0
+
+                        try await subscribeToCapturedNotes(on: socket, generation: generation)
+                        if hasAcknowledgedConnection {
+                            do {
+                                try await resynchronizeTimeline(
+                                    on: socket,
+                                    generation: generation,
+                                    continuation: continuation
+                                )
+                                continuation.yield(.connected(true))
+                            } catch is CancellationError {
+                                throw CancellationError()
+                            } catch {
+                                continuation.yield(
+                                    .failed(
+                                        message: MissCatFeedRepositoryError.streamingUnavailable.localizedDescription
+                                    )
+                                )
+                            }
+                        } else {
+                            hasAcknowledgedConnection = true
+                            continuation.yield(.connected(true))
+                        }
+                        continue
+                    }
+
+                    try await handle(
+                        envelope,
+                        on: socket,
+                        generation: generation,
+                        continuation: continuation
+                    )
+                }
+            } catch is CancellationError {
+                break
+            } catch {
+                guard !stopped, !Task.isCancelled, isCurrent(socket, generation: generation) else {
+                    break
+                }
+
+                activeSocket = nil
+                socket.cancel(with: .goingAway, reason: nil)
+                continuation.yield(.connected(false))
+                reconnectAttempt += 1
+
+                guard reconnectAttempt <= configuration.maximumReconnectAttempts else {
+                    continuation.yield(
+                        .failed(message: MissCatFeedRepositoryError.streamingUnavailable.localizedDescription)
+                    )
+                    continuation.finish()
+                    return
+                }
+
+                let delay = configuration.reconnectDelayNanoseconds(forAttempt: reconnectAttempt)
+                do {
+                    try await reconnectSleep(delay)
+                } catch {
+                    break
+                }
+            }
+        }
+
+        continuation.finish()
+    }
+
+    func stop() async {
+        guard !stopped else { return }
+        stopped = true
+        activeGeneration += 1
+        guard let socket = activeSocket else { return }
+        activeSocket = nil
+
+        for noteID in capturedNoteIDs.sorted() {
+            try? await sendUnsubscribe(noteID: noteID, to: socket)
+        }
+        try? await sendDisconnect(to: socket)
+        socket.cancel(with: .goingAway, reason: nil)
+    }
+
+    private func handle(
+        _ envelope: [String: Any],
+        on socket: any MissCatFeedWebSocket,
+        generation: Int,
+        continuation: AsyncStream<MissCatRealtimeEvent>.Continuation
+    ) async throws {
+        guard let type = envelope["type"] as? String else { return }
+
+        if type == "channel" {
+            guard let body = envelope["body"] as? [String: Any],
+                  body["id"] as? String == streamID,
+                  body["type"] as? String == "note",
+                  let noteObject = body["body"] as? [String: Any],
+                  JSONSerialization.isValidJSONObject(noteObject),
+                  isCurrent(socket, generation: generation) else { return }
+
+            let data = try JSONSerialization.data(withJSONObject: noteObject)
+            let noteDTO = try decoder.decode(FeedNoteDTO.self, from: data)
+            let note = MissCatMisskeyFeedRepository.convert(noteDTO)
+            if capturedNoteIDs.insert(note.noteID).inserted {
+                try await sendSubscribe(noteID: note.noteID, to: socket)
+            }
+            guard isCurrent(socket, generation: generation) else { return }
+            continuation.yield(.inserted(note))
+            return
+        }
+
+        guard type == "noteUpdated",
+              let update = envelope["body"] as? [String: Any],
+              let noteID = update["id"] as? String,
+              capturedNoteIDs.contains(noteID),
+              let updateType = update["type"] as? String,
+              let updateBody = update["body"] as? [String: Any],
+              isCurrent(socket, generation: generation) else { return }
+
+        switch updateType {
+        case "reacted", "unreacted":
+            guard let reaction = updateBody["reaction"] as? String else { return }
+            let userID = updateBody["userId"] as? String
+            continuation.yield(
+                .reaction(
+                    noteID: noteID,
+                    reaction: reaction,
+                    delta: updateType == "reacted" ? 1 : -1,
+                    isMine: userID == accountID
+                )
+            )
+        case "pollVoted":
+            guard let choice = updateBody["choice"] as? Int else { return }
+            let userID = updateBody["userId"] as? String
+            continuation.yield(
+                .pollVote(noteID: noteID, choice: choice, isMine: userID == accountID)
+            )
+        case "deleted":
+            guard updateBody["deletedAt"] as? String != nil else { return }
+            continuation.yield(.removed(noteID: noteID))
+        default:
+            return
+        }
+    }
+
+    private func resynchronizeTimeline(
+        on socket: any MissCatFeedWebSocket,
+        generation: Int,
+        continuation: AsyncStream<MissCatRealtimeEvent>.Continuation
+    ) async throws {
+        let page = try await resynchronize(configuration.resynchronizationLimit)
+        guard isCurrent(socket, generation: generation) else { return }
+
+        // The store prepends inserts, so replay oldest-to-newest to preserve REST order.
+        for note in page.notes.reversed() {
+            guard isCurrent(socket, generation: generation) else { return }
+            if capturedNoteIDs.contains(note.noteID) {
+                continuation.yield(.replaced(note))
+            } else {
+                capturedNoteIDs.insert(note.noteID)
+                try await sendSubscribe(noteID: note.noteID, to: socket)
+                continuation.yield(.inserted(note))
+            }
+        }
+    }
+
+    private func subscribeToCapturedNotes(
+        on socket: any MissCatFeedWebSocket,
+        generation: Int
+    ) async throws {
+        for noteID in capturedNoteIDs.sorted() {
+            guard isCurrent(socket, generation: generation) else { return }
+            try await sendSubscribe(noteID: noteID, to: socket)
+        }
+    }
+
+    private func sendConnect(to socket: any MissCatFeedWebSocket) async throws {
+        try await send(
+            [
+                "type": "connect",
+                "body": [
+                    "channel": channel,
+                    "id": streamID,
+                    "params": [String: Any](),
+                    "pong": true,
+                ] as [String: Any],
+            ],
+            to: socket
+        )
+    }
+
+    private func sendSubscribe(noteID: String, to socket: any MissCatFeedWebSocket) async throws {
+        try await send(
+            ["type": "subNote", "body": ["id": noteID]],
+            to: socket
+        )
+    }
+
+    private func sendUnsubscribe(noteID: String, to socket: any MissCatFeedWebSocket) async throws {
+        try await send(
+            ["type": "unsubNote", "body": ["id": noteID]],
+            to: socket
+        )
+    }
+
+    private func sendDisconnect(to socket: any MissCatFeedWebSocket) async throws {
+        try await send(
+            ["type": "disconnect", "body": ["id": streamID]],
+            to: socket
+        )
+    }
+
+    private func send(
+        _ object: [String: Any],
+        to socket: any MissCatFeedWebSocket
+    ) async throws {
+        let data = try JSONSerialization.data(withJSONObject: object)
+        guard let text = String(data: data, encoding: .utf8) else {
+            throw MissCatFeedRepositoryError.streamingUnavailable
+        }
+        try await socket.send(.string(text))
+    }
+
+    private func isCurrent(_ socket: any MissCatFeedWebSocket, generation: Int) -> Bool {
+        guard !stopped,
+              generation == activeGeneration,
+              let activeSocket else { return false }
+        return ObjectIdentifier(activeSocket) == ObjectIdentifier(socket)
+    }
+
+    private static func envelope(
+        from message: URLSessionWebSocketTask.Message
+    ) -> [String: Any]? {
+        let data: Data
+        switch message {
+        case let .string(text):
+            guard let encoded = text.data(using: .utf8) else { return nil }
+            data = encoded
+        case let .data(messageData):
+            data = messageData
+        @unknown default:
+            return nil
+        }
+        return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+    }
+
+    private static func isAcknowledgement(_ envelope: [String: Any], streamID: String) -> Bool {
+        guard envelope["type"] as? String == "connected",
+              let body = envelope["body"] as? [String: Any] else { return false }
+        return body["id"] as? String == streamID
+    }
 }
 
 private struct FeedPageRequest: Encodable {

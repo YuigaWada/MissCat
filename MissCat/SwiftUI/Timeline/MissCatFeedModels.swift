@@ -290,7 +290,7 @@ public enum MissCatRealtimeEvent: Equatable, Sendable {
     case replaced(MissCatNote)
     case removed(noteID: String)
     case reaction(noteID: String, reaction: String, delta: Int, isMine: Bool)
-    case pollVote(noteID: String, choice: Int)
+    case pollVote(noteID: String, choice: Int, isMine: Bool)
     case failed(message: String)
 }
 
