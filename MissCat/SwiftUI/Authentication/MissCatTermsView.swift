@@ -16,11 +16,11 @@ public struct MissCatTermsView: View {
         VStack(spacing: 0) {
             ScrollView {
                 Text(text)
-                    .font(.system(size: 12))
+                    .font(MissCatTypography.termsText)
                     .foregroundStyle(Color.primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, MissCatLegacyMetrics.termsTextHorizontalInset)
+                    .padding(.vertical, MissCatLegacyMetrics.termsTextVerticalInset)
                     .textSelection(.enabled)
             }
             .accessibilityIdentifier("terms.text")
@@ -28,17 +28,18 @@ public struct MissCatTermsView: View {
             HStack {
                 Spacer()
                 Button("同意する", action: onAgree)
-                    .font(.system(size: 17))
-                    .frame(height: 30)
+                    .font(MissCatTypography.termsAgreement)
+                    .frame(height: MissCatLegacyMetrics.termsAgreementHeight)
                     .buttonStyle(.plain)
                     .foregroundStyle(Color.accentColor)
                     .accessibilityIdentifier("terms.agree")
             }
-            .padding(.top, 15)
-            .padding(.trailing, 20)
+            .padding(.top, MissCatLegacyMetrics.termsAgreementTopGap)
+            .padding(.trailing, MissCatLegacyMetrics.termsAgreementTrailingInset)
         }
         .navigationTitle("利用規約")
         .navigationBarTitleDisplayMode(.inline)
+        .missCatLegacyOnboardingNavigationBar()
         .background(Color(uiColor: .systemBackground))
         .accessibilityIdentifier("terms.screen")
     }

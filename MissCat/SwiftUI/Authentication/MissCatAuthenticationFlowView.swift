@@ -69,24 +69,18 @@ public struct MissCatAuthenticationFlowView: View {
                 }
             }
         }
-        .sheet(isPresented: $showsInstanceEditor) {
+        .background {
             MissCatInstanceEditorView(
+                isPresented: $showsInstanceEditor,
                 instance: $instance,
                 onCancel: { showsInstanceEditor = false },
-                onApply: { _ in showsInstanceEditor = false }
+                onApply: { _ in }
             )
         }
         .overlay {
             if isPreparingAuthorization {
-                ZStack {
-                    Color.black.opacity(0.18).ignoresSafeArea()
-                    ProgressView()
-                        .controlSize(.large)
-                        .padding(22)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-                        .accessibilityLabel("認証の準備中")
-                        .accessibilityIdentifier("authentication.loading")
-                }
+                MissCatAuthenticationLoadingOverlay(accessibilityLabel: "認証の準備中")
+                    .accessibilityIdentifier("authentication.loading")
             }
         }
         .accessibilityIdentifier("authentication.flow")

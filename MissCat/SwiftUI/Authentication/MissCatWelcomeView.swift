@@ -25,7 +25,12 @@ public struct MissCatWelcomeView: View {
             let size = proxy.size
             let safeTop = proxy.safeAreaInsets.top
             let safeBottom = proxy.safeAreaInsets.bottom
-            let buttonHeight = MissCatLegacyMetrics.welcomeButtonHeight(canvasHeight: size.height)
+            let layout = MissCatWelcomeLayout(
+                contentSize: size,
+                safeTop: safeTop,
+                safeBottom: safeBottom
+            )
+            let buttonHeight = layout.buttonHeight
             let buttonWidth = MissCatLegacyMetrics.welcomeButtonWidth(canvasWidth: size.width)
             let buttonGap = max(
                 0,
@@ -33,12 +38,7 @@ public struct MissCatWelcomeView: View {
                     - (MissCatLegacyMetrics.welcomeHorizontalInset * 2)
                     - (buttonWidth * 2)
             )
-            let changeButtonBottom = size.height - safeBottom - MissCatLegacyMetrics.welcomeChangeInstanceBottomFromSafeArea
-            let changeButtonHeight: CGFloat = 30
-            let buttonsTop = changeButtonBottom
-                - changeButtonHeight
-                - MissCatLegacyMetrics.welcomeChangeInstanceGap
-                - buttonHeight
+            let changeButtonHeight = MissCatLegacyMetrics.welcomeChangeInstanceHeight
 
             ZStack(alignment: .topLeading) {
                 LinearGradient(
@@ -50,6 +50,8 @@ public struct MissCatWelcomeView: View {
                     startPoint: .bottomLeading,
                     endPoint: .topTrailing
                 )
+                .frame(width: size.width, height: layout.canvasHeight)
+                .offset(y: layout.backgroundOffsetY)
                 .ignoresSafeArea()
 
                 Image("Logo")
@@ -61,9 +63,7 @@ public struct MissCatWelcomeView: View {
                     )
                     .position(
                         x: size.width / 2,
-                        y: safeTop
-                            + MissCatLegacyMetrics.welcomeLogoTopFromSafeArea
-                            + MissCatLegacyMetrics.welcomeLogoHeight / 2
+                        y: layout.logoCenterY
                     )
                     .accessibilityHidden(true)
 
@@ -73,11 +73,7 @@ public struct MissCatWelcomeView: View {
                     .fixedSize()
                     .position(
                         x: size.width / 2,
-                        y: safeTop
-                            + MissCatLegacyMetrics.welcomeLogoTopFromSafeArea
-                            + MissCatLegacyMetrics.welcomeLogoHeight
-                            + MissCatLegacyMetrics.welcomeTaglineGap
-                            + 10.5
+                        y: layout.taglineCenterY
                     )
                     .modifier(WelcomeControlEntrance(isVisible: controlsAreVisible))
                     .accessibilityIdentifier("welcome.tagline")
@@ -90,18 +86,18 @@ public struct MissCatWelcomeView: View {
                 }
                 .padding(.horizontal, MissCatLegacyMetrics.welcomeHorizontalInset)
                 .frame(width: size.width, height: buttonHeight)
-                .position(x: size.width / 2, y: buttonsTop + buttonHeight / 2)
+                .position(x: size.width / 2, y: layout.buttonsTopY + buttonHeight / 2)
                 .modifier(WelcomeControlEntrance(isVisible: controlsAreVisible))
 
                 Button(action: onChangeInstance) {
                     Text("> インスタンスを変更する")
-                        .font(.system(size: 17))
+                        .font(.system(size: MissCatLegacyMetrics.welcomeChangeInstanceFontSize))
                         .foregroundStyle(Color.white.opacity(0.925))
                         .frame(height: changeButtonHeight)
                 }
                 .buttonStyle(.plain)
                 .fixedSize(horizontal: true, vertical: false)
-                .position(x: size.width / 2, y: changeButtonBottom - changeButtonHeight / 2)
+                .position(x: size.width / 2, y: layout.changeInstanceCenterY)
                 .modifier(WelcomeControlEntrance(isVisible: controlsAreVisible))
                 .accessibilityIdentifier("welcome.change-instance")
 
@@ -110,12 +106,10 @@ public struct MissCatWelcomeView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.trailing, MissCatLegacyMetrics.welcomeHorizontalInset)
-                    .frame(width: size.width, height: 18)
+                    .frame(width: size.width, height: MissCatLegacyMetrics.welcomeInstanceHeight)
                     .position(
                         x: size.width / 2,
-                        y: size.height - safeBottom
-                            - MissCatLegacyMetrics.welcomeInstanceBottomFromSafeArea
-                            - 9
+                        y: layout.instanceCenterY
                     )
                     .modifier(WelcomeControlEntrance(isVisible: controlsAreVisible))
                     .accessibilityLabel("現在のインスタンス、\(instance)")

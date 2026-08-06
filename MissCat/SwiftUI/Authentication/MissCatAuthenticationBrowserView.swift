@@ -7,6 +7,19 @@ public enum MissCatAuthenticationIntent: String, Hashable, Sendable {
     case logIn
 }
 
+struct MissCatAuthenticationCallbackGate {
+    private(set) var hasReportedCallback = false
+
+    mutating func shouldReport(
+        _ url: URL,
+        matching callbackMatches: (URL) -> Bool
+    ) -> Bool {
+        guard !hasReportedCallback, callbackMatches(url) else { return false }
+        hasReportedCallback = true
+        return true
+    }
+}
+
 /// A WKWebView-backed authentication surface matching the legacy full-safe-area browser.
 /// Token exchange stays in the authentication service; this view only reports callback URLs.
 public struct MissCatAuthenticationBrowserView: View {
@@ -41,7 +54,9 @@ public struct MissCatAuthenticationBrowserView: View {
             makeLoginRequestAfterSignUp: makeLoginRequestAfterSignUp,
             onFailure: onFailure
         )
-        .background(Color(hex: "5C6367"))
+        .background(Color(hex: MissCatLegacyColorHex.authenticationBrowserBackground))
+        .navigationBarTitleDisplayMode(.inline)
+        .missCatLegacyOnboardingNavigationBar()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -82,12 +97,7 @@ private struct MissCatWebView: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.isOpaque = false
-        let legacyBackground = UIColor(
-            red: 92 / 255,
-            green: 99 / 255,
-            blue: 103 / 255,
-            alpha: 1
-        )
+        let legacyBackground = UIColor(hex: MissCatLegacyColorHex.authenticationBrowserBackground)
         webView.backgroundColor = legacyBackground
         webView.scrollView.backgroundColor = legacyBackground
         context.coordinator.loadedURL = request.url
@@ -117,7 +127,7 @@ private struct MissCatWebView: UIViewRepresentable {
         var onFailure: (Error) -> Void
         var loadedURL: URL?
         var reloadToken = 0
-        private var reportedCallbackURL: URL?
+        private var callbackGate = MissCatAuthenticationCallbackGate()
         private var requestedLoginAfterSignUp = false
 
         init(
@@ -152,9 +162,7 @@ private struct MissCatWebView: UIViewRepresentable {
             decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void
         ) {
             if let url = navigationAction.request.url,
-               callbackMatches(url),
-               reportedCallbackURL != url {
-                reportedCallbackURL = url
+               callbackGate.shouldReport(url, matching: callbackMatches) {
                 onCallback(url)
             }
             decisionHandler(.allow)

@@ -110,7 +110,13 @@ final class ApplicationState: ObservableObject {
 
     func present(_ error: Error) {
         canRetryAuthentication = false
-        errorMessage = error.description
+        if root == .authentication, !isCompletingAuthentication {
+            // This is the exact message shown by StartViewController when app
+            // registration or the authentication host could not be reached.
+            errorMessage = "インスタンスに接続できません"
+        } else {
+            errorMessage = error.description
+        }
     }
 }
 
@@ -136,15 +142,8 @@ struct MissCatRootView: View {
             }
 
             if applicationState.isCompletingAuthentication {
-                ZStack {
-                    Color.black.opacity(0.18).ignoresSafeArea()
-                    ProgressView()
-                        .controlSize(.large)
-                        .padding(22)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-                        .accessibilityLabel("認証情報を保存中")
-                }
-                .accessibilityIdentifier("authentication.completing")
+                MissCatAuthenticationLoadingOverlay(accessibilityLabel: "認証情報を保存中")
+                    .accessibilityIdentifier("authentication.completing")
             }
         }
         .task { applicationState.resolveInitialRoute() }
@@ -158,7 +157,12 @@ struct MissCatRootView: View {
             if applicationState.canRetryAuthentication {
                 Button("再試行") { applicationState.retryAuthentication() }
             }
-            Button("閉じる") { applicationState.errorMessage = nil }
+            Button(
+                "閉じる",
+                role: applicationState.canRetryAuthentication ? .cancel : .destructive
+            ) {
+                applicationState.errorMessage = nil
+            }
         } message: {
             Text(applicationState.errorMessage ?? "")
         }

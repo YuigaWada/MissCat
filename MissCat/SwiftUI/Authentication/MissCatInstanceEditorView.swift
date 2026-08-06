@@ -1,70 +1,82 @@
 import SwiftUI
 
+/// Presents the instance editor with the same native alert chrome and copy used by
+/// the legacy start screen. Keeping it as a SwiftUI alert also preserves the
+/// automatic keyboard presentation and platform button layout.
 public struct MissCatInstanceEditorView: View {
+    @Binding private var isPresented: Bool
     @Binding private var instance: String
     public let onCancel: () -> Void
     public let onApply: (String) -> Void
 
-    @State private var draft: String
-    @FocusState private var isFocused: Bool
+    @State private var draft = ""
 
     public init(
+        isPresented: Binding<Bool>,
         instance: Binding<String>,
         onCancel: @escaping () -> Void,
         onApply: @escaping (String) -> Void
     ) {
+        _isPresented = isPresented
         _instance = instance
-        _draft = State(initialValue: instance.wrappedValue)
         self.onCancel = onCancel
         self.onApply = onApply
     }
 
     public var body: some View {
-        NavigationStack {
-            Form {
-                Section("接続先インスタンス") {
-                    TextField("misskey.io", text: $draft)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .keyboardType(.URL)
-                        .submitLabel(.done)
-                        .focused($isFocused)
-                        .onSubmit(apply)
-                        .accessibilityIdentifier("instance.field")
+        Color.clear
+            .frame(width: 0, height: 0)
+            .alert("インスタンスの変更", isPresented: $isPresented) {
+                TextField("misskey.io", text: $draft)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .keyboardType(.URL)
+                    .submitLabel(.done)
+                    .onSubmit(apply)
+                    .accessibilityIdentifier("instance.field")
+
+                Button("閉じる", role: .cancel) {
+                    onCancel()
+                }
+                .accessibilityIdentifier("instance.cancel")
+
+                Button("変更", action: apply)
+                    .accessibilityIdentifier("instance.apply")
+            }
+            .onChange(of: isPresented) { presented in
+                if presented {
+                    // UIKit's text field was intentionally empty and displayed
+                    // misskey.io as a placeholder every time the alert opened.
+                    draft = ""
                 }
             }
-            .navigationTitle("インスタンスを変更")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル", action: onCancel)
-                        .accessibilityIdentifier("instance.cancel")
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("変更", action: apply)
-                        .accessibilityIdentifier("instance.apply")
-                }
-            }
-        }
-        .onAppear { isFocused = true }
-        .accessibilityIdentifier("instance.screen")
+            .accessibilityIdentifier("instance.screen")
     }
 
+    /// Mirrors `StartViewController.shapeInstance(_:)` so existing instance
+    /// strings keep the same behavior during the SwiftUI migration.
     public static func normalize(_ value: String) -> String {
         var normalized = value
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "　", with: "")
-
-        for prefix in ["https://", "http://"] where normalized.hasPrefix(prefix) {
-            normalized.removeFirst(prefix.count)
+        var removals = [" ", "　"]
+        if value.contains("http") {
+            removals.append("http://")
+            removals.append("https://")
         }
-        return normalized.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+
+        for removal in removals {
+            normalized = normalized.replacingOccurrences(of: removal, with: "")
+        }
+        return normalized
+    }
+
+    public static func resolve(_ value: String) -> String {
+        normalize(value.isEmpty ? "misskey.io" : value)
     }
 
     private func apply() {
-        let normalized = Self.normalize(draft)
-        let resolved = normalized.isEmpty ? "misskey.io" : normalized
+        let resolved = Self.resolve(draft)
         instance = resolved
+        isPresented = false
         onApply(resolved)
     }
 }
