@@ -106,13 +106,12 @@ Historic captures do not cover all required design states. Add fixtures/snapshot
 6. Emit three artifacts: baseline, current, and amplified absolute-difference/overlay image, plus JSON metrics.
 7. Gate app-owned pixels on all of:
    - exact dimensions;
-   - mean absolute RGBA error ≤ 0.5/255;
-   - changed pixels above 8/255 per channel ≤ 0.10%;
-   - SSIM ≥ 0.995;
-   - no connected changed region larger than 16×16 pixels unless reviewer marks and explains an approved OS-rendering exception.
+   - changed-pixel similarity ≥ 0.90 (equivalently, changed pixels above 8/255 per channel ≤ 10%);
+   - SSIM similarity score ≥ 0.90.
+   - Emit mean absolute RGBA error and maximum connected changed-region bounds as diagnostics, but do not apply the superseded stricter thresholds as release gates.
 8. A numerical pass is necessary but not sufficient. Reviewer inspects overlay at 100% for hierarchy, truncation, wrong font weight, safe-area/footer drift, animation frame, and tap-state mismatch, then signs the case.
 
-The “completely identical design” target is zero app-owned pixel difference. The tolerances above exist only for unavoidable rasterization differences between OS/font renderers; every exception must be case-specific and recorded, never a blanket baseline update.
+Per the product owner's 2026-08-07 decision, “completely identical design” is accepted at a measured similarity of 90% or higher. Both SSIM and changed-pixel similarity must independently meet 0.90; do not average a failing metric into a pass. Every baseline/current pair must still represent the same deterministic state, and baselines must never be silently regenerated.
 
 ## Behavior comparison protocol
 

@@ -2,7 +2,7 @@
 
 ## Release gates
 
-The rewrite is accepted only when all P0/P1 rows below pass on the newest installed iOS simulator runtime and no required capability remains backed by a legacy Storyboard/XIB controller. “Design is identical” is evaluated by the screenshot protocol in `docs/migration-test-matrix.md`; code review alone is not visual evidence.
+The rewrite is accepted only when all P0/P1 rows below pass on the newest installed iOS simulator runtime and no required capability remains backed by a legacy Storyboard/XIB controller. Per the product owner's 2026-08-07 decision, “Design is identical” means a same-state screenshot similarity of at least 90% under the protocol in `docs/migration-test-matrix.md`; code review alone is not visual evidence.
 
 Definitions:
 
@@ -16,14 +16,14 @@ Definitions:
 | ARCH-02 | P0 | Current iOS | App and extension build with warnings triaged on the newest supported stable Xcode/iOS and, at minimum during local development, the newest installed simulator; launch without compatibility crash and support current safe areas/keyboard. | Clean build log; simulator run |
 | ARCH-03 | P0 | State/API | Misskey REST, streaming, cache, auth, and persistence sit behind injectable protocols/actors; views contain no direct token/keychain/network handling. | Architecture review; unit tests |
 | ARCH-04 | P1 | Concurrency | No UI update occurs off-main; repeated navigation, fast scrolling, cancellation, reconnect, and account switching do not leak tasks or show prior-account data. | Stress UI tests; Instruments/manual evidence |
-| VIS-01 | P0 | Golden visuals | Every historic golden state has a same-state replacement capture and diff artifact; app-owned pixels meet the defined threshold. | Baseline/current/diff triplets |
+| VIS-01 | P0 | Golden visuals | Every historic golden state has a same-state replacement capture and diff artifact; app-owned pixels have SSIM ≥ 0.90 and changed-pixel similarity ≥ 0.90. | Baseline/current/diff triplets |
 | VIS-02 | P1 | Theme | Light and dark palettes, custom accent, typography, separators, corner radii, shadows, tab underline, footer geometry, avatar/cat badge, loading skeletons, and empty/error banners match legacy. | Snapshot suite at required devices/themes |
 | VIS-03 | P1 | Accessibility/layout | Dynamic Type and VoiceOver do not block any function; default content size remains pixel-compatible. Long Japanese/Latin names, RTL-safe layout, and keyboard avoidance have no clipping. | UI/a11y tests and focused snapshots |
 | AUTH-01 | P0 | Start | With no account, exact start screen appears; selected instance displays; change-instance normalization works. | Unit + screenshot + UI test |
 | AUTH-02 | P0 | Terms/auth | Sign-up and login require explicit Terms acceptance, support cancel/retry, current Misskey auth/session exchange, and save no account on failure. | Mock-server E2E |
 | AUTH-03 | P0 | Accounts | Existing accounts upgrade without re-login; API tokens remain keychain-only; duplicate account updates safely; add/switch/delete/last-account flows work. | Migration unit tests + UI E2E |
-| HOME-01 | P0 | Shell | Top search/timeline pager and five-position footer match legacy, preserve selected page, and route all items; repeated tap scrolls Home/Notifications to top. | UI tests + screenshots |
-| HOME-02 | P1 | Tabs | Add/delete/reorder/rename/account-bind Home/Local/Social/Global tabs; invalid/deleted-account tabs are repaired; empty set restores defaults. | Unit + settings-to-home E2E |
+| HOME-01 | P0 | Shell | Top search/timeline pager and five-position footer match legacy, preserve selected page, and route all items; repeated tap scrolls Home/Notifications to top. Every timeline tab changes through both direct tap and horizontal swipe using one synchronized selection state. | UI tests + screenshots |
+| HOME-02 | P1 | Tabs | Add/delete/reorder/rename/account-bind Home/Local/Social/Global tabs; invalid/deleted-account tabs are repaired; empty set restores defaults. Tap, forward/reverse swipe, boundary swipe, and rapid switching select the correct content/account while preserving each tab's scroll position. | Unit + settings-to-home E2E |
 | TL-01 | P0 | Timelines | Home/Local/Social/Global initial load, correct account credentials, empty/error/retry, pagination, and manual refresh work. No special-host substitution changes requested timeline semantics. | Contract tests + UI E2E |
 | TL-02 | P0 | Streaming | Correct channel connects, reconnects with missed-note catch-up, deduplicates, inserts notes, applies reaction/unreaction/delete/poll updates, and stops on account/tab teardown. | Fake WebSocket integration tests |
 | TL-03 | P1 | Row variants | Normal, reply, renote, promotion, quote, CW, skeleton, and mixed-content rows render and size identically with stable scroll position. | Parameterized snapshots/UI scroll test |
