@@ -11,6 +11,7 @@ readonly EVIDENCE_SCHEMA_VERSION=2
 readonly SUMMARY_SCHEMA_VERSION=4
 readonly REVIEW_SCHEMA_VERSION=1
 readonly EXPECTED_REQUIREMENTS_SHA256="8c119a005579a70d5f373d3d82a0b9a33f62eabb896cfadd820487d48a087c50"
+readonly EXPECTED_CAPTURE_POLICY_SHA256="a4e8ae8bbfd9476a6e44c339b0e2a4f1d7c920936b6af86444af6c746b76b048"
 readonly EXPECTED_SURFACES=45
 readonly EXPECTED_VISUAL_CASES=710
 
@@ -114,9 +115,11 @@ requirement_ids="${temporary_dir}/requirement-ids.txt"
 used_paths="${temporary_dir}/used-paths.txt"
 used_baseline_hashes="${temporary_dir}/used-baseline-hashes.txt"
 used_candidate_hashes="${temporary_dir}/used-candidate-hashes.txt"
+used_pixel_content="${temporary_dir}/used-pixel-content.tsv"
 : > "$used_paths"
 : > "$used_baseline_hashes"
 : > "$used_candidate_hashes"
+: > "$used_pixel_content"
 
 sha256_file() {
     /usr/bin/openssl dgst -sha256 -r "$1" | awk '{ print $1 }'
@@ -181,6 +184,20 @@ register_unique_image_content() {
     printf '%s\n' "$digest" >> "$registry"
 }
 
+register_canonical_pixel_content() {
+    local digest="$1"
+    local case_id="$2"
+    local role="$3"
+    local owner
+    owner=$(awk -F '\t' -v digest="$digest" '$1 == digest { print $2; exit }' "$used_pixel_content")
+    if [[ -n "$owner" && "$owner" != "$case_id" ]]; then
+        fail "reused or replayed decoded pixel content (${role}) for $case_id; owned by $owner"
+    fi
+    if [[ -z "$owner" ]]; then
+        printf '%s\t%s\n' "$digest" "$case_id" >> "$used_pixel_content"
+    fi
+}
+
 image_dimensions() {
     local path="$1"
     local output width height
@@ -191,6 +208,23 @@ image_dimensions() {
     [[ "$width" =~ ^[0-9]+$ && "$height" =~ ^[0-9]+$ && "$width" -gt 0 && "$height" -gt 0 ]] || \
         fail "invalid PNG dimensions: ${path#${repository_root}/}"
     printf '%s %s' "$width" "$height"
+}
+
+canonical_pixel_digest() {
+    local path="$1"
+    local orientation="$2"
+    local width="$3"
+    local height="$4"
+    local digest
+    [[ -x "$magick_bin" ]] || fail "ImageMagick is required to canonicalize capture pixels: $magick_bin"
+    digest=$(
+        {
+            printf 'misscat-rgba8-srgb-v1\0%s\0%s\0%s\0' "$orientation" "$width" "$height"
+            "$magick_bin" "$path" -auto-orient -colorspace sRGB -alpha on -depth 8 -strip rgba:-
+        } | /usr/bin/openssl dgst -sha256 -r | awk '{ print $1 }'
+    ) || fail "cannot canonicalize capture pixels: ${path#${repository_root}/}"
+    [[ "$digest" =~ ^[0-9a-f]{64}$ ]] || fail "invalid canonical pixel digest: ${path#${repository_root}/}"
+    printf '%s' "$digest"
 }
 
 git_blob_at() {
@@ -406,6 +440,8 @@ header == 0 {
 }
 END { if (!header || rows != 2 || bad) exit 65 }
 ' "$capture_policy" || fail "invalid capture policy contract"
+[[ "$(sha256_file "$capture_policy")" == "$EXPECTED_CAPTURE_POLICY_SHA256" ]] || \
+    fail "capture policy does not match the authoritative device profile"
 
 approval_row=$(awk -F '\t' '
 BEGIN { expected_header = "policy_sha256\tpolicy_commit" }
@@ -508,6 +544,12 @@ while IFS=$'\t' read -r surface state appearance device fixture locale content_s
     candidate_sha=$(sha256_file "$candidate_path")
     register_unique_image_content "$baseline_sha" "$used_baseline_hashes" baseline "$case_id"
     register_unique_image_content "$candidate_sha" "$used_candidate_hashes" candidate "$case_id"
+    baseline_pixel_digest=$(canonical_pixel_digest \
+        "$baseline_path" "$capture_orientation" "$baseline_width" "$baseline_height")
+    candidate_pixel_digest=$(canonical_pixel_digest \
+        "$candidate_path" "$capture_orientation" "$candidate_width" "$candidate_height")
+    register_canonical_pixel_content "$baseline_pixel_digest" "$case_id" baseline
+    register_canonical_pixel_content "$candidate_pixel_digest" "$case_id" candidate
     summary_result=$("$json_validator" summary "$summary_path" \
         "$surface" "$state" "$appearance" "$device" "$capture_orientation" "$fixture" "$locale" "$content_size" "$visual_ready" \
         "$baseline" "$candidate" "$summary_relative" "$heatmap_relative" "$side_by_side_relative" "$overlay_relative" \

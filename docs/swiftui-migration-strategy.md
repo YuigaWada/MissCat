@@ -405,10 +405,13 @@ The comparator calculates changed-pixel similarity and SSIM independently. The
 pinned 45-ID requirement inventory expands to 710 cases across state, device,
 appearance, locale, and content-size axes; focused cases cover long Japanese and
 Latin content, RTL, accessibility Dynamic Type, and keyboards. Surface 43 alone
-is a route audit. The evidence verifier rejects missing or replayed captures,
-hash drift, relaxed or malformed metrics, unapproved masks, metadata mismatch,
-unreviewed overlays, and invalid artifact/reviewer commit ancestry. The evidence
-manifest is currently empty, so keep every surface in `migrating` until that
+is a route audit. The evidence verifier rejects missing or replayed captures
+using one decoded-pixel ownership registry across baseline and candidate roles,
+while preserving raw PNG hash provenance. It also hard-pins the full-resolution
+device capture policy and rejects hash drift, relaxed or malformed metrics,
+unapproved masks, metadata mismatch, unreviewed overlays, and invalid
+artifact/reviewer commit ancestry. The evidence manifest is currently empty,
+so keep every surface in `migrating` until that
 strict gate and its functional requirements both pass.
 
 ### Mandatory tab and account behavior suite

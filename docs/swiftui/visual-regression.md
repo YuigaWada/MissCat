@@ -14,7 +14,7 @@ artifacts/visual-acceptance/cases/<surface>--<state>--<appearance>--<device>--<l
 artifacts/visual-acceptance/cases/<surface>--<state>--<appearance>--<device>--<locale>--<content-size>/review.json
 ```
 
-Baseline and candidate must use the same device, orientation, display scale, appearance, locale, Dynamic Type size, seeded app data, and screen state. `docs/visual-acceptance-capture-policy.tsv` pins full-resolution portrait pixels for every allowed device (`1206x2622` for iPhone 16 Pro and `750x1334` for iPhone SE 3). The verifier rejects matching but scaled images, rotated or landscape images, cropping, and differing dimensions instead of resizing either input. Orientation is also recorded explicitly in `summary.json`.
+Baseline and candidate must use the same device, orientation, display scale, appearance, locale, Dynamic Type size, seeded app data, and screen state. `docs/visual-acceptance-capture-policy.tsv` pins full-resolution portrait pixels for every allowed device (`1206x2622` for iPhone 16 Pro and `750x1334` for iPhone SE 3). The verifier hard-pins that policy's digest to `a4e8ae8bbfd9476a6e44c339b0e2a4f1d7c920936b6af86444af6c746b76b048`, so a producer cannot precommit a smaller or otherwise relaxed device profile. It rejects matching but scaled images, rotated or landscape images, cropping, and differing dimensions instead of resizing either input. Orientation is also recorded explicitly in `summary.json`.
 
 ## Running a comparison
 
@@ -114,15 +114,19 @@ commit must not contain `review.json`. A later descendant commit adds the
 reviewer's tracked acceptance record after 100% overlay inspection. The verifier
 requires every artifact blob to match the producer commit, `HEAD`, and the working
 tree, and requires the reviewer record to remain unchanged since its introduction.
-Baseline and candidate image content must also be unique across canonical cases;
-distinct filenames cannot legitimize a copied screenshot from another state.
+Baseline and candidate image content must also be unique across canonical cases
+and across their baseline/candidate roles. The verifier retains each raw PNG hash
+for provenance, then separately hashes a canonical decoded 8-bit sRGB RGBA stream
+with its dimensions and orientation. Distinct filenames, PNG compression, or
+comments cannot legitimize a copied screenshot from another state. Pixel-identical
+baseline and candidate captures remain valid only inside their one canonical case.
 For every recorded row, the verifier reruns `compare-screenshots.sh` from the
 tracked inputs and recorded settings, compares the independently calculated JSON
 metrics, and requires byte-identical regenerated heatmap, side-by-side, and
 overlay artifacts. A hand-authored passing summary is not acceptance evidence.
-The capture policy, mask policy, and mask-policy approval record must all exist
-unchanged before the artifact-producer commit. Any used mask must already be an
-identical tracked blob at the independently pinned policy commit.
+The authoritative capture policy, mask policy, and mask-policy approval record
+must all exist unchanged before the artifact-producer commit. Any used mask must
+already be an identical tracked blob at the independently pinned policy commit.
 
 Validate the inventory while migration evidence is still incomplete:
 
