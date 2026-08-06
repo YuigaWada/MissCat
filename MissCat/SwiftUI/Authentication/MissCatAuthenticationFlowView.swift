@@ -8,6 +8,7 @@ public struct MissCatAuthenticationFlowView: View {
         MissCatAuthenticationIntent,
         String
     ) async throws -> URLRequest
+    public typealias LoginRequestProvider = @MainActor (String) async throws -> URLRequest
 
     private enum Destination: Hashable {
         case terms
@@ -22,6 +23,7 @@ public struct MissCatAuthenticationFlowView: View {
     @State private var showsInstanceEditor = false
 
     private let makeAuthorizationRequest: AuthorizationRequestProvider
+    private let makeLoginRequestAfterSignUp: LoginRequestProvider
     private let callbackMatches: (URL) -> Bool
     private let onCallback: (URL) -> Void
     private let onFailure: (Error) -> Void
@@ -29,12 +31,14 @@ public struct MissCatAuthenticationFlowView: View {
     public init(
         initialInstance: String = "misskey.io",
         makeAuthorizationRequest: @escaping AuthorizationRequestProvider,
+        makeLoginRequestAfterSignUp: @escaping LoginRequestProvider,
         callbackMatches: @escaping (URL) -> Bool,
         onCallback: @escaping (URL) -> Void,
         onFailure: @escaping (Error) -> Void
     ) {
         _instance = State(initialValue: MissCatInstanceEditorView.normalize(initialInstance))
         self.makeAuthorizationRequest = makeAuthorizationRequest
+        self.makeLoginRequestAfterSignUp = makeLoginRequestAfterSignUp
         self.callbackMatches = callbackMatches
         self.onCallback = onCallback
         self.onFailure = onFailure
@@ -57,7 +61,9 @@ public struct MissCatAuthenticationFlowView: View {
                         MissCatAuthenticationBrowserView(
                             request: authorizationRequest,
                             callbackMatches: callbackMatches,
-                            onCallback: onCallback
+                            onCallback: onCallback,
+                            makeLoginRequestAfterSignUp: signUpLoginRequestProvider,
+                            onFailure: onFailure
                         )
                     }
                 }
@@ -84,6 +90,11 @@ public struct MissCatAuthenticationFlowView: View {
             }
         }
         .accessibilityIdentifier("authentication.flow")
+    }
+
+    private var signUpLoginRequestProvider: (@MainActor () async throws -> URLRequest)? {
+        guard pendingIntent == .signUp else { return nil }
+        return { try await makeLoginRequestAfterSignUp(instance) }
     }
 
     private func begin(_ intent: MissCatAuthenticationIntent) {

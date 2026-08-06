@@ -42,7 +42,6 @@ public struct MissCatInstanceEditorView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("変更", action: apply)
-                        .disabled(Self.normalize(draft).isEmpty)
                         .accessibilityIdentifier("instance.apply")
                 }
             }
@@ -64,8 +63,8 @@ public struct MissCatInstanceEditorView: View {
 
     private func apply() {
         let normalized = Self.normalize(draft)
-        guard !normalized.isEmpty else { return }
-        instance = normalized
-        onApply(normalized)
+        let resolved = normalized.isEmpty ? "misskey.io" : normalized
+        instance = resolved
+        onApply(resolved)
     }
 }

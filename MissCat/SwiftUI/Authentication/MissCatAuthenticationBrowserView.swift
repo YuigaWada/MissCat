@@ -13,17 +13,23 @@ public struct MissCatAuthenticationBrowserView: View {
     public let request: URLRequest
     public let callbackMatches: (URL) -> Bool
     public let onCallback: (URL) -> Void
+    public let makeLoginRequestAfterSignUp: (@MainActor () async throws -> URLRequest)?
+    public let onFailure: (Error) -> Void
 
     @State private var reloadToken = 0
 
     public init(
         request: URLRequest,
         callbackMatches: @escaping (URL) -> Bool,
-        onCallback: @escaping (URL) -> Void
+        onCallback: @escaping (URL) -> Void,
+        makeLoginRequestAfterSignUp: (@MainActor () async throws -> URLRequest)? = nil,
+        onFailure: @escaping (Error) -> Void = { _ in }
     ) {
         self.request = request
         self.callbackMatches = callbackMatches
         self.onCallback = onCallback
+        self.makeLoginRequestAfterSignUp = makeLoginRequestAfterSignUp
+        self.onFailure = onFailure
     }
 
     public var body: some View {
@@ -31,7 +37,9 @@ public struct MissCatAuthenticationBrowserView: View {
             request: request,
             reloadToken: reloadToken,
             callbackMatches: callbackMatches,
-            onCallback: onCallback
+            onCallback: onCallback,
+            makeLoginRequestAfterSignUp: makeLoginRequestAfterSignUp,
+            onFailure: onFailure
         )
         .background(Color(hex: "5C6367"))
         .toolbar {
@@ -54,9 +62,16 @@ private struct MissCatWebView: UIViewRepresentable {
     let reloadToken: Int
     let callbackMatches: (URL) -> Bool
     let onCallback: (URL) -> Void
+    let makeLoginRequestAfterSignUp: (@MainActor () async throws -> URLRequest)?
+    let onFailure: (Error) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(callbackMatches: callbackMatches, onCallback: onCallback)
+        Coordinator(
+            callbackMatches: callbackMatches,
+            onCallback: onCallback,
+            makeLoginRequestAfterSignUp: makeLoginRequestAfterSignUp,
+            onFailure: onFailure
+        )
     }
 
     func makeUIView(context: Context) -> WKWebView {
@@ -75,14 +90,16 @@ private struct MissCatWebView: UIViewRepresentable {
         )
         webView.backgroundColor = legacyBackground
         webView.scrollView.backgroundColor = legacyBackground
-        webView.load(request)
         context.coordinator.loadedURL = request.url
+        context.coordinator.clearWebsiteDataAndLoad(request, in: webView)
         return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         context.coordinator.callbackMatches = callbackMatches
         context.coordinator.onCallback = onCallback
+        context.coordinator.makeLoginRequestAfterSignUp = makeLoginRequestAfterSignUp
+        context.coordinator.onFailure = onFailure
 
         if context.coordinator.reloadToken != reloadToken {
             context.coordinator.reloadToken = reloadToken
@@ -96,16 +113,37 @@ private struct MissCatWebView: UIViewRepresentable {
     final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         var callbackMatches: (URL) -> Bool
         var onCallback: (URL) -> Void
+        var makeLoginRequestAfterSignUp: (@MainActor () async throws -> URLRequest)?
+        var onFailure: (Error) -> Void
         var loadedURL: URL?
         var reloadToken = 0
         private var reportedCallbackURL: URL?
+        private var requestedLoginAfterSignUp = false
 
         init(
             callbackMatches: @escaping (URL) -> Bool,
-            onCallback: @escaping (URL) -> Void
+            onCallback: @escaping (URL) -> Void,
+            makeLoginRequestAfterSignUp: (@MainActor () async throws -> URLRequest)?,
+            onFailure: @escaping (Error) -> Void
         ) {
             self.callbackMatches = callbackMatches
             self.onCallback = onCallback
+            self.makeLoginRequestAfterSignUp = makeLoginRequestAfterSignUp
+            self.onFailure = onFailure
+        }
+
+        func clearWebsiteDataAndLoad(_ request: URLRequest, in webView: WKWebView) {
+            URLSession.shared.reset {}
+
+            let dataStore = WKWebsiteDataStore.default()
+            let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+            dataStore.fetchDataRecords(ofTypes: dataTypes) { records in
+                dataStore.removeData(ofTypes: dataTypes, for: records) {
+                    DispatchQueue.main.async {
+                        webView.load(request)
+                    }
+                }
+            }
         }
 
         func webView(
@@ -120,6 +158,28 @@ private struct MissCatWebView: UIViewRepresentable {
                 onCallback(url)
             }
             decisionHandler(.allow)
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation?) {
+            guard !requestedLoginAfterSignUp,
+                  let makeLoginRequestAfterSignUp
+            else { return }
+
+            webView.evaluateJavaScript("localStorage.getItem(\"i\")") { result, _ in
+                guard let apiKey = result as? String, !apiKey.isEmpty else { return }
+                self.requestedLoginAfterSignUp = true
+
+                Task { @MainActor in
+                    do {
+                        let request = try await makeLoginRequestAfterSignUp()
+                        self.loadedURL = request.url
+                        webView.load(request)
+                    } catch {
+                        self.requestedLoginAfterSignUp = false
+                        self.onFailure(error)
+                    }
+                }
+            }
         }
     }
 }
