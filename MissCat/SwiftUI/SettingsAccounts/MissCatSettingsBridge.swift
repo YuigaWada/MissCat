@@ -140,7 +140,11 @@ final class MissCatAddAccountModel: ObservableObject {
 
     private let service: MissCatAuthenticationService
 
-    init(service: MissCatAuthenticationService = MissCatAuthenticationService()) {
+    init() {
+        self.service = MissCatAuthenticationService()
+    }
+
+    init(service: MissCatAuthenticationService) {
         self.service = service
     }
 
@@ -249,4 +253,3 @@ struct MissCatAddAccountView: View {
         .accessibilityIdentifier("accounts.add.flow")
     }
 }
-

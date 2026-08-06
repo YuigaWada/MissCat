@@ -472,79 +472,7 @@ public struct MissCatDesignSettingsScreen: View {
     }
 
     public var body: some View {
-        List {
-            Section("上タブ設定") {
-                ForEach(store.tabs) { tab in
-                    VStack(alignment: .leading, spacing: 5) {
-                        HStack(spacing: 10) {
-                            Text(tab.kind.legacyTitle)
-                                .font(.system(size: 14, weight: .semibold))
-                                .frame(width: 70, alignment: .leading)
-                            TextField(
-                                tab.kind.defaultName,
-                                text: Binding(
-                                    get: { tab.name },
-                                    set: { store.updateName(id: tab.id, name: $0) }
-                                )
-                            )
-                            .accessibilityIdentifier("settings.design.tab-name.\(tab.id)")
-                        }
-
-                        if store.accounts.count > 1 {
-                            Picker(
-                                "アカウント",
-                                selection: Binding(
-                                    get: { tab.accountID ?? store.accounts.first?.id ?? "" },
-                                    set: { value in updateOwner(tabID: tab.id, ownerID: value) }
-                                )
-                            ) {
-                                ForEach(store.accounts) { account in
-                                    Text("@\(account.username)@\(account.instance)").tag(account.id)
-                                }
-                            }
-                            .font(.system(size: 12))
-                        }
-                    }
-                    .listRowBackground(cellBackground)
-                }
-                .onMove(perform: store.moveTabs)
-                .onDelete(perform: store.removeTabs)
-
-                Menu("タブを追加") {
-                    ForEach(MissCatSettingsTabKind.allCases.filter { $0 != .user && $0 != .list }) { kind in
-                        Button(kind.legacyTitle) {
-                            store.addTab(kind: kind, accountID: store.accounts.first?.id)
-                        }
-                    }
-                }
-                .accessibilityIdentifier("settings.design.add-tab")
-            } footer: {
-                Text("タップで表示名を変更することができます")
-            }
-
-            Section("テーマ設定") {
-                Picker("カラーモード", selection: $store.mode) {
-                    ForEach(MissCatThemeMode.allCases) { mode in Text(mode.rawValue).tag(mode) }
-                }
-                .pickerStyle(.segmented)
-                .accessibilityIdentifier("settings.design.color-mode")
-
-                ColorPicker("メインカラー", selection: accentBinding, supportsOpacity: false)
-                    .accessibilityIdentifier("settings.design.color-picker")
-
-                HStack {
-                    Text("HEX")
-                    TextField("2F7CF6", text: Binding(
-                        get: { store.accentHex },
-                        set: { store.setAccentHex($0) }
-                    ))
-                    .textInputAutocapitalization(.characters)
-                    .autocorrectionDisabled()
-                    .multilineTextAlignment(.trailing)
-                    .accessibilityIdentifier("settings.design.color-hex")
-                }
-            }
-        }
+        designList
         .scrollContentBackground(.hidden)
         .background(palette.base)
         .foregroundStyle(palette.text)
@@ -553,26 +481,135 @@ public struct MissCatDesignSettingsScreen: View {
         .environment(\.editMode, .constant(.active))
         .task { store.load() }
         .onDisappear { store.save(onRootRelaunchRequired: onRootRelaunchRequired) }
-        .overlay {
-            if store.isLoading || store.isSaving {
-                ProgressView()
-                    .padding(24)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-                    .accessibilityIdentifier("settings.design.progress")
-            }
-        }
+        .overlay { progressOverlay }
         .alert(
             "エラー",
-            isPresented: Binding(
-                get: { if case .error = store.presentation { return true }; return false },
-                set: { if !$0 { store.dismissPresentation() } }
-            )
+            isPresented: errorIsPresented
         ) {
             Button("閉じる", role: .cancel) { store.dismissPresentation() }
         } message: {
-            if case let .error(_, message) = store.presentation { Text(message) }
+            errorMessage
         }
         .accessibilityIdentifier("settings.design.screen")
+    }
+
+    private var designList: some View {
+        List {
+            tabSettingsSection
+            Section(header: Text("テーマ設定"), footer: EmptyView()) {
+                Picker("カラーモード", selection: $store.mode) {
+                    ForEach(MissCatThemeMode.allCases) { mode in
+                        Text(mode.rawValue).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .accessibilityIdentifier("settings.design.color-mode")
+
+                SwiftUI.ColorPicker("メインカラー", selection: accentBinding, supportsOpacity: false)
+                    .accessibilityIdentifier("settings.design.color-picker")
+
+                HStack {
+                    Text("HEX")
+                    TextField("2F7CF6", text: accentHexBinding)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                        .multilineTextAlignment(.trailing)
+                        .accessibilityIdentifier("settings.design.color-hex")
+                }
+            }
+        }
+    }
+
+    private var tabSettingsSection: some View {
+        Section {
+            ForEach(store.tabs) { tab in
+                tabRow(tab)
+                    .listRowBackground(cellBackground)
+            }
+            .onMove(perform: store.moveTabs)
+            .onDelete(perform: store.removeTabs)
+
+            Menu("タブを追加") {
+                ForEach(addableTabKinds) { kind in
+                    Button(kind.legacyTitle) {
+                        store.addTab(kind: kind, accountID: store.accounts.first?.id)
+                    }
+                }
+            }
+            .accessibilityIdentifier("settings.design.add-tab")
+        } header: {
+            Text("上タブ設定")
+        } footer: {
+            Text("タップで表示名を変更することができます")
+        }
+    }
+
+    private func tabRow(_ tab: MissCatSettingsTab) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 10) {
+                Text(tab.kind.legacyTitle)
+                    .font(.system(size: 14, weight: .semibold))
+                    .frame(width: 70, alignment: .leading)
+                TextField(tab.kind.defaultName, text: tabNameBinding(for: tab))
+                    .accessibilityIdentifier("settings.design.tab-name.\(tab.id)")
+            }
+
+            if store.accounts.count > 1 {
+                Picker("アカウント", selection: tabOwnerBinding(for: tab)) {
+                    ForEach(store.accounts) { account in
+                        Text("@\(account.username)@\(account.instance)").tag(account.id)
+                    }
+                }
+                .font(.system(size: 12))
+            }
+        }
+    }
+
+    @ViewBuilder private var progressOverlay: some View {
+        if store.isLoading || store.isSaving {
+            ProgressView()
+                .padding(24)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                .accessibilityIdentifier("settings.design.progress")
+        }
+    }
+
+    @ViewBuilder private var errorMessage: some View {
+        if case let .error(_, message) = store.presentation {
+            Text(message)
+        }
+    }
+
+    private var addableTabKinds: [MissCatSettingsTabKind] {
+        MissCatSettingsTabKind.allCases.filter { $0 != .user && $0 != .list }
+    }
+
+    private var errorIsPresented: Binding<Bool> {
+        Binding(
+            get: { if case .error = store.presentation { return true }; return false },
+            set: { if !$0 { store.dismissPresentation() } }
+        )
+    }
+
+    private var accentHexBinding: Binding<String> {
+        Binding(
+            get: { store.accentHex },
+            set: { store.setAccentHex($0) }
+        )
+    }
+
+    private func tabNameBinding(for tab: MissCatSettingsTab) -> Binding<String> {
+        Binding(
+            get: { tab.name },
+            set: { store.updateName(id: tab.id, name: $0) }
+        )
+    }
+
+    private func tabOwnerBinding(for tab: MissCatSettingsTab) -> Binding<String> {
+        Binding(
+            get: { tab.accountID ?? store.accounts.first?.id ?? "" },
+            set: { updateOwner(tabID: tab.id, ownerID: $0) }
+        )
     }
 
     private var cellBackground: Color {
