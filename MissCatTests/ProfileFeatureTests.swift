@@ -76,6 +76,46 @@ final class MissCatProfileTransportContractTests: XCTestCase {
         XCTAssertEqual(following.nextCursor, "relationship-id")
     }
 
+    func testRelationshipAcceptsCurrentArrayAndCompatibleObjectResponses() async throws {
+        var responses: [Any] = [
+            [["id": "target", "isFollowing": true]],
+            ["id": "target", "isFollowing": false]
+        ]
+        var requests: [URLRequest] = []
+        ProfileURLProtocolStub.handler = { request in
+            requests.append(request)
+            return Self.response(for: request, json: responses.removeFirst())
+        }
+        let subject = MissCatRESTProfileRepository(account: account, session: session)
+
+        let currentResponse = try await subject.relationship(userID: "target")
+        let compatibleResponse = try await subject.relationship(userID: "target")
+
+        XCTAssertTrue(currentResponse)
+        XCTAssertFalse(compatibleResponse)
+        XCTAssertEqual(requests.map { $0.url?.path }, ["/api/users/relation", "/api/users/relation"])
+        let bodies = try requests.map { try XCTUnwrap($0.profileBodyData).jsonObject }
+        XCTAssertTrue(bodies.allSatisfy {
+            $0["i"] as? String == "account-token" && $0["userId"] as? String == "target"
+        })
+    }
+
+    func testRelationshipRejectsEmptyArrayResponse() async {
+        ProfileURLProtocolStub.handler = { request in
+            Self.response(for: request, json: [])
+        }
+        let subject = MissCatRESTProfileRepository(account: account, session: session)
+
+        do {
+            _ = try await subject.relationship(userID: "target")
+            XCTFail("Expected an empty relation list to be rejected")
+        } catch let DecodingError.dataCorrupted(context) {
+            XCTAssertEqual(context.debugDescription, "users/relation returned an empty relation list")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
     func testProfileUpdateSendsOnlyChangedFieldAndToken() async throws {
         var capturedBody: [String: Any] = [:]
         ProfileURLProtocolStub.handler = { request in

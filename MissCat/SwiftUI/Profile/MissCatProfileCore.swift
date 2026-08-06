@@ -464,7 +464,28 @@ private struct SearchBody: Encodable {
 }
 
 private struct RelationshipResponse: Decodable {
+    private struct Payload: Decodable {
+        let isFollowing: Bool
+    }
+
     let isFollowing: Bool
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let payload = try? container.decode(Payload.self) {
+            isFollowing = payload.isFollowing
+            return
+        }
+
+        let payloads = try container.decode([Payload].self)
+        guard let payload = payloads.first else {
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "users/relation returned an empty relation list"
+            )
+        }
+        isFollowing = payload.isFollowing
+    }
 }
 
 private struct FollowEdge: Decodable {
