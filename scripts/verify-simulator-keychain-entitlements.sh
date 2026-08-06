@@ -12,6 +12,7 @@ plutil_bin=${PLUTIL_BIN:-/usr/bin/plutil}
 codesign_bin=${CODESIGN_BIN:-/usr/bin/codesign}
 otool_bin=${OTOOL_BIN:-/usr/bin/otool}
 dd_bin=${DD_BIN:-/bin/dd}
+wc_bin=${WC_BIN:-/usr/bin/wc}
 application_group="group.yuwd.MissCat"
 
 temporary_directory=$(mktemp -d)
@@ -65,6 +66,7 @@ extract_entitlements() {
     # `simctl install` consumes that section even when the ad-hoc signature has
     # no entitlement blob, so inspect the exact section as a fallback.
     local executable_name executable_path section_details section_offset section_size
+    local section_offset_decimal section_size_decimal section_end executable_size extracted_size
     executable_name=$(plist_value "$info_plist" CFBundleExecutable) || return 1
     executable_path="$bundle_path/$executable_name"
     [[ -f "$executable_path" ]] || return 1
@@ -80,8 +82,26 @@ extract_entitlements() {
     [[ -n "$section_offset" && -n "$section_size" ]] || return 1
     [[ "$section_offset" =~ ^(0x)?[0-9a-fA-F]+$ && "$section_size" =~ ^(0x)?[0-9a-fA-F]+$ ]] || return 1
 
+    if [[ "$section_offset" == 0x* || "$section_offset" == 0X* ]]; then
+        section_offset_decimal=$((section_offset))
+    else
+        section_offset_decimal=$((10#$section_offset))
+    fi
+    if [[ "$section_size" == 0x* || "$section_size" == 0X* ]]; then
+        section_size_decimal=$((section_size))
+    else
+        section_size_decimal=$((10#$section_size))
+    fi
+    section_end=$((section_offset_decimal + section_size_decimal))
+    executable_size=$("$wc_bin" -c <"$executable_path" | tr -d '[:space:]') || return 1
+    [[ "$executable_size" =~ ^[0-9]+$ ]] || return 1
+    ((section_offset_decimal >= 0 && section_size_decimal > 0)) || return 1
+    ((section_end >= section_offset_decimal && section_end <= executable_size)) || return 1
+
     "$dd_bin" if="$executable_path" of="$destination" \
-        bs=1 skip="$((section_offset))" count="$((section_size))" status=none 2>/dev/null || return 1
+        bs=1 skip="$section_offset_decimal" count="$section_size_decimal" status=none 2>/dev/null || return 1
+    extracted_size=$("$wc_bin" -c <"$destination" | tr -d '[:space:]') || return 1
+    [[ "$extracted_size" == "$section_size_decimal" ]] || return 1
     "$plutil_bin" -lint "$destination" >/dev/null 2>&1 || return 1
     "$plutil_bin" -extract keychain-access-groups raw "$destination" >/dev/null 2>&1 || return 1
 }

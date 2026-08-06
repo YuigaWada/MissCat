@@ -102,6 +102,17 @@ for bundle in "$fallback" "$fallback/PlugIns/MissCatShare.appex"; do
 done
 expect_success fallback "$fallback"
 
+truncated=$(make_app truncated)
+truncated_bundle="$truncated/PlugIns/MissCatShare.appex"
+truncated_plist="$truncated_bundle/signed-entitlements.plist"
+truncated_executable=$(/usr/bin/plutil -extract CFBundleExecutable raw "$truncated_bundle/Info.plist")
+truncated_size=$(wc -c <"$truncated_plist" | tr -d ' ')
+printf '0123456789abcdef' >"$truncated_bundle/$truncated_executable"
+cat "$truncated_plist" >>"$truncated_bundle/$truncated_executable"
+echo "16 $((truncated_size + 32))" >"$truncated_bundle/$truncated_executable.section"
+rm "$truncated_plist"
+expect_failure truncated-macho-fallback "$truncated"
+
 unsigned=$(make_app unsigned)
 rm "$unsigned/signed-entitlements.plist"
 expect_failure unsigned "$unsigned"
@@ -122,5 +133,12 @@ disagreement=$(make_app disagreement)
 /usr/bin/plutil -replace MissCatKeychainAccessGroup -string OTHER.yuwd.MissCat \
     "$disagreement/PlugIns/MissCatShare.appex/Info.plist"
 expect_failure main-extension-disagreement "$disagreement"
+
+wrong_share=$(make_app wrong-share)
+write_entitlements \
+    "$wrong_share/PlugIns/MissCatShare.appex/signed-entitlements.plist" \
+    "OTHER.yuwd.MissCat" \
+    "group.yuwd.MissCat"
+expect_failure wrong-share-entitlement-with-matching-info "$wrong_share"
 
 echo "PASS: entitlement verifier fixtures"
