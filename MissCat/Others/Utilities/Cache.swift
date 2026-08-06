@@ -21,6 +21,41 @@ protocol AccountAPIKeyStoring {
     func allAccountIDs() throws -> [String]
 }
 
+protocol AccountDefaultsStoring: AnyObject {
+    func object(forKey defaultName: String) -> Any?
+    func data(forKey defaultName: String) -> Data?
+    func string(forKey defaultName: String) -> String?
+    func set(_ value: Any?, forKey defaultName: String)
+    func removeObject(forKey defaultName: String)
+    @discardableResult func synchronize() -> Bool
+}
+
+extension Foundation.UserDefaults: AccountDefaultsStoring {}
+
+private struct AccountPersistenceRecoveryJournal: Codable, Equatable {
+    enum Phase: String, Codable {
+        case preparing
+        case rollbackRequired
+        case commitRequired
+    }
+
+    let transactionID: String
+    let accountID: String
+    let previousMetadata: Data?
+    let previousCurrentAccountID: String?
+    let desiredMetadata: Data
+    let desiredCurrentAccountID: String?
+    let hadPreviousAPIKey: Bool
+    let backupKey: String
+    let proposedKey: String
+    var phase: Phase
+}
+
+private enum AccountPersistenceRecoveryKeys {
+    static let journal = "account-persistence-recovery-v1"
+    static let stagingPrefix = "__MissCatAccountPersistenceStaging.v1."
+}
+
 private struct KeychainAccountAPIKeyStore: AccountAPIKeyStoring {
     private let keychain: Keychain
 
@@ -61,6 +96,7 @@ struct AccountKeychainMigrator {
 
             let accountIDs = try oldStore.allAccountIDs()
                 .filter { $0 != Self.completionMarker && $0 != "DidMigrateToAppGroups" }
+                .filter { !$0.hasPrefix(AccountPersistenceRecoveryKeys.stagingPrefix) }
                 .sorted()
             for accountID in accountIDs {
                 guard let value = try oldStore.apiKey(for: accountID) else {
@@ -247,7 +283,7 @@ extension Cache {
             return accessGroup
         }
 
-        private let injectedUserDefaults: Foundation.UserDefaults?
+        private let injectedUserDefaults: AccountDefaultsStoring?
         private let injectedAPIKeyStore: AccountAPIKeyStoring?
 
         init(userDefaults: Foundation.UserDefaults? = nil,
@@ -255,11 +291,17 @@ extension Cache {
             injectedUserDefaults = userDefaults
             injectedAPIKeyStore = apiKeyStore
         }
+
+        init(defaultsStore: AccountDefaultsStoring,
+             apiKeyStore: AccountAPIKeyStoring) {
+            injectedUserDefaults = defaultsStore
+            injectedAPIKeyStore = apiKeyStore
+        }
         
         // MARK: Stores
         
         // ShareExtensionとUserDefaults情報を共有するためappGroupsのUserDefaultsを用いる
-        private lazy var userDefaults: Foundation.UserDefaults = {
+        private lazy var userDefaults: AccountDefaultsStoring = {
             if let injectedUserDefaults = injectedUserDefaults {
                 return injectedUserDefaults
             }
@@ -337,6 +379,9 @@ extension Cache {
         }
 
         func getUsersThrowing() throws -> [SecureUser] {
+            try recoverInterruptedAccountPersistence()
+            removeOrphanedStagingKeys()
+
             guard let data = userDefaults.data(forKey: savedUserKey),
                   !data.isEmpty else {
                 repairCurrentUserId(availableUsers: [])
@@ -392,11 +437,11 @@ extension Cache {
                 }
             } catch {
                 // Even when Keychain access fails, remove any legacy plaintext key.
-                userDefaults.set(try encodeMetadata(storedUsers), forKey: savedUserKey)
+                try persistSanitizedMetadata(try encodeMetadata(storedUsers))
                 throw error
             }
 
-            userDefaults.set(try encodeMetadata(availableMetadata), forKey: savedUserKey)
+            try persistSanitizedMetadata(try encodeMetadata(availableMetadata))
             repairCurrentUserId(availableUsers: availableUsers)
             return availableUsers
         }
@@ -478,15 +523,15 @@ extension Cache {
                                             instance: user.normalizedInstance,
                                             apiKey: apiKey)
             let accountID = normalizedUser.accountIdentifier
-            let previousMetadata = userDefaults.object(forKey: savedUserKey)
-            let previousCurrent = userDefaults.object(forKey: currentUserIdKey)
-            var previousAPIKey: String?
-            var didReadPreviousAPIKey = false
 
             do {
-                previousAPIKey = try apiKeyStore.apiKey(for: accountID)
-                didReadPreviousAPIKey = true
                 let savedUsers = try getUsersThrowing()
+                // getUsersThrowing() has already migrated/scrubbed legacy
+                // plaintext values. Snapshot only that verified-safe value and
+                // preserve absence as absence for an exact rollback.
+                let previousMetadata = userDefaults.data(forKey: savedUserKey)
+                let previousCurrent = userDefaults.string(forKey: currentUserIdKey)
+                let previousAPIKey = try apiKeyStore.apiKey(for: accountID)
                 let newUsers: [SecureUser]
                 if savedUsers.contains(where: { $0.accountIdentifier == accountID }) {
                     newUsers = savedUsers.map { $0.accountIdentifier == accountID ? normalizedUser : $0 }
@@ -495,41 +540,181 @@ extension Cache {
                 }
 
                 let usersData = try encodeMetadata(newUsers)
-                try apiKeyStore.setAPIKey(apiKey, for: accountID)
-                guard try apiKeyStore.apiKey(for: accountID) == apiKey else {
-                    throw AccountPersistenceError.keychainVerificationFailed
-                }
+                let transactionID = UUID().uuidString
+                var journal = AccountPersistenceRecoveryJournal(
+                    transactionID: transactionID,
+                    accountID: accountID,
+                    previousMetadata: previousMetadata,
+                    previousCurrentAccountID: previousCurrent,
+                    desiredMetadata: usersData,
+                    desiredCurrentAccountID: makeCurrent ? accountID : previousCurrent,
+                    hadPreviousAPIKey: previousAPIKey != nil,
+                    backupKey: AccountPersistenceRecoveryKeys.stagingPrefix + transactionID + ".backup",
+                    proposedKey: AccountPersistenceRecoveryKeys.stagingPrefix + transactionID + ".proposed",
+                    phase: .preparing
+                )
 
-                userDefaults.set(usersData, forKey: savedUserKey)
-                if makeCurrent {
-                    userDefaults.set(accountID, forKey: currentUserIdKey)
+                try persistRecoveryJournal(journal)
+                if let previousAPIKey {
+                    try writeAndVerifyAPIKey(previousAPIKey, for: journal.backupKey)
                 }
+                try writeAndVerifyAPIKey(apiKey, for: journal.proposedKey)
+
+                journal.phase = .rollbackRequired
+                try persistRecoveryJournal(journal)
+                try writeAndVerifyAPIKey(apiKey, for: accountID)
+                try restoreDefaults(metadata: usersData, currentAccountID: journal.desiredCurrentAccountID)
 
                 guard metadataContains(accountID: accountID, in: userDefaults.data(forKey: savedUserKey)),
-                      try apiKeyStore.apiKey(for: accountID) == apiKey,
-                      !makeCurrent || userDefaults.string(forKey: currentUserIdKey) == accountID
+                      try apiKeyStore.apiKey(for: accountID) == apiKey
                 else { throw AccountPersistenceError.finalVerificationFailed }
+
+                journal.phase = .commitRequired
+                try persistRecoveryJournal(journal)
+                try recoverInterruptedAccountPersistence()
 
                 return SecureUser(userId: normalizedUser.userId,
                                   username: normalizedUser.username,
                                   instance: normalizedUser.instance,
                                   apiKey: apiKey)
             } catch {
-                restore(previousMetadata, forKey: savedUserKey)
-                restore(previousCurrent, forKey: currentUserIdKey)
+                // Recovery is intentionally best effort here. If it cannot be
+                // verified, the durable journal remains and all account reads
+                // fail closed until a later call completes it.
+                try? recoverInterruptedAccountPersistence()
+                return nil
+            }
+        }
+
+        private func recoverInterruptedAccountPersistence() throws {
+            guard let journalData = userDefaults.data(forKey: AccountPersistenceRecoveryKeys.journal),
+                  !journalData.isEmpty
+            else { return }
+
+            let journal = try JSONDecoder().decode(AccountPersistenceRecoveryJournal.self, from: journalData)
+            switch journal.phase {
+            case .preparing:
+                break
+            case .rollbackRequired:
                 do {
-                    guard didReadPreviousAPIKey else { return nil }
-                    if let previousAPIKey {
-                        try apiKeyStore.setAPIKey(previousAPIKey, for: accountID)
+                    if journal.hadPreviousAPIKey {
+                        guard let previousAPIKey = try apiKeyStore.apiKey(for: journal.backupKey) else {
+                            throw AccountPersistenceError.keychainVerificationFailed
+                        }
+                        try writeAndVerifyAPIKey(previousAPIKey, for: journal.accountID)
                     } else {
-                        try apiKeyStore.removeAPIKey(for: accountID)
+                        try removeAndVerifyAPIKey(for: journal.accountID)
                     }
                 } catch {
-                    // Metadata/current selection have still been rolled back.
-                    // A verified orphan Keychain item is never enumerated as an
-                    // account and will be overwritten by a later retry.
+                    // The Share extension may not know about a newer recovery
+                    // journal. Remove the affected account from the shared
+                    // metadata before failing so no process can pair it with
+                    // an unverified Keychain value.
+                    try quarantineAffectedAccount(using: journal)
+                    throw error
                 }
-                return nil
+                try restoreDefaults(
+                    metadata: journal.previousMetadata,
+                    currentAccountID: journal.previousCurrentAccountID
+                )
+            case .commitRequired:
+                guard let proposedAPIKey = try apiKeyStore.apiKey(for: journal.proposedKey) else {
+                    throw AccountPersistenceError.keychainVerificationFailed
+                }
+                try writeAndVerifyAPIKey(proposedAPIKey, for: journal.accountID)
+                try restoreDefaults(
+                    metadata: journal.desiredMetadata,
+                    currentAccountID: journal.desiredCurrentAccountID
+                )
+            }
+
+            try removeRecoveryJournal()
+            try? removeAndVerifyAPIKey(for: journal.backupKey)
+            try? removeAndVerifyAPIKey(for: journal.proposedKey)
+        }
+
+        private func quarantineAffectedAccount(
+            using journal: AccountPersistenceRecoveryJournal
+        ) throws {
+            let previousUsers: [SecureUser]
+            if let metadata = journal.previousMetadata {
+                previousUsers = try JSONDecoder().decode([SecureUser].self, from: metadata)
+            } else {
+                previousUsers = []
+            }
+            let safeUsers = previousUsers.filter { $0.accountIdentifier != journal.accountID }
+            let metadata = journal.previousMetadata == nil && safeUsers.isEmpty
+                ? nil
+                : try encodeMetadata(safeUsers)
+            let safeIDs = Set(safeUsers.map(\.accountIdentifier))
+            let current = journal.previousCurrentAccountID.flatMap {
+                safeIDs.contains($0) ? $0 : nil
+            } ?? safeUsers.first?.accountIdentifier
+            try restoreDefaults(metadata: metadata, currentAccountID: current)
+        }
+
+        private func persistRecoveryJournal(_ journal: AccountPersistenceRecoveryJournal) throws {
+            let data = try JSONEncoder().encode(journal)
+            userDefaults.set(data, forKey: AccountPersistenceRecoveryKeys.journal)
+            userDefaults.synchronize()
+            guard userDefaults.data(forKey: AccountPersistenceRecoveryKeys.journal) == data else {
+                throw AccountPersistenceError.finalVerificationFailed
+            }
+        }
+
+        private func removeRecoveryJournal() throws {
+            userDefaults.removeObject(forKey: AccountPersistenceRecoveryKeys.journal)
+            userDefaults.synchronize()
+            guard userDefaults.data(forKey: AccountPersistenceRecoveryKeys.journal) == nil else {
+                throw AccountPersistenceError.finalVerificationFailed
+            }
+        }
+
+        private func restoreDefaults(metadata: Data?, currentAccountID: String?) throws {
+            if let metadata {
+                userDefaults.set(metadata, forKey: savedUserKey)
+            } else {
+                userDefaults.removeObject(forKey: savedUserKey)
+            }
+            if let currentAccountID {
+                userDefaults.set(currentAccountID, forKey: currentUserIdKey)
+            } else {
+                userDefaults.removeObject(forKey: currentUserIdKey)
+            }
+            userDefaults.synchronize()
+
+            guard userDefaults.data(forKey: savedUserKey) == metadata,
+                  userDefaults.string(forKey: currentUserIdKey) == currentAccountID
+            else { throw AccountPersistenceError.finalVerificationFailed }
+        }
+
+        private func persistSanitizedMetadata(_ metadata: Data) throws {
+            userDefaults.set(metadata, forKey: savedUserKey)
+            userDefaults.synchronize()
+            guard userDefaults.data(forKey: savedUserKey) == metadata,
+                  let decoded = try? JSONDecoder().decode([SecureUser].self, from: metadata),
+                  decoded.allSatisfy({ $0.apiKey == nil })
+            else { throw AccountPersistenceError.finalVerificationFailed }
+        }
+
+        private func writeAndVerifyAPIKey(_ apiKey: String, for accountID: String) throws {
+            try apiKeyStore.setAPIKey(apiKey, for: accountID)
+            guard try apiKeyStore.apiKey(for: accountID) == apiKey else {
+                throw AccountPersistenceError.keychainVerificationFailed
+            }
+        }
+
+        private func removeAndVerifyAPIKey(for accountID: String) throws {
+            try apiKeyStore.removeAPIKey(for: accountID)
+            guard try apiKeyStore.apiKey(for: accountID) == nil else {
+                throw AccountPersistenceError.keychainVerificationFailed
+            }
+        }
+
+        private func removeOrphanedStagingKeys() {
+            guard let keys = try? apiKeyStore.allAccountIDs() else { return }
+            for key in keys where key.hasPrefix(AccountPersistenceRecoveryKeys.stagingPrefix) {
+                try? removeAndVerifyAPIKey(for: key)
             }
         }
 
