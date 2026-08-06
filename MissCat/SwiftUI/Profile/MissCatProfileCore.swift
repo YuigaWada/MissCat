@@ -323,14 +323,16 @@ public final class MissCatRESTProfileRepository: MissCatProfileRepository {
                 body: FollowListBody(i: account.token, userId: userID, limit: limit, untilId: cursor)
             )
             let users = edges.compactMap { $0.follower ?? $0.user }
-            return page(users, limit: limit, cursor: { $0.id })
+            let next = edges.count == limit ? edges.last.flatMap { $0.id ?? $0.follower?.id ?? $0.user?.id } : nil
+            return .init(items: users, nextCursor: next)
         case let .following(userID):
             let edges: [FollowEdge] = try await post(
                 "users/following",
                 body: FollowListBody(i: account.token, userId: userID, limit: limit, untilId: cursor)
             )
             let users = edges.compactMap { $0.followee ?? $0.user }
-            return page(users, limit: limit, cursor: { $0.id })
+            let next = edges.count == limit ? edges.last.flatMap { $0.id ?? $0.followee?.id ?? $0.user?.id } : nil
+            return .init(items: users, nextCursor: next)
         case let .search(query):
             let offset = Int(cursor ?? "0") ?? 0
             let users: [MissCatProfileUser] = try await post(
@@ -464,6 +466,7 @@ private struct RelationshipResponse: Decodable {
 }
 
 private struct FollowEdge: Decodable {
+    let id: String?
     let follower: MissCatProfileUser?
     let followee: MissCatProfileUser?
     let user: MissCatProfileUser?

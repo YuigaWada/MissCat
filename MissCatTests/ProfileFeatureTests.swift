@@ -63,15 +63,17 @@ final class MissCatProfileTransportContractTests: XCTestCase {
     func testFollowersAndFollowingDecodeModernRelationshipEdges() async throws {
         ProfileURLProtocolStub.handler = { request in
             let key = request.url?.path.hasSuffix("followers") == true ? "follower" : "followee"
-            return Self.response(for: request, json: [[key: Self.userJSON(id: key, username: key)]])
+            return Self.response(for: request, json: [["id": "relationship-id", key: Self.userJSON(id: key, username: key)]])
         }
         let subject = MissCatRESTProfileRepository(account: account, session: session)
 
-        let followers = try await subject.users(kind: .followers(userID: "target"), cursor: nil, limit: 40)
-        let following = try await subject.users(kind: .following(userID: "target"), cursor: nil, limit: 40)
+        let followers = try await subject.users(kind: .followers(userID: "target"), cursor: nil, limit: 1)
+        let following = try await subject.users(kind: .following(userID: "target"), cursor: nil, limit: 1)
 
         XCTAssertEqual(followers.items.map(\.id), ["follower"])
         XCTAssertEqual(following.items.map(\.id), ["followee"])
+        XCTAssertEqual(followers.nextCursor, "relationship-id")
+        XCTAssertEqual(following.nextCursor, "relationship-id")
     }
 
     func testProfileUpdateSendsOnlyChangedFieldAndToken() async throws {
