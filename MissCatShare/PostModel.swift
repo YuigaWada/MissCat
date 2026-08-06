@@ -83,30 +83,6 @@ final class PostModel {
         )
     }
 
-    /// Compatibility entry point for the storyboard controller while the
-    /// SwiftUI compose view is integrated in the next commit.
-    func submitNote(
-        _ note: String?,
-        image: UIImage?,
-        visibility: Visibility,
-        completion: @escaping (Bool) -> Void
-    ) {
-        let visibility = ShareVisibility(rawValue: visibility.rawValue) ?? .public
-        let draft = ShareDraft(
-            text: note ?? "",
-            imageData: image.flatMap { $0.pngData() }.map { [$0] } ?? []
-        )
-
-        Task {
-            do {
-                try await submitNote(draft: draft, visibility: visibility)
-                completion(true)
-            } catch {
-                completion(false)
-            }
-        }
-    }
-
     private func uploadImage(_ data: Data) async throws -> String {
         guard let image = UIImage(data: data) else { throw PostingError.invalidImage }
         guard let resizedImage = image.resized(widthUnder: 1024),
