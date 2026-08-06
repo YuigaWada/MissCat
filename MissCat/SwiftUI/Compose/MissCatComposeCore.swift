@@ -252,6 +252,7 @@ enum MissCatComposeValidationError: LocalizedError, Equatable {
     case altTextTooLong(limit: Int)
     case pollChoiceCount
     case emptyPollChoice
+    case pollChoiceTooLong(limit: Int)
     case duplicatePollChoice
     case pollExpiryInvalid
     case renoteCannotContainComment
@@ -270,6 +271,7 @@ enum MissCatComposeValidationError: LocalizedError, Equatable {
         case let .altTextTooLong(limit): "代替テキストは\(limit)文字以内にしてください"
         case .pollChoiceCount: "アンケートの選択肢は2〜10件にしてください"
         case .emptyPollChoice: "アンケートの選択肢をすべて入力してください"
+        case let .pollChoiceTooLong(limit): "アンケートの選択肢は\(limit)文字以内にしてください"
         case .duplicatePollChoice: "アンケートに同じ選択肢は追加できません"
         case .pollExpiryInvalid: "アンケートの終了日時を未来に設定してください"
         case .renoteCannotContainComment: "通常のRenoteにはコメントや添付を追加できません"
@@ -279,8 +281,9 @@ enum MissCatComposeValidationError: LocalizedError, Equatable {
 
 enum MissCatComposeSubmissionBuilder {
     static let maximumTextLength = 1_500
-    static let maximumContentWarningLength = 1_500
-    static let maximumAltTextLength = 1_500
+    static let maximumContentWarningLength = 100
+    static let maximumAltTextLength = 512
+    static let maximumPollChoiceLength = 50
     static let maximumMediaCount = 4
 
     static func build(
@@ -322,12 +325,14 @@ enum MissCatComposeSubmissionBuilder {
             throw MissCatComposeValidationError.emptyPost
         }
 
+        let normalizedContentWarning = draft.contentWarning
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         return MissCatComposeSubmission(
             accountID: accountID,
             mode: mode,
             text: draft.text,
-            contentWarning: draft.hasContentWarning
-                ? draft.contentWarning.trimmingCharacters(in: .whitespacesAndNewlines)
+            contentWarning: draft.hasContentWarning && !normalizedContentWarning.isEmpty
+                ? normalizedContentWarning
                 : nil,
             visibility: draft.visibility,
             visibleUserIDs: draft.visibility == .specified
@@ -351,6 +356,9 @@ enum MissCatComposeSubmissionBuilder {
         let choices = draft.choices.map { $0.text.trimmingCharacters(in: .whitespacesAndNewlines) }
         guard choices.allSatisfy({ !$0.isEmpty }) else {
             throw MissCatComposeValidationError.emptyPollChoice
+        }
+        guard choices.allSatisfy({ $0.count <= maximumPollChoiceLength }) else {
+            throw MissCatComposeValidationError.pollChoiceTooLong(limit: maximumPollChoiceLength)
         }
         let foldedChoices = choices.map { $0.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current) }
         guard Set(foldedChoices).count == foldedChoices.count else {

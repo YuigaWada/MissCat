@@ -157,6 +157,7 @@ final class ShareComposerViewModel: ObservableObject {
     }
 
     func submit() async -> Bool {
+        guard phase == .ready || phase == .failed else { return false }
         guard let selectedAccountID, selectedAccount != nil else {
             errorMessage = "投稿に使うアカウントを選択してください"
             phase = .failed
