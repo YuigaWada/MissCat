@@ -9,6 +9,7 @@
 @testable import MissCat
 import MisskeyKit
 import UIKit
+import WebKit
 import XCTest
 
 class MissCatTests: XCTestCase {
@@ -150,6 +151,105 @@ final class AuthenticationCallbackSecurityTests: XCTestCase {
             url,
             expectedURLString: expected,
             expectedSessionID: sessionID
+        )
+    }
+}
+
+@MainActor
+final class AuthenticationWebsiteDataPolicyTests: XCTestCase {
+    private let loginRequest = URLRequest(
+        url: URL(string: "https://misskey.io/miauth/test-session")!
+    )
+
+    func testAuthenticationBrowserDefaultsToPreservingWebsiteData() {
+        let browser = MissCatAuthenticationBrowserView(
+            request: loginRequest,
+            callbackMatches: { _ in false },
+            onCallback: { _ in }
+        )
+
+        XCTAssertEqual(browser.websiteDataPolicy, .preserveSession)
+    }
+
+    func testNormalAuthenticationUsesPersistentDefaultWebsiteDataStore() {
+        let configuration = MissCatAuthenticationBrowserPolicy.configuration()
+
+        XCTAssertTrue(configuration.websiteDataStore.isPersistent)
+        XCTAssertTrue(configuration.websiteDataStore === WKWebsiteDataStore.default())
+    }
+
+    func testNormalLoginRetryAndRelaunchNeverClearWebsiteData() {
+        var loadCount = 0
+        var clearedHosts: [String] = []
+
+        for _ in 0..<3 {
+            let plan = MissCatAuthenticationBrowserPolicy.initialLoadPlan(
+                for: loginRequest,
+                websiteDataPolicy: .preserveSession
+            )
+            MissCatAuthenticationBrowserPolicy.performInitialLoad(
+                plan: plan,
+                load: { loadCount += 1 },
+                clearSelectedInstance: { host, completion in
+                    clearedHosts.append(host)
+                    completion()
+                }
+            )
+        }
+
+        XCTAssertEqual(loadCount, 3)
+        XCTAssertTrue(clearedHosts.isEmpty)
+    }
+
+    func testWebsiteDataClearingRequiresExplicitAccountSwitchAndLoadsOnce() {
+        let plan = MissCatAuthenticationBrowserPolicy.initialLoadPlan(
+            for: loginRequest,
+            websiteDataPolicy: .clearForExplicitAccountSwitch
+        )
+        var loadCount = 0
+        var clearedHosts: [String] = []
+
+        MissCatAuthenticationBrowserPolicy.performInitialLoad(
+            plan: plan,
+            load: { loadCount += 1 },
+            clearSelectedInstance: { host, completion in
+                clearedHosts.append(host)
+                completion()
+            }
+        )
+
+        XCTAssertEqual(clearedHosts, ["misskey.io"])
+        XCTAssertEqual(loadCount, 1)
+    }
+
+    func testExplicitClearScopesRecordsToSelectedInstanceDomain() {
+        XCTAssertTrue(MissCatAuthenticationBrowserPolicy.shouldClearRecord(
+            displayName: "misskey.io",
+            selectedHost: "misskey.io"
+        ))
+        XCTAssertTrue(MissCatAuthenticationBrowserPolicy.shouldClearRecord(
+            displayName: ".misskey.io",
+            selectedHost: "auth.misskey.io"
+        ))
+        XCTAssertFalse(MissCatAuthenticationBrowserPolicy.shouldClearRecord(
+            displayName: "misskey.io.evil.invalid",
+            selectedHost: "misskey.io"
+        ))
+        XCTAssertFalse(MissCatAuthenticationBrowserPolicy.shouldClearRecord(
+            displayName: "",
+            selectedHost: "misskey.io"
+        ))
+    }
+
+    func testInvalidExplicitClearRequestFallsBackToNonDestructiveLoad() {
+        let request = URLRequest(url: URL(string: "about:blank")!)
+
+        XCTAssertEqual(
+            MissCatAuthenticationBrowserPolicy.initialLoadPlan(
+                for: request,
+                websiteDataPolicy: .clearForExplicitAccountSwitch
+            ),
+            .loadImmediately
         )
     }
 }
@@ -384,7 +484,7 @@ final class MiAuthAuthenticationTests: XCTestCase {
         XCTAssertEqual(fixture.transport.requests.count, 1)
     }
 
-    func testRetryAfterFailureRequiresNewSessionAndRejectsOldCallback() async throws {
+    func testUserInitiatedRetryAfterFailureRequiresNewSessionAndRejectsOldCallback() async throws {
         let fixture = makeFixture(
             results: [
                 .success(response("unavailable", statusCode: 503)),
@@ -397,8 +497,14 @@ final class MiAuthAuthenticationTests: XCTestCase {
             _ = try await fixture.service.completeAuthentication(callbackURL: oldCallback)
         }
 
+        // Failure alone must not create or check another server-side session.
+        await Task.yield()
+        XCTAssertEqual(fixture.transport.requests.count, 1)
+        XCTAssertFalse(fixture.service.callbackMatches(oldCallback))
+
         _ = try await fixture.service.makeAuthorizationRequest(intent: .logIn, instance: "misskey.io")
         let newCallback = callbackURL(sessionID: secondSession)
+        XCTAssertEqual(fixture.transport.requests.count, 1)
         XCTAssertFalse(fixture.service.callbackMatches(oldCallback))
         XCTAssertTrue(fixture.service.callbackMatches(newCallback))
 

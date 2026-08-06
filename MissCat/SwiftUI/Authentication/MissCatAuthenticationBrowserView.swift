@@ -7,6 +7,66 @@ public enum MissCatAuthenticationIntent: String, Hashable, Sendable {
     case logIn
 }
 
+/// Controls the browser's signed-in website session independently from the
+/// native MissCat account selected after MiAuth completes.
+public enum MissCatAuthenticationWebsiteDataPolicy: Hashable, Sendable {
+    /// Normal login, retry, and relaunch behavior. Cookies and site data remain
+    /// in WebKit's persistent default store so a server sign-in is reusable.
+    case preserveSession
+
+    /// A destructive, explicit account-switch action. This must never be used
+    /// for automatic error recovery or an ordinary login attempt.
+    case clearForExplicitAccountSwitch
+}
+
+enum MissCatAuthenticationInitialLoadPlan: Equatable {
+    case loadImmediately
+    case clearSelectedInstanceThenLoad(host: String)
+}
+
+enum MissCatAuthenticationBrowserPolicy {
+    static func configuration() -> WKWebViewConfiguration {
+        let configuration = WKWebViewConfiguration()
+        configuration.websiteDataStore = .default()
+        return configuration
+    }
+
+    static func initialLoadPlan(
+        for request: URLRequest,
+        websiteDataPolicy: MissCatAuthenticationWebsiteDataPolicy
+    ) -> MissCatAuthenticationInitialLoadPlan {
+        guard websiteDataPolicy == .clearForExplicitAccountSwitch,
+              let host = request.url?.host?.lowercased(),
+              !host.isEmpty
+        else {
+            return .loadImmediately
+        }
+        return .clearSelectedInstanceThenLoad(host: host)
+    }
+
+    static func shouldClearRecord(displayName: String, selectedHost: String) -> Bool {
+        let record = displayName.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "."))
+        let host = selectedHost.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "."))
+        guard !record.isEmpty, !host.isEmpty else { return false }
+        return record == host
+            || record.hasSuffix(".\(host)")
+            || host.hasSuffix(".\(record)")
+    }
+
+    static func performInitialLoad(
+        plan: MissCatAuthenticationInitialLoadPlan,
+        load: @escaping () -> Void,
+        clearSelectedInstance: (_ host: String, _ completion: @escaping () -> Void) -> Void
+    ) {
+        switch plan {
+        case .loadImmediately:
+            load()
+        case let .clearSelectedInstanceThenLoad(host):
+            clearSelectedInstance(host, load)
+        }
+    }
+}
+
 struct MissCatAuthenticationCallbackGate {
     private(set) var hasReportedCallback = false
 
@@ -47,6 +107,7 @@ public struct MissCatAuthenticationBrowserView: View {
     public let onCallback: (URL) -> Void
     public let makeLoginRequestAfterSignUp: (@MainActor () async throws -> URLRequest)?
     public let onFailure: (Error) -> Void
+    public let websiteDataPolicy: MissCatAuthenticationWebsiteDataPolicy
 
     @State private var reloadToken = 0
 
@@ -55,12 +116,14 @@ public struct MissCatAuthenticationBrowserView: View {
         callbackMatches: @escaping (URL) -> Bool,
         onCallback: @escaping (URL) -> Void,
         makeLoginRequestAfterSignUp: (@MainActor () async throws -> URLRequest)? = nil,
+        websiteDataPolicy: MissCatAuthenticationWebsiteDataPolicy = .preserveSession,
         onFailure: @escaping (Error) -> Void = { _ in }
     ) {
         self.request = request
         self.callbackMatches = callbackMatches
         self.onCallback = onCallback
         self.makeLoginRequestAfterSignUp = makeLoginRequestAfterSignUp
+        self.websiteDataPolicy = websiteDataPolicy
         self.onFailure = onFailure
     }
 
@@ -71,6 +134,7 @@ public struct MissCatAuthenticationBrowserView: View {
             callbackMatches: callbackMatches,
             onCallback: onCallback,
             makeLoginRequestAfterSignUp: makeLoginRequestAfterSignUp,
+            websiteDataPolicy: websiteDataPolicy,
             onFailure: onFailure
         )
         .background(Color(hex: MissCatLegacyColorHex.authenticationBrowserBackground))
@@ -97,6 +161,7 @@ private struct MissCatWebView: UIViewRepresentable {
     let callbackMatches: (URL) -> Bool
     let onCallback: (URL) -> Void
     let makeLoginRequestAfterSignUp: (@MainActor () async throws -> URLRequest)?
+    let websiteDataPolicy: MissCatAuthenticationWebsiteDataPolicy
     let onFailure: (Error) -> Void
 
     func makeCoordinator() -> Coordinator {
@@ -109,8 +174,7 @@ private struct MissCatWebView: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> WKWebView {
-        let configuration = WKWebViewConfiguration()
-        configuration.websiteDataStore = .default()
+        let configuration = MissCatAuthenticationBrowserPolicy.configuration()
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
@@ -120,7 +184,12 @@ private struct MissCatWebView: UIViewRepresentable {
         webView.backgroundColor = legacyBackground
         webView.scrollView.backgroundColor = legacyBackground
         context.coordinator.loadedURL = request.url
-        context.coordinator.clearWebsiteDataAndLoad(request, in: webView)
+        context.coordinator.loadInitialRequest(
+            request,
+            websiteDataPolicy: websiteDataPolicy,
+            dataStore: configuration.websiteDataStore,
+            in: webView
+        )
         return webView
     }
 
@@ -161,14 +230,48 @@ private struct MissCatWebView: UIViewRepresentable {
             self.onFailure = onFailure
         }
 
-        func clearWebsiteDataAndLoad(_ request: URLRequest, in webView: WKWebView) {
-            let dataStore = WKWebsiteDataStore.default()
+        func loadInitialRequest(
+            _ request: URLRequest,
+            websiteDataPolicy: MissCatAuthenticationWebsiteDataPolicy,
+            dataStore: WKWebsiteDataStore,
+            in webView: WKWebView
+        ) {
+            let plan = MissCatAuthenticationBrowserPolicy.initialLoadPlan(
+                for: request,
+                websiteDataPolicy: websiteDataPolicy
+            )
+            MissCatAuthenticationBrowserPolicy.performInitialLoad(
+                plan: plan,
+                load: { webView.load(request) },
+                clearSelectedInstance: { host, completion in
+                    self.clearWebsiteData(
+                        for: host,
+                        in: dataStore,
+                        completion: completion
+                    )
+                }
+            )
+        }
+
+        private func clearWebsiteData(
+            for selectedHost: String,
+            in dataStore: WKWebsiteDataStore,
+            completion: @escaping () -> Void
+        ) {
             let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
             dataStore.fetchDataRecords(ofTypes: dataTypes) { records in
-                dataStore.removeData(ofTypes: dataTypes, for: records) {
-                    DispatchQueue.main.async {
-                        webView.load(request)
-                    }
+                let selectedRecords = records.filter {
+                    MissCatAuthenticationBrowserPolicy.shouldClearRecord(
+                        displayName: $0.displayName,
+                        selectedHost: selectedHost
+                    )
+                }
+                guard !selectedRecords.isEmpty else {
+                    DispatchQueue.main.async(execute: completion)
+                    return
+                }
+                dataStore.removeData(ofTypes: dataTypes, for: selectedRecords) {
+                    DispatchQueue.main.async(execute: completion)
                 }
             }
         }

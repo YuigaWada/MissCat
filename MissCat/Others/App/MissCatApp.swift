@@ -114,6 +114,8 @@ final class ApplicationState: ObservableObject {
     }
 
     private func restartAuthenticationFlow() {
+        // This only rebuilds the local flow after an explicit Retry/Close tap.
+        // A new MiAuth session is not created until the user submits login again.
         authenticationService.invalidatePendingAuthentication()
         errorMessage = nil
         canRetryAuthentication = false
