@@ -3,7 +3,7 @@
 set -euo pipefail
 
 readonly DEFAULT_MAGICK="/opt/homebrew/bin/magick"
-readonly SCHEMA_VERSION=1
+readonly SCHEMA_VERSION=2
 
 usage() {
     cat <<'USAGE'
@@ -12,9 +12,11 @@ Usage:
 
 Options:
   --out DIR                 Artifact directory (default: beside candidate)
-  --threshold RATIO         Maximum changed-pixel ratio, 0...1 (default: 0)
+  --threshold RATIO         Maximum changed-pixel ratio, 0...1 (default: 0.10)
+  --min-ssim VALUE          Minimum SSIM similarity, 0...1 (default: 0.90)
+  --channel-delta VALUE     Per-channel change threshold, 0...255 (default: 8)
   --max-rmse VALUE          Optional maximum normalized RMSE, 0...1
-  --fuzz PERCENT            ImageMagick color fuzz, 0...100% (default: 0%)
+  --fuzz PERCENT            Diagnostic RMSE fuzz, 0...100% (default: 0%)
   --mask MASK.png           Explicit mask: white compares, black ignores
   --magick PATH             ImageMagick executable (default: /opt/homebrew/bin/magick)
   -h, --help                Show this help
@@ -114,7 +116,9 @@ write_validation_report() {
   },
   "comparison": {
     "fuzz_percent": $fuzz_number,
+    "channel_delta": $channel_delta,
     "max_changed_ratio": $threshold,
+    "min_ssim": $min_ssim,
     "max_normalized_rmse": $max_rmse_json
   },
   "mask": {
@@ -137,7 +141,9 @@ JSON
 baseline_input=""
 candidate_input=""
 out_input=""
-threshold="0"
+threshold="0.10"
+min_ssim="0.90"
+channel_delta="8"
 max_rmse=""
 fuzz="0%"
 mask_input=""
@@ -158,6 +164,16 @@ while [[ $# -gt 0 ]]; do
         --max-rmse)
             require_value "$@"
             max_rmse="$2"
+            shift 2
+            ;;
+        --min-ssim)
+            require_value "$@"
+            min_ssim="$2"
+            shift 2
+            ;;
+        --channel-delta)
+            require_value "$@"
+            channel_delta="$2"
             shift 2
             ;;
         --fuzz)
@@ -204,6 +220,9 @@ done
 }
 [[ -x "$magick_bin" ]] || fail "ImageMagick executable is unavailable: $magick_bin"
 is_ratio "$threshold" || fail "threshold must be between 0 and 1: $threshold"
+is_ratio "$min_ssim" || fail "min-ssim must be between 0 and 1: $min_ssim"
+[[ "$channel_delta" =~ ^[0-9]+$ ]] || fail "channel-delta must be an integer from 0 to 255: $channel_delta"
+[[ "$channel_delta" -le 255 ]] || fail "channel-delta must be an integer from 0 to 255: $channel_delta"
 if [[ -n "$max_rmse" ]]; then
     is_ratio "$max_rmse" || fail "max-rmse must be between 0 and 1: $max_rmse"
 fi
@@ -212,7 +231,10 @@ fuzz_number=${fuzz%%%}
 awk -v value="$fuzz_number" 'BEGIN { exit !(value >= 0 && value <= 100) }' || fail "fuzz must be between 0% and 100%: $fuzz"
 
 threshold=$(normalize_number "$threshold")
+min_ssim=$(normalize_number "$min_ssim")
 fuzz_number=$(normalize_number "$fuzz_number")
+channel_delta_percent=$(awk -v value="$channel_delta" \
+    'BEGIN { printf "%.12g%%", 100 * value / 255 }')
 if [[ -n "$max_rmse" ]]; then
     max_rmse=$(normalize_number "$max_rmse")
     max_rmse_json="$max_rmse"
@@ -295,16 +317,19 @@ if [[ -n "$mask" ]]; then
 fi
 
 binary_diff="$temporary_dir/changed-pixels.png"
-binary_status=0
-"$magick_bin" compare -fuzz "$fuzz" -highlight-color white -lowlight-color black \
-    "$effective_baseline" "$effective_candidate" "$binary_diff" >/dev/null 2>&1 || binary_status=$?
-[[ "$binary_status" -le 1 ]] || fail "ImageMagick pixel comparison failed"
+channel_difference="$temporary_dir/channel-difference.png"
+"$magick_bin" "$effective_baseline" "$effective_candidate" \
+    -alpha off -compose Difference -composite -separate -evaluate-sequence Max \
+    "$channel_difference"
+"$magick_bin" "$channel_difference" -threshold "$channel_delta_percent" "$binary_diff"
 changed_pixels_output=$("$magick_bin" -precision 20 "$binary_diff" -alpha off -colorspace Gray \
     -threshold 50% -format '%[fx:round(mean*w*h)]' info:)
 changed_pixels=$(normalize_pixel_count "$changed_pixels_output" "$evaluated_pixels") || \
     fail "could not count changed pixels: $changed_pixels_output"
 changed_ratio=$(awk -v changed="$changed_pixels" -v total="$evaluated_pixels" \
     'BEGIN { printf "%.12g", changed / total }')
+changed_similarity=$(awk -v ratio="$changed_ratio" \
+    'BEGIN { printf "%.12g", 1 - ratio }')
 
 rmse_output=""
 rmse_status=0
@@ -327,11 +352,40 @@ if [[ "$evaluated_pixels" -ne "$total_pixels" ]]; then
         'BEGIN { printf "%.12g", value * sqrt(total / evaluated) }')
 fi
 
-heatmap_status=0
+ssim_output=""
+ssim_status=0
+set +e
+ssim_output=$("$magick_bin" compare -metric SSIM \
+    "$effective_baseline" "$effective_candidate" null: 2>&1)
+ssim_status=$?
+set -e
+[[ "$ssim_status" -le 1 ]] || fail "ImageMagick SSIM comparison failed: $ssim_output"
+ssim_normalized=$(printf '%s\n' "$ssim_output" | awk -F '[()]' '{ print $2 }')
+[[ "$ssim_normalized" =~ ^[0-9]+([.][0-9]+)?([eE][-+]?[0-9]+)?$ ]] || \
+    fail "unexpected SSIM metric: $ssim_output"
+ssim_normalized=$(normalize_number "$ssim_normalized")
+if [[ "$evaluated_pixels" -ne "$total_pixels" ]]; then
+    # Both masked inputs contain identical black pixels. Remove their ideal
+    # contribution from ImageMagick's whole-canvas mean so the score remains
+    # normalized to the app-owned pixels evaluated by the changed-pixel gate.
+    ssim_normalized=$(awk \
+        -v value="$ssim_normalized" \
+        -v total="$total_pixels" \
+        -v ignored="$ignored_pixels" \
+        -v evaluated="$evaluated_pixels" \
+        'BEGIN {
+            adjusted = (value * total - ignored) / evaluated
+            if (adjusted < 0) adjusted = 0
+            if (adjusted > 1) adjusted = 1
+            printf "%.12g", adjusted
+        }')
+fi
+
 raw_heatmap="$temporary_dir/diff-heatmap.png"
-"$magick_bin" compare -fuzz "$fuzz" -metric AE -highlight-color '#ff0055' -lowlight-color '#101010' \
-    "$effective_baseline" "$effective_candidate" "$raw_heatmap" >/dev/null 2>&1 || heatmap_status=$?
-[[ "$heatmap_status" -le 1 ]] || fail "could not create heatmap"
+"$magick_bin" "$binary_diff" \
+    -fill '#ff0055' -opaque white \
+    -fill '#101010' -opaque black \
+    "$raw_heatmap"
 "$magick_bin" "$raw_heatmap" -strip -define png:exclude-chunks=date,time "$heatmap_path"
 "$magick_bin" "$baseline" "$candidate" +append -strip -define png:exclude-chunks=date,time "$side_by_side_path"
 "$magick_bin" "$baseline" "$candidate" -define compose:args=50 -compose Blend -composite \
@@ -339,6 +393,8 @@ raw_heatmap="$temporary_dir/diff-heatmap.png"
 
 ratio_exceeded=$(awk -v actual="$changed_ratio" -v maximum="$threshold" \
     'BEGIN { print (actual > maximum) ? 1 : 0 }')
+ssim_below_minimum=$(awk -v actual="$ssim_normalized" -v minimum="$min_ssim" \
+    'BEGIN { print (actual < minimum) ? 1 : 0 }')
 rmse_exceeded=0
 if [[ -n "$max_rmse" ]]; then
     rmse_exceeded=$(awk -v actual="$rmse_normalized" -v maximum="$max_rmse" \
@@ -347,7 +403,7 @@ fi
 
 status="passed"
 exit_status=0
-if [[ "$ratio_exceeded" -eq 1 || "$rmse_exceeded" -eq 1 ]]; then
+if [[ "$ratio_exceeded" -eq 1 || "$ssim_below_minimum" -eq 1 || "$rmse_exceeded" -eq 1 ]]; then
     status="threshold_exceeded"
     exit_status=1
 fi
@@ -370,14 +426,19 @@ cat > "$summary_path" <<JSON
   },
   "comparison": {
     "fuzz_percent": $fuzz_number,
+    "channel_delta": $channel_delta,
     "changed_pixels": $changed_pixels,
     "evaluated_pixels": $evaluated_pixels,
     "changed_ratio": $changed_ratio,
+    "changed_similarity": $changed_similarity,
+    "ssim": $ssim_normalized,
     "rmse_absolute": $rmse_absolute,
     "rmse_normalized": $rmse_normalized,
     "max_changed_ratio": $threshold,
+    "min_ssim": $min_ssim,
     "max_normalized_rmse": $max_rmse_json,
     "changed_ratio_exceeded": $([[ "$ratio_exceeded" -eq 1 ]] && printf true || printf false),
+    "ssim_below_minimum": $([[ "$ssim_below_minimum" -eq 1 ]] && printf true || printf false),
     "normalized_rmse_exceeded": $([[ "$rmse_exceeded" -eq 1 ]] && printf true || printf false)
   },
   "mask": {
@@ -396,6 +457,7 @@ cat > "$summary_path" <<JSON
 }
 JSON
 
-printf '%s: changed=%s/%s ratio=%s rmse=%s summary=%s\n' \
-    "$status" "$changed_pixels" "$evaluated_pixels" "$changed_ratio" "$rmse_normalized" "$summary_path"
+printf '%s: changed=%s/%s similarity=%s ssim=%s rmse=%s summary=%s\n' \
+    "$status" "$changed_pixels" "$evaluated_pixels" "$changed_similarity" \
+    "$ssim_normalized" "$rmse_normalized" "$summary_path"
 exit "$exit_status"

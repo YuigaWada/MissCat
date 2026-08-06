@@ -22,7 +22,7 @@ Baseline and candidate must use the same device, orientation, display scale, app
 
 ## Running a comparison
 
-Exact comparison is the default and is the acceptance setting for design parity:
+The default acceptance setting implements the product threshold: changed-pixel similarity must be at least 0.90 and SSIM must independently be at least 0.90:
 
 ```sh
 scripts/compare-screenshots.sh \
@@ -34,28 +34,31 @@ scripts/compare-screenshots.sh \
 The command reports:
 
 - absolute changed pixels;
-- changed-pixel ratio, normalized by evaluated (unmasked) pixels;
+- changed-pixel ratio and similarity, normalized by evaluated (unmasked) pixels;
+- SSIM similarity over the same app-owned evaluation area;
 - absolute and normalized RMSE, normalized over evaluated pixels when a mask is used;
 - input hashes, dimensions, thresholds, fuzz, and mask metadata in `summary.json`;
 - `diff-heatmap.png`, `side-by-side.png`, and `overlay.png` inspection artifacts.
 
-It exits `0` when the configured limits pass, `1` when a limit is exceeded, and `2` for invalid inputs or tooling errors. A changed ratio exactly equal to the threshold passes; a larger value fails.
+It exits `0` when every configured limit passes, `1` when a limit is exceeded, and `2` for invalid inputs or tooling errors. The defaults are a maximum changed-pixel ratio of `0.10`, a minimum SSIM of `0.90`, and a per-channel change threshold of `8/255`. A pixel counts as changed when any RGB channel differs by more than eight levels. A metric exactly equal to its threshold passes.
 
 Color fuzz and thresholds must be explicit when relaxed:
 
 ```sh
 scripts/compare-screenshots.sh \
   --fuzz 0.5% \
-  --threshold 0.001 \
+  --channel-delta 8 \
+  --threshold 0.10 \
+  --min-ssim 0.90 \
   --max-rmse 0.01 \
   --out "artifacts/visual-diff/timeline" \
   "artifacts/screenshots/baseline/timeline--iphone-16-pro--ios-18.6--dark.png" \
   "artifacts/screenshots/candidate/timeline--iphone-16-pro--ios-18.6--dark.png"
 ```
 
-Do not relax thresholds merely to make a comparison pass. Review the generated heatmap and side-by-side image first, and retain `summary.json` with the artifacts so the effective settings are auditable.
+Do not relax thresholds merely to make a comparison pass. Both required similarities must reach `0.90`; a strong result in one metric cannot compensate for a failure in the other. Review the generated heatmap and side-by-side image first, and retain `summary.json` with the artifacts so the effective settings are auditable.
 
-`--fuzz` controls which pixels count as changed and which pixels appear in the heatmap. RMSE deliberately retains the residual color error, so use `--max-rmse` independently when small widespread color shifts must also fail the check. Reports and generated PNGs omit timestamps and other volatile metadata so identical inputs and settings produce deterministic metrics and artifacts.
+`--channel-delta` controls which pixels count as changed and which pixels appear in the heatmap. `--fuzz` applies only to the diagnostic RMSE calculation; use `--max-rmse` independently when small widespread color shifts must also fail the check. Reports and generated PNGs omit timestamps and other volatile metadata so identical inputs and settings produce deterministic metrics and artifacts.
 
 ## Dynamic status-bar content
 
@@ -75,7 +78,7 @@ The report records the absolute mask path, SHA-256, and ignored-pixel count. The
 
 ## Self-test
 
-The shell self-test generates tiny fixtures, including paths containing spaces, using ImageMagick. It verifies exact matches, threshold failure/pass behavior, fuzz, explicit masking, output artifacts, JSON validity, and dimension rejection:
+The shell self-test generates tiny fixtures, including paths containing spaces, using ImageMagick. It verifies exact matches, the default per-channel `8/255` tolerance, changed-similarity and SSIM failure/pass behavior, explicit masking, output artifacts, JSON validity, and dimension rejection:
 
 ```sh
 scripts/test-compare-screenshots.sh

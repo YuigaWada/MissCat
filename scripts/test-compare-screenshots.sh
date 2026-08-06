@@ -46,13 +46,15 @@ baseline="$fixture_dir/baseline image.png"
 identical="$fixture_dir/identical candidate.png"
 changed="$fixture_dir/changed candidate.png"
 near_color="$fixture_dir/near color candidate.png"
+beyond_tolerance="$fixture_dir/beyond tolerance candidate.png"
 wrong_size="$fixture_dir/wrong size candidate.png"
 mask="$fixture_dir/status mask.png"
 
 "$magick_bin" -size 4x4 xc:white "$baseline"
 "$magick_bin" "$baseline" "$identical"
 "$magick_bin" "$baseline" -fill black -draw 'point 1,1' "$changed"
-"$magick_bin" -size 4x4 xc:'#fefefe' "$near_color"
+"$magick_bin" -size 4x4 xc:'#f7f7f7' "$near_color"
+"$magick_bin" -size 4x4 xc:'#f6f6f6' "$beyond_tolerance"
 "$magick_bin" -size 3x4 xc:white "$wrong_size"
 "$magick_bin" -size 4x4 xc:white -fill black -draw 'point 1,1' "$mask"
 
@@ -61,6 +63,8 @@ identical_out="$fixture_dir/identical output"
 /usr/bin/plutil -convert json -o /dev/null -- "$identical_out/summary.json"
 assert_json_contains "$identical_out/summary.json" '"status": "passed"'
 assert_json_contains "$identical_out/summary.json" '"changed_pixels": 0'
+assert_json_contains "$identical_out/summary.json" '"changed_similarity": 1'
+assert_json_contains "$identical_out/summary.json" '"ssim": 1'
 assert_file "$identical_out/diff-heatmap.png"
 assert_file "$identical_out/side-by-side.png"
 assert_file "$identical_out/overlay.png"
@@ -76,15 +80,25 @@ overlay_sha=$(file_sha "$identical_out/overlay.png")
 
 changed_out="$fixture_dir/changed output"
 changed_status=0
-"$compare_script" --magick "$magick_bin" --out "$changed_out" "$baseline" "$changed" || changed_status=$?
+"$compare_script" --magick "$magick_bin" --threshold 0 \
+    --out "$changed_out" "$baseline" "$changed" || changed_status=$?
 [[ "$changed_status" -eq 1 ]] || fail "changed image should exceed the zero threshold"
 assert_json_contains "$changed_out/summary.json" '"status": "threshold_exceeded"'
 assert_json_contains "$changed_out/summary.json" '"changed_pixels": 1'
 assert_json_contains "$changed_out/summary.json" '"changed_ratio": 0.0625'
+assert_json_contains "$changed_out/summary.json" '"changed_similarity": 0.9375'
 
 allowed_out="$fixture_dir/allowed output"
-"$compare_script" --magick "$magick_bin" --threshold 0.0625 --out "$allowed_out" "$baseline" "$changed"
+"$compare_script" --magick "$magick_bin" --threshold 0.0625 --min-ssim 0 \
+    --out "$allowed_out" "$baseline" "$changed"
 assert_json_contains "$allowed_out/summary.json" '"status": "passed"'
+
+ssim_out="$fixture_dir/ssim output"
+ssim_status=0
+"$compare_script" --magick "$magick_bin" --threshold 1 --min-ssim 0.90 \
+    --out "$ssim_out" "$baseline" "$changed" || ssim_status=$?
+[[ "$ssim_status" -eq 1 ]] || fail "changed image should fall below the SSIM threshold"
+assert_json_contains "$ssim_out/summary.json" '"ssim_below_minimum": true'
 
 rmse_out="$fixture_dir/rmse output"
 rmse_status=0
@@ -93,9 +107,24 @@ rmse_status=0
 [[ "$rmse_status" -eq 1 ]] || fail "changed image should exceed the RMSE threshold"
 assert_json_contains "$rmse_out/summary.json" '"normalized_rmse_exceeded": true'
 
-fuzz_out="$fixture_dir/fuzz output"
-"$compare_script" --magick "$magick_bin" --fuzz 1% --out "$fuzz_out" "$baseline" "$near_color"
-assert_json_contains "$fuzz_out/summary.json" '"changed_pixels": 0'
+tolerance_out="$fixture_dir/tolerance output"
+"$compare_script" --magick "$magick_bin" --out "$tolerance_out" "$baseline" "$near_color"
+assert_json_contains "$tolerance_out/summary.json" '"channel_delta": 8'
+assert_json_contains "$tolerance_out/summary.json" '"changed_pixels": 0'
+
+beyond_tolerance_out="$fixture_dir/beyond tolerance output"
+beyond_tolerance_status=0
+"$compare_script" --magick "$magick_bin" --threshold 0 --min-ssim 0 \
+    --out "$beyond_tolerance_out" "$baseline" "$beyond_tolerance" || beyond_tolerance_status=$?
+[[ "$beyond_tolerance_status" -eq 1 ]] || fail "a nine-level channel change should exceed tolerance"
+assert_json_contains "$beyond_tolerance_out/summary.json" '"changed_pixels": 16'
+
+exact_color_out="$fixture_dir/exact color output"
+exact_color_status=0
+"$compare_script" --magick "$magick_bin" --channel-delta 0 --threshold 0 --min-ssim 0 \
+    --out "$exact_color_out" "$baseline" "$near_color" || exact_color_status=$?
+[[ "$exact_color_status" -eq 1 ]] || fail "zero channel tolerance should detect the color change"
+assert_json_contains "$exact_color_out/summary.json" '"changed_pixels": 16'
 
 masked_out="$fixture_dir/masked output"
 "$compare_script" --magick "$magick_bin" --mask "$mask" --out "$masked_out" "$baseline" "$changed"
