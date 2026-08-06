@@ -450,11 +450,110 @@ final class MissCatFeedStoreTests: XCTestCase {
         store.selectTimeline("local", origin: .tap)
         await store.waitForPendingPersistence()
 
-        await store.switchAccount(to: provider.secondaryScope)
+        store.switchAccount(to: provider.secondaryScope)
+        await store.waitForPendingAccountSwitch()
 
         XCTAssertEqual(store.configuration?.currentScope, provider.secondaryScope)
         XCTAssertEqual(store.selectedTimelineID, "secondary-home")
         XCTAssertEqual(provider.switchedScopes, [provider.secondaryScope])
+    }
+
+    func testShellStoreRejectsLateNonCooperativeAccountSwitch() async {
+        let provider = NonCooperativeShellConfigurationProvider()
+        let store = MissCatShellStore(provider: provider)
+        await store.load()
+
+        store.switchAccount(to: provider.secondaryScope)
+        await waitUntil { provider.pendingScopes.contains(provider.secondaryScope) }
+        XCTAssertTrue(provider.pendingScopes.contains(provider.secondaryScope))
+        store.switchAccount(to: provider.tertiaryScope)
+        await waitUntil { provider.pendingScopes.contains(provider.tertiaryScope) }
+        XCTAssertTrue(provider.pendingScopes.contains(provider.tertiaryScope))
+
+        provider.resumeSwitch(to: provider.tertiaryScope)
+        await store.waitForPendingAccountSwitch()
+        provider.resumeSwitch(to: provider.secondaryScope)
+        await waitUntil { provider.returnedScopes.contains(provider.secondaryScope) }
+        await Task.yield()
+
+        XCTAssertTrue(provider.returnedScopes.contains(provider.secondaryScope))
+        XCTAssertEqual(store.configuration?.currentScope, provider.tertiaryScope)
+        XCTAssertEqual(store.selectedTimelineID, "tertiary-home")
+        XCTAssertEqual(store.phase, .loaded)
+    }
+
+    func testShellStoreRejectsLateNonCooperativeConfigurationLoad() async {
+        let provider = NonCooperativeShellLoadProvider()
+        let store = MissCatShellStore(provider: provider)
+
+        let load = Task { await store.load() }
+        await waitUntil { provider.hasPendingLoad }
+        XCTAssertTrue(provider.hasPendingLoad)
+        store.cancelConfigurationTasks()
+        provider.resumeLoad()
+        await load.value
+
+        XCTAssertNil(store.configuration)
+        XCTAssertEqual(store.phase, .idle)
+    }
+
+    func testPageOwnerResolutionUsesCompositeAccountIdentity() {
+        let otherInstance = MissCatShellAccountScope(
+            instance: "one.example",
+            userID: "shared-user",
+            username: "cat"
+        )
+        let current = MissCatShellAccountScope(
+            instance: "two.example",
+            userID: "shared-user",
+            username: "cat"
+        )
+        let unique = MissCatShellAccountScope(
+            instance: "three.example",
+            userID: "unique-user",
+            username: "dog"
+        )
+        let ambiguousOne = MissCatShellAccountScope(
+            instance: "four.example",
+            userID: "ambiguous-user",
+            username: "fox"
+        )
+        let ambiguousTwo = MissCatShellAccountScope(
+            instance: "five.example",
+            userID: "ambiguous-user",
+            username: "fox"
+        )
+
+        XCTAssertEqual(
+            MissCatLegacyShellConfigurationProvider.resolvePageOwnerScope(
+                userID: "shared-user",
+                among: [otherInstance, current, unique, ambiguousOne, ambiguousTwo],
+                currentScope: current
+            ),
+            current
+        )
+        XCTAssertEqual(
+            MissCatLegacyShellConfigurationProvider.resolvePageOwnerScope(
+                userID: "unique-user",
+                among: [otherInstance, current, unique, ambiguousOne, ambiguousTwo],
+                currentScope: current
+            ),
+            unique
+        )
+        XCTAssertNil(
+            MissCatLegacyShellConfigurationProvider.resolvePageOwnerScope(
+                userID: "missing-user",
+                among: [otherInstance, current, unique, ambiguousOne, ambiguousTwo],
+                currentScope: current
+            )
+        )
+        XCTAssertNil(
+            MissCatLegacyShellConfigurationProvider.resolvePageOwnerScope(
+                userID: "ambiguous-user",
+                among: [otherInstance, current, unique, ambiguousOne, ambiguousTwo],
+                currentScope: current
+            )
+        )
     }
 
     func testShellStoreEmitsOnlyHomeAndNotificationScrollToTopSignals() async {
@@ -692,6 +791,107 @@ private final class MockShellConfigurationProvider: MissCatShellConfigurationPro
                 MissCatTimelinePage(id: $0, title: $0, source: .home, accountScope: scope)
             },
             selectedTimelineID: pageIDs[0],
+            appearance: .init(isDark: false, accentHex: "2F7CF6")
+        )
+    }
+}
+
+@MainActor
+private final class NonCooperativeShellConfigurationProvider: MissCatShellConfigurationProviding {
+    let primaryScope = MissCatShellAccountScope(instance: "one.example", userID: "shared", username: "cat")
+    let secondaryScope = MissCatShellAccountScope(instance: "two.example", userID: "shared", username: "cat")
+    let tertiaryScope = MissCatShellAccountScope(instance: "three.example", userID: "shared", username: "cat")
+
+    private var continuations: [
+        MissCatShellAccountScope: CheckedContinuation<MissCatShellConfiguration, Never>
+    ] = [:]
+    private let feedRepository = MockMissCatFeedRepository()
+    private(set) var returnedScopes: Set<MissCatShellAccountScope> = []
+
+    var pendingScopes: Set<MissCatShellAccountScope> {
+        Set(continuations.keys)
+    }
+
+    func loadConfiguration() async throws -> MissCatShellConfiguration {
+        configuration(scope: primaryScope, pageID: "primary-home")
+    }
+
+    func switchAccount(to scope: MissCatShellAccountScope) async throws -> MissCatShellConfiguration {
+        let configuration = await withCheckedContinuation { continuation in
+            continuations[scope] = continuation
+        }
+        returnedScopes.insert(scope)
+        return configuration
+    }
+
+    func resumeSwitch(to scope: MissCatShellAccountScope) {
+        continuations.removeValue(forKey: scope)?.resume(
+            returning: configuration(scope: scope, pageID: scope == tertiaryScope ? "tertiary-home" : "secondary-home")
+        )
+    }
+
+    func saveSelectedTimelineID(
+        _ selectedID: String,
+        for scope: MissCatShellAccountScope
+    ) async throws {}
+
+    func repository(for scope: MissCatShellAccountScope) throws -> any MissCatFeedRepository {
+        feedRepository
+    }
+
+    private func configuration(
+        scope: MissCatShellAccountScope,
+        pageID: String
+    ) -> MissCatShellConfiguration {
+        MissCatShellConfiguration(
+            currentScope: scope,
+            accounts: [primaryScope, secondaryScope, tertiaryScope].map { MissCatShellAccount(scope: $0) },
+            timelinePages: [MissCatTimelinePage(id: pageID, title: pageID, source: .home, accountScope: scope)],
+            selectedTimelineID: pageID,
+            appearance: .init(isDark: false, accentHex: "2F7CF6")
+        )
+    }
+}
+
+@MainActor
+private final class NonCooperativeShellLoadProvider: MissCatShellConfigurationProviding {
+    private let scope = MissCatShellAccountScope(instance: "one.example", userID: "shared", username: "cat")
+    private var loadContinuation: CheckedContinuation<MissCatShellConfiguration, Never>?
+    private let feedRepository = MockMissCatFeedRepository()
+
+    var hasPendingLoad: Bool { loadContinuation != nil }
+
+    func loadConfiguration() async throws -> MissCatShellConfiguration {
+        await withCheckedContinuation { continuation in
+            loadContinuation = continuation
+        }
+    }
+
+    func resumeLoad() {
+        loadContinuation?.resume(returning: configuration)
+        loadContinuation = nil
+    }
+
+    func switchAccount(to scope: MissCatShellAccountScope) async throws -> MissCatShellConfiguration {
+        throw MissCatShellConfigurationError.accountNotFound
+    }
+
+    func saveSelectedTimelineID(
+        _ selectedID: String,
+        for scope: MissCatShellAccountScope
+    ) async throws {}
+
+    func repository(for scope: MissCatShellAccountScope) throws -> any MissCatFeedRepository {
+        feedRepository
+    }
+
+    private var configuration: MissCatShellConfiguration {
+        let page = MissCatTimelinePage(id: "home", title: "Home", source: .home, accountScope: scope)
+        return MissCatShellConfiguration(
+            currentScope: scope,
+            accounts: [MissCatShellAccount(scope: scope)],
+            timelinePages: [page],
+            selectedTimelineID: page.id,
             appearance: .init(isDark: false, accentHex: "2F7CF6")
         )
     }
