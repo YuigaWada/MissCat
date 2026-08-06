@@ -46,6 +46,7 @@ metadata_args=(
     --state comparator-selftest
     --appearance light
     --device fixture-device
+    --orientation portrait
     --fixture comparator-selftest
     --locale ja-jp
     --content-size medium
