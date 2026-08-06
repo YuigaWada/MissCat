@@ -1,0 +1,51 @@
+# MissCat UIKit/SwiftUI migration ledger.
+# Keep one row for every screen/state in docs/legacy-functional-inventory.md.
+# runtime_owner: framework that renders the ordinary reachable route today.
+# migration_state: accepted, migrating, or legacy.
+# accepted requires ordinary-route wiring, required behavior, relevant tests, and >=90% visual similarity.
+id	area	surface	runtime_owner	migration_state	evidence	note
+01	Shell	Home/pager	uikit	migrating	MissCat/SwiftUI/MainShell/MissCatMainShellView.swift;MissCat/SwiftUI/Timeline/MissCatTimelinePager.swift	SwiftUI shell and pager exist but authenticated root still presents LegacyApplicationView.
+02	Shell	Footer	uikit	migrating	MissCat/SwiftUI/MainShell/MissCatMainShellView.swift	SwiftUI footer exists but is not on the authenticated route.
+03	Shell	Account navbar/dropdown	uikit	legacy	MissCat/View/Reusable/Tab/NavBar.swift	No complete SwiftUI account dropdown is integrated.
+04	Login	Start	swiftui	migrating	MissCat/SwiftUI/Authentication/MissCatWelcomeView.swift	Ordinary logged-out route is SwiftUI; live login and >=90% visual gate are not yet accepted.
+05	Login	Terms	swiftui	migrating	MissCat/SwiftUI/Authentication/MissCatTermsView.swift	Ordinary logged-out route is SwiftUI; E2E and visual gates remain.
+06	Login	Instance selector	swiftui	migrating	MissCat/SwiftUI/Authentication/MissCatInstanceEditorView.swift	Ordinary logged-out route is SwiftUI; E2E and visual gates remain.
+07	Login	Auth web	swiftui	migrating	MissCat/SwiftUI/Authentication/MissCatAuthenticationBrowserView.swift	SwiftUI hosts the browser route; restored MiAuth must be integrated and verified.
+08	Timeline	Home / Local / Social / Global	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatFeedScreens.swift	Native SwiftUI feed family exists but authenticated root still uses UIKit.
+09	Timeline	Configured tabs	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatTimelinePager.swift	Tap/swipe pager exists but is not wired to the persisted tab configuration on the ordinary route.
+10	Timeline	User/list/search modes	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatFeedModels.swift	Search feed support exists; the complete user/list/search contract is not wired.
+11	Timeline	Pull to refresh	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatFeedScreens.swift	SwiftUI refreshable implementation exists but is not on the ordinary route.
+12	Note	Normal/reply/renote/promotion/quote	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatNoteRow.swift	SwiftUI note row exists but is not on the ordinary route and still requires visual/E2E acceptance.
+13	Note	MFM/text	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatNoteRow.swift	SwiftUI text rendering is partial and does not yet satisfy the full supported MFM contract.
+14	Note	Content warning	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatNoteRow.swift	SwiftUI CW disclosure exists but remains unwired and unverified visually.
+15	Note	Attachments	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatNoteRow.swift	SwiftUI attachment grid exists; gallery/video/sensitive-media parity is not yet accepted.
+16	Note	URL preview	uikit	legacy	MissCat/View/Reusable/NoteCell/UrlPreviewer.swift	No complete native SwiftUI URL preview is integrated.
+17	Note	Poll	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatNoteRow.swift	SwiftUI poll and vote UI exists but remains unwired and unverified.
+18	Note	Reactions	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatNoteRow.swift	SwiftUI reaction chips/actions exist but picker and ordinary-route verification remain.
+19	Note	Reply / renote / quote	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatNoteRow.swift;MissCat/SwiftUI/Compose/MissCatComposeScreens.swift	SwiftUI actions and compose modes exist but are not connected end to end.
+20	Note	Overflow	uikit	legacy	MissCat/View/Timeline/TimelineViewController.swift	No complete SwiftUI overflow action contract is integrated.
+21	Detail	Post thread	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatFeedScreens.swift	SwiftUI thread feed exists but is not on the ordinary route.
+22	Detail	Detail actions	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatNoteRow.swift	Some SwiftUI actions exist; the full detail action contract remains incomplete and unwired.
+23	Search	Trends	uikit	legacy	MissCat/View/Search/TrendViewController.swift	No native SwiftUI trends screen is integrated.
+24	Search	Note/user search	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatFeedScreens.swift	SwiftUI note search exists; user search and ordinary-route wiring remain.
+25	Users	User result/list	uikit	legacy	MissCat/View/UserList/UserListViewController.swift	No integrated SwiftUI user list is present on main.
+26	Profile	Profile	uikit	legacy	MissCat/View/Profile/ProfileViewController.swift	Profile SwiftUI work is still isolated from main.
+27	Profile	Relationship/list navigation	uikit	legacy	MissCat/View/Profile/ProfileViewController.swift	Profile relationship/list SwiftUI work is still isolated from main.
+28	Profile	Edit profile	uikit	legacy	MissCat/View/ProfileSettings/ProfileSettingsViewController.swift	Profile edit SwiftUI work is still isolated from main.
+29	Compose	Normal/reply/quote	uikit	migrating	MissCat/SwiftUI/Compose/MissCatComposeScreens.swift	Native compose modes exist but the ordinary app route still presents UIKit.
+30	Compose	Media	uikit	migrating	MissCat/SwiftUI/Compose/MissCatComposeMediaViews.swift	Native media workflow exists but is not wired or E2E accepted.
+31	Compose	CW / now playing / emoji	uikit	migrating	MissCat/SwiftUI/Compose/MissCatComposeScreens.swift	Native controls exist but are not wired or E2E accepted.
+32	Compose	Poll/location	uikit	migrating	MissCat/SwiftUI/Compose/MissCatComposeControls.swift	SwiftUI poll support exists; location remains outside the accepted legacy contract and the route is unwired.
+33	Notifications	Notification list	uikit	legacy	MissCat/View/Notification/NotificationsViewController.swift	No integrated native SwiftUI notification list.
+34	Notifications	In-app push banner	uikit	legacy	MissCat/Others/App/AppDelegate.swift	No integrated native SwiftUI in-app push banner.
+35	Messages	History	uikit	legacy	MissCat/View/MessageList/MessageListViewController.swift	No integrated native SwiftUI message history.
+36	Messages	Conversation	uikit	legacy	MissCat/View/Message/DirectMessageViewController.swift	No integrated native SwiftUI conversation.
+37	Accounts	Account list	uikit	legacy	MissCat/View/AccountsList/AccountsListViewController.swift	No integrated native SwiftUI account list.
+38	Settings	Settings root	uikit	legacy	MissCat/View/Settings/SettingsViewController.swift	No integrated native SwiftUI settings root.
+39	Settings	Design	uikit	legacy	MissCat/View/Settings/DesignSettingsViewController.swift	No integrated native SwiftUI design settings.
+40	Settings	Reactions	uikit	legacy	MissCat/View/Settings/ReactionSettingsViewController.swift	No integrated native SwiftUI reaction settings.
+41	Settings	Licenses	uikit	legacy	MissCat/View/Settings/LicenseViewController.swift	No integrated native SwiftUI license screen.
+42	Settings	About	uikit	legacy	MissCat/View/Settings/AboutMisskeyViewController.swift	No integrated native SwiftUI About screen.
+43	Settings	Legacy account/theme controllers	uikit	legacy	MissCat/View/Base.lproj/Main.storyboard	Unreachable/dead legacy scenes remain pending removal or explicit exclusion.
+44	Empty/error	Placeholder and banners	uikit	legacy	MissCat/View/Base.lproj/Main.storyboard	SwiftUI feature-local placeholders exist, but the shared app-wide contract is not integrated.
+45	Share extension	Compose sheet	swiftui	migrating	MissCatShare/ShareComposerView.swift	Principal content is SwiftUI behind a required extension host; E2E and >=90% visual gates remain.

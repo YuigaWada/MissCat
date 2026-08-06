@@ -59,6 +59,8 @@ Any note → detail / author profile / reply / renote / quote / reaction picker 
 
 Status meanings: **implemented** is an observable legacy path; **partial** exists but contains a known missing branch; **dead** is not reachable from the shipped navigation.
 
+Migration ownership and acceptance are tracked separately in `docs/ui-migration-surfaces.tsv`. Run `scripts/report-ui-migration.sh` for the current UIKit/SwiftUI ratio. A surface only becomes accepted after it is reachable on the ordinary route, preserves its required behavior, passes relevant tests, and reaches at least 90% screenshot similarity.
+
 | Area | Screen/state | User-visible contract and actions | Status / primary evidence |
 | --- | --- | --- | --- |
 | Shell | Home/pager | Search is first top item, followed by user-configured timeline tabs. Horizontal paging and selected blue underline. Light/dark theme and custom main color propagate. | Implemented. `MissCat/View/Main/HomeViewController.swift:70-165`; `MissCat/Others/Utilities/Theme.swift:13-331` |
