@@ -230,6 +230,512 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         }
     }
 
+    func testStreamingUsesSecretSafeRequestAndExactConnectAcknowledgement() async throws {
+        let socket = FeedFakeWebSocket()
+        let factory = FeedFakeWebSocketFactory(sockets: [socket])
+        let subject = makeStreamingSubject(factory: factory, streamID: "stream-home")
+        let recorder = FeedRealtimeEventRecorder()
+        let task = record(
+            subject.realtimeEvents(source: .home, capturing: ["captured-a"]),
+            in: recorder
+        )
+
+        await assertEventually(awaitValue { socket.resumeCount == 1 && socket.sentObjects.count == 1 })
+        let request = try XCTUnwrap(factory.requests.first)
+        XCTAssertEqual(request.url?.scheme, "wss")
+        XCTAssertEqual(request.url?.host, "example.invalid")
+        XCTAssertEqual(request.url?.path, "/streaming")
+        XCTAssertNil(request.url?.query)
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer account-token")
+        XCTAssertFalse(try XCTUnwrap(request.url?.absoluteString).contains("account-token"))
+
+        let connect = try XCTUnwrap(socket.sentObjects.first)
+        XCTAssertEqual(connect["type"] as? String, "connect")
+        let body = try XCTUnwrap(connect["body"] as? [String: Any])
+        XCTAssertEqual(body["channel"] as? String, "homeTimeline")
+        XCTAssertEqual(body["id"] as? String, "stream-home")
+        XCTAssertEqual(body["params"] as? NSDictionary, [:] as NSDictionary)
+        XCTAssertEqual(body["pong"] as? Bool, true)
+        XCTAssertFalse(socket.sentText.contains("account-token"))
+
+        socket.push(json: ["type": "connected", "body": ["id": "another-stream"]])
+        try await Task.sleep(nanoseconds: 20_000_000)
+        let beforeAck = await recorder.snapshot()
+        XCTAssertTrue(beforeAck.isEmpty)
+
+        socket.push(json: ["type": "connected", "body": ["id": "stream-home"]])
+        await assertEventually(awaitValue {
+            let values = await recorder.snapshot()
+            return values.contains(.connected(true))
+                && socket.sentObjects.contains {
+                    $0["type"] as? String == "subNote"
+                        && (($0["body"] as? [String: Any])?["id"] as? String) == "captured-a"
+                }
+        })
+
+        task.cancel()
+    }
+
+    func testStreamingMapsAllCurrentTimelineChannelNames() async throws {
+        let mappings: [(MissCatFeedSource, String)] = [
+            (.home, "homeTimeline"),
+            (.local, "localTimeline"),
+            (.social, "hybridTimeline"),
+            (.global, "globalTimeline"),
+        ]
+
+        for (source, expectedChannel) in mappings {
+            let socket = FeedFakeWebSocket()
+            let factory = FeedFakeWebSocketFactory(sockets: [socket])
+            let subject = makeStreamingSubject(factory: factory, streamID: "stream-map")
+            let task = Task {
+                for await _ in subject.realtimeEvents(source: source, capturing: []) {}
+            }
+
+            await assertEventually(awaitValue { !socket.sentObjects.isEmpty })
+            let connect = try XCTUnwrap(socket.sentObjects.first)
+            let body = try XCTUnwrap(connect["body"] as? [String: Any])
+            XCTAssertEqual(body["channel"] as? String, expectedChannel)
+            task.cancel()
+            await assertEventually(awaitValue { socket.cancelCount == 1 })
+        }
+    }
+
+    func testStreamingDecodesCurrentDictionaryNoteEnvelopeAndSubscribesToIt() async throws {
+        let socket = FeedFakeWebSocket()
+        let factory = FeedFakeWebSocketFactory(sockets: [socket])
+        let subject = makeStreamingSubject(factory: factory, streamID: "stream-note")
+        let recorder = FeedRealtimeEventRecorder()
+        let task = record(subject.realtimeEvents(source: .local, capturing: []), in: recorder)
+
+        await assertEventually(awaitValue { !socket.sentObjects.isEmpty })
+        socket.push(json: ["type": "connected", "body": ["id": "stream-note"]])
+        await assertEventually(awaitValue {
+            let values = await recorder.snapshot()
+            return values.contains(.connected(true))
+        })
+
+        socket.push(json: [
+            "type": "channel",
+            "body": [
+                "id": "stream-note",
+                "type": "note",
+                "body": Self.noteJSON(id: "live-note"),
+            ],
+        ])
+
+        await assertEventually(awaitValue {
+            let values = await recorder.snapshot()
+            return values.contains { event in
+                guard case let .inserted(note) = event else { return false }
+                return note.noteID == "live-note"
+                    && note.attachments.first?.width == 640
+                    && note.poll?.choices.first?.votes == 3
+            }
+        })
+        XCTAssertTrue(socket.sentObjects.contains {
+            $0["type"] as? String == "subNote"
+                && (($0["body"] as? [String: Any])?["id"] as? String) == "live-note"
+        })
+
+        task.cancel()
+    }
+
+    func testStreamingDecodesEveryCurrentNoteUpdatedVariantAndIsMine() async throws {
+        let socket = FeedFakeWebSocket()
+        let factory = FeedFakeWebSocketFactory(sockets: [socket])
+        let subject = makeStreamingSubject(factory: factory, streamID: "stream-updates")
+        let recorder = FeedRealtimeEventRecorder()
+        let task = record(
+            subject.realtimeEvents(source: .social, capturing: ["note-a"]),
+            in: recorder
+        )
+
+        await assertEventually(awaitValue { !socket.sentObjects.isEmpty })
+        socket.push(json: ["type": "connected", "body": ["id": "stream-updates"]])
+        await assertEventually(awaitValue {
+            let values = await recorder.snapshot()
+            return values.contains(.connected(true))
+        })
+
+        socket.push(json: Self.noteUpdated(
+            id: "note-a",
+            type: "reacted",
+            body: ["reaction": ":party:", "userId": "me"]
+        ))
+        socket.push(json: Self.noteUpdated(
+            id: "note-a",
+            type: "unreacted",
+            body: ["reaction": "like", "userId": "someone-else"]
+        ))
+        socket.push(json: Self.noteUpdated(
+            id: "note-a",
+            type: "pollVoted",
+            body: ["choice": 2, "userId": "me"]
+        ))
+        socket.push(json: Self.noteUpdated(
+            id: "note-a",
+            type: "deleted",
+            body: ["deletedAt": "2026-08-07T00:00:00.000Z"]
+        ))
+
+        await assertEventually(awaitValue {
+            let values = await recorder.snapshot()
+            return values.contains(.reaction(
+                noteID: "note-a",
+                reaction: ":party:",
+                delta: 1,
+                isMine: true
+            ))
+                && values.contains(.reaction(
+                    noteID: "note-a",
+                    reaction: "like",
+                    delta: -1,
+                    isMine: false
+                ))
+                && values.contains(.pollVote(noteID: "note-a", choice: 2, isMine: true))
+                && values.contains(.removed(noteID: "note-a"))
+        })
+
+        task.cancel()
+    }
+
+    func testSiblingStreamsIgnoreOtherChannelAndCapturedNoteEvents() async throws {
+        let socketA = FeedFakeWebSocket()
+        let socketB = FeedFakeWebSocket()
+        let factory = FeedFakeWebSocketFactory(sockets: [socketA, socketB])
+        let IDs = FeedStreamIDSequence(["stream-a", "stream-b"])
+        let subject = MissCatMisskeyFeedRepository(
+            session: account,
+            urlSession: urlSession,
+            webSocketFactory: factory,
+            makeStreamID: { IDs.next() }
+        )
+        let recorderA = FeedRealtimeEventRecorder()
+        let recorderB = FeedRealtimeEventRecorder()
+        let taskA = record(
+            subject.realtimeEvents(source: .home, capturing: ["note-a"]),
+            in: recorderA
+        )
+        await assertEventually(awaitValue { !socketA.sentObjects.isEmpty })
+        let taskB = record(
+            subject.realtimeEvents(source: .global, capturing: ["note-b"]),
+            in: recorderB
+        )
+        await assertEventually(awaitValue { !socketB.sentObjects.isEmpty })
+
+        socketA.push(json: ["type": "connected", "body": ["id": "stream-a"]])
+        socketB.push(json: ["type": "connected", "body": ["id": "stream-b"]])
+        await assertEventually(awaitValue {
+            let a = await recorderA.snapshot()
+            let b = await recorderB.snapshot()
+            return a.contains(.connected(true)) && b.contains(.connected(true))
+        })
+
+        socketA.push(json: [
+            "type": "channel",
+            "body": [
+                "id": "stream-b",
+                "type": "note",
+                "body": Self.noteJSON(id: "wrong-channel"),
+            ],
+        ])
+        socketA.push(json: Self.noteUpdated(
+            id: "note-b",
+            type: "reacted",
+            body: ["reaction": "wrong", "userId": "me"]
+        ))
+        socketA.push(json: Self.noteUpdated(
+            id: "note-a",
+            type: "reacted",
+            body: ["reaction": "right-a", "userId": "me"]
+        ))
+        socketB.push(json: Self.noteUpdated(
+            id: "note-b",
+            type: "reacted",
+            body: ["reaction": "right-b", "userId": "me"]
+        ))
+
+        await assertEventually(awaitValue {
+            let a = await recorderA.snapshot()
+            let b = await recorderB.snapshot()
+            return a.contains(.reaction(noteID: "note-a", reaction: "right-a", delta: 1, isMine: true))
+                && b.contains(.reaction(noteID: "note-b", reaction: "right-b", delta: 1, isMine: true))
+        })
+        let valuesA = await recorderA.snapshot()
+        let valuesB = await recorderB.snapshot()
+        XCTAssertFalse(valuesA.contains { event in
+            if case let .inserted(note) = event { return note.noteID == "wrong-channel" }
+            if case let .reaction(_, reaction, _, _) = event { return reaction == "wrong" }
+            return false
+        })
+        XCTAssertFalse(valuesB.contains { event in
+            if case let .reaction(noteID, _, _, _) = event { return noteID == "note-a" }
+            return false
+        })
+
+        taskA.cancel()
+        taskB.cancel()
+    }
+
+    func testStreamingTerminationUnsubscribesDisconnectsAndClosesSocket() async throws {
+        let socket = FeedFakeWebSocket()
+        let factory = FeedFakeWebSocketFactory(sockets: [socket])
+        let subject = makeStreamingSubject(factory: factory, streamID: "stream-stop")
+        let task = Task {
+            for await _ in subject.realtimeEvents(
+                source: .home,
+                capturing: ["note-b", "note-a"]
+            ) {}
+        }
+
+        await assertEventually(awaitValue { !socket.sentObjects.isEmpty })
+        socket.push(json: ["type": "connected", "body": ["id": "stream-stop"]])
+        await assertEventually(awaitValue {
+            socket.sentObjects.filter { $0["type"] as? String == "subNote" }.count == 2
+        })
+        task.cancel()
+
+        await assertEventually(awaitValue {
+            let objects = socket.sentObjects
+            let unsubscribed = Set(objects.compactMap { object -> String? in
+                guard object["type"] as? String == "unsubNote" else { return nil }
+                return (object["body"] as? [String: Any])?["id"] as? String
+            })
+            let disconnected = objects.contains { object in
+                object["type"] as? String == "disconnect"
+                    && ((object["body"] as? [String: Any])?["id"] as? String) == "stream-stop"
+            }
+            return unsubscribed == Set(["note-a", "note-b"])
+                && disconnected
+                && socket.cancelCount == 1
+        })
+    }
+
+    func testReconnectResubscribesThenPerformsRESTResyncAndIgnoresStaleSocket() async throws {
+        let first = FeedFakeWebSocket()
+        let second = FeedFakeWebSocket()
+        let factory = FeedFakeWebSocketFactory(sockets: [first, second])
+        var resyncRequests: [URLRequest] = []
+        FeedURLProtocolStub.handler = { request in
+            resyncRequests.append(request)
+            return Self.response(
+                for: request,
+                json: [Self.noteJSON(id: "note-old"), Self.noteJSON(id: "note-new")]
+            )
+        }
+        let subject = makeStreamingSubject(
+            factory: factory,
+            streamID: "stream-reconnect",
+            configuration: MissCatFeedRealtimeConfiguration(
+                maximumReconnectAttempts: 3,
+                baseReconnectDelayNanoseconds: 0,
+                maximumReconnectDelayNanoseconds: 0,
+                resynchronizationLimit: 100
+            ),
+            reconnectSleep: { _ in }
+        )
+        let recorder = FeedRealtimeEventRecorder()
+        let task = record(
+            subject.realtimeEvents(source: .home, capturing: ["note-old"]),
+            in: recorder
+        )
+
+        await assertEventually(awaitValue { !first.sentObjects.isEmpty })
+        first.push(json: ["type": "connected", "body": ["id": "stream-reconnect"]])
+        await assertEventually(awaitValue {
+            let values = await recorder.snapshot()
+            return values.contains(.connected(true))
+        })
+        first.push(json: [
+            "type": "channel",
+            "body": [
+                "id": "stream-reconnect",
+                "type": "note",
+                "body": Self.noteJSON(id: "note-live"),
+            ],
+        ])
+        await assertEventually(awaitValue {
+            let values = await recorder.snapshot()
+            return values.contains { event in
+                guard case let .inserted(note) = event else { return false }
+                return note.noteID == "note-live"
+            }
+        })
+
+        first.fail(FeedFakeWebSocketError.connectionLost)
+        await assertEventually(awaitValue { !second.sentObjects.isEmpty })
+        second.push(json: ["type": "connected", "body": ["id": "stream-reconnect"]])
+
+        await assertEventually(awaitValue {
+            let values = await recorder.snapshot()
+            let connectedCount = values.filter { $0 == .connected(true) }.count
+            let replaced = values.contains { event in
+                guard case let .replaced(note) = event else { return false }
+                return note.noteID == "note-old"
+            }
+            let inserted = values.contains { event in
+                guard case let .inserted(note) = event else { return false }
+                return note.noteID == "note-new"
+            }
+            return connectedCount == 2 && replaced && inserted && resyncRequests.count == 1
+        })
+
+        let secondTypes = second.sentObjects.compactMap { $0["type"] as? String }
+        XCTAssertEqual(secondTypes.first, "connect")
+        XCTAssertEqual(Array(secondTypes.dropFirst().prefix(2)), ["subNote", "subNote"])
+        let resubscribedBeforeResync = Set(second.sentObjects.dropFirst().prefix(2).compactMap {
+            ($0["body"] as? [String: Any])?["id"] as? String
+        })
+        XCTAssertEqual(resubscribedBeforeResync, Set(["note-live", "note-old"]))
+        XCTAssertTrue(second.sentObjects.contains {
+            $0["type"] as? String == "subNote"
+                && (($0["body"] as? [String: Any])?["id"] as? String) == "note-new"
+        })
+        let resyncBody = try XCTUnwrap(resyncRequests.first?.feedBodyData).feedJSONObject
+        XCTAssertEqual(resyncBody["i"] as? String, "account-token")
+        XCTAssertEqual(resyncBody["limit"] as? Int, 100)
+
+        let beforeStale = await recorder.snapshot()
+        first.push(json: Self.noteUpdated(
+            id: "note-old",
+            type: "reacted",
+            body: ["reaction": "stale", "userId": "me"]
+        ))
+        try await Task.sleep(nanoseconds: 20_000_000)
+        let afterStale = await recorder.snapshot()
+        XCTAssertEqual(afterStale, beforeStale)
+
+        task.cancel()
+    }
+
+    func testMalformedUnknownAndWrongIdentifiersAreIgnored() async throws {
+        let socket = FeedFakeWebSocket()
+        let factory = FeedFakeWebSocketFactory(sockets: [socket])
+        let subject = makeStreamingSubject(factory: factory, streamID: "stream-filter")
+        let recorder = FeedRealtimeEventRecorder()
+        let task = record(
+            subject.realtimeEvents(source: .global, capturing: ["note-a"]),
+            in: recorder
+        )
+
+        await assertEventually(awaitValue { !socket.sentObjects.isEmpty })
+        socket.push(json: ["type": "connected", "body": ["id": "stream-filter"]])
+        await assertEventually(awaitValue {
+            let values = await recorder.snapshot()
+            return values.contains(.connected(true))
+        })
+
+        socket.push(text: "{not-json")
+        socket.push(json: ["type": "futureEvent", "body": ["anything": true]])
+        socket.push(json: [
+            "type": "channel",
+            "body": [
+                "id": "wrong-stream",
+                "type": "note",
+                "body": Self.noteJSON(id: "wrong-note"),
+            ],
+        ])
+        socket.push(json: Self.noteUpdated(
+            id: "uncaptured",
+            type: "reacted",
+            body: ["reaction": "ignored", "userId": "me"]
+        ))
+        socket.push(json: Self.noteUpdated(
+            id: "note-a",
+            type: "deleted",
+            body: [:]
+        ))
+        socket.push(json: Self.noteUpdated(
+            id: "note-a",
+            type: "reacted",
+            body: ["reaction": "accepted", "userId": "me"]
+        ))
+
+        await assertEventually(awaitValue {
+            let values = await recorder.snapshot()
+            return values.contains(
+                .reaction(noteID: "note-a", reaction: "accepted", delta: 1, isMine: true)
+            )
+        })
+        let values = await recorder.snapshot()
+        let mutations = values.filter {
+            if case .connected = $0 { return false }
+            return true
+        }
+        XCTAssertEqual(
+            mutations,
+            [.reaction(noteID: "note-a", reaction: "accepted", delta: 1, isMine: true)]
+        )
+
+        task.cancel()
+    }
+
+    func testReconnectDelayIsBoundedExponential() {
+        let configuration = MissCatFeedRealtimeConfiguration(
+            maximumReconnectAttempts: 6,
+            baseReconnectDelayNanoseconds: 500_000_000,
+            maximumReconnectDelayNanoseconds: 30_000_000_000,
+            resynchronizationLimit: 100
+        )
+
+        XCTAssertEqual(configuration.reconnectDelayNanoseconds(forAttempt: 0), 500_000_000)
+        XCTAssertEqual(configuration.reconnectDelayNanoseconds(forAttempt: 1), 500_000_000)
+        XCTAssertEqual(configuration.reconnectDelayNanoseconds(forAttempt: 2), 1_000_000_000)
+        XCTAssertEqual(configuration.reconnectDelayNanoseconds(forAttempt: 3), 2_000_000_000)
+        XCTAssertEqual(configuration.reconnectDelayNanoseconds(forAttempt: 7), 30_000_000_000)
+        XCTAssertEqual(configuration.reconnectDelayNanoseconds(forAttempt: 100), 30_000_000_000)
+    }
+
+    private func makeStreamingSubject(
+        factory: FeedFakeWebSocketFactory,
+        streamID: String,
+        configuration: MissCatFeedRealtimeConfiguration = .live,
+        reconnectSleep: @escaping @Sendable (UInt64) async throws -> Void = { nanoseconds in
+            try await Task.sleep(nanoseconds: nanoseconds)
+        }
+    ) -> MissCatMisskeyFeedRepository {
+        MissCatMisskeyFeedRepository(
+            session: account,
+            urlSession: urlSession,
+            webSocketFactory: factory,
+            realtimeConfiguration: configuration,
+            makeStreamID: { streamID },
+            reconnectSleep: reconnectSleep
+        )
+    }
+
+    private func record(
+        _ stream: AsyncStream<MissCatRealtimeEvent>,
+        in recorder: FeedRealtimeEventRecorder
+    ) -> Task<Void, Never> {
+        Task {
+            for await event in stream {
+                await recorder.append(event)
+            }
+        }
+    }
+
+    private func awaitValue(
+        timeout: TimeInterval = 2,
+        condition: @escaping () async -> Bool
+    ) async -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if await condition() { return true }
+            try? await Task.sleep(nanoseconds: 5_000_000)
+        }
+        return await condition()
+    }
+
+    private func assertEventually(
+        _ value: Bool,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertTrue(value, file: file, line: line)
+    }
+
     private func makeSubject() -> MissCatMisskeyFeedRepository {
         MissCatMisskeyFeedRepository(session: account, urlSession: urlSession)
     }
@@ -274,6 +780,167 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         ]
         if let replyId { note["replyId"] = replyId }
         return note
+    }
+
+    private static func noteUpdated(
+        id: String,
+        type: String,
+        body: [String: Any]
+    ) -> [String: Any] {
+        [
+            "type": "noteUpdated",
+            "body": ["id": id, "type": type, "body": body] as [String: Any],
+        ]
+    }
+}
+
+private actor FeedRealtimeEventRecorder {
+    private var values: [MissCatRealtimeEvent] = []
+
+    func append(_ event: MissCatRealtimeEvent) {
+        values.append(event)
+    }
+
+    func snapshot() -> [MissCatRealtimeEvent] {
+        values
+    }
+}
+
+private enum FeedFakeWebSocketError: Error {
+    case connectionLost
+}
+
+private final class FeedFakeWebSocket: MissCatFeedWebSocket {
+    private typealias MessageResult = Result<URLSessionWebSocketTask.Message, Error>
+
+    private let lock = NSLock()
+    private var queuedResults: [MessageResult] = []
+    private var pendingReceive: CheckedContinuation<URLSessionWebSocketTask.Message, Error>?
+    private var storedSentMessages: [URLSessionWebSocketTask.Message] = []
+    private var storedResumeCount = 0
+    private var storedCancelCount = 0
+
+    var resumeCount: Int { lock.feedWithLock { storedResumeCount } }
+    var cancelCount: Int { lock.feedWithLock { storedCancelCount } }
+
+    var sentObjects: [[String: Any]] {
+        lock.feedWithLock { storedSentMessages }.compactMap { message in
+            let data: Data
+            switch message {
+            case let .string(text): data = Data(text.utf8)
+            case let .data(messageData): data = messageData
+            @unknown default: return nil
+            }
+            return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        }
+    }
+
+    var sentText: String {
+        lock.feedWithLock { storedSentMessages }.compactMap { message in
+            switch message {
+            case let .string(text): text
+            case let .data(data): String(data: data, encoding: .utf8)
+            @unknown default: nil
+            }
+        }.joined(separator: "\n")
+    }
+
+    func resume() {
+        lock.feedWithLock { storedResumeCount += 1 }
+    }
+
+    func send(_ message: URLSessionWebSocketTask.Message) async throws {
+        lock.feedWithLock { storedSentMessages.append(message) }
+    }
+
+    func receive() async throws -> URLSessionWebSocketTask.Message {
+        try await withCheckedThrowingContinuation { continuation in
+            let queued: MessageResult? = lock.feedWithLock {
+                if !queuedResults.isEmpty { return queuedResults.removeFirst() }
+                pendingReceive = continuation
+                return nil
+            }
+            if let queued { continuation.resume(with: queued) }
+        }
+    }
+
+    func cancel(with closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
+        let continuation: CheckedContinuation<URLSessionWebSocketTask.Message, Error>? = lock.feedWithLock {
+            storedCancelCount += 1
+            let continuation = pendingReceive
+            pendingReceive = nil
+            return continuation
+        }
+        continuation?.resume(throwing: CancellationError())
+    }
+
+    func push(json: Any) {
+        let data = try! JSONSerialization.data(withJSONObject: json)
+        push(.success(.data(data)))
+    }
+
+    func push(text: String) {
+        push(.success(.string(text)))
+    }
+
+    func fail(_ error: Error) {
+        push(.failure(error))
+    }
+
+    private func push(_ result: MessageResult) {
+        let continuation: CheckedContinuation<URLSessionWebSocketTask.Message, Error>? = lock.feedWithLock {
+            if let continuation = pendingReceive {
+                pendingReceive = nil
+                return continuation
+            }
+            queuedResults.append(result)
+            return nil
+        }
+        continuation?.resume(with: result)
+    }
+}
+
+private final class FeedFakeWebSocketFactory: MissCatFeedWebSocketFactory {
+    private let lock = NSLock()
+    private var sockets: [FeedFakeWebSocket]
+    private var storedRequests: [URLRequest] = []
+
+    init(sockets: [FeedFakeWebSocket]) {
+        self.sockets = sockets
+    }
+
+    var requests: [URLRequest] { lock.feedWithLock { storedRequests } }
+
+    func makeWebSocket(request: URLRequest) -> any MissCatFeedWebSocket {
+        lock.feedWithLock {
+            precondition(!sockets.isEmpty, "A fake socket must be provided for every connection")
+            storedRequests.append(request)
+            return sockets.removeFirst()
+        }
+    }
+}
+
+private final class FeedStreamIDSequence: @unchecked Sendable {
+    private let lock = NSLock()
+    private var values: [String]
+
+    init(_ values: [String]) {
+        self.values = values
+    }
+
+    func next() -> String {
+        lock.feedWithLock {
+            precondition(!values.isEmpty, "A stream ID must be provided for every stream")
+            return values.removeFirst()
+        }
+    }
+}
+
+private extension NSLock {
+    func feedWithLock<Value>(_ body: () throws -> Value) rethrows -> Value {
+        lock()
+        defer { unlock() }
+        return try body()
     }
 }
 
