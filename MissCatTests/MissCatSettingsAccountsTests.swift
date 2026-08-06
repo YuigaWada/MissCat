@@ -260,6 +260,124 @@ final class MissCatDesignSettingsStoreTests: XCTestCase {
         XCTAssertEqual(MissCatDesignSettingsStore.normalizedHex("invalid"), "2F7CF6")
         XCTAssertEqual(MissCatDesignSettingsStore.normalizedHex("123"), "2F7CF6")
     }
+
+    func testHexDraftAllowsPartialTypingAndValidatesOnlyOnCommit() async {
+        let owner = account("owner")
+        let repository = FakeDesignRepository(snapshot: .init(
+            tabs: [.init(name: "Home", kind: .home, accountID: owner.id)],
+            mode: .light,
+            accentHex: "2F7CF6",
+            accounts: [owner]
+        ))
+        let store = MissCatDesignSettingsStore(repository: repository)
+        store.load()
+        await eventually { store.isReady }
+
+        store.updateAccentHexDraft("#12a")
+
+        XCTAssertEqual(store.accentHexDraft, "12A")
+        XCTAssertEqual(store.accentHex, "2F7CF6")
+        XCTAssertFalse(store.commitAccentHexDraft())
+
+        store.updateAccentHexDraft("12abef")
+        XCTAssertTrue(store.commitAccentHexDraft())
+        XCTAssertEqual(store.accentHex, "12ABEF")
+    }
+
+    func testLoadRepairsInvalidOwnersWithoutChangingOrderedTabIdentityFields() async {
+        let owner = account("valid")
+        let tabs: [MissCatSettingsTab] = [
+            .init(name: "World", kind: .global, accountID: "deleted"),
+            .init(name: "Friends", kind: .list, accountID: nil, listID: "list-42"),
+            .init(name: "Person", kind: .user, accountID: owner.id)
+        ]
+        let store = MissCatDesignSettingsStore(repository: FakeDesignRepository(snapshot: .init(
+            tabs: tabs,
+            mode: .dark,
+            accentHex: "ABCDEF",
+            accounts: [owner]
+        )))
+
+        store.load()
+        await eventually { store.isReady }
+
+        XCTAssertEqual(store.tabs.map(\.name), ["World", "Friends", "Person"])
+        XCTAssertEqual(store.tabs.map(\.kind), [.global, .list, .user])
+        XCTAssertEqual(store.tabs.map(\.accountID), [owner.id, owner.id, owner.id])
+        XCTAssertEqual(store.tabs.map(\.listID), [nil, "list-42", nil])
+    }
+
+    func testFailedDesignSaveRemainsRetryable() async {
+        let owner = account("owner")
+        let snapshot = MissCatDesignSettingsSnapshot(
+            tabs: [.init(name: "Home", kind: .home, accountID: owner.id)],
+            mode: .light,
+            accentHex: "2F7CF6",
+            accounts: [owner]
+        )
+        let repository = FakeDesignRepository(snapshot: snapshot)
+        repository.saveError = MissCatAccountManagementError.accountPersistenceFailed
+        let store = MissCatDesignSettingsStore(repository: repository)
+        store.load()
+        await eventually { store.isReady }
+        store.updateMode(.dark)
+
+        store.save()
+        await eventually { if case .error = store.presentation { return true }; return false }
+        repository.saveError = nil
+        store.retrySave()
+        await eventually { repository.savedSnapshots.count == 1 && !store.isSaving }
+
+        XCTAssertEqual(repository.savedSnapshots.first?.mode, .dark)
+    }
+
+    func testDesignSaveFinishesAfterOwningScreenCloses() async {
+        let owner = account("owner")
+        let repository = FakeDesignRepository(snapshot: .init(
+            tabs: [.init(name: "Home", kind: .home, accountID: owner.id)],
+            mode: .light,
+            accentHex: "2F7CF6",
+            accounts: [owner]
+        ))
+        repository.saveDelayNanoseconds = 100_000_000
+        var store: MissCatDesignSettingsStore? = .init(repository: repository)
+        store?.load()
+        await eventually { store?.isReady == true }
+        store?.updateMode(.dark)
+
+        store?.save()
+        store = nil
+        await eventually { repository.savedSnapshots.count == 1 }
+
+        XCTAssertEqual(repository.savedSnapshots.first?.mode, .dark)
+    }
+
+    func testDesignFailureSurvivesRootCloseAndCanRetryAfterReopen() async {
+        let owner = account("owner")
+        let repository = FakeDesignRepository(snapshot: .init(
+            tabs: [.init(name: "Home", kind: .home, accountID: owner.id)],
+            mode: .light,
+            accentHex: "2F7CF6",
+            accounts: [owner]
+        ))
+        repository.saveError = MissCatAccountManagementError.accountPersistenceFailed
+        var original: MissCatDesignSettingsStore? = .init(repository: repository)
+        original?.load()
+        await eventually { original?.isReady == true }
+        original?.updateMode(.dark)
+        original?.save()
+        await eventually { if case .error = original?.presentation { return true }; return false }
+        original = nil
+
+        repository.saveError = nil
+        let reopened = MissCatDesignSettingsStore(repository: repository)
+        reopened.load()
+        await eventually { if case .error = reopened.presentation { return true }; return false }
+        reopened.retrySave()
+        await eventually { repository.savedSnapshots.count == 1 && !reopened.isSaving }
+
+        XCTAssertEqual(repository.savedSnapshots.first?.mode, .dark)
+    }
 }
 
 @MainActor
@@ -319,6 +437,158 @@ final class MissCatReactionSettingsStoreTests: XCTestCase {
             ["👍", "❤️", "😆", "🤔", "😮", "🎉", "💢", "😥", "😇", "🍮", "🤯"]
         )
     }
+
+    func testPickerSearchCoversFavoritesHistoryCustomAndStandardSections() async {
+        let account = MissCatReactionAccount(id: "owner", instance: "example.test")
+        let favorite = MissCatReactionItem(rawValue: "👍", displayValue: "👍")
+        let custom = MissCatReactionItem(
+            rawValue: ":misscat:",
+            imageURL: URL(string: "https://example.test/misscat.gif"),
+            searchTerms: ["animals", "cat"]
+        )
+        let standard = MissCatReactionItem(rawValue: "smile", displayValue: "😄", searchTerms: ["people"])
+        let snapshot = MissCatReactionSettingsSnapshot(
+            account: account,
+            favorites: [favorite],
+            available: [favorite, custom, standard],
+            history: Array(repeating: favorite, count: 20),
+            sections: [
+                .init(id: "favorites", title: "お気に入り", kind: .favorites, items: [favorite]),
+                .init(id: "history", title: "履歴", kind: .history, items: [favorite]),
+                .init(id: "custom-animals", title: "Animals", kind: .custom, items: [custom]),
+                .init(id: "standard-people", title: "People", kind: .standard, items: [standard])
+            ]
+        )
+        XCTAssertEqual(snapshot.history.count, 14)
+        let store = MissCatReactionSettingsStore(repository: FakeReactionRepository(
+            accounts: [account], snapshot: snapshot
+        ))
+        store.load(accountID: account.id)
+        await eventually { store.snapshot != nil }
+
+        XCTAssertEqual(store.pickerSections.map(\.kind), [.favorites, .history, .custom, .standard])
+        store.searchQuery = "cat"
+        XCTAssertEqual(store.pickerSections.map(\.kind), [.custom])
+        XCTAssertEqual(store.pickerSections.first?.items, [custom])
+    }
+
+    func testAccountReloadDoesNotCancelReactionSave() async {
+        let account = MissCatReactionAccount(id: "owner", instance: "example.test")
+        let first = MissCatReactionItem(rawValue: "1", displayValue: "1")
+        let second = MissCatReactionItem(rawValue: "2", displayValue: "2")
+        let repository = FakeReactionRepository(
+            accounts: [account],
+            snapshot: .init(account: account, favorites: [first], available: [first, second])
+        )
+        repository.saveDelayNanoseconds = 100_000_000
+        let store = MissCatReactionSettingsStore(repository: repository)
+        store.load(accountID: account.id)
+        await eventually { store.snapshot != nil }
+        store.add(second)
+
+        store.saveIfNeeded()
+        store.loadAccounts()
+        await eventually { repository.savedSnapshots.count == 1 && !store.isSaving }
+
+        XCTAssertEqual(repository.savedSnapshots.first?.favorites, [first, second])
+    }
+
+    func testFailedReactionSaveRemainsRetryable() async {
+        let account = MissCatReactionAccount(id: "owner", instance: "example.test")
+        let first = MissCatReactionItem(rawValue: "1", displayValue: "1")
+        let second = MissCatReactionItem(rawValue: "2", displayValue: "2")
+        let repository = FakeReactionRepository(
+            accounts: [account],
+            snapshot: .init(account: account, favorites: [first], available: [first, second])
+        )
+        repository.saveError = MissCatAccountManagementError.accountPersistenceFailed
+        let store = MissCatReactionSettingsStore(repository: repository)
+        store.load(accountID: account.id)
+        await eventually { store.snapshot != nil }
+        store.add(second)
+
+        store.saveIfNeeded()
+        await eventually { if case .error = store.presentation { return true }; return false }
+        repository.saveError = nil
+        store.retrySave()
+        await eventually { repository.savedSnapshots.count == 1 && !store.isSaving }
+
+        XCTAssertEqual(repository.savedSnapshots.first?.favorites, [first, second])
+    }
+}
+
+final class MissCatEmojiArchiveTests: XCTestCase {
+    func testSecureArchiveRoundTripAndCorruptDataRecovery() throws {
+        let items = [EmojiView.EmojiModel(
+            rawEmoji: ":misscat:",
+            isDefault: false,
+            defaultEmoji: nil,
+            customEmojiUrl: "https://example.test/misscat.apng"
+        )]
+        let data = try EmojiView.EmojiModel.archiveEmojis(items)
+        let decoded = EmojiView.EmojiModel.decodeStoredEmojis(data)
+
+        XCTAssertEqual(decoded?.map(\.rawEmoji), [":misscat:"])
+        XCTAssertNil(EmojiView.EmojiModel.decodeStoredEmojis(Data([0x00, 0x01, 0x02])))
+    }
+
+    func testLegacyNonSecureArchiveCanBeReadForMigration() throws {
+        let items = [EmojiView.EmojiModel(
+            rawEmoji: "👍",
+            isDefault: true,
+            defaultEmoji: "👍",
+            customEmojiUrl: nil
+        )]
+        let legacy = try NSKeyedArchiver.archivedData(
+            withRootObject: items,
+            requiringSecureCoding: false
+        )
+
+        XCTAssertEqual(EmojiView.EmojiModel.decodeStoredEmojis(legacy)?.map(\.rawEmoji), ["👍"])
+    }
+}
+
+final class MissCatThemeProductionContractTests: XCTestCase {
+    func testRemovingThreeBoundTabsReportsChangeWhenDefaultsAlsoHaveThreeTabs() {
+        let bound = [
+            Theme.Tab(name: "A", kind: .home, userId: "owner", listId: nil),
+            Theme.Tab(name: "B", kind: .local, userId: "owner", listId: nil),
+            Theme.Tab(name: "C", kind: .global, userId: "owner", listId: nil)
+        ]
+        let defaults = Theme.Model.getDefault()?.tab ?? []
+
+        let result = Theme.removingTabs(for: "owner", from: bound, defaults: defaults)
+
+        XCTAssertTrue(result.changed)
+        XCTAssertEqual(result.tabs, defaults)
+        XCTAssertEqual(result.tabs.count, 3)
+    }
+
+    @MainActor
+    func testProductionAdapterReadbackChecksOrderedNameKindOwnerAndListID() {
+        let tabs = [
+            Theme.Tab(name: "Home", kind: .home, userId: "owner-a", listId: nil),
+            Theme.Tab(name: "Friends", kind: .list, userId: "owner-b", listId: "list-42")
+        ]
+        let expected = Theme.Model(tab: tabs, mainColorHex: "ABCDEF", colorMode: .dark)
+        let exact = Theme.Model(tab: tabs, mainColorHex: "ABCDEF", colorMode: .dark)
+        let reordered = Theme.Model(tab: Array(tabs.reversed()), mainColorHex: "ABCDEF", colorMode: .dark)
+        let wrongOwner = Theme.Model(
+            tab: [tabs[0], Theme.Tab(name: "Friends", kind: .list, userId: "owner-a", listId: "list-42")],
+            mainColorHex: "ABCDEF",
+            colorMode: .dark
+        )
+        let wrongList = Theme.Model(
+            tab: [tabs[0], Theme.Tab(name: "Friends", kind: .list, userId: "owner-b", listId: "list-99")],
+            mainColorHex: "ABCDEF",
+            colorMode: .dark
+        )
+
+        XCTAssertTrue(MissCatLegacySettingsRepository.persistedThemeMatches(exact, expected: expected))
+        XCTAssertFalse(MissCatLegacySettingsRepository.persistedThemeMatches(reordered, expected: expected))
+        XCTAssertFalse(MissCatLegacySettingsRepository.persistedThemeMatches(wrongOwner, expected: expected))
+        XCTAssertFalse(MissCatLegacySettingsRepository.persistedThemeMatches(wrongList, expected: expected))
+    }
 }
 
 final class MissCatSettingsVisualContractTests: XCTestCase {
@@ -335,18 +605,12 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
         XCTAssertEqual(MissCatSettingsLegacyMetrics.aboutDeveloperRowHeight, 70)
     }
 
-    func testLicenseCatalogRetainsAllLegacyEntries() {
+    func testLicenseCatalogExactlyMatchesPodfileLockInventory() {
         let catalog = LicenseTableViewController.getOssDescription()
-        let expected = [
-            "APNGKit", "Agrume", "Cache", "ChromaColorPicker", "Eureka",
-            "FloatingPanel", "Gifu", "MessageKit", "MisskeyKit", "PolioPager",
-            "RxCocoa", "RxDataSources", "RxSwift", "SkeletonView", "Starscream",
-            "SwiftLinkPreview", "XLPagerTabStrip", "XLActionController", "YanagiText",
-            "photo-editor"
-        ]
+        let expected = LicenseTableViewController.podfileLockDependencyNames
 
         XCTAssertEqual(catalog.keys.sorted(), expected.sorted())
-        XCTAssertEqual(catalog.count, 20)
+        XCTAssertEqual(catalog.count, 22)
         XCTAssertTrue(catalog.values.allSatisfy { $0.count > 200 })
         XCTAssertTrue(catalog.values.joined(separator: "\n").contains("License"))
     }
@@ -409,6 +673,8 @@ private final class FakeAccountRepository: MissCatAccountManaging {
 private final class FakeDesignRepository: MissCatDesignSettingsManaging {
     var snapshot: MissCatDesignSettingsSnapshot
     var requiresRelaunch = false
+    var saveDelayNanoseconds: UInt64 = 0
+    var saveError: Error?
     private(set) var savedSnapshots: [MissCatDesignSettingsSnapshot] = []
 
     init(snapshot: MissCatDesignSettingsSnapshot) {
@@ -422,6 +688,10 @@ private final class FakeDesignRepository: MissCatDesignSettingsManaging {
     func saveDesignSettings(
         _ snapshot: MissCatDesignSettingsSnapshot
     ) async throws -> MissCatDesignSaveResult {
+        if saveDelayNanoseconds > 0 {
+            try await Task.sleep(nanoseconds: saveDelayNanoseconds)
+        }
+        if let saveError { throw saveError }
         savedSnapshots.append(snapshot)
         self.snapshot = snapshot
         return .init(snapshot: snapshot, requiresRootRelaunch: requiresRelaunch)
@@ -432,6 +702,8 @@ private final class FakeDesignRepository: MissCatDesignSettingsManaging {
 private final class FakeReactionRepository: MissCatReactionSettingsManaging {
     var accounts: [MissCatReactionAccount]
     var snapshot: MissCatReactionSettingsSnapshot
+    var saveDelayNanoseconds: UInt64 = 0
+    var saveError: Error?
     private(set) var savedSnapshots: [MissCatReactionSettingsSnapshot] = []
 
     init(accounts: [MissCatReactionAccount], snapshot: MissCatReactionSettingsSnapshot) {
@@ -448,6 +720,10 @@ private final class FakeReactionRepository: MissCatReactionSettingsManaging {
     }
 
     func saveReactions(_ snapshot: MissCatReactionSettingsSnapshot) async throws {
+        if saveDelayNanoseconds > 0 {
+            try await Task.sleep(nanoseconds: saveDelayNanoseconds)
+        }
+        if let saveError { throw saveError }
         savedSnapshots.append(snapshot)
         self.snapshot = snapshot
     }
