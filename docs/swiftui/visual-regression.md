@@ -14,7 +14,7 @@ artifacts/visual-acceptance/cases/<surface>--<state>--<appearance>--<device>--<l
 artifacts/visual-acceptance/cases/<surface>--<state>--<appearance>--<device>--<locale>--<content-size>/review.json
 ```
 
-Baseline and candidate must use the same device, orientation, display scale, appearance, locale, Dynamic Type size, seeded app data, and screen state. The tool rejects differing pixel dimensions instead of resizing either input.
+Baseline and candidate must use the same device, orientation, display scale, appearance, locale, Dynamic Type size, seeded app data, and screen state. `docs/visual-acceptance-capture-policy.tsv` pins full-resolution portrait pixels for every allowed device (`1206x2622` for iPhone 16 Pro and `750x1334` for iPhone SE 3). The verifier rejects matching but scaled images, rotated or landscape images, cropping, and differing dimensions instead of resizing either input. Orientation is also recorded explicitly in `summary.json`.
 
 ## Running a comparison
 
@@ -24,6 +24,7 @@ The default acceptance setting implements the product threshold: changed-pixel s
 scripts/compare-screenshots.sh \
   --surface-id 01 --state home --appearance light \
   --device iphone-16-pro-ios18.6 \
+  --orientation portrait \
   --fixture shell-home-pager--home \
   --locale ja-jp --content-size medium \
   --visual-ready visual-ready.shell-home-pager.home \
@@ -50,6 +51,7 @@ Color fuzz and thresholds must be explicit when relaxed:
 scripts/compare-screenshots.sh \
   --surface-id 08 --state home --appearance dark \
   --device iphone-16-pro-ios18.6 \
+  --orientation portrait \
   --fixture timeline-family--home \
   --locale ja-jp --content-size medium \
   --visual-ready visual-ready.timeline-family.home \
@@ -75,7 +77,11 @@ Prefer deterministic captures: use the same Simulator model/runtime and stabiliz
 No mask is currently approved by
 `docs/visual-acceptance-mask-policy.tsv`. If OS-owned values cannot be stabilized,
 review and pin a device-specific mask hash, ignored-pixel ceiling, and minimal
-allowed rectangle before using `--mask`. White pixels are compared and black
+allowed rectangle before using `--mask`. The exact policy digest and its earlier
+policy commit must be recorded in `docs/visual-acceptance-mask-policy-approval.tsv`
+before screenshot artifacts are produced. A mask, policy relaxation, or approval
+record introduced by the evidence commit is rejected; evidence producers cannot
+approve their own exclusions. White pixels are compared and black
 pixels are ignored. The verifier recomputes the ignored count and bounds and
 rejects unapproved, changed, or overbroad masks. Never mask app navigation bars,
 titles, safe-area layout, sheets, keyboard-owned app content, or controls.
@@ -108,6 +114,15 @@ commit must not contain `review.json`. A later descendant commit adds the
 reviewer's tracked acceptance record after 100% overlay inspection. The verifier
 requires every artifact blob to match the producer commit, `HEAD`, and the working
 tree, and requires the reviewer record to remain unchanged since its introduction.
+Baseline and candidate image content must also be unique across canonical cases;
+distinct filenames cannot legitimize a copied screenshot from another state.
+For every recorded row, the verifier reruns `compare-screenshots.sh` from the
+tracked inputs and recorded settings, compares the independently calculated JSON
+metrics, and requires byte-identical regenerated heatmap, side-by-side, and
+overlay artifacts. A hand-authored passing summary is not acceptance evidence.
+The capture policy, mask policy, and mask-policy approval record must all exist
+unchanged before the artifact-producer commit. Any used mask must already be an
+identical tracked blob at the independently pinned policy commit.
 
 Validate the inventory while migration evidence is still incomplete:
 

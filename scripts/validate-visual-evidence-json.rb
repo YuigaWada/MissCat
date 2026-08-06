@@ -52,11 +52,11 @@ mode = ARGV.shift
 
 case mode
 when "summary"
-  if ARGV.length != 22
-    fail_validation("summary validator expected 22 arguments, received #{ARGV.length}")
+  if ARGV.length != 23
+    fail_validation("summary validator expected 23 arguments, received #{ARGV.length}")
   end
 
-  path, surface, state, appearance, device, fixture, locale, content_size, visual_ready,
+  path, surface, state, appearance, device, orientation, fixture, locale, content_size, visual_ready,
     baseline_path, candidate_path, summary_path, heatmap_path, side_by_side_path, overlay_path,
     baseline_sha, candidate_sha, baseline_width, baseline_height, candidate_width, candidate_height,
     expected_schema = ARGV
@@ -67,12 +67,13 @@ when "summary"
   string!(data["status"], "status", expected: "passed")
 
   capture = data["capture"]
-  exact_keys!(capture, %w[appearance content_size device fixture locale state surface_id visual_ready], "capture")
+  exact_keys!(capture, %w[appearance content_size device fixture locale orientation state surface_id visual_ready], "capture")
   {
     "surface_id" => surface,
     "state" => state,
     "appearance" => appearance,
     "device" => device,
+    "orientation" => orientation,
     "fixture" => fixture,
     "locale" => locale,
     "content_size" => content_size,
@@ -106,6 +107,7 @@ when "summary"
   rmse_normalized = number!(comparison["rmse_normalized"], "comparison.rmse_normalized", minimum: 0, maximum: 1)
   max_changed_ratio = number!(comparison["max_changed_ratio"], "comparison.max_changed_ratio", minimum: 0, maximum: 0.10)
   min_ssim = number!(comparison["min_ssim"], "comparison.min_ssim", minimum: 0.90, maximum: 1)
+  maximum_rmse = nil
   unless comparison["max_normalized_rmse"].nil?
     maximum_rmse = number!(comparison["max_normalized_rmse"], "comparison.max_normalized_rmse", minimum: 0, maximum: 1)
     fail_validation("comparison.rmse_normalized exceeds configured maximum") if rmse_normalized > maximum_rmse
@@ -148,13 +150,32 @@ when "summary"
     fail_validation("mask bounds exceed image dimensions") if x + width > baseline_width.to_i || y + height > baseline_height.to_i
     fail_validation("mask ignored pixels exceed its bounds") if ignored_pixels > width * height
     fail_validation("comparison.evaluated_pixels does not match mask") unless evaluated_pixels == total_pixels - ignored_pixels
-    puts ["mask", "true", mask_path, mask_sha, ignored_pixels, x, y, width, height].join("\t")
+    mask_fields = ["true", mask_path, mask_sha, ignored_pixels, x, y, width, height]
   else
     fail_validation("unrequested mask cannot be applied") if applied
     fail_validation("unrequested mask fields must be null") unless mask["path"].nil? && mask["sha256"].nil? && mask["ignored_bounds"].nil?
     fail_validation("unrequested mask ignored pixels must be zero") unless ignored_pixels.zero?
     fail_validation("unmasked comparison must evaluate every pixel") unless evaluated_pixels == total_pixels
-    puts "mask\tfalse"
+    mask_fields = ["false", "none", "none", 0, 0, 0, 0, 0]
+  end
+  puts ["summary", fuzz, channel_delta, max_changed_ratio, min_ssim, maximum_rmse || "none", *mask_fields].join("\t")
+
+when "recomputed"
+  if ARGV.length != 2
+    fail_validation("recomputed validator expected recorded and recomputed summaries")
+  end
+  recorded = parse_json(ARGV[0])
+  recomputed = parse_json(ARGV[1])
+  %w[schema_version status capture comparison].each do |key|
+    fail_validation("recomputed #{key} mismatch") unless recorded[key] == recomputed[key]
+  end
+  %w[baseline candidate].each do |key|
+    %w[sha256 width height].each do |field|
+      fail_validation("recomputed #{key}.#{field} mismatch") unless recorded.dig(key, field) == recomputed.dig(key, field)
+    end
+  end
+  %w[requested applied sha256 ignored_pixels ignored_bounds].each do |field|
+    fail_validation("recomputed mask.#{field} mismatch") unless recorded.dig("mask", field) == recomputed.dig("mask", field)
   end
 
 when "review"
@@ -185,5 +206,5 @@ when "review"
   string!(data["reviewer"]["notes"], "reviewer.notes")
   boolean!(data["reviewer"]["overlay_inspected_at_100_percent"], "reviewer.overlay_inspected_at_100_percent", expected: true)
 else
-  fail_validation("usage: validate-visual-evidence-json.rb summary|review ...")
+  fail_validation("usage: validate-visual-evidence-json.rb summary|recomputed|review ...")
 end

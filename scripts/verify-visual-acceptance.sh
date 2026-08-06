@@ -5,9 +5,10 @@ set -euo pipefail
 readonly script_dir="$(cd "$(dirname "$0")" && pwd -P)"
 readonly repository_root="$(cd "${script_dir}/.." && pwd -P)"
 readonly json_validator="${script_dir}/validate-visual-evidence-json.rb"
+readonly comparator="${script_dir}/compare-screenshots.sh"
 readonly REQUIREMENTS_SCHEMA_VERSION=2
 readonly EVIDENCE_SCHEMA_VERSION=2
-readonly SUMMARY_SCHEMA_VERSION=3
+readonly SUMMARY_SCHEMA_VERSION=4
 readonly REVIEW_SCHEMA_VERSION=1
 readonly EXPECTED_REQUIREMENTS_SHA256="8c119a005579a70d5f373d3d82a0b9a33f62eabb896cfadd820487d48a087c50"
 readonly EXPECTED_SURFACES=45
@@ -17,6 +18,8 @@ requirements="${repository_root}/docs/visual-acceptance-requirements.tsv"
 evidence="${repository_root}/docs/visual-acceptance-evidence.tsv"
 ledger="${repository_root}/docs/ui-migration-surfaces.tsv"
 mask_policy="${repository_root}/docs/visual-acceptance-mask-policy.tsv"
+mask_policy_approval="${repository_root}/docs/visual-acceptance-mask-policy-approval.tsv"
+capture_policy="${repository_root}/docs/visual-acceptance-capture-policy.tsv"
 magick_bin="${MAGICK_BIN:-/opt/homebrew/bin/magick}"
 mode="--inventory"
 
@@ -24,7 +27,8 @@ usage() {
     cat >&2 <<'USAGE'
 usage: scripts/verify-visual-acceptance.sh [--inventory|--require-complete]
        [--requirements PATH] [--evidence PATH] [--ledger PATH]
-       [--mask-policy PATH] [--magick PATH]
+       [--capture-policy PATH] [--mask-policy PATH]
+       [--mask-policy-approval PATH] [--magick PATH]
 
 --inventory validates the pinned 45-surface/710-case contract and every
 recorded evidence row. --require-complete additionally rejects missing visual
@@ -63,6 +67,16 @@ while [[ $# -gt 0 ]]; do
             mask_policy="$2"
             shift 2
             ;;
+        --mask-policy-approval)
+            [[ $# -ge 2 ]] || { usage; exit 64; }
+            mask_policy_approval="$2"
+            shift 2
+            ;;
+        --capture-policy)
+            [[ $# -ge 2 ]] || { usage; exit 64; }
+            capture_policy="$2"
+            shift 2
+            ;;
         --magick)
             [[ $# -ge 2 ]] || { usage; exit 64; }
             magick_bin="$2"
@@ -80,10 +94,13 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -x "$json_validator" ]] || fail "missing JSON validator: $json_validator"
+[[ -x "$comparator" ]] || fail "missing screenshot comparator: $comparator"
 [[ -f "$requirements" ]] || fail "missing requirements: $requirements"
 [[ -f "$evidence" ]] || fail "missing evidence manifest: $evidence"
 [[ -f "$ledger" ]] || fail "missing migration ledger: $ledger"
 [[ -f "$mask_policy" ]] || fail "missing mask policy: $mask_policy"
+[[ -f "$mask_policy_approval" ]] || fail "missing mask policy approval: $mask_policy_approval"
+[[ -f "$capture_policy" ]] || fail "missing capture policy: $capture_policy"
 
 temporary_dir=$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/misscat-visual-acceptance.XXXXXX")
 trap 'rm -rf "$temporary_dir"' EXIT
@@ -95,7 +112,11 @@ recorded_cases="${temporary_dir}/recorded.tsv"
 ledger_ids="${temporary_dir}/ledger-ids.txt"
 requirement_ids="${temporary_dir}/requirement-ids.txt"
 used_paths="${temporary_dir}/used-paths.txt"
+used_baseline_hashes="${temporary_dir}/used-baseline-hashes.txt"
+used_candidate_hashes="${temporary_dir}/used-candidate-hashes.txt"
 : > "$used_paths"
+: > "$used_baseline_hashes"
+: > "$used_candidate_hashes"
 
 sha256_file() {
     /usr/bin/openssl dgst -sha256 -r "$1" | awk '{ print $1 }'
@@ -149,6 +170,17 @@ register_unique_path() {
     printf '%s\n' "$relative" >> "$used_paths"
 }
 
+register_unique_image_content() {
+    local digest="$1"
+    local registry="$2"
+    local label="$3"
+    local case_id="$4"
+    if /usr/bin/grep -Fqx "$digest" "$registry"; then
+        fail "reused or replayed ${label} image content for $case_id"
+    fi
+    printf '%s\n' "$digest" >> "$registry"
+}
+
 image_dimensions() {
     local path="$1"
     local output width height
@@ -179,6 +211,17 @@ require_immutable_blob() {
     current_blob=$(git -C "$repository_root" hash-object "$path") || fail "cannot hash ${label}: $relative"
     [[ "$evidence_blob" == "$head_blob" && "$head_blob" == "$current_blob" ]] || \
         fail "${label} blob drifted from evidence_commit: $relative"
+}
+
+require_prior_immutable_blob() {
+    local relative="$1"
+    local commit="$2"
+    local label="$3"
+    local path="$4"
+    local parent
+    parent=$(git -C "$repository_root" rev-parse "${commit}^" 2>/dev/null) || \
+        fail "evidence_commit has no prior ${label} approval: $commit"
+    require_immutable_blob "$relative" "$parent" "$label" "$path"
 }
 
 require_artifact_producer() {
@@ -346,6 +389,56 @@ header == 0 {
 END { if (!header || bad) exit 65 }
 ' "$mask_policy" || fail "invalid mask policy contract"
 
+awk -F '\t' '
+BEGIN { expected_header = "device\torientation\tpixel_width\tpixel_height" }
+/^#/ || NF == 0 { next }
+header == 0 {
+    if ($0 != expected_header) { print "unexpected capture policy header" > "/dev/stderr"; exit 65 }
+    header = 1
+    next
+}
+{
+    if (NF != 4 || seen[$1]++) { print "invalid or duplicate capture policy row" > "/dev/stderr"; bad = 1 }
+    if ($1 !~ /^[a-z0-9][a-z0-9.-]*$/ || ($2 != "portrait" && $2 != "landscape")) bad = 1
+    if ($3 !~ /^[0-9]+$/ || $4 !~ /^[0-9]+$/ || $3 < 1 || $4 < 1) bad = 1
+    if (($2 == "portrait" && $3 >= $4) || ($2 == "landscape" && $3 <= $4)) bad = 1
+    rows++
+}
+END { if (!header || rows != 2 || bad) exit 65 }
+' "$capture_policy" || fail "invalid capture policy contract"
+
+approval_row=$(awk -F '\t' '
+BEGIN { expected_header = "policy_sha256\tpolicy_commit" }
+/^#/ || NF == 0 { next }
+header == 0 {
+    if ($0 != expected_header) exit 65
+    header = 1
+    next
+}
+{
+    if (NF != 2 || rows++) exit 65
+    if ($1 !~ /^[0-9a-f]{64}$/ || $2 !~ /^[0-9a-f]{40}$/) exit 65
+    print
+}
+END { if (!header || rows != 1) exit 65 }
+' "$mask_policy_approval") || fail "invalid mask policy approval contract"
+IFS=$'\t' read -r approved_policy_sha approved_policy_commit <<< "$approval_row"
+[[ "$(sha256_file "$mask_policy")" == "$approved_policy_sha" ]] || fail "mask policy digest is not independently approved"
+git -C "$repository_root" cat-file -e "${approved_policy_commit}^{commit}" 2>/dev/null || \
+    fail "unknown approved mask policy commit: $approved_policy_commit"
+git -C "$repository_root" merge-base --is-ancestor "$approved_policy_commit" HEAD || \
+    fail "approved mask policy commit is not an ancestor of HEAD"
+mask_policy_relative="${mask_policy#${repository_root}/}"
+mask_policy_path=$(canonical_existing_file "$mask_policy_relative" mask-policy)
+approved_policy_blob=$(git_blob_at "$approved_policy_commit" "$mask_policy_relative") || \
+    fail "mask policy was not tracked at its approved commit"
+[[ "$approved_policy_blob" == "$(git -C "$repository_root" hash-object "$mask_policy_path")" ]] || \
+    fail "approved mask policy commit does not pin the current policy"
+mask_policy_approval_relative="${mask_policy_approval#${repository_root}/}"
+mask_policy_approval_path=$(canonical_existing_file "$mask_policy_approval_relative" mask-policy-approval)
+capture_policy_relative="${capture_policy#${repository_root}/}"
+capture_policy_path=$(canonical_existing_file "$capture_policy_relative" capture-policy)
+
 while IFS=$'\t' read -r surface state appearance device fixture locale content_size visual_ready baseline candidate diff_dir review_record commit; do
     [[ "$surface" == "surface_id" || "$surface" == \#* || -z "$surface" ]] && continue
     [[ "$surface" =~ ^[0-9][0-9]$ ]] || fail "invalid evidence surface ID: $surface"
@@ -360,6 +453,11 @@ while IFS=$'\t' read -r surface state appearance device fixture locale content_s
     expected_ready=$(printf '%s\n' "$expected_row" | cut -f 8)
     [[ "$fixture" == "$expected_fixture" ]] || fail "fixture metadata mismatch: $surface/$state/$appearance/$device"
     [[ "$visual_ready" == "$expected_ready" ]] || fail "visualReady metadata mismatch: $surface/$state/$appearance/$device"
+    capture_policy_row=$(awk -F '\t' -v device="$device" '$1 == device { print; exit }' "$capture_policy")
+    [[ -n "$capture_policy_row" ]] || fail "missing capture policy for device: $device"
+    capture_orientation=$(printf '%s\n' "$capture_policy_row" | cut -f 2)
+    capture_width=$(printf '%s\n' "$capture_policy_row" | cut -f 3)
+    capture_height=$(printf '%s\n' "$capture_policy_row" | cut -f 4)
 
     case_id="${surface}--${state}--${appearance}--${device}--${locale}--${content_size}"
     case_root="artifacts/visual-acceptance/cases/${case_id}"
@@ -397,6 +495,8 @@ while IFS=$'\t' read -r surface state appearance device fixture locale content_s
     read -r candidate_width candidate_height <<< "$(image_dimensions "$candidate_path")"
     [[ "$baseline_width" -eq "$candidate_width" && "$baseline_height" -eq "$candidate_height" ]] || \
         fail "baseline/candidate dimensions differ for $case_id"
+    [[ "$baseline_width" -eq "$capture_width" && "$baseline_height" -eq "$capture_height" ]] || \
+        fail "capture dimensions or orientation violate device policy for $case_id: expected ${capture_orientation} ${capture_width}x${capture_height}, received ${baseline_width}x${baseline_height}"
     read -r heatmap_width heatmap_height <<< "$(image_dimensions "$heatmap_path")"
     read -r side_width side_height <<< "$(image_dimensions "$side_by_side_path")"
     read -r overlay_width overlay_height <<< "$(image_dimensions "$overlay_path")"
@@ -406,8 +506,10 @@ while IFS=$'\t' read -r surface state appearance device fixture locale content_s
 
     baseline_sha=$(sha256_file "$baseline_path")
     candidate_sha=$(sha256_file "$candidate_path")
-    mask_result=$("$json_validator" summary "$summary_path" \
-        "$surface" "$state" "$appearance" "$device" "$fixture" "$locale" "$content_size" "$visual_ready" \
+    register_unique_image_content "$baseline_sha" "$used_baseline_hashes" baseline "$case_id"
+    register_unique_image_content "$candidate_sha" "$used_candidate_hashes" candidate "$case_id"
+    summary_result=$("$json_validator" summary "$summary_path" \
+        "$surface" "$state" "$appearance" "$device" "$capture_orientation" "$fixture" "$locale" "$content_size" "$visual_ready" \
         "$baseline" "$candidate" "$summary_relative" "$heatmap_relative" "$side_by_side_relative" "$overlay_relative" \
         "$baseline_sha" "$candidate_sha" "$baseline_width" "$baseline_height" "$candidate_width" "$candidate_height" \
         "$SUMMARY_SCHEMA_VERSION") || fail "strict summary validation failed for $case_id"
@@ -415,9 +517,16 @@ while IFS=$'\t' read -r surface state appearance device fixture locale content_s
     [[ "$commit" =~ ^[0-9a-f]{40}$ ]] || fail "evidence_commit must be a full lowercase commit hash for $case_id"
     git -C "$repository_root" cat-file -e "${commit}^{commit}" 2>/dev/null || fail "unknown evidence_commit: $commit"
     git -C "$repository_root" merge-base --is-ancestor "$commit" HEAD || fail "evidence_commit is not an ancestor of HEAD: $commit"
+    [[ "$approved_policy_commit" != "$commit" ]] || fail "mask policy approval must predate evidence_commit: $commit"
+    git -C "$repository_root" merge-base --is-ancestor "$approved_policy_commit" "$commit" || \
+        fail "mask policy approval does not predate evidence_commit: $commit"
+    require_prior_immutable_blob "$mask_policy_relative" "$commit" mask-policy "$mask_policy_path"
+    require_prior_immutable_blob "$mask_policy_approval_relative" "$commit" mask-policy-approval "$mask_policy_approval_path"
+    require_prior_immutable_blob "$capture_policy_relative" "$commit" capture-policy "$capture_policy_path"
 
-    IFS=$'\t' read -r mask_marker mask_requested mask_relative mask_sha ignored_pixels ignored_x ignored_y ignored_width ignored_height <<< "$mask_result"
-    [[ "$mask_marker" == "mask" ]] || fail "invalid mask validator output for $case_id"
+    IFS=$'\t' read -r summary_marker fuzz_percent channel_delta max_changed_ratio min_ssim max_normalized_rmse \
+        mask_requested mask_relative mask_sha ignored_pixels ignored_x ignored_y ignored_width ignored_height <<< "$summary_result"
+    [[ "$summary_marker" == "summary" ]] || fail "invalid summary validator output for $case_id"
     if [[ "$mask_requested" == "true" ]]; then
         [[ -x "$magick_bin" ]] || fail "ImageMagick is required to audit masks: $magick_bin"
         policy_row=$(awk -F '\t' -v device="$device" -v path="$mask_relative" '$1 == device && $2 == path { print; exit }' "$mask_policy")
@@ -431,13 +540,13 @@ while IFS=$'\t' read -r surface state appearance device fixture locale content_s
         [[ "$mask_sha" == "$policy_sha" ]] || fail "mask hash is not approved for $case_id"
         mask_path=$(canonical_existing_file "$mask_relative" mask)
         [[ "$(sha256_file "$mask_path")" == "$mask_sha" ]] || fail "mask file hash drift for $case_id"
+        approved_mask_blob=$(git_blob_at "$approved_policy_commit" "$mask_relative") || \
+            fail "mask was not pinned at the approved policy commit for $case_id"
+        [[ "$approved_mask_blob" == "$(git -C "$repository_root" hash-object "$mask_path")" ]] || \
+            fail "mask differs from the independently approved policy commit for $case_id"
         read -r mask_width mask_height <<< "$(image_dimensions "$mask_path")"
         [[ "$mask_width" -eq "$baseline_width" && "$mask_height" -eq "$baseline_height" ]] || fail "mask dimensions mismatch for $case_id"
         require_immutable_blob "$mask_relative" "$commit" mask "$mask_path"
-        policy_relative="${mask_policy#${repository_root}/}"
-        policy_path=$(canonical_existing_file "$policy_relative" mask-policy)
-        require_immutable_blob "$policy_relative" "$commit" mask-policy "$policy_path"
-
         effective_mask="${temporary_dir}/effective-mask.png"
         ignored_mask="${temporary_dir}/ignored-mask.png"
         "$magick_bin" "$mask_path" -alpha off -colorspace Gray -threshold 50% "$effective_mask"
@@ -460,6 +569,41 @@ while IFS=$'\t' read -r surface state appearance device fixture locale content_s
     elif [[ "$mask_requested" != "false" ]]; then
         fail "invalid mask request state for $case_id"
     fi
+
+    recomputed_dir="${temporary_dir}/recomputed"
+    recompute_arguments=(
+        --magick "$magick_bin"
+        --surface-id "$surface"
+        --state "$state"
+        --appearance "$appearance"
+        --device "$device"
+        --orientation "$capture_orientation"
+        --fixture "$fixture"
+        --locale "$locale"
+        --content-size "$content_size"
+        --visual-ready "$visual_ready"
+        --fuzz "${fuzz_percent}%"
+        --channel-delta "$channel_delta"
+        --threshold "$max_changed_ratio"
+        --min-ssim "$min_ssim"
+        --out "$recomputed_dir"
+    )
+    if [[ "$max_normalized_rmse" != "none" ]]; then
+        recompute_arguments+=(--max-rmse "$max_normalized_rmse")
+    fi
+    if [[ "$mask_requested" == "true" ]]; then
+        recompute_arguments+=(--mask "$mask_path")
+    fi
+    "$comparator" "${recompute_arguments[@]}" "$baseline_path" "$candidate_path" >/dev/null || \
+        fail "independent pixel recomputation did not pass for $case_id"
+    "$json_validator" recomputed "$summary_path" "$recomputed_dir/summary.json" >/dev/null || \
+        fail "independent pixel recomputation metrics mismatch for $case_id"
+    [[ "$(sha256_file "$heatmap_path")" == "$(sha256_file "$recomputed_dir/diff-heatmap.png")" ]] || \
+        fail "independent pixel recomputation heatmap mismatch for $case_id"
+    [[ "$(sha256_file "$side_by_side_path")" == "$(sha256_file "$recomputed_dir/side-by-side.png")" ]] || \
+        fail "independent pixel recomputation side-by-side mismatch for $case_id"
+    [[ "$(sha256_file "$overlay_path")" == "$(sha256_file "$recomputed_dir/overlay.png")" ]] || \
+        fail "independent pixel recomputation overlay mismatch for $case_id"
 
     require_immutable_blob "$baseline" "$commit" baseline "$baseline_path"
     require_immutable_blob "$candidate" "$commit" candidate "$candidate_path"

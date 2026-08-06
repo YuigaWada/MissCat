@@ -3,7 +3,7 @@
 set -euo pipefail
 
 readonly DEFAULT_MAGICK="/opt/homebrew/bin/magick"
-readonly SCHEMA_VERSION=3
+readonly SCHEMA_VERSION=4
 
 usage() {
     cat <<'USAGE'
@@ -22,6 +22,7 @@ Options:
   --state TOKEN             Deterministic visual state (required)
   --appearance TOKEN        Appearance axis (required)
   --device TOKEN            Device/runtime axis (required)
+  --orientation TOKEN       Capture orientation axis (required)
   --fixture TOKEN           Deterministic fixture ID (required)
   --locale TOKEN            Locale axis (required)
   --content-size TOKEN      Content-size axis (required)
@@ -138,6 +139,7 @@ write_validation_report() {
     "state": "$(json_escape "$state")",
     "appearance": "$(json_escape "$appearance")",
     "device": "$(json_escape "$device")",
+    "orientation": "$(json_escape "$orientation")",
     "fixture": "$(json_escape "$fixture")",
     "locale": "$(json_escape "$locale")",
     "content_size": "$(json_escape "$content_size")",
@@ -194,6 +196,7 @@ surface_id=""
 state=""
 appearance=""
 device=""
+orientation=""
 fixture=""
 locale=""
 content_size=""
@@ -257,6 +260,11 @@ while [[ $# -gt 0 ]]; do
             device="$2"
             shift 2
             ;;
+        --orientation)
+            require_value "$@"
+            orientation="$2"
+            shift 2
+            ;;
         --fixture)
             require_value "$@"
             fixture="$2"
@@ -316,7 +324,7 @@ done
 }
 [[ -x "$magick_bin" ]] || fail "ImageMagick executable is unavailable: $magick_bin"
 [[ "$surface_id" =~ ^[0-9][0-9]$ ]] || fail "surface-id must be two digits"
-for metadata in "$state" "$appearance" "$device" "$fixture" "$locale" "$content_size" "$visual_ready"; do
+for metadata in "$state" "$appearance" "$device" "$orientation" "$fixture" "$locale" "$content_size" "$visual_ready"; do
     is_token "$metadata" || fail "all capture metadata fields are required canonical tokens"
 done
 is_ratio "$threshold" || fail "threshold must be between 0 and 1: $threshold"
@@ -543,6 +551,7 @@ cat > "$summary_path" <<JSON
     "state": "$(json_escape "$state")",
     "appearance": "$(json_escape "$appearance")",
     "device": "$(json_escape "$device")",
+    "orientation": "$(json_escape "$orientation")",
     "fixture": "$(json_escape "$fixture")",
     "locale": "$(json_escape "$locale")",
     "content_size": "$(json_escape "$content_size")",
