@@ -25,9 +25,14 @@ class SecureUser: Codable {
 
 class UserModel {
     // MARK: Stores
+
+    private static let appGroup = "group.yuwd.MissCat"
+    private static let keychainService = "yuwd.MissCat"
+    private static let keychainAccessGroup = "4LMTSU8RLS.yuwd.MissCat"
     
-    private lazy var userDefaults = Foundation.UserDefaults(suiteName: "group.yuwd.MissCat")!
-    private lazy var keychain = Keychain(service: "yuwd.MissCat", accessGroup: "group.yuwd.MissCat")
+    private lazy var userDefaults = Foundation.UserDefaults(suiteName: Self.appGroup)!
+    private lazy var keychain = Keychain(service: Self.keychainService,
+                                         accessGroup: Self.keychainAccessGroup)
     
     // MARK: Keys
     
@@ -42,32 +47,48 @@ class UserModel {
         guard let data = userDefaults.data(forKey: savedUserKey),
               let users = try? JSONDecoder().decode([SecureUser].self, from: data),
               users.count > 0 else { return [] }
-        
-        var noApiKeyUserIds: [String] = []
-        
-        // apikeyをキーチェーンから取り出して詰め替えていく
-        let _users: [SecureUser] = users.compactMap {
-            guard let apiKey = self.keychain[$0.userId] else { noApiKeyUserIds.append($0.userId); return nil }
-            return SecureUser(userId: $0.userId, username: $0.username, instance: $0.instance, apiKey: apiKey)
+
+        var availableUsers: [SecureUser] = []
+        var availableMetadata: [SecureUser] = []
+
+        do {
+            for user in users {
+                var apiKey = try keychain.get(user.userId)
+                if apiKey == nil, let legacyAPIKey = user.apiKey {
+                    try keychain.set(legacyAPIKey, key: user.userId)
+                    guard try keychain.get(user.userId) == legacyAPIKey else {
+                        throw AccountPersistenceError.keychainVerificationFailed
+                    }
+                    apiKey = legacyAPIKey
+                }
+
+                guard let resolvedAPIKey = apiKey else { continue }
+                availableUsers.append(SecureUser(userId: user.userId,
+                                                 username: user.username,
+                                                 instance: user.instance,
+                                                 apiKey: resolvedAPIKey))
+                availableMetadata.append(user)
+            }
+        } catch {
+            if let metadata = encodeMetadata(users) {
+                userDefaults.set(metadata, forKey: savedUserKey)
+            }
+            return []
         }
-        
-        if noApiKeyUserIds.count > 0 { // apiKeyを持っていないユーザーは削除する
-            guard let usersData = try? JSONEncoder().encode(users.filter { !noApiKeyUserIds.contains($0.userId) }) else { return _users }
-            userDefaults.set(usersData, forKey: savedUserKey)
+
+        if let metadata = encodeMetadata(availableMetadata) {
+            userDefaults.set(metadata, forKey: savedUserKey)
         }
-        
-        return _users
+        repairCurrentUserId(availableUsers: availableUsers)
+        return availableUsers
     }
     
     /// 現在ログイン中のユーザーデータを取得する
     func getCurrentUser() -> SecureUser? {
-        // currentUserIdを持つアカウントを探す
-        guard let currentUserId = getCurrentUserId(), let currentUser = getUser(userId: currentUserId) else {
-            let savedUser = getUsers()
-            return savedUser.count > 0 ? savedUser[0] : nil
-        }
-        
-        return currentUser
+        let savedUsers = getUsers()
+        repairCurrentUserId(availableUsers: savedUsers)
+        guard let currentUserId = getCurrentUserId() else { return nil }
+        return savedUsers.first(where: { $0.userId == currentUserId })
     }
     
     /// 指定されたuserIdのユーザーを取得する
@@ -84,6 +105,33 @@ class UserModel {
     /// 現在ログイン中のユーザーのuserIdを取得する
     func getCurrentUserId() -> String? {
         return userDefaults.string(forKey: currentUserIdKey)
+    }
+
+    private enum AccountPersistenceError: Error {
+        case keychainVerificationFailed
+    }
+
+    private func encodeMetadata(_ users: [SecureUser]) -> Data? {
+        let metadata = users.map {
+            SecureUser(userId: $0.userId,
+                       username: $0.username,
+                       instance: $0.instance,
+                       apiKey: nil)
+        }
+        return try? JSONEncoder().encode(metadata)
+    }
+
+    private func repairCurrentUserId(availableUsers: [SecureUser]) {
+        let availableUserIds = availableUsers.map { $0.userId }
+        if let currentUserId = getCurrentUserId(), availableUserIds.contains(currentUserId) {
+            return
+        }
+
+        if let replacementUserId = availableUserIds.first {
+            userDefaults.set(replacementUserId, forKey: currentUserIdKey)
+        } else {
+            userDefaults.removeObject(forKey: currentUserIdKey)
+        }
     }
     
     // MARK: Visiblity

@@ -8,7 +8,7 @@
 	</array>
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)yuwd.MissCat.MissCatShare</string>
+		<string>$(AppIdentifierPrefix)yuwd.MissCat</string>
 	</array>
 </dict>
 </plist>

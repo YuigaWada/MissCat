@@ -13,6 +13,33 @@ import SwiftLinkPreview
 import UIKit
 
 typealias Attachments = [NSTextAttachment: YanagiText.Attachment]
+
+protocol AccountAPIKeyStoring {
+    func apiKey(for userId: String) throws -> String?
+    func setAPIKey(_ apiKey: String, for userId: String) throws
+    func removeAPIKey(for userId: String) throws
+}
+
+private struct KeychainAccountAPIKeyStore: AccountAPIKeyStoring {
+    private let keychain: Keychain
+
+    init(keychain: Keychain) {
+        self.keychain = keychain
+    }
+
+    func apiKey(for userId: String) throws -> String? {
+        return try keychain.get(userId)
+    }
+
+    func setAPIKey(_ apiKey: String, for userId: String) throws {
+        try keychain.set(apiKey, key: userId)
+    }
+
+    func removeAPIKey(for userId: String) throws {
+        try keychain.remove(userId)
+    }
+}
+
 class Cache {
     struct UserInfo {
         let user: SecureUser
@@ -152,20 +179,40 @@ class Cache {
 extension Cache {
     class UserDefaults {
         static var shared: Cache.UserDefaults = .init()
+
+        private static let appGroup = "group.yuwd.MissCat"
+        private static let keychainService = "yuwd.MissCat"
+        private static let keychainAccessGroup = "4LMTSU8RLS.yuwd.MissCat"
+
+        private let injectedUserDefaults: Foundation.UserDefaults?
+        private let injectedAPIKeyStore: AccountAPIKeyStoring?
+
+        init(userDefaults: Foundation.UserDefaults? = nil,
+             apiKeyStore: AccountAPIKeyStoring? = nil) {
+            injectedUserDefaults = userDefaults
+            injectedAPIKeyStore = apiKeyStore
+        }
         
         // MARK: Stores
         
         // ShareExtensionとUserDefaults情報を共有するためappGroupsのUserDefaultsを用いる
         private lazy var userDefaults: Foundation.UserDefaults = {
-            guard let userDefaults = Foundation.UserDefaults(suiteName: "group.yuwd.MissCat") else { fatalError() }
+            if let injectedUserDefaults = injectedUserDefaults {
+                return injectedUserDefaults
+            }
+            guard let userDefaults = Foundation.UserDefaults(suiteName: Self.appGroup) else { fatalError() }
             migrateUserDefaultsToAppGroups(userDefaults)
             return userDefaults
         }()
         
-        private lazy var keychain: Keychain = { // indexをuseridとして、valueをapiKeyとする
-            let keychain = Keychain(service: "yuwd.MissCat", accessGroup: "group.yuwd.MissCat")
+        private lazy var apiKeyStore: AccountAPIKeyStoring = { // indexをuseridとして、valueをapiKeyとする
+            if let injectedAPIKeyStore = injectedAPIKeyStore {
+                return injectedAPIKeyStore
+            }
+            let keychain = Keychain(service: Self.keychainService,
+                                    accessGroup: Self.keychainAccessGroup)
             migrateKeyChainToAppGroups(keychain)
-            return keychain
+            return KeychainAccountAPIKeyStore(keychain: keychain)
         }()
         
         // MARK: Keys
@@ -188,63 +235,93 @@ extension Cache {
         
         // MARK: User
         
-        func removeUser(userId: String) {
-            let savedUser = getUsers().filter { $0.userId != userId } // 保存済みのユーザー情報からターゲットのみ除外する
-            guard let usersData = try? JSONEncoder().encode(savedUser) else { return }
-            
-            userDefaults.set(usersData, forKey: savedUserKey)
-            do { try keychain.remove(userId) }
-            catch {}
-            
-            if let currentUser = getCurrentUser(), userId == currentUser.userId { // メインとしてログインしている場合
-                guard savedUser.count > 0 else { return }
-                
-                let newMainUserId = savedUser[0].userId
-                changeCurrentUser(userId: newMainUserId) // メインアカウントを移し替える
+        @discardableResult
+        func removeUser(userId: String) -> Bool {
+            do {
+                let savedUsers = try getUsersThrowing().filter { $0.userId != userId }
+                let usersData = try encodeMetadata(savedUsers)
+                try apiKeyStore.removeAPIKey(for: userId)
+                userDefaults.set(usersData, forKey: savedUserKey)
+                repairCurrentUserId(availableUsers: savedUsers)
+                return true
+            } catch {
+                return false
             }
         }
         
         /// ユーザーを保存する
         func saveUser(_ user: SecureUser) -> Bool {
-            let savedUsers = getUsers()
-            var newUsers: [SecureUser]
-            if savedUsers.filter({ $0.userId == user.userId }).count > 0 { // アカウントがすでにログインされてたら
-                newUsers = savedUsers.map { // アカウント情報をアップデートする
-                    guard $0.userId == user.userId else { return $0 }
-                    return user
+            guard let apiKey = user.apiKey else { return false }
+
+            do {
+                let savedUsers = try getUsersThrowing()
+                let newUsers: [SecureUser]
+                if savedUsers.contains(where: { $0.userId == user.userId }) {
+                    newUsers = savedUsers.map { $0.userId == user.userId ? user : $0 }
+                } else {
+                    newUsers = savedUsers + [user]
                 }
-            } else { // 新規のアカウントだったら
-                newUsers = savedUsers + [user]
+
+                // Encode only sanitized metadata before touching the Keychain. This also
+                // guarantees that another account's hydrated key cannot enter UserDefaults.
+                let usersData = try encodeMetadata(newUsers)
+                try apiKeyStore.setAPIKey(apiKey, for: user.userId)
+                guard try apiKeyStore.apiKey(for: user.userId) == apiKey else { return false }
+
+                userDefaults.set(usersData, forKey: savedUserKey)
+                user.apiKey = nil // Preserve the existing caller contract after secure persistence succeeds.
+                return true
+            } catch {
+                return false
             }
-            
-            guard let usersData = try? JSONEncoder().encode(newUsers) else { return false }
-            
-            keychain[user.userId] = user.apiKey // apiKeyはキーチェーンに保存
-            user.apiKey = nil // apikeyは隠蔽する
-            userDefaults.set(usersData, forKey: savedUserKey) // instance情報とuserIdはそのままUserDefaultsへ
-            return true
         }
         
         /// 保存されている全てのユーザー情報を取得する
         func getUsers() -> [SecureUser] {
+            return (try? getUsersThrowing()) ?? []
+        }
+
+        func getUsersThrowing() throws -> [SecureUser] {
             guard let data = userDefaults.data(forKey: savedUserKey),
-                  let users = try? JSONDecoder().decode([SecureUser].self, from: data),
-                  users.count > 0 else { return [] }
-            
-            var noApiKeyUserIds: [String] = []
-            
-            // apikeyをキーチェーンから取り出して詰め替えていく
-            let _users: [SecureUser] = users.compactMap {
-                guard let apiKey = self.keychain[$0.userId] else { noApiKeyUserIds.append($0.userId); return nil }
-                return SecureUser(userId: $0.userId, username: $0.username, instance: $0.instance, apiKey: apiKey)
+                  !data.isEmpty else {
+                repairCurrentUserId(availableUsers: [])
+                return []
             }
-            
-            if noApiKeyUserIds.count > 0 { // apiKeyを持っていないユーザーは削除する
-                guard let usersData = try? JSONEncoder().encode(users.filter { !noApiKeyUserIds.contains($0.userId) }) else { return _users }
-                userDefaults.set(usersData, forKey: savedUserKey)
+
+            let storedUsers = try JSONDecoder().decode([SecureUser].self, from: data)
+            var availableUsers: [SecureUser] = []
+            var availableMetadata: [SecureUser] = []
+
+            do {
+                for storedUser in storedUsers {
+                    var apiKey = try apiKeyStore.apiKey(for: storedUser.userId)
+
+                    // Older builds accidentally wrote the API key into the shared JSON.
+                    // Move it into the shared Keychain before the JSON is scrubbed.
+                    if apiKey == nil, let legacyAPIKey = storedUser.apiKey {
+                        try apiKeyStore.setAPIKey(legacyAPIKey, for: storedUser.userId)
+                        guard try apiKeyStore.apiKey(for: storedUser.userId) == legacyAPIKey else {
+                            throw AccountPersistenceError.keychainVerificationFailed
+                        }
+                        apiKey = legacyAPIKey
+                    }
+
+                    guard let resolvedAPIKey = apiKey else { continue }
+                    availableUsers.append(SecureUser(userId: storedUser.userId,
+                                                     username: storedUser.username,
+                                                     instance: storedUser.instance,
+                                                     apiKey: resolvedAPIKey))
+                    availableMetadata.append(storedUser)
+                }
+            } catch {
+                // Even when Keychain access fails, remove any legacy plaintext key.
+                userDefaults.set(try encodeMetadata(storedUsers), forKey: savedUserKey)
+                throw error
             }
-            
-            return _users
+
+            userDefaults.set(try encodeMetadata(availableMetadata), forKey: savedUserKey)
+            repairCurrentUserId(availableUsers: availableUsers)
+            return availableUsers
         }
         
         /// 指定されたuserIdのユーザーを取得する
@@ -271,15 +348,40 @@ extension Cache {
         /// 現在ログイン中のユーザーデータを取得する
         func getCurrentUser() -> SecureUser? {
             userRefill()
-            
-            // currentUserIdを持つアカウントを探す
-            guard let currentUserId = getCurrentUserId(), let currentUser = getUser(userId: currentUserId) else {
-                let savedUser = getUsers()
-                return savedUser.count > 0 ? savedUser[0] : nil
-            }
+
+            guard let savedUsers = try? getUsersThrowing() else { return nil }
+            guard let currentUserId = getCurrentUserId(),
+                  let currentUser = savedUsers.first(where: { $0.userId == currentUserId }) else { return nil }
             
             usernameRefill(with: currentUser)
             return currentUser
+        }
+
+        private enum AccountPersistenceError: Error {
+            case keychainVerificationFailed
+        }
+
+        private func encodeMetadata(_ users: [SecureUser]) throws -> Data {
+            let metadata = users.map {
+                SecureUser(userId: $0.userId,
+                           username: $0.username,
+                           instance: $0.instance,
+                           apiKey: nil)
+            }
+            return try JSONEncoder().encode(metadata)
+        }
+
+        private func repairCurrentUserId(availableUsers: [SecureUser]) {
+            let availableUserIds = availableUsers.map { $0.userId }
+            if let currentUserId = getCurrentUserId(), availableUserIds.contains(currentUserId) {
+                return
+            }
+
+            if let replacementUserId = availableUserIds.first {
+                changeCurrentUser(userId: replacementUserId)
+            } else {
+                userDefaults.removeObject(forKey: currentUserIdKey)
+            }
         }
         
         // MARK: Visibility
@@ -306,13 +408,14 @@ extension Cache {
                   let instance = Foundation.UserDefaults.standard.string(forKey: currentLoginedInstance) else { return }
             
             // 詰め替える
-            _ = saveUser(.init(userId: userId, username: "", instance: instance, apiKey: apiKey))
+            guard saveUser(.init(userId: userId, username: "", instance: instance, apiKey: apiKey)) else { return }
             changeCurrentUser(userId: userId)
             
             // UserDefaultsに保存されているデータを削除
             Foundation.UserDefaults.standard.removeObject(forKey: currentLoginedApiKey)
             Foundation.UserDefaults.standard.removeObject(forKey: currentLoginedUserId)
             Foundation.UserDefaults.standard.removeObject(forKey: currentLoginedInstance)
+            userDefaults.removeObject(forKey: currentLoginedApiKey)
         }
         
         /// userRefill()で詰めきれなかったusernameを非同期で詰める
@@ -340,8 +443,10 @@ extension Cache {
             
             if !groupDefaults.bool(forKey: didMigrateToAppGroups) {
                 for key in userDefaults.dictionaryRepresentation().keys {
+                    guard key != "current-logined-ApiKey" else { continue }
                     groupDefaults.set(userDefaults.dictionaryRepresentation()[key], forKey: key)
                 }
+                groupDefaults.removeObject(forKey: "current-logined-ApiKey")
                 groupDefaults.set(true, forKey: didMigrateToAppGroups)
                 groupDefaults.synchronize()
                 print("Successfully migrated defaults")
@@ -351,16 +456,17 @@ extension Cache {
         }
         
         func migrateKeyChainToAppGroups(_ new: Keychain) {
-            let old = Keychain(service: "yuwd.MissCat")
+            let old = Keychain(service: Self.keychainService)
             
             // Key to track if we migrated
             let didMigrateToAppGroups = "DidMigrateToAppGroups"
             
             if !new.allKeys().contains(didMigrateToAppGroups) {
                 for key in old.allKeys() {
-                    new[key] = old[key]
+                    guard let value = try? old.get(key) else { continue }
+                    try? new.set(value, key: key)
                 }
-                new[didMigrateToAppGroups] = "true"
+                try? new.set("true", key: didMigrateToAppGroups)
                 print("Successfully migrated defaults")
             } else {
                 print("No need to migrate defaults")
