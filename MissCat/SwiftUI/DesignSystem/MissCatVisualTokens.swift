@@ -42,6 +42,21 @@ public enum MissCatLegacyMetrics {
     public static let navigationHeaderHeight: CGFloat = 44
     public static let hairlineWidth: CGFloat = 0.5
 
+    // Profile.storyboard geometry (414 × 896 reference canvas).
+    public static let profileHeaderHeight: CGFloat = 436.5
+    public static let profileBannerHeight: CGFloat = 153.5
+    public static let profileAvatarDiameter: CGFloat = 78
+    public static let profileAvatarLeading: CGFloat = 20
+    public static let profileAvatarTop: CGFloat = 95
+    public static let profileBiographyTop: CGFloat = 181
+    public static let profileBiographyHeight: CGFloat = 183.5
+    public static let profileCountsWidth: CGFloat = 226
+    public static let profileCountsHeight: CGFloat = 51
+    public static let profileActionWidth: CGFloat = 105
+    public static let profileActionHeight: CGFloat = 27
+    public static let profileTabsHeight: CGFloat = 46
+    public static let profileUserAvatarDiameter: CGFloat = 50
+
     /// Storyboard ratio: button height = canvas height × 0.0569196.
     public static func welcomeButtonHeight(canvasHeight: CGFloat) -> CGFloat {
         canvasHeight * 0.0569196
