@@ -3,6 +3,34 @@ import XCTest
 
 @MainActor
 final class MissCatAccountStoreTests: XCTestCase {
+    func testProfileRoutingSeparatesStorageIdentityFromServerUserID() {
+        let first = SecureUser(
+            userId: "same-user",
+            username: "first",
+            instance: "first.example",
+            apiKey: nil
+        )
+        let second = SecureUser(
+            userId: "same-user",
+            username: "second",
+            instance: "second.example",
+            apiKey: nil
+        )
+        let summary = MissCatAccountSummary(
+            id: second.accountIdentifier,
+            userID: second.userId,
+            username: second.username,
+            instance: second.instance
+        )
+
+        XCTAssertNotEqual(first.accountIdentifier, second.accountIdentifier)
+        XCTAssertNil(MissCatSettingsBridge.profileUserID(for: summary, owner: first))
+        XCTAssertEqual(
+            MissCatSettingsBridge.profileUserID(for: summary, owner: second),
+            "same-user"
+        )
+    }
+
     func testLoadPreservesRepositoryOrderAndCurrentSelection() async {
         let first = account("first", username: "one")
         let second = account("second", username: "two")
