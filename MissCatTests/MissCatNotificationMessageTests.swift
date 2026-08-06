@@ -428,6 +428,10 @@ final class MissCatNotificationMessageContractTests: XCTestCase {
         )
         XCTAssertNil(MissCatPushEnvelope(payload: ["notificationId": "notification"]))
         XCTAssertNil(MissCatPushEnvelope(payload: ["ownerId": "owner"]))
+        XCTAssertEqual(
+            MissCatPushEnvelope(payload: ["owner_id": "owner", "notification_id": "notification"]),
+            .init(ownerAccountID: "owner", notificationID: "notification")
+        )
     }
 
     func testNativeNotificationRequestUsesCurrentEndpointAndBearerContract() async throws {
@@ -458,14 +462,12 @@ final class MissCatNotificationMessageContractTests: XCTestCase {
     func testNativeCurrentChatContractsHistoryTimelineAndSend() async throws {
         let endpoints = #"["i/notifications","chat/history","chat/messages/user-timeline","chat/messages/create-to-user"]"#
         let history = #"[{"id":"history","createdAt":"2026-08-07T00:00:00.000Z","fromUserId":"owner","toUserId":"peer","fromUser":{"id":"owner","name":"Owner","username":"owner"},"toUser":{"id":"peer","name":"Peer","username":"peer"},"text":"latest","isRead":true}]"#
-        let timeline = #"[{"id":"old","createdAt":"2026-08-06T00:00:00.000Z","fromUserId":"peer","toUserId":"owner","text":"old","isRead":true}]"#
-        let sent = #"{"id":"sent","createdAt":"2026-08-07T00:00:01.000Z","fromUserId":"owner","toUserId":"peer","text":"hello","isRead":false}"#
+        let timeline = #"[{"id":"old","createdAt":"2026-08-06T00:00:00.000Z","fromUserId":"peer","toUserId":"owner","text":"old","reactions":[]}]"#
+        let sent = #"{"id":"sent","createdAt":"2026-08-07T00:00:01.000Z","fromUserId":"owner","toUserId":"peer","text":"hello","reactions":[]}"#
         let transport = QueueHTTPTransport(responses: [
             .init(status: 200, body: endpoints),
             .init(status: 200, body: history),
-            .init(status: 200, body: endpoints),
             .init(status: 200, body: timeline),
-            .init(status: 200, body: endpoints),
             .init(status: 200, body: sent)
         ])
         let repository = nativeRepository(transport: transport)
@@ -483,8 +485,8 @@ final class MissCatNotificationMessageContractTests: XCTestCase {
             requests.map { $0.url?.path ?? "" },
             [
                 "/api/endpoints", "/api/chat/history",
-                "/api/endpoints", "/api/chat/messages/user-timeline",
-                "/api/endpoints", "/api/chat/messages/create-to-user"
+                "/api/chat/messages/user-timeline",
+                "/api/chat/messages/create-to-user"
             ]
         )
         let sendBody = try XCTUnwrap(requests.last?.httpBody)
@@ -501,9 +503,7 @@ final class MissCatNotificationMessageContractTests: XCTestCase {
         let transport = QueueHTTPTransport(responses: [
             .init(status: 200, body: endpoints),
             .init(status: 200, body: history),
-            .init(status: 200, body: endpoints),
             .init(status: 200, body: timeline),
-            .init(status: 200, body: endpoints),
             .init(status: 200, body: sent)
         ])
         let repository = nativeRepository(transport: transport)
@@ -518,11 +518,11 @@ final class MissCatNotificationMessageContractTests: XCTestCase {
             requests.map { $0.url?.path ?? "" },
             [
                 "/api/endpoints", "/api/messaging/history",
-                "/api/endpoints", "/api/messaging/messages",
-                "/api/endpoints", "/api/messaging/create"
+                "/api/messaging/messages",
+                "/api/messaging/create"
             ]
         )
-        let timelineBody = try XCTUnwrap(requests[3].httpBody)
+        let timelineBody = try XCTUnwrap(requests[2].httpBody)
         let timelineJSON = try XCTUnwrap(JSONSerialization.jsonObject(with: timelineBody) as? [String: Any])
         XCTAssertEqual(timelineJSON["userId"] as? String, "peer")
         XCTAssertEqual(timelineJSON["markAsRead"] as? Bool, true)
@@ -551,6 +551,28 @@ final class MissCatNotificationMessageContractTests: XCTestCase {
         XCTAssertEqual(requests.map { $0.url?.path }, ["/api/endpoints"])
     }
 
+    func testNativeMentionResolutionUsesCurrentUsersShowContract() async throws {
+        let transport = QueueHTTPTransport(responses: [
+            .init(
+                status: 200,
+                body: #"{"id":"person","name":"Cat","username":"cat","host":"remote.test","avatarUrl":"https://cdn.test/cat.png"}"#
+            )
+        ])
+        let repository = nativeRepository(transport: transport)
+
+        let person = try await repository.resolvePerson(acct: "@cat@remote.test")
+
+        XCTAssertEqual(person.id, "person")
+        XCTAssertEqual(person.acct, "@cat@remote.test")
+        let requests = await transport.requests()
+        XCTAssertEqual(requests.map { $0.url?.path }, ["/api/users/show"])
+        let body = try XCTUnwrap(requests.first?.httpBody)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertEqual(json["username"] as? String, "cat")
+        XCTAssertEqual(json["host"] as? String, "remote.test")
+        XCTAssertEqual(requests.first?.value(forHTTPHeaderField: "Authorization"), "Bearer fixture-token")
+    }
+
     private func nativeRepository(
         transport: QueueHTTPTransport
     ) -> MissCatNativeNotificationMessagingRepository {
@@ -563,6 +585,51 @@ final class MissCatNotificationMessageContractTests: XCTestCase {
             ),
             transport: transport
         )
+    }
+}
+
+@MainActor
+final class MissCatNotificationMessageOrdinaryRouteTests: XCTestCase {
+    func testOrdinaryControllersAreNativeSwiftUIHostsForAValidAccount() throws {
+        let owner = SecureUser(
+            userId: "owner",
+            username: "owner",
+            instance: "example.test",
+            apiKey: "fixture-token"
+        )
+        let home = HomeViewController()
+
+        let notifications = try XCTUnwrap(
+            MissCatNotificationMessageBridge.makeNotificationsController(owner: owner, home: home)
+        )
+        let messages = try XCTUnwrap(
+            MissCatNotificationMessageBridge.makeMessagesController(owner: owner, home: home)
+        )
+
+        XCTAssertEqual(notifications.ownerID, "owner")
+        XCTAssertEqual(messages.ownerID, "owner")
+    }
+
+    func testOrdinaryControllersRejectMissingCredentialsWithoutNetwork() {
+        let owner = SecureUser(
+            userId: "owner",
+            username: "owner",
+            instance: "example.test",
+            apiKey: nil
+        )
+        let home = HomeViewController()
+
+        XCTAssertNil(MissCatNotificationMessageBridge.makeNotificationsController(owner: owner, home: home))
+        XCTAssertNil(MissCatNotificationMessageBridge.makeMessagesController(owner: owner, home: home))
+    }
+
+    func testNotificationReselectCoordinatorEmitsDeterministicScrollRequest() {
+        let coordinator = MissCatNotificationScrollCoordinator()
+
+        coordinator.scrollToTop()
+        coordinator.scrollToTop()
+
+        XCTAssertEqual(coordinator.request, 2)
     }
 }
 
