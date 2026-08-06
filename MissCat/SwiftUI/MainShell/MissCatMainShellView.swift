@@ -47,12 +47,14 @@ public struct MissCatMainShellView<Content: View>: View {
     private let avatar: Image?
     private let accounts: [MissCatShellAccount]
     private let currentAccountID: String?
+    private let bannerMessage: String?
     private let onSearch: () -> Void
     private let onCompose: () -> Void
     private let onSettings: () -> Void
     private let onAccountSelected: (MissCatShellAccountScope) -> Void
     private let onTimelineSelection: (String, MissCatTimelineSelectionOrigin) -> Void
     private let onReselect: (MissCatRootSection) -> Void
+    private let onDismissBanner: () -> Void
     private let content: (MissCatRootSection) -> Content
 
     public init(
@@ -63,12 +65,14 @@ public struct MissCatMainShellView<Content: View>: View {
         avatar: Image? = nil,
         accounts: [MissCatShellAccount] = [],
         currentAccountID: String? = nil,
+        bannerMessage: String? = nil,
         onSearch: @escaping () -> Void,
         onCompose: @escaping () -> Void,
         onSettings: @escaping () -> Void = {},
         onAccountSelected: @escaping (MissCatShellAccountScope) -> Void = { _ in },
         onTimelineSelection: @escaping (String, MissCatTimelineSelectionOrigin) -> Void = { _, _ in },
         onReselect: @escaping (MissCatRootSection) -> Void = { _ in },
+        onDismissBanner: @escaping () -> Void = {},
         @ViewBuilder content: @escaping (MissCatRootSection) -> Content
     ) {
         self.timelineTabs = timelineTabs
@@ -78,12 +82,14 @@ public struct MissCatMainShellView<Content: View>: View {
         self.avatar = avatar
         self.accounts = accounts
         self.currentAccountID = currentAccountID
+        self.bannerMessage = bannerMessage
         self.onSearch = onSearch
         self.onCompose = onCompose
         self.onSettings = onSettings
         self.onAccountSelected = onAccountSelected
         self.onTimelineSelection = onTimelineSelection
         self.onReselect = onReselect
+        self.onDismissBanner = onDismissBanner
         self.content = content
     }
 
@@ -94,6 +100,7 @@ public struct MissCatMainShellView<Content: View>: View {
             content(selectedSection)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(palette.base)
+                .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("main.content.\(selectedSection.rawValue)")
 
             MissCatBottomBar(
@@ -105,6 +112,20 @@ public struct MissCatMainShellView<Content: View>: View {
         }
         .background(palette.base.ignoresSafeArea())
         .tint(palette.accent)
+        .overlay(alignment: .top) {
+            if let bannerMessage {
+                MissCatFeedStatusBanner(
+                    message: bannerMessage,
+                    palette: palette,
+                    onDismiss: onDismissBanner
+                )
+                .padding(.horizontal, 10)
+                .padding(.top, 8)
+                .accessibilityIdentifier("main.banner.error")
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: bannerMessage)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("main.shell")
     }
 
@@ -205,6 +226,7 @@ public struct MissCatTimelineTabs: View {
                 .fill(palette.border)
                 .frame(height: MissCatLegacyMetrics.hairlineWidth)
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("main.timeline-tabs")
         .accessibilityValue(selectedID)
     }
@@ -260,6 +282,7 @@ public struct MissCatNavigationHeader: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel("アカウントを切り替える")
                     .accessibilityIdentifier("main.header.account")
+                    .accessibilityValue(currentAccountID ?? "")
                     .popover(isPresented: $showsAccountSwitcher, arrowEdge: .top) {
                         MissCatAccountDropdownView(
                             accounts: accounts,
@@ -295,6 +318,7 @@ public struct MissCatNavigationHeader: View {
                 .fill(palette.border)
                 .frame(height: MissCatLegacyMetrics.hairlineWidth)
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("main.header")
     }
 
@@ -405,6 +429,7 @@ public struct MissCatAccountDropdownView: View {
         }
         .frame(width: 280)
         .background(palette.base)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("main.account.dropdown")
     }
 }
@@ -465,6 +490,7 @@ public struct MissCatBottomBar: View {
                 .fill(palette.border)
                 .frame(height: MissCatLegacyMetrics.hairlineWidth)
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("main.bottom-bar")
     }
 

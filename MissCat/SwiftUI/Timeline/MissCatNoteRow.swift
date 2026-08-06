@@ -5,6 +5,7 @@ public struct MissCatNoteRow: View {
     public let palette: MissCatVisualPalette
     public let expandsContentWarning: Bool
     public let showsThreadConnector: Bool
+    public let relativeDateReference: Date
     public let onOpenUser: (String) -> Void
     public let onOpenNote: (String) -> Void
     public let onOpenAttachment: (MissCatNoteAttachment) -> Void
@@ -24,6 +25,7 @@ public struct MissCatNoteRow: View {
         palette: MissCatVisualPalette = .legacyLight,
         expandsContentWarning: Bool = false,
         showsThreadConnector: Bool = false,
+        relativeDateReference: Date = Date(),
         onOpenUser: @escaping (String) -> Void = { _ in },
         onOpenNote: @escaping (String) -> Void = { _ in },
         onOpenAttachment: @escaping (MissCatNoteAttachment) -> Void = { _ in },
@@ -39,6 +41,7 @@ public struct MissCatNoteRow: View {
         self.palette = palette
         self.expandsContentWarning = expandsContentWarning
         self.showsThreadConnector = showsThreadConnector
+        self.relativeDateReference = relativeDateReference
         self.onOpenUser = onOpenUser
         self.onOpenNote = onOpenNote
         self.onOpenAttachment = onOpenAttachment
@@ -157,7 +160,7 @@ public struct MissCatNoteRow: View {
                 Spacer(minLength: 4)
 
                 if let createdAt = note.createdAt {
-                    Text(Self.relativeDateFormatter.localizedString(for: createdAt, relativeTo: Date()))
+                    Text(Self.relativeDateFormatter.localizedString(for: createdAt, relativeTo: relativeDateReference))
                         .font(.system(size: 13))
                         .foregroundStyle(palette.strong)
                         .lineLimit(1)

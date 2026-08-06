@@ -35,23 +35,37 @@ public struct MissCatFeedView: View {
     private let emptyTitle: String
     private let navigationActions: MissCatFeedNavigationActions
     private let scrollToTopTrigger: Int
+    private let relativeDateReference: Date
+    private let visualReadyIdentifier: String?
+    private let allowsLoadingVisualReady: Bool
 
     public init(
         source: MissCatFeedSource,
         repository: MissCatFeedRepository,
+        accountScope: MissCatShellAccountScope? = nil,
         palette: MissCatVisualPalette = .legacyLight,
         emptyTitle: String = "ノートがありません",
         scrollPositionID: Binding<String?> = .constant(nil),
         scrollToTopTrigger: Int = 0,
+        relativeDateReference: Date = Date(),
+        visualReadyIdentifier: String? = nil,
+        allowsLoadingVisualReady: Bool = false,
         navigationActions: MissCatFeedNavigationActions = .init()
     ) {
         _store = StateObject(
-            wrappedValue: MissCatFeedStore(source: source, repository: repository)
+            wrappedValue: MissCatFeedStore(
+                source: source,
+                repository: repository,
+                accountScope: accountScope
+            )
         )
         _scrollPositionID = scrollPositionID
         self.palette = palette
         self.emptyTitle = emptyTitle
         self.scrollToTopTrigger = scrollToTopTrigger
+        self.relativeDateReference = relativeDateReference
+        self.visualReadyIdentifier = visualReadyIdentifier
+        self.allowsLoadingVisualReady = allowsLoadingVisualReady
         self.navigationActions = navigationActions
     }
 
@@ -71,7 +85,7 @@ public struct MissCatFeedView: View {
             }
         }
         .task { await store.loadInitial() }
-        .onDisappear { store.stopRealtime() }
+        .onDisappear { store.cancelAllFeedTasks() }
         .onChange(of: scrollToTopTrigger) { _, generation in
             guard generation > 0, let firstID = store.notes.first?.id else { return }
             withAnimation(.easeOut(duration: 0.2)) {
@@ -90,7 +104,18 @@ public struct MissCatFeedView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
+        .overlay(alignment: .bottomTrailing) {
+            if isVisuallyStable, let visualReadyIdentifier {
+                Text("visual-ready")
+                    .font(.system(size: 1))
+                    .opacity(0.01)
+                    .frame(width: 1, height: 1)
+                    .accessibilityIdentifier(visualReadyIdentifier)
+                    .accessibilityValue(scrollPositionID ?? "top")
+            }
+        }
         .animation(.easeInOut(duration: 0.2), value: store.actionErrorMessage)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("feed.\(store.source.accessibilityName)")
     }
 
@@ -103,6 +128,7 @@ public struct MissCatFeedView: View {
                         palette: palette,
                         expandsContentWarning: store.isThreadRoot(note),
                         showsThreadConnector: isThreadNote(at: index),
+                        relativeDateReference: relativeDateReference,
                         onOpenUser: navigationActions.openUser,
                         onOpenNote: navigationActions.openNote,
                         onOpenAttachment: navigationActions.openAttachment,
@@ -122,6 +148,7 @@ public struct MissCatFeedView: View {
                             Task { await store.vote(noteID: noteID, choice: choice) }
                         }
                     )
+                    .id(note.id)
                     .task {
                         await store.loadNextPageIfNeeded(currentNoteID: note.id)
                     }
@@ -198,6 +225,15 @@ public struct MissCatFeedView: View {
     private func isThreadNote(at index: Int) -> Bool {
         guard case .noteDetail = store.source else { return false }
         return index < store.notes.count - 1
+    }
+
+    private var isVisuallyStable: Bool {
+        switch store.phase {
+        case .loaded, .empty, .failed:
+            true
+        case .idle, .loading:
+            allowsLoadingVisualReady
+        }
     }
 }
 

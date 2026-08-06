@@ -36,6 +36,34 @@ public enum MissCatTimelineSelectionOrigin: Equatable, Sendable {
     case pagesChanged
 }
 
+public struct MissCatTimelineScrollKey: Hashable, Sendable {
+    public let accountScope: MissCatShellAccountScope
+    public let pageID: String
+
+    public init(accountScope: MissCatShellAccountScope, pageID: String) {
+        self.accountScope = accountScope
+        self.pageID = pageID
+    }
+}
+
+public struct MissCatTimelineScrollPositionState: Equatable, Sendable {
+    private var positions: [MissCatTimelineScrollKey: String] = [:]
+
+    public init() {}
+
+    public func position(for key: MissCatTimelineScrollKey) -> String? {
+        positions[key]
+    }
+
+    public mutating func setPosition(_ noteID: String?, for key: MissCatTimelineScrollKey) {
+        if let noteID, !noteID.isEmpty {
+            positions[key] = noteID
+        } else {
+            positions.removeValue(forKey: key)
+        }
+    }
+}
+
 /// Pure state shared by tap and swipe selection. Keeping this independent of SwiftUI
 /// makes edge clamping, reverse swipes and rapid selection changes deterministic in tests.
 public struct MissCatTimelineSelectionState: Equatable, Sendable {
@@ -91,7 +119,7 @@ public struct MissCatTimelineSelectionState: Equatable, Sendable {
 /// `MissCatTimelineTabs`, so header taps and page swipes always update one source of truth.
 public struct MissCatTimelinePager: View {
     @Binding private var selectedID: String
-    @State private var scrollPositions: [String: String] = [:]
+    @State private var scrollPositions = MissCatTimelineScrollPositionState()
 
     private let accountScope: MissCatShellAccountScope
     private let pages: [MissCatTimelinePage]
@@ -99,6 +127,10 @@ public struct MissCatTimelinePager: View {
     private let palette: MissCatVisualPalette
     private let navigationActions: MissCatFeedNavigationActions
     private let scrollToTopTrigger: Int
+    private let relativeDateReference: Date
+    private let visualReadyPrefix: String?
+    private let allowsLoadingVisualReady: Bool
+    private let externalScrollPosition: ((MissCatTimelineScrollKey) -> Binding<String?>)?
     private let onSelection: (String, MissCatTimelineSelectionOrigin) -> Void
 
     public init(
@@ -117,6 +149,10 @@ public struct MissCatTimelinePager: View {
         self.palette = palette
         self.navigationActions = navigationActions
         scrollToTopTrigger = 0
+        relativeDateReference = Date()
+        visualReadyPrefix = nil
+        allowsLoadingVisualReady = false
+        externalScrollPosition = nil
         onSelection = { _, _ in }
     }
 
@@ -127,6 +163,10 @@ public struct MissCatTimelinePager: View {
         repositoryProvider: @escaping (MissCatShellAccountScope) -> (any MissCatFeedRepository)?,
         palette: MissCatVisualPalette = .legacyLight,
         scrollToTopTrigger: Int = 0,
+        relativeDateReference: Date = Date(),
+        visualReadyPrefix: String? = nil,
+        allowsLoadingVisualReady: Bool = false,
+        scrollPosition: ((MissCatTimelineScrollKey) -> Binding<String?>)? = nil,
         navigationActions: MissCatFeedNavigationActions = .init(),
         onSelection: @escaping (String, MissCatTimelineSelectionOrigin) -> Void = { _, _ in }
     ) {
@@ -136,6 +176,10 @@ public struct MissCatTimelinePager: View {
         self.repositoryProvider = repositoryProvider
         self.palette = palette
         self.scrollToTopTrigger = scrollToTopTrigger
+        self.relativeDateReference = relativeDateReference
+        self.visualReadyPrefix = visualReadyPrefix
+        self.allowsLoadingVisualReady = allowsLoadingVisualReady
+        externalScrollPosition = scrollPosition
         self.navigationActions = navigationActions
         self.onSelection = onSelection
     }
@@ -146,6 +190,7 @@ public struct MissCatTimelinePager: View {
                 timelinePage(page)
                 .id("\(accountScope.id):\(page.id)")
                 .tag(page.id)
+                .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("timeline.page.\(page.accessibilityID)")
             }
         }
@@ -153,7 +198,7 @@ public struct MissCatTimelinePager: View {
         .background(palette.base)
         .onAppear(perform: normalizeSelection)
         .onChange(of: pageIDs) { _, _ in normalizeSelection() }
-        .onChange(of: accountScope) { _, _ in scrollPositions.removeAll() }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("timeline.pager")
         .accessibilityValue(selectedID)
     }
@@ -161,7 +206,7 @@ public struct MissCatTimelinePager: View {
     private var pageIDs: [String] { pages.map(\.id) }
 
     private var selection: Binding<String> {
-        Binding(
+        return Binding(
             get: { selectedID },
             set: { candidate in
                 var state = MissCatTimelineSelectionState(
@@ -176,10 +221,17 @@ public struct MissCatTimelinePager: View {
         )
     }
 
-    private func scrollPosition(for pageID: String) -> Binding<String?> {
-        Binding(
-            get: { scrollPositions[pageID] },
-            set: { scrollPositions[pageID] = $0 }
+    private func scrollPosition(for page: MissCatTimelinePage) -> Binding<String?> {
+        let key = MissCatTimelineScrollKey(
+            accountScope: page.accountScope ?? accountScope,
+            pageID: page.id
+        )
+        if let externalScrollPosition {
+            return externalScrollPosition(key)
+        }
+        return Binding(
+            get: { scrollPositions.position(for: key) },
+            set: { scrollPositions.setPosition($0, for: key) }
         )
     }
 
@@ -197,9 +249,13 @@ public struct MissCatTimelinePager: View {
             MissCatFeedView(
                 source: page.source,
                 repository: repository,
+                accountScope: scope,
                 palette: palette,
-                scrollPositionID: scrollPosition(for: page.id),
+                scrollPositionID: scrollPosition(for: page),
                 scrollToTopTrigger: selectedID == page.id ? scrollToTopTrigger : 0,
+                relativeDateReference: relativeDateReference,
+                visualReadyIdentifier: visualReadyPrefix.map { "\($0).\(page.accessibilityID)" },
+                allowsLoadingVisualReady: allowsLoadingVisualReady,
                 navigationActions: navigationActions
             )
         } else {

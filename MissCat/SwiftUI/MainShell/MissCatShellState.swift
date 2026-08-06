@@ -190,6 +190,7 @@ public final class MissCatShellStore: ObservableObject {
     private var footerState = MissCatFooterSelectionState()
     private var persistenceTask: Task<Void, Never>?
     private var repositories: [MissCatShellAccountScope: any MissCatFeedRepository] = [:]
+    @Published private var timelineScrollPositions = MissCatTimelineScrollPositionState()
 
     public init(provider: any MissCatShellConfigurationProviding) {
         self.provider = provider
@@ -265,7 +266,6 @@ public final class MissCatShellStore: ObservableObject {
     public func switchAccount(to scope: MissCatShellAccountScope) async {
         guard scope != configuration?.currentScope else { return }
         persistenceTask?.cancel()
-        repositories.removeAll()
         phase = .loading
         do {
             let configuration = try await provider.switchAccount(to: scope)
@@ -294,6 +294,14 @@ public final class MissCatShellStore: ObservableObject {
 
     public func dismissBanner() {
         bannerMessage = nil
+    }
+
+    public func timelineScrollPosition(for key: MissCatTimelineScrollKey) -> String? {
+        timelineScrollPositions.position(for: key)
+    }
+
+    public func setTimelineScrollPosition(_ noteID: String?, for key: MissCatTimelineScrollKey) {
+        timelineScrollPositions.setPosition(noteID, for: key)
     }
 
     func waitForPendingPersistence() async {
