@@ -1,3 +1,4 @@
-# Paths are repository-relative. One accepted record is required for every expanded visual requirement.
-# reviewer must be accepted; evidence_commit must be an ancestor of the revision being verified.
-surface_id	state	appearance	device	baseline	candidate	diff_dir	reviewer	evidence_commit
+# schema_version=2
+# evidence_commit is the earlier commit that first tracked the immutable baseline/candidate/diff blobs.
+# review_record is a unique immutable JSON decision added by a later descendant commit after 100% overlay review.
+surface_id	state	appearance	device	fixture	locale	content_size	visual_ready	baseline	candidate	diff_dir	review_record	evidence_commit

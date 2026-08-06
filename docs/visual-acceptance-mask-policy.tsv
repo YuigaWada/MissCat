@@ -1,0 +1,3 @@
+# schema_version=1
+# No masks are approved. Prefer deterministic status-bar capture. A future exception must pin a device-specific tracked mask hash, ignored-pixel ceiling, and minimal allowed bounds.
+device	mask_path	sha256	max_ignored_pixels	allowed_x	allowed_y	allowed_width	allowed_height

@@ -402,10 +402,14 @@ For all eleven historic states and all additional states in `docs/migration-test
 9. have a reviewer inspect the overlay at 100% even after numerical pass.
 
 The comparator calculates changed-pixel similarity and SSIM independently. The
-45-ID requirement inventory expands the states/devices/appearances and the
-evidence verifier rejects missing captures, hash drift, relaxed thresholds,
-unreviewed overlays, or non-ancestor evidence commits. Keep every surface in
-`migrating` until that strict gate and its functional requirements both pass.
+pinned 45-ID requirement inventory expands to 710 cases across state, device,
+appearance, locale, and content-size axes; focused cases cover long Japanese and
+Latin content, RTL, accessibility Dynamic Type, and keyboards. Surface 43 alone
+is a route audit. The evidence verifier rejects missing or replayed captures,
+hash drift, relaxed or malformed metrics, unapproved masks, metadata mismatch,
+unreviewed overlays, and invalid artifact/reviewer commit ancestry. The evidence
+manifest is currently empty, so keep every surface in `migrating` until that
+strict gate and its functional requirements both pass.
 
 ### Mandatory tab and account behavior suite
 

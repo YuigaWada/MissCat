@@ -3,7 +3,7 @@
 set -euo pipefail
 
 readonly DEFAULT_MAGICK="/opt/homebrew/bin/magick"
-readonly SCHEMA_VERSION=2
+readonly SCHEMA_VERSION=3
 
 usage() {
     cat <<'USAGE'
@@ -14,10 +14,19 @@ Options:
   --out DIR                 Artifact directory (default: beside candidate)
   --threshold RATIO         Maximum changed-pixel ratio, 0...1 (default: 0.10)
   --min-ssim VALUE          Minimum SSIM similarity, 0...1 (default: 0.90)
-  --channel-delta VALUE     Per-channel change threshold, 0...255 (default: 8)
+  --channel-delta VALUE     Per-channel change threshold, 0...8 (default: 8)
   --max-rmse VALUE          Optional maximum normalized RMSE, 0...1
   --fuzz PERCENT            Diagnostic RMSE fuzz, 0...100% (default: 0%)
   --mask MASK.png           Explicit mask: white compares, black ignores
+  --surface-id ID           Two-digit migration surface ID (required)
+  --state TOKEN             Deterministic visual state (required)
+  --appearance TOKEN        Appearance axis (required)
+  --device TOKEN            Device/runtime axis (required)
+  --fixture TOKEN           Deterministic fixture ID (required)
+  --locale TOKEN            Locale axis (required)
+  --content-size TOKEN      Content-size axis (required)
+  --visual-ready TOKEN      Accessibility readiness signal (required)
+  --record-relative-to DIR  Store artifact paths relative to this canonical root
   --magick PATH             ImageMagick executable (default: /opt/homebrew/bin/magick)
   -h, --help                Show this help
 
@@ -40,7 +49,13 @@ absolute_existing_file() {
     local source_dir source_name
     source_dir=$(dirname "$source_path")
     source_name=$(basename "$source_path")
-    printf '%s/%s' "$(cd "$source_dir" && pwd -P)" "$source_name"
+    /bin/realpath "$(cd "$source_dir" && pwd -P)/$source_name"
+}
+
+absolute_existing_directory() {
+    local target_path="$1"
+    [[ -d "$target_path" ]] || fail "directory not found: $target_path"
+    /bin/realpath "$target_path"
 }
 
 absolute_directory() {
@@ -57,6 +72,22 @@ json_escape() {
     value=${value//$'\r'/\\r}
     value=${value//$'\t'/\\t}
     printf '%s' "$value"
+}
+
+record_path() {
+    local absolute_path="$1"
+    if [[ -z "$record_root" ]]; then
+        printf '%s' "$absolute_path"
+        return
+    fi
+    case "$absolute_path" in
+        "$record_root"/*) printf '%s' "${absolute_path#${record_root}/}" ;;
+        *) fail "recorded path escapes --record-relative-to: $absolute_path" ;;
+    esac
+}
+
+is_token() {
+    [[ "$1" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]
 }
 
 sha256() {
@@ -102,14 +133,24 @@ write_validation_report() {
   "schema_version": $SCHEMA_VERSION,
   "status": "$(json_escape "$status")",
   "detail": "$(json_escape "$detail")",
+  "capture": {
+    "surface_id": "$(json_escape "$surface_id")",
+    "state": "$(json_escape "$state")",
+    "appearance": "$(json_escape "$appearance")",
+    "device": "$(json_escape "$device")",
+    "fixture": "$(json_escape "$fixture")",
+    "locale": "$(json_escape "$locale")",
+    "content_size": "$(json_escape "$content_size")",
+    "visual_ready": "$(json_escape "$visual_ready")"
+  },
   "baseline": {
-    "path": "$(json_escape "$baseline")",
+    "path": "$(json_escape "$baseline_record")",
     "sha256": "$baseline_sha",
     "width": $baseline_width,
     "height": $baseline_height
   },
   "candidate": {
-    "path": "$(json_escape "$candidate")",
+    "path": "$(json_escape "$candidate_record")",
     "sha256": "$candidate_sha",
     "width": $candidate_width,
     "height": $candidate_height
@@ -126,10 +167,11 @@ write_validation_report() {
     "applied": false,
     "path": $mask_path_json,
     "sha256": $mask_sha_json,
-    "ignored_pixels": 0
+    "ignored_pixels": 0,
+    "ignored_bounds": null
   },
   "artifacts": {
-    "summary": "$(json_escape "$summary_path")",
+    "summary": "$(json_escape "$summary_record")",
     "heatmap": null,
     "side_by_side": null,
     "overlay": null
@@ -148,6 +190,15 @@ max_rmse=""
 fuzz="0%"
 mask_input=""
 magick_bin="$DEFAULT_MAGICK"
+surface_id=""
+state=""
+appearance=""
+device=""
+fixture=""
+locale=""
+content_size=""
+visual_ready=""
+record_relative_to_input=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -186,6 +237,51 @@ while [[ $# -gt 0 ]]; do
             mask_input="$2"
             shift 2
             ;;
+        --surface-id)
+            require_value "$@"
+            surface_id="$2"
+            shift 2
+            ;;
+        --state)
+            require_value "$@"
+            state="$2"
+            shift 2
+            ;;
+        --appearance)
+            require_value "$@"
+            appearance="$2"
+            shift 2
+            ;;
+        --device)
+            require_value "$@"
+            device="$2"
+            shift 2
+            ;;
+        --fixture)
+            require_value "$@"
+            fixture="$2"
+            shift 2
+            ;;
+        --locale)
+            require_value "$@"
+            locale="$2"
+            shift 2
+            ;;
+        --content-size)
+            require_value "$@"
+            content_size="$2"
+            shift 2
+            ;;
+        --visual-ready)
+            require_value "$@"
+            visual_ready="$2"
+            shift 2
+            ;;
+        --record-relative-to)
+            require_value "$@"
+            record_relative_to_input="$2"
+            shift 2
+            ;;
         --magick)
             require_value "$@"
             magick_bin="$2"
@@ -219,10 +315,14 @@ done
     exit 2
 }
 [[ -x "$magick_bin" ]] || fail "ImageMagick executable is unavailable: $magick_bin"
+[[ "$surface_id" =~ ^[0-9][0-9]$ ]] || fail "surface-id must be two digits"
+for metadata in "$state" "$appearance" "$device" "$fixture" "$locale" "$content_size" "$visual_ready"; do
+    is_token "$metadata" || fail "all capture metadata fields are required canonical tokens"
+done
 is_ratio "$threshold" || fail "threshold must be between 0 and 1: $threshold"
 is_ratio "$min_ssim" || fail "min-ssim must be between 0 and 1: $min_ssim"
-[[ "$channel_delta" =~ ^[0-9]+$ ]] || fail "channel-delta must be an integer from 0 to 255: $channel_delta"
-[[ "$channel_delta" -le 255 ]] || fail "channel-delta must be an integer from 0 to 255: $channel_delta"
+[[ "$channel_delta" =~ ^[0-9]+$ ]] || fail "channel-delta must be an integer from 0 to 8: $channel_delta"
+[[ "$channel_delta" -le 8 ]] || fail "channel-delta must be an integer from 0 to 8: $channel_delta"
 if [[ -n "$max_rmse" ]]; then
     is_ratio "$max_rmse" || fail "max-rmse must be between 0 and 1: $max_rmse"
 fi
@@ -244,6 +344,10 @@ fi
 
 baseline=$(absolute_existing_file "$baseline_input")
 candidate=$(absolute_existing_file "$candidate_input")
+record_root=""
+if [[ -n "$record_relative_to_input" ]]; then
+    record_root=$(absolute_existing_directory "$record_relative_to_input")
+fi
 mask=""
 mask_requested="false"
 mask_path_json="null"
@@ -251,7 +355,7 @@ mask_sha_json="null"
 if [[ -n "$mask_input" ]]; then
     mask=$(absolute_existing_file "$mask_input")
     mask_requested="true"
-    mask_path_json="\"$(json_escape "$mask")\""
+    mask_path_json="\"$(json_escape "$(record_path "$mask")")\""
     mask_sha_json="\"$(sha256 "$mask")\""
 fi
 
@@ -267,6 +371,12 @@ summary_path="$out_dir/summary.json"
 heatmap_path="$out_dir/diff-heatmap.png"
 side_by_side_path="$out_dir/side-by-side.png"
 overlay_path="$out_dir/overlay.png"
+baseline_record=$(record_path "$baseline")
+candidate_record=$(record_path "$candidate")
+summary_record=$(record_path "$summary_path")
+heatmap_record=$(record_path "$heatmap_path")
+side_by_side_record=$(record_path "$side_by_side_path")
+overlay_record=$(record_path "$overlay_path")
 
 read -r baseline_width baseline_height <<< "$(dimensions "$baseline")"
 read -r candidate_width candidate_height <<< "$(dimensions "$candidate")"
@@ -284,6 +394,7 @@ total_pixels=$((baseline_width * baseline_height))
 evaluated_pixels=$total_pixels
 ignored_pixels=0
 mask_applied="false"
+ignored_bounds_json="null"
 
 temporary_dir=$(mktemp -d "${TMPDIR:-/tmp}/misscat-visual-diff.XXXXXX")
 trap 'rm -rf "$temporary_dir"' EXIT
@@ -309,6 +420,21 @@ if [[ -n "$mask" ]]; then
         fail "could not count mask pixels: $evaluated_pixels_output"
     [[ "$evaluated_pixels" -gt 0 ]] || fail "mask ignores every screenshot pixel"
     ignored_pixels=$((total_pixels - evaluated_pixels))
+    [[ "$ignored_pixels" -gt 0 ]] || fail "mask must ignore at least one screenshot pixel"
+
+    ignored_mask="$temporary_dir/ignored-mask.png"
+    "$magick_bin" "$effective_mask" -negate "$ignored_mask"
+    # A known black border makes the trim background deterministic even when
+    # the ignored region touches the image's top-left pixel. The page offset
+    # includes that one-pixel border, so translate it back to image space.
+    ignored_geometry=$("$magick_bin" "$ignored_mask" -bordercolor black -border 1 -trim -format '%wx%h%O' info:)
+    [[ "$ignored_geometry" =~ ^([0-9]+)x([0-9]+)\+([0-9]+)\+([0-9]+)$ ]] || \
+        fail "could not determine ignored mask bounds: $ignored_geometry"
+    ignored_width="${BASH_REMATCH[1]}"
+    ignored_height="${BASH_REMATCH[2]}"
+    ignored_x=$((BASH_REMATCH[3] - 1))
+    ignored_y=$((BASH_REMATCH[4] - 1))
+    ignored_bounds_json="{\"x\": $ignored_x, \"y\": $ignored_y, \"width\": $ignored_width, \"height\": $ignored_height}"
 
     "$magick_bin" "$baseline" -alpha off "$effective_mask" -compose Multiply -composite "$effective_baseline"
     "$magick_bin" "$candidate" -alpha off "$effective_mask" -compose Multiply -composite "$effective_candidate"
@@ -412,14 +538,24 @@ cat > "$summary_path" <<JSON
 {
   "schema_version": $SCHEMA_VERSION,
   "status": "$status",
+  "capture": {
+    "surface_id": "$(json_escape "$surface_id")",
+    "state": "$(json_escape "$state")",
+    "appearance": "$(json_escape "$appearance")",
+    "device": "$(json_escape "$device")",
+    "fixture": "$(json_escape "$fixture")",
+    "locale": "$(json_escape "$locale")",
+    "content_size": "$(json_escape "$content_size")",
+    "visual_ready": "$(json_escape "$visual_ready")"
+  },
   "baseline": {
-    "path": "$(json_escape "$baseline")",
+    "path": "$(json_escape "$baseline_record")",
     "sha256": "$baseline_sha",
     "width": $baseline_width,
     "height": $baseline_height
   },
   "candidate": {
-    "path": "$(json_escape "$candidate")",
+    "path": "$(json_escape "$candidate_record")",
     "sha256": "$candidate_sha",
     "width": $candidate_width,
     "height": $candidate_height
@@ -446,13 +582,14 @@ cat > "$summary_path" <<JSON
     "applied": $mask_applied,
     "path": $mask_path_json,
     "sha256": $mask_sha_json,
-    "ignored_pixels": $ignored_pixels
+    "ignored_pixels": $ignored_pixels,
+    "ignored_bounds": $ignored_bounds_json
   },
   "artifacts": {
-    "summary": "$(json_escape "$summary_path")",
-    "heatmap": "$(json_escape "$heatmap_path")",
-    "side_by_side": "$(json_escape "$side_by_side_path")",
-    "overlay": "$(json_escape "$overlay_path")"
+    "summary": "$(json_escape "$summary_record")",
+    "heatmap": "$(json_escape "$heatmap_record")",
+    "side_by_side": "$(json_escape "$side_by_side_record")",
+    "overlay": "$(json_escape "$overlay_record")"
   }
 }
 JSON
