@@ -2,19 +2,34 @@ import UIKit
 
 @MainActor
 final class SharePostService: SharePosting {
-    private let userModel: UserModel
+    private let userProvider: (String) -> SecureUser?
     private let transport: any MissCatComposeHTTPTransport
     private let requestTimeout: TimeInterval
-    private var isSubmitting = false
+    private let journal: MissCatComposeOperationJournalStoring
+    private var activeSubmissionTask: Task<Void, Error>?
 
     init(
         userModel: UserModel,
         transport: any MissCatComposeHTTPTransport = MissCatComposeURLSessionTransport(),
-        requestTimeout: TimeInterval = MissCatNativeComposeAPIClient.defaultTimeout
+        requestTimeout: TimeInterval = MissCatNativeComposeAPIClient.defaultTimeout,
+        journal: MissCatComposeOperationJournalStoring = MissCatComposeOperationJournal()
     ) {
-        self.userModel = userModel
+        userProvider = userModel.getUser(accountIdentifier:)
         self.transport = transport
         self.requestTimeout = requestTimeout
+        self.journal = journal
+    }
+
+    init(
+        userProvider: @escaping (String) -> SecureUser?,
+        transport: any MissCatComposeHTTPTransport,
+        requestTimeout: TimeInterval = MissCatNativeComposeAPIClient.defaultTimeout,
+        journal: MissCatComposeOperationJournalStoring
+    ) {
+        self.userProvider = userProvider
+        self.transport = transport
+        self.requestTimeout = requestTimeout
+        self.journal = journal
     }
 
     func submit(
@@ -22,22 +37,32 @@ final class SharePostService: SharePosting {
         accountID: String,
         visibility: ShareVisibility
     ) async throws {
-        guard !isSubmitting else {
+        guard activeSubmissionTask == nil else {
             throw MissCatNativeComposeAPIError.alreadySubmitting
         }
-        isSubmitting = true
-        defer { isSubmitting = false }
 
-        guard let user = userModel.getUser(accountIdentifier: accountID) else {
+        guard let user = userProvider(accountID), user.accountIdentifier == accountID else {
             throw PostModel.PostingError.accountUnavailable
         }
 
         let model = try PostModel(
             user: user,
             transport: transport,
-            requestTimeout: requestTimeout
+            requestTimeout: requestTimeout,
+            journal: journal
         )
-        try await model.submitNote(draft: draft, visibility: visibility)
+        let task = Task { try await model.submitNote(draft: draft, visibility: visibility) }
+        activeSubmissionTask = task
+        defer { activeSubmissionTask = nil }
+        try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
+    func cancelActiveSubmission() {
+        activeSubmissionTask?.cancel()
     }
 }
 
@@ -64,15 +89,20 @@ final class PostModel {
     }
 
     private let client: MissCatNativeComposeAPIClient
+    private let accountID: String
+    private let journal: MissCatComposeOperationJournalStoring
 
     init(
         user: SecureUser,
         transport: any MissCatComposeHTTPTransport = MissCatComposeURLSessionTransport(),
-        requestTimeout: TimeInterval = MissCatNativeComposeAPIClient.defaultTimeout
+        requestTimeout: TimeInterval = MissCatNativeComposeAPIClient.defaultTimeout,
+        journal: MissCatComposeOperationJournalStoring = MissCatComposeOperationJournal()
     ) throws {
         guard let apiKey = user.apiKey, !apiKey.isEmpty else {
             throw PostingError.accountUnavailable
         }
+        accountID = user.accountIdentifier
+        self.journal = journal
         client = MissCatNativeComposeAPIClient(
             scope: try MissCatComposeAccountScope(
                 accountID: user.accountIdentifier,
@@ -87,22 +117,59 @@ final class PostModel {
     func submitNote(draft: ShareDraft, visibility: ShareVisibility) async throws {
         guard draft.hasContent else { throw PostingError.emptyContent }
 
-        var fileIDs: [String] = []
-        for imageData in draft.imageData {
-            try Task.checkCancellation()
-            fileIDs.append(try await uploadImage(imageData))
-        }
+        let fingerprint = MissCatComposeOperationFingerprint.make(parts: [
+            Data(accountID.utf8),
+            Data(visibility.rawValue.utf8),
+            Data(draft.text.utf8)
+        ] + draft.imageData)
+        var record = try resumableRecord(fingerprint: fingerprint)
 
-        _ = try await client.createNote(
-            MissCatComposeAPINote(
-                visibility: visibility.composeAPIVisibility,
-                text: draft.text,
-                fileIDs: fileIDs
+        do {
+            var fileIDs = Array(record.knownFileIDs.prefix(draft.imageData.count))
+            for imageData in draft.imageData.dropFirst(fileIDs.count) {
+                try Task.checkCancellation()
+                let upload = try preparedUpload(imageData)
+                record.phase = .uploading
+                journal.save(record)
+                fileIDs.append(try await client.upload(upload))
+                record.knownFileIDs = fileIDs
+                journal.save(record)
+            }
+
+            record.phase = .readyToCreateNote
+            journal.save(record)
+            try Task.checkCancellation()
+            record.phase = .noteRequestStarted
+            journal.save(record)
+            let noteID = try await client.createNote(
+                MissCatComposeAPINote(
+                    visibility: visibility.composeAPIVisibility,
+                    text: draft.text,
+                    fileIDs: fileIDs
+                )
             )
-        )
+            record.createdNoteID = noteID
+            record.phase = .noteCreated
+            journal.save(record)
+            try Task.checkCancellation()
+            journal.remove(fingerprint: fingerprint)
+        } catch let error as MissCatNativeComposeAPIError {
+            if case .outcomeUnknown = error {
+                record.phase = .outcomeUnknown
+                journal.save(record)
+            } else {
+                let cleanupIsUnknown = await compensateOrClean(record: &record)
+                if !cleanupIsUnknown { journal.remove(fingerprint: fingerprint) }
+            }
+            throw error
+        } catch {
+            let cleanupIsUnknown = await compensateOrClean(record: &record)
+            if !cleanupIsUnknown { journal.remove(fingerprint: fingerprint) }
+            throw error
+        }
     }
 
-    private func uploadImage(_ data: Data) async throws -> String {
+    private func preparedUpload(_ data: Data) throws -> MissCatComposeAPIUpload {
         guard let image = UIImage(data: data) else { throw PostingError.invalidImage }
         guard let resizedImage = image.resized(widthUnder: 1024),
               let targetData = resizedImage.jpegData(compressionQuality: 0.5)
@@ -110,15 +177,54 @@ final class PostModel {
             throw PostingError.imageEncodingFailed
         }
 
-        return try await client.upload(
-            MissCatComposeAPIUpload(
-                data: targetData,
-                mimeType: "image/jpeg",
-                filename: UUID().uuidString + ".jpeg",
-                comment: nil,
-                isSensitive: false
-            )
+        return MissCatComposeAPIUpload(
+            data: targetData,
+            mimeType: "image/jpeg",
+            filename: UUID().uuidString + ".jpeg",
+            comment: nil,
+            isSensitive: false
         )
+    }
+
+    private func resumableRecord(fingerprint: String) throws -> MissCatComposeOperationRecord {
+        guard var existing = journal.record(fingerprint: fingerprint) else {
+            let record = MissCatComposeOperationRecord(fingerprint: fingerprint)
+            journal.save(record)
+            return record
+        }
+        switch existing.phase {
+        case .outcomeUnknown, .noteRequestStarted:
+            existing.phase = .outcomeUnknown
+            journal.save(existing)
+            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: "notes/create")
+        case .noteCreated:
+            throw MissCatNativeComposeAPIError.alreadyCreated
+        case .preparing, .uploading, .readyToCreateNote:
+            return existing
+        }
+    }
+
+    private func compensateOrClean(record: inout MissCatComposeOperationRecord) async -> Bool {
+        if let noteID = record.createdNoteID {
+            guard !record.noteDeleteAttempted else { return true }
+            record.noteDeleteAttempted = true
+            journal.save(record)
+            let cleanup = Task { try await client.deleteNote(id: noteID) }
+            if (try? await cleanup.value) == nil {
+                record.phase = .outcomeUnknown
+                journal.save(record)
+                return true
+            }
+            return false
+        }
+
+        for fileID in record.knownFileIDs where !record.cleanupAttemptedFileIDs.contains(fileID) {
+            record.cleanupAttemptedFileIDs.append(fileID)
+            journal.save(record)
+            let cleanup = Task { try await client.deleteFile(id: fileID) }
+            _ = try? await cleanup.value
+        }
+        return false
     }
 }
 

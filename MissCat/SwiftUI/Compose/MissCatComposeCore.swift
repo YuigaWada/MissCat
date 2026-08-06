@@ -227,6 +227,11 @@ protocol MissCatComposeSubmitting: AnyObject {
         _ submission: MissCatComposeSubmission,
         progress: @escaping (MissCatComposeUploadProgress) -> Void
     ) async throws
+    func cancelActiveSubmission()
+}
+
+extension MissCatComposeSubmitting {
+    func cancelActiveSubmission() {}
 }
 
 @MainActor
@@ -450,6 +455,7 @@ final class MissCatComposeViewModel: ObservableObject {
         case uploading(MissCatComposeUploadProgress)
         case submitting
         case failed
+        case outcomeUnknown
         case completed
         case cancelled
     }
@@ -466,6 +472,8 @@ final class MissCatComposeViewModel: ObservableObject {
     private let posting: MissCatComposeSubmitting
     private let nowPlayingProvider: MissCatNowPlayingProviding
     private var initialDraft: MissCatComposeDraft
+    private var submissionTask: Task<Bool, Never>?
+    private var submissionID: UUID?
 
     init(
         mode: MissCatComposeMode,
@@ -611,28 +619,66 @@ final class MissCatComposeViewModel: ObservableObject {
             ? .submitting
             : .uploading(MissCatComposeUploadProgress(completed: 0, total: submission.media.count))
 
-        do {
-            try await posting.submit(submission) { [weak self] progress in
-                guard let self else { return }
-                self.phase = progress.completed >= progress.total ? .submitting : .uploading(progress)
+        let operationID = UUID()
+        submissionID = operationID
+        let task = Task { @MainActor [weak self] in
+            guard let self else { return false }
+            do {
+                try await posting.submit(submission) { [weak self] progress in
+                    guard let self, self.submissionID == operationID, !self.isTerminal else { return }
+                    self.phase = progress.completed >= progress.total ? .submitting : .uploading(progress)
+                }
+                guard resolveTerminal(.completed, operationID: operationID) else { return false }
+                initialDraft = draft
+                return true
+            } catch let error as MissCatNativeComposeAPIError {
+                if case .outcomeUnknown = error {
+                    errorMessage = error.localizedDescription
+                    _ = resolveTerminal(.outcomeUnknown, operationID: operationID)
+                } else if !isTerminal {
+                    errorMessage = error.localizedDescription
+                    phase = .failed
+                }
+                return false
+            } catch is CancellationError {
+                _ = resolveTerminal(.cancelled, operationID: operationID)
+                return false
+            } catch {
+                guard !isTerminal else { return false }
+                errorMessage = error.localizedDescription
+                phase = .failed
+                return false
             }
-            phase = .completed
-            initialDraft = draft
-            return true
-        } catch {
-            errorMessage = error.localizedDescription
-            phase = .failed
-            return false
         }
+        submissionTask = task
+        let result = await task.value
+        if submissionID == operationID {
+            submissionTask = nil
+            submissionID = nil
+        }
+        return result
     }
 
     func cancel() {
         switch phase {
-        case .ready, .failed:
-            phase = .cancelled
-        case .loading, .uploading, .submitting, .completed, .cancelled:
+        case .completed, .cancelled, .outcomeUnknown:
             return
+        case .loading, .ready, .uploading, .submitting, .failed:
+            phase = .cancelled
+            posting.cancelActiveSubmission()
+            submissionTask?.cancel()
         }
+    }
+
+    private var isTerminal: Bool {
+        phase == .completed || phase == .cancelled || phase == .outcomeUnknown
+    }
+
+    @discardableResult
+    private func resolveTerminal(_ terminal: Phase, operationID: UUID) -> Bool {
+        guard submissionID == operationID, !isTerminal else { return false }
+        phase = terminal
+        return true
     }
 
     private func makeSubmission() throws -> MissCatComposeSubmission {

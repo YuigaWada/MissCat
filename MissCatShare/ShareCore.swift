@@ -49,11 +49,41 @@ struct ShareAccount: Identifiable, Equatable, Sendable {
 /// Safe result for a signed-extension credential-read check. It intentionally
 /// cannot carry or describe the credential itself.
 struct ShareCredentialReadProof: Equatable, Sendable, CustomStringConvertible {
-    let accountIdentifier: String
+    let accountIdentifierHash: String
     let credentialAvailable: Bool
 
     var description: String {
-        "ShareCredentialReadProof(accountIdentifier: \(accountIdentifier), credentialAvailable: \(credentialAvailable))"
+        "ShareCredentialReadProof(accountIdentifierHash: \(accountIdentifierHash), credentialAvailable: \(credentialAvailable))"
+    }
+}
+
+enum ShareCredentialReadProbe {
+    static let launchArgument = "--misscat-share-credential-proof"
+    static let resultKey = "share-credential-proof.available"
+    static let accountHashKey = "share-credential-proof.account-hash"
+
+    @discardableResult
+    static func invokeIfRequested(
+        arguments: [String],
+        accountIdentifier: String?,
+        read: (String) -> ShareCredentialReadProof,
+        store: (ShareCredentialReadProof) -> Void
+    ) -> Bool {
+        guard arguments.contains(launchArgument), let accountIdentifier else { return false }
+        store(read(accountIdentifier))
+        return true
+    }
+}
+
+@MainActor
+final class ShareRequestTerminalArbiter {
+    enum Terminal: Equatable { case completed, cancelled }
+    private(set) var terminal: Terminal?
+
+    func resolve(_ candidate: Terminal) -> Bool {
+        guard terminal == nil else { return false }
+        terminal = candidate
+        return true
     }
 }
 
@@ -126,6 +156,11 @@ protocol SharePosting: AnyObject {
         accountID: String,
         visibility: ShareVisibility
     ) async throws
+    func cancelActiveSubmission()
+}
+
+extension SharePosting {
+    func cancelActiveSubmission() {}
 }
 
 @MainActor
@@ -137,7 +172,9 @@ final class ShareComposerViewModel: ObservableObject {
         case ready
         case posting
         case failed
+        case outcomeUnknown
         case completed
+        case cancelled
     }
 
     @Published var text = ""
@@ -149,6 +186,8 @@ final class ShareComposerViewModel: ObservableObject {
 
     let accounts: [ShareAccount]
     private let posting: SharePosting
+    private var submissionTask: Task<Bool, Never>?
+    private var submissionID: UUID?
 
     init(
         accounts: [ShareAccount],
@@ -168,8 +207,7 @@ final class ShareComposerViewModel: ObservableObject {
     }
 
     var canPost: Bool {
-        phase != .loading
-            && phase != .posting
+        (phase == .ready || phase == .failed)
             && selectedAccount != nil
             && text.count <= Self.maximumTextLength
             && ShareDraft(text: text, imageData: imageData).hasContent
@@ -225,18 +263,60 @@ final class ShareComposerViewModel: ObservableObject {
         phase = .posting
         errorMessage = nil
 
-        do {
-            try await posting.submit(
-                draft: draft,
-                accountID: selectedAccountID,
-                visibility: visibility
-            )
-            phase = .completed
-            return true
-        } catch {
-            errorMessage = error.localizedDescription
-            phase = .failed
-            return false
+        let operationID = UUID()
+        submissionID = operationID
+        let task = Task { @MainActor [weak self] in
+            guard let self else { return false }
+            do {
+                try await posting.submit(
+                    draft: draft,
+                    accountID: selectedAccountID,
+                    visibility: visibility
+                )
+                return resolveTerminal(.completed, operationID: operationID)
+            } catch let error as MissCatNativeComposeAPIError {
+                if case .outcomeUnknown = error {
+                    errorMessage = error.localizedDescription
+                    _ = resolveTerminal(.outcomeUnknown, operationID: operationID)
+                } else if !isTerminal {
+                    errorMessage = error.localizedDescription
+                    phase = .failed
+                }
+                return false
+            } catch is CancellationError {
+                _ = resolveTerminal(.cancelled, operationID: operationID)
+                return false
+            } catch {
+                guard !isTerminal else { return false }
+                errorMessage = error.localizedDescription
+                phase = .failed
+                return false
+            }
         }
+        submissionTask = task
+        let result = await task.value
+        if submissionID == operationID {
+            submissionTask = nil
+            submissionID = nil
+        }
+        return result
+    }
+
+    func cancel() {
+        guard !isTerminal else { return }
+        phase = .cancelled
+        posting.cancelActiveSubmission()
+        submissionTask?.cancel()
+    }
+
+    private var isTerminal: Bool {
+        phase == .completed || phase == .cancelled || phase == .outcomeUnknown
+    }
+
+    @discardableResult
+    private func resolveTerminal(_ terminal: Phase, operationID: UUID) -> Bool {
+        guard submissionID == operationID, !isTerminal else { return false }
+        phase = terminal
+        return true
     }
 }

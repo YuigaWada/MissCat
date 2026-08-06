@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 struct MissCatComposeAccountScope: Sendable {
@@ -141,6 +142,8 @@ enum MissCatNativeComposeAPIError: LocalizedError, Equatable {
     case invalidResponse(endpoint: String)
     case server(status: Int, code: String?, message: String?, id: String?)
     case alreadySubmitting
+    case outcomeUnknown(endpoint: String)
+    case alreadyCreated
 
     var errorDescription: String? {
         switch self {
@@ -164,7 +167,93 @@ enum MissCatNativeComposeAPIError: LocalizedError, Equatable {
             }
         case .alreadySubmitting:
             "この投稿はすでに送信中です"
+        case .outcomeUnknown:
+            "送信結果を確認できません。重複を避けるため、この内容は再送できません"
+        case .alreadyCreated:
+            "この投稿は作成済みです。重複を避けるため再送しません"
         }
+    }
+}
+
+/// A body- and credential-free description of one logical compose operation.
+/// Only the SHA-256 result is persisted; the input parts never leave memory.
+enum MissCatComposeOperationFingerprint {
+    static func make(parts: [Data]) -> String {
+        var input = Data("misscat-compose-operation-v1".utf8)
+        for part in parts {
+            var length = UInt64(part.count).bigEndian
+            withUnsafeBytes(of: &length) { input.append(contentsOf: $0) }
+            input.append(part)
+        }
+        return SHA256.hash(data: input).map { String(format: "%02x", $0) }.joined()
+    }
+
+    static func accountHash(_ accountIdentifier: String) -> String {
+        make(parts: [Data(accountIdentifier.utf8)])
+    }
+}
+
+struct MissCatComposeOperationRecord: Codable, Equatable, Sendable {
+    enum Phase: String, Codable, Sendable {
+        case preparing
+        case uploading
+        case readyToCreateNote
+        case noteRequestStarted
+        case outcomeUnknown
+        case noteCreated
+    }
+
+    let fingerprint: String
+    var phase: Phase
+    var knownFileIDs: [String]
+    var createdNoteID: String?
+    var cleanupAttemptedFileIDs: [String]
+    var noteDeleteAttempted: Bool
+
+    init(
+        fingerprint: String,
+        phase: Phase = .preparing,
+        knownFileIDs: [String] = [],
+        createdNoteID: String? = nil,
+        cleanupAttemptedFileIDs: [String] = [],
+        noteDeleteAttempted: Bool = false
+    ) {
+        self.fingerprint = fingerprint
+        self.phase = phase
+        self.knownFileIDs = knownFileIDs
+        self.createdNoteID = createdNoteID
+        self.cleanupAttemptedFileIDs = cleanupAttemptedFileIDs
+        self.noteDeleteAttempted = noteDeleteAttempted
+    }
+}
+
+protocol MissCatComposeOperationJournalStoring: AnyObject {
+    func record(fingerprint: String) -> MissCatComposeOperationRecord?
+    func save(_ record: MissCatComposeOperationRecord)
+    func remove(fingerprint: String)
+}
+
+final class MissCatComposeOperationJournal: MissCatComposeOperationJournalStoring, @unchecked Sendable {
+    static let appGroup = "group.yuwd.MissCat"
+    private static let keyPrefix = "native-compose-operation-v1."
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = UserDefaults(suiteName: appGroup) ?? .standard) {
+        self.defaults = defaults
+    }
+
+    func record(fingerprint: String) -> MissCatComposeOperationRecord? {
+        guard let data = defaults.data(forKey: Self.keyPrefix + fingerprint) else { return nil }
+        return try? JSONDecoder().decode(MissCatComposeOperationRecord.self, from: data)
+    }
+
+    func save(_ record: MissCatComposeOperationRecord) {
+        guard let data = try? JSONEncoder().encode(record) else { return }
+        defaults.set(data, forKey: Self.keyPrefix + record.fingerprint)
+    }
+
+    func remove(fingerprint: String) {
+        defaults.removeObject(forKey: Self.keyPrefix + fingerprint)
     }
 }
 
@@ -211,11 +300,11 @@ struct MissCatNativeComposeAPIClient: Sendable {
             .finalized()
         request.setValue(String(request.httpBody?.count ?? 0), forHTTPHeaderField: "Content-Length")
 
-        let data = try await successfulData(for: request)
+        let data = try await mutationData(for: request, endpoint: "drive/files/create")
         guard let response = try? JSONDecoder().decode(DriveFileResponse.self, from: data),
               !response.id.isEmpty
         else {
-            throw MissCatNativeComposeAPIError.invalidResponse(endpoint: "drive/files/create")
+            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: "drive/files/create")
         }
         return response.id
     }
@@ -228,13 +317,30 @@ struct MissCatNativeComposeAPIClient: Sendable {
         encoder.outputFormatting = [.sortedKeys]
         request.httpBody = try encoder.encode(body)
 
-        let data = try await successfulData(for: request)
+        let data = try await mutationData(for: request, endpoint: "notes/create")
         guard let response = try? JSONDecoder().decode(NoteCreateResponse.self, from: data),
               !response.createdNote.id.isEmpty
         else {
-            throw MissCatNativeComposeAPIError.invalidResponse(endpoint: "notes/create")
+            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: "notes/create")
         }
         return response.createdNote.id
+    }
+
+    func deleteFile(id: String) async throws {
+        guard !id.isEmpty else { return }
+        try await sendDelete(path: "/api/drive/files/delete", endpoint: "drive/files/delete", key: "fileId", id: id)
+    }
+
+    func deleteNote(id: String) async throws {
+        guard !id.isEmpty else { return }
+        try await sendDelete(path: "/api/notes/delete", endpoint: "notes/delete", key: "noteId", id: id)
+    }
+
+    private func sendDelete(path: String, endpoint: String, key: String, id: String) async throws {
+        var request = try authenticatedRequest(path: path)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: [key: id], options: [.sortedKeys])
+        _ = try await mutationData(for: request, endpoint: endpoint)
     }
 
     private func authenticatedRequest(path: String) throws -> URLRequest {
@@ -253,10 +359,19 @@ struct MissCatNativeComposeAPIClient: Sendable {
         return request
     }
 
-    private func successfulData(for request: URLRequest) async throws -> Data {
+    private func mutationData(for request: URLRequest, endpoint: String) async throws -> Data {
         try Task.checkCancellation()
-        let (data, response) = try await transport.data(for: request)
-        try Task.checkCancellation()
+        let data: Data
+        let response: HTTPURLResponse
+        do {
+            (data, response) = try await transport.data(for: request)
+        } catch let error as MissCatNativeComposeAPIError where error == .invalidHTTPResponse {
+            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: endpoint)
+        } catch {
+            // Misskey 00f6634 has no idempotency key. Once transport starts a
+            // mutation, timeout/cancellation cannot prove whether it committed.
+            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: endpoint)
+        }
         guard (200 ..< 300).contains(response.statusCode) else {
             let envelope = try? JSONDecoder().decode(ErrorEnvelope.self, from: data)
             throw MissCatNativeComposeAPIError.server(

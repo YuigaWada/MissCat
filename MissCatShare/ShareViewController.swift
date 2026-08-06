@@ -7,7 +7,7 @@ final class ShareViewController: UIViewController {
 
     private var hostingController: UIHostingController<ShareComposerView>?
     private var viewModel: ShareComposerViewModel?
-    private var hasFinishedRequest = false
+    private let terminalArbiter = ShareRequestTerminalArbiter()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,6 +27,19 @@ final class ShareViewController: UIViewController {
         let visibility = userModel.getCurrentVisibility()
             .flatMap { ShareVisibility(rawValue: $0.rawValue) }
             ?? .public
+
+#if DEBUG
+        ShareCredentialReadProbe.invokeIfRequested(
+            arguments: ProcessInfo.processInfo.arguments,
+            accountIdentifier: selectedAccountID,
+            read: userModel.credentialReadProof(accountIdentifier:),
+            store: { proof in
+                let defaults = UserDefaults(suiteName: MissCatComposeOperationJournal.appGroup) ?? .standard
+                defaults.set(proof.credentialAvailable, forKey: ShareCredentialReadProbe.resultKey)
+                defaults.set(proof.accountIdentifierHash, forKey: ShareCredentialReadProbe.accountHashKey)
+            }
+        )
+#endif
 
         let viewModel = ShareComposerViewModel(
             accounts: accounts,
@@ -58,31 +71,30 @@ final class ShareViewController: UIViewController {
     }
 
     private func loadSharedContent() {
-        guard !hasFinishedRequest, let viewModel else { return }
+        guard terminalArbiter.terminal == nil, let viewModel else { return }
         viewModel.beginLoading()
         let inputItems = extensionContext?.inputItems ?? []
 
         Task { @MainActor in
             do {
                 let draft = try await inputLoader.load(inputItems: inputItems)
-                guard !hasFinishedRequest else { return }
+                guard terminalArbiter.terminal == nil else { return }
                 viewModel.load(draft)
             } catch {
-                guard !hasFinishedRequest else { return }
+                guard terminalArbiter.terminal == nil else { return }
                 viewModel.failLoading(error)
             }
         }
     }
 
     private func completeRequest() {
-        guard !hasFinishedRequest else { return }
-        hasFinishedRequest = true
+        guard terminalArbiter.resolve(.completed) else { return }
         extensionContext?.completeRequest(returningItems: nil, completionHandler: nil)
     }
 
     private func cancelRequest() {
-        guard !hasFinishedRequest else { return }
-        hasFinishedRequest = true
+        viewModel?.cancel()
+        guard terminalArbiter.resolve(.cancelled) else { return }
         let error = NSError(
             domain: NSCocoaErrorDomain,
             code: NSUserCancelledError,
