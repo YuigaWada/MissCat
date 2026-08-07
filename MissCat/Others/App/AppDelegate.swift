@@ -59,6 +59,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             || MissCatDiscoveryFixtureConfiguration.isAutomatedTestRun
             || MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
             setupMissCat()
+            return true
+        }
 #endif
         setupMissCat()
         setupFirebase()
