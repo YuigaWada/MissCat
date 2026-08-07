@@ -437,8 +437,8 @@ private struct MissCatDiscoveryLegacyNoteRow: View {
         .foregroundStyle(palette.text)
         .padding(.leading, 20)
         .padding(.trailing, 20)
-        .padding(.top, 13)
-        .padding(.bottom, 10)
+        .padding(.top, 9)
+        .padding(.bottom, 11)
         .frame(height: 148)
         .background(palette.base)
         .overlay(alignment: .bottom) {
@@ -466,7 +466,7 @@ private struct MissCatDiscoveryLegacyUserRow: View {
     let palette: MissCatVisualPalette
 
     var body: some View {
-        HStack(alignment: .center, spacing: 10) {
+        HStack(alignment: .top, spacing: 10) {
             AsyncImage(url: user.avatarURL) { phase in
                 if case let .success(image) = phase {
                     image.resizable().scaledToFill()
@@ -476,6 +476,7 @@ private struct MissCatDiscoveryLegacyUserRow: View {
             }
             .frame(width: 50, height: 50)
             .clipShape(Circle())
+            .padding(.top, 11)
 
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline, spacing: 5) {
@@ -497,7 +498,8 @@ private struct MissCatDiscoveryLegacyUserRow: View {
         }
         .foregroundStyle(palette.text)
         .padding(.horizontal, 20)
-        .frame(height: 100)
+        .padding(.top, 14)
+        .frame(height: 100, alignment: .top)
         .background(palette.base)
         .overlay(alignment: .bottom) {
             Rectangle().fill(palette.border.opacity(0.7)).frame(height: MissCatLegacyMetrics.hairlineWidth)
