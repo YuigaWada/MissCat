@@ -10,7 +10,6 @@
 #if DEBUG
 import CryptoKit
 #endif
-import MisskeyKit
 import Security
 import UIKit
 import WebKit
@@ -529,6 +528,161 @@ private final class FakeAuthenticationAccountStore: MissCatAuthenticationAccount
     }
 }
 
+private actor FakeNativeAPITransport: MissCatNativeAPITransport {
+    struct Response {
+        let body: String
+        let statusCode: Int
+    }
+
+    private var responses: [Response]
+    private var requests: [URLRequest] = []
+
+    init(_ responses: [Response]) {
+        self.responses = responses
+    }
+
+    func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        requests.append(request)
+        let response = responses.removeFirst()
+        let httpResponse = HTTPURLResponse(
+            url: request.url!,
+            statusCode: response.statusCode,
+            httpVersion: nil,
+            headerFields: nil
+        )!
+        return (Data(response.body.utf8), httpResponse)
+    }
+
+    func recordedRequests() -> [URLRequest] {
+        requests
+    }
+}
+
+final class MissCatNativeAPIClientTests: XCTestCase {
+    private let token = "native-api-token-not-a-real-credential"
+
+    func testCurrentAccountUsesAuthenticatedIdentityContractAndMinimalResponse() async throws {
+        let transport = FakeNativeAPITransport([
+            .init(
+                body: #"{"id":"user-1","username":"wada","future":{"shape":true}}"#,
+                statusCode: 200
+            )
+        ])
+        let client = try MissCatNativeAPIClient(
+            instance: "https://MISSKEY.Example:443/",
+            accessToken: token,
+            transport: transport
+        )
+
+        let account = try await client.currentAccount()
+
+        XCTAssertEqual(account, .init(id: "user-1", username: "wada"))
+        let requests = await transport.recordedRequests()
+        let request = try XCTUnwrap(requests.first)
+        XCTAssertEqual(request.url?.absoluteString, "https://misskey.example/api/i")
+        assertAuthenticatedJSONRequest(request, body: [:])
+    }
+
+    func testMetaDecodesOnlyCustomEmojiFieldsUsedBySettings() async throws {
+        let transport = FakeNativeAPITransport([
+            .init(
+                body: #"{"emojis":[{"name":"blobcat","url":"https://cdn.example/blobcat.webp","category":"Cats","aliases":["blob"]},{"name":"uncategorized","url":"https://cdn.example/u.png","category":null}]}"#,
+                statusCode: 200
+            )
+        ])
+        let client = try MissCatNativeAPIClient(
+            instance: "misskey.example",
+            accessToken: token,
+            transport: transport
+        )
+
+        let emojis = try await client.customEmojis()
+
+        XCTAssertEqual(emojis, [
+            .init(name: "blobcat", url: "https://cdn.example/blobcat.webp", category: "Cats"),
+            .init(name: "uncategorized", url: "https://cdn.example/u.png", category: nil)
+        ])
+        let requests = await transport.recordedRequests()
+        let request = try XCTUnwrap(requests.first)
+        XCTAssertEqual(request.url?.path, "/api/meta")
+        assertAuthenticatedJSONRequest(request, body: [:])
+    }
+
+    func testServiceWorkerRegistrationPreservesEndpointAndLowercasePublicKeyContract() async throws {
+        let transport = FakeNativeAPITransport([
+            .init(body: #"{"state":"subscribed","key":"server-key"}"#, statusCode: 200)
+        ])
+        let client = try MissCatNativeAPIClient(
+            instance: "misskey.example",
+            accessToken: token,
+            transport: transport
+        )
+
+        let state = try await client.registerServiceWorker(
+            endpoint: "https://push.example/api/v1/push/ja/user-1/fcm-token",
+            auth: "auth-secret",
+            publicKey: "public-key"
+        )
+
+        XCTAssertEqual(state, .subscribed)
+        let requests = await transport.recordedRequests()
+        let request = try XCTUnwrap(requests.first)
+        XCTAssertEqual(request.url?.path, "/api/sw/register")
+        assertAuthenticatedJSONRequest(request, body: [
+            "endpoint": "https://push.example/api/v1/push/ja/user-1/fcm-token",
+            "auth": "auth-secret",
+            "publickey": "public-key"
+        ])
+    }
+
+    func testServiceWorkerAlreadySubscribedAndServerFailuresRemainDistinct() async throws {
+        let transport = FakeNativeAPITransport([
+            .init(body: #"{"state":"already-subscribed"}"#, statusCode: 200),
+            .init(body: #"{"error":{"code":"RATE_LIMITED","message":"slow down"}}"#, statusCode: 429)
+        ])
+        let client = try MissCatNativeAPIClient(
+            instance: "misskey.example",
+            accessToken: token,
+            transport: transport
+        )
+
+        XCTAssertEqual(
+            try await client.registerServiceWorker(endpoint: "https://push.example", auth: "a", publicKey: "p"),
+            .alreadySubscribed
+        )
+        do {
+            _ = try await client.currentAccount()
+            XCTFail("Expected a server error")
+        } catch let error as MissCatNativeAPIError {
+            XCTAssertEqual(error, .server(status: 429, code: "RATE_LIMITED", message: "slow down"))
+        }
+    }
+
+    private func assertAuthenticatedJSONRequest(
+        _ request: URLRequest,
+        body expectedBody: [String: String],
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertEqual(request.httpMethod, "POST", file: file, line: line)
+        XCTAssertEqual(
+            request.value(forHTTPHeaderField: "Content-Type"),
+            "application/json",
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(
+            request.value(forHTTPHeaderField: "Authorization"),
+            "Bearer \(token)",
+            file: file,
+            line: line
+        )
+        let body = (try? JSONSerialization.jsonObject(with: request.httpBody ?? Data())) as? [String: String]
+        XCTAssertEqual(body, expectedBody, file: file, line: line)
+        XCTAssertNil(request.httpBody?.range(of: Data(token.utf8)), file: file, line: line)
+    }
+}
+
 private final class UUIDSequence {
     private var values: [UUID]
 
@@ -694,7 +848,6 @@ final class MiAuthAuthenticationTests: XCTestCase {
             fixture.store.currentUserID,
             MissCatAccountIdentity.storageKey(instance: "misskey.io", userId: "user-1")
         )
-        XCTAssertEqual(fixture.misskey.auth.getAPIKey(), testToken)
         XCTAssertEqual(fixture.transport.requests.count, 1)
         XCTAssertEqual(fixture.transport.requests.first?.httpMethod, "POST")
         XCTAssertEqual(
@@ -759,7 +912,6 @@ final class MiAuthAuthenticationTests: XCTestCase {
             _ = try await fixture.service.completeAuthentication(callbackURL: callback)
         }
 
-        XCTAssertNil(fixture.misskey.auth.getAPIKey())
         XCTAssertNil(fixture.store.savedUser)
         XCTAssertNil(fixture.store.currentUserID)
         XCTAssertEqual(fixture.transport.requests.count, 1)
@@ -797,8 +949,7 @@ final class MiAuthAuthenticationTests: XCTestCase {
     private typealias Fixture = (
         service: MissCatAuthenticationService,
         transport: FakeMiAuthTransport,
-        store: FakeAuthenticationAccountStore,
-        misskey: MisskeyKit
+        store: FakeAuthenticationAccountStore
     )
 
     private func makeFixture(
@@ -807,16 +958,14 @@ final class MiAuthAuthenticationTests: XCTestCase {
     ) -> Fixture {
         let transport = FakeMiAuthTransport(results: results)
         let store = FakeAuthenticationAccountStore()
-        let misskey = MisskeyKit()
         let sequence = UUIDSequence(sessionIDs ?? [firstSession])
         let service = MissCatAuthenticationService(
-            misskey: misskey,
             transport: transport,
             uuidGenerator: sequence.next,
             accountStore: store,
             performsPostLoginActions: false
         )
-        return (service, transport, store, misskey)
+        return (service, transport, store)
     }
 
     private func startAndMakeCallback(
@@ -992,6 +1141,14 @@ final class AccountPersistenceTests: XCTestCase {
         keyStore = nil
         defaults = nil
         super.tearDown()
+    }
+
+    func testVisibilityStoragePreservesEveryNativeComposeRawValue() {
+        for visibility in MissCatVisibility.allCases {
+            subject.setCurrentVisibility(visibility)
+            XCTAssertEqual(subject.getCurrentVisibility(), visibility)
+            XCTAssertEqual(defaults.string(forKey: "current-visibility"), visibility.rawValue)
+        }
     }
 
     func testSaveStoresOnlySanitizedMetadataInSharedDefaults() throws {
