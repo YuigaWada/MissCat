@@ -1,7 +1,7 @@
 #if DEBUG
 import Foundation
 
-/// DEBUG-only dependency configuration for exercising the ordinary UIKit Home
+/// DEBUG-only dependency configuration for exercising the ordinary Home
 /// route and NotificationMessageBridge without storing a real credential.
 /// It never replaces the application root and is excluded from Release builds.
 enum MissCatNoteOrdinaryRouteConfiguration {
