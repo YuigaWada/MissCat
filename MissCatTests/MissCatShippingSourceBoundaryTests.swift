@@ -10,8 +10,9 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
         )
         let sourceNames = try swiftSourceNames(in: appSources)
 
-        XCTAssertEqual(sourceNames.count, 64)
+        XCTAssertEqual(sourceNames.count, 65)
         XCTAssertTrue(sourceNames.contains("MissCatNativeAPI.swift"))
+        XCTAssertTrue(sourceNames.contains("MissCatCameraCapture.swift"))
         for forbiddenMembership in [
             "ViewController.swift in Sources",
             "ViewModel.swift in Sources",
