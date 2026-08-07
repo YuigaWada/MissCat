@@ -54,18 +54,46 @@ enum MissCatNotificationMessageBridge {
         case let .user(userID):
             home.move2Profile(userId: userID, owner: owner)
         case let .note(noteID):
-            guard let repository = MissCatMisskeyFeedRepository(user: owner) else { return }
-            let view = MissCatNoteDetailView(
+            guard let repository = noteRepository(owner: owner) else { return }
+            let palette = notePresentationPalette
+            let detail = MissCatNoteDetailView(
                 noteID: noteID,
                 repository: repository,
-                palette: currentPalette,
+                palette: palette,
                 navigationActions: feedNavigationActions(owner: owner, home: home)
             )
-            let controller = MissCatRoutedHostingController(rootView: AnyView(view))
+#if DEBUG
+            let routedView = MissCatNoteOrdinaryRouteConfiguration.isEnabled
+                ? AnyView(detail.navigationBarBackButtonHidden(true).preferredColorScheme(.light))
+                : AnyView(detail)
+#else
+            let routedView = AnyView(detail)
+#endif
+            let controller = MissCatRoutedHostingController(rootView: routedView)
             controller.title = "Thread"
-            controller.view.backgroundColor = UIColor(currentPalette.base)
+            controller.view.backgroundColor = UIColor(palette.base)
             home.navigationController?.pushViewController(controller, animated: true)
         }
+    }
+
+    private static func noteRepository(
+        owner: SecureUser
+    ) -> (any MissCatNoteContextRepository)? {
+#if DEBUG
+        if MissCatNoteOrdinaryRouteConfiguration.isEnabled {
+            return MissCatNoteOrdinaryRouteConfiguration.makeRepository()
+        }
+#endif
+        return MissCatMisskeyFeedRepository(user: owner)
+    }
+
+    private static var notePresentationPalette: MissCatVisualPalette {
+#if DEBUG
+        if MissCatNoteOrdinaryRouteConfiguration.isEnabled {
+            return .noteLegacyLight
+        }
+#endif
+        return currentPalette
     }
 
     static func makeConversationController(

@@ -14,6 +14,7 @@ public final class MissCatFeedStore: ObservableObject {
     @Published public private(set) var canLoadMore = true
     @Published public private(set) var isRealtimeConnected = false
     @Published public private(set) var actionErrorMessage: String?
+    @Published public private(set) var canRetryAction = false
 
     private let repository: MissCatFeedRepository
     private let pageSize: Int
@@ -24,6 +25,7 @@ public final class MissCatFeedStore: ObservableObject {
     private var realtimeTask: Task<Void, Never>?
     private var realtimeGeneration = UUID()
     private var inFlightMutations = Set<MutationKey>()
+    private var failedAction: RetryAction?
 
     private enum MutationKey: Hashable {
         case favorite(String)
@@ -37,6 +39,15 @@ public final class MissCatFeedStore: ObservableObject {
     private enum InitialContent {
         case page(MissCatFeedPage)
         case thread(MissCatNoteThread)
+    }
+
+    private enum RetryAction {
+        case favorite(String)
+        case reaction(String, String)
+        case renote(String)
+        case vote(String, Int)
+        case delete(String)
+        case mute(String)
     }
 
     public init(
@@ -96,7 +107,14 @@ public final class MissCatFeedStore: ObservableObject {
             } catch {
                 guard let self, self.accepts(generation: generation, scope: capturedScope) else { return }
                 self.initialLoadTask = nil
-                self.phase = .failed(message: Self.message(for: error))
+                if error as? MissCatFeedRepositoryError == .emptyResponse {
+                    self.thread = nil
+                    self.notes = []
+                    self.canLoadMore = false
+                    self.phase = .empty
+                } else {
+                    self.phase = .failed(message: Self.message(for: error))
+                }
             }
         }
         initialLoadTask = task
@@ -201,6 +219,23 @@ public final class MissCatFeedStore: ObservableObject {
 
     public func dismissActionError() {
         actionErrorMessage = nil
+        failedAction = nil
+        canRetryAction = false
+    }
+
+    public func retryLastAction() async {
+        guard let failedAction else { return }
+        self.failedAction = nil
+        actionErrorMessage = nil
+        canRetryAction = false
+        switch failedAction {
+        case let .favorite(noteID): await toggleFavorite(noteID: noteID)
+        case let .reaction(noteID, reaction): await toggleReaction(noteID: noteID, reaction: reaction)
+        case let .renote(noteID): await renote(noteID: noteID)
+        case let .vote(noteID, choice): await vote(noteID: noteID, choice: choice)
+        case let .delete(noteID): await delete(noteID: noteID)
+        case let .mute(userID): await muteUser(userID: userID)
+        }
     }
 
     public func isThreadRoot(_ note: MissCatNote) -> Bool {
@@ -234,7 +269,7 @@ public final class MissCatFeedStore: ObservableObject {
                 notes.insert(note, at: min(previousIndex, notes.endIndex))
             }
             phase = notes.isEmpty ? .empty : .loaded
-            actionErrorMessage = Self.message(for: error)
+            recordFailure(.favorite(noteID), error: error)
         }
     }
 
@@ -288,7 +323,7 @@ public final class MissCatFeedStore: ObservableObject {
                     }
                 }
             }
-            actionErrorMessage = Self.message(for: error)
+            recordFailure(.reaction(noteID, reaction), error: error)
         }
     }
 
@@ -303,7 +338,7 @@ public final class MissCatFeedStore: ObservableObject {
             try await repository.perform(.renote(noteID: noteID))
         } catch {
             mutateNotes(noteID: noteID) { $0.renoteCount = max(0, $0.renoteCount - 1) }
-            actionErrorMessage = Self.message(for: error)
+            recordFailure(.renote(noteID), error: error)
         }
     }
 
@@ -338,7 +373,7 @@ public final class MissCatFeedStore: ObservableObject {
                 poll.choices[index].isVoted = false
                 note.poll = poll
             }
-            actionErrorMessage = Self.message(for: error)
+            recordFailure(.vote(noteID, choice), error: error)
         }
     }
 
@@ -353,7 +388,7 @@ public final class MissCatFeedStore: ObservableObject {
             synchronizeThread()
             phase = notes.isEmpty ? .empty : .loaded
         } catch {
-            actionErrorMessage = Self.message(for: error)
+            recordFailure(.delete(noteID), error: error)
         }
     }
 
@@ -368,7 +403,7 @@ public final class MissCatFeedStore: ObservableObject {
             synchronizeThread()
             phase = notes.isEmpty ? .empty : .loaded
         } catch {
-            actionErrorMessage = Self.message(for: error)
+            recordFailure(.mute(userID), error: error)
         }
     }
 
@@ -408,6 +443,12 @@ public final class MissCatFeedStore: ObservableObject {
 
     private func accepts(generation: UInt64, scope: MissCatShellAccountScope?) -> Bool {
         !Task.isCancelled && contentGeneration == generation && accountScope == scope
+    }
+
+    private func recordFailure(_ action: RetryAction, error: Error) {
+        failedAction = action
+        canRetryAction = true
+        actionErrorMessage = Self.message(for: error)
     }
 
     private func applyInitialContent(_ content: InitialContent) {

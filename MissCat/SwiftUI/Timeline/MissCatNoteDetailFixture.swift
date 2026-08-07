@@ -1,52 +1,90 @@
 #if DEBUG
 import Foundation
-import SwiftUI
 
-enum MissCatNoteDetailFixtureConfiguration {
-    static let launchArgument = "--note-detail-fixture"
-    static let stateEnvironmentKey = "MISS_CAT_NOTE_FIXTURE_STATE"
+/// DEBUG-only dependency configuration for exercising the ordinary UIKit Home
+/// route and NotificationMessageBridge without storing a real credential.
+/// It never replaces the application root and is excluded from Release builds.
+enum MissCatNoteOrdinaryRouteConfiguration {
+    static let launchArgument = "--note-actions-ordinary-route"
+    static let stateEnvironmentKey = "MISS_CAT_NOTE_ORDINARY_STATE"
 
     static var isEnabled: Bool {
         CommandLine.arguments.contains(launchArgument)
-            || ProcessInfo.processInfo.environment[stateEnvironmentKey] != nil
-    }
-
-    static var isAutomatedTestRun: Bool {
-        isEnabled
-            || ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 
     static var state: String {
         ProcessInfo.processInfo.environment[stateEnvironmentKey] ?? "content"
     }
-}
 
-struct MissCatNoteDetailFixtureRoot: View {
-    private let repository = MissCatNoteDetailFixtureRepository(
-        state: MissCatNoteDetailFixtureConfiguration.state
+    static let owner = SecureUser(
+        userId: "ordinary-note-owner",
+        username: "wada",
+        instance: "ordinary-note.invalid",
+        apiKey: "ordinary-note-token"
     )
 
-    var body: some View {
-        NavigationStack {
-            MissCatNoteDetailView(noteID: "fixture-root", repository: repository)
-        }
-        .preferredColorScheme(
-            ProcessInfo.processInfo.environment["MISS_CAT_NOTE_FIXTURE_APPEARANCE"] == "dark"
-                ? .dark
-                : .light
+    static func makeRepository() -> any MissCatNoteContextRepository {
+        MissCatNoteOrdinaryRouteRepository(state: state)
+    }
+}
+
+@MainActor
+enum MissCatNoteOrdinaryRouteComposeFactory {
+    static func makeViewModel(mode: MissCatComposeMode) -> MissCatComposeViewModel {
+        MissCatComposeViewModel(
+            mode: mode,
+            environment: MissCatNoteOrdinaryRouteComposeEnvironment(),
+            posting: MissCatNoteOrdinaryRouteComposePosting(),
+            nowPlayingProvider: MissCatEmptyNowPlayingProvider()
         )
     }
 }
 
-private final class MissCatNoteDetailFixtureRepository: MissCatNoteContextRepository {
+@MainActor
+private final class MissCatNoteOrdinaryRouteComposeEnvironment: MissCatComposeEnvironmentProviding {
+    func load() async throws -> MissCatComposeBootstrap {
+        MissCatComposeBootstrap(
+            accounts: [
+                MissCatComposeAccount(
+                    id: "ordinary-note-owner",
+                    username: "wada",
+                    instance: "ordinary-note.invalid"
+                ),
+            ],
+            selectedAccountID: "ordinary-note-owner",
+            visibility: .public
+        )
+    }
+
+    func persistSelectedAccount(id: String) {}
+    func persistVisibility(_ visibility: MissCatComposeVisibility) {}
+}
+
+@MainActor
+private final class MissCatNoteOrdinaryRouteComposePosting: MissCatComposeSubmitting {
+    func submit(
+        _ submission: MissCatComposeSubmission,
+        progress: @escaping (MissCatComposeUploadProgress) -> Void
+    ) async throws {
+        try await Task.sleep(nanoseconds: 40_000_000)
+    }
+}
+
+private final class MissCatNoteOrdinaryRouteRepository: MissCatNoteContextRepository {
     let accountIdentifier = MissCatAccountIdentity.storageKey(
-        instance: "fixture.example",
-        userId: "fixture-me"
+        instance: "ordinary-note.invalid",
+        userId: "ordinary-note-owner"
     )
     let currentServerUserID = "fixture-me"
-    private let state: String
 
-    init(state: String) { self.state = state }
+    private let state: String
+    private var previewAttempts = 0
+    private var reactionAttempts = 0
+    private var actionAttempts = 0
+
+    init(state: String) {
+        self.state = state
+    }
 
     func fetchPage(
         source: MissCatFeedSource,
@@ -79,15 +117,43 @@ private final class MissCatNoteDetailFixtureRepository: MissCatNoteContextReposi
         AsyncStream { $0.finish() }
     }
 
-    func perform(_ action: MissCatFeedAction) async throws {}
+    func perform(_ action: MissCatFeedAction) async throws {
+        actionAttempts += 1
+        if state == "action-failure", actionAttempts == 1 {
+            throw MissCatFeedRepositoryError.rejectedAction
+        }
+    }
 
     func notePermalink(noteID: String) -> URL? {
-        URL(string: "https://fixture.example/notes/\(noteID)")
+        URL(string: "https://ordinary-note.invalid/notes/\(noteID)")
+    }
+
+    func cachedURLPreview(for url: URL) -> MissCatURLPreview? {
+        Self.preview(for: url)
     }
 
     func fetchURLPreview(for url: URL) async throws -> MissCatURLPreview {
         try await Task.sleep(nanoseconds: 40_000_000)
-        return MissCatURLPreview(
+        previewAttempts += 1
+        if state == "preview-failure", previewAttempts == 1 {
+            throw URLError(.cannotLoadFromNetwork)
+        }
+        return Self.preview(for: url)
+    }
+
+    func fetchReactionChoices() async throws -> [MissCatReactionChoice] {
+        reactionAttempts += 1
+        if state == "reaction-error", reactionAttempts == 1 {
+            throw MissCatFeedRepositoryError.invalidResponse
+        }
+        return [
+            MissCatReactionChoice(value: ":misscat:", label: "🐈"),
+            MissCatReactionChoice(value: ":swiftui:", label: "🟢"),
+        ]
+    }
+
+    private static func preview(for url: URL) -> MissCatURLPreview {
+        MissCatURLPreview(
             sourceURL: url,
             title: "MissCat SwiftUI migration",
             description: "Legacy design, native interactions, and deterministic visual evidence.",
@@ -99,7 +165,7 @@ private final class MissCatNoteDetailFixtureRepository: MissCatNoteContextReposi
         id: "fixture-me",
         name: "だわくん 🧃",
         username: "wada",
-        isCat: true
+        isCat: false
     )
 
     private static let replyAuthor = MissCatNoteAuthor(
@@ -120,15 +186,13 @@ private final class MissCatNoteDetailFixtureRepository: MissCatNoteContextReposi
             MissCatNote(
                 id: "fixture-ancestor",
                 author: replyAuthor,
-                createdAt: Date(timeIntervalSince1970: 1_700_000_000),
                 text: "SwiftUI版の詳細画面を確認します。"
             ),
         ],
         note: MissCatNote(
             id: "fixture-root",
             author: author,
-            createdAt: Date(timeIntervalSince1970: 1_700_000_060),
-            text: "<spin>回転タグは安全に無視</spin> **太字** とリンク https://example.com/misscat",
+            text: "<spin>回転タグは安全に無視</spin> **太字** とリンク\nhttps://example.com/misscat",
             visibility: "public",
             attachments: attachments,
             reactions: [
@@ -137,19 +201,13 @@ private final class MissCatNoteDetailFixtureRepository: MissCatNoteContextReposi
             ],
             repliesCount: 1,
             renoteCount: 3,
-            tags: ["SwiftUI", "MissCat"],
             myReaction: "👍",
-            isFavorite: false,
-            poll: .init(choices: [
-                .init(id: 0, text: "同じデザイン", votes: 9),
-                .init(id: 1, text: "新しい挙動", votes: 3),
-            ])
+            isFavorite: false
         ),
         replies: [
             MissCatNote(
                 id: "fixture-reply",
                 author: replyAuthor,
-                createdAt: Date(timeIntervalSince1970: 1_700_000_120),
                 text: "メディアをタップして、左右にスワイプできます。",
                 replyID: "fixture-root"
             ),

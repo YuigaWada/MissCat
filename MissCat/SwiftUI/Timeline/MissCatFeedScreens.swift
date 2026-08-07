@@ -549,6 +549,9 @@ public struct MissCatNoteDetailView: View {
     private let navigationActions: MissCatFeedNavigationActions
     @StateObject private var store: MissCatFeedStore
     @StateObject private var readiness = MissCatNoteVisualReadiness()
+    @State private var presentedSheet: PresentedSheet?
+    @State private var pendingRenote: MissCatNote?
+    @State private var pendingDestructiveAction: DestructiveAction?
 
     public init(
         noteID: String,
@@ -588,12 +591,93 @@ public struct MissCatNoteDetailView: View {
                 set: { if !$0 { store.dismissActionError() } }
             )
         ) {
+            if store.canRetryAction {
+                Button("再試行") { Task { await store.retryLastAction() } }
+            }
             Button("閉じる") { store.dismissActionError() }
         } message: {
             Text(store.actionErrorMessage ?? "")
         }
+        .fullScreenCover(item: $presentedSheet) { sheet in
+            switch sheet.kind {
+            case .reaction:
+                if let contextRepository {
+                    MissCatReactionPickerView(
+                        noteID: sheet.note.noteID,
+                        existingReactions: sheet.note.reactions,
+                        repository: contextRepository,
+                        palette: palette
+                    ) { noteID, reaction in
+                        Task { await store.toggleReaction(noteID: noteID, reaction: reaction) }
+                    }
+                }
+            case .reply:
+                MissCatNoteComposeSheet(note: sheet.note, kind: .reply) {
+                    presentedSheet = nil
+                    Task { await store.refresh() }
+                }
+            case .quote:
+                MissCatNoteComposeSheet(note: sheet.note, kind: .quote) {
+                    presentedSheet = nil
+                    Task { await store.refresh() }
+                }
+            }
+        }
+        .confirmationDialog(
+            "Renote",
+            isPresented: Binding(
+                get: { pendingRenote != nil },
+                set: { if !$0 { pendingRenote = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            if let note = pendingRenote {
+                Button("Renote") {
+                    pendingRenote = nil
+                    Task { await store.renote(noteID: note.noteID) }
+                }
+                .accessibilityIdentifier("note.renote.confirm")
+                Button("引用Renote") {
+                    pendingRenote = nil
+                    presentedSheet = PresentedSheet(kind: .quote, note: note)
+                }
+                .accessibilityIdentifier("note.renote.quote")
+            }
+            Button("キャンセル", role: .cancel) { pendingRenote = nil }
+        }
+        .alert(
+            pendingDestructiveAction?.title ?? "確認",
+            isPresented: Binding(
+                get: { pendingDestructiveAction != nil },
+                set: { if !$0 { pendingDestructiveAction = nil } }
+            ),
+            presenting: pendingDestructiveAction
+        ) { action in
+            Button(action.actionTitle, role: .destructive) {
+                pendingDestructiveAction = nil
+                Task {
+                    switch action {
+                    case let .delete(note): await store.delete(noteID: note.noteID)
+                    case let .mute(note): await store.muteUser(userID: note.author.id)
+                    }
+                }
+            }
+            .accessibilityIdentifier("note.destructive.confirm")
+            Button("キャンセル", role: .cancel) { pendingDestructiveAction = nil }
+        } message: { action in
+            Text(action.message)
+        }
         .navigationTitle("Thread")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { Task { await store.refresh() } } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .accessibilityLabel("再読込")
+                .accessibilityIdentifier("note.detail.refresh")
+            }
+        }
         .id(contextRepository?.accountIdentifier ?? "unscoped:\(noteID)")
         .accessibilityIdentifier("note.detail.screen")
     }
@@ -647,7 +731,7 @@ public struct MissCatNoteDetailView: View {
                             .foregroundStyle(palette.strong)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 20)
-                            .padding(.top, index == 0 ? 8 : 12)
+                            .padding(.top, 9)
                             .padding(.bottom, 4)
                             .accessibilityIdentifier("note.detail.section.\(role.rawValue)")
                     }
@@ -656,21 +740,27 @@ public struct MissCatNoteDetailView: View {
                         note: note,
                         palette: palette,
                         expandsContentWarning: store.isThreadRoot(note),
-                        showsThreadConnector: index < store.notes.count - 1,
+                        showsThreadConnector: false,
                         onOpenUser: navigationActions.openUser,
                         onOpenNote: navigationActions.openNote,
                         onOpenAttachment: navigationActions.openAttachment,
                         onOpenHashtag: navigationActions.openHashtag,
-                        onReply: navigationActions.reply,
-                        onRenote: { noteID in Task { await store.renote(noteID: noteID) } },
-                        onChooseReaction: navigationActions.chooseReaction,
+                        onReply: { _ in presentedSheet = PresentedSheet(kind: .reply, note: note) },
+                        onRenote: { _ in pendingRenote = note },
+                        onChooseReaction: { _ in
+                            if contextRepository != nil {
+                                presentedSheet = PresentedSheet(kind: .reaction, note: note)
+                            } else {
+                                navigationActions.chooseReaction(note.noteID)
+                            }
+                        },
                         onToggleReaction: { noteID, reaction in
                             Task { await store.toggleReaction(noteID: noteID, reaction: reaction) }
                         },
                         onToggleFavorite: { noteID in Task { await store.toggleFavorite(noteID: noteID) } },
                         onVote: { noteID, choice in Task { await store.vote(noteID: noteID, choice: choice) } },
-                        onDelete: { noteID in Task { await store.delete(noteID: noteID) } },
-                        onMuteUser: { userID in Task { await store.muteUser(userID: userID) } },
+                        onDelete: { _ in pendingDestructiveAction = .delete(note) },
+                        onMuteUser: { _ in pendingDestructiveAction = .mute(note) },
                         contextRepository: contextRepository,
                         readiness: readiness
                     )
@@ -697,6 +787,39 @@ public struct MissCatNoteDetailView: View {
         }
     }
 
+    private struct PresentedSheet: Identifiable {
+        enum Kind: String { case reaction, reply, quote }
+        let kind: Kind
+        let note: MissCatNote
+        var id: String { "\(kind.rawValue):\(note.noteID)" }
+    }
+
+    private enum DestructiveAction {
+        case delete(MissCatNote)
+        case mute(MissCatNote)
+
+        var title: String {
+            switch self {
+            case .delete: "ノートを削除しますか？"
+            case .mute: "このユーザーをミュートしますか？"
+            }
+        }
+
+        var message: String {
+            switch self {
+            case .delete: "この操作は取り消せません。"
+            case .mute: "このユーザーのノートは表示されなくなります。"
+            }
+        }
+
+        var actionTitle: String {
+            switch self {
+            case .delete: "削除"
+            case .mute: "ミュート"
+            }
+        }
+    }
+
     private func threadRole(_ note: MissCatNote) -> ThreadRole? {
         guard let thread = store.thread else { return nil }
         if thread.note.id == note.id { return .note }
@@ -711,5 +834,122 @@ public struct MissCatNoteDetailView: View {
             || lowercased.contains("internet")
             || message.contains("オフライン")
             || message.contains("インターネット")
+    }
+}
+
+private struct MissCatNoteComposeSheet: View {
+    enum Kind { case reply, quote }
+
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var viewModel: MissCatComposeViewModel
+    private let kind: Kind
+    private let onComplete: () -> Void
+
+    @MainActor
+    init(note: MissCatNote, kind: Kind, onComplete: @escaping () -> Void) {
+        self.kind = kind
+        self.onComplete = onComplete
+        let target = MissCatComposeTarget(
+            id: note.noteID,
+            username: note.author.username,
+            instance: note.author.host ?? "",
+            text: note.text,
+            avatarURL: note.author.avatarURL
+        )
+        let mode: MissCatComposeMode = kind == .reply ? .reply(target) : .quote(target)
+#if DEBUG
+        let model = MissCatNoteOrdinaryRouteConfiguration.isEnabled
+            ? MissCatNoteOrdinaryRouteComposeFactory.makeViewModel(mode: mode)
+            : MissCatComposeFactory.makeViewModel(mode: mode)
+#else
+        let model = MissCatComposeFactory.makeViewModel(mode: mode)
+#endif
+        _viewModel = StateObject(wrappedValue: model)
+    }
+
+    var body: some View {
+        MissCatLegacyBottomOverlay(
+            height: MissCatLegacyMetrics.noteComposePanelHeight,
+            palette: .noteLegacyLight
+        ) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(kind == .reply ? "返信" : "引用Renote")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(MissCatVisualPalette.noteLegacyLight.text)
+                    .accessibilityIdentifier("compose.mode")
+
+                if let target = viewModel.mode.target {
+                    Text(targetSummary(target))
+                        .font(.system(size: 13))
+                        .foregroundStyle(MissCatVisualPalette.noteLegacyLight.text)
+                        .lineLimit(2)
+                        .padding(.horizontal, 10)
+                        .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
+                        .background(MissCatVisualPalette.noteLegacyLight.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: 5))
+                        .accessibilityIdentifier("compose.target")
+                }
+
+                ZStack(alignment: .topLeading) {
+                    if viewModel.draft.text.isEmpty {
+                        Text(kind == .reply ? "返信を入力" : "コメントを入力")
+                            .font(.system(size: 17))
+                            .foregroundStyle(Color(uiColor: .placeholderText))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 8)
+                    }
+                    TextEditor(text: $viewModel.draft.text)
+                        .font(.system(size: 17))
+                        .scrollContentBackground(.hidden)
+                        .accessibilityIdentifier("compose.text")
+                }
+                .frame(height: 140)
+                .overlay {
+                    Rectangle()
+                        .stroke(MissCatVisualPalette.noteLegacyLight.border, lineWidth: 0.5)
+                }
+
+                Button(kind == .reply ? "返信" : "投稿") {
+                    Task {
+                        if await viewModel.submit() { complete() }
+                    }
+                }
+                .font(.system(size: 17))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 40)
+                .background(MissCatVisualPalette.noteLegacyLight.accent)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .buttonStyle(.plain)
+                .allowsHitTesting(viewModel.canSubmit)
+                .accessibilityIdentifier("compose.submit")
+
+                Spacer(minLength: 0)
+            }
+        }
+        .task { await viewModel.load() }
+        .alert("エラー", isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.dismissError() } }
+        )) {
+            Button("閉じる") { viewModel.dismissError() }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
+    }
+
+    private func complete() {
+        dismiss()
+        onComplete()
+    }
+
+    private func targetSummary(_ target: MissCatComposeTarget) -> String {
+        let rendered = String(MissCatNativeMFMRenderer.render(target.text).characters)
+        let firstURLIndex = ["https://", "http://"]
+            .compactMap { rendered.range(of: $0)?.lowerBound }
+            .min() ?? rendered.endIndex
+        let withoutURL = rendered[..<firstURLIndex]
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return target.mention + "  " + withoutURL
     }
 }

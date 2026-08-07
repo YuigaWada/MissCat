@@ -57,6 +57,12 @@ final class MissCatNoteDetailTests: XCTestCase {
         XCTAssertEqual(links, [URL(string: "https://example.test/path")!])
     }
 
+    func testNativeMFMRendererPreservesExplicitLineBreaks() {
+        let rendered = MissCatNativeMFMRenderer.render("first\nsecond")
+
+        XCTAssertEqual(String(rendered.characters), "first\nsecond")
+    }
+
     func testPreviewURLDetectionIsStableDeduplicatedAndBounded() {
         let urls = MissCatNativeMFMRenderer.previewURLs(
             in: "https://one.test/a https://one.test/a https://two.test/b",
@@ -205,6 +211,118 @@ final class MissCatNoteDetailTests: XCTestCase {
     }
 
     @MainActor
+    func testURLPreviewCacheIsAccountScopedAndAvoidsDuplicateTransport() async throws {
+        let repository = NoteDetailContextRepositoryStub()
+        let url = URL(string: "https://example.test/cached")!
+        repository.previewResults = [
+            .success(.init(sourceURL: url, title: "Cached")),
+            .success(.init(sourceURL: url, title: "Second account")),
+        ]
+        let cache = MissCatURLPreviewCache(timeToLive: 60)
+        let first = MissCatURLPreviewStore(sourceURL: url, repository: repository, cache: cache)
+        let second = MissCatURLPreviewStore(sourceURL: url, repository: repository, cache: cache)
+
+        first.load()
+        let firstLoaded = await waitUntil { if case .loaded = first.phase { true } else { false } }
+        XCTAssertTrue(firstLoaded)
+        second.load()
+        let secondLoaded = await waitUntil { if case .loaded = second.phase { true } else { false } }
+        XCTAssertTrue(secondLoaded)
+        XCTAssertEqual(repository.previewRequestCount, 1)
+
+        repository.accountIdentifier = "misscat-account-v2:other:test"
+        let otherAccount = MissCatURLPreviewStore(sourceURL: url, repository: repository, cache: cache)
+        otherAccount.load()
+        let otherLoaded = await waitUntil { if case .loaded = otherAccount.phase { true } else { false } }
+        XCTAssertTrue(otherLoaded)
+        XCTAssertEqual(repository.previewRequestCount, 2)
+    }
+
+    @MainActor
+    func testURLPreviewCancellationRejectsLateCompletionAndKeepsFallback() async throws {
+        let repository = NoteDetailContextRepositoryStub()
+        repository.previewDelayNanoseconds = 180_000_000
+        let url = URL(string: "https://fallback.example/path")!
+        repository.previewResults = [.success(.init(sourceURL: url, title: "Too late"))]
+        let store = MissCatURLPreviewStore(
+            sourceURL: url,
+            repository: repository,
+            cache: MissCatURLPreviewCache()
+        )
+
+        store.load()
+        store.cancel()
+        try await Task.sleep(nanoseconds: 260_000_000)
+
+        XCTAssertEqual(store.phase, .loading)
+        XCTAssertEqual(store.fallbackPreview.title, "fallback.example")
+        XCTAssertEqual(store.fallbackPreview.resolvedURL, url)
+    }
+
+    @MainActor
+    func testReactionPickerFallsBackThenRetriesRemoteChoices() async throws {
+        let repository = NoteDetailContextRepositoryStub()
+        repository.reactionResults = [
+            .failure(MissCatFeedRepositoryError.invalidResponse),
+            .success([MissCatReactionChoice(value: ":misscat:", label: "🐈")]),
+        ]
+        let store = MissCatReactionPickerStore(repository: repository)
+
+        store.load()
+        let didFail = await waitUntil { if case .failed = store.phase { true } else { false } }
+        XCTAssertTrue(didFail)
+        XCTAssertTrue(store.choices.contains { $0.value == "👍" })
+        store.retry()
+        let didRecover = await waitUntil { store.phase == .loaded }
+        XCTAssertTrue(didRecover)
+        XCTAssertTrue(store.choices.contains { $0.value == ":misscat:" })
+    }
+
+    @MainActor
+    func testRenoteFailureRollsBackAndRetryCommitsExactlyOnce() async throws {
+        let repository = NoteDetailContextRepositoryStub()
+        repository.thread = Self.threadFixture
+        repository.actionDelayNanoseconds = 80_000_000
+        repository.actionResults = [
+            .failure(MissCatFeedRepositoryError.rejectedAction),
+            .success(()),
+        ]
+        let store = MissCatFeedStore(source: .noteDetail(noteID: "root"), repository: repository)
+        await store.loadInitial()
+
+        async let first: Void = store.renote(noteID: "root")
+        async let duplicate: Void = store.renote(noteID: "root")
+        _ = await (first, duplicate)
+
+        XCTAssertEqual(store.notes.first { $0.noteID == "root" }?.renoteCount, 0)
+        XCTAssertEqual(repository.actions, [.renote(noteID: "root")])
+        XCTAssertTrue(store.canRetryAction)
+
+        await store.retryLastAction()
+
+        XCTAssertEqual(store.notes.first { $0.noteID == "root" }?.renoteCount, 1)
+        XCTAssertEqual(repository.actions, [.renote(noteID: "root"), .renote(noteID: "root")])
+        XCTAssertNil(store.actionErrorMessage)
+    }
+
+    @MainActor
+    func testDeleteFailureKeepsThreadUntilSuccessfulRetry() async {
+        let repository = NoteDetailContextRepositoryStub()
+        repository.thread = Self.threadFixture
+        repository.actionResults = [
+            .failure(MissCatFeedRepositoryError.rejectedAction),
+            .success(()),
+        ]
+        let store = MissCatFeedStore(source: .noteDetail(noteID: "root"), repository: repository)
+        await store.loadInitial()
+
+        await store.delete(noteID: "root")
+        XCTAssertTrue(store.notes.contains { $0.noteID == "root" })
+        await store.retryLastAction()
+        XCTAssertFalse(store.notes.contains { $0.noteID == "root" })
+    }
+
+    @MainActor
     func testDetailStoreDeleteAndMuteRemoveOnlyAffectedNotes() async {
         let repository = NoteDetailContextRepositoryStub()
         repository.thread = Self.threadFixture
@@ -227,6 +345,19 @@ final class MissCatNoteDetailTests: XCTestCase {
         await store.loadInitial()
 
         XCTAssertEqual(store.phase, .failed(message: "インターネットに接続できません。"))
+    }
+
+    @MainActor
+    func testDetailStoreMapsMissingThreadToDeterministicEmptyState() async {
+        let repository = NoteDetailContextRepositoryStub()
+        repository.threadError = MissCatFeedRepositoryError.emptyResponse
+        let store = MissCatFeedStore(source: .noteDetail(noteID: "root"), repository: repository)
+
+        await store.loadInitial()
+
+        XCTAssertEqual(store.phase, .empty)
+        XCTAssertTrue(store.notes.isEmpty)
+        XCTAssertNil(store.thread)
     }
 
     private func makeRepository(instance: String = "tenant.example") -> MissCatMisskeyFeedRepository {
@@ -308,7 +439,12 @@ private final class NoteDetailContextRepositoryStub: MissCatNoteContextRepositor
         replies: []
     )
     var previewResults: [Result<MissCatURLPreview, Error>] = []
+    var previewRequestCount = 0
+    var previewDelayNanoseconds: UInt64 = 0
+    var reactionResults: [Result<[MissCatReactionChoice], Error>] = []
     var actions: [MissCatFeedAction] = []
+    var actionResults: [Result<Void, Error>] = []
+    var actionDelayNanoseconds: UInt64 = 0
     var threadError: Error?
 
     func fetchPage(source: MissCatFeedSource, cursor: String?, limit: Int) async throws -> MissCatFeedPage {
@@ -324,13 +460,25 @@ private final class NoteDetailContextRepositoryStub: MissCatNoteContextRepositor
         AsyncStream { $0.finish() }
     }
 
-    func perform(_ action: MissCatFeedAction) async throws { actions.append(action) }
+    func perform(_ action: MissCatFeedAction) async throws {
+        actions.append(action)
+        if actionDelayNanoseconds > 0 { try await Task.sleep(nanoseconds: actionDelayNanoseconds) }
+        guard !actionResults.isEmpty else { return }
+        try actionResults.removeFirst().get()
+    }
 
     func notePermalink(noteID: String) -> URL? { URL(string: "https://example.test/notes/\(noteID)") }
 
     func fetchURLPreview(for url: URL) async throws -> MissCatURLPreview {
+        previewRequestCount += 1
+        if previewDelayNanoseconds > 0 { try await Task.sleep(nanoseconds: previewDelayNanoseconds) }
         guard !previewResults.isEmpty else { return .init(sourceURL: url, title: "Preview") }
         return try previewResults.removeFirst().get()
+    }
+
+    func fetchReactionChoices() async throws -> [MissCatReactionChoice] {
+        guard !reactionResults.isEmpty else { return MissCatReactionChoice.legacyDefaults }
+        return try reactionResults.removeFirst().get()
     }
 }
 

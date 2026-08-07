@@ -58,7 +58,8 @@ final class ApplicationState: ObservableObject {
 
 #if DEBUG
         if MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled
-            || MissCatProfileOrdinaryRouteConfiguration.isEnabled {
+            || MissCatProfileOrdinaryRouteConfiguration.isEnabled
+            || MissCatNoteOrdinaryRouteConfiguration.isEnabled {
             Theme.shared.reset()
             Theme.shared.set()
             root = .legacyApplication
@@ -171,8 +172,6 @@ struct MissCatRootView: View {
 #if DEBUG
         if MissCatDiscoveryFixtureConfiguration.isEnabled {
             MissCatDiscoveryFixtureRoot()
-        } else if MissCatNoteDetailFixtureConfiguration.isEnabled {
-            MissCatNoteDetailFixtureRoot()
         } else if let acceptanceFixture {
             MissCatLoginProfileFixtureRoot(route: acceptanceFixture)
         } else {

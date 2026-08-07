@@ -42,6 +42,13 @@ public enum MissCatLegacyMetrics {
     public static let navigationHeaderHeight: CGFloat = 44
     public static let hairlineWidth: CGFloat = 0.5
 
+    // Legacy note-detail bottom panels. These exclude the home-indicator
+    // inset, which safeAreaPadding contributes when presented.
+    public static let noteReactionPanelHeight: CGFloat = 218.333333
+    public static let noteComposePanelHeight: CGFloat = 314.333333
+    public static let noteOverflowPanelHeight: CGFloat = 274.333333
+    public static let notePreviewFailurePanelHeight: CGFloat = 126
+
     // Profile.storyboard geometry (414 × 896 reference canvas).
     public static let profileHeaderHeight: CGFloat = 436.5
     public static let profileBannerHeight: CGFloat = 153.5

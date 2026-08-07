@@ -35,6 +35,9 @@ class HomeViewController: PolioPagerViewController {
     private var isXSeries = UIScreen.main.bounds.size.height > 811
     private let footerTabHeight: CGFloat = 55
     private var initialized: Bool = false
+#if DEBUG
+    private var didOpenOrdinaryNoteRoute = false
+#endif
     
     // ViewController
     private var notificationsViewController: MissCatNotificationsHostingController?
@@ -178,13 +181,28 @@ class HomeViewController: PolioPagerViewController {
         navigationController?.delegate = self
         navigationController?.interactivePopGestureRecognizer?.delegate = self
         navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+
+#if DEBUG
+        if MissCatNoteOrdinaryRouteConfiguration.isEnabled, !didOpenOrdinaryNoteRoute {
+            didOpenOrdinaryNoteRoute = true
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                MissCatNotificationMessageBridge.openNotificationRoute(
+                    .note("fixture-root"),
+                    owner: MissCatNoteOrdinaryRouteConfiguration.owner,
+                    home: self
+                )
+            }
+        }
+#endif
         
         guard !initialized else { return }
         
         setupFooterTab()
 #if DEBUG
         if !MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled
-            && !MissCatProfileOrdinaryRouteConfiguration.isEnabled {
+            && !MissCatProfileOrdinaryRouteConfiguration.isEnabled
+            && !MissCatNoteOrdinaryRouteConfiguration.isEnabled {
             loadingBanner()
         }
 #else
@@ -356,9 +374,12 @@ class HomeViewController: PolioPagerViewController {
     
     private func userAuth() {
 #if DEBUG
-        if MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
+        if MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled
+            || MissCatNoteOrdinaryRouteConfiguration.isEnabled {
             logined = true
-            currentInstance = MissCatDiscoveryOrdinaryRouteConfiguration.session.instance
+            currentInstance = MissCatNoteOrdinaryRouteConfiguration.isEnabled
+                ? MissCatNoteOrdinaryRouteConfiguration.owner.instance
+                : MissCatDiscoveryOrdinaryRouteConfiguration.session.instance
             return
         }
         if MissCatProfileOrdinaryRouteConfiguration.isEnabled {

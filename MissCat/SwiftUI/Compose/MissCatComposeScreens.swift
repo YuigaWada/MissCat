@@ -164,7 +164,7 @@ struct MissCatComposeScreen: View {
             Button("編集を続ける", role: .cancel) {}
         }
         .interactiveDismissDisabled(viewModel.hasUnsavedChanges || isBusy)
-        .accessibilityIdentifier("compose.screen")
+        .accessibilityElement(children: .contain)
     }
 
     private var navigationHeader: some View {
@@ -178,6 +178,7 @@ struct MissCatComposeScreen: View {
             Text(viewModel.mode.title)
                 .font(MissCatTypography.navigationTitle)
                 .lineLimit(1)
+                .accessibilityIdentifier("compose.mode")
 
             Spacer()
 

@@ -27,6 +27,7 @@ public struct MissCatNoteRow: View {
     @State private var isContentWarningExpanded: Bool
     @State private var revealedSensitiveAttachmentIDs = Set<String>()
     @State private var selectedAttachment: MissCatNoteAttachment?
+    @State private var showsOverflowActions = false
 
     public init(
         note: MissCatNote,
@@ -113,7 +114,7 @@ public struct MissCatNoteRow: View {
         .background(palette.base)
         .overlay(alignment: .bottom) {
             Rectangle()
-                .fill(palette.border)
+                .fill(Color(hex: "DBDBDB"))
                 .frame(height: MissCatLegacyMetrics.hairlineWidth)
         }
         .contentShape(Rectangle())
@@ -187,7 +188,6 @@ public struct MissCatNoteRow: View {
                         .lineLimit(1)
                 }
             }
-            .frame(height: 27)
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("note.\(note.id).author")
@@ -218,7 +218,7 @@ public struct MissCatNoteRow: View {
                     Text(MissCatNativeMFMRenderer.render(note.text))
                         .font(.system(size: 14))
                         .foregroundStyle(palette.text)
-                        .tint(palette.accent)
+                        .tint(palette.text)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("note.\(note.id).body")
                         .onTapGesture { onOpenNote(note.noteID) }
@@ -264,16 +264,59 @@ public struct MissCatNoteRow: View {
         }
     }
 
+    @ViewBuilder
     private func attachmentGrid(_ attachments: [MissCatNoteAttachment]) -> some View {
-        let columns = attachments.count == 1
-            ? [GridItem(.flexible(), spacing: 4)]
-            : [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)]
+        if attachments.allSatisfy({ $0.url == nil && $0.thumbnailURL == nil }) {
+            unavailableAttachmentGrid(attachments)
+        } else {
+            let columns: [GridItem] = if attachments.count == 1 {
+                [GridItem(.flexible(), spacing: 4)]
+            } else if attachments.count == 3 {
+                Array(repeating: GridItem(.flexible(), spacing: 4), count: 3)
+            } else {
+                [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)]
+            }
 
-        return LazyVGrid(columns: columns, spacing: 4) {
-            ForEach(Array(attachments.prefix(4))) { attachment in
-                attachmentView(attachment, single: attachments.count == 1)
+            LazyVGrid(columns: columns, spacing: 4) {
+                ForEach(Array(attachments.prefix(4))) { attachment in
+                    attachmentView(attachment, single: attachments.count == 1)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+            .accessibilityIdentifier("note.\(note.id).attachments")
+        }
+    }
+
+    private func unavailableAttachmentGrid(_ attachments: [MissCatNoteAttachment]) -> some View {
+        ZStack {
+            palette.surface
+
+            Image(systemName: "photo")
+                .font(.system(size: 20))
+                .foregroundStyle(palette.strong)
+
+            HStack(spacing: -8) {
+                Image(systemName: "photo")
+                Image(systemName: "play.circle.fill")
+            }
+            .font(.system(size: 20))
+            .foregroundStyle(palette.strong)
+            .offset(x: 18)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+
+            HStack(spacing: 0) {
+                ForEach(Array(attachments.prefix(4))) { attachment in
+                    Button { handleAttachmentTap(attachment) } label: {
+                        Color.clear.contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(attachment.name)
+                    .accessibilityIdentifier("note.\(note.id).attachment.\(attachment.id)")
+                }
             }
         }
+        .frame(height: 104)
+        .clipped()
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .accessibilityIdentifier("note.\(note.id).attachments")
     }
@@ -281,19 +324,7 @@ public struct MissCatNoteRow: View {
     private func attachmentView(_ attachment: MissCatNoteAttachment, single: Bool) -> some View {
         let sensitiveIsHidden = attachment.isSensitive && !revealedSensitiveAttachmentIDs.contains(attachment.id)
 
-        return Button {
-            if sensitiveIsHidden {
-                revealedSensitiveAttachmentIDs.insert(attachment.id)
-            } else if presentsMediaInternally {
-                MissCatNoteMediaTapRouter.route(
-                    attachment,
-                    presentNatively: { selectedAttachment = $0 },
-                    legacyPresentation: onOpenAttachment
-                )
-            } else {
-                onOpenAttachment(attachment)
-            }
-        } label: {
+        return Button { handleAttachmentTap(attachment) } label: {
             ZStack {
                 MissCatTrackedRemoteImage(
                     url: attachment.thumbnailURL ?? attachment.url,
@@ -304,11 +335,12 @@ public struct MissCatNoteRow: View {
                     readiness: readiness
                 )
                 .frame(maxWidth: .infinity)
-                .frame(height: single ? 210 : 130)
+                .frame(height: single ? 210 : note.attachments.count == 3 ? 104 : 130)
                 .clipped()
                 .blur(radius: sensitiveIsHidden ? 18 : 0)
 
-                if attachment.kind == .video || attachment.kind == .audio || attachment.kind == .animatedImage {
+                if attachment.url != nil,
+                   attachment.kind == .video || attachment.kind == .audio || attachment.kind == .animatedImage {
                     Image(systemName: "play.circle.fill")
                         .font(.system(size: 38))
                         .foregroundStyle(.white.opacity(0.8))
@@ -327,6 +359,18 @@ public struct MissCatNoteRow: View {
         .buttonStyle(.plain)
         .accessibilityLabel(sensitiveIsHidden ? "閲覧注意。タップで表示" : attachment.name)
         .accessibilityIdentifier("note.\(note.id).attachment.\(attachment.id)")
+    }
+
+    private func handleAttachmentTap(_ attachment: MissCatNoteAttachment) {
+        if attachment.isSensitive && !revealedSensitiveAttachmentIDs.contains(attachment.id) {
+            revealedSensitiveAttachmentIDs.insert(attachment.id)
+        } else {
+            MissCatNoteMediaTapRouter.route(
+                attachment,
+                presentNatively: { selectedAttachment = $0 },
+                legacyPresentation: onOpenAttachment
+            )
+        }
     }
 
     private func quotedNoteView(_ quoted: MissCatQuotedNote) -> some View {
@@ -415,7 +459,7 @@ public struct MissCatNoteRow: View {
                     }
                     .font(.system(size: 13))
                     .padding(.horizontal, 7)
-                    .frame(minHeight: 28)
+                    .frame(width: 72, height: 28)
                     .foregroundStyle(reaction.isMine ? .white : palette.text)
                     .background(reaction.isMine ? palette.accent : palette.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 4))
@@ -444,7 +488,7 @@ public struct MissCatNoteRow: View {
             ) { onRenote(note.noteID) }
 
             actionButton(
-                symbol: note.myReaction == nil ? "face.smiling" : "face.smiling.inverse",
+                symbol: "face.smiling",
                 count: nil,
                 label: "リアクション",
                 identifier: "reaction"
@@ -454,53 +498,46 @@ public struct MissCatNoteRow: View {
         }
         .frame(height: 40)
         .foregroundStyle(palette.strong)
-        .accessibilityIdentifier("note.\(note.id).actions")
+        .accessibilityElement(children: .contain)
     }
 
     private var overflowMenu: some View {
-        Menu {
-            Button {
-                onToggleFavorite(note.noteID)
-                onOverflowAction(note.isFavorite ? .unfavorite : .favorite)
-            } label: {
-                Label(note.isFavorite ? "お気に入り解除" : "お気に入り", systemImage: "star")
-            }
-            .accessibilityIdentifier("note.\(note.id).overflow.favorite")
-
-            if let permalink = contextRepository?.notePermalink(noteID: note.noteID) {
-                Button {
-                    UIPasteboard.general.string = permalink.absoluteString
-                    onOverflowAction(.copyLink)
-                } label: { Label("リンクをコピー", systemImage: "doc.on.doc") }
-                    .accessibilityIdentifier("note.\(note.id).overflow.copy-link")
-
-                Button {
-                    openURL(permalink)
-                    onOverflowAction(.openInBrowser)
-                } label: { Label("ブラウザで開く", systemImage: "safari") }
-                    .accessibilityIdentifier("note.\(note.id).overflow.browser")
-            }
-
-            if contextRepository?.currentServerUserID == note.author.id {
-                Button(role: .destructive) {
-                    onDelete(note.noteID)
-                    onOverflowAction(.delete)
-                } label: { Label("削除", systemImage: "trash") }
-                    .accessibilityIdentifier("note.\(note.id).overflow.delete")
-            } else {
-                Button(role: .destructive) {
-                    onMuteUser(note.author.id)
-                    onOverflowAction(.muteUser)
-                } label: { Label("このユーザーをミュート", systemImage: "speaker.slash") }
-                    .accessibilityIdentifier("note.\(note.id).overflow.mute")
-            }
-        } label: {
+        Button { showsOverflowActions = true } label: {
             Image(systemName: note.isFavorite ? "star.fill" : "ellipsis")
-                .font(.system(size: 15, weight: .bold))
+                .font(.system(size: 20))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .buttonStyle(.plain)
         .accessibilityLabel("その他")
         .accessibilityIdentifier("note.\(note.id).action.overflow")
+        .fullScreenCover(isPresented: $showsOverflowActions) {
+            MissCatNoteOverflowPanel(
+                note: note,
+                palette: palette,
+                permalink: contextRepository?.notePermalink(noteID: note.noteID),
+                isOwnNote: contextRepository?.currentServerUserID == note.author.id,
+                onFavorite: {
+                    onToggleFavorite(note.noteID)
+                    onOverflowAction(note.isFavorite ? .unfavorite : .favorite)
+                },
+                onCopyLink: { permalink in
+                    UIPasteboard.general.string = permalink.absoluteString
+                    onOverflowAction(.copyLink)
+                },
+                onOpenBrowser: { permalink in
+                    openURL(permalink)
+                    onOverflowAction(.openInBrowser)
+                },
+                onDelete: {
+                    onDelete(note.noteID)
+                    onOverflowAction(.delete)
+                },
+                onMute: {
+                    onMuteUser(note.author.id)
+                    onOverflowAction(.muteUser)
+                }
+            )
+        }
     }
 
     private func actionButton(
@@ -513,7 +550,7 @@ public struct MissCatNoteRow: View {
         Button(action: action) {
             HStack(spacing: 5) {
                 Image(systemName: symbol)
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 20))
                 if let count, count > 0 {
                     Text("\(count)").font(.system(size: 12))
                 }
@@ -528,7 +565,7 @@ public struct MissCatNoteRow: View {
     private static func symbol(for kind: MissCatAttachmentKind) -> String {
         switch kind {
         case .image, .animatedImage: "photo"
-        case .video: "video"
+        case .video: "play.circle.fill"
         case .audio: "waveform"
         case .other: "doc"
         }
@@ -552,6 +589,97 @@ public struct MissCatNoteRow: View {
         formatter.unitsStyle = .abbreviated
         return formatter
     }()
+}
+
+private struct MissCatNoteOverflowPanel: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let note: MissCatNote
+    let palette: MissCatVisualPalette
+    let permalink: URL?
+    let isOwnNote: Bool
+    let onFavorite: () -> Void
+    let onCopyLink: (URL) -> Void
+    let onOpenBrowser: (URL) -> Void
+    let onDelete: () -> Void
+    let onMute: () -> Void
+
+    var body: some View {
+        MissCatLegacyBottomOverlay(
+            height: MissCatLegacyMetrics.noteOverflowPanelHeight,
+            palette: palette
+        ) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("その他")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(palette.text)
+
+                actionButton(
+                    note.isFavorite ? "お気に入り解除" : "お気に入り",
+                    symbol: "star",
+                    identifier: "note.\(note.id).overflow.favorite"
+                ) { onFavorite() }
+
+                if let permalink {
+                    actionButton(
+                        "リンクをコピー",
+                        symbol: "doc.on.doc",
+                        identifier: "note.\(note.id).overflow.copy-link"
+                    ) { onCopyLink(permalink) }
+                    actionButton(
+                        "ブラウザで開く",
+                        symbol: "safari",
+                        identifier: "note.\(note.id).overflow.browser"
+                    ) { onOpenBrowser(permalink) }
+                }
+
+                if isOwnNote {
+                    actionButton(
+                        "削除",
+                        symbol: "trash",
+                        role: .destructive,
+                        identifier: "note.\(note.id).overflow.delete",
+                        action: onDelete
+                    )
+                } else {
+                    actionButton(
+                        "このユーザーをミュート",
+                        symbol: "speaker.slash",
+                        role: .destructive,
+                        identifier: "note.\(note.id).overflow.mute",
+                        action: onMute
+                    )
+                }
+
+                Spacer(minLength: 0)
+            }
+        }
+    }
+
+    private func actionButton(
+        _ title: String,
+        symbol: String,
+        role: ButtonRole? = nil,
+        identifier: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(role: role) {
+            dismiss()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { action() }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: symbol).frame(width: 25)
+                Text(title)
+                Spacer()
+            }
+            .font(.system(size: 16))
+            .frame(height: 46)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(role == .destructive ? Color.red : palette.text)
+        .accessibilityIdentifier(identifier)
+    }
 }
 
 enum MissCatNoteMediaPresentationOwner: Equatable {
