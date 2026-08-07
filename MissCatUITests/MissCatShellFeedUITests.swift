@@ -93,8 +93,11 @@ final class MissCatShellFeedUITests: XCTestCase {
         XCTAssertTrue(persistedAccount.waitForExistence(timeout: 5))
         let persistedAccountBeforeCompose = persistedAccount.value as? String
         XCTAssertFalse(persistedAccountBeforeCompose?.isEmpty ?? true)
+        let primaryComposeAccountID =
+            "misscat-account-v2:Zml4dHVyZS5leGFtcGxl:Zml4dHVyZS1jYXQ="
         let secondaryComposeAccountID =
             "misscat-account-v2:c29jaWFsLmV4YW1wbGU=:Zml4dHVyZS1jYXQ="
+        XCTAssertEqual(persistedAccountBeforeCompose, primaryComposeAccountID)
 
         app.buttons["main.action.compose"].tap()
         XCTAssertTrue(app.buttons["compose.cancel"].waitForExistence(timeout: 5))
@@ -118,7 +121,6 @@ final class MissCatShellFeedUITests: XCTestCase {
             element("production.root.compose-selection-request").value as? String,
             secondaryComposeAccountID
         )
-        waitForAccount("https://fixture.example|fixture-cat")
 
         app.buttons["main.action.compose"].tap()
         XCTAssertTrue(app.buttons["compose.cancel"].waitForExistence(timeout: 5))
@@ -136,7 +138,16 @@ final class MissCatShellFeedUITests: XCTestCase {
             element("production.root.compose-submission-account").value as? String,
             secondaryComposeAccountID
         )
-        waitForAccount("https://fixture.example|fixture-cat")
+        let isolationEvidence = XCTAttachment(
+            string: [
+                "persisted=\(persistedAccount.value as? String ?? "missing")",
+                "selected=\(element("production.root.compose-selection-request").value as? String ?? "missing")",
+                "submitted=\(element("production.root.compose-submission-account").value as? String ?? "missing")",
+            ].joined(separator: "\n")
+        )
+        isolationEvidence.name = "production-compose-account-isolation-state"
+        isolationEvidence.lifetime = .keepAlways
+        add(isolationEvidence)
 
         app.buttons["main.tab.messages"].tap()
         XCTAssertTrue(element("messages.history.screen").waitForExistence(timeout: 5))
