@@ -1461,7 +1461,7 @@ final class NativeKeychainStoreTests: XCTestCase {
     private let service = "yuwd.MissCat"
     private let accessGroup = "TESTTEAM.yuwd.MissCat"
 
-    func testReadsFormerKeychainAccessGenericPasswordSchema() throws {
+    func testReadsFormerGenericPasswordSchema() throws {
         let recorder = NativeKeychainSecurityRecorder()
         recorder.copyResults = [(errSecSuccess, Data("test-token".utf8))]
         let store = makeStore(recorder)

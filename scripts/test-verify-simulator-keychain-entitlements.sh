@@ -64,7 +64,7 @@ write_info() {
 <?xml version="1.0" encoding="UTF-8"?>
 <plist version="1.0"><dict>
 <key>CFBundleExecutable</key><string>$executable</string>
-<key>MissCatKeychainAccessGroup</key><string>$access_group</string>
+<key>MissCatSecureStoreAccessGroup</key><string>$access_group</string>
 </dict></plist>
 EOF
     : >"$bundle/$executable"
@@ -233,7 +233,7 @@ printf 'not a plist' >"$malformed/signed-entitlements.plist"
 expect_failure malformed "$malformed"
 
 disagreement=$(make_app disagreement)
-/usr/bin/plutil -replace MissCatKeychainAccessGroup -string OTHER.yuwd.MissCat \
+/usr/bin/plutil -replace MissCatSecureStoreAccessGroup -string OTHER.yuwd.MissCat \
     "$disagreement/PlugIns/MissCatShare.appex/Info.plist"
 expect_failure main-extension-disagreement "$disagreement"
 
