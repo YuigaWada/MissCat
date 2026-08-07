@@ -212,7 +212,7 @@ Do not replace `ApplicationState.Root.legacyApplication` in production merely be
 
 The complete SwiftUI root now owns the ordinary authenticated route. Its UI-test launch argument injects deterministic account-scoped dependencies into the same production assembly; it is not an alternate fixture-only root. The legacy root case, wrapper, and automatic Storyboard fallback are absent.
 
-Legacy UI resources still present in the shipping target are unaccepted retirement debt even when the SwiftUI root no longer executes them. G removes all 25 Storyboard/XIB files, their project/resource references, launch/share-extension plist keys, and the obsolete source loaders from the repository after evidence is archived.
+The 25 app/share-owned Storyboard and XIB files, their project/resource references, and their launch/share-extension plist keys are removed. Obsolete legacy source loaders remain unaccepted retirement debt. Embedded third-party frameworks also continue to contribute compiled Interface Builder artifacts until their legacy callers and Pods are retired in G.
 
 ### F — Push and share extension (`N=8`)
 
@@ -220,7 +220,7 @@ Ledger focus: notification/banner state `34` and share `45`. Acceptance focus: N
 
 The bundle includes permission states, APNs/FCM token rotation, per-account WebPush registration/removal, foreground presentation, background tap/deep link, malformed/wrong-owner payloads, relay security/observability, share text/URL/1–4 ordered images, account/visibility persistence, progress/cancel/retry, and exactly-once host completion.
 
-The extension uses `NSExtensionPrincipalClass` with the minimum UIKit host required by Apple and SwiftUI-owned content. Remove `MainInterface.storyboard` and the unused UIKit account/visibility controllers. App and extension share the same account/keychain module and signed access group.
+The extension uses `NSExtensionPrincipalClass` with the minimum UIKit host required by Apple and SwiftUI-owned content. `MainInterface.storyboard` is removed; the unused UIKit account/visibility controllers remain retirement work. App and extension share the same account/keychain module and signed access group.
 
 ### G — Legacy removal and release audit (`N=10`)
 
@@ -496,9 +496,9 @@ These are source facts, not claims that all tests or user flows pass.
 - live authentication, current-server compatibility, device push, and share-host journeys still need retained release evidence;
 - streaming reconnect/catch-up and long-running multi-account stress evidence remain incomplete;
 - shell glyphs and feature layouts still require the full deterministic visual matrix against approved references;
-- share content remains behind `MainInterface.storyboard` and still carries legacy dependency-retirement work;
+- share content has a principal-class SwiftUI host and still carries legacy dependency-retirement and host-E2E work;
 - the fixture-backed UI targets and `visualReady` markers exist, while the complete batch snapshot manifest and current CI release gate remain unfinished;
-- Storyboards, XIBs, orphan UIKit controllers, Rx code, patched Pods, and old build settings remain retirement debt even though the ordinary application root no longer constructs them.
+- orphan UIKit controllers and runtime Storyboard/nib loader calls, Rx code, patched Pods with compiled Interface Builder resources, and old build settings remain retirement debt even though the ordinary application root no longer constructs them.
 
 ### Test evidence boundary
 

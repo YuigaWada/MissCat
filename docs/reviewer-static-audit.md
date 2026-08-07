@@ -16,9 +16,9 @@ The ordinary logged-out and authenticated routes now enter the SwiftUI applicati
 
 `ApplicationState` now restores `MissCatApplicationRootStore`, and the authenticated phase constructs `MissCatProductionApplicationRootView`. Its root-owned `NavigationStack`, shell, feature destinations, account generation, modal routing, and actor-safe push ingress are exercised through the ordinary production assembly. `MissCatLegacyApplicationView` and its project references have been removed.
 
-Static cutover tests reject any legacy application host in shipping Swift sources or the project file, and reject Storyboard/Home-controller construction from the app entry, delegate, and production root. Ordinary-root UI tests cover the native timeline, account switch, compose, notifications, messages, profile, and settings routes. Orphan Storyboard/XIB/controller sources still require physical retirement before release and are not accepted merely because the root no longer constructs them.
+Static cutover tests reject any legacy application host in shipping Swift sources or the project file, and reject Storyboard/Home-controller construction from the app entry, delegate, and production root. Ordinary-root UI tests cover the native timeline, account switch, compose, notifications, messages, profile, and settings routes. The 3 Storyboards and 22 XIBs owned by the app and share extension have now been removed from the repository and project. Orphan UIKit controller sources and their runtime loader calls still require retirement before release.
 
-The share extension is further along: `ShareViewController` installs `ShareComposerView` in a `UIHostingController`. Its extension entry still declares `MainInterface.storyboard`, however, and there is no extension E2E or visual-parity evidence. This SwiftUI content migration does not change the main-app verdict.
+The share extension is further along: `ShareViewController` installs `ShareComposerView` in a `UIHostingController`, and its extension entry now uses `NSExtensionPrincipalClass` instead of `MainInterface.storyboard`. Share-host E2E and visual-parity evidence remain open. This SwiftUI content migration does not change the main-app verdict.
 
 ### 2. AUTH-03: account entry still requires release evidence
 
