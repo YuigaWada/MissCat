@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 @MainActor
 enum MissCatComposeFactory {

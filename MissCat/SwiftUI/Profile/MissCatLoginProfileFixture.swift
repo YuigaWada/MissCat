@@ -1,13 +1,11 @@
 #if DEBUG
 import Foundation
 import SwiftUI
-import UIKit
 
-/// Runs the production application root, Main.storyboard Home pager, native
-/// SwiftUI search-results host, and its production profile bridge without a
-/// saved account or a live network. Deterministic repositories are injected
-/// only at the native Discovery and Profile repository boundaries; this is
-/// deliberately separate from the direct SwiftUI fixture above.
+/// Runs the production SwiftUI application root and its typed Discovery and
+/// Profile routes without a saved account or a live network. Deterministic
+/// repositories are injected only at those repository boundaries; this stays
+/// deliberately separate from the direct feature fixture below.
 @MainActor
 enum MissCatProfileOrdinaryRouteConfiguration {
     static let launchArgument = "--login-profile-real-ordinary-route"
@@ -41,25 +39,48 @@ enum MissCatProfileOrdinaryRouteConfiguration {
         profileRepository: repository
     )
 
-    private static weak var actionMarker: UILabel?
-
-    static func installActionMarker(in view: UIView) {
-        let marker = UILabel(frame: CGRect(x: 1, y: 1, width: 2, height: 2))
-        marker.text = "ordinary profile action"
-        marker.textColor = .clear
-        marker.isAccessibilityElement = true
-        marker.accessibilityIdentifier = "profile.realOrdinary.lastAction"
-        marker.accessibilityLabel = "profile.realOrdinary.lastAction"
-        marker.accessibilityValue = "none"
-        view.addSubview(marker)
-        actionMarker = marker
-
-        view.isAccessibilityElement = false
-        view.accessibilityIdentifier = "profile.realOrdinary.home"
-    }
+    static let actionState = MissCatProfileOrdinaryActionState()
 
     static func record(_ action: String) {
-        actionMarker?.accessibilityValue = action
+        actionState.record(action)
+    }
+}
+
+@MainActor
+final class MissCatProfileOrdinaryActionState: ObservableObject {
+    @Published private(set) var lastAction = "none"
+
+    func record(_ action: String) {
+        lastAction = action
+    }
+}
+
+struct MissCatProfileOrdinaryAccessibilityMarker: View {
+    @ObservedObject var state: MissCatProfileOrdinaryActionState
+
+    var body: some View {
+        VStack(spacing: 0) {
+            marker(
+                text: "ordinary profile home",
+                identifier: "profile.realOrdinary.home",
+                value: "ready"
+            )
+            marker(
+                text: "ordinary profile action",
+                identifier: "profile.realOrdinary.lastAction",
+                value: state.lastAction
+            )
+        }
+    }
+
+    private func marker(text: String, identifier: String, value: String) -> some View {
+        Text(text)
+            .font(.system(size: 1))
+            .frame(width: 2, height: 2)
+            .opacity(0.01)
+            .accessibilityLabel(identifier)
+            .accessibilityValue(value)
+            .accessibilityIdentifier(identifier)
     }
 }
 

@@ -1,7 +1,8 @@
 @preconcurrency import AVFoundation
+import CoreGraphics
 import Foundation
+import ImageIO
 import MediaPlayer
-import UIKit
 
 enum MissCatComposeLegacyVisibilityAdapter {
     static func value(_ visibility: MissCatComposeVisibility) -> MissCatVisibility? {
@@ -146,7 +147,8 @@ final class MissCatNowPlayingProvider: MissCatNowPlayingProviding {
     func current() -> MissCatNowPlaying? {
         guard let item = MPMusicPlayerController.systemMusicPlayer.nowPlayingItem else { return nil }
         let artwork = item.artwork?.image(at: CGSize(width: 600, height: 600))
-            .flatMap { $0.jpegData(compressionQuality: 0.9) }
+            .flatMap(\.cgImage)
+            .flatMap { MissCatComposeImageCodec.jpegData(from: $0, compressionQuality: 0.9) }
         return MissCatNowPlaying(
             artist: item.artist,
             title: item.title ?? "",
@@ -493,10 +495,14 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
     private func preparedUpload(for media: MissCatComposeMedia) async throws -> (data: Data, mimeType: String, filename: String) {
         switch media.kind {
         case .image:
-            guard let image = UIImage(data: media.data) else { throw ServiceError.unsupportedMedia }
-            guard let resized = image.missCatResized(widthUnder: 1_024),
-                  let data = resized.jpegData(compressionQuality: 0.5)
-            else {
+            guard MissCatComposeImageCodec.decode(media.data) != nil else {
+                throw ServiceError.unsupportedMedia
+            }
+            guard let data = MissCatComposeImageCodec.jpegData(
+                from: media.data,
+                maximumWidth: 1_024,
+                compressionQuality: 0.5
+            ) else {
                 throw ServiceError.imageEncodingFailed
             }
             return (data, "image/jpeg", media.filename.replacingPathExtension(with: "jpeg"))
@@ -582,14 +588,58 @@ private extension String {
     }
 }
 
-private extension UIImage {
-    func missCatResized(widthUnder maximumWidth: CGFloat) -> UIImage? {
-        guard size.width > maximumWidth else { return self }
-        let ratio = maximumWidth / size.width
-        let canvasSize = CGSize(width: size.width * ratio, height: size.height * ratio)
-        let renderer = UIGraphicsImageRenderer(size: canvasSize)
-        return renderer.image { _ in
-            draw(in: CGRect(origin: .zero, size: canvasSize))
+enum MissCatComposeImageCodec {
+    static func decode(_ data: Data, maximumWidth: CGFloat? = nil) -> CGImage? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil)
+                as? [CFString: Any],
+              let rawWidth = (properties[kCGImagePropertyPixelWidth] as? NSNumber)?.doubleValue,
+              let rawHeight = (properties[kCGImagePropertyPixelHeight] as? NSNumber)?.doubleValue,
+              rawWidth > 0,
+              rawHeight > 0
+        else {
+            return nil
         }
+
+        let orientation = (properties[kCGImagePropertyOrientation] as? NSNumber)?.intValue ?? 1
+        let swapsDimensions = (5 ... 8).contains(orientation)
+        let displayWidth = swapsDimensions ? rawHeight : rawWidth
+        let scale = maximumWidth.map { min(1, Double($0) / displayWidth) } ?? 1
+        let maximumPixelSize = max(1, Int(ceil(max(rawWidth, rawHeight) * scale)))
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maximumPixelSize,
+            kCGImageSourceShouldCacheImmediately: true,
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+    }
+
+    static func jpegData(
+        from data: Data,
+        maximumWidth: CGFloat,
+        compressionQuality: CGFloat
+    ) -> Data? {
+        guard let image = decode(data, maximumWidth: maximumWidth) else { return nil }
+        return jpegData(from: image, compressionQuality: compressionQuality)
+    }
+
+    static func jpegData(from image: CGImage, compressionQuality: CGFloat) -> Data? {
+        let output = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(
+            output,
+            "public.jpeg" as CFString,
+            1,
+            nil
+        ) else {
+            return nil
+        }
+        CGImageDestinationAddImage(
+            destination,
+            image,
+            [kCGImageDestinationLossyCompressionQuality: compressionQuality] as CFDictionary
+        )
+        guard CGImageDestinationFinalize(destination) else { return nil }
+        return output as Data
     }
 }

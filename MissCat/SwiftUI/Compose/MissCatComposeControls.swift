@@ -1,5 +1,5 @@
+import CoreGraphics
 import SwiftUI
-import UIKit
 
 private extension ColorScheme {
     var missCatComposePalette: MissCatVisualPalette {
@@ -475,8 +475,8 @@ struct MissCatMediaPreviewStrip: View {
 
     @ViewBuilder
     private func preview(for item: MissCatComposeMedia) -> some View {
-        if let image = UIImage(data: item.previewData) {
-            Image(uiImage: image).resizable().scaledToFill()
+        if let image = MissCatComposeImageCodec.decode(item.previewData) {
+            Image(decorative: image, scale: 1).resizable().scaledToFill()
                 .overlay {
                     if item.kind == .video {
                         Image(systemName: "play.circle.fill")

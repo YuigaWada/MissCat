@@ -194,6 +194,14 @@ struct MissCatRootView: View {
                     .accessibilityIdentifier("authentication.completing")
             }
             #endif
+
+            #if DEBUG
+            if MissCatProfileOrdinaryRouteConfiguration.isEnabled {
+                MissCatProfileOrdinaryAccessibilityMarker(
+                    state: MissCatProfileOrdinaryRouteConfiguration.actionState
+                )
+            }
+            #endif
         }
         .task {
             #if DEBUG

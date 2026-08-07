@@ -65,8 +65,8 @@ Update the baseline only in the same reviewed change that demonstrably improves
 the measured state. Do not raise a debt ceiling or lower the progress fraction
 to make a regression pass.
 
-The current App-target baseline is 64 Swift files: 3 UIKit-only, 22
-SwiftUI-only, 6 hybrid, and 33 neutral. Rx, PolioPager, active legacy loaders,
+The current App-target baseline is 64 Swift files: 2 UIKit-only, 25
+SwiftUI-only, 3 hybrid, and 34 neutral. Rx, PolioPager, active legacy loaders,
 and tracked Interface Builder artifacts are all zero. Pure-SwiftUI progress is
-the exact fraction `22 / 31` (approximately `70.9677%`; the emitted floor is
-`7096` basis points or `70.96%`).
+the exact fraction `25 / 30` (approximately `83.3333%`; the emitted floor is
+`8333` basis points or `83.33%`).
