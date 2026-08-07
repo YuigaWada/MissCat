@@ -629,6 +629,7 @@ final class MissCatDiscoveryAccountCoordinator {
     }
 }
 
+@MainActor
 private enum MissCatDiscoveryPalette {
     static var current: MissCatVisualPalette {
         var palette = Theme.shared.currentModel?.colorMode == .dark

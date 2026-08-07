@@ -12,22 +12,25 @@ struct ThemeModelStorage {
     let data: (_ key: String) -> Data?
     let setData: (_ data: Data?, _ key: String) -> Void
 
-    static let standard = ThemeModelStorage(
-        data: { UserDefaults.standard.data(forKey: $0) },
-        setData: { data, key in
-            if let data {
-                UserDefaults.standard.set(data, forKey: key)
-            } else {
-                UserDefaults.standard.removeObject(forKey: key)
+    static var standard: ThemeModelStorage {
+        ThemeModelStorage(
+            data: { UserDefaults.standard.data(forKey: $0) },
+            setData: { data, key in
+                if let data {
+                    UserDefaults.standard.set(data, forKey: key)
+                } else {
+                    UserDefaults.standard.removeObject(forKey: key)
+                }
             }
-        }
-    )
+        )
+    }
 }
 
 // MARK: Theme
 
-public class Theme {
-    static var shared: Theme = .init()
+@MainActor
+public final class Theme {
+    static let shared = Theme()
 
     enum PersistenceError: Error {
         case writeOrReadbackFailed
@@ -117,7 +120,7 @@ public class Theme {
     /// Theme archives historically stored a bare server user ID. Preserve exact
     /// instance-scoped IDs, migrate a bare ID only when it has one match, and route
     /// missing/ambiguous owners through the deterministic current-account fallback.
-    static func resolvedTabOwnerIdentifier(
+    nonisolated static func resolvedTabOwnerIdentifier(
         _ storedIdentifier: String?,
         users: [SecureUser],
         fallbackAccountIdentifier: String?
@@ -175,7 +178,7 @@ public class Theme {
         return false
     }
 
-    static func removingTabs(
+    nonisolated static func removingTabs(
         for userID: String,
         from tabs: [Theme.Tab],
         defaults: [Theme.Tab]
@@ -188,7 +191,7 @@ public class Theme {
         )
     }
 
-    static func removingTabs(
+    nonisolated static func removingTabs(
         forAccountIdentifier accountIdentifier: String,
         legacyUserID: String?,
         from tabs: [Theme.Tab],
@@ -207,7 +210,10 @@ public class Theme {
     /// - Parameters:
     ///   - model1: 比較対象1
     ///   - model2: 比較対象2
-    static func needAllRelaunch(between model1: Theme.Model, and model2: Theme.Model) -> Bool {
+    nonisolated static func needAllRelaunch(
+        between model1: Theme.Model,
+        and model2: Theme.Model
+    ) -> Bool {
         if model1.isEqual(to: model2) {
             return false
         }
@@ -394,7 +400,7 @@ public extension Theme {
             return try? JSONDecoder().decode(Model.self, from: data)
         }
         
-        private static var defaultJson = """
+        private static let defaultJson = """
         {
             "tab": [
                 {

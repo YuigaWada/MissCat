@@ -1,13 +1,13 @@
 import Foundation
 
-public protocol MissCatNotificationsRepository: AnyObject {
+public protocol MissCatNotificationsRepository: AnyObject, Sendable {
     var accountScope: MissCatAccountScope { get }
 
     func fetchNotifications(cursor: String?, limit: Int) async throws -> MissCatNotificationPage
     func realtimeNotifications() -> AsyncStream<MissCatNotificationRealtimeEvent>
 }
 
-public protocol MissCatMessagingRepository: AnyObject {
+public protocol MissCatMessagingRepository: AnyObject, Sendable {
     var accountScope: MissCatAccountScope { get }
 
     func fetchConversations(limit: Int) async throws -> [MissCatConversation]
@@ -76,7 +76,7 @@ public protocol MissCatHTTPTransport: Sendable {
     func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse)
 }
 
-public struct MissCatURLSessionTransport: MissCatHTTPTransport, @unchecked Sendable {
+public struct MissCatURLSessionTransport: MissCatHTTPTransport {
     private let session: URLSession
 
     public init(session: URLSession = .shared) {
@@ -97,13 +97,12 @@ public struct MissCatURLSessionTransport: MissCatHTTPTransport, @unchecked Senda
 public final class MissCatNativeNotificationMessagingRepository:
     MissCatNotificationsRepository,
     MissCatMessagingRepository,
-    @unchecked Sendable
+    Sendable
 {
     public let accountScope: MissCatAccountScope
 
     private let transport: MissCatHTTPTransport
     private let webSocketSession: URLSession
-    private let decoder: JSONDecoder
     private let capabilityCache = MissCatEndpointCapabilityCache()
 
     public init(
@@ -114,7 +113,6 @@ public final class MissCatNativeNotificationMessagingRepository:
         self.accountScope = accountScope
         self.transport = transport
         self.webSocketSession = webSocketSession
-        decoder = JSONDecoder()
     }
 
     public func fetchNotifications(cursor: String?, limit: Int) async throws -> MissCatNotificationPage {
@@ -152,7 +150,6 @@ public final class MissCatNativeNotificationMessagingRepository:
         }
 
         let session = webSocketSession
-        let decoder = decoder
         return AsyncStream { continuation in
             let channelID = UUID().uuidString
             let socket = session.webSocketTask(with: url)
@@ -183,7 +180,10 @@ public final class MissCatNativeNotificationMessagingRepository:
                         case let .string(value): data = Data(value.utf8)
                         @unknown default: continue
                         }
-                        guard let envelope = try? decoder.decode(APIStreamingEnvelope.self, from: data),
+                        guard let envelope = try? JSONDecoder().decode(
+                            APIStreamingEnvelope.self,
+                            from: data
+                        ),
                               envelope.body.id == channelID,
                               envelope.body.type == "notification",
                               let notification = envelope.body.body.domainValue else { continue }
@@ -325,7 +325,7 @@ public final class MissCatNativeNotificationMessagingRepository:
             throw MissCatNotificationMessagingError.server(status: response.statusCode)
         }
         do {
-            return try decoder.decode(Response.self, from: data)
+            return try JSONDecoder().decode(Response.self, from: data)
         } catch {
             throw MissCatNotificationMessagingError.invalidResponse
         }
@@ -452,14 +452,10 @@ private struct APIChatMessage: Decodable {
 
 private enum MissCatAPIDateParser {
     static func date(_ value: String) -> Date {
-        fractional.date(from: value) ?? plain.date(from: value) ?? .distantPast
+        let fractionalFormatter = ISO8601DateFormatter()
+        fractionalFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return fractionalFormatter.date(from: value)
+            ?? ISO8601DateFormatter().date(from: value)
+            ?? .distantPast
     }
-
-    private static let fractional: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter
-    }()
-
-    private static let plain = ISO8601DateFormatter()
 }

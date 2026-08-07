@@ -359,7 +359,8 @@ private struct MissCatAuthenticationFixtureHarness: View {
     }
 }
 
-final class MissCatProfileFixtureRepository: MissCatProfileRepository {
+/// Mutable fixture state is serialized by `lock`.
+final class MissCatProfileFixtureRepository: MissCatProfileRepository, @unchecked Sendable {
     enum FixtureError: LocalizedError {
         case follow
         case update
@@ -501,7 +502,7 @@ final class MissCatProfileFixtureRepository: MissCatProfileRepository {
     func uploadProfileImage(
         data: Data,
         filename: String,
-        progress: @escaping (Double) -> Void
+        progress: @escaping @Sendable (Double) -> Void
     ) async throws -> String {
         progress(0.5)
         progress(1)

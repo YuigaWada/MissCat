@@ -1,6 +1,6 @@
 import Foundation
 
-public protocol MissCatFeedRepository: AnyObject {
+public protocol MissCatFeedRepository: AnyObject, Sendable {
     func fetchPage(
         source: MissCatFeedSource,
         cursor: String?,
@@ -57,7 +57,7 @@ public enum MissCatFeedRepositoryError: LocalizedError, Equatable {
     }
 }
 
-protocol MissCatFeedWebSocket: AnyObject {
+protocol MissCatFeedWebSocket: AnyObject, Sendable {
     func resume()
     func send(_ message: URLSessionWebSocketTask.Message) async throws
     func receive() async throws -> URLSessionWebSocketTask.Message
@@ -66,7 +66,7 @@ protocol MissCatFeedWebSocket: AnyObject {
 
 extension URLSessionWebSocketTask: MissCatFeedWebSocket {}
 
-protocol MissCatFeedWebSocketFactory: AnyObject {
+protocol MissCatFeedWebSocketFactory: AnyObject, Sendable {
     func makeWebSocket(request: URLRequest) -> any MissCatFeedWebSocket
 }
 
@@ -116,7 +116,7 @@ struct MissCatFeedRealtimeConfiguration: Equatable, Sendable {
 typealias MissCatFeedReconnectSleep = @Sendable (UInt64) async throws -> Void
 
 /// Account-scoped current Misskey REST and native WebSocket adapter.
-public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
+public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository, Sendable {
     private let account: MissCatFeedSession
     private let urlSession: URLSession
     private let webSocketFactory: any MissCatFeedWebSocketFactory
@@ -820,17 +820,11 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
 
     private static func parseDate(_ value: String?) -> Date? {
         guard let value else { return nil }
-        if let date = fractionalDateFormatter.date(from: value) { return date }
-        return basicDateFormatter.date(from: value)
+        let fractionalFormatter = ISO8601DateFormatter()
+        fractionalFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = fractionalFormatter.date(from: value) { return date }
+        return ISO8601DateFormatter().date(from: value)
     }
-
-    private static let fractionalDateFormatter: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter
-    }()
-
-    private static let basicDateFormatter = ISO8601DateFormatter()
 }
 
 private actor MissCatFeedRealtimeConnection {

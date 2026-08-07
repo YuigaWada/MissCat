@@ -4,6 +4,7 @@ import Foundation
 /// DEBUG-only dependency configuration for exercising the ordinary Home
 /// route and NotificationMessageBridge without storing a real credential.
 /// It never replaces the application root and is excluded from Release builds.
+@MainActor
 enum MissCatNoteOrdinaryRouteConfiguration {
     static let launchArgument = "--note-actions-ordinary-route"
     static let stateEnvironmentKey = "MISS_CAT_NOTE_ORDINARY_STATE"
@@ -70,7 +71,11 @@ private final class MissCatNoteOrdinaryRouteComposePosting: MissCatComposeSubmit
     }
 }
 
-private final class MissCatNoteOrdinaryRouteRepository: MissCatNoteContextRepository {
+/// `lock` serializes deterministic one-shot failure counters used by the fixture.
+private final class MissCatNoteOrdinaryRouteRepository:
+    MissCatNoteContextRepository,
+    @unchecked Sendable
+{
     let accountIdentifier = MissCatAccountIdentity.storageKey(
         instance: "ordinary-note.invalid",
         userId: "ordinary-note-owner"
@@ -78,6 +83,7 @@ private final class MissCatNoteOrdinaryRouteRepository: MissCatNoteContextReposi
     let currentServerUserID = "fixture-me"
 
     private let state: String
+    private let lock = NSLock()
     private var previewAttempts = 0
     private var reactionAttempts = 0
     private var actionAttempts = 0
@@ -118,8 +124,11 @@ private final class MissCatNoteOrdinaryRouteRepository: MissCatNoteContextReposi
     }
 
     func perform(_ action: MissCatFeedAction) async throws {
-        actionAttempts += 1
-        if state == "action-failure", actionAttempts == 1 {
+        let attempt = lock.withLock {
+            actionAttempts += 1
+            return actionAttempts
+        }
+        if state == "action-failure", attempt == 1 {
             throw MissCatFeedRepositoryError.rejectedAction
         }
     }
@@ -134,16 +143,22 @@ private final class MissCatNoteOrdinaryRouteRepository: MissCatNoteContextReposi
 
     func fetchURLPreview(for url: URL) async throws -> MissCatURLPreview {
         try await Task.sleep(nanoseconds: 40_000_000)
-        previewAttempts += 1
-        if state == "preview-failure", previewAttempts == 1 {
+        let attempt = lock.withLock {
+            previewAttempts += 1
+            return previewAttempts
+        }
+        if state == "preview-failure", attempt == 1 {
             throw URLError(.cannotLoadFromNetwork)
         }
         return Self.preview(for: url)
     }
 
     func fetchReactionChoices() async throws -> [MissCatReactionChoice] {
-        reactionAttempts += 1
-        if state == "reaction-error", reactionAttempts == 1 {
+        let attempt = lock.withLock {
+            reactionAttempts += 1
+            return reactionAttempts
+        }
+        if state == "reaction-error", attempt == 1 {
             throw MissCatFeedRepositoryError.invalidResponse
         }
         return [

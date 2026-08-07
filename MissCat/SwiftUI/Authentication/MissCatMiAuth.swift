@@ -14,12 +14,12 @@ struct MissCatMiAuthCheckResponse: Decodable {
     let user: User?
 }
 
-struct MissCatMiAuthHTTPResponse {
+struct MissCatMiAuthHTTPResponse: Sendable {
     let data: Data
     let statusCode: Int
 }
 
-protocol MissCatMiAuthTransport {
+protocol MissCatMiAuthTransport: Sendable {
     func send(_ request: URLRequest) async throws -> MissCatMiAuthHTTPResponse
 }
 
@@ -43,7 +43,7 @@ enum MissCatMiAuthTransportError: Error {
     case missingHTTPResponse
 }
 
-struct MissCatInstance: Equatable {
+struct MissCatInstance: Equatable, Sendable {
     let origin: URL
     let identifier: String
 

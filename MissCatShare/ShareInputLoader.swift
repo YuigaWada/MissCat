@@ -1,11 +1,18 @@
 import Foundation
 import UniformTypeIdentifiers
 
+@MainActor
 protocol ShareInputLoading {
     func load(inputItems: [Any]) async throws -> ShareDraft
 }
 
 final class ShareInputLoader: ShareInputLoading {
+    private enum LoadedItem: Sendable {
+        case text(String)
+        case url(URL)
+        case data(Data)
+    }
+
     enum LoadingError: LocalizedError {
         case noSupportedContent
         case unreadableAttachment
@@ -97,7 +104,7 @@ final class ShareInputLoader: ShareInputLoading {
             if let url = Self.url(from: item), url.isFileURL {
                 return try Self.readFile(at: url)
             }
-            if let data = item as? Data, !data.isEmpty {
+            if case let .data(data) = item, !data.isEmpty {
                 return data
             }
             throw error
@@ -137,13 +144,13 @@ final class ShareInputLoader: ShareInputLoading {
     private func loadItem(
         provider: NSItemProvider,
         typeIdentifier: String
-    ) async throws -> NSSecureCoding {
+    ) async throws -> LoadedItem {
         try await withCheckedThrowingContinuation { continuation in
             provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, error in
                 if let error {
                     continuation.resume(throwing: error)
-                } else if let item {
-                    continuation.resume(returning: item)
+                } else if let item, let loadedItem = Self.loadedItem(from: item) {
+                    continuation.resume(returning: loadedItem)
                 } else {
                     continuation.resume(throwing: LoadingError.unreadableAttachment)
                 }
@@ -151,30 +158,45 @@ final class ShareInputLoader: ShareInputLoading {
         }
     }
 
-    private static func text(from item: NSSecureCoding) -> String? {
+    nonisolated private static func loadedItem(from item: NSSecureCoding) -> LoadedItem? {
+        if let url = item as? URL {
+            return .url(url)
+        }
         if let string = item as? String {
-            return string
+            return .text(string)
         }
         if let attributedString = item as? NSAttributedString {
-            return attributedString.string
+            return .text(attributedString.string)
         }
         if let data = item as? Data {
+            return .data(data)
+        }
+        return nil
+    }
+
+    private static func text(from item: LoadedItem) -> String? {
+        switch item {
+        case let .text(string):
+            return string
+        case let .data(data):
             return String(data: data, encoding: .utf8)
+        case .url:
+            return nil
         }
-        return nil
     }
 
-    private static func url(from item: NSSecureCoding) -> URL? {
-        if let url = item as? URL {
+    private static func url(from item: LoadedItem) -> URL? {
+        switch item {
+        case let .url(url):
             return url
-        }
-        if let string = item as? String {
+        case let .text(string):
             return URL(string: string)
+        case .data:
+            return nil
         }
-        return nil
     }
 
-    private static func readFile(at url: URL) throws -> Data {
+    nonisolated private static func readFile(at url: URL) throws -> Data {
         let accessed = url.startAccessingSecurityScopedResource()
         defer {
             if accessed {

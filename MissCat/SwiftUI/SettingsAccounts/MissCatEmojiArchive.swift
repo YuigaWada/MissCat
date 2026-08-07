@@ -15,25 +15,27 @@ struct EmojiArchiveStorage {
     let setVersion: (_ version: Int?, _ key: String) -> Void
     let keys: () -> [String]
 
-    static let standard = EmojiArchiveStorage(
-        data: { UserDefaults.standard.data(forKey: $0) },
-        version: { UserDefaults.standard.object(forKey: $0) as? Int },
-        setData: { data, key in
-            if let data {
-                UserDefaults.standard.set(data, forKey: key)
-            } else {
-                UserDefaults.standard.removeObject(forKey: key)
-            }
-        },
-        setVersion: { version, key in
-            if let version {
-                UserDefaults.standard.set(version, forKey: key)
-            } else {
-                UserDefaults.standard.removeObject(forKey: key)
-            }
-        },
-        keys: { Array(UserDefaults.standard.dictionaryRepresentation().keys) }
-    )
+    static var standard: EmojiArchiveStorage {
+        EmojiArchiveStorage(
+            data: { UserDefaults.standard.data(forKey: $0) },
+            version: { UserDefaults.standard.object(forKey: $0) as? Int },
+            setData: { data, key in
+                if let data {
+                    UserDefaults.standard.set(data, forKey: key)
+                } else {
+                    UserDefaults.standard.removeObject(forKey: key)
+                }
+            },
+            setVersion: { version, key in
+                if let version {
+                    UserDefaults.standard.set(version, forKey: key)
+                } else {
+                    UserDefaults.standard.removeObject(forKey: key)
+                }
+            },
+            keys: { Array(UserDefaults.standard.dictionaryRepresentation().keys) }
+        )
+    }
 }
 
 /// Foundation-only persistence for reaction favorites/history. The Objective-C

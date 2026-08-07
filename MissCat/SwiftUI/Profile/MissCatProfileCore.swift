@@ -217,6 +217,8 @@ public struct MissCatProfilePage<Element> {
     }
 }
 
+extension MissCatProfilePage: Sendable where Element: Sendable {}
+
 public enum MissCatProfileTimelineTab: String, CaseIterable, Identifiable, Sendable {
     case notes
     case notesAndReplies
@@ -341,25 +343,27 @@ public enum MissCatProfileAPIError: LocalizedError, Equatable {
     }
 }
 
-public protocol MissCatProfileRepository {
+public protocol MissCatProfileRepository: Sendable {
     var account: MissCatProfileAccount { get }
     func profile(userID: String) async throws -> MissCatProfileUser
     func relationship(userID: String) async throws -> Bool
     func notes(userID: String, tab: MissCatProfileTimelineTab, cursor: String?, limit: Int) async throws -> MissCatProfilePage<MissCatProfileNote>
     func users(kind: MissCatUserListKind, cursor: String?, limit: Int) async throws -> MissCatProfilePage<MissCatProfileUser>
     func setFollowing(_ following: Bool, userID: String) async throws
-    func uploadProfileImage(data: Data, filename: String, progress: @escaping (Double) -> Void) async throws -> String
+    func uploadProfileImage(
+        data: Data,
+        filename: String,
+        progress: @escaping @Sendable (Double) -> Void
+    ) async throws -> String
     func deleteProfileImage(fileID: String) async throws
     func updateProfile(patch: MissCatProfileUpdatePatch) async throws -> MissCatProfileUser
 }
 
 // MARK: - Current Misskey REST transport
 
-public final class MissCatRESTProfileRepository: MissCatProfileRepository {
+public final class MissCatRESTProfileRepository: MissCatProfileRepository, Sendable {
     public let account: MissCatProfileAccount
     private let session: URLSession
-    private let encoder = JSONEncoder()
-    private let decoder = JSONDecoder()
 
     public init(account: MissCatProfileAccount, session: URLSession = .shared) {
         self.account = account
@@ -438,7 +442,7 @@ public final class MissCatRESTProfileRepository: MissCatProfileRepository {
     public func uploadProfileImage(
         data: Data,
         filename: String,
-        progress: @escaping (Double) -> Void
+        progress: @escaping @Sendable (Double) -> Void
     ) async throws -> String {
         let boundary = "MissCat-\(UUID().uuidString)"
         var request = try makeRequest(path: "drive/files/create")
@@ -453,7 +457,7 @@ public final class MissCatRESTProfileRepository: MissCatProfileRepository {
         progress(0)
         let (responseData, response) = try await session.upload(for: request, from: body, delegate: delegate)
         try validate(response, data: responseData)
-        let file = try decoder.decode(DriveFileResponse.self, from: responseData)
+        let file = try JSONDecoder().decode(DriveFileResponse.self, from: responseData)
         progress(1)
         return file.id
     }
@@ -480,13 +484,13 @@ public final class MissCatRESTProfileRepository: MissCatProfileRepository {
     ) async throws -> Response {
         var request = try makeRequest(path: path)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try encoder.encode(body)
+        request.httpBody = try JSONEncoder().encode(body)
         let (data, response) = try await session.data(for: request)
         try validate(response, data: data)
         if Response.self == EmptyResponse.self, data.isEmpty {
             return EmptyResponse() as! Response
         }
-        return try decoder.decode(Response.self, from: data)
+        return try JSONDecoder().decode(Response.self, from: data)
     }
 
     private func makeRequest(path: String) throws -> URLRequest {
@@ -501,7 +505,7 @@ public final class MissCatRESTProfileRepository: MissCatProfileRepository {
     private func validate(_ response: URLResponse, data: Data) throws {
         guard let http = response as? HTTPURLResponse else { throw MissCatProfileAPIError.invalidResponse }
         guard (200 ..< 300).contains(http.statusCode) else {
-            let error = try? decoder.decode(APIErrorEnvelope.self, from: data)
+            let error = try? JSONDecoder().decode(APIErrorEnvelope.self, from: data)
             let message = error?.error.message ?? HTTPURLResponse.localizedString(forStatusCode: http.statusCode)
             throw MissCatProfileAPIError.http(http.statusCode, message)
         }
@@ -641,9 +645,9 @@ private struct UpdateBody: Encodable {
 }
 
 private final class UploadProgressDelegate: NSObject, URLSessionTaskDelegate {
-    private let progress: (Double) -> Void
+    private let progress: @Sendable (Double) -> Void
 
-    init(progress: @escaping (Double) -> Void) {
+    init(progress: @escaping @Sendable (Double) -> Void) {
         self.progress = progress
     }
 
@@ -1094,8 +1098,9 @@ public final class MissCatProfileEditorStore: ObservableObject {
 
             func cleanUpUploads() async {
                 guard !newlyUploadedIDs.isEmpty else { return }
+                let uploadIDs = newlyUploadedIDs
                 let cleanupTask = Task {
-                    for fileID in newlyUploadedIDs {
+                    for fileID in uploadIDs {
                         try? await repository.deleteProfileImage(fileID: fileID)
                     }
                 }
@@ -1114,11 +1119,17 @@ public final class MissCatProfileEditorStore: ObservableObject {
                 if avatarRemoved {
                     patch.avatarImage = .remove
                 } else if let avatarData {
+                    guard let progressStore = self else { throw CancellationError() }
+                    let completedBeforeUpload = completedUploads
                     let uploadTask = Task {
                         try await repository.uploadProfileImage(data: avatarData, filename: "avatar.jpg") { value in
-                            Task { @MainActor [weak self] in
-                                guard let self, self.generation == generation else { return }
-                                self.uploadProgress = (Double(completedUploads) + value) / Double(max(1, uploadCount))
+                            Task { @MainActor [weak progressStore] in
+                                guard let progressStore,
+                                      progressStore.generation == generation
+                                else { return }
+                                progressStore.uploadProgress = (
+                                    Double(completedBeforeUpload) + value
+                                ) / Double(max(1, uploadCount))
                             }
                         }
                     }
@@ -1132,11 +1143,17 @@ public final class MissCatProfileEditorStore: ObservableObject {
                 if bannerRemoved {
                     patch.bannerImage = .remove
                 } else if let bannerData {
+                    guard let progressStore = self else { throw CancellationError() }
+                    let completedBeforeUpload = completedUploads
                     let uploadTask = Task {
                         try await repository.uploadProfileImage(data: bannerData, filename: "banner.jpg") { value in
-                            Task { @MainActor [weak self] in
-                                guard let self, self.generation == generation else { return }
-                                self.uploadProgress = (Double(completedUploads) + value) / Double(max(1, uploadCount))
+                            Task { @MainActor [weak progressStore] in
+                                guard let progressStore,
+                                      progressStore.generation == generation
+                                else { return }
+                                progressStore.uploadProgress = (
+                                    Double(completedBeforeUpload) + value
+                                ) / Double(max(1, uploadCount))
                             }
                         }
                     }

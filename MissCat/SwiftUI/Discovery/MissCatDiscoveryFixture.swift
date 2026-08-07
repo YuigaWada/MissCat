@@ -83,7 +83,12 @@ struct MissCatDiscoveryFixtureRoot: View {
     }
 }
 
-private final class MissCatDiscoveryFixtureRepository: MissCatDiscoveryRepository, MissCatNoteContextRepository {
+/// `lock` serializes the fixture's one-shot pagination failure state.
+private final class MissCatDiscoveryFixtureRepository:
+    MissCatDiscoveryRepository,
+    MissCatNoteContextRepository,
+    @unchecked Sendable
+{
     let accountIdentifier = MissCatAccountIdentity.storageKey(
         instance: "fixture.example",
         userId: "fixture-me"
@@ -91,6 +96,7 @@ private final class MissCatDiscoveryFixtureRepository: MissCatDiscoveryRepositor
     let currentServerUserID = "fixture-me"
 
     private let state: String
+    private let lock = NSLock()
     private var didFailNotePagination = false
 
     init(state: String) { self.state = state }
@@ -113,8 +119,14 @@ private final class MissCatDiscoveryFixtureRepository: MissCatDiscoveryRepositor
     ) async throws -> MissCatDiscoveryPage<MissCatNote> {
         try await resolveState()
         if state == "empty" { return .init(items: [], nextCursor: nil) }
-        if cursor != nil, state == "pagination-error", !didFailNotePagination {
+        let shouldFailPagination = lock.withLock {
+            guard cursor != nil, state == "pagination-error", !didFailNotePagination else {
+                return false
+            }
             didFailNotePagination = true
+            return true
+        }
+        if shouldFailPagination {
             throw MissCatFeedRepositoryError.invalidResponse
         }
 

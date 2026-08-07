@@ -43,7 +43,7 @@ public struct MissCatInstanceEditorView: View {
                 Button("変更", action: apply)
                     .accessibilityIdentifier("instance.apply")
             }
-            .onChange(of: isPresented) { presented in
+            .onChange(of: isPresented) { _, presented in
                 if presented {
                     // UIKit's text field was intentionally empty and displayed
                     // misskey.io as a placeholder every time the alert opened.
@@ -57,7 +57,7 @@ public struct MissCatInstanceEditorView: View {
 
     /// Mirrors `StartViewController.shapeInstance(_:)` so existing instance
     /// strings keep the same behavior during the SwiftUI migration.
-    public static func normalize(_ value: String) -> String {
+    nonisolated public static func normalize(_ value: String) -> String {
         var normalized = value
         var removals = [" ", "　"]
         if value.contains("http") {
@@ -71,7 +71,7 @@ public struct MissCatInstanceEditorView: View {
         return normalized
     }
 
-    public static func resolve(_ value: String) -> String {
+    nonisolated public static func resolve(_ value: String) -> String {
         normalize(value.isEmpty ? "misskey.io" : value)
     }
 

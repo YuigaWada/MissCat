@@ -803,11 +803,12 @@ private enum MissCatAuthenticationProbe {
         guard CommandLine.arguments.contains(launchArgument),
               let apiKey = user.apiKey,
               !apiKey.isEmpty,
-              let defaults = UserDefaults(suiteName: appGroup)
+              UserDefaults(suiteName: appGroup) != nil
         else { return }
 
-        defaults.removeObject(forKey: resultKey)
+        UserDefaults(suiteName: appGroup)?.removeObject(forKey: resultKey)
         let savedUserID = user.userId
+        let username = user.username
         let instance = user.instance.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
 
         Task {
@@ -820,12 +821,13 @@ private enum MissCatAuthenticationProbe {
             async let timelineResult = requestTimeline(
                 instance: instance,
                 apiKey: apiKey,
-                userID: user.userId,
-                username: user.username
+                userID: savedUserID,
+                username: username
             )
             var result = await identityResult
             result.merge(await emojiResult) { _, latest in latest }
             result.merge(await timelineResult) { _, latest in latest }
+            guard let defaults = UserDefaults(suiteName: appGroup) else { return }
             defaults.set(result, forKey: resultKey)
             defaults.synchronize()
         }

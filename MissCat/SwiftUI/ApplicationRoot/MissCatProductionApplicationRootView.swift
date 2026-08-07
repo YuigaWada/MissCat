@@ -330,7 +330,7 @@ struct MissCatProductionApplicationRootView: View {
             onTimelineSelection: { id, origin in
                 selectTimeline(id, origin: origin, configuration: configuration)
             },
-            onReselect: reselect,
+            onReselect: { section in reselect(section) },
             onDismissBanner: rootStore.dismissError
         ) { section in
             sectionContent(section, configuration: configuration)
@@ -605,7 +605,7 @@ struct MissCatProductionApplicationRootView: View {
                 onOpenURL: { rootStore.router.open(.externalURL($0)) },
                 onOpenImage: { openURL($0) },
                 onOpenSettings: { rootStore.router.presentSheet(.settings) },
-                onSelectRoot: selectRoot,
+                onSelectRoot: { section in selectRoot(section) },
                 onCompose: { rootStore.router.presentFullScreen(.compose(.new)) },
                 onOpenDestination: openProfileDestination
             )
@@ -748,7 +748,7 @@ struct MissCatProductionApplicationRootView: View {
     private var sectionBinding: Binding<MissCatRootSection> {
         Binding(
             get: { rootStore.router.selectedSection },
-            set: selectRoot
+            set: { section in selectRoot(section) }
         )
     }
 
@@ -1028,11 +1028,13 @@ private struct MissCatApplicationShareSheet: View {
 }
 
 #if DEBUG
+/// The sole mutable fixture flag is serialized by `reactionLock`.
 private final class MissCatProductionRootE2ERepository:
     MissCatNoteContextRepository,
     MissCatDiscoveryRepository,
     MissCatNotificationsRepository,
-    MissCatMessagingRepository
+    MissCatMessagingRepository,
+    @unchecked Sendable
 {
     let accountScope: MissCatAccountScope
     let accountIdentifier: String
@@ -1255,7 +1257,7 @@ private final class MissCatProductionRootE2EProfileRepository: MissCatProfileRep
     func uploadProfileImage(
         data: Data,
         filename: String,
-        progress: @escaping (Double) -> Void
+        progress: @escaping @Sendable (Double) -> Void
     ) async throws -> String {
         progress(1)
         return "fixture-profile-upload"

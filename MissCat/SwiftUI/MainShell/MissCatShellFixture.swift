@@ -353,9 +353,14 @@ private final class MissCatShellFixtureProvider: MissCatShellConfigurationProvid
     }
 }
 
-private final class MissCatShellFixtureRepository: MissCatNoteContextRepository {
+/// `lock` serializes deterministic request counters used by the fixture.
+private final class MissCatShellFixtureRepository:
+    MissCatNoteContextRepository,
+    @unchecked Sendable
+{
     private let mode: MissCatShellFixtureLaunch.Mode
     private let scope: MissCatShellAccountScope
+    private let lock = NSLock()
     private var initialPageRequestCount = 0
     private var detailThreadRequestCount = 0
 
@@ -392,8 +397,11 @@ private final class MissCatShellFixtureRepository: MissCatNoteContextRepository 
                 hasMore: false
             )
         }
-        initialPageRequestCount += 1
-        if initialPageRequestCount > 1 {
+        let initialRequestNumber = lock.withLock {
+            initialPageRequestCount += 1
+            return initialPageRequestCount
+        }
+        if initialRequestNumber > 1 {
             try await Task.sleep(nanoseconds: 3_000_000_000)
         }
         let prefix = source.accessibilityName
@@ -496,7 +504,10 @@ private final class MissCatShellFixtureRepository: MissCatNoteContextRepository 
     }
 
     func fetchThread(noteID: String, replyLimit: Int) async throws -> MissCatNoteThread {
-        detailThreadRequestCount += 1
+        let detailRequestNumber = lock.withLock {
+            detailThreadRequestCount += 1
+            return detailThreadRequestCount
+        }
         let note = MissCatNote(
             id: noteID,
             author: MissCatNoteAuthor(
@@ -514,7 +525,7 @@ private final class MissCatShellFixtureRepository: MissCatNoteContextRepository 
         guard MissCatShellFixtureLaunch.paginationEnabled else {
             return MissCatNoteThread(ancestors: [], note: note, replies: [])
         }
-        if detailThreadRequestCount > 1 {
+        if detailRequestNumber > 1 {
             return MissCatNoteThread(
                 ancestors: [],
                 note: note,

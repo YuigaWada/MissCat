@@ -19,22 +19,24 @@ struct MissCatNativeKeychainStore {
         var update: ([String: Any], [String: Any]) -> OSStatus
         var delete: ([String: Any]) -> OSStatus
 
-        static let live = SecurityClient(
-            copyMatching: { query in
-                var result: CFTypeRef?
-                let status = SecItemCopyMatching(query as CFDictionary, &result)
-                return (status, result)
-            },
-            add: { attributes in
-                SecItemAdd(attributes as CFDictionary, nil)
-            },
-            update: { query, attributes in
-                SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-            },
-            delete: { query in
-                SecItemDelete(query as CFDictionary)
-            }
-        )
+        static var live: SecurityClient {
+            SecurityClient(
+                copyMatching: { query in
+                    var result: CFTypeRef?
+                    let status = SecItemCopyMatching(query as CFDictionary, &result)
+                    return (status, result)
+                },
+                add: { attributes in
+                    SecItemAdd(attributes as CFDictionary, nil)
+                },
+                update: { query, attributes in
+                    SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+                },
+                delete: { query in
+                    SecItemDelete(query as CFDictionary)
+                }
+            )
+        }
     }
 
     private let service: String

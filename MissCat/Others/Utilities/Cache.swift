@@ -151,7 +151,7 @@ class Cache {}
 
 extension Cache {
     class UserDefaults {
-        static var shared: Cache.UserDefaults = .init()
+        static var shared: Cache.UserDefaults { .init() }
 
         private static let appGroup = "group.yuwd.MissCat"
         private static let keychainService = "yuwd.MissCat"
