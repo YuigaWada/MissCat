@@ -20,6 +20,7 @@
 		C0DE00000000000000000013 /* MissCatMainShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000014 /* MissCatMainShellView.swift */; };
 		F11E00000000000000000001 /* MissCatShellState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11E00000000000000000002 /* MissCatShellState.swift */; };
 		F11E00000000000000000003 /* MissCatShellFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11E00000000000000000004 /* MissCatShellFixture.swift */; };
+		F11E00000000000000000005 /* MissCatFrozenLegacyShellReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11E00000000000000000006 /* MissCatFrozenLegacyShellReference.swift */; };
 		C0DE00000000000000000019 /* MissCatAuthenticationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001A /* MissCatAuthenticationService.swift */; };
 		C0DE0000000000000000001B /* ShareCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001C /* ShareCore.swift */; };
 		C0DE0000000000000000001D /* ShareInputLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001E /* ShareInputLoader.swift */; };
@@ -304,6 +305,7 @@
 		C0DE00000000000000000014 /* MissCatMainShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatMainShellView.swift; sourceTree = "<group>"; };
 		F11E00000000000000000002 /* MissCatShellState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatShellState.swift; sourceTree = "<group>"; };
 		F11E00000000000000000004 /* MissCatShellFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatShellFixture.swift; sourceTree = "<group>"; };
+		F11E00000000000000000006 /* MissCatFrozenLegacyShellReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatFrozenLegacyShellReference.swift; sourceTree = "<group>"; };
 		C0DE0000000000000000001A /* MissCatAuthenticationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatAuthenticationService.swift; sourceTree = "<group>"; };
 		C0DE0000000000000000001C /* ShareCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCore.swift; sourceTree = "<group>"; };
 		C0DE0000000000000000001E /* ShareInputLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareInputLoader.swift; sourceTree = "<group>"; };
@@ -644,6 +646,7 @@
 				C0DE00000000000000000014 /* MissCatMainShellView.swift */,
 				F11E00000000000000000002 /* MissCatShellState.swift */,
 				F11E00000000000000000004 /* MissCatShellFixture.swift */,
+				F11E00000000000000000006 /* MissCatFrozenLegacyShellReference.swift */,
 			);
 			path = MainShell;
 			sourceTree = "<group>";
@@ -1723,6 +1726,7 @@
 				C0DE00000000000000000013 /* MissCatMainShellView.swift in Sources */,
 				F11E00000000000000000001 /* MissCatShellState.swift in Sources */,
 				F11E00000000000000000003 /* MissCatShellFixture.swift in Sources */,
+				F11E00000000000000000005 /* MissCatFrozenLegacyShellReference.swift in Sources */,
 				C0DE00000000000000000019 /* MissCatAuthenticationService.swift in Sources */,
 				C0DE00000000000000000022 /* MissCatFeedModels.swift in Sources */,
 				C0DE00000000000000000024 /* MissCatFeedRepository.swift in Sources */,

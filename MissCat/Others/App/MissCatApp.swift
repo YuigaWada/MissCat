@@ -145,7 +145,9 @@ struct MissCatRootView: View {
     var body: some View {
         ZStack {
             #if DEBUG
-            if MissCatShellFixtureLaunch.isRequested {
+            if MissCatFrozenLegacyShellReferenceLaunch.isRequested {
+                MissCatFrozenLegacyShellReferenceView()
+            } else if MissCatShellFixtureLaunch.isRequested {
                 MissCatShellFixtureView()
             } else {
                 applicationRoot
@@ -155,7 +157,9 @@ struct MissCatRootView: View {
             #endif
 
             #if DEBUG
-            if !MissCatShellFixtureLaunch.isRequested, applicationState.isCompletingAuthentication {
+            if !MissCatShellFixtureLaunch.isRequested,
+               !MissCatFrozenLegacyShellReferenceLaunch.isRequested,
+               applicationState.isCompletingAuthentication {
                 MissCatAuthenticationLoadingOverlay(accessibilityLabel: "認証情報を保存中")
                     .accessibilityIdentifier("authentication.completing")
             }
@@ -168,7 +172,9 @@ struct MissCatRootView: View {
         }
         .task {
             #if DEBUG
-            guard !MissCatShellFixtureLaunch.isRequested else { return }
+            guard !MissCatShellFixtureLaunch.isRequested,
+                  !MissCatFrozenLegacyShellReferenceLaunch.isRequested
+            else { return }
             #endif
             applicationState.resolveInitialRoute()
         }
