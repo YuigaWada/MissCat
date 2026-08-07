@@ -10,7 +10,10 @@
 		A77000000000000000000002 /* MissCatApplicationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77000000000000000000001 /* MissCatApplicationModels.swift */; };
 		A77000000000000000000004 /* MissCatApplicationRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77000000000000000000003 /* MissCatApplicationRouter.swift */; };
 		A77000000000000000000006 /* MissCatApplicationRootStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77000000000000000000005 /* MissCatApplicationRootStore.swift */; };
+		BEE200000000000000000004 /* MissCatProductionApplicationSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE200000000000000000003 /* MissCatProductionApplicationSupport.swift */; };
+		BEE200000000000000000006 /* MissCatProductionApplicationRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE200000000000000000005 /* MissCatProductionApplicationRootView.swift */; };
 		A77000000000000000000008 /* MissCatApplicationRootTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77000000000000000000007 /* MissCatApplicationRootTests.swift */; };
+		BEE200000000000000000002 /* MissCatProductionRootCutoverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE200000000000000000001 /* MissCatProductionRootCutoverTests.swift */; };
 		AACC00000000000000000001 /* MissCatProfileFamilyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC00000000000000000002 /* MissCatProfileFamilyView.swift */; };
 		AACC00000000000000000003 /* MissCatLoginProfileFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC00000000000000000004 /* MissCatLoginProfileFixture.swift */; };
 		AACC00000000000000000005 /* MissCatLoginProfileAcceptanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC00000000000000000006 /* MissCatLoginProfileAcceptanceTests.swift */; };
@@ -321,7 +324,10 @@
 		A77000000000000000000001 /* MissCatApplicationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatApplicationModels.swift; sourceTree = "<group>"; };
 		A77000000000000000000003 /* MissCatApplicationRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatApplicationRouter.swift; sourceTree = "<group>"; };
 		A77000000000000000000005 /* MissCatApplicationRootStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatApplicationRootStore.swift; sourceTree = "<group>"; };
+		BEE200000000000000000003 /* MissCatProductionApplicationSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatProductionApplicationSupport.swift; sourceTree = "<group>"; };
+		BEE200000000000000000005 /* MissCatProductionApplicationRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatProductionApplicationRootView.swift; sourceTree = "<group>"; };
 		A77000000000000000000007 /* MissCatApplicationRootTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatApplicationRootTests.swift; sourceTree = "<group>"; };
+		BEE200000000000000000001 /* MissCatProductionRootCutoverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatProductionRootCutoverTests.swift; sourceTree = "<group>"; };
 		AACC00000000000000000002 /* MissCatProfileFamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatProfileFamilyView.swift; sourceTree = "<group>"; };
 		AACC00000000000000000004 /* MissCatLoginProfileFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatLoginProfileFixture.swift; sourceTree = "<group>"; };
 		AACC00000000000000000006 /* MissCatLoginProfileAcceptanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatLoginProfileAcceptanceTests.swift; sourceTree = "<group>"; };
@@ -687,6 +693,8 @@
 				A77000000000000000000001 /* MissCatApplicationModels.swift */,
 				A77000000000000000000003 /* MissCatApplicationRouter.swift */,
 				A77000000000000000000005 /* MissCatApplicationRootStore.swift */,
+				BEE200000000000000000003 /* MissCatProductionApplicationSupport.swift */,
+				BEE200000000000000000005 /* MissCatProductionApplicationRootView.swift */,
 			);
 			path = ApplicationRoot;
 			sourceTree = "<group>";
@@ -1049,6 +1057,7 @@
 			isa = PBXGroup;
 			children = (
 				A77000000000000000000007 /* MissCatApplicationRootTests.swift */,
+				BEE200000000000000000001 /* MissCatProductionRootCutoverTests.swift */,
 				D15C00000000000000000008 /* MissCatDiscoveryTests.swift */,
 				AACC00000000000000000006 /* MissCatLoginProfileAcceptanceTests.swift */,
 				E0DE0000000000000000000C /* MissCatSettingsAccountsTests.swift */,
@@ -1970,6 +1979,8 @@
 				A77000000000000000000002 /* MissCatApplicationModels.swift in Sources */,
 				A77000000000000000000004 /* MissCatApplicationRouter.swift in Sources */,
 				A77000000000000000000006 /* MissCatApplicationRootStore.swift in Sources */,
+				BEE200000000000000000004 /* MissCatProductionApplicationSupport.swift in Sources */,
+				BEE200000000000000000006 /* MissCatProductionApplicationRootView.swift in Sources */,
 				D15C00000000000000000001 /* MissCatDiscoveryCore.swift in Sources */,
 				D15C00000000000000000003 /* MissCatDiscoveryViews.swift in Sources */,
 				D15C00000000000000000005 /* MissCatDiscoveryFixture.swift in Sources */,
@@ -2165,6 +2176,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A77000000000000000000008 /* MissCatApplicationRootTests.swift in Sources */,
+				BEE200000000000000000002 /* MissCatProductionRootCutoverTests.swift in Sources */,
 				D15C00000000000000000007 /* MissCatDiscoveryTests.swift in Sources */,
 				AACC00000000000000000005 /* MissCatLoginProfileAcceptanceTests.swift in Sources */,
 				E0DE0000000000000000000D /* MissCatSettingsAccountsTests.swift in Sources */,

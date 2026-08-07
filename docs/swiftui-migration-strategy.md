@@ -31,17 +31,17 @@ The primary fields have deliberately different meanings:
 - `runtime_owner=swiftui|uikit`: the framework rendering the ordinary reachable route in the current integrated commit. A source file, preview, launch argument, or test-only route does not alter this value.
 - `migration_state=legacy|migrating|accepted`: delivery status. `migrating` includes detached or incomplete SwiftUI work. `accepted` is permitted only when `runtime_owner=swiftui` and all evidence below exists.
 
-The current `cdf01f1` baseline is:
+The production-root cutover state is:
 
 | Metric | Count | Ratio |
 | --- | ---: | ---: |
-| SwiftUI ordinary runtime owner | 5 / 45 | 11.1% |
-| UIKit ordinary runtime owner | 40 / 45 | 88.9% |
+| SwiftUI ordinary runtime owner | 45 / 45 | 100.0% |
+| UIKit ordinary runtime owner | 0 / 45 | 0.0% |
 | Accepted | 0 / 45 | 0.0% |
-| Migrating | 25 / 45 | 55.6% |
-| Legacy | 20 / 45 | 44.4% |
+| Migrating | 45 / 45 | 100.0% |
+| Legacy | 0 / 45 | 0.0% |
 
-The five SwiftUI-owned inventory surfaces are Login IDs `04`–`07` and Share extension ID `45`. The detached main shell, feed, note-row, detail, and compose implementations remain UIKit-owned because authenticated ordinary use still enters `LegacyApplicationView`.
+All fixed-ledger surfaces now have a SwiftUI ordinary runtime owner. This is a routing milestone, not acceptance: visual parity, complete live-service evidence, reviewer sign-off, and legacy source/resource retirement remain open, so every row stays `migrating`.
 
 `accepted` requires all of the following for that row:
 
@@ -210,9 +210,9 @@ Do not replace `ApplicationState.Root.legacyApplication` in production merely be
 - the new root has run fixture offline/error/cancellation and rapid multi-account stress journeys;
 - the independent reviewer has no open P0 root-cutover finding.
 
-Until then, expose the complete SwiftUI root only through a deterministic UI-test launch argument and previews. That route must use fixture dependencies and must never read a live keychain. At cutover, delete the legacy root case and fallback in the same commit. Do not keep an automatic “if new route fails, show Storyboard” path.
+The complete SwiftUI root now owns the ordinary authenticated route. Its UI-test launch argument injects deterministic account-scoped dependencies into the same production assembly; it is not an alternate fixture-only root. The legacy root case, wrapper, and automatic Storyboard fallback are absent.
 
-Legacy UI resources may remain temporarily in a non-shipping reference target after cutover so final diffs can be reproduced. They are removed from the shipping target immediately and deleted from the repository in G after evidence is archived.
+Legacy UI resources still present in the shipping target are unaccepted retirement debt even when the SwiftUI root no longer executes them. G removes all 25 Storyboard/XIB files, their project/resource references, launch/share-extension plist keys, and the obsolete source loaders from the repository after evidence is archived.
 
 ### F — Push and share extension (`N=8`)
 
@@ -229,7 +229,7 @@ This is not a cleanup that can be deferred after “completion.” It is part of
 1. remove `Main.storyboard` and every app UI XIB from target and repository;
 2. remove `MainInterface.storyboard` and unused share controllers;
 3. remove legacy view controllers, view models, Rx bindings, and duplicate persistence models;
-4. remove `LegacyApplicationView` and every runtime Storyboard/nib loader;
+4. keep the removed legacy application wrapper absent and retire every remaining runtime Storyboard/nib loader;
 5. remove all CocoaPods integration phases/configurations and `Podfile`/lock after replacements land;
 6. remove post-install source patches and stale framework/linker settings;
 7. remove obsolete assets/fonts only after visual mapping proves they are unused;
@@ -490,25 +490,15 @@ Manual Preview and authentication E2E builds must retain their signed Keychain a
 
 These are source facts, not claims that all tests or user flows pass.
 
-### Unwired or incomplete
+### Unaccepted or incomplete
 
-- existing sessions and successful authentication still route to `LegacyApplicationView`, which loads `Main.storyboard`;
-- the detached shell/feed/compose types have no ordinary root call site;
-- add-account and last-account recovery still use the legacy Start controller;
-- current authentication uses old app/session exchange, a fixed secret, and substring callback matching; the reported live simulator path fails with “データ処理に失敗しました”;
-- feed defaults are hard coded rather than repaired from persisted account-bound tab configuration;
-- feed navigation closures default to no-ops, so source presence does not prove working navigation;
-- streaming has no proved reconnect/catch-up contract and still relies on the locked MisskeyKit/Starscream path;
-- the SwiftUI row uses basic URL detection, not the required MFM/emoji contract;
-- URL preview, full gallery/player, full overflow actions, reaction picker, and detail pagination are incomplete or absent;
-- the last action button conflates favorite and overflow behavior;
-- shell glyphs use SF Symbols without visual acceptance against the legacy assets;
-- share content remains behind `MainInterface.storyboard`, duplicates account persistence, and uses MisskeyKit;
-- no UI-test or snapshot target, fixture server, `visualReady` implementation, batch visual manifest, or current CI release gate exists;
-- current GitHub Actions selects Xcode 11.3.1/iOS 13.3, incompatible with the present iOS 17.0 project target;
-- the evidence inventory remains incomplete even though the comparator and strict
-  gate semantics now exist;
-- Storyboards, XIBs, UIKit controllers, Rx code, patched Pods, and old build settings remain in the shipping targets.
+- all 45 ordinary runtime owners are SwiftUI, but no row has cleared the independent visual/reviewer gate;
+- live authentication, current-server compatibility, device push, and share-host journeys still need retained release evidence;
+- streaming reconnect/catch-up and long-running multi-account stress evidence remain incomplete;
+- shell glyphs and feature layouts still require the full deterministic visual matrix against approved references;
+- share content remains behind `MainInterface.storyboard` and still carries legacy dependency-retirement work;
+- the fixture-backed UI targets and `visualReady` markers exist, while the complete batch snapshot manifest and current CI release gate remain unfinished;
+- Storyboards, XIBs, orphan UIKit controllers, Rx code, patched Pods, and old build settings remain retirement debt even though the ordinary application root no longer constructs them.
 
 ### Test evidence boundary
 
@@ -558,7 +548,8 @@ P1 blockers include exact shell assets/geometry, full MFM/animated emoji/media, 
 
 Completion is proven only when every item has authoritative current-commit evidence:
 
-- [ ] `scripts/report-ui-migration.sh` reports SwiftUI owner `45/45` and accepted `45/45`.
+- [x] `scripts/report-ui-migration.sh` reports SwiftUI owner `45/45`.
+- [ ] `scripts/report-ui-migration.sh` reports accepted `45/45` (currently `0/45`).
 - [ ] Every P0 and P1 acceptance-matrix row maps to passing evidence; no unresolved defects remain.
 - [ ] App, share extension, unit, contract/integration, UI/E2E, and snapshot targets build from a clean checkout.
 - [ ] Full tests execute on the newest supported stable Xcode/iOS simulator and compact/current-width devices, with retained `.xcresult`, logs, counts, and zero required skips.

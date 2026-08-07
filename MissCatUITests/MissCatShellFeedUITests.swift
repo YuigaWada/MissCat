@@ -45,6 +45,56 @@ final class MissCatShellFeedUITests: XCTestCase {
         waitForSynchronizedPagerSelection("home")
     }
 
+    func testOrdinaryProductionRootOwnsShellRoutesAndAccountGeneration() {
+        app.launchArguments = ["--misscat-production-root-e2e"]
+        app.launch()
+
+        XCTAssertTrue(element("production.root").waitForExistence(timeout: 10))
+        waitForProductionReady(page: "home")
+        waitForSynchronizedPagerSelection("home")
+
+        app.buttons["main.tab.notifications"].tap()
+        XCTAssertTrue(element("notifications.screen").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["通知はありません"].exists)
+        app.buttons["main.header.account"].tap()
+        app.buttons["main.account.https://social.example|fixture-cat"].tap()
+        waitForProductionReady(page: "home")
+        app.buttons["main.tab.notifications"].tap()
+        XCTAssertTrue(element("notifications.screen").waitForExistence(timeout: 5))
+        waitForAccount("https://social.example|fixture-cat")
+
+        app.buttons["main.tab.home"].tap()
+        waitForProductionReady(page: "home")
+        app.buttons["main.timeline.local"].tap()
+        waitForProductionPagerSelection("local")
+        swipeProductionPagerRight()
+        waitForProductionPagerSelection("home")
+        swipeProductionPagerRight()
+        waitForProductionPagerSelection("home")
+        swipeProductionPagerLeft()
+        waitForProductionPagerSelection("local")
+        swipeProductionPagerLeft()
+        waitForProductionPagerSelection("global")
+        swipeProductionPagerLeft()
+        waitForProductionPagerSelection("global")
+
+        app.buttons["main.action.compose"].tap()
+        XCTAssertTrue(app.buttons["compose.cancel"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.alerts["エラー"].exists)
+        app.buttons["compose.cancel"].tap()
+        XCTAssertTrue(element("production.root").waitForExistence(timeout: 5))
+        XCTAssertFalse(app.alerts["エラー"].exists)
+
+        app.buttons["main.tab.messages"].tap()
+        XCTAssertTrue(element("messages.history.screen").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["メッセージはありません"].exists)
+        app.buttons["main.tab.profile"].tap()
+        app.buttons["main.header.settings"].tap()
+        XCTAssertTrue(element("settings.root.visualReady").waitForExistence(timeout: 5))
+        app.buttons["settings.close"].tap()
+        XCTAssertTrue(element("production.root").waitForExistence(timeout: 5))
+    }
+
     func testFooterAccountPopoverAndCompositeScrollRestoration() {
         launchFixture()
         let homeReady = waitForReady(page: "home")
@@ -290,6 +340,13 @@ final class MissCatShellFeedUITests: XCTestCase {
         return marker
     }
 
+    @discardableResult
+    private func waitForProductionReady(page: String) -> XCUIElement {
+        let marker = element("production.root.visual-ready.\(page)")
+        XCTAssertTrue(marker.waitForExistence(timeout: 10), "Missing production visualReady marker for \(page)")
+        return marker
+    }
+
     private func element(_ identifier: String) -> XCUIElement {
         app.descendants(matching: .any)[identifier]
     }
@@ -306,6 +363,38 @@ final class MissCatShellFeedUITests: XCTestCase {
         for otherPage in ["home", "local", "global"] where otherPage != page {
             XCTAssertFalse(app.buttons["main.timeline.\(otherPage)"].isSelected)
         }
+    }
+
+    private func waitForProductionPagerSelection(_ page: String) {
+        waitForSynchronizedPagerSelection(page)
+
+        let selection = element("production.timeline.selection")
+        expectation(
+            for: NSPredicate(format: "value == %@", page),
+            evaluatedWith: selection
+        )
+        waitForExpectations(timeout: 5)
+        waitForProductionReady(page: page)
+    }
+
+    private func swipeProductionPagerLeft() {
+        dragProductionPager(from: 0.8, to: 0.2)
+    }
+
+    private func swipeProductionPagerRight() {
+        dragProductionPager(from: 0.2, to: 0.8)
+    }
+
+    private func dragProductionPager(from startX: CGFloat, to endX: CGFloat) {
+        let pagerSurface = element("main.content.home")
+        XCTAssertTrue(pagerSurface.waitForExistence(timeout: 5))
+        let start = pagerSurface.coordinate(
+            withNormalizedOffset: CGVector(dx: startX, dy: 0.5)
+        )
+        let end = pagerSurface.coordinate(
+            withNormalizedOffset: CGVector(dx: endX, dy: 0.5)
+        )
+        start.press(forDuration: 0.05, thenDragTo: end)
     }
 
     private func waitForAccount(_ accountID: String) {

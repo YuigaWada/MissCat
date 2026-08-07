@@ -1,0 +1,871 @@
+import Combine
+import SwiftUI
+
+@MainActor
+final class MissCatProductionAccountCoordinator: ObservableObject {
+    enum Phase {
+        case loading
+        case ready(MissCatShellConfiguration)
+        case failed(String)
+    }
+
+    @Published private(set) var phase: Phase = .loading
+    @Published private(set) var homeScrollToTopGeneration = 0
+
+    let session: MissCatApplicationSession
+    private let shellProvider = MissCatLegacyShellConfigurationProvider()
+    private var feedRepositories: [MissCatShellAccountScope: any MissCatFeedRepository] = [:]
+    private(set) var notificationRepository: (any MissCatNotificationsRepository)?
+    private(set) var messagingRepository: (any MissCatMessagingRepository)?
+    private(set) var notificationStore: MissCatNotificationsStore?
+    let notificationScrollCoordinator = MissCatNotificationScrollCoordinator()
+    private(set) var discoveryGeneration: MissCatDiscoveryAccountGeneration?
+    private(set) var profileAccount: MissCatProfileAccount?
+    private var people: [String: MissCatPerson] = [:]
+    private var attachments: [String: MissCatNoteAttachment] = [:]
+
+    init(session: MissCatApplicationSession) {
+        self.session = session
+    }
+
+    func load() async {
+        guard case .loading = phase else { return }
+        do {
+#if DEBUG
+            if MissCatProductionRootE2ELaunch.isRequested {
+                let configuration = makeFixtureConfiguration()
+                let repository = MissCatProductionRootE2ERepository(
+                    account: configuration.currentScope
+                )
+                for account in configuration.accounts {
+                    feedRepositories[account.scope] = repository
+                }
+                notificationRepository = repository
+                messagingRepository = repository
+                notificationStore = MissCatNotificationsStore(repository: repository)
+                phase = .ready(configuration)
+                return
+            }
+#endif
+            let configuration = try await shellProvider.loadConfiguration()
+            guard configuration.currentScope.userID == session.currentAccount.userID,
+                  MissCatApplicationAccountID(
+                    instance: configuration.currentScope.instance,
+                    userID: configuration.currentScope.userID
+                  ) == session.currentAccount.id,
+                  let user = Cache.UserDefaults.shared.getUsers().first(where: {
+                    $0.accountIdentifier == session.currentAccount.id.rawValue
+                  }),
+                  let apiKey = user.apiKey,
+                  !apiKey.isEmpty
+            else { throw MissCatShellConfigurationError.accountIdentityMismatch }
+
+            for page in configuration.timelinePages {
+                let scope = page.accountScope ?? configuration.currentScope
+                if feedRepositories[scope] == nil {
+                    feedRepositories[scope] = try shellProvider.repository(for: scope)
+                }
+            }
+            let accountScope = MissCatAccountScope(
+                accountID: user.userId,
+                username: user.username,
+                host: user.normalizedInstance,
+                accessToken: apiKey
+            )
+            let notificationMessaging = MissCatNativeNotificationMessagingRepository(
+                accountScope: accountScope
+            )
+            notificationRepository = notificationMessaging
+            messagingRepository = notificationMessaging
+            notificationStore = MissCatNotificationsStore(repository: notificationMessaging)
+            let feedSession = MissCatFeedSession(
+                accountID: user.userId,
+                username: user.username,
+                instance: user.instance,
+                apiKey: apiKey
+            )
+            let currentFeed = repository(for: configuration.currentScope)
+            discoveryGeneration = MissCatDiscoveryAccountGeneration(
+                session: feedSession,
+                feedRepository: currentFeed
+            )
+            profileAccount = MissCatProfileAccount(
+                userID: user.userId,
+                instance: user.instance,
+                token: apiKey
+            )
+            phase = .ready(configuration)
+        } catch is CancellationError {
+            phase = .loading
+        } catch {
+            phase = .failed(error.localizedDescription)
+        }
+    }
+
+    func repository(for scope: MissCatShellAccountScope) -> (any MissCatFeedRepository)? {
+        if let repository = feedRepositories[scope] { return repository }
+        guard let repository = try? shellProvider.repository(for: scope) else { return nil }
+        feedRepositories[scope] = repository
+        return repository
+    }
+
+    func persistTimelineSelection(_ id: String, scope: MissCatShellAccountScope) {
+        Task {
+            try? await shellProvider.saveSelectedTimelineID(id, for: scope)
+        }
+    }
+
+    func scrollHomeToTop() {
+        homeScrollToTopGeneration &+= 1
+    }
+
+    func remember(_ person: MissCatPerson) {
+        people[person.id] = person
+    }
+
+    func person(id: String) -> MissCatPerson? { people[id] }
+
+    func remember(_ attachment: MissCatNoteAttachment) {
+        attachments[attachment.id] = attachment
+    }
+
+    func attachment(id: String) -> MissCatNoteAttachment? { attachments[id] }
+
+    func handle(push: MissCatApplicationPush) async {
+        guard let notificationStore else { return }
+        let notificationID: String
+        switch push.action {
+        case let .refreshNotifications(id), let .openNotification(id):
+            notificationID = id
+        }
+        await notificationStore.handleForegroundPush(
+            MissCatResolvedPushEnvelope(
+                ownerAccountIdentifier: push.accountID.rawValue,
+                ownerAPIUserID: session.currentAccount.userID,
+                notificationID: notificationID
+            )
+        )
+    }
+
+    private func makeFixtureConfiguration() -> MissCatShellConfiguration {
+        let accounts = session.accounts.map { account in
+            MissCatShellAccount(
+                scope: MissCatShellAccountScope(
+                    instance: account.instance,
+                    userID: account.userID,
+                    username: account.username
+                ),
+                displayName: account.displayName,
+                avatarURL: account.avatarURL
+            )
+        }
+        let currentScope = accounts.first(where: {
+            MissCatApplicationAccountID(
+                instance: $0.scope.instance,
+                userID: $0.scope.userID
+            ) == session.currentAccount.id
+        })?.scope ?? accounts[0].scope
+        let sources: [MissCatFeedSource] = [.home, .local, .global]
+        let pages = zip(session.timelineTabs, sources).map { tab, source in
+            MissCatTimelinePage(
+                id: tab.id,
+                title: tab.title,
+                source: source,
+                accountScope: currentScope,
+                accessibilityID: tab.accessibilityID
+            )
+        }
+        return MissCatShellConfiguration(
+            currentScope: currentScope,
+            accounts: accounts,
+            timelinePages: pages,
+            selectedTimelineID: session.selectedTimelineID,
+            appearance: MissCatShellAppearance(
+                isDark: false,
+                accentHex: MissCatLegacyColorHex.accent
+            )
+        )
+    }
+}
+
+/// The authenticated application root. It owns the application `NavigationStack`,
+/// shell, feature factories, account generation and modal presentation state.
+struct MissCatProductionApplicationRootView: View {
+    @Bindable private var rootStore: MissCatApplicationRootStore
+    @StateObject private var coordinator: MissCatProductionAccountCoordinator
+    @Environment(\.openURL) private var openURL
+
+    private let session: MissCatApplicationSession
+
+    init(rootStore: MissCatApplicationRootStore, session: MissCatApplicationSession) {
+        self.rootStore = rootStore
+        self.session = session
+        _coordinator = StateObject(
+            wrappedValue: MissCatProductionAccountCoordinator(session: session)
+        )
+    }
+
+    var body: some View {
+        Group {
+            switch coordinator.phase {
+            case .loading:
+                ProgressView("タイムラインを準備中…")
+                    .accessibilityIdentifier("production.root.loading")
+            case let .failed(message):
+                ContentUnavailableView(
+                    "アプリを開けません",
+                    systemImage: "exclamationmark.triangle",
+                    description: Text(message)
+                )
+                .accessibilityIdentifier("production.root.failure")
+            case let .ready(configuration):
+                navigationRoot(configuration)
+            }
+        }
+        .task { await coordinator.load() }
+        .task(id: rootStore.router.pushDeliveryGeneration) {
+            guard let push = rootStore.router.latestPush else { return }
+            await coordinator.handle(push: push)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("production.root")
+    }
+
+    private func navigationRoot(_ configuration: MissCatShellConfiguration) -> some View {
+        NavigationStack(path: navigationPathBinding) {
+            shell(configuration)
+                .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(for: MissCatApplicationRoute.self) { route in
+                    routeDestination(route, configuration: configuration)
+                }
+        }
+        .sheet(item: sheetBinding) { destination in
+            sheetDestination(destination, configuration: configuration)
+        }
+        .fullScreenCover(item: fullScreenBinding) { destination in
+            fullScreenDestination(destination)
+        }
+    }
+
+    private func shell(_ configuration: MissCatShellConfiguration) -> some View {
+        MissCatMainShellView(
+            timelineTabs: rootStore.router.timelineSelection.tabs,
+            selectedTimelineID: timelineBinding(configuration),
+            selectedSection: sectionBinding,
+            palette: configuration.appearance.palette,
+            avatar: Image(systemName: "person.crop.circle.fill"),
+            accounts: configuration.accounts,
+            currentAccountID: configuration.currentScope.id,
+            bannerMessage: rootStore.lastErrorMessage,
+            onSearch: { rootStore.router.open(.discovery) },
+            onCompose: { rootStore.router.presentFullScreen(.compose(.new)) },
+            onSettings: { rootStore.router.presentSheet(.settings) },
+            onAccountSelected: switchAccount,
+            onTimelineSelection: { id, origin in
+                selectTimeline(id, origin: origin, configuration: configuration)
+            },
+            onReselect: reselect,
+            onDismissBanner: rootStore.dismissError
+        ) { section in
+            sectionContent(section, configuration: configuration)
+        }
+    }
+
+    @ViewBuilder
+    private func sectionContent(
+        _ section: MissCatRootSection,
+        configuration: MissCatShellConfiguration
+    ) -> some View {
+        switch section {
+        case .home:
+            MissCatTimelinePager(
+                accountScope: configuration.currentScope,
+                pages: configuration.timelinePages,
+                selectedID: timelineBinding(configuration),
+                repositoryProvider: coordinator.repository,
+                palette: configuration.appearance.palette,
+                scrollToTopTrigger: coordinator.homeScrollToTopGeneration,
+                visualReadyPrefix: fixtureVisualReadyPrefix,
+                navigationActions: feedNavigationActions,
+                onSelection: { id, origin in
+                    selectTimeline(id, origin: origin, configuration: configuration)
+                }
+            )
+            .overlay(alignment: .topTrailing) {
+                Text("timeline-selection")
+                    .font(.system(size: 1))
+                    .opacity(0.01)
+                    .frame(width: 1, height: 1)
+                    .accessibilityIdentifier("production.timeline.selection")
+                    .accessibilityValue(selectedTimelineAccessibilityID(configuration))
+            }
+        case .notifications:
+            if let notificationStore = coordinator.notificationStore {
+                MissCatNotificationsView(
+                    store: notificationStore,
+                    palette: configuration.appearance.palette,
+                    navigationActions: notificationNavigationActions,
+                    scrollCoordinator: coordinator.notificationScrollCoordinator
+                )
+            } else {
+                unavailable("通知")
+            }
+        case .messages:
+            if let repository = coordinator.messagingRepository {
+                MissCatMessageHistoryView(
+                    repository: repository,
+                    palette: configuration.appearance.palette,
+                    navigationActions: messageNavigationActions
+                )
+            } else {
+                unavailable("メッセージ")
+            }
+        case .profile:
+            profileView(
+                userID: session.currentAccount.userID,
+                palette: configuration.appearance.palette,
+                showsBack: false
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func routeDestination(
+        _ route: MissCatApplicationRoute,
+        configuration: MissCatShellConfiguration
+    ) -> some View {
+        let palette = configuration.appearance.palette
+        switch route {
+        case .discovery:
+            if let generation = coordinator.discoveryGeneration {
+                MissCatDiscoveryRoot(generation: generation)
+            } else {
+                unavailable("検索")
+            }
+        case let .note(id):
+            if let repository = coordinator.repository(for: configuration.currentScope) {
+                MissCatNoteDetailView(
+                    noteID: id,
+                    repository: repository,
+                    palette: palette,
+                    navigationActions: feedNavigationActions
+                )
+            } else { unavailable("ノート") }
+        case .notification:
+            if let notificationStore = coordinator.notificationStore {
+                MissCatNotificationsView(
+                    store: notificationStore,
+                    palette: palette,
+                    navigationActions: notificationNavigationActions,
+                    scrollCoordinator: coordinator.notificationScrollCoordinator
+                )
+            } else { unavailable("通知") }
+        case let .profile(userID):
+            profileView(userID: userID, palette: palette, showsBack: true)
+        case let .userTimeline(userID, includesReplies, onlyFiles):
+            if let repository = coordinator.repository(for: configuration.currentScope) {
+                MissCatUserTimelineView(
+                    userID: userID,
+                    includesReplies: includesReplies,
+                    onlyFiles: onlyFiles,
+                    repository: repository,
+                    palette: palette,
+                    navigationActions: feedNavigationActions
+                )
+            } else { unavailable("タイムライン") }
+        case let .conversation(userID):
+            if let person = coordinator.person(id: userID),
+               let repository = coordinator.messagingRepository {
+                MissCatConversationView(
+                    peer: person,
+                    repository: repository,
+                    palette: palette,
+                    navigationActions: messageNavigationActions
+                )
+            } else { unavailable("会話") }
+        case let .search(query):
+            if let repository = coordinator.repository(for: configuration.currentScope) {
+                MissCatSearchResultsView(
+                    query: query,
+                    repository: repository,
+                    palette: palette,
+                    navigationActions: feedNavigationActions
+                )
+            } else { unavailable("検索") }
+        case let .hashtag(tag):
+            if let repository = coordinator.repository(for: configuration.currentScope) {
+                MissCatHashtagResultsView(
+                    tag: tag,
+                    repository: repository,
+                    palette: palette,
+                    navigationActions: feedNavigationActions
+                )
+            } else { unavailable("ハッシュタグ") }
+        case .settings:
+            settingsView(palette: palette, close: rootStore.router.pop)
+        case .accounts:
+            accountsView(palette: palette, close: rootStore.router.pop)
+        case let .externalURL(url):
+            MissCatExternalURLDestination(url: url)
+        }
+    }
+
+    @ViewBuilder
+    private func sheetDestination(
+        _ destination: MissCatApplicationSheetDestination,
+        configuration: MissCatShellConfiguration
+    ) -> some View {
+        switch destination {
+        case .accountSwitcher:
+            accountsView(
+                palette: configuration.appearance.palette,
+                close: rootStore.router.dismissSheet
+            )
+        case .settings:
+            settingsView(
+                palette: configuration.appearance.palette,
+                close: rootStore.router.dismissSheet
+            )
+        case let .reactionPicker(noteID):
+            if let repository = coordinator.repository(for: configuration.currentScope)
+                as? any MissCatNoteContextRepository {
+                MissCatReactionPickerView(
+                    noteID: noteID,
+                    existingReactions: [],
+                    repository: repository,
+                    palette: configuration.appearance.palette
+                ) { noteID, reaction in
+                    Task {
+                        try? await repository.perform(
+                            .addReaction(noteID: noteID, reaction: reaction)
+                        )
+                    }
+                }
+            } else {
+                unavailable("リアクション")
+            }
+        case let .share(noteID):
+            if let repository = coordinator.repository(for: configuration.currentScope)
+                as? any MissCatNoteContextRepository,
+               let url = repository.notePermalink(noteID: noteID) {
+                MissCatApplicationShareSheet(url: url)
+                    .accessibilityIdentifier("share.sheet")
+            } else {
+                unavailable("共有")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func fullScreenDestination(
+        _ destination: MissCatApplicationFullScreenDestination
+    ) -> some View {
+        switch destination {
+        case let .compose(intent):
+            MissCatComposeScreen(
+                viewModel: composeViewModel(intent),
+                onComplete: rootStore.router.dismissFullScreen,
+                onCancel: rootStore.router.dismissFullScreen
+            )
+        case let .media(attachmentID):
+            if let attachment = coordinator.attachment(id: attachmentID) {
+                MissCatMediaViewer(attachments: [attachment], selectedID: attachment.id)
+            } else { unavailable("メディア") }
+        }
+    }
+
+    private func profileView(
+        userID: String,
+        palette: MissCatVisualPalette,
+        showsBack: Bool
+    ) -> AnyView {
+        guard let account = coordinator.profileAccount else {
+            return AnyView(unavailable("プロフィール"))
+        }
+        return AnyView(
+            MissCatProfileFamilyView(
+                root: .profile(userID: userID),
+                account: account,
+                palette: palette,
+                shellOwnership: .outerShell,
+                rootProfileShowsBack: showsBack,
+                onExit: rootStore.router.pop,
+                onOpenURL: { rootStore.router.open(.externalURL($0)) },
+                onOpenImage: { openURL($0) },
+                onOpenSettings: { rootStore.router.presentSheet(.settings) },
+                onSelectRoot: selectRoot,
+                onCompose: { rootStore.router.presentFullScreen(.compose(.new)) }
+            )
+        )
+    }
+
+    private func settingsView(
+        palette: MissCatVisualPalette,
+        close: @escaping () -> Void
+    ) -> some View {
+        let repository = MissCatLegacySettingsRepository()
+        return MissCatSettingsRootView(
+            designStore: MissCatDesignSettingsStore(repository: repository),
+            reactionStore: MissCatReactionSettingsStore(repository: repository),
+            palette: palette,
+            licenses: MissCatSettingsBridge.licenseCatalog(),
+            appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0",
+            onRootRelaunchRequired: { Task { await rootStore.restore() } },
+            onClose: close
+        )
+    }
+
+    private func accountsView(
+        palette: MissCatVisualPalette,
+        close: @escaping () -> Void
+    ) -> some View {
+        let repository = MissCatLegacySettingsRepository()
+        return MissCatAccountsRootView(
+            store: MissCatAccountStore(repository: repository),
+            palette: palette,
+            profileDestination: { account, dismiss in
+                guard let user = Cache.UserDefaults.shared.getUser(userId: account.id),
+                      let token = user.apiKey else {
+                    return AnyView(unavailable("プロフィール"))
+                }
+                return AnyView(
+                    MissCatProfileFamilyView(
+                        root: .profile(userID: account.userID),
+                        account: MissCatProfileAccount(
+                            userID: user.userId,
+                            instance: user.instance,
+                            token: token
+                        ),
+                        palette: palette,
+                        onExit: dismiss
+                    )
+                )
+            },
+            onAccountSwitched: {
+                close()
+                Task { await rootStore.restore() }
+            },
+            onConfiguredTabsChanged: { Task { await rootStore.restore() } }
+        )
+    }
+
+    private var feedNavigationActions: MissCatFeedNavigationActions {
+        MissCatFeedNavigationActions(
+            openUser: { rootStore.router.open(.profile(userID: $0)) },
+            openNote: { rootStore.router.open(.note(id: $0)) },
+            openAttachment: {
+                coordinator.remember($0)
+                rootStore.router.presentFullScreen(.media(attachmentID: $0.id))
+            },
+            openHashtag: { rootStore.router.open(.hashtag($0)) },
+            reply: { rootStore.router.presentFullScreen(.compose(.reply(noteID: $0))) },
+            chooseReaction: { rootStore.router.presentSheet(.reactionPicker(noteID: $0)) }
+        )
+    }
+
+    private var notificationNavigationActions: MissCatNotificationNavigationActions {
+        MissCatNotificationNavigationActions { route in
+            switch route {
+            case let .user(id): rootStore.router.open(.profile(userID: id))
+            case let .note(id): rootStore.router.open(.note(id: id))
+            }
+        }
+    }
+
+    private var messageNavigationActions: MissCatMessageNavigationActions {
+        MissCatMessageNavigationActions(
+            openConversation: {
+                coordinator.remember($0)
+                rootStore.router.open(.conversation(userID: $0.id))
+            },
+            openRoute: { route in
+                switch route {
+                case let .externalURL(url): rootStore.router.open(.externalURL(url))
+                case let .hashtag(tag): rootStore.router.open(.hashtag(tag))
+                case let .mention(acct):
+                    if let repository = coordinator.messagingRepository
+                        as? MissCatNativeNotificationMessagingRepository {
+                        Task {
+                            if let person = try? await repository.resolvePerson(acct: acct) {
+                                coordinator.remember(person)
+                                rootStore.router.open(.profile(userID: person.id))
+                            }
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+    private var navigationPathBinding: Binding<[MissCatApplicationRoute]> {
+        Binding(
+            get: { rootStore.router.path },
+            set: { rootStore.router.replacePath($0) }
+        )
+    }
+
+    private var sectionBinding: Binding<MissCatRootSection> {
+        Binding(
+            get: { rootStore.router.selectedSection },
+            set: selectRoot
+        )
+    }
+
+    private func timelineBinding(
+        _ configuration: MissCatShellConfiguration
+    ) -> Binding<String> {
+        Binding(
+            get: { rootStore.router.timelineSelection.selectedID },
+            set: { id in
+                if case .changed = rootStore.router.selectTimeline(id) {
+                    coordinator.persistTimelineSelection(id, scope: configuration.currentScope)
+                }
+            }
+        )
+    }
+
+    private var sheetBinding: Binding<MissCatApplicationSheetDestination?> {
+        Binding(
+            get: { rootStore.router.sheetDestination },
+            set: { if $0 == nil { rootStore.router.dismissSheet() } }
+        )
+    }
+
+    private var fullScreenBinding: Binding<MissCatApplicationFullScreenDestination?> {
+        Binding(
+            get: { rootStore.router.fullScreenDestination },
+            set: { if $0 == nil { rootStore.router.dismissFullScreen() } }
+        )
+    }
+
+    private func selectTimeline(
+        _ id: String,
+        origin: MissCatTimelineSelectionOrigin,
+        configuration: MissCatShellConfiguration
+    ) {
+        let previous = rootStore.router.timelineSelection.selectedID
+        let result: MissCatApplicationTabSelectionResult
+        if origin == .swipe,
+           let previousIndex = configuration.timelinePages.firstIndex(where: { $0.id == previous }),
+           let targetIndex = configuration.timelinePages.firstIndex(where: { $0.id == id }) {
+            result = targetIndex > previousIndex
+                ? rootStore.router.swipeTimelineLeft()
+                : rootStore.router.swipeTimelineRight()
+        } else {
+            result = rootStore.router.selectTimeline(id)
+        }
+        if case let .changed(selected, _) = result {
+            coordinator.persistTimelineSelection(selected, scope: configuration.currentScope)
+        }
+    }
+
+    private func selectedTimelineAccessibilityID(
+        _ configuration: MissCatShellConfiguration
+    ) -> String {
+        let selectedID = rootStore.router.timelineSelection.selectedID
+        return configuration.timelinePages.first(where: { $0.id == selectedID })?.accessibilityID
+            ?? selectedID
+    }
+
+    private func selectRoot(_ section: MissCatRootSection) {
+        _ = rootStore.router.selectRoot(section)
+    }
+
+    private func reselect(_ section: MissCatRootSection) {
+        rootStore.router.popToRoot(in: section)
+        if section == .home { coordinator.scrollHomeToTop() }
+        if section == .notifications { coordinator.notificationScrollCoordinator.scrollToTop() }
+    }
+
+    private func switchAccount(_ scope: MissCatShellAccountScope) {
+        let accountID = MissCatApplicationAccountID(instance: scope.instance, userID: scope.userID)
+        Task {
+            await rootStore.switchAccount(to: accountID)
+        }
+    }
+
+    private func composeMode(_ intent: MissCatApplicationComposeIntent) -> MissCatComposeMode {
+        switch intent {
+        case .new: .note
+        case let .reply(noteID): .reply(composeTarget(noteID))
+        case let .quote(noteID): .quote(composeTarget(noteID))
+        }
+    }
+
+    private func composeViewModel(
+        _ intent: MissCatApplicationComposeIntent
+    ) -> MissCatComposeViewModel {
+        let mode = composeMode(intent)
+#if DEBUG
+        if MissCatProductionRootE2ELaunch.isRequested {
+            return MissCatProductionRootE2EComposeFactory.makeViewModel(mode: mode)
+        }
+#endif
+        return MissCatComposeFactory.makeViewModel(mode: mode)
+    }
+
+    private func composeTarget(_ noteID: String) -> MissCatComposeTarget {
+        MissCatComposeTarget(
+            id: noteID,
+            username: session.currentAccount.username,
+            instance: session.currentAccount.instance,
+            text: ""
+        )
+    }
+
+    private func unavailable(_ title: String) -> some View {
+        ContentUnavailableView(
+            "\(title)を利用できません",
+            systemImage: "exclamationmark.triangle"
+        )
+    }
+
+    private var fixtureVisualReadyPrefix: String? {
+#if DEBUG
+        MissCatProductionRootE2ELaunch.isRequested ? "production.root.visual-ready" : nil
+#else
+        nil
+#endif
+    }
+}
+
+private struct MissCatExternalURLDestination: View {
+    @Environment(\.openURL) private var openURL
+    let url: URL
+
+    var body: some View {
+        ContentUnavailableView {
+            Label("外部リンク", systemImage: "safari")
+        } description: {
+            Text(url.absoluteString)
+        } actions: {
+            Button("Safariで開く") { openURL(url) }
+        }
+        .navigationTitle("リンク")
+    }
+}
+
+private struct MissCatApplicationShareSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let url: URL
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Label("ノートを共有", systemImage: "square.and.arrow.up")
+                .font(.headline)
+
+            ShareLink(item: url) {
+                Label("共有先を選ぶ", systemImage: "square.and.arrow.up")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+
+            Button("閉じる", action: dismiss.callAsFunction)
+                .buttonStyle(.bordered)
+        }
+        .padding(24)
+        .presentationDetents([.medium])
+    }
+}
+
+#if DEBUG
+private final class MissCatProductionRootE2ERepository:
+    MissCatFeedRepository,
+    MissCatNotificationsRepository,
+    MissCatMessagingRepository
+{
+    let accountScope: MissCatAccountScope
+
+    init(account: MissCatShellAccountScope) {
+        accountScope = MissCatAccountScope(
+            accountID: account.userID,
+            username: account.username,
+            host: account.displayInstance,
+            accessToken: "fixture-token"
+        )
+    }
+
+    func fetchPage(
+        source: MissCatFeedSource,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatFeedPage {
+        guard cursor == nil else { return MissCatFeedPage(notes: [], hasMore: false) }
+        let prefix = source.accessibilityName
+        return MissCatFeedPage(
+            notes: (0 ..< min(limit, 12)).map { index in
+                MissCatNote(
+                    id: "\(prefix)-\(index)",
+                    author: MissCatNoteAuthor(
+                        id: "fixture-author-\(index)",
+                        name: "Miss Cat",
+                        username: "misscat",
+                        isCat: true
+                    ),
+                    createdAt: Date(timeIntervalSince1970: 1_596_288_600 - Double(index * 60)),
+                    text: index == 0 ? "Production SwiftUI root fixture 🐈" : "Fixture note \(index + 1)"
+                )
+            },
+            hasMore: false
+        )
+    }
+
+    func fetchThread(noteID: String, replyLimit: Int) async throws -> MissCatNoteThread {
+        let note = MissCatNote(
+            id: noteID,
+            author: MissCatNoteAuthor(
+                id: "fixture-author",
+                name: "Miss Cat",
+                username: "misscat"
+            ),
+            createdAt: Date(timeIntervalSince1970: 1_596_288_600),
+            text: "Production note detail"
+        )
+        return MissCatNoteThread(ancestors: [], note: note, replies: [])
+    }
+
+    func realtimeEvents(
+        source: MissCatFeedSource,
+        capturing noteIDs: [String]
+    ) -> AsyncStream<MissCatRealtimeEvent> {
+        AsyncStream { $0.yield(.connected(true)) }
+    }
+
+    func perform(_ action: MissCatFeedAction) async throws {}
+
+    func fetchNotifications(cursor: String?, limit: Int) async throws -> MissCatNotificationPage {
+        MissCatNotificationPage(notifications: [], hasMore: false)
+    }
+
+    func resolveNotification(id: String) async throws -> MissCatNotification? { nil }
+
+    func realtimeNotifications() -> AsyncStream<MissCatNotificationRealtimeEvent> {
+        AsyncStream { $0.yield(.connected(true)) }
+    }
+
+    func fetchConversations(limit: Int) async throws -> [MissCatConversation] { [] }
+
+    func fetchMessages(
+        peer: MissCatPerson,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatMessagePage {
+        MissCatMessagePage(messages: [], hasMore: false)
+    }
+
+    func sendText(
+        _ text: String,
+        to peer: MissCatPerson,
+        requestID: UUID
+    ) async throws -> MissCatDirectMessage {
+        MissCatDirectMessage(
+            id: requestID.uuidString,
+            senderID: accountScope.accountID,
+            recipientID: peer.id,
+            text: text,
+            createdAt: Date(),
+            isRead: true
+        )
+    }
+}
+#endif

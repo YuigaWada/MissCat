@@ -32,63 +32,40 @@ struct MissCatApp: App {
     }
 }
 
-/// Owns app-wide navigation while screens are migrated from UIKit to SwiftUI.
-///
-/// Keeping the route explicit prevents a second source of truth from growing
-/// inside individual views. Each legacy destination can be replaced by a
-/// SwiftUI case without changing application startup again.
+/// Owns authentication and the production SwiftUI application lifecycle.
+/// The application root store remains the single source of truth for account,
+/// navigation, modal, and push-delivery state.
 @MainActor
 final class ApplicationState: ObservableObject {
-    enum Root: Equatable {
-        case resolvingSession
-        case authentication
-        case legacyApplication
-    }
-
-    @Published private(set) var root: Root = .resolvingSession
     @Published private(set) var isCompletingAuthentication = false
     @Published private(set) var canRetryAuthentication = false
     @Published private(set) var authenticationFlowGeneration = 0
     @Published var errorMessage: String?
 
     private let authenticationService = MissCatAuthenticationService()
+    let applicationRootStore: MissCatApplicationRootStore
 
-    func resolveInitialRoute() {
-        guard root == .resolvingSession else { return }
+    init() {
+        applicationRootStore = MissCatApplicationRootStore(
+            sessionProvider: MissCatProductionSessionAdapter(),
+            pushMailbox: MissCatApplicationPushIngress.shared.mailbox
+        )
+        let store = applicationRootStore
+        Task {
+            await MissCatApplicationPushIngress.shared.install { [weak store] push in
+                _ = await store?.receivePush(push)
+            }
+        }
+    }
 
+    func resolveInitialRoute() async {
+        guard case .launching = applicationRootStore.phase else { return }
+        await applicationRootStore.restore()
 #if DEBUG
-        if MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled
-            || MissCatProfileOrdinaryRouteConfiguration.isEnabled
-            || MissCatNoteOrdinaryRouteConfiguration.isEnabled {
-            Theme.shared.reset()
-            Theme.shared.set()
-            root = .legacyApplication
-            return
+        if let currentUser = Cache.UserDefaults.shared.getCurrentUser() {
+            MissCatAuthenticationProbe.runIfRequested(user: currentUser)
         }
 #endif
-
-        let cache = Cache.UserDefaults.shared
-        guard let currentUser = cache.getCurrentUser(),
-              !currentUser.userId.isEmpty,
-              !currentUser.instance.isEmpty,
-              let apiKey = currentUser.apiKey,
-              !apiKey.isEmpty
-        else {
-            root = .authentication
-            return
-        }
-
-        // getCurrentUser() falls back to the first saved account when the
-        // persisted current ID is absent or stale. Persist that fallback so
-        // the legacy Theme tab resolver sees the same account.
-        cache.changeCurrentUser(currentUser)
-#if DEBUG
-        MissCatAuthenticationProbe.runIfRequested(user: currentUser)
-#endif
-
-        Theme.shared.reset()
-        Theme.shared.set()
-        root = .legacyApplication
     }
 
     func makeAuthorizationRequest(
@@ -118,7 +95,7 @@ final class ApplicationState: ObservableObject {
             defer { isCompletingAuthentication = false }
             do {
                 _ = try await authenticationService.completeAuthentication(callbackURL: callbackURL)
-                root = .legacyApplication
+                await applicationRootStore.restore()
             } catch {
                 present(error)
                 canRetryAuthentication = true
@@ -150,7 +127,7 @@ final class ApplicationState: ObservableObject {
 
     func present(_ error: Error) {
         canRetryAuthentication = false
-        if root == .authentication, !isCompletingAuthentication {
+        if applicationRootStore.phase.authenticatedSession == nil, !isCompletingAuthentication {
             // This is the exact message shown by StartViewController when app
             // registration or the authentication host could not be reached.
             errorMessage = "インスタンスに接続できません"
@@ -217,7 +194,7 @@ struct MissCatRootView: View {
                   !MissCatAccountsSettingsAcceptanceLaunch.isRequested
             else { return }
             #endif
-            applicationState.resolveInitialRoute()
+            await applicationState.resolveInitialRoute()
         }
         .alert(
             "エラー",
@@ -242,10 +219,25 @@ struct MissCatRootView: View {
 
     @ViewBuilder
     private var applicationRoot: some View {
-        switch applicationState.root {
-        case .resolvingSession:
+        MissCatApplicationPhaseView(applicationState: applicationState)
+    }
+}
+
+private struct MissCatApplicationPhaseView: View {
+    @ObservedObject var applicationState: ApplicationState
+    @Bindable private var rootStore: MissCatApplicationRootStore
+
+    init(applicationState: ApplicationState) {
+        self.applicationState = applicationState
+        rootStore = applicationState.applicationRootStore
+    }
+
+    @ViewBuilder
+    var body: some View {
+        switch rootStore.phase {
+        case .launching:
             MissCatLaunchView()
-        case .authentication:
+        case .signedOut, .failed:
             MissCatAuthenticationFlowView(
                 makeAuthorizationRequest: applicationState.makeAuthorizationRequest,
                 makeLoginRequestAfterSignUp: applicationState.makeLoginRequestAfterSignUp,
@@ -254,26 +246,16 @@ struct MissCatRootView: View {
                 onFailure: applicationState.present
             )
             .id(applicationState.authenticationFlowGeneration)
-        case .legacyApplication:
-            LegacyApplicationView()
-                .ignoresSafeArea()
+        case let .authenticated(session),
+             let .switching(current: session, target: _),
+             let .signingOut(current: session):
+            MissCatProductionApplicationRootView(
+                rootStore: applicationState.applicationRootStore,
+                session: session
+            )
+            .id(session.currentAccount.id)
         }
     }
-}
-
-/// Temporary compatibility boundary for screens that have not yet been
-/// rewritten. The storyboard remains a resource so behavior and visual
-/// baselines stay available during the screen-by-screen SwiftUI migration.
-struct LegacyApplicationView: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> UIViewController {
-        guard let root = UIStoryboard(name: "Main", bundle: .main).instantiateInitialViewController() else {
-            preconditionFailure("Main.storyboard must provide its legacy root view controller")
-        }
-
-        return root
-    }
-
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
 
 #if DEBUG

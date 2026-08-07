@@ -15,14 +15,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     // MARK: Main
     
     var window: UIWindow?
-    private var rootViewController: UIViewController? {
-        if #available(iOS 13, *) {
-            let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene
-            return scene?.windows.first?.rootViewController
-        } else {
-            return window?.rootViewController
-        }
-    }
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
@@ -36,6 +28,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         if MissCatShellFixtureLaunch.isRequested
             || MissCatPersistenceProbeLaunch.isRequested
             || MissCatAccountsSettingsAcceptanceLaunch.isRequested
+            || MissCatProductionRootE2ELaunch.isRequested
             || isRunningUnitTests
         {
             return true
@@ -154,13 +147,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 instance: $0.instance
             )
         }
-        guard let resolved = MissCatPushOwnerResolver.resolve(envelope, accounts: identities),
-              let owner = users.first(where: {
-                  $0.accountIdentifier == resolved.ownerAccountIdentifier
-              })
+        guard let resolved = MissCatPushOwnerResolver.resolve(envelope, accounts: identities)
         else { return }
-        guard let home = rootViewController?.descendant(of: HomeViewController.self) else { return }
-        home.handlePush(resolved, owner: owner, opensRoute: opensRoute)
+        let action: MissCatApplicationPush.Action = opensRoute
+            ? .openNotification(notificationID: resolved.notificationID)
+            : .refreshNotifications(notificationID: resolved.notificationID)
+        let deliveryKind = opensRoute ? "open" : "refresh"
+        let push = MissCatApplicationPush(
+            id: "\(resolved.ownerAccountIdentifier):\(resolved.notificationID):\(deliveryKind)",
+            accountID: MissCatApplicationAccountID(
+                rawValue: resolved.ownerAccountIdentifier
+            ),
+            action: action
+        )
+        Task {
+            await MissCatApplicationPushIngress.shared.receive(push)
+        }
     }
 
     func userNotificationCenter(
@@ -183,27 +185,5 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             routePush(envelope, opensRoute: true)
         }
         completionHandler()
-    }
-}
-
-private extension UIViewController {
-    func descendant<T: UIViewController>(of type: T.Type) -> T? {
-        if let match = self as? T {
-            return match
-        }
-
-        for child in children {
-            if let match = child.descendant(of: type) {
-                return match
-            }
-        }
-
-        if let presentedViewController,
-           let match = presentedViewController.descendant(of: type)
-        {
-            return match
-        }
-
-        return nil
     }
 }

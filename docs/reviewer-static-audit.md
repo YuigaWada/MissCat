@@ -2,39 +2,37 @@
 
 Date: 2026-08-07
 
-Reviewed baseline: `origin/migration/swiftui-main` at `9b29738` (`270820f` is an ancestor)
+Reviewed baseline: production SwiftUI-root cutover based on `9c1a338`
 
-Review mode: source inspection, deterministic shell tests, and iPhone 16 Pro / iOS 18.6 Simulator unit XCTest. The reviewer did not run XCUITest, GUI automation, or screenshot capture.
+Review mode: source inspection, deterministic shell tests, and iPhone 16 Pro / iOS 18.6 Simulator unit and ordinary-root XCUITest on arm64 and x86_64. Screenshot acceptance remains a separate reviewer gate.
 
 ## Verdict
 
-The current baseline is not release-ready against `docs/swiftui-migration-acceptance-matrix.md`. The SwiftUI launch, first-account authentication boundary, and share-composer content are present, but ordinary authenticated app use still enters the legacy Storyboard application. The available evidence does not establish complete SwiftUI migration, functional parity, or pixel parity.
+The ordinary logged-out and authenticated routes now enter the SwiftUI application assembly without a legacy application wrapper or Storyboard fallback. The fixed ledger therefore records SwiftUI runtime ownership for 45/45 surfaces, while acceptance remains 0/45: live-service, full visual-parity, legacy-retirement, and independent reviewer gates are still open.
 
 ## Release-blocking findings
 
-### 1. ARCH-01: authenticated runtime still requires Main.storyboard
+### 1. ARCH-01: authenticated runtime cutover is implemented; retirement remains
 
-`ApplicationState.Root.legacyApplication` is selected for both an existing session and successful authentication (`MissCat/Others/App/MissCatApp.swift:31-35`, `:45-66`, `:86-98`). `MissCatRootView` then renders `LegacyApplicationView`, whose only implementation instantiates the initial controller from `Main.storyboard` (`MissCat/Others/App/MissCatApp.swift:117-180`).
+`ApplicationState` now restores `MissCatApplicationRootStore`, and the authenticated phase constructs `MissCatProductionApplicationRootView`. Its root-owned `NavigationStack`, shell, feature destinations, account generation, modal routing, and actor-safe push ingress are exercised through the ordinary production assembly. `MissCatLegacyApplicationView` and its project references have been removed.
 
-`MissCatMainShellView` is defined but has no runtime call site. Consequently, the main app's timeline, note, profile, compose, notification, message, and settings acceptance rows remain backed by legacy UIKit/Storyboard/XIB code. This independently fails ARCH-01 and the explicit non-acceptance rule against Storyboard/XIB screens in ordinary flow.
+Static cutover tests reject any legacy application host in shipping Swift sources or the project file, and reject Storyboard/Home-controller construction from the app entry, delegate, and production root. Ordinary-root UI tests cover the native timeline, account switch, compose, notifications, messages, profile, and settings routes. Orphan Storyboard/XIB/controller sources still require physical retirement before release and are not accepted merely because the root no longer constructs them.
 
 The share extension is further along: `ShareViewController` installs `ShareComposerView` in a `UIHostingController`. Its extension entry still declares `MainInterface.storyboard`, however, and there is no extension E2E or visual-parity evidence. This SwiftUI content migration does not change the main-app verdict.
 
-### 2. AUTH-03: add-account and last-account flows bypass SwiftUI authentication
+### 2. AUTH-03: account entry still requires release evidence
 
-The SwiftUI authentication flow is used only by the top-level no-session route. Inside the authenticated legacy application, add-account, logout, and missing-account recovery instantiate the Storyboard `StartViewController` directly (`MissCat/View/Main/AccountsListViewController.swift:135-161`; `MissCat/View/Main/HomeViewController.swift:305-331`).
+The native accounts/settings assembly owns ordinary add, switch, delete, and required last-account recovery routing. AUTH-03 remains unaccepted until live add-account authentication, cancellation, relaunch, and final-account recovery have retained release evidence on the designated environment.
 
-This creates two authentication implementations with different error, retry, persistence, and navigation behavior. AUTH-03 cannot pass until all account-entry paths share the tested SwiftUI flow or a single injected authentication coordinator.
+### 3. AUTH-02: callback origin and session validation is implemented
 
-### 3. AUTH-02: callback validation is a substring check
+`MissCatAuthenticationCallbackMatcher` compares normalized HTTPS scheme, host, default/explicit port, root path, an exact single `session` query item, and the expected session UUID. It rejects lookalike hosts, wrong ports/paths/sessions, extra query items, fragments, and encoded callback text embedded elsewhere.
 
-`MissCatAuthenticationService.callbackMatches` accepts any absolute URL containing the callback string (`MissCat/SwiftUI/Authentication/MissCatAuthenticationService.swift:84-86`). That includes unrelated hosts with the expected URL embedded in a path or query. The browser uses this predicate to begin token exchange (`MissCat/SwiftUI/Authentication/MissCatAuthenticationBrowserView.swift:149-160`).
+The service moves a matching pending session to checking state before suspension, and the browser callback gate reports a callback once, preventing duplicate token exchange. `MissCatAuthenticationCallbackMatcherTests`, callback-gate tests, and service retry/stale-session tests cover these contracts. AUTH-02 is no longer an open blocker; live authentication evidence remains tracked separately under AUTH-03.
 
-Callback acceptance must compare normalized URL components (scheme, host, port, and allowed path) and have unit coverage for lookalike hosts, encoded query values, fragments, and duplicate navigations. The existing `isCompletingAuthentication` and per-URL browser guards reduce duplicate work but do not repair origin validation.
+### 4. VIS-01 and REL-01: runtime UI coverage exists; visual acceptance remains open
 
-### 4. VIS-01 and REL-01: the only confirmed candidate fails, and the required suite is absent
-
-The Xcode project has app, share-extension, and unit-test targets only; there is no UI-test or snapshot target and no `MissCatUITests` source tree. There is also no fixture-backed capture runner or `visualReady` implementation.
+The Xcode project now includes fixture-backed UI targets and deterministic `visualReady` markers, including an ordinary production-root journey. These functional tests do not replace the required same-state screenshot matrix or independent visual review.
 
 The integration agent confirmed a normal-launch SwiftUI Welcome capture at `artifacts/screenshots/swiftui/welcome-iphone16pro-ios18.6.png` in its worktree. Direct comparison against the selected legacy reference is a hard failure:
 
@@ -49,9 +47,9 @@ That is far beyond the documented 0.10% changed-pixel ceiling. A single failing 
 
 The script self-test passes and covers dimensions, masks, fuzz, deterministic artifacts, RMSE, and large scientific-notation pixel counts. It should be retained, then extended to the complete documented metric set and invoked by a batch manifest that fails on missing cases.
 
-### 6. VIS-02: the unused shell cannot establish identical design
+### 6. VIS-02: the active shell still requires visual acceptance
 
-The proposed bottom bar uses SF Symbols (`MissCat/SwiftUI/MainShell/MissCatMainShellView.swift:271-328`), while the legacy contract uses the checked-in Font Awesome/tab assets and historical raster output. Even before runtime integration, substituting glyph families changes outlines, optical sizing, and baseline placement. An explicit approved asset mapping plus screenshot evidence is required; code-level geometry constants are insufficient.
+The ordinary bottom bar and shell now use the native SwiftUI implementation. Its SF Symbol mapping still differs from the historical Font Awesome/tab assets, so an explicit approved asset mapping plus screenshot evidence is required; runtime ownership and code-level geometry constants are insufficient for acceptance.
 
 ## Additional runtime diagnostic
 
