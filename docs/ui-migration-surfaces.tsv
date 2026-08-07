@@ -26,8 +26,8 @@ id	area	surface	runtime_owner	migration_state	evidence	note
 20	Note	Overflow	uikit	legacy	MissCat/View/Timeline/TimelineViewController.swift	No complete SwiftUI overflow action contract is integrated.
 21	Detail	Post thread	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatFeedScreens.swift	SwiftUI thread feed exists but is not on the ordinary route.
 22	Detail	Detail actions	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatNoteRow.swift	Some SwiftUI actions exist; the full detail action contract remains incomplete and unwired.
-23	Search	Trends	uikit	legacy	MissCat/View/Search/TrendViewController.swift	No native SwiftUI trends screen is integrated.
-24	Search	Note/user search	uikit	migrating	MissCat/SwiftUI/Timeline/MissCatFeedScreens.swift	SwiftUI note search exists; user search and ordinary-route wiring remain.
+23	Search	Trends	swiftui	migrating	MissCat/SwiftUI/Discovery/MissCatDiscoveryViews.swift	Native SwiftUI trends are integrated through the ordinary Home page-zero route; UIKit remains only at the pager hosting boundary.
+24	Search	Note/user search	swiftui	migrating	MissCat/SwiftUI/Discovery/MissCatDiscoveryViews.swift	Native SwiftUI note and user search are integrated with tap/swipe result tabs and typed destinations; UIKit remains only at the pager hosting boundary.
 25	Users	User result/list	swiftui	migrating	MissCat/SwiftUI/Profile/MissCatProfileBridge.swift;MissCat/SwiftUI/Profile/MissCatProfileViews.swift	The ordinary user-search route now hosts SwiftUI; authenticated E2E and >=90% visual gates remain.
 26	Profile	Profile	swiftui	migrating	MissCat/SwiftUI/Profile/MissCatProfileBridge.swift;MissCat/SwiftUI/Profile/MissCatProfileViews.swift	The ordinary profile route now hosts SwiftUI; live account behavior and visual parity remain unaccepted.
 27	Profile	Relationship/list navigation	swiftui	migrating	MissCat/SwiftUI/Profile/MissCatProfileViews.swift;MissCat/SwiftUI/Profile/MissCatProfileCore.swift	Followers, following, and relationship navigation are native SwiftUI; live E2E and visual gates remain.

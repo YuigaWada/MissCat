@@ -149,18 +149,23 @@ final class MissCatDiscoveryUITests: XCTestCase {
     }
 
     func testCaptureSwiftUICandidates() {
-        app = launch(state: "content")
+        app = launch(state: "trends")
         XCTAssertTrue(app.staticTexts["Fixture.exampleでのトレンド"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.staticTexts["discovery.visualReady"].value as? String, "true")
         attachScreenshot("discovery-swiftui-candidate-trends")
 
-        app.buttons["discovery.trend.SwiftUI"].tap()
+        app.terminate()
+        app = launch(state: "notes")
         XCTAssertTrue(noteResult.waitForExistence(timeout: 5))
+        XCTAssertEqual(app.textFields["discovery.query"].value as? String, "SwiftUI")
         XCTAssertEqual(app.staticTexts["discovery.visualReady"].value as? String, "true")
         attachScreenshot("discovery-swiftui-candidate-notes")
 
-        usersTab.tap()
+        app.terminate()
+        app = launch(state: "users")
         XCTAssertTrue(firstUser.waitForExistence(timeout: 5))
+        XCTAssertTrue(usersTab.isSelected)
+        XCTAssertEqual(app.textFields["discovery.query"].value as? String, "SwiftUI")
         XCTAssertEqual(app.staticTexts["discovery.visualReady"].value as? String, "true")
         attachScreenshot("discovery-swiftui-candidate-users")
 

@@ -59,6 +59,18 @@ struct MissCatDiscoveryFixtureRoot: View {
             previewProfile: repository.fixtureUser,
             pageSize: 8
         )
+
+        switch MissCatDiscoveryFixtureConfiguration.state {
+        case "notes":
+            generation.store.query = "SwiftUI"
+            generation.store.submitSearch()
+        case "users":
+            generation.store.query = "SwiftUI"
+            generation.store.select(.users)
+            generation.store.submitSearch()
+        default:
+            break
+        }
     }
 
     var body: some View {
