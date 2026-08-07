@@ -15,8 +15,6 @@ public final class MissCatApplicationRouter {
     public private(set) var timelineSelection: MissCatApplicationTabSelection
     public private(set) var sheetDestination: MissCatApplicationSheetDestination?
     public private(set) var fullScreenDestination: MissCatApplicationFullScreenDestination?
-    public private(set) var latestPush: MissCatApplicationPush?
-    public private(set) var pushDeliveryGeneration = 0
 
     private var navigationPaths: [MissCatRootSection: [MissCatApplicationRoute]] = [:]
 
@@ -106,7 +104,6 @@ public final class MissCatApplicationRouter {
         navigationPaths.removeAll(keepingCapacity: true)
         sheetDestination = nil
         fullScreenDestination = nil
-        latestPush = nil
         timelineSelection = MissCatApplicationTabSelection(
             tabs: session.timelineTabs,
             selectedID: session.selectedTimelineID
@@ -119,17 +116,7 @@ public final class MissCatApplicationRouter {
         navigationPaths.removeAll()
         sheetDestination = nil
         fullScreenDestination = nil
-        latestPush = nil
         timelineSelection = MissCatApplicationTabSelection(tabs: [], selectedID: "")
     }
 
-    public func handleDeliveredPush(_ push: MissCatApplicationPush) {
-        guard push.accountID == activeAccountID else { return }
-        latestPush = push
-        pushDeliveryGeneration &+= 1
-
-        guard case let .openNotification(notificationID) = push.action else { return }
-        selectedSection = .notifications
-        navigationPaths[.notifications, default: []].append(.notification(id: notificationID))
-    }
 }

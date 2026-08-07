@@ -9,7 +9,6 @@ public final class MissCatNotificationsStore: ObservableObject {
     @Published public private(set) var isLoadingMore = false
     @Published public private(set) var isRealtimeConnected = false
     @Published public private(set) var actionErrorMessage: String?
-    @Published public private(set) var banner: MissCatInAppNotificationBanner?
 
     public private(set) var accountScope: MissCatAccountScope
 
@@ -107,34 +106,7 @@ public final class MissCatNotificationsStore: ObservableObject {
         canLoadMore = true
         isLoadingMore = false
         actionErrorMessage = nil
-        banner = nil
         phase = .idle
-    }
-
-    public func handleForegroundPush(_ envelope: MissCatResolvedPushEnvelope) async {
-        guard envelope.ownerAPIUserID == accountScope.accountID else { return }
-        let generation = scopeGeneration
-        do {
-            guard let resolved = try await repository.resolveNotification(id: envelope.notificationID),
-                  generation == scopeGeneration,
-                  !Task.isCancelled else { return }
-            notifications = Self.normalized([resolved] + notifications)
-            phase = .loaded
-            banner = MissCatInAppNotificationBanner(notification: resolved)
-        } catch {
-            guard generation == scopeGeneration, !Task.isCancelled else { return }
-            actionErrorMessage = Self.message(for: error)
-        }
-    }
-
-    public func dismissBanner() {
-        banner = nil
-    }
-
-    @discardableResult
-    public func takeBannerRoute() -> MissCatNotificationRoute? {
-        defer { banner = nil }
-        return banner?.route
     }
 
     public func dismissActionError() {

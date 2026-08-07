@@ -216,22 +216,6 @@ final class MissCatProductionAccountCoordinator: ObservableObject {
         }
     }
 
-    func handle(push: MissCatApplicationPush) async {
-        guard let notificationStore else { return }
-        let notificationID: String
-        switch push.action {
-        case let .refreshNotifications(id), let .openNotification(id):
-            notificationID = id
-        }
-        await notificationStore.handleForegroundPush(
-            MissCatResolvedPushEnvelope(
-                ownerAccountIdentifier: push.accountID.rawValue,
-                ownerAPIUserID: session.currentAccount.userID,
-                notificationID: notificationID
-            )
-        )
-    }
-
     private func makeFixtureConfiguration() -> MissCatShellConfiguration {
         let accounts = session.accounts.map { account in
             MissCatShellAccount(
@@ -308,10 +292,6 @@ struct MissCatProductionApplicationRootView: View {
             }
         }
         .task { await coordinator.load() }
-        .task(id: rootStore.router.pushDeliveryGeneration) {
-            guard let push = rootStore.router.latestPush else { return }
-            await coordinator.handle(push: push)
-        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("production.root")
         .overlay(alignment: .topLeading) { productionRootE2EStateMarkers }
@@ -1188,8 +1168,6 @@ private final class MissCatProductionRootE2ERepository:
     func fetchNotifications(cursor: String?, limit: Int) async throws -> MissCatNotificationPage {
         MissCatNotificationPage(notifications: [], hasMore: false)
     }
-
-    func resolveNotification(id: String) async throws -> MissCatNotification? { nil }
 
     func realtimeNotifications() -> AsyncStream<MissCatNotificationRealtimeEvent> {
         AsyncStream { $0.yield(.connected(true)) }

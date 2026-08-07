@@ -237,20 +237,3 @@ public struct MissCatApplicationTabSelection: Equatable, Sendable {
         tabs.contains(where: { $0.id == candidate }) ? candidate : (tabs.first?.id ?? "")
     }
 }
-
-public struct MissCatApplicationPush: Hashable, Identifiable, Sendable {
-    public enum Action: Hashable, Sendable {
-        case refreshNotifications(notificationID: String)
-        case openNotification(notificationID: String)
-    }
-
-    public let id: String
-    public let accountID: MissCatApplicationAccountID
-    public let action: Action
-
-    public init(id: String, accountID: MissCatApplicationAccountID, action: Action) {
-        self.id = id
-        self.accountID = accountID
-        self.action = action
-    }
-}

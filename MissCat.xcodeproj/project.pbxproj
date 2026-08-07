@@ -25,12 +25,9 @@
 		8D1A4C0A24DD82CC00EFD826 /* PostModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1A4C0924DD82CC00EFD826 /* PostModel.swift */; };
 		8D1A4C0E24DD95CA00EFD826 /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1A4C0D24DD95CA00EFD826 /* UserModel.swift */; };
 		8D3037022389018800BA6D38 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3037012389018800BA6D38 /* Cache.swift */; };
-		8D4A2A16237437BE00503685 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4A2A15237437BE00503685 /* AppDelegate.swift */; };
 		8D4A2A1F237437C000503685 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D4A2A1E237437C000503685 /* Assets.xcassets */; };
 		8D4A2A2D237437C100503685 /* MissCatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4A2A2C237437C100503685 /* MissCatTests.swift */; };
 		8D4B02C1241FE5C90056605F /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4B02C0241FE5C90056605F /* Theme.swift */; };
-		8D905644246A7120006D0F50 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8D905643246A7120006D0F50 /* GoogleService-Info.plist */; };
-		8DCCF8E5246A97C50001A21C /* MisscatApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCCF8E4246A97C50001A21C /* MisscatApi.swift */; };
 		8DCCF8E7246AB1090001A21C /* ApiKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DCCF8E6246AB1090001A21C /* ApiKeyManager.swift */; };
 		8DE35E6B23F68FC300E10CB4 /* Pods_MissCat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49D674DA4870479FF355F58B /* Pods_MissCat.framework */; };
 		8DEB21C5243B0C1400E4D1EB /* Error+MissCat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */; };
@@ -192,15 +189,12 @@
 		8D1C150E2424E3B6004B1202 /* MissCat.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MissCat.entitlements; sourceTree = "<group>"; };
 		8D3037012389018800BA6D38 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
 		8D4A2A12237437BE00503685 /* MissCat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MissCat.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		8D4A2A15237437BE00503685 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8D4A2A1E237437C000503685 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8D4A2A23237437C000503685 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D4A2A28237437C100503685 /* MissCatTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MissCatTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D4A2A2C237437C100503685 /* MissCatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatTests.swift; sourceTree = "<group>"; };
 		8D4A2A2E237437C100503685 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D4B02C0241FE5C90056605F /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
-		8D905643246A7120006D0F50 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		8DCCF8E4246A97C50001A21C /* MisscatApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MisscatApi.swift; sourceTree = "<group>"; };
 		8DCCF8E6246AB1090001A21C /* ApiKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiKeyManager.swift; sourceTree = "<group>"; };
 		8DEB21C4243B0C1300E4D1EB /* Error+MissCat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Error+MissCat.swift"; sourceTree = "<group>"; };
 		8DF7E3CD24DDEC6500D29018 /* ShareAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = ShareAssets.xcassets; sourceTree = "<group>"; };
@@ -460,7 +454,6 @@
 			children = (
 				8D4A2A23237437C000503685 /* Info.plist */,
 				8D1C150E2424E3B6004B1202 /* MissCat.entitlements */,
-				8D905643246A7120006D0F50 /* GoogleService-Info.plist */,
 				C0DE00000000000000000015 /* SwiftUI */,
 				8D0AC5B4237B5AC700530508 /* Resources */,
 				8D3EC236237AE52800808727 /* Others */,
@@ -506,9 +499,7 @@
 				C0A900000000000000000003 /* MissCatNativeComposeAPI.swift */,
 				F3A700000000000000000002 /* MissCatNativeAPI.swift */,
 				C0DE00000000000000000002 /* MissCatApp.swift */,
-				8D4A2A15237437BE00503685 /* AppDelegate.swift */,
 				8D1C150D2424C649004B1202 /* Bridge.h */,
-				8DCCF8E4246A97C50001A21C /* MisscatApi.swift */,
 				8DCCF8E6246AB1090001A21C /* ApiKeyManager.swift */,
 				8DFD614024912F3D00E22C9F /* SecureUser.swift */,
 			);
@@ -917,7 +908,6 @@
 				8D0AC5B8237B5D0D00530508 /* Font Awesome 5 Brands-Regular-400.otf in Resources */,
 				8D0AC5B9237B5D0D00530508 /* Font Awesome 5 Free-Regular-400.otf in Resources */,
 				8D0AC5BA237B5D0D00530508 /* Font Awesome 5 Free-Solid-900.otf in Resources */,
-				8D905644246A7120006D0F50 /* GoogleService-Info.plist in Resources */,
 				8D4A2A1F237437C000503685 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1075,11 +1065,9 @@
 				D0D000000000000000000005 /* MissCatNotificationMessageStores.swift in Sources */,
 				D0D000000000000000000007 /* MissCatNotificationsViews.swift in Sources */,
 				D0D000000000000000000009 /* MissCatMessagingViews.swift in Sources */,
-				8DCCF8E5246A97C50001A21C /* MisscatApi.swift in Sources */,
 				8D3037022389018800BA6D38 /* Cache.swift in Sources */,
 				8D4B02C1241FE5C90056605F /* Theme.swift in Sources */,
 				8DEB21C5243B0C1400E4D1EB /* Error+MissCat.swift in Sources */,
-				8D4A2A16237437BE00503685 /* AppDelegate.swift in Sources */,
 				8DCCF8E7246AB1090001A21C /* ApiKeyManager.swift in Sources */,
 				8DFD614124912F3D00E22C9F /* SecureUser.swift in Sources */,
 				F3A700000000000000000001 /* MissCatNativeAPI.swift in Sources */,

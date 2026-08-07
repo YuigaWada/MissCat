@@ -54,28 +54,10 @@ public struct MissCatNotificationsView: View {
     }
 
     public var body: some View {
-        ZStack(alignment: .top) {
+        ZStack {
             palette.base.ignoresSafeArea()
             content
-
-            if let banner = store.banner {
-                MissCatInAppNotificationBannerView(
-                    banner: banner,
-                    palette: palette,
-                    onTap: {
-                        if let route = store.takeBannerRoute() {
-                            navigationActions.open(route)
-                        }
-                    },
-                    onDismiss: store.dismissBanner
-                )
-                .padding(.horizontal, 10)
-                .padding(.top, 6)
-                .transition(.move(edge: .top).combined(with: .opacity))
-                .zIndex(2)
-            }
         }
-        .animation(.snappy, value: store.banner?.id)
         .task { await store.loadInitial() }
         .onDisappear { store.stopRealtime() }
         .alert(
@@ -253,47 +235,5 @@ public struct MissCatNotificationRow: View {
         case .follow: palette.accent
         case .reply, .mention: .cyan
         }
-    }
-}
-
-public struct MissCatInAppNotificationBannerView: View {
-    public let banner: MissCatInAppNotificationBanner
-    public let palette: MissCatVisualPalette
-    public let onTap: () -> Void
-    public let onDismiss: () -> Void
-
-    public init(
-        banner: MissCatInAppNotificationBanner,
-        palette: MissCatVisualPalette = .legacyLight,
-        onTap: @escaping () -> Void,
-        onDismiss: @escaping () -> Void
-    ) {
-        self.banner = banner
-        self.palette = palette
-        self.onTap = onTap
-        self.onDismiss = onDismiss
-    }
-
-    public var body: some View {
-        HStack(spacing: 8) {
-            Button(action: onTap) {
-                MissCatNotificationRow(notification: banner.notification, palette: palette)
-                    .background(palette.surface)
-            }
-            .buttonStyle(.plain)
-
-            Button(action: onDismiss) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(palette.strong)
-                    .frame(width: 30, height: 30)
-            }
-            .accessibilityLabel("通知を閉じる")
-            .accessibilityIdentifier("notification.banner.dismiss")
-        }
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .shadow(color: .black.opacity(0.18), radius: 8, y: 3)
-        .accessibilityIdentifier("notification.banner")
     }
 }

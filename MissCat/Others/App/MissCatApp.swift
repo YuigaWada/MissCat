@@ -11,7 +11,6 @@ import SwiftUI
 
 @main
 struct MissCatApp: App {
-    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var applicationState = ApplicationState()
 
     var body: some Scene {
@@ -33,7 +32,7 @@ struct MissCatApp: App {
 
 /// Owns authentication and the production SwiftUI application lifecycle.
 /// The application root store remains the single source of truth for account,
-/// navigation, modal, and push-delivery state.
+/// navigation, and modal state.
 @MainActor
 final class ApplicationState: ObservableObject {
     @Published private(set) var isCompletingAuthentication = false
@@ -46,15 +45,8 @@ final class ApplicationState: ObservableObject {
 
     init() {
         applicationRootStore = MissCatApplicationRootStore(
-            sessionProvider: MissCatProductionSessionAdapter(),
-            pushMailbox: MissCatApplicationPushIngress.shared.mailbox
+            sessionProvider: MissCatProductionSessionAdapter()
         )
-        let store = applicationRootStore
-        Task {
-            await MissCatApplicationPushIngress.shared.install { [weak store] push in
-                _ = await store?.receivePush(push)
-            }
-        }
     }
 
     func resolveInitialRoute() async {

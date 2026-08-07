@@ -240,7 +240,6 @@ final class MissCatAuthenticationService {
 
         if performsPostLoginActions {
             MissCatEmojiCatalog.prepare(for: persistedUser)
-            registerPushNotifications(for: persistedUser)
             Theme.shared.reset()
             Theme.shared.set()
         }
@@ -281,13 +280,6 @@ final class MissCatAuthenticationService {
         }
     }
 
-    private func registerPushNotifications(for user: SecureUser) {
-        #if targetEnvironment(simulator)
-            MisscatApi(apiKeyManager: MockApiKeyManager(), and: user).registerSw()
-        #else
-            MisscatApi(apiKeyManager: ApiKeyManager(), and: user).registerSw()
-        #endif
-    }
 }
 
 extension MissCatAuthenticationService {

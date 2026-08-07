@@ -4,7 +4,6 @@ public protocol MissCatNotificationsRepository: AnyObject {
     var accountScope: MissCatAccountScope { get }
 
     func fetchNotifications(cursor: String?, limit: Int) async throws -> MissCatNotificationPage
-    func resolveNotification(id: String) async throws -> MissCatNotification?
     func realtimeNotifications() -> AsyncStream<MissCatNotificationRealtimeEvent>
 }
 
@@ -131,14 +130,6 @@ public final class MissCatNativeNotificationMessagingRepository:
             notifications: notifications,
             hasMore: response.count >= limit
         )
-    }
-
-    public func resolveNotification(id: String) async throws -> MissCatNotification? {
-        let response: [APINotification] = try await post(
-            "i/notifications",
-            body: ["limit": 100, "markAsRead": false]
-        )
-        return response.first(where: { $0.id == id })?.domainValue
     }
 
     public func realtimeNotifications() -> AsyncStream<MissCatNotificationRealtimeEvent> {
