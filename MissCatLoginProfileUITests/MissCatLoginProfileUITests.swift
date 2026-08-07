@@ -27,11 +27,16 @@ final class MissCatLoginProfileUITests: XCTestCase {
     func testAuthenticationInstanceValidationBackCancelAndCallback() {
         launch("--login-profile-auth")
         XCTAssertTrue(element("welcome.screen").waitForExistence(timeout: 10))
+        XCTAssertTrue(
+            element("visual-ready.login-start.default").waitForExistence(timeout: 2)
+        )
         capture("04-start-current")
 
         setInstance("javascript:alert(1)", captureName: "06-instance-selector-current")
         app.buttons["welcome.login"].tap()
         XCTAssertTrue(element("terms.screen").waitForExistence(timeout: 5))
+        XCTAssertTrue(element("visual-ready.login-terms.top").exists)
+        XCTAssertFalse(element("visual-ready.login-terms.bottom").exists)
         capture("05-terms-current")
         app.buttons["terms.agree"].tap()
         let validationAlert = app.alerts["エラー"]
@@ -47,6 +52,7 @@ final class MissCatLoginProfileUITests: XCTestCase {
         app.buttons["welcome.login"].tap()
         app.buttons["terms.agree"].tap()
         XCTAssertTrue(element("authentication.browser").waitForExistence(timeout: 10))
+        XCTAssertTrue(element("visual-ready.login-auth-browser.loading").exists)
         XCTAssertTrue(app.buttons["authentication.reload"].exists)
         capture("07-auth-web-current")
 
@@ -78,11 +84,12 @@ final class MissCatLoginProfileUITests: XCTestCase {
 
         relaunch("--login-profile-auth", "--login-profile-auth-browser-error")
         advanceToAuthorization()
-        let browserAlert = app.alerts["エラー"]
-        XCTAssertTrue(browserAlert.waitForExistence(timeout: 10))
-        browserAlert.buttons["再試行"].tap()
-        XCTAssertTrue(element("welcome.screen").waitForExistence(timeout: 5))
-        advanceToAuthorization()
+        XCTAssertTrue(element("visual-ready.login-auth-browser.error").waitForExistence(timeout: 10))
+        XCTAssertFalse(app.alerts["エラー"].exists)
+        XCTAssertTrue(app.staticTexts[
+            "認証ページを開けませんでした。通信状態を確認して再試行してください"
+        ].exists)
+        app.buttons["authentication.retry"].tap()
         XCTAssertTrue(
             app.buttons["authentication.fixture.complete-session"]
                 .waitForExistence(timeout: 10)
@@ -118,6 +125,8 @@ final class MissCatLoginProfileUITests: XCTestCase {
         app.buttons["terms.agree"].tap()
 
         XCTAssertTrue(app.buttons["authentication.signup.continue"].waitForExistence(timeout: 5))
+        XCTAssertTrue(element("visual-ready.login-auth-registration").exists)
+        XCTAssertFalse(element("visual-ready.login-auth-browser.loading").exists)
         XCTAssertFalse(app.buttons["authentication.fixture.complete-session"].exists)
         app.buttons["authentication.signup.continue"].tap()
 
@@ -127,6 +136,22 @@ final class MissCatLoginProfileUITests: XCTestCase {
         XCTAssertTrue(element("authentication.fixture.completed").waitForExistence(timeout: 5))
         XCTAssertEqual(element("authentication.fixture.registration-open-count").value as? String, "1")
         XCTAssertEqual(element("authentication.fixture.authorization-request-count").value as? String, "2")
+    }
+
+    func testTermsReadinessTracksTheActuallyVisibleScrollEdge() {
+        launch("--login-profile-auth")
+        XCTAssertTrue(element("welcome.screen").waitForExistence(timeout: 10))
+        app.buttons["welcome.login"].tap()
+        XCTAssertTrue(element("visual-ready.login-terms.top").waitForExistence(timeout: 5))
+        XCTAssertFalse(element("visual-ready.login-terms.bottom").exists)
+
+        let terms = app.scrollViews["terms.text"]
+        for _ in 0 ..< 12 where !element("visual-ready.login-terms.bottom").exists {
+            terms.swipeUp()
+        }
+
+        XCTAssertTrue(element("visual-ready.login-terms.bottom").waitForExistence(timeout: 5))
+        XCTAssertFalse(element("visual-ready.login-terms.top").exists)
     }
 
     func testSearchResultProfileTabsAndRelationshipNavigation() {
@@ -428,6 +453,7 @@ final class MissCatLoginProfileUITests: XCTestCase {
 
     private func setInstance(_ value: String, captureName: String? = nil) {
         app.buttons["welcome.change-instance"].tap()
+        XCTAssertTrue(element("visual-ready.login-instance.default").waitForExistence(timeout: 5))
         // SwiftUI alert text fields are hosted by UIKit and do not consistently
         // forward their SwiftUI accessibility identifier on current simulators.
         let field = app.alerts.textFields.firstMatch
@@ -435,7 +461,12 @@ final class MissCatLoginProfileUITests: XCTestCase {
         if let captureName { capture(captureName) }
         field.tap()
         field.typeText(value)
+        let readiness = value.contains("javascript:")
+            ? "visual-ready.login-instance.invalid"
+            : "visual-ready.login-instance.default"
+        XCTAssertTrue(element(readiness).waitForExistence(timeout: 5))
         app.alerts.buttons["変更"].tap()
+        XCTAssertFalse(element(readiness).exists)
     }
 
     private func openTargetProfile() {

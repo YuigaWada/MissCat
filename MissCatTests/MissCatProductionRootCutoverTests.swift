@@ -280,6 +280,11 @@ final class MissCatProductionRootCutoverTests: XCTestCase {
                 "Missing deterministic visual-ready state: \(visualState)"
             )
         }
+
+        XCTAssertTrue(welcome.contains("if visualIsReady {"))
+        XCTAssertFalse(welcome.contains("value: visualIsReady"))
+        XCTAssertTrue(instance.contains("if isPresented {"))
+        XCTAssertTrue(browser.contains("visual-ready.login-auth-registration"))
     }
 
     func testSystemShareOracleUsesRemoteSystemIdentifiersInsteadOfAirDropAvailability() throws {

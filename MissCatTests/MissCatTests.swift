@@ -376,6 +376,95 @@ final class OnboardingVisualTokenTests: XCTestCase {
     }
 }
 
+final class AuthenticationVisualReadinessTests: XCTestCase {
+    func testTermsReadinessTracksOnlyEdgesActuallyInsideTheViewport() {
+        XCTAssertEqual(
+            MissCatTermsScrollReadiness.visibleEdges(
+                contentMinY: 0,
+                contentMaxY: 1_200,
+                viewportHeight: 600
+            ),
+            [.top]
+        )
+        XCTAssertEqual(
+            MissCatTermsScrollReadiness.visibleEdges(
+                contentMinY: -300,
+                contentMaxY: 900,
+                viewportHeight: 600
+            ),
+            []
+        )
+        XCTAssertEqual(
+            MissCatTermsScrollReadiness.visibleEdges(
+                contentMinY: -600,
+                contentMaxY: 600,
+                viewportHeight: 600
+            ),
+            [.bottom]
+        )
+        XCTAssertEqual(
+            MissCatTermsScrollReadiness.visibleEdges(
+                contentMinY: 0,
+                contentMaxY: 500,
+                viewportHeight: 600
+            ),
+            [.top, .bottom]
+        )
+    }
+
+    func testInstanceReadinessExistsOnlyWhileTheAlertIsPresented() {
+        XCTAssertNil(
+            MissCatInstanceEditorVisualReadiness.identifier(
+                isPresented: false,
+                draft: "misskey.io"
+            )
+        )
+        XCTAssertEqual(
+            MissCatInstanceEditorVisualReadiness.identifier(
+                isPresented: true,
+                draft: ""
+            ),
+            "visual-ready.login-instance.default"
+        )
+        XCTAssertEqual(
+            MissCatInstanceEditorVisualReadiness.identifier(
+                isPresented: true,
+                draft: "javascript:alert(1)"
+            ),
+            "visual-ready.login-instance.invalid"
+        )
+    }
+
+    func testRegistrationHasADistinctReadinessStateFromMiAuthLoading() {
+        XCTAssertEqual(
+            MissCatAuthenticationBrowserPresentationState.registration.visualReadyIdentifier,
+            "visual-ready.login-auth-registration"
+        )
+        XCTAssertEqual(
+            MissCatAuthenticationBrowserPresentationState.loading.visualReadyIdentifier,
+            "visual-ready.login-auth-browser.loading"
+        )
+        XCTAssertNotEqual(
+            MissCatAuthenticationBrowserPresentationState.registration.visualReadyIdentifier,
+            MissCatAuthenticationBrowserPresentationState.loading.visualReadyIdentifier
+        )
+    }
+
+    func testBrowserFailureCopyIsStableAndDoesNotExposeRawSystemErrors() {
+        let raw = NSError(
+            domain: "SensitiveTransportDetails",
+            code: 73,
+            userInfo: [NSLocalizedDescriptionKey: "proxy host and internal route"]
+        )
+
+        let message = MissCatAuthenticationBrowserPolicy.userFacingFailureMessage(for: raw)
+
+        XCTAssertEqual(message, "認証ページを開けませんでした。通信状態を確認して再試行してください")
+        XCTAssertFalse(message.contains(raw.localizedDescription))
+        XCTAssertFalse(message.contains(raw.domain))
+    }
+}
+
 final class InstanceEditorBehaviorTests: XCTestCase {
     func testNormalizationMatchesLegacyInstanceShaping() {
         XCTAssertEqual(
@@ -1050,6 +1139,127 @@ final class MiAuthAuthenticationTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)", file: file, line: line)
         }
+    }
+}
+
+private actor AuthenticationApplicationSessionProvider: MissCatApplicationSessionProviding {
+    let restoredSession: MissCatApplicationSession?
+    private(set) var restoreCount = 0
+
+    init(restoredSession: MissCatApplicationSession?) {
+        self.restoredSession = restoredSession
+    }
+
+    func restoreSession() async throws -> MissCatApplicationSession? {
+        restoreCount += 1
+        return restoredSession
+    }
+
+    func switchSession(
+        to accountID: MissCatApplicationAccountID
+    ) async throws -> MissCatApplicationSession {
+        throw MissCatApplicationSessionError.accountIdentityMismatch
+    }
+
+    func signOut(accountID: MissCatApplicationAccountID) async throws {}
+}
+
+@MainActor
+final class AuthenticationApplicationStateWiringTests: XCTestCase {
+    private let sessionID = UUID(uuidString: "11111111-2222-3333-4444-555555555555")!
+
+    func testProductionLifecycleCompletesMiAuthPersistsAndRestoresAuthenticatedRoot() async throws {
+        let body = """
+        {"ok":true,"token":"application-state-token-not-a-credential","user":{"id":"state-user","username":"state-cat"}}
+        """
+        let transport = FakeMiAuthTransport(results: [
+            .success(MissCatMiAuthHTTPResponse(data: Data(body.utf8), statusCode: 200))
+        ])
+        let accountStore = FakeAuthenticationAccountStore()
+        let sequence = UUIDSequence([sessionID])
+        let service = MissCatAuthenticationService(
+            transport: transport,
+            uuidGenerator: sequence.next,
+            accountStore: accountStore,
+            performsPostLoginActions: false
+        )
+        let account = MissCatApplicationAccount(
+            instance: "fixture.invalid",
+            userID: "state-user",
+            username: "state-cat"
+        )
+        let session = MissCatApplicationSession(
+            currentAccount: account,
+            accounts: [account],
+            timelineTabs: [MissCatTimelineTab(id: "home", title: "Home")],
+            selectedTimelineID: "home"
+        )
+        let provider = AuthenticationApplicationSessionProvider(restoredSession: session)
+        let rootStore = MissCatApplicationRootStore(sessionProvider: provider)
+        let state = ApplicationState(
+            authenticationService: service,
+            applicationRootStore: rootStore
+        )
+
+        _ = try await state.makeAuthorizationRequest(intent: .logIn, instance: "fixture.invalid")
+        let callback = URL(
+            string: "misscat://auth?session=11111111-2222-3333-4444-555555555555"
+        )!
+        XCTAssertTrue(state.callbackMatches(callback))
+
+        await state.completeAuthenticationAndRestore(callbackURL: callback)
+
+        XCTAssertEqual(accountStore.savedUser?.userId, "state-user")
+        XCTAssertEqual(accountStore.savedUser?.instance, "fixture.invalid")
+        XCTAssertEqual(accountStore.currentUserID, account.id.rawValue)
+        XCTAssertEqual(rootStore.phase.authenticatedSession?.currentAccount.id, account.id)
+        XCTAssertEqual(await provider.restoreCount, 1)
+        XCTAssertNil(state.errorMessage)
+        XCTAssertFalse(state.canRetryAuthentication)
+        XCTAssertFalse(state.isCompletingAuthentication)
+    }
+
+    func testProductionLifecyclePersistenceFailureDoesNotRestoreOrHideRetry() async throws {
+        let body = """
+        {"ok":true,"token":"rejected-state-token-not-a-credential","user":{"id":"state-user","username":"state-cat"}}
+        """
+        let transport = FakeMiAuthTransport(results: [
+            .success(MissCatMiAuthHTTPResponse(data: Data(body.utf8), statusCode: 200))
+        ])
+        let accountStore = FakeAuthenticationAccountStore()
+        accountStore.saveShouldSucceed = false
+        let sequence = UUIDSequence([sessionID])
+        let service = MissCatAuthenticationService(
+            transport: transport,
+            uuidGenerator: sequence.next,
+            accountStore: accountStore,
+            performsPostLoginActions: false
+        )
+        let provider = AuthenticationApplicationSessionProvider(restoredSession: nil)
+        let rootStore = MissCatApplicationRootStore(sessionProvider: provider)
+        let state = ApplicationState(
+            authenticationService: service,
+            applicationRootStore: rootStore
+        )
+
+        _ = try await state.makeAuthorizationRequest(intent: .logIn, instance: "fixture.invalid")
+        let callback = URL(
+            string: "misscat://auth?session=11111111-2222-3333-4444-555555555555"
+        )!
+        await state.completeAuthenticationAndRestore(callbackURL: callback)
+
+        XCTAssertNil(accountStore.savedUser)
+        XCTAssertNil(accountStore.currentUserID)
+        XCTAssertEqual(state.errorMessage, "アカウント情報を安全に保存できませんでした")
+        XCTAssertTrue(state.canRetryAuthentication)
+        XCTAssertFalse(state.isCompletingAuthentication)
+        XCTAssertEqual(await provider.restoreCount, 0)
+        XCTAssertEqual(rootStore.phase, .launching)
+
+        state.retryAuthentication()
+        XCTAssertNil(state.errorMessage)
+        XCTAssertFalse(state.canRetryAuthentication)
+        XCTAssertEqual(state.authenticationFlowGeneration, 1)
     }
 }
 
