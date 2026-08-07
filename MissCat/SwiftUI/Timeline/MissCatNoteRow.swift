@@ -19,6 +19,7 @@ public struct MissCatNoteRow: View {
     public let onVote: (String, Int) -> Void
     public let onDelete: (String) -> Void
     public let onMuteUser: (String) -> Void
+    public let onShare: (String) -> Void
     public let onOverflowAction: (MissCatNoteOverflowAction) -> Void
     public let contextRepository: (any MissCatNoteContextRepository)?
     public let readiness: MissCatNoteVisualReadiness?
@@ -47,6 +48,7 @@ public struct MissCatNoteRow: View {
         onVote: @escaping (String, Int) -> Void = { _, _ in },
         onDelete: @escaping (String) -> Void = { _ in },
         onMuteUser: @escaping (String) -> Void = { _ in },
+        onShare: @escaping (String) -> Void = { _ in },
         onOverflowAction: @escaping (MissCatNoteOverflowAction) -> Void = { _ in },
         contextRepository: (any MissCatNoteContextRepository)? = nil,
         readiness: MissCatNoteVisualReadiness? = nil,
@@ -69,6 +71,7 @@ public struct MissCatNoteRow: View {
         self.onVote = onVote
         self.onDelete = onDelete
         self.onMuteUser = onMuteUser
+        self.onShare = onShare
         self.onOverflowAction = onOverflowAction
         self.contextRepository = contextRepository
         self.readiness = readiness
@@ -528,6 +531,10 @@ public struct MissCatNoteRow: View {
                     openURL(permalink)
                     onOverflowAction(.openInBrowser)
                 },
+                onShare: {
+                    onShare(note.noteID)
+                    onOverflowAction(.share)
+                },
                 onDelete: {
                     onDelete(note.noteID)
                     onOverflowAction(.delete)
@@ -601,6 +608,7 @@ private struct MissCatNoteOverflowPanel: View {
     let onFavorite: () -> Void
     let onCopyLink: (URL) -> Void
     let onOpenBrowser: (URL) -> Void
+    let onShare: () -> Void
     let onDelete: () -> Void
     let onMute: () -> Void
 
@@ -632,6 +640,13 @@ private struct MissCatNoteOverflowPanel: View {
                         identifier: "note.\(note.id).overflow.browser"
                     ) { onOpenBrowser(permalink) }
                 }
+
+                actionButton(
+                    "共有",
+                    symbol: "square.and.arrow.up",
+                    identifier: "note.\(note.id).overflow.share",
+                    action: onShare
+                )
 
                 if isOwnNote {
                     actionButton(

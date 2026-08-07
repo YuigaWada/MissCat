@@ -405,6 +405,7 @@ public final class MissCatReactionPickerStore: ObservableObject {
 public enum MissCatNoteOverflowAction: Equatable, Sendable {
     case copyLink
     case openInBrowser
+    case share
     case favorite
     case unfavorite
     case muteUser

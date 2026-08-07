@@ -6,17 +6,20 @@ public struct MissCatDiscoveryNavigationActions {
     public var openNote: (String) -> Void
     public var openAttachment: (MissCatNoteAttachment) -> Void
     public var openHashtag: (String) -> Void
+    public var openSearch: ((String) -> Void)?
 
     public init(
         openUser: @escaping (String) -> Void = { _ in },
         openNote: @escaping (String) -> Void = { _ in },
         openAttachment: @escaping (MissCatNoteAttachment) -> Void = { _ in },
-        openHashtag: @escaping (String) -> Void = { _ in }
+        openHashtag: @escaping (String) -> Void = { _ in },
+        openSearch: ((String) -> Void)? = nil
     ) {
         self.openUser = openUser
         self.openNote = openNote
         self.openAttachment = openAttachment
         self.openHashtag = openHashtag
+        self.openSearch = openSearch
     }
 }
 
@@ -148,7 +151,11 @@ public struct MissCatDiscoveryScreen: View {
                     ForEach(store.trends) { trend in
                         Button {
                             searchIsFocused = false
-                            store.activateTrend(trend)
+                            if let openSearch = navigationActions.openSearch {
+                                openSearch(trend.tag)
+                            } else {
+                                store.activateTrend(trend)
+                            }
                         } label: {
                             Text("#\(trend.tag)")
                                 .font(.system(size: 17))
@@ -765,23 +772,44 @@ struct MissCatDiscoveryRoot: View {
     @StateObject private var router = MissCatDiscoveryRouter()
 
     let generation: MissCatDiscoveryAccountGeneration
+    let applicationNavigationActions: MissCatDiscoveryNavigationActions?
+
+    init(
+        generation: MissCatDiscoveryAccountGeneration,
+        applicationNavigationActions: MissCatDiscoveryNavigationActions? = nil
+    ) {
+        self.generation = generation
+        self.applicationNavigationActions = applicationNavigationActions
+    }
 
     var body: some View {
-        NavigationStack(path: $router.path) {
-            MissCatDiscoveryScreen(
-                store: generation.store,
-                instanceDisplayName: generation.session.instance,
-                palette: MissCatDiscoveryPageFactory.currentPalette,
-                navigationActions: discoveryNavigationActions
-            )
-            .navigationTitle("検索")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationDestination(for: MissCatDiscoveryRoute.self) { route in
-                destination(for: route)
+        Group {
+            if let applicationNavigationActions {
+                discoveryScreen(navigationActions: applicationNavigationActions)
+            } else {
+                NavigationStack(path: $router.path) {
+                    discoveryScreen(navigationActions: discoveryNavigationActions)
+                        .navigationDestination(for: MissCatDiscoveryRoute.self) { route in
+                            destination(for: route)
+                        }
+                }
             }
         }
         .id(generation.id)
         .accessibilityIdentifier("home.discovery.native-page")
+    }
+
+    private func discoveryScreen(
+        navigationActions: MissCatDiscoveryNavigationActions
+    ) -> some View {
+        MissCatDiscoveryScreen(
+            store: generation.store,
+            instanceDisplayName: generation.session.instance,
+            palette: MissCatDiscoveryPageFactory.currentPalette,
+            navigationActions: navigationActions
+        )
+        .navigationTitle("検索")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private var discoveryNavigationActions: MissCatDiscoveryNavigationActions {

@@ -1,12 +1,29 @@
 import SwiftUI
 
+public struct MissCatFeedReactionRequest {
+    public let noteID: String
+    public let existingReactions: [MissCatReaction]
+    public let selectReaction: (String) -> Void
+
+    public init(
+        noteID: String,
+        existingReactions: [MissCatReaction],
+        selectReaction: @escaping (String) -> Void
+    ) {
+        self.noteID = noteID
+        self.existingReactions = existingReactions
+        self.selectReaction = selectReaction
+    }
+}
+
 public struct MissCatFeedNavigationActions {
     public var openUser: (String) -> Void
     public var openNote: (String) -> Void
     public var openAttachment: (MissCatNoteAttachment) -> Void
     public var openHashtag: (String) -> Void
     public var reply: (String) -> Void
-    public var chooseReaction: (String) -> Void
+    public var chooseReaction: (MissCatFeedReactionRequest) -> Void
+    public var share: (String) -> Void
 
     public init(
         openUser: @escaping (String) -> Void = { _ in },
@@ -14,7 +31,8 @@ public struct MissCatFeedNavigationActions {
         openAttachment: @escaping (MissCatNoteAttachment) -> Void = { _ in },
         openHashtag: @escaping (String) -> Void = { _ in },
         reply: @escaping (String) -> Void = { _ in },
-        chooseReaction: @escaping (String) -> Void = { _ in }
+        chooseReaction: @escaping (MissCatFeedReactionRequest) -> Void = { _ in },
+        share: @escaping (String) -> Void = { _ in }
     ) {
         self.openUser = openUser
         self.openNote = openNote
@@ -22,6 +40,7 @@ public struct MissCatFeedNavigationActions {
         self.openHashtag = openHashtag
         self.reply = reply
         self.chooseReaction = chooseReaction
+        self.share = share
     }
 }
 
@@ -137,7 +156,22 @@ public struct MissCatFeedView: View {
                         onRenote: { noteID in
                             Task { await store.renote(noteID: noteID) }
                         },
-                        onChooseReaction: navigationActions.chooseReaction,
+                        onChooseReaction: { noteID in
+                            navigationActions.chooseReaction(
+                                MissCatFeedReactionRequest(
+                                    noteID: noteID,
+                                    existingReactions: note.reactions,
+                                    selectReaction: { reaction in
+                                        Task {
+                                            await store.toggleReaction(
+                                                noteID: noteID,
+                                                reaction: reaction
+                                            )
+                                        }
+                                    }
+                                )
+                            )
+                        },
                         onToggleReaction: { noteID, reaction in
                             Task { await store.toggleReaction(noteID: noteID, reaction: reaction) }
                         },
@@ -146,7 +180,8 @@ public struct MissCatFeedView: View {
                         },
                         onVote: { noteID, choice in
                             Task { await store.vote(noteID: noteID, choice: choice) }
-                        }
+                        },
+                        onShare: navigationActions.share
                     )
                     .id(note.id)
                     .task {
@@ -751,7 +786,20 @@ public struct MissCatNoteDetailView: View {
                             if contextRepository != nil {
                                 presentedSheet = PresentedSheet(kind: .reaction, note: note)
                             } else {
-                                navigationActions.chooseReaction(note.noteID)
+                                navigationActions.chooseReaction(
+                                    MissCatFeedReactionRequest(
+                                        noteID: note.noteID,
+                                        existingReactions: note.reactions,
+                                        selectReaction: { reaction in
+                                            Task {
+                                                await store.toggleReaction(
+                                                    noteID: note.noteID,
+                                                    reaction: reaction
+                                                )
+                                            }
+                                        }
+                                    )
+                                )
                             }
                         },
                         onToggleReaction: { noteID, reaction in
@@ -761,6 +809,7 @@ public struct MissCatNoteDetailView: View {
                         onVote: { noteID, choice in Task { await store.vote(noteID: noteID, choice: choice) } },
                         onDelete: { _ in pendingDestructiveAction = .delete(note) },
                         onMuteUser: { _ in pendingDestructiveAction = .mute(note) },
+                        onShare: navigationActions.share,
                         contextRepository: contextRepository,
                         readiness: readiness
                     )

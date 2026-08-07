@@ -21,9 +21,11 @@ final class MissCatProductionAccountCoordinator: ObservableObject {
     let notificationScrollCoordinator = MissCatNotificationScrollCoordinator()
     private(set) var discoveryGeneration: MissCatDiscoveryAccountGeneration?
     private(set) var profileAccount: MissCatProfileAccount?
+    private(set) var profileRepositoryFactory: ((MissCatProfileAccount) -> MissCatProfileRepository)?
     private(set) var composeSession: MissCatComposeProductionSession?
     private var people: [String: MissCatPerson] = [:]
     private var attachments: [String: MissCatNoteAttachment] = [:]
+    private var reactionRequests: [String: MissCatFeedReactionRequest] = [:]
 
     init(session: MissCatApplicationSession) {
         self.session = session
@@ -44,6 +46,29 @@ final class MissCatProductionAccountCoordinator: ObservableObject {
                 notificationRepository = repository
                 messagingRepository = repository
                 notificationStore = MissCatNotificationsStore(repository: repository)
+                let feedSession = MissCatFeedSession(
+                    accountID: configuration.currentScope.userID,
+                    username: configuration.currentScope.username,
+                    instance: configuration.currentScope.instance,
+                    apiKey: "fixture-token"
+                )
+                discoveryGeneration = MissCatDiscoveryAccountGeneration(
+                    session: feedSession,
+                    discoveryRepository: repository,
+                    feedRepository: repository,
+                    previewProfile: repository.profileUser,
+                    pageSize: 8
+                )
+                let fixtureProfileAccount = MissCatProfileAccount(
+                    userID: configuration.currentScope.userID,
+                    instance: configuration.currentScope.instance,
+                    token: "fixture-token"
+                )
+                let profileRepository = MissCatProductionRootE2EProfileRepository(
+                    account: fixtureProfileAccount
+                )
+                profileAccount = fixtureProfileAccount
+                profileRepositoryFactory = { _ in profileRepository }
                 composeSession = try MissCatProductionRootE2ELaunch.composeSession(
                     for: session.currentAccount.id
                 )
@@ -99,6 +124,7 @@ final class MissCatProductionAccountCoordinator: ObservableObject {
                 instance: user.instance,
                 token: apiKey
             )
+            profileRepositoryFactory = { MissCatRESTProfileRepository(account: $0) }
             let savedUsersByAccountID = Dictionary(
                 uniqueKeysWithValues: savedUsers.map { ($0.accountIdentifier, $0) }
             )
@@ -173,6 +199,22 @@ final class MissCatProductionAccountCoordinator: ObservableObject {
     }
 
     func attachment(id: String) -> MissCatNoteAttachment? { attachments[id] }
+
+    func prepareReaction(_ request: MissCatFeedReactionRequest) {
+        reactionRequests[request.noteID] = request
+    }
+
+    func reactionRequest(noteID: String) -> MissCatFeedReactionRequest? {
+        reactionRequests[noteID]
+    }
+
+    func clearReactionRequest(noteID: String? = nil) {
+        if let noteID {
+            reactionRequests[noteID] = nil
+        } else {
+            reactionRequests.removeAll()
+        }
+    }
 
     func handle(push: MissCatApplicationPush) async {
         guard let notificationStore else { return }
@@ -382,7 +424,16 @@ struct MissCatProductionApplicationRootView: View {
         switch route {
         case .discovery:
             if let generation = coordinator.discoveryGeneration {
-                MissCatDiscoveryRoot(generation: generation)
+                MissCatDiscoveryRoot(
+                    generation: generation,
+                    applicationNavigationActions: discoveryNavigationActions
+                )
+                .navigationBarBackButtonHidden(true)
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        productionRouteBackButton
+                    }
+                }
             } else {
                 unavailable("検索")
             }
@@ -394,6 +445,12 @@ struct MissCatProductionApplicationRootView: View {
                     palette: palette,
                     navigationActions: feedNavigationActions
                 )
+                .navigationBarBackButtonHidden(true)
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        productionRouteBackButton
+                    }
+                }
             } else { unavailable("ノート") }
         case .notification:
             if let notificationStore = coordinator.notificationStore {
@@ -435,6 +492,12 @@ struct MissCatProductionApplicationRootView: View {
                     palette: palette,
                     navigationActions: feedNavigationActions
                 )
+                .navigationBarBackButtonHidden(true)
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        productionRouteBackButton
+                    }
+                }
             } else { unavailable("検索") }
         case let .hashtag(tag):
             if let repository = coordinator.repository(for: configuration.currentScope) {
@@ -472,18 +535,18 @@ struct MissCatProductionApplicationRootView: View {
             )
         case let .reactionPicker(noteID):
             if let repository = coordinator.repository(for: configuration.currentScope)
-                as? any MissCatNoteContextRepository {
+                as? any MissCatNoteContextRepository,
+               let request = coordinator.reactionRequest(noteID: noteID) {
                 MissCatReactionPickerView(
                     noteID: noteID,
-                    existingReactions: [],
+                    existingReactions: request.existingReactions,
                     repository: repository,
                     palette: configuration.appearance.palette
-                ) { noteID, reaction in
-                    Task {
-                        try? await repository.perform(
-                            .addReaction(noteID: noteID, reaction: reaction)
-                        )
-                    }
+                ) { _, reaction in
+                    request.selectReaction(reaction)
+                }
+                .overlay(alignment: .topLeading) {
+                    productionSheetE2EMarker("reaction:\(noteID)")
                 }
             } else {
                 unavailable("リアクション")
@@ -494,6 +557,9 @@ struct MissCatProductionApplicationRootView: View {
                let url = repository.notePermalink(noteID: noteID) {
                 MissCatApplicationShareSheet(url: url)
                     .accessibilityIdentifier("share.sheet")
+                    .overlay(alignment: .topLeading) {
+                        productionSheetE2EMarker("share:\(noteID)")
+                    }
             } else {
                 unavailable("共有")
             }
@@ -530,6 +596,9 @@ struct MissCatProductionApplicationRootView: View {
         guard let account = coordinator.profileAccount else {
             return AnyView(unavailable("プロフィール"))
         }
+        guard let repositoryFactory = coordinator.profileRepositoryFactory else {
+            return AnyView(unavailable("プロフィール"))
+        }
         return AnyView(
             MissCatProfileFamilyView(
                 root: .profile(userID: userID),
@@ -537,6 +606,7 @@ struct MissCatProductionApplicationRootView: View {
                 palette: palette,
                 shellOwnership: .outerShell,
                 rootProfileShowsBack: showsBack,
+                repositoryFactory: repositoryFactory,
                 onExit: rootStore.router.pop,
                 onOpenURL: { rootStore.router.open(.externalURL($0)) },
                 onOpenImage: { openURL($0) },
@@ -607,7 +677,24 @@ struct MissCatProductionApplicationRootView: View {
             },
             openHashtag: { rootStore.router.open(.hashtag($0)) },
             reply: { rootStore.router.presentFullScreen(.compose(.reply(noteID: $0))) },
-            chooseReaction: { rootStore.router.presentSheet(.reactionPicker(noteID: $0)) }
+            chooseReaction: { request in
+                coordinator.prepareReaction(request)
+                rootStore.router.presentSheet(.reactionPicker(noteID: request.noteID))
+            },
+            share: { rootStore.router.presentSheet(.share(noteID: $0)) }
+        )
+    }
+
+    private var discoveryNavigationActions: MissCatDiscoveryNavigationActions {
+        MissCatDiscoveryNavigationActions(
+            openUser: { rootStore.router.open(.profile(userID: $0)) },
+            openNote: { rootStore.router.open(.note(id: $0)) },
+            openAttachment: {
+                coordinator.remember($0)
+                rootStore.router.presentFullScreen(.media(attachmentID: $0.id))
+            },
+            openHashtag: { rootStore.router.open(.hashtag($0)) },
+            openSearch: { rootStore.router.open(.search(query: $0)) }
         )
     }
 
@@ -675,8 +762,21 @@ struct MissCatProductionApplicationRootView: View {
     private var sheetBinding: Binding<MissCatApplicationSheetDestination?> {
         Binding(
             get: { rootStore.router.sheetDestination },
-            set: { if $0 == nil { rootStore.router.dismissSheet() } }
+            set: {
+                if $0 == nil {
+                    coordinator.clearReactionRequest()
+                    rootStore.router.dismissSheet()
+                }
+            }
         )
+    }
+
+    private var productionRouteBackButton: some View {
+        Button(action: rootStore.router.pop) {
+            Image(systemName: "chevron.left")
+        }
+        .accessibilityLabel("戻る")
+        .accessibilityIdentifier("production.route.back")
     }
 
     private var fullScreenBinding: Binding<MissCatApplicationFullScreenDestination?> {
@@ -792,6 +892,19 @@ struct MissCatProductionApplicationRootView: View {
     }
 
     @ViewBuilder
+    private func productionSheetE2EMarker(_ destination: String) -> some View {
+#if DEBUG
+        if MissCatProductionRootE2ELaunch.isRequested {
+            Color.clear
+                .frame(width: 1, height: 1)
+                .accessibilityElement()
+                .accessibilityIdentifier("production.sheet.destination")
+                .accessibilityValue(destination)
+        }
+#endif
+    }
+
+    @ViewBuilder
     private var productionRootE2EStateMarkers: some View {
 #if DEBUG
         if MissCatProductionRootE2ELaunch.isRequested {
@@ -817,9 +930,39 @@ struct MissCatProductionApplicationRootView: View {
                     .accessibilityValue(
                         MissCatProductionRootE2EState.shared.composeSubmissionAccountID ?? ""
                     )
+                Color.clear
+                    .frame(width: 1, height: 1)
+                    .accessibilityElement()
+                    .accessibilityIdentifier("production.root.route")
+                    .accessibilityValue(productionRouteE2EValue)
+                Color.clear
+                    .frame(width: 1, height: 1)
+                    .accessibilityElement()
+                    .accessibilityIdentifier("production.root.sheet")
+                    .accessibilityValue(rootStore.router.sheetDestination?.id ?? "none")
             }
         }
 #endif
+    }
+
+    private var productionRouteE2EValue: String {
+        guard let route = rootStore.router.path.last else {
+            return "root:\(rootStore.router.selectedSection.rawValue)"
+        }
+        switch route {
+        case .discovery: return "discovery"
+        case let .note(id): return "note:\(id)"
+        case let .notification(id): return "notification:\(id)"
+        case let .profile(userID): return "profile:\(userID)"
+        case let .userTimeline(userID, includesReplies, onlyFiles):
+            return "user-timeline:\(userID):\(includesReplies):\(onlyFiles)"
+        case let .conversation(userID): return "conversation:\(userID)"
+        case let .search(query): return "search:\(query)"
+        case let .hashtag(tag): return "hashtag:\(tag)"
+        case .settings: return "settings"
+        case .accounts: return "accounts"
+        case let .externalURL(url): return "external:\(url.absoluteString)"
+        }
     }
 }
 
@@ -853,6 +996,7 @@ private struct MissCatApplicationShareSheet: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("share.link")
 
             Button("閉じる", action: dismiss.callAsFunction)
                 .buttonStyle(.bordered)
@@ -864,11 +1008,16 @@ private struct MissCatApplicationShareSheet: View {
 
 #if DEBUG
 private final class MissCatProductionRootE2ERepository:
-    MissCatFeedRepository,
+    MissCatNoteContextRepository,
+    MissCatDiscoveryRepository,
     MissCatNotificationsRepository,
     MissCatMessagingRepository
 {
     let accountScope: MissCatAccountScope
+    let accountIdentifier: String
+    let currentServerUserID: String
+    private let reactionLock = NSLock()
+    private var shouldFailFirstReaction = true
 
     init(account: MissCatShellAccountScope) {
         accountScope = MissCatAccountScope(
@@ -877,6 +1026,11 @@ private final class MissCatProductionRootE2ERepository:
             host: account.displayInstance,
             accessToken: "fixture-token"
         )
+        accountIdentifier = MissCatAccountIdentity.storageKey(
+            instance: account.instance,
+            userId: account.userID
+        )
+        currentServerUserID = account.userID
     }
 
     func fetchPage(
@@ -925,7 +1079,72 @@ private final class MissCatProductionRootE2ERepository:
         AsyncStream { $0.yield(.connected(true)) }
     }
 
-    func perform(_ action: MissCatFeedAction) async throws {}
+    func perform(_ action: MissCatFeedAction) async throws {
+        guard case .addReaction = action else { return }
+        let shouldFail = reactionLock.withLock {
+            defer { shouldFailFirstReaction = false }
+            return shouldFailFirstReaction
+        }
+        if shouldFail { throw MissCatFeedRepositoryError.rejectedAction }
+    }
+
+    func notePermalink(noteID: String) -> URL? {
+        URL(string: "https://\(accountScope.host)/notes/\(noteID)")
+    }
+
+    func fetchURLPreview(for url: URL) async throws -> MissCatURLPreview {
+        MissCatURLPreview(sourceURL: url, title: "Production root fixture")
+    }
+
+    func fetchTrends() async throws -> [MissCatTrend] {
+        [
+            MissCatTrend(tag: "SwiftUI", chart: [2, 3, 5], usersCount: 42),
+            MissCatTrend(tag: "MissCat", chart: [1, 4, 6], usersCount: 21),
+        ]
+    }
+
+    func searchNotes(
+        query: String,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatDiscoveryPage<MissCatNote> {
+        let page = try await fetchPage(
+            source: .search(query: query),
+            cursor: cursor,
+            limit: limit
+        )
+        return MissCatDiscoveryPage(
+            items: page.notes,
+            nextCursor: page.hasMore ? page.notes.last?.id : nil
+        )
+    }
+
+    func searchUsers(
+        query: String,
+        offset: Int,
+        limit: Int
+    ) async throws -> MissCatDiscoveryPage<MissCatProfileUser> {
+        guard offset == 0 else { return MissCatDiscoveryPage(items: [], nextCursor: nil) }
+        let users = [
+            profileUser("fixture-author-0"),
+            profileUser(currentServerUserID),
+        ]
+        return MissCatDiscoveryPage(items: Array(users.prefix(limit)), nextCursor: nil)
+    }
+
+    func profileUser(_ userID: String) -> MissCatProfileUser {
+        MissCatProfileUser(
+            id: userID,
+            name: userID == currentServerUserID ? "Miss Cat" : "Route Author",
+            username: userID == currentServerUserID ? accountScope.username : "route-author",
+            host: accountScope.host,
+            description: "Production root typed-route fixture",
+            isCat: true,
+            followersCount: 42,
+            followingCount: 21,
+            notesCount: 12
+        )
+    }
 
     func fetchNotifications(cursor: String?, limit: Int) async throws -> MissCatNotificationPage {
         MissCatNotificationPage(notifications: [], hasMore: false)
@@ -959,6 +1178,87 @@ private final class MissCatProductionRootE2ERepository:
             text: text,
             createdAt: Date(),
             isRead: true
+        )
+    }
+}
+
+private final class MissCatProductionRootE2EProfileRepository: MissCatProfileRepository {
+    let account: MissCatProfileAccount
+
+    init(account: MissCatProfileAccount) {
+        self.account = account
+    }
+
+    func profile(userID: String) async throws -> MissCatProfileUser {
+        fixtureUser(userID)
+    }
+
+    func relationship(userID: String) async throws -> Bool { false }
+
+    func notes(
+        userID: String,
+        tab: MissCatProfileTimelineTab,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatProfilePage<MissCatProfileNote> {
+        guard cursor == nil, tab != .media else {
+            return MissCatProfilePage(items: [], nextCursor: nil)
+        }
+        let user = fixtureUser(userID)
+        return MissCatProfilePage(
+            items: [
+                MissCatProfileNote(
+                    id: "profile-route-note",
+                    createdAt: "2026-08-07T00:00:00.000Z",
+                    text: "Production root profile route",
+                    user: user,
+                    reactions: ["👍": 1]
+                ),
+            ],
+            nextCursor: nil
+        )
+    }
+
+    func users(
+        kind: MissCatUserListKind,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatProfilePage<MissCatProfileUser> {
+        guard cursor == nil else { return MissCatProfilePage(items: [], nextCursor: nil) }
+        return MissCatProfilePage(
+            items: [fixtureUser("fixture-author-0"), fixtureUser(account.userID)],
+            nextCursor: nil
+        )
+    }
+
+    func setFollowing(_ following: Bool, userID: String) async throws {}
+
+    func uploadProfileImage(
+        data: Data,
+        filename: String,
+        progress: @escaping (Double) -> Void
+    ) async throws -> String {
+        progress(1)
+        return "fixture-profile-upload"
+    }
+
+    func deleteProfileImage(fileID: String) async throws {}
+
+    func updateProfile(patch: MissCatProfileUpdatePatch) async throws -> MissCatProfileUser {
+        fixtureUser(account.userID)
+    }
+
+    private func fixtureUser(_ userID: String) -> MissCatProfileUser {
+        MissCatProfileUser(
+            id: userID,
+            name: userID == account.userID ? "Miss Cat" : "Route Author",
+            username: userID == account.userID ? "misscat" : "route-author",
+            host: MissCatAccountIdentity.normalizedInstance(account.instance),
+            description: "Production root typed-route fixture",
+            isCat: true,
+            followersCount: 42,
+            followingCount: 21,
+            notesCount: 12
         )
     }
 }
