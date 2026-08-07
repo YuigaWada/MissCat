@@ -38,14 +38,56 @@ sim_key="$group_path/.misscat-auth-backup-key"
 sim_input="$group_path/.misscat-auth-backup-input.enc"
 sim_output="$group_path/.misscat-auth-backup-output.enc"
 
-cleanup() {
-  rm -f -- "$sim_key" "$sim_input" "$sim_output"
-  if [ -n "$key_tmp" ]; then rm -f -- "$key_tmp"; fi
-  if [ -n "$backup_tmp" ]; then rm -f -- "$backup_tmp"; fi
+remove_staging_artifacts() {
+  cleanup_status=0
+  rm -f -- "$sim_key" || cleanup_status=1
+  rm -f -- "$sim_input" || cleanup_status=1
+  rm -f -- "$sim_output" || cleanup_status=1
+  return "$cleanup_status"
 }
-trap cleanup EXIT
+
+assert_staging_absent() {
+  for staged_path in "$sim_key" "$sim_input" "$sim_output"; do
+    if [ -e "$staged_path" ] || [ -L "$staged_path" ]; then
+      echo "simulator authentication staging cleanup incomplete" >&2
+      return 1
+    fi
+  done
+}
+
+remove_host_temporaries() {
+  cleanup_status=0
+  if [ -n "$key_tmp" ]; then rm -f -- "$key_tmp" || cleanup_status=1; fi
+  if [ -n "$backup_tmp" ]; then rm -f -- "$backup_tmp" || cleanup_status=1; fi
+  return "$cleanup_status"
+}
+
+cleanup_on_exit() {
+  exit_status="$?"
+  trap - EXIT
+  remove_staging_artifacts || exit_status=1
+  assert_staging_absent || exit_status=1
+  remove_host_temporaries || exit_status=1
+  exit "$exit_status"
+}
+
+finalize_operation() {
+  completed_operation="$1"
+  if ! remove_staging_artifacts; then
+    echo "$completed_operation staging cleanup failed" >&2
+    return 1
+  fi
+  assert_staging_absent || return 1
+  echo "$completed_operation succeeded"
+}
+
+trap cleanup_on_exit EXIT
 trap 'exit 1' HUP INT TERM
-cleanup
+if ! remove_staging_artifacts; then
+  echo "initial simulator staging cleanup failed" >&2
+  exit 1
+fi
+assert_staging_absent
 
 validate_secure_file() {
   path="$1"
@@ -90,7 +132,6 @@ wait_for_result() {
       result_success="$(plutil -extract auth-backup-result.success raw -o - "$prefs_path" 2>/dev/null || true)"
       if [ "$result_operation" = "$expected" ] && [ "$result_nonce" = "$expected_nonce" ]; then
         [ "$result_success" = "true" ] || { echo "$expected failed" >&2; exit 1; }
-        echo "$expected succeeded"
         return
       fi
     fi
@@ -152,6 +193,7 @@ case "$operation" in
     mv -f "$backup_tmp" "$backup_path"
     backup_tmp=""
     validate_backup
+    finalize_operation export
     echo "backup_sha256=$(openssl dgst -sha256 "$backup_path" | awk '{print $NF}')"
     echo "backup_mode=$(stat -f '%Lp' "$backup_path") key_mode=$(stat -f '%Lp' "$key_path")"
     ;;
@@ -161,12 +203,18 @@ case "$operation" in
     install_key
     stage_backup
     launch_operation preflight
-    cleanup
+    if ! remove_staging_artifacts; then
+      echo "preflight staging cleanup failed" >&2
+      exit 1
+    fi
+    assert_staging_absent
     launch_operation clear
+    finalize_operation clear
     ;;
   restore)
     install_key
     stage_backup
     launch_operation restore
+    finalize_operation restore
     ;;
 esac
