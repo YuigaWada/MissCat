@@ -45,7 +45,7 @@ enum MissCatEmojiArchive {
         case favs
         case history
     }
-    
+
     @objc(EmojiModel) class EmojiModel: NSObject, NSSecureCoding {
         class var supportsSecureCoding: Bool { true }
 
@@ -58,9 +58,9 @@ enum MissCatEmojiArchive {
         let isDefault: Bool
         let defaultEmoji: String?
         let customEmojiUrl: String?
-        
+
         var isFake: Bool = false
-        
+
         init(rawEmoji: String, isDefault: Bool, defaultEmoji: String?, customEmojiUrl: String?, isFake: Bool = false) {
             self.rawEmoji = rawEmoji
             self.isDefault = isDefault
@@ -68,25 +68,25 @@ enum MissCatEmojiArchive {
             self.customEmojiUrl = customEmojiUrl
             self.isFake = isFake
         }
-        
+
         // MARK: UserDefaults Init
-        
+
         required init?(coder aDecoder: NSCoder) {
             rawEmoji = aDecoder.decodeObject(of: NSString.self, forKey: "rawEmoji") as String? ?? ""
             isDefault = aDecoder.decodeBool(forKey: "isDefault")
             defaultEmoji = aDecoder.decodeObject(of: NSString.self, forKey: "defaultEmoji") as String?
             customEmojiUrl = aDecoder.decodeObject(of: NSString.self, forKey: "customEmojiUrl") as String?
         }
-        
+
         func encode(with aCoder: NSCoder) {
             aCoder.encode(rawEmoji, forKey: "rawEmoji")
             aCoder.encode(isDefault, forKey: "isDefault")
             aCoder.encode(defaultEmoji, forKey: "defaultEmoji")
             aCoder.encode(customEmojiUrl, forKey: "customEmojiUrl")
         }
-        
+
         // MARK: GET/SET
-        
+
         static func getEmojis(type: EmojiType, owner: SecureUser) -> [EmojiModel]? {
             getEmojis(type: type, owner: owner, storage: .standard)
         }
@@ -117,7 +117,7 @@ enum MissCatEmojiArchive {
             }
             return sanitized
         }
-        
+
         static func saveEmojis(with target: [EmojiModel], type: EmojiType, owner: SecureUser) {
             _ = try? saveEmojisChecked(with: target, type: type, owner: owner, storage: .standard)
         }
@@ -158,13 +158,13 @@ enum MissCatEmojiArchive {
             }
             throw PersistenceError.writeOrReadbackFailed
         }
-        
+
         static func checkHavingEmojis(type: EmojiType, owner: SecureUser) -> Bool {
             migrateLegacyKeyIfNeeded(type: type, owner: owner, storage: .standard)
             let key = getKey(type: type, owner: owner)
             return UserDefaults.standard.object(forKey: key) != nil
         }
-        
+
         static func getKey(type: EmojiType, owner: SecureUser) -> String {
             let instance = canonicalInstanceIdentifier(owner.instance) ?? owner.instance
             return "\(type.rawValue)-\(instance)" // 絵文字情報はインスタンスごとに管理する
