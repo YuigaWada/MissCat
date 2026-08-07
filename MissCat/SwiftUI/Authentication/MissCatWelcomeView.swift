@@ -6,25 +6,39 @@ struct MissCatWelcomeFrameGeometry {
     let safeBottom: CGFloat
 
     init(proposedSize: CGSize, proposedSafeTop: CGFloat, proposedSafeBottom: CGFloat) {
-        contentSize = proposedSize
-        safeTop = proposedSafeTop
-        safeBottom = proposedSafeBottom
+        contentSize = CGSize(
+            width: Self.validFrameDimension(proposedSize.width),
+            height: Self.validFrameDimension(proposedSize.height)
+        )
+        safeTop = Self.validFrameDimension(proposedSafeTop)
+        safeBottom = Self.validFrameDimension(proposedSafeBottom)
     }
 
     var canvasHeight: CGFloat {
-        contentSize.height + safeTop + safeBottom
+        Self.validFrameDimension(contentSize.height + safeTop + safeBottom)
     }
 
     var logoWidth: CGFloat {
-        contentSize.width - (MissCatLegacyMetrics.welcomeLogoHorizontalInset * 2)
+        Self.validFrameDimension(
+            contentSize.width - (MissCatLegacyMetrics.welcomeLogoHorizontalInset * 2)
+        )
     }
 
     var buttonWidth: CGFloat {
-        MissCatLegacyMetrics.welcomeButtonWidth(canvasWidth: contentSize.width)
+        Self.validFrameDimension(
+            MissCatLegacyMetrics.welcomeButtonWidth(canvasWidth: contentSize.width)
+        )
     }
 
     var buttonHeight: CGFloat {
-        MissCatLegacyMetrics.welcomeButtonHeight(canvasHeight: canvasHeight)
+        Self.validFrameDimension(
+            MissCatLegacyMetrics.welcomeButtonHeight(canvasHeight: canvasHeight)
+        )
+    }
+
+    private static func validFrameDimension(_ proposed: CGFloat) -> CGFloat {
+        guard proposed.isFinite else { return 0 }
+        return max(0, proposed)
     }
 }
 

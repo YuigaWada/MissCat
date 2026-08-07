@@ -212,7 +212,8 @@ enum MissCatProfileHeaderLayout {
     static let identityReservedWidth: CGFloat = 126
 
     static func identityMaxWidth(containerWidth: CGFloat) -> CGFloat {
-        containerWidth - identityReservedWidth
+        guard containerWidth.isFinite else { return 0 }
+        return max(0, containerWidth - identityReservedWidth)
     }
 }
 
