@@ -2,6 +2,7 @@
 import AVFoundation
 import CoreGraphics
 import Foundation
+import Observation
 import XCTest
 
 final class MissCatCameraCaptureTests: XCTestCase {
@@ -89,6 +90,51 @@ final class MissCatCameraCaptureTests: XCTestCase {
         XCTAssertEqual(flow.state, .available)
     }
 
+    @MainActor
+    func testObservationTracksCameraPermissionAndCaptureState() async {
+        let model = MissCatCameraCaptureModel(configuration: .profile)
+        let accessChanged = expectation(description: "Observation reports camera access mutation")
+
+        withObservationTracking {
+            _ = model.accessState
+        } onChange: {
+            accessChanged.fulfill()
+        }
+        model.applyAccessState(.ready)
+        await fulfillment(of: [accessChanged], timeout: 1)
+        XCTAssertEqual(model.accessState, .ready)
+
+        let captureChanged = expectation(description: "Observation reports camera capture mutation")
+        withObservationTracking {
+            _ = model.capture
+        } onChange: {
+            captureChanged.fulfill()
+        }
+        let photo = MissCatCameraCapture.photo(Data([9, 8, 7]))
+        model.receiveCapture(photo)
+        await fulfillment(of: [captureChanged], timeout: 1)
+        XCTAssertEqual(model.capture, photo)
+        XCTAssertFalse(model.isCapturingPhoto)
+        XCTAssertFalse(model.isRecording)
+    }
+
+    @MainActor
+    func testInjectedCameraModelIsRetainedOnlyForViewLifetime() {
+        var model: MissCatCameraCaptureModel? = MissCatCameraCaptureModel(configuration: .profile)
+        weak var retainedModel = model
+        var screen: MissCatCameraCaptureView? = MissCatCameraCaptureView(
+            configuration: .profile,
+            onCapture: { _ in },
+            model: model!
+        )
+
+        model = nil
+        XCTAssertNotNil(retainedModel)
+
+        screen = nil
+        XCTAssertNil(retainedModel)
+    }
+
     func testProfileAvatarProcessingProducesOrientedSquareJPEG() throws {
         let source = try XCTUnwrap(makeJPEG(width: 12, height: 8))
         let avatar = try XCTUnwrap(
@@ -142,6 +188,28 @@ final class MissCatCameraCaptureTests: XCTestCase {
         XCTAssertTrue(profile.contains("PhotosPicker("))
         XCTAssertTrue(compose.contains("MissCatCameraCaptureView"))
         XCTAssertTrue(profile.contains("MissCatCameraCaptureView"))
+    }
+
+    func testProfileDiscoveryAndCameraStateOwnersUseObservationOnly() throws {
+        let sources = try [
+            source(named: "MissCat/SwiftUI/Profile/MissCatProfileCore.swift"),
+            source(named: "MissCat/SwiftUI/Profile/MissCatProfileViews.swift"),
+            source(named: "MissCat/SwiftUI/Discovery/MissCatDiscoveryCore.swift"),
+            source(named: "MissCat/SwiftUI/Discovery/MissCatDiscoveryViews.swift"),
+            source(named: "MissCat/SwiftUI/Camera/MissCatCameraCapture.swift"),
+        ]
+        let combined = sources.joined(separator: "\n")
+
+        XCTAssertTrue(combined.contains("import Observation"))
+        XCTAssertTrue(combined.contains("@Observable"))
+        for legacy in ["import Combine", "ObservableObject", "@Published", "@StateObject", "@ObservedObject"] {
+            XCTAssertFalse(combined.contains(legacy), "Found legacy state owner: \(legacy)")
+        }
+        XCTAssertTrue(combined.contains("@State private var store: MissCatProfileStore"))
+        XCTAssertTrue(combined.contains("@State private var store: MissCatDiscoveryStore"))
+        XCTAssertTrue(combined.contains("@State private var model: MissCatCameraCaptureModel"))
+        XCTAssertTrue(combined.contains("@Bindable var store = store"))
+        XCTAssertTrue(combined.contains("@Bindable var model = model"))
     }
 
     private func makeJPEG(width: Int, height: Int) -> Data? {

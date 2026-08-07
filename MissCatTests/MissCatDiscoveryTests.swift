@@ -1,4 +1,5 @@
 @testable import MissCat
+import Observation
 import XCTest
 
 final class MissCatDiscoveryTests: XCTestCase {
@@ -302,6 +303,54 @@ final class MissCatDiscoveryTests: XCTestCase {
         XCTAssertNotEqual(first.accountIdentifier, second.accountIdentifier)
     }
 
+    @MainActor
+    func testObservationTracksDiscoveryQueryBindingMutation() async {
+        let store = MissCatDiscoveryStore(repository: DiscoveryRepositoryStub())
+        let changed = expectation(description: "Observation reports the query binding mutation")
+
+        withObservationTracking {
+            _ = store.query
+        } onChange: {
+            changed.fulfill()
+        }
+        store.query = "Observation"
+
+        await fulfillment(of: [changed], timeout: 1)
+        XCTAssertEqual(store.query, "Observation")
+    }
+
+    @MainActor
+    func testInjectedDiscoveryStoreIsRetainedOnlyForViewLifetime() {
+        let repository = DiscoveryRepositoryStub()
+        var store: MissCatDiscoveryStore? = MissCatDiscoveryStore(repository: repository)
+        weak var retainedStore = store
+        var screen: MissCatDiscoveryScreen? = MissCatDiscoveryScreen(
+            store: store!,
+            instanceDisplayName: "example.invalid"
+        )
+
+        store = nil
+        XCTAssertNotNil(retainedStore)
+
+        screen = nil
+        XCTAssertNil(retainedStore)
+    }
+
+    @MainActor
+    func testDeinitializingDiscoveryStoreCancelsInFlightSearchWithoutSelfRetention() async {
+        let repository = CancellationDiscoveryRepository(accountIdentifier: "fixture.example::fixture-me")
+        var store: MissCatDiscoveryStore? = MissCatDiscoveryStore(repository: repository)
+        weak var releasedStore = store
+        store?.query = "long-running"
+        store?.submitSearch()
+        try? await Task.sleep(nanoseconds: 20_000_000)
+
+        store = nil
+        await waitUntil { repository.cancellationCount >= 2 }
+
+        XCTAssertNil(releasedStore)
+    }
+
     private static let feedSession = MissCatFeedSession(
         accountID: "user-1",
         username: "wada",
@@ -350,6 +399,23 @@ final class MissCatDiscoveryTests: XCTestCase {
         }
         return body
     }
+}
+
+@MainActor
+private func waitUntil(
+    timeoutNanoseconds: UInt64 = 2_000_000_000,
+    file: StaticString = #filePath,
+    line: UInt = #line,
+    _ condition: @escaping () -> Bool
+) async {
+    let interval: UInt64 = 10_000_000
+    var elapsed: UInt64 = 0
+    while elapsed < timeoutNanoseconds {
+        if condition() { return }
+        try? await Task.sleep(nanoseconds: interval)
+        elapsed += interval
+    }
+    XCTFail("Condition was not satisfied before timeout", file: file, line: line)
 }
 
 private final class DiscoveryRepositoryStub: MissCatDiscoveryRepository {

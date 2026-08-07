@@ -1,5 +1,6 @@
 @testable import MissCat
 import Foundation
+import Observation
 import XCTest
 
 final class MissCatProfileHeaderLayoutTests: XCTestCase {
@@ -376,6 +377,61 @@ final class MissCatProfileStoreTests: XCTestCase {
         XCTAssertTrue(store.isCurrentUser)
         XCTAssertEqual(repository.relationshipCalls, [])
     }
+
+    func testObservationTracksProfileTabBindingMutation() async {
+        let repository = ProfileRepositorySpy(account: account)
+        let store = MissCatProfileStore(
+            account: account,
+            userID: "other",
+            repositoryFactory: { _ in repository }
+        )
+        let changed = expectation(description: "Observation reports the selected-tab binding mutation")
+
+        withObservationTracking {
+            _ = store.selectedTab
+        } onChange: {
+            changed.fulfill()
+        }
+        store.selectedTab = .media
+
+        await fulfillment(of: [changed], timeout: 1)
+        XCTAssertEqual(store.selectedTab, .media)
+    }
+
+    func testInjectedProfileStoreIsRetainedOnlyForViewLifetime() {
+        let repository = ProfileRepositorySpy(account: account)
+        var store: MissCatProfileStore? = MissCatProfileStore(
+            account: account,
+            userID: "other",
+            repositoryFactory: { _ in repository }
+        )
+        weak var retainedStore = store
+        var screen: MissCatProfileScreen? = MissCatProfileScreen(store: store!)
+
+        store = nil
+        XCTAssertNotNil(retainedStore)
+
+        screen = nil
+        XCTAssertNil(retainedStore)
+    }
+
+    func testDeinitializingProfileStoreCancelsInFlightProfileRequest() async {
+        let repository = ProfileRepositorySpy(account: account)
+        repository.profileDelayNanoseconds = 3_600_000_000_000
+        var store: MissCatProfileStore? = MissCatProfileStore(
+            account: account,
+            userID: "other",
+            repositoryFactory: { _ in repository }
+        )
+        weak var releasedStore = store
+
+        store?.reloadProfile()
+        await waitUntil { repository.profileCalls == ["other"] }
+        store = nil
+        await waitUntil { repository.profileCancellationCount == 1 }
+
+        XCTAssertNil(releasedStore)
+    }
 }
 
 @MainActor
@@ -561,6 +617,7 @@ private final class ProfileRepositorySpy: MissCatProfileRepository, @unchecked S
     let account: MissCatProfileAccount
     var profileValue: MissCatProfileUser
     var profileDelayNanoseconds: UInt64 = 0
+    var profileCancellationCount = 0
     var profileCalls: [String] = []
     var relationshipValue = false
     var relationshipCalls: [String] = []
@@ -587,7 +644,14 @@ private final class ProfileRepositorySpy: MissCatProfileRepository, @unchecked S
 
     func profile(userID: String) async throws -> MissCatProfileUser {
         profileCalls.append(userID)
-        if profileDelayNanoseconds > 0 { try await Task.sleep(nanoseconds: profileDelayNanoseconds) }
+        if profileDelayNanoseconds > 0 {
+            do {
+                try await Task.sleep(nanoseconds: profileDelayNanoseconds)
+            } catch is CancellationError {
+                profileCancellationCount += 1
+                throw CancellationError()
+            }
+        }
         return profileValue
     }
 
