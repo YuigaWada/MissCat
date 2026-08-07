@@ -697,40 +697,6 @@ final class MissCatNotificationMessageContractTests: XCTestCase {
 
 @MainActor
 final class MissCatNotificationMessageOrdinaryRouteTests: XCTestCase {
-    func testOrdinaryControllersAreNativeSwiftUIHostsForAValidAccount() throws {
-        let owner = SecureUser(
-            userId: "owner",
-            username: "owner",
-            instance: "example.test",
-            apiKey: "fixture-token"
-        )
-        let home = HomeViewController()
-
-        let notifications = try XCTUnwrap(
-            MissCatNotificationMessageBridge.makeNotificationsController(owner: owner, home: home)
-        )
-        let messages = try XCTUnwrap(
-            MissCatNotificationMessageBridge.makeMessagesController(owner: owner, home: home)
-        )
-
-        XCTAssertEqual(notifications.ownerID, owner.accountIdentifier)
-        XCTAssertEqual(messages.ownerID, owner.accountIdentifier)
-        XCTAssertNotEqual(notifications.ownerID, owner.userId)
-    }
-
-    func testOrdinaryControllersRejectMissingCredentialsWithoutNetwork() {
-        let owner = SecureUser(
-            userId: "owner",
-            username: "owner",
-            instance: "example.test",
-            apiKey: nil
-        )
-        let home = HomeViewController()
-
-        XCTAssertNil(MissCatNotificationMessageBridge.makeNotificationsController(owner: owner, home: home))
-        XCTAssertNil(MissCatNotificationMessageBridge.makeMessagesController(owner: owner, home: home))
-    }
-
     func testNotificationReselectCoordinatorEmitsDeterministicScrollRequest() {
         let coordinator = MissCatNotificationScrollCoordinator()
 

@@ -1146,39 +1146,43 @@ public struct MissCatReactionPicker: View {
     }
 }
 
-/// The existing decoder understands static images plus animated GIF/APNG and SVG.
-/// Keeping it behind this SwiftUI bridge avoids flattening custom reactions through
-/// AsyncImage's static-image-only rendering path.
-private struct MissCatReactionImage: UIViewRepresentable {
+private struct MissCatReactionImage: View {
     let url: URL
     var onLoad: ((Bool) -> Void)?
+    @State private var reportedURL: URL?
 
     init(url: URL, onLoad: ((Bool) -> Void)? = nil) {
         self.url = url
         self.onLoad = onLoad
     }
 
-    final class Coordinator {
-        var loadedURL: URL?
+    var body: some View {
+        AsyncImage(url: url) { phase in
+            switch phase {
+            case let .success(image):
+                image
+                    .resizable()
+                    .scaledToFit()
+                    .onAppear { report(success: true) }
+            case .failure:
+                Image(systemName: "exclamationmark.triangle")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundStyle(.secondary)
+                    .padding(6)
+                    .onAppear { report(success: false) }
+            case .empty:
+                ProgressView()
+            @unknown default:
+                EmptyView()
+            }
+        }
     }
 
-    func makeCoordinator() -> Coordinator { Coordinator() }
-
-    func makeUIView(context: Context) -> MFMImageView {
-        let view = MFMImageView(frame: .zero)
-        view.contentMode = .scaleAspectFit
-        view.backgroundColor = .clear
-        return view
-    }
-
-    func updateUIView(_ view: MFMImageView, context: Context) {
-        guard context.coordinator.loadedURL != url else { return }
-        context.coordinator.loadedURL = url
-        view.setImage(url: url.absoluteString, completion: onLoad)
-    }
-
-    static func dismantleUIView(_ view: MFMImageView, coordinator: Coordinator) {
-        view.prepareForReuse()
+    private func report(success: Bool) {
+        guard reportedURL != url else { return }
+        reportedURL = url
+        onLoad?(success)
     }
 }
 

@@ -180,7 +180,9 @@ private struct MissCatWebView: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.isOpaque = false
-        let legacyBackground = UIColor(hex: MissCatLegacyColorHex.authenticationBrowserBackground)
+        let legacyBackground = UIColor(
+            Color(hex: MissCatLegacyColorHex.authenticationBrowserBackground)
+        )
         webView.backgroundColor = legacyBackground
         webView.scrollView.backgroundColor = legacyBackground
         context.coordinator.loadedURL = request.url

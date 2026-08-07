@@ -426,7 +426,6 @@ final class MissCatLegacyShellConfigurationProvider: MissCatShellConfigurationPr
         guard let persisted = cache.getCurrentUser(), self.scope(for: persisted) == scope else {
             throw MissCatShellConfigurationError.accountIdentityMismatch
         }
-        Cache.shared.resetMyCache()
         Theme.shared.reset()
         Theme.shared.set()
         return try makeConfiguration(currentUser: persisted)
@@ -457,8 +456,7 @@ final class MissCatLegacyShellConfigurationProvider: MissCatShellConfigurationPr
         let currentScope = scope(for: currentUser)
         let accounts = users.map { user in
             let scope = scope(for: user)
-            let cached = Cache.shared.getUserInfo(user: user)
-            return MissCatShellAccount(scope: scope, displayName: cached?.name)
+            return MissCatShellAccount(scope: scope)
         }
         let theme = Theme.shared.currentModel ?? Theme.Model.getDefault()
         let pages = Self.makePages(theme: theme, users: users, currentScope: currentScope)

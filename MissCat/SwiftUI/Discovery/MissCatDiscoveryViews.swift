@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 public struct MissCatDiscoveryNavigationActions {
     public var openUser: (String) -> Void
@@ -630,122 +629,8 @@ final class MissCatDiscoveryAccountCoordinator {
     }
 }
 
-/// Temporary UIKit containment boundary used by the ordinary Home pager. The
-/// complete discovery hierarchy below this controller is native SwiftUI.
-@MainActor
-final class MissCatDiscoveryHostingController: UIHostingController<AnyView> {
-    private let accountCoordinator: MissCatDiscoveryAccountCoordinator
-
-    var accountIdentifier: String {
-        accountCoordinator.generation.accountIdentifier
-    }
-
-    var hasFullProfileFamilyRouting: Bool {
-        accountCoordinator.generation.profileRepositoryFactory != nil
-            && accountCoordinator.generation.profileActions != nil
-    }
-
-    init(generation: MissCatDiscoveryAccountGeneration) {
-        accountCoordinator = MissCatDiscoveryAccountCoordinator(generation: generation)
-        super.init(rootView: AnyView(EmptyView()))
-        rebuildRoot()
-        view.backgroundColor = UIColor(MissCatDiscoveryPageFactory.currentPalette.base)
-    }
-
-    @available(*, unavailable)
-    required dynamic init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    func handleHashtag(_ tag: String) {
-        accountCoordinator.generation.store.search(hashtag: tag)
-    }
-
-    func replaceAccountGeneration(_ generation: MissCatDiscoveryAccountGeneration) {
-        guard accountCoordinator.replace(with: generation) else { return }
-        rebuildRoot()
-    }
-
-    func retire() {
-        accountCoordinator.cancel()
-    }
-
-    private func rebuildRoot() {
-        rootView = AnyView(
-            MissCatDiscoveryRoot(generation: accountCoordinator.generation)
-        )
-    }
-}
-
-@MainActor
-enum MissCatDiscoveryPageFactory {
-    static func makeController(
-        owner: SecureUser?,
-        home: HomeViewController? = nil
-    ) -> UIViewController {
-#if DEBUG
-        if MissCatProfileOrdinaryRouteConfiguration.isEnabled {
-            let configuration = MissCatProfileOrdinaryRouteConfiguration.self
-            let repository = configuration.discoveryRepository
-            let session = MissCatFeedSession(
-                accountID: configuration.owner.userId,
-                username: configuration.owner.username,
-                instance: configuration.owner.instance,
-                apiKey: configuration.account.token
-            )
-            let generation = MissCatDiscoveryAccountGeneration(
-                session: session,
-                discoveryRepository: repository,
-                feedRepository: repository,
-                profileRepositoryFactory: { _ in configuration.repository },
-                profileActions: MissCatProfileBridge.productionActions(
-                    owner: configuration.owner,
-                    router: home
-                )
-            )
-            generation.store.query = configuration.query
-            generation.store.select(.users)
-            generation.store.submitSearch()
-            return MissCatDiscoveryHostingController(generation: generation)
-        }
-        if MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
-            let session = MissCatDiscoveryOrdinaryRouteConfiguration.session
-            let repository = MissCatDiscoveryOrdinaryRouteRepository()
-            return MissCatDiscoveryHostingController(
-                generation: MissCatDiscoveryAccountGeneration(
-                    session: session,
-                    discoveryRepository: repository,
-                    feedRepository: repository,
-                    previewProfile: repository.user
-                )
-            )
-        }
-#endif
-        guard let owner,
-              let apiKey = owner.apiKey,
-              !apiKey.isEmpty
-        else {
-            return UIHostingController(rootView: AnyView(MissCatDiscoveryUnavailableView()))
-        }
-        let session = MissCatFeedSession(
-            accountID: owner.userId,
-            username: owner.username,
-            instance: owner.instance,
-            apiKey: apiKey
-        )
-        return MissCatDiscoveryHostingController(
-            generation: MissCatDiscoveryAccountGeneration(
-                session: session,
-                profileRepositoryFactory: { MissCatRESTProfileRepository(account: $0) },
-                profileActions: MissCatProfileBridge.productionActions(
-                    owner: owner,
-                    router: home
-                )
-            )
-        )
-    }
-
-    static var currentPalette: MissCatVisualPalette {
+private enum MissCatDiscoveryPalette {
+    static var current: MissCatVisualPalette {
         var palette = Theme.shared.currentModel?.colorMode == .dark
             ? MissCatVisualPalette.legacyDark
             : MissCatVisualPalette.legacyLight
@@ -753,17 +638,6 @@ enum MissCatDiscoveryPageFactory {
             palette.accent = Color(hex: accent)
         }
         return palette
-    }
-}
-
-private struct MissCatDiscoveryUnavailableView: View {
-    var body: some View {
-        ContentUnavailableView(
-            "検索を利用できません",
-            systemImage: "person.crop.circle.badge.exclamationmark",
-            description: Text("アカウントを選択してください")
-        )
-        .accessibilityIdentifier("discovery.account-unavailable")
     }
 }
 
@@ -805,7 +679,7 @@ struct MissCatDiscoveryRoot: View {
         MissCatDiscoveryScreen(
             store: generation.store,
             instanceDisplayName: generation.session.instance,
-            palette: MissCatDiscoveryPageFactory.currentPalette,
+            palette: MissCatDiscoveryPalette.current,
             navigationActions: navigationActions
         )
         .navigationTitle("検索")
@@ -837,7 +711,7 @@ struct MissCatDiscoveryRoot: View {
             MissCatNoteDetailView(
                 noteID: noteID,
                 repository: generation.feedRepository,
-                palette: MissCatDiscoveryPageFactory.currentPalette,
+                palette: MissCatDiscoveryPalette.current,
                 navigationActions: feedNavigationActions
             )
 
@@ -847,7 +721,7 @@ struct MissCatDiscoveryRoot: View {
                 MissCatProfileFamilyView(
                     root: .profile(userID: userID),
                     account: generation.profileAccount,
-                    palette: MissCatDiscoveryPageFactory.currentPalette,
+                    palette: MissCatDiscoveryPalette.current,
                     shellOwnership: .outerShell,
                     rootProfileShowsBack: true,
                     repositoryFactory: repositoryFactory,
@@ -859,7 +733,7 @@ struct MissCatDiscoveryRoot: View {
             } else {
                 MissCatProfileScreen(
                     store: MissCatProfileStore(account: generation.profileAccount, userID: userID),
-                    palette: MissCatDiscoveryPageFactory.currentPalette,
+                    palette: MissCatDiscoveryPalette.current,
                     onBack: router.pop,
                     onOpenURL: routeProfileURL,
                     onOpenImage: { url in
@@ -881,7 +755,7 @@ struct MissCatDiscoveryRoot: View {
                 includesReplies: includesReplies,
                 onlyFiles: onlyFiles,
                 repository: generation.feedRepository,
-                palette: MissCatDiscoveryPageFactory.currentPalette,
+                palette: MissCatDiscoveryPalette.current,
                 navigationActions: feedNavigationActions
             )
             .navigationTitle("投稿")
@@ -891,7 +765,7 @@ struct MissCatDiscoveryRoot: View {
             MissCatUserListTimelineView(
                 listID: listID,
                 repository: generation.feedRepository,
-                palette: MissCatDiscoveryPageFactory.currentPalette,
+                palette: MissCatDiscoveryPalette.current,
                 navigationActions: feedNavigationActions
             )
             .navigationTitle("リスト")
@@ -902,7 +776,7 @@ struct MissCatDiscoveryRoot: View {
                 MissCatSearchResultsView(
                     query: query,
                     repository: generation.feedRepository,
-                    palette: MissCatDiscoveryPageFactory.currentPalette,
+                    palette: MissCatDiscoveryPalette.current,
                     navigationActions: feedNavigationActions
                 )
             } else {
@@ -911,7 +785,7 @@ struct MissCatDiscoveryRoot: View {
                         account: generation.profileAccount,
                         kind: .search(query: query)
                     ),
-                    palette: MissCatDiscoveryPageFactory.currentPalette,
+                    palette: MissCatDiscoveryPalette.current,
                     onSelectUser: { router.open(.profile($0)) }
                 )
             }
@@ -927,7 +801,7 @@ struct MissCatDiscoveryRoot: View {
             MissCatHashtagResultsView(
                 tag: tag,
                 repository: generation.feedRepository,
-                palette: MissCatDiscoveryPageFactory.currentPalette,
+                palette: MissCatDiscoveryPalette.current,
                 navigationActions: feedNavigationActions
             )
         }

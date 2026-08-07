@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import MisskeyKit
 
 class SecureUser: Codable {
     let userId: String

@@ -109,7 +109,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         
         savedUsers.forEach { user in
             self.registerSw(for: user)
-            self.setupEmojiHandler(for: user)
+            MissCatEmojiCatalog.prepare(for: user)
         }
     }
     
@@ -121,10 +121,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             let misscatApi = MisscatApi(apiKeyManager: ApiKeyManager(), and: user)
             misscatApi.registerSw()
         #endif
-    }
-    
-    private func setupEmojiHandler(for user: SecureUser) {
-        EmojiHandler.setHandler(owner: user)
     }
     
     // MARK: Notifications

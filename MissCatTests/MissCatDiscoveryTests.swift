@@ -259,45 +259,16 @@ final class MissCatDiscoveryTests: XCTestCase {
         XCTAssertEqual(routes.count, 7)
     }
 
-    @MainActor
-    func testOrdinaryPageFactoryBuildsNativeHostingBoundaryFromImmutableOwnerSnapshot() throws {
-        let owner = SecureUser(
-            userId: "server-user",
-            username: "wada",
-            instance: "factory.example",
-            apiKey: "factory-token"
-        )
-
-        let controller = try XCTUnwrap(
-            MissCatDiscoveryPageFactory.makeController(owner: owner) as? MissCatDiscoveryHostingController
-        )
-        owner.apiKey = "later-token"
-
-        XCTAssertEqual(
-            controller.accountIdentifier,
-            MissCatAccountIdentity.storageKey(instance: "factory.example", userId: "server-user")
-        )
-        XCTAssertTrue(controller.hasFullProfileFamilyRouting)
-        controller.retire()
-    }
-
-    func testOrdinaryHomeRouteHasNoProductionLegacySearchConstructionOrFallback() throws {
+    func testShippingTargetHasNoLegacyHomeOrSearchControllerMembership() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-        let home = try String(
-            contentsOf: repositoryRoot.appendingPathComponent("MissCat/View/Main/HomeViewController.swift"),
-            encoding: .utf8
-        )
         let project = try String(
             contentsOf: repositoryRoot.appendingPathComponent("MissCat.xcodeproj/project.pbxproj"),
             encoding: .utf8
         )
 
-        XCTAssertTrue(home.contains("[generateDiscoveryVC()] + setViewControllers"))
-        XCTAssertFalse(home.contains("SearchViewController"))
-        XCTAssertFalse(home.contains("TrendViewController"))
-        XCTAssertFalse(home.contains("search.searchNote"))
+        XCTAssertFalse(project.contains("HomeViewController.swift in Sources"))
         XCTAssertFalse(project.contains("SearchViewController.swift in Sources"))
         XCTAssertFalse(project.contains("TrendViewController.swift in Sources"))
     }

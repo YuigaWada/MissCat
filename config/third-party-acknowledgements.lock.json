@@ -3,130 +3,16 @@
   "provenance": "CocoaPods generated Pods-MissCat-acknowledgements.plist; acknowledgement digests normalize only trailing horizontal whitespace per line",
   "dependencies": [
     {
-      "name": "Agrume",
-      "version": "5.6.13",
-      "sourceURL": "https://github.com/JanGorman/Agrume.git",
-      "acknowledgementSHA256": "d38303d0a9fd2c1b9018a48a440e673908b6e872e0017a9353b61f7edc2c6cb5"
-    },
-    {
-      "name": "APNGKit",
-      "version": "1.2.2",
-      "sourceURL": "https://github.com/onevcat/APNGKit.git",
-      "acknowledgementSHA256": "626057da1870babc6cad05ad764e70be57007a7d334a67a82e7e67fba10f92ff"
-    },
-    {
-      "name": "Cache",
-      "version": "6.0.0",
-      "sourceURL": "https://github.com/hyperoslo/Cache.git",
-      "acknowledgementSHA256": "dc0d67e55e4794f21a7f2d6d11a1f0404da88872c3483dcedce3ca7d828b693f"
-    },
-    {
-      "name": "ChromaColorPicker",
-      "version": "2.0.2",
-      "sourceURL": "https://github.com/joncardasis/ChromaColorPicker.git",
-      "acknowledgementSHA256": "9308a9dea37675950a80078f92f459617bd0199cdec1c5313d1b21c6bc4cbe77"
-    },
-    {
-      "name": "Eureka",
-      "version": "5.3.3",
-      "sourceURL": "https://github.com/xmartlabs/Eureka.git",
-      "acknowledgementSHA256": "1af6b0ff12c2f32d7a3385c82db5603143fb33be1d2b3e6255262d5e09923598"
-    },
-    {
       "name": "Firebase",
       "version": "8.0.0",
       "sourceURL": "https://github.com/firebase/firebase-ios-sdk.git",
       "acknowledgementSHA256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
     },
     {
-      "name": "FloatingPanel",
-      "version": "1.7.4",
-      "sourceURL": "https://github.com/SCENEE/FloatingPanel.git",
-      "acknowledgementSHA256": "034bcec66ce678e81cae206003d7ff44ac66f4d943c349b198663b5eed10e68a"
-    },
-    {
-      "name": "Gifu",
-      "version": "3.3",
-      "sourceURL": "https://github.com/kaishin/Gifu.git",
-      "acknowledgementSHA256": "ab07e076432c88446c6758cd8b411805ba93c9051be1a08ab7891e7d777df118"
-    },
-    {
-      "name": "iOSPhotoEditor",
-      "version": "1.0.0",
-      "sourceURL": "https://github.com/M-Hamed/photo-editor.git",
-      "acknowledgementSHA256": "5ddc23ec1c3d7493c3ab16f75e2a30025dae18ce810abaa25a2826b1aa0acb09"
-    },
-    {
-      "name": "MessageKit",
-      "version": "3.3.0",
-      "sourceURL": "https://github.com/MessageKit/MessageKit.git",
-      "acknowledgementSHA256": "645b1bbb46776bf0dbca751d101a203add94461fbb0f0c12cf9d756f60e68afd"
-    },
-    {
       "name": "MisskeyKit",
       "version": "3.0.4",
       "sourceURL": "https://github.com/yuigawada/MisskeyKit-for-iOS.git",
       "acknowledgementSHA256": "b34352252acb77429df939b87b8ba0bb4cdb26d64df756dfc548b620d753c450"
-    },
-    {
-      "name": "PolioPager",
-      "version": "2.6",
-      "sourceURL": "https://github.com/yuigawada/PolioPager.git",
-      "acknowledgementSHA256": "b34352252acb77429df939b87b8ba0bb4cdb26d64df756dfc548b620d753c450"
-    },
-    {
-      "name": "RxCocoa",
-      "version": "5.1.1",
-      "sourceURL": "https://github.com/ReactiveX/RxSwift.git",
-      "acknowledgementSHA256": "d0dc53828698ad55944b83808a2c28c920716a077bd5325e859a80219043873c"
-    },
-    {
-      "name": "RxDataSources",
-      "version": "4.0.1",
-      "sourceURL": "https://github.com/RxSwiftCommunity/RxDataSources.git",
-      "acknowledgementSHA256": "32255ed3661ee74fe37c8528dfec7f143cee3b61b08854708e1fe3496439bc8f"
-    },
-    {
-      "name": "RxSwift",
-      "version": "5.1.2",
-      "sourceURL": "https://github.com/ReactiveX/RxSwift.git",
-      "acknowledgementSHA256": "d0dc53828698ad55944b83808a2c28c920716a077bd5325e859a80219043873c"
-    },
-    {
-      "name": "SkeletonView",
-      "version": "1.8.2",
-      "sourceURL": "https://github.com/Juanpe/SkeletonView.git",
-      "acknowledgementSHA256": "ff200b95c350c4221a5276535d4ca265808f3b8eb2d9422783b89b62385f2e61"
-    },
-    {
-      "name": "Starscream",
-      "version": "3.1.1",
-      "sourceURL": "https://github.com/daltoniam/Starscream.git",
-      "acknowledgementSHA256": "0c79f31d66662a65218c3ce8464662e48662e8918248c5ebb2fdc5987ebb5429"
-    },
-    {
-      "name": "SVGKit",
-      "version": "2.1.0",
-      "sourceURL": "https://github.com/SVGKit/SVGKit.git",
-      "acknowledgementSHA256": "4b1a87c06dc55ee653b4477fa04e839cdcf63fbf19b846a843965c94858dfd34"
-    },
-    {
-      "name": "SwiftLinkPreview",
-      "version": "3.1.0",
-      "sourceURL": "https://github.com/LeonardoCardoso/SwiftLinkPreview.git",
-      "acknowledgementSHA256": "806f71167b84da574feee4d66cd4d3d35712a4213028c4c553213780658e08cb"
-    },
-    {
-      "name": "XLActionController",
-      "version": "5.1.0",
-      "sourceURL": "https://github.com/xmartlabs/XLActionController.git",
-      "acknowledgementSHA256": "65cf8e9acb2c60e55f5272d57a194f8e83fc3965c1cb6be85a85ea0a2266ca40"
-    },
-    {
-      "name": "XLPagerTabStrip",
-      "version": "9.0.0",
-      "sourceURL": "https://github.com/xmartlabs/XLPagerTabStrip.git",
-      "acknowledgementSHA256": "0d09dbe902167291518371c5248d818c17c92f86a7cd5a58f6ce5958004a1a2b"
     }
   ]
 }

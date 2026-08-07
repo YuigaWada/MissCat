@@ -249,7 +249,7 @@ final class MissCatAuthenticationService {
         misskey.auth.setAPIKey(apiKey)
 
         if performsPostLoginActions {
-            EmojiHandler.setHandler(owner: persistedUser)
+            MissCatEmojiCatalog.prepare(for: persistedUser)
             registerPushNotifications(for: persistedUser)
             Theme.shared.reset()
             Theme.shared.set()

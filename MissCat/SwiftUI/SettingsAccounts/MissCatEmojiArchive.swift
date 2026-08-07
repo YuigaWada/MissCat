@@ -1,14 +1,12 @@
 //
-//  EmojiView.swift
+//  MissCatEmojiArchive.swift
 //  MissCat
 //
 //  Created by Yuiga Wada on 2019/11/18.
 //  Copyright © 2019 Yuiga Wada. All rights reserved.
 //
 
-import Gifu
-import SVGKit
-import UIKit
+import Foundation
 
 struct EmojiArchiveStorage {
     let data: (_ key: String) -> Data?
@@ -38,96 +36,9 @@ struct EmojiArchiveStorage {
     )
 }
 
-class EmojiView: UIView {
-    @IBOutlet weak var emojiLabel: UILabel!
-    
-    @IBOutlet weak var emojiImageView: MFMImageView!
-    @IBOutlet var view: UIView!
-    
-    var isFake: Bool = false {
-        didSet {
-            guard isFake else { return }
-            emojiImageView.backgroundColor = .clear
-            emojiLabel.backgroundColor = .clear
-        }
-    }
-    
-    var emoji: EmojiView.EmojiModel? {
-        didSet {
-            self.setEmoji()
-        }
-    }
-    
-    // MARK: Life Cycle
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        loadNib()
-        backgroundColor = .clear
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)!
-        loadNib()
-        backgroundColor = .clear
-    }
-    
-    func loadNib() {
-        if let view = UINib(nibName: "EmojiView", bundle: Bundle(for: type(of: self))).instantiate(withOwner: self, options: nil)[0] as? UIView {
-            view.frame = bounds
-            view.backgroundColor = .clear
-            addSubview(view)
-            adjustFontSize()
-        }
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        setEmoji()
-    }
-    
-    func initialize() {
-        emojiLabel.text = nil
-        emojiImageView.image = nil
-        emojiImageView.prepareForReuse() // GIFImageView → prepareForReuseしないとセルの再利用時、再利用前の画像が残ってしまう
-        
-        emojiLabel.isHidden = false
-        emojiImageView.isHidden = false
-        
-        emojiImageView.backgroundColor = isFake ? .clear : .lightGray
-        emojiLabel.backgroundColor = .clear
-    }
-    
-    // MARK: Emojis
-        
-    private func setEmoji() {
-        guard let emoji = emoji else { return }
-        
-        initialize()
-        emojiImageView.isHidden = false
-        
-        var customEmojiUrl = emoji.customEmojiUrl
-        if emoji.isDefault,
-           let defaultEmoji = emoji.defaultEmoji
-        {
-            customEmojiUrl = MFMEngine.getTwemojiURL(for: defaultEmoji)
-        }
-        
-        if let customEmojiUrl = customEmojiUrl {
-            emojiImageView.setImage(url: customEmojiUrl, cachedToStorage: true) // イメージをset
-        }
-    }
-    
-    // MARK: Others
-    
-    // 最適なフォントサイズに変更する
-    private func adjustFontSize() {
-        let font: UIFont = emojiLabel.font ?? UIFont.systemFont(ofSize: 50.0)
-        emojiLabel.font = font.withSize(50) // 多分shrinkが効いていい感じのサイズになる
-    }
-}
-
-extension EmojiView {
+/// Foundation-only persistence for reaction favorites/history. The Objective-C
+/// archive class name remains `EmojiModel`, preserving previously saved data.
+enum MissCatEmojiArchive {
     enum EmojiType: String {
         case favs
         case history
@@ -404,23 +315,5 @@ extension EmojiView {
                 return
             }
         }
-    }
-}
-
-// CollectionViewはセクションのヘッダを持たないので、自前で実装してあげる
-// したがって、modelの方にヘッダー情報をねじ込む
-class EmojiViewHeader: EmojiView.EmojiModel {
-    // MARK: Header
-    
-    var title: String
-    
-    init(title: String) {
-        self.title = title
-        super.init(rawEmoji: "", isDefault: true, defaultEmoji: nil, customEmojiUrl: nil)
-    }
-    
-    @available(*, unavailable)
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 }

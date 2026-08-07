@@ -626,7 +626,7 @@ struct MissCatProductionApplicationRootView: View {
             designStore: MissCatDesignSettingsStore(repository: repository),
             reactionStore: MissCatReactionSettingsStore(repository: repository),
             palette: palette,
-            licenses: MissCatSettingsBridge.licenseCatalog(),
+            licenses: MissCatLicenseCatalog.entries(),
             appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0",
             onRootRelaunchRequired: { Task { await rootStore.restore() } },
             onClose: close

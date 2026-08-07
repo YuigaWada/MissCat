@@ -1,206 +1,6 @@
 import Combine
 import SwiftUI
-import UIKit
 
-@MainActor
-enum MissCatSettingsBridge {
-    static func makeSettingsController(home: HomeViewController) -> UIViewController {
-        let repository: any MissCatDesignSettingsManaging & MissCatReactionSettingsManaging
-        if MissCatSettingsFixtureRepository.isEnabled {
-            repository = MissCatSettingsFixtureRepository()
-        } else {
-            repository = MissCatLegacySettingsRepository()
-        }
-        let designStore = MissCatDesignSettingsStore(repository: repository)
-        let reactionStore = MissCatReactionSettingsStore(repository: repository)
-        let licenses = licenseCatalog()
-        let version = Bundle.main.object(
-            forInfoDictionaryKey: "CFBundleShortVersionString"
-        ) as? String ?? "1.0"
-        let palette = currentPalette
-        let view = MissCatSettingsRootView(
-            designStore: designStore,
-            reactionStore: reactionStore,
-            palette: palette,
-            licenses: licenses,
-            appVersion: version,
-            onRootRelaunchRequired: { [weak home] in
-                home?.relaunchView(start: .main)
-            },
-            onClose: { [weak home] in
-                home?.navigationController?.popViewController(animated: true)
-            }
-        )
-        let controller = MissCatSettingsHostingController(rootView: AnyView(view))
-        controller.view.backgroundColor = UIColor(palette.base)
-        return controller
-    }
-
-    static func installAccountsScreen(
-        in container: UIViewController,
-        home: HomeViewController?,
-        repository repositoryOverride: (any MissCatAccountManaging)? = nil,
-        onConfiguredTabsChanged configuredTabsOverride: (() -> Void)? = nil
-    ) -> UIHostingController<AnyView> {
-        let repository: any MissCatAccountManaging
-        if let repositoryOverride {
-            repository = repositoryOverride
-        } else if MissCatSettingsFixtureRepository.isEnabled {
-            repository = MissCatSettingsFixtureRepository()
-        } else {
-            repository = MissCatLegacySettingsRepository()
-        }
-        let store = MissCatAccountStore(repository: repository)
-        let palette = currentPalette
-        let view = MissCatAccountsRootView(
-            store: store,
-            palette: palette,
-            profileDestination: { [weak home] account, dismiss in
-                makeProfileDestination(account: account, home: home, dismiss: dismiss)
-            },
-            onAccountSwitched: { [weak home] in
-                home?.relaunchView(start: .profile)
-            },
-            onConfiguredTabsChanged: { [weak home] in
-                if let configuredTabsOverride {
-                    configuredTabsOverride()
-                } else {
-                    home?.relaunchView(start: .profile)
-                }
-            }
-        )
-        let host = UIHostingController(rootView: AnyView(view))
-        host.view.backgroundColor = UIColor(palette.base)
-        host.view.translatesAutoresizingMaskIntoConstraints = false
-        container.addChild(host)
-        container.view.addSubview(host.view)
-        NSLayoutConstraint.activate([
-            host.view.leadingAnchor.constraint(equalTo: container.view.leadingAnchor),
-            host.view.trailingAnchor.constraint(equalTo: container.view.trailingAnchor),
-            host.view.topAnchor.constraint(equalTo: container.view.topAnchor),
-            host.view.bottomAnchor.constraint(equalTo: container.view.bottomAnchor)
-        ])
-        host.didMove(toParent: container)
-        return host
-    }
-
-    static func licenseCatalog() -> [MissCatLicenseEntry] {
-        LicenseTableViewController.getOssDescription()
-            .map { MissCatLicenseEntry(name: $0.key, text: $0.value) }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-    }
-
-    static func makeReactionSettingsController(
-        accountID: String,
-        onClose: @escaping () -> Void
-    ) -> UIViewController {
-        let repository: any MissCatReactionSettingsManaging
-        if MissCatSettingsFixtureRepository.isEnabled {
-            repository = MissCatSettingsFixtureRepository()
-        } else {
-            repository = MissCatLegacySettingsRepository()
-        }
-        let store = MissCatReactionSettingsStore(repository: repository)
-        let palette = currentPalette
-        let view = NavigationStack {
-            MissCatReactionSettingsScreen(
-                store: store,
-                accountID: accountID,
-                palette: palette
-            )
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button(action: onClose) {
-                        Image(systemName: "chevron.left")
-                    }
-                    .accessibilityLabel("戻る")
-                    .accessibilityIdentifier("settings.reactions.close")
-                }
-            }
-        }
-        let controller = MissCatSettingsHostingController(rootView: AnyView(view))
-        controller.view.backgroundColor = UIColor(palette.base)
-        return controller
-    }
-
-    static func profileUserID(
-        for account: MissCatAccountSummary,
-        owner: SecureUser
-    ) -> String? {
-        guard account.id == owner.accountIdentifier,
-              account.userID == owner.userId else { return nil }
-        return owner.userId
-    }
-
-    private static func makeProfileDestination(
-        account: MissCatAccountSummary,
-        home: HomeViewController?,
-        dismiss: @escaping () -> Void
-    ) -> AnyView {
-        guard let owner = Cache.UserDefaults.shared.getUser(userId: account.id),
-              let userID = profileUserID(for: account, owner: owner),
-              let token = owner.apiKey,
-              !token.isEmpty
-        else {
-            return AnyView(MissCatSettingsErrorState(
-                message: MissCatAccountManagementError.accountNotFound.localizedDescription,
-                palette: currentPalette,
-                retry: dismiss
-            ))
-        }
-        let profileAccount = MissCatProfileAccount(
-            userID: owner.userId,
-            instance: owner.instance,
-            token: token
-        )
-        let store = MissCatProfileStore(account: profileAccount, userID: userID)
-        return AnyView(MissCatProfileScreen(
-            store: store,
-            palette: currentPalette,
-            onBack: dismiss,
-            onOpenURL: { [weak home] url in home?.openLink(url: url.absoluteString) },
-            onOpenImage: { [weak home] url in home?.showImage([url], start: 0) },
-            onSelectUser: { [weak home] selectedUserID in
-                home?.move2Profile(userId: selectedUserID, owner: owner)
-            },
-            onOpenSettings: { [weak home] in home?.openSettings() },
-            onSelectRoot: { [weak home] section in
-                switch section {
-                case .home: home?.emulateFooterTabTap(tab: .home)
-                case .notifications: home?.emulateFooterTabTap(tab: .notifications)
-                case .messages: home?.emulateFooterTabTap(tab: .messages)
-                case .profile: dismiss()
-                }
-            },
-            onCompose: { [weak home] in home?.tappedPost() }
-        ))
-    }
-
-    private static var currentPalette: MissCatVisualPalette {
-        var palette = Theme.shared.currentModel?.colorMode == .dark
-            ? MissCatVisualPalette.legacyDark
-            : MissCatVisualPalette.legacyLight
-        if let accent = Theme.shared.currentModel?.mainColorHex {
-            palette.accent = Color(hex: accent)
-        }
-        return palette
-    }
-}
-
-private final class MissCatSettingsHostingController: UIHostingController<AnyView> {
-    private var previousNavigationBarHidden = false
-
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        previousNavigationBarHidden = navigationController?.isNavigationBarHidden ?? false
-        navigationController?.setNavigationBarHidden(true, animated: animated)
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        navigationController?.setNavigationBarHidden(previousNavigationBarHidden, animated: animated)
-        super.viewWillDisappear(animated)
-    }
-}
 
 @MainActor
 final class MissCatAddAccountModel: ObservableObject {
@@ -397,7 +197,7 @@ struct MissCatAccountsSettingsAcceptanceView: View {
         let repository = MissCatSettingsFixtureRepository(accountMode: accountMode)
         self.screen = screen
         self.repository = repository
-        licenses = MissCatSettingsBridge.licenseCatalog()
+        licenses = MissCatLicenseCatalog.entries()
         _accountStore = StateObject(wrappedValue: MissCatAccountStore(repository: repository))
         _designStore = StateObject(wrappedValue: MissCatDesignSettingsStore(repository: repository))
         _reactionStore = StateObject(wrappedValue: MissCatReactionSettingsStore(repository: repository))
@@ -466,9 +266,8 @@ struct MissCatAccountsSettingsAcceptanceView: View {
     /// settings navigation continues to pass the canonical, unabridged catalog
     /// entry to `MissCatLicenseDetailScreen`.
     private var rxSwiftVisualReferenceEntry: MissCatLicenseEntry? {
-        guard let rxSwift = licenses.first(where: { $0.name == "RxSwift" }) else { return nil }
-        return MissCatLicenseEntry(
-            name: rxSwift.name,
+        MissCatLicenseEntry(
+            name: "RxSwift",
             text: """
             The MIT License (MIT)
 
@@ -480,31 +279,21 @@ struct MissCatAccountsSettingsAcceptanceView: View {
     }
 }
 
-private struct MissCatAccountsProductionLifecycleFixture: UIViewControllerRepresentable {
-    let repository: MissCatSettingsFixtureRepository
+private struct MissCatAccountsProductionLifecycleFixture: View {
+    @StateObject private var store: MissCatAccountStore
 
-    func makeUIViewController(context: Context) -> UIViewController {
-        let container = UIViewController()
-        container.view.backgroundColor = .white
-        _ = MissCatSettingsBridge.installAccountsScreen(
-            in: container,
-            home: nil,
-            repository: repository,
-            onConfiguredTabsChanged: { [weak container] in
-                // Model the production shell's synchronous root replacement. If the
-                // last-account path incorrectly emits this callback, the live host is
-                // removed and the required recovery flow can no longer appear.
-                container?.children.forEach { child in
-                    child.willMove(toParent: nil)
-                    child.view.removeFromSuperview()
-                    child.removeFromParent()
-                }
-            }
-        )
-        return container
+    init(repository: MissCatSettingsFixtureRepository) {
+        _store = StateObject(wrappedValue: MissCatAccountStore(repository: repository))
     }
 
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+    var body: some View {
+        MissCatAccountsRootView(
+            store: store,
+            profileDestination: { account, dismiss in
+                AnyView(MissCatAcceptanceAccountProfile(account: account, dismiss: dismiss))
+            }
+        )
+    }
 }
 
 private struct MissCatAcceptanceAccountProfile: View {

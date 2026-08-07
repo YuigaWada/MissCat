@@ -1,42 +1,13 @@
 platform :ios, '17.0'
-use_frameworks!
-
-target 'MissCatShare' do
-pod 'MisskeyKit'
-end
-
-
 target 'MissCat' do
+  use_frameworks!
 
-pod 'MisskeyKit'
-pod 'PolioPager'
-pod 'Starscream','3.1.1'
-
-pod 'Firebase/Messaging'
-pod 'RxSwift', '~> 5'
-pod 'RxCocoa', '~> 5'
-pod 'RxDataSources'
-pod 'Agrume'
-pod 'SVGKit', :git => 'https://github.com/SVGKit/SVGKit.git', :branch => '3.x'
-pod "SkeletonView",'1.8.2'
-pod 'FloatingPanel', '1.7.4'
-pod 'Gifu'
-pod 'iOSPhotoEditor'
-pod 'XLPagerTabStrip'
-pod 'APNGKit', '~> 1.0'
-pod 'SwiftLinkPreview', '~> 3.1.0'
-pod 'Cache'
-pod 'MessageKit'
-pod 'Eureka'
-pod 'ChromaColorPicker'
-pod 'XLActionController'
-pod 'XLActionController/Twitter'
-pod 'XLActionController/Tweetbot'
+  pod 'MisskeyKit'
+  pod 'Firebase/Messaging'
 end
 
-# These pods predate the deployment targets supported by Xcode 16. Keep the
-# locked APIs for the legacy UIKit implementation while the SwiftUI port moves
-# each feature away from CocoaPods.
+# MisskeyKit remains the native API compatibility layer while its three local
+# request-shape fixes are upstreamed.
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |configuration|
@@ -44,34 +15,6 @@ post_install do |installer|
     end
   end
 
-  # FloatingPanel 1.7.4 declares an unavailable stored property. Swift 6's
-  # compiler rejects that declaration even when the target uses Swift 5 mode.
-  floating_panel_surface = File.join(
-    installer.sandbox.root,
-    'FloatingPanel/Framework/Sources/FloatingPanelSurfaceView.swift'
-  )
-  if File.exist?(floating_panel_surface)
-    File.chmod(0o644, floating_panel_surface)
-    source = File.read(floating_panel_surface)
-    source.sub!(
-      'public var backgroundView: UIView!',
-      "public var backgroundView: UIView {\n        get { fatalError(\"Use containerView instead\") }\n        set {}\n    }"
-    )
-    File.write(floating_panel_surface, source)
-  end
-
-  # APNGKit's bundled libpng checks whether TARGET_OS_MAC is defined instead
-  # of checking its value, selecting the long-removed Carbon <fp.h> on iOS.
-  apng_png_private = File.join(
-    installer.sandbox.root,
-    'APNGKit/APNGKit/libpng-apng/pngpriv.h'
-  )
-  if File.exist?(apng_png_private)
-    File.chmod(0o644, apng_png_private)
-    source = File.read(apng_png_private)
-    source.sub!(' || defined(TARGET_OS_MAC)', '')
-    File.write(apng_png_private, source)
-  end
 
   # MisskeyKit 3.0.4 exposes EmojiModel but not its memberwise initializer.
   # MissCat historically consumed that initializer from a prebuilt framework.
@@ -195,46 +138,4 @@ post_install do |installer|
     File.write(misskey_drive, source)
   end
 
-  # Swift 6 sees both the optional and non-optional pointer overloads as a
-  # match in Eureka 5.3.3. Rebinding first makes the intended overload exact.
-  eureka_field_row = File.join(
-    installer.sandbox.root,
-    'Eureka/Source/Rows/Common/FieldRow.swift'
-  )
-  if File.exist?(eureka_field_row)
-    File.chmod(0o644, eureka_field_row)
-    source = File.read(eureka_field_row)
-    source.gsub!(
-      'AutoreleasingUnsafeMutablePointer<AnyObject?>.init(unsafePointer)',
-      'AutoreleasingUnsafeMutablePointer<AnyObject?>(UnsafeMutableRawPointer(unsafePointer).assumingMemoryBound(to: AnyObject?.self))'
-    )
-    File.write(eureka_field_row, source)
-  end
-
-  eureka_text_area_row = File.join(
-    installer.sandbox.root,
-    'Eureka/Source/Rows/TextAreaRow.swift'
-  )
-  if File.exist?(eureka_text_area_row)
-    File.chmod(0o644, eureka_text_area_row)
-    source = File.read(eureka_text_area_row)
-    source.gsub!(
-      'AutoreleasingUnsafeMutablePointer<AnyObject?>.init(UnsafeMutablePointer<T>.allocate(capacity: 1))',
-      'AutoreleasingUnsafeMutablePointer<AnyObject?>(UnsafeMutablePointer<AnyObject?>.allocate(capacity: 1))'
-    )
-    File.write(eureka_text_area_row, source)
-  end
-
-  # RxCocoa 5 used an uppercase property name identical to its generic type.
-  # Modern Swift resolves the unqualified spelling as the type, so qualify it.
-  rxcocoa_deprecated = File.join(
-    installer.sandbox.root,
-    'RxCocoa/RxCocoa/Deprecated.swift'
-  )
-  if File.exist?(rxcocoa_deprecated)
-    File.chmod(0o644, rxcocoa_deprecated)
-    source = File.read(rxcocoa_deprecated)
-    source.sub!('if let view = UIElement {', 'if let view = self.UIElement {')
-    File.write(rxcocoa_deprecated, source)
-  end
 end

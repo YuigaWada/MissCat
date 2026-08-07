@@ -51,7 +51,6 @@ final class MissCatProductionSessionAdapter: MissCatApplicationSessionProviding 
         guard cache.changeCurrentUser(userId: accountID.rawValue),
               cache.getCurrentUserId() == accountID.rawValue
         else { throw MissCatShellConfigurationError.accountIdentityMismatch }
-        Cache.shared.resetMyCache()
         Theme.shared.reset()
         Theme.shared.set()
         let session = try await makeSession()
@@ -70,7 +69,6 @@ final class MissCatProductionSessionAdapter: MissCatApplicationSessionProviding 
         guard cache.removeUser(userId: accountID.rawValue) else {
             throw MissCatAccountManagementError.accountPersistenceFailed
         }
-        Cache.shared.resetMyCache()
         Theme.shared.reset()
     }
 

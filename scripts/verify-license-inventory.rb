@@ -7,7 +7,7 @@ require "digest"
 root = File.expand_path("..", __dir__)
 lock = File.read(File.join(root, "Podfile.lock"), encoding: "UTF-8")
 source = File.read(
-  File.join(root, "MissCat/View/Settings/LicenseViewController.swift"),
+  File.join(root, "MissCat/SwiftUI/SettingsAccounts/MissCatLicenseCatalog.swift"),
   encoding: "UTF-8"
 )
 acknowledgements_path = File.join(root, "MissCat/Resources/ThirdPartyAcknowledgements.plist")
@@ -24,8 +24,8 @@ locked = dependency_block.lines.map do |line|
   product == "Firebase" ? "Firebase" : product
 end.compact.uniq.sort
 
-constant = source[/static let podfileLockDependencyNames = \[(?<body>.*?)\n    \]/m, :body]
-abort "Could not parse podfileLockDependencyNames" unless constant
+constant = source[/static let dependencyNames = \[(?<body>.*?)\]/m, :body]
+abort "Could not parse dependencyNames" unless constant
 generated = constant.scan(/"([^"]+)"/).flatten.uniq.sort
 
 unless locked == generated

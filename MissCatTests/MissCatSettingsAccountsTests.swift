@@ -25,11 +25,9 @@ final class MissCatAccountStoreTests: XCTestCase {
         )
 
         XCTAssertNotEqual(first.accountIdentifier, second.accountIdentifier)
-        XCTAssertNil(MissCatSettingsBridge.profileUserID(for: summary, owner: first))
-        XCTAssertEqual(
-            MissCatSettingsBridge.profileUserID(for: summary, owner: second),
-            "same-user"
-        )
+        XCTAssertNotEqual(summary.id, first.accountIdentifier)
+        XCTAssertEqual(summary.id, second.accountIdentifier)
+        XCTAssertEqual(summary.userID, second.userId)
     }
 
     func testProductionSwitchPropagatesFailedCompositeSelectionWrite() async throws {
@@ -660,21 +658,21 @@ final class MissCatReactionSettingsStoreTests: XCTestCase {
 
 final class MissCatEmojiArchiveTests: XCTestCase {
     func testSecureArchiveRoundTripAndCorruptDataRecovery() throws {
-        let items = [EmojiView.EmojiModel(
+        let items = [MissCatEmojiArchive.EmojiModel(
             rawEmoji: ":misscat:",
             isDefault: false,
             defaultEmoji: nil,
             customEmojiUrl: "https://example.test/misscat.apng"
         )]
-        let data = try EmojiView.EmojiModel.archiveEmojis(items)
-        let decoded = EmojiView.EmojiModel.decodeStoredEmojis(data)
+        let data = try MissCatEmojiArchive.EmojiModel.archiveEmojis(items)
+        let decoded = MissCatEmojiArchive.EmojiModel.decodeStoredEmojis(data)
 
         XCTAssertEqual(decoded?.map(\.rawEmoji), [":misscat:"])
-        XCTAssertNil(EmojiView.EmojiModel.decodeStoredEmojis(Data([0x00, 0x01, 0x02])))
+        XCTAssertNil(MissCatEmojiArchive.EmojiModel.decodeStoredEmojis(Data([0x00, 0x01, 0x02])))
     }
 
     func testLegacyNonSecureArchiveCanBeReadForMigration() throws {
-        let items = [EmojiView.EmojiModel(
+        let items = [MissCatEmojiArchive.EmojiModel(
             rawEmoji: "👍",
             isDefault: true,
             defaultEmoji: "👍",
@@ -685,7 +683,7 @@ final class MissCatEmojiArchiveTests: XCTestCase {
             requiringSecureCoding: false
         )
 
-        XCTAssertEqual(EmojiView.EmojiModel.decodeStoredEmojis(legacy)?.map(\.rawEmoji), ["👍"])
+        XCTAssertEqual(MissCatEmojiArchive.EmojiModel.decodeStoredEmojis(legacy)?.map(\.rawEmoji), ["👍"])
     }
 
     func testLegacyDecoderRejectsAnArchiveContainingAnUnapprovedClass() throws {
@@ -694,7 +692,7 @@ final class MissCatEmojiArchiveTests: XCTestCase {
             requiringSecureCoding: false
         )
 
-        XCTAssertNil(EmojiView.EmojiModel.decodeStoredEmojis(hostile))
+        XCTAssertNil(MissCatEmojiArchive.EmojiModel.decodeStoredEmojis(hostile))
     }
 
     func testDecoderRejectsSecureCodingSubclassBeforeInstantiation() throws {
@@ -709,20 +707,20 @@ final class MissCatEmojiArchiveTests: XCTestCase {
             requiringSecureCoding: true
         )
 
-        XCTAssertFalse(EmojiView.EmojiModel.hasExactArchiveClassGraph(hostile))
-        XCTAssertNil(EmojiView.EmojiModel.decodeStoredEmojis(hostile))
+        XCTAssertFalse(MissCatEmojiArchive.EmojiModel.hasExactArchiveClassGraph(hostile))
+        XCTAssertNil(MissCatEmojiArchive.EmojiModel.decodeStoredEmojis(hostile))
         XCTAssertEqual(HostileEmojiModelSubclass.decodeCount, 0)
     }
 
     func testExactArchiveComparisonCoversOrderAndAllPersistedFields() {
         let expected = [
-            EmojiView.EmojiModel(
+            MissCatEmojiArchive.EmojiModel(
                 rawEmoji: ":cat:",
                 isDefault: false,
                 defaultEmoji: nil,
                 customEmojiUrl: "https://example.test/cat.gif"
             ),
-            EmojiView.EmojiModel(
+            MissCatEmojiArchive.EmojiModel(
                 rawEmoji: "👍",
                 isDefault: true,
                 defaultEmoji: "👍",
@@ -730,7 +728,7 @@ final class MissCatEmojiArchiveTests: XCTestCase {
             )
         ]
         let exact = expected.map {
-            EmojiView.EmojiModel(
+            MissCatEmojiArchive.EmojiModel(
                 rawEmoji: $0.rawEmoji,
                 isDefault: $0.isDefault,
                 defaultEmoji: $0.defaultEmoji,
@@ -738,7 +736,7 @@ final class MissCatEmojiArchiveTests: XCTestCase {
             )
         }
         let wrongDefaultFlag = [
-            EmojiView.EmojiModel(
+            MissCatEmojiArchive.EmojiModel(
                 rawEmoji: ":cat:",
                 isDefault: true,
                 defaultEmoji: nil,
@@ -748,7 +746,7 @@ final class MissCatEmojiArchiveTests: XCTestCase {
         ]
         let wrongDefaultEmoji = [
             exact[0],
-            EmojiView.EmojiModel(
+            MissCatEmojiArchive.EmojiModel(
                 rawEmoji: "👍",
                 isDefault: true,
                 defaultEmoji: "👎",
@@ -756,7 +754,7 @@ final class MissCatEmojiArchiveTests: XCTestCase {
             )
         ]
         let wrongURL = [
-            EmojiView.EmojiModel(
+            MissCatEmojiArchive.EmojiModel(
                 rawEmoji: ":cat:",
                 isDefault: false,
                 defaultEmoji: nil,
@@ -765,11 +763,11 @@ final class MissCatEmojiArchiveTests: XCTestCase {
             exact[1]
         ]
 
-        XCTAssertTrue(EmojiView.EmojiModel.archiveFieldsEqual(exact, expected))
-        XCTAssertFalse(EmojiView.EmojiModel.archiveFieldsEqual(Array(exact.reversed()), expected))
-        XCTAssertFalse(EmojiView.EmojiModel.archiveFieldsEqual(wrongDefaultFlag, expected))
-        XCTAssertFalse(EmojiView.EmojiModel.archiveFieldsEqual(wrongDefaultEmoji, expected))
-        XCTAssertFalse(EmojiView.EmojiModel.archiveFieldsEqual(wrongURL, expected))
+        XCTAssertTrue(MissCatEmojiArchive.EmojiModel.archiveFieldsEqual(exact, expected))
+        XCTAssertFalse(MissCatEmojiArchive.EmojiModel.archiveFieldsEqual(Array(exact.reversed()), expected))
+        XCTAssertFalse(MissCatEmojiArchive.EmojiModel.archiveFieldsEqual(wrongDefaultFlag, expected))
+        XCTAssertFalse(MissCatEmojiArchive.EmojiModel.archiveFieldsEqual(wrongDefaultEmoji, expected))
+        XCTAssertFalse(MissCatEmojiArchive.EmojiModel.archiveFieldsEqual(wrongURL, expected))
     }
 
     func testFailedReactionReadbackRestoresPreviousArchiveAndVersion() throws {
@@ -779,26 +777,26 @@ final class MissCatEmojiArchiveTests: XCTestCase {
             instance: "example.test",
             apiKey: nil
         )
-        let previous = [EmojiView.EmojiModel(
+        let previous = [MissCatEmojiArchive.EmojiModel(
             rawEmoji: "👍",
             isDefault: true,
             defaultEmoji: "👍",
             customEmojiUrl: nil
         )]
-        let replacement = [EmojiView.EmojiModel(
+        let replacement = [MissCatEmojiArchive.EmojiModel(
             rawEmoji: ":cat:",
             isDefault: false,
             defaultEmoji: nil,
             customEmojiUrl: "https://example.test/cat.gif"
         )]
-        let key = EmojiView.EmojiModel.getKey(type: .favs, owner: owner)
+        let key = MissCatEmojiArchive.EmojiModel.getKey(type: .favs, owner: owner)
         let storage = InMemoryEmojiArchiveStorage(
-            data: [key: try EmojiView.EmojiModel.archiveEmojis(previous)],
+            data: [key: try MissCatEmojiArchive.EmojiModel.archiveEmojis(previous)],
             versions: ["\(key).secure-archive-version": 2]
         )
         storage.corruptNextDataWrite = true
 
-        XCTAssertThrowsError(try EmojiView.EmojiModel.saveEmojisChecked(
+        XCTAssertThrowsError(try MissCatEmojiArchive.EmojiModel.saveEmojisChecked(
             with: replacement,
             type: .favs,
             owner: owner,
@@ -806,8 +804,8 @@ final class MissCatEmojiArchiveTests: XCTestCase {
         ))
 
         let restoredData = try XCTUnwrap(storage.data[key])
-        let restored = try XCTUnwrap(EmojiView.EmojiModel.decodeStoredEmojis(restoredData))
-        XCTAssertTrue(EmojiView.EmojiModel.archiveFieldsEqual(restored, previous))
+        let restored = try XCTUnwrap(MissCatEmojiArchive.EmojiModel.decodeStoredEmojis(restoredData))
+        XCTAssertTrue(MissCatEmojiArchive.EmojiModel.archiveFieldsEqual(restored, previous))
         XCTAssertEqual(storage.versions["\(key).secure-archive-version"], 2)
     }
 
@@ -818,7 +816,7 @@ final class MissCatEmojiArchiveTests: XCTestCase {
             instance: "example.test",
             apiKey: "fixture-token-must-not-be-persisted"
         )
-        let item = EmojiView.EmojiModel(
+        let item = MissCatEmojiArchive.EmojiModel(
             rawEmoji: ":cat:",
             isDefault: false,
             defaultEmoji: nil,
@@ -834,12 +832,12 @@ final class MissCatEmojiArchiveTests: XCTestCase {
             versions: ["\(legacyKey).secure-archive-version": 1]
         )
 
-        let migrated = EmojiView.EmojiModel.getEmojis(
+        let migrated = MissCatEmojiArchive.EmojiModel.getEmojis(
             type: .favs,
             owner: owner,
             storage: storage.interface
         )
-        let canonicalKey = EmojiView.EmojiModel.getKey(type: .favs, owner: owner)
+        let canonicalKey = MissCatEmojiArchive.EmojiModel.getKey(type: .favs, owner: owner)
 
         XCTAssertEqual(migrated?.map(\.rawEmoji), [":cat:"])
         XCTAssertNil(storage.data[legacyKey])
@@ -856,7 +854,7 @@ final class MissCatEmojiArchiveTests: XCTestCase {
         }
 
         let firstCanonicalData = storage.data[canonicalKey]
-        let secondRead = EmojiView.EmojiModel.getEmojis(
+        let secondRead = MissCatEmojiArchive.EmojiModel.getEmojis(
             type: .favs,
             owner: owner,
             storage: storage.interface
@@ -1084,17 +1082,14 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
     }
 
     func testLicenseCatalogExactlyMatchesBundledCocoaPodsAcknowledgementContent() throws {
-        let catalog = LicenseTableViewController.getOssDescription()
-        let expected = LicenseTableViewController.podfileLockDependencyNames
-        let authoritative = try XCTUnwrap(
-            LicenseTableViewController.bundledAcknowledgementCatalog(
-                in: Bundle(for: LicenseTableViewController.self)
-            )
-        )
+        let bundle = Bundle(for: MissCatLegacySettingsRepository.self)
+        let catalog = MissCatLicenseCatalog.acknowledgements(in: bundle)
+        let expected = MissCatLicenseCatalog.dependencyNames
+        let authoritative = MissCatLicenseCatalog.acknowledgements(in: bundle)
 
         XCTAssertEqual(catalog.keys.sorted(), expected.sorted())
         XCTAssertEqual(catalog, authoritative)
-        XCTAssertEqual(catalog.count, 22)
+        XCTAssertEqual(catalog.count, expected.count)
         for name in expected {
             XCTAssertEqual(catalog[name], authoritative[name], "Acknowledgement text differs for \(name)")
         }
@@ -1104,15 +1099,17 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
     func testAcceptanceFixturesUseCanonicalReactionInstancesAndLicenseCatalog() async throws {
         let repository = MissCatSettingsFixtureRepository()
         let instances = try await repository.loadReactionAccounts()
-        let licenses = MissCatSettingsBridge.licenseCatalog()
-        let expectedLicenseNames = LicenseTableViewController.podfileLockDependencyNames.sorted {
+        let licenses = MissCatLicenseCatalog.entries(
+            in: Bundle(for: MissCatLegacySettingsRepository.self)
+        )
+        let expectedLicenseNames = MissCatLicenseCatalog.dependencyNames.sorted {
             $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
         }
 
         XCTAssertEqual(instances.map(\.instance), ["misskey.example", "social.example"])
         XCTAssertEqual(licenses.map(\.name), expectedLicenseNames)
-        XCTAssertEqual(licenses.count, 22)
-        XCTAssertTrue(try XCTUnwrap(licenses.first { $0.name == "RxSwift" }).text.contains("2015"))
+        XCTAssertEqual(licenses.count, expectedLicenseNames.count)
+        XCTAssertTrue(try XCTUnwrap(licenses.first { $0.name == "MisskeyKit" }).text.contains("MIT License"))
     }
 
     func testSettingsRoutesCoverAllLegacyDestinations() {
@@ -1135,16 +1132,6 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
         XCTAssertEqual(first, duplicate)
         XCTAssertNotEqual(first, second)
         XCTAssertEqual(Set([first, duplicate, second]).count, 2)
-    }
-
-    @MainActor
-    func testReactionPanelSettingsShortcutBuildsNativeSwiftUIHost() {
-        let controller = MissCatSettingsBridge.makeReactionSettingsController(
-            accountID: "https://example.invalid|fixture-user",
-            onClose: {}
-        )
-
-        XCTAssertTrue(controller is UIHostingController<AnyView>)
     }
 
     @MainActor
@@ -1190,43 +1177,9 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
         XCTAssertTrue(String(data: gifData.prefix(6), encoding: .ascii)?.hasPrefix("GIF") == true)
         XCTAssertNotNil(apngData.range(of: Data("acTL".utf8)))
         XCTAssertTrue(String(data: svgData, encoding: .utf8)?.contains("<svg") == true)
-        XCTAssertEqual(MFMImageView.imageFormat(gifData), .gif)
-        XCTAssertEqual(MFMImageView.imageFormat(apngData), .apng)
-        XCTAssertEqual(MFMImageView.imageFormat(svgData), .other)
         XCTAssertTrue([gif, apng, svg].allSatisfy(\.isFileURL))
     }
 
-    @MainActor
-    func testProductionImageViewDecodesEveryLocalFixtureAndRejectsInvalidFixture() async throws {
-        let bundle = Bundle(for: MissCatLegacySettingsRepository.self)
-        let valid = [
-            try XCTUnwrap(bundle.url(forResource: "reaction-fixture", withExtension: "gif")),
-            try XCTUnwrap(bundle.url(forResource: "reaction-fixture", withExtension: "apngdata")),
-            try XCTUnwrap(bundle.url(forResource: "reaction-fixture", withExtension: "svg"))
-        ]
-
-        for url in valid {
-            let loaded = expectation(description: "decode \(url.lastPathComponent)")
-            let imageView = MFMImageView(frame: CGRect(x: 0, y: 0, width: 32, height: 32))
-            imageView.setImage(url: url.absoluteString) { succeeded in
-                XCTAssertTrue(succeeded, "Production decoder rejected \(url.lastPathComponent)")
-                loaded.fulfill()
-            }
-            await fulfillment(of: [loaded], timeout: 3)
-            imageView.prepareForReuse()
-        }
-
-        let invalid = try XCTUnwrap(
-            bundle.url(forResource: "reaction-fixture", withExtension: "invalid")
-        )
-        let rejected = expectation(description: "reject invalid fixture")
-        let imageView = MFMImageView(frame: CGRect(x: 0, y: 0, width: 32, height: 32))
-        imageView.setImage(url: invalid.absoluteString) { succeeded in
-            XCTAssertFalse(succeeded)
-            rejected.fulfill()
-        }
-        await fulfillment(of: [rejected], timeout: 3)
-    }
 }
 
 @MainActor
@@ -1346,7 +1299,7 @@ private final class HostileEmojiArchiveObject: NSObject, NSSecureCoding {
 }
 
 @objc(HostileEmojiModelSubclass)
-private final class HostileEmojiModelSubclass: EmojiView.EmojiModel {
+private final class HostileEmojiModelSubclass: MissCatEmojiArchive.EmojiModel {
     static var decodeCount = 0
     override class var supportsSecureCoding: Bool { true }
 

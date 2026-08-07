@@ -59,7 +59,6 @@ final class MissCatLegacySettingsRepository:
             throw MissCatAccountManagementError.currentAccountVerificationFailed
         }
 
-        Cache.shared.resetMyCache()
         theme.reset()
         theme.set()
         // Once the persisted current account changes, do not introduce another
@@ -79,7 +78,6 @@ final class MissCatLegacySettingsRepository:
             throw MissCatAccountManagementError.accountPersistenceFailed
         }
         let tabsChanged = theme.removeUserTabs(for: user)
-        Cache.shared.resetMyCache()
         // Credential removal is the persistence boundary. Build the resulting
         // state synchronously so cancellation cannot hide a committed deletion.
         let snapshot = metadataSnapshot()
@@ -163,20 +161,20 @@ final class MissCatLegacySettingsRepository:
             throw MissCatAccountManagementError.accountNotFound
         }
 
-        let saved = EmojiView.EmojiModel.getEmojis(
+        let saved = MissCatEmojiArchive.EmojiModel.getEmojis(
             type: .favs,
             owner: owner,
             storage: emojiStorage
         ) ?? []
-        let history = Array((EmojiView.EmojiModel.getEmojis(
+        let history = Array((MissCatEmojiArchive.EmojiModel.getEmojis(
             type: .history,
             owner: owner,
             storage: emojiStorage
         ) ?? []).prefix(14))
-        let favoriteModels: [EmojiView.EmojiModel]
+        let favoriteModels: [MissCatEmojiArchive.EmojiModel]
         if saved.isEmpty {
             favoriteModels = MissCatReactionSettingsStore.legacyDefaults.map {
-                EmojiView.EmojiModel(
+                MissCatEmojiArchive.EmojiModel(
                     rawEmoji: $0,
                     isDefault: true,
                     defaultEmoji: $0,
@@ -221,16 +219,16 @@ final class MissCatLegacySettingsRepository:
         }
 
         let models = snapshot.favorites.map { item in
-            EmojiView.EmojiModel(
+            MissCatEmojiArchive.EmojiModel(
                 rawEmoji: item.rawValue,
                 isDefault: item.imageURL == nil,
                 defaultEmoji: item.imageURL == nil ? (item.displayValue ?? item.rawValue) : nil,
                 customEmojiUrl: item.imageURL?.absoluteString
             )
         }
-        let persisted: [EmojiView.EmojiModel]
+        let persisted: [MissCatEmojiArchive.EmojiModel]
         do {
-            persisted = try EmojiView.EmojiModel.saveEmojisChecked(
+            persisted = try MissCatEmojiArchive.EmojiModel.saveEmojisChecked(
                 with: models,
                 type: .favs,
                 owner: owner,
@@ -239,19 +237,17 @@ final class MissCatLegacySettingsRepository:
         } catch {
             throw MissCatAccountManagementError.accountPersistenceFailed
         }
-        guard EmojiView.EmojiModel.archiveFieldsEqual(persisted, models) else {
+        guard MissCatEmojiArchive.EmojiModel.archiveFieldsEqual(persisted, models) else {
             throw MissCatAccountManagementError.accountPersistenceFailed
         }
-        EmojiRepository.shared.updateUserEmojis(to: .favs, owner: owner, new: persisted)
     }
 
     private func summary(for user: SecureUser) async -> MissCatAccountSummary {
-        let cached = Cache.shared.getUserInfo(user: user)
         let fallback = MissCatAccountSummary(
             id: user.accountIdentifier,
             userID: user.userId,
             username: user.username,
-            displayName: cached?.name,
+            displayName: nil,
             instance: user.instance
         )
         guard let token = user.apiKey, !token.isEmpty,
@@ -275,7 +271,7 @@ final class MissCatLegacySettingsRepository:
                 id: user.accountIdentifier,
                 userID: user.userId,
                 username: profile.username ?? user.username,
-                displayName: profile.name ?? cached?.name,
+                displayName: profile.name,
                 instance: user.instance,
                 avatarURL: profile.avatarUrl.flatMap(URL.init(string:))
             )
@@ -287,12 +283,11 @@ final class MissCatLegacySettingsRepository:
     private func metadataSnapshot() -> MissCatAccountSnapshot {
         MissCatAccountSnapshot(
             accounts: cache.getUsers().map { user in
-                let cached = Cache.shared.getUserInfo(user: user)
                 return MissCatAccountSummary(
                     id: user.accountIdentifier,
                     userID: user.userId,
                     username: user.username,
-                    displayName: cached?.name,
+                    displayName: nil,
                     instance: user.instance
                 )
             },
@@ -336,7 +331,7 @@ final class MissCatLegacySettingsRepository:
     }
 
     private func categorizedReactionSections(for owner: SecureUser) -> [MissCatReactionSection] {
-        guard let handler = EmojiHandler.getHandler(owner: owner) else {
+        guard let catalog = MissCatEmojiCatalog.catalog(for: owner) else {
             return [MissCatReactionSection(
                 id: "standard-defaults",
                 title: "標準絵文字",
@@ -347,8 +342,8 @@ final class MissCatLegacySettingsRepository:
             )]
         }
 
-        let custom = handler.categorizedCustomEmojis.keys.sorted().compactMap { category -> MissCatReactionSection? in
-            let items = (handler.categorizedCustomEmojis[category] ?? []).map {
+        let custom = catalog.categorizedCustomEmojis.keys.sorted().compactMap { category -> MissCatReactionSection? in
+            let items = (catalog.categorizedCustomEmojis[category] ?? []).map {
                 reactionItem(from: $0, searchTerms: [category])
             }
             guard !items.isEmpty else { return nil }
@@ -359,8 +354,8 @@ final class MissCatLegacySettingsRepository:
                 items: items
             )
         }
-        let standard = handler.categorizedDefaultEmojis.keys.sorted().compactMap { category -> MissCatReactionSection? in
-            let items = (handler.categorizedDefaultEmojis[category] ?? []).map {
+        let standard = catalog.categorizedDefaultEmojis.keys.sorted().compactMap { category -> MissCatReactionSection? in
+            let items = (catalog.categorizedDefaultEmojis[category] ?? []).map {
                 reactionItem(from: $0, searchTerms: [category])
             }
             guard !items.isEmpty else { return nil }
@@ -375,7 +370,7 @@ final class MissCatLegacySettingsRepository:
     }
 
     private func reactionItem(
-        from model: EmojiView.EmojiModel,
+        from model: MissCatEmojiArchive.EmojiModel,
         searchTerms: [String] = []
     ) -> MissCatReactionItem {
         MissCatReactionItem(
