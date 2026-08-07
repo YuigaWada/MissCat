@@ -185,7 +185,10 @@ struct MissCatRootView: View {
     private var productionRoot: some View {
         ZStack {
             #if DEBUG
-            if MissCatShellFixtureLaunch.isRequested {
+            if MissCatFrozenLegacySettingsReferenceLaunch.isRequested {
+                MissCatFrozenLegacySettingsReferenceView()
+                    .ignoresSafeArea()
+            } else if MissCatShellFixtureLaunch.isRequested {
                 MissCatShellFixtureView()
             } else {
                 applicationRoot
@@ -208,7 +211,9 @@ struct MissCatRootView: View {
         }
         .task {
             #if DEBUG
-            guard !MissCatShellFixtureLaunch.isRequested else { return }
+            guard !MissCatShellFixtureLaunch.isRequested,
+                  !MissCatFrozenLegacySettingsReferenceLaunch.isRequested
+            else { return }
             #endif
             applicationState.resolveInitialRoute()
         }

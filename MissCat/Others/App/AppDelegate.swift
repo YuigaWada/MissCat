@@ -31,7 +31,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Visual/UI fixtures must not display system permission prompts, contact
         // Firebase, or hydrate real cached accounts. Ordinary launches continue
         // through the complete startup path below.
-        if MissCatShellFixtureLaunch.isRequested || MissCatPersistenceProbeLaunch.isRequested {
+        if MissCatShellFixtureLaunch.isRequested
+            || MissCatPersistenceProbeLaunch.isRequested
+            || MissCatFrozenLegacySettingsReferenceLaunch.isRequested
+        {
             return true
         }
 
@@ -53,8 +56,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             || MissCatDiscoveryFixtureConfiguration.isAutomatedTestRun
             || MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
             setupMissCat()
-            return true
-        }
 #endif
         setupMissCat()
         setupFirebase()
