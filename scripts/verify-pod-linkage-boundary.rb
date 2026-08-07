@@ -7,7 +7,6 @@ require "pathname"
 
 EXPECTED_DIRECT_DEPENDENCIES = %w[
   Firebase/Messaging
-  MisskeyKit
 ].freeze
 
 EXPECTED_ROOT_PODS = %w[
@@ -18,14 +17,12 @@ EXPECTED_ROOT_PODS = %w[
   FirebaseMessaging
   GoogleDataTransport
   GoogleUtilities
-  MisskeyKit
   PromisesObjC
-  Starscream
   nanopb
 ].freeze
 
 EXPECTED_CONFIGURATIONS = %w[Debug Release].freeze
-EXPECTED_APP_FRAMEWORKS = %w[Foundation MisskeyKit Starscream UIKit].freeze
+EXPECTED_APP_FRAMEWORKS = %w[Foundation UIKit].freeze
 EXPECTED_SEARCH_PATHS = ["$(inherited)"].freeze
 EXPECTED_POD_PHASES = [
   "[CP] Check Pods Manifest.lock",

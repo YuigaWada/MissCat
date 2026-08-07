@@ -104,7 +104,7 @@ expect_boundary_failure \
 reset_project
 mutate_once \
     "$project_path" \
-    $'\t\t\t\t\t"-framework",\n\t\t\t\t\t"\\"MisskeyKit\\"",\n' \
+    $'\t\t\t\t\t"-framework",\n\t\t\t\t\t"\\"UIKit\\"",\n' \
     ''
 expect_boundary_failure \
     "missing current framework" \
@@ -145,8 +145,8 @@ reset_podfile
 
 mutate_once \
     "${fixture_repository}/Podfile.lock" \
-    '  Starscream:' \
-    '  RetiredStarscream:'
+    '  FirebaseMessaging:' \
+    '  RetiredFirebaseMessaging:'
 expect_boundary_failure \
     "changed locked graph" \
     "Podfile.lock root pods" \
