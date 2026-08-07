@@ -1,4 +1,7 @@
-import UIKit
+import CoreGraphics
+import Foundation
+import ImageIO
+import UniformTypeIdentifiers
 #if MISSCAT_TESTS
 @testable import MissCat
 #endif
@@ -179,10 +182,16 @@ final class PostModel {
     }
 
     private func preparedUpload(_ data: Data) throws -> MissCatComposeAPIUpload {
-        guard let image = UIImage(data: data) else { throw PostingError.invalidImage }
-        guard let resizedImage = image.resized(widthUnder: 1024),
-              let targetData = resizedImage.jpegData(compressionQuality: 0.5)
-        else {
+        let targetData: Data
+        do {
+            targetData = try ShareImageCodec.prepareJPEG(
+                data,
+                maximumWidth: 1_024,
+                compressionQuality: 0.5
+            )
+        } catch ShareImageCodec.CodecError.invalidImage {
+            throw PostingError.invalidImage
+        } catch {
             throw PostingError.imageEncodingFailed
         }
 
@@ -313,18 +322,69 @@ private extension ShareVisibility {
     }
 }
 
-private extension UIImage {
-    func resized(widthUnder maximumWidth: CGFloat) -> UIImage? {
-        guard size.width > maximumWidth else { return self }
-        return resized(withPercentage: maximumWidth / size.width)
+enum ShareImageCodec {
+    enum CodecError: Error {
+        case invalidImage
+        case encodingFailed
     }
 
-    func resized(withPercentage percentage: CGFloat) -> UIImage? {
-        guard percentage > 0 else { return nil }
-        let canvasSize = CGSize(width: size.width * percentage, height: size.height * percentage)
-        UIGraphicsBeginImageContextWithOptions(canvasSize, false, scale)
-        defer { UIGraphicsEndImageContext() }
-        draw(in: CGRect(origin: .zero, size: canvasSize))
-        return UIGraphicsGetImageFromCurrentImageContext()
+    static func decode(_ data: Data) -> CGImage? {
+        guard !data.isEmpty,
+              let source = CGImageSourceCreateWithData(data as CFData, nil)
+        else { return nil }
+        return CGImageSourceCreateImageAtIndex(source, 0, nil)
+    }
+
+    static func prepareJPEG(
+        _ data: Data,
+        maximumWidth: Int,
+        compressionQuality: Double
+    ) throws -> Data {
+        guard let sourceImage = decode(data) else { throw CodecError.invalidImage }
+        guard maximumWidth > 0, (0 ... 1).contains(compressionQuality) else {
+            throw CodecError.encodingFailed
+        }
+
+        let scale = min(1, Double(maximumWidth) / Double(sourceImage.width))
+        let targetWidth = max(1, Int((Double(sourceImage.width) * scale).rounded()))
+        let targetHeight = max(1, Int((Double(sourceImage.height) * scale).rounded()))
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(
+            data: nil,
+            width: targetWidth,
+            height: targetHeight,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+        ) else {
+            throw CodecError.encodingFailed
+        }
+        context.interpolationQuality = .high
+        context.draw(
+            sourceImage,
+            in: CGRect(x: 0, y: 0, width: targetWidth, height: targetHeight)
+        )
+        guard let preparedImage = context.makeImage() else {
+            throw CodecError.encodingFailed
+        }
+
+        let output = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(
+            output,
+            UTType.jpeg.identifier as CFString,
+            1,
+            nil
+        ) else {
+            throw CodecError.encodingFailed
+        }
+        let properties = [
+            kCGImageDestinationLossyCompressionQuality: compressionQuality
+        ] as CFDictionary
+        CGImageDestinationAddImage(destination, preparedImage, properties)
+        guard CGImageDestinationFinalize(destination), output.length > 0 else {
+            throw CodecError.encodingFailed
+        }
+        return output as Data
     }
 }

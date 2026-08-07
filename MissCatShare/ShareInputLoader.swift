@@ -1,6 +1,5 @@
 import Foundation
 import UniformTypeIdentifiers
-import UIKit
 
 protocol ShareInputLoading {
     func load(inputItems: [Any]) async throws -> ShareDraft
@@ -88,12 +87,13 @@ final class ShareInputLoader: ShareInputLoading {
                 }
             }
         } catch {
-            let item = try await loadItem(provider: provider, typeIdentifier: typeIdentifier)
-            if let image = item as? UIImage,
-               let data = image.pngData()
-            {
+            if let data = try? await loadFileData(
+                provider: provider,
+                typeIdentifier: typeIdentifier
+            ), !data.isEmpty {
                 return data
             }
+            let item = try await loadItem(provider: provider, typeIdentifier: typeIdentifier)
             if let url = Self.url(from: item), url.isFileURL {
                 return try Self.readFile(at: url)
             }
@@ -101,6 +101,27 @@ final class ShareInputLoader: ShareInputLoading {
                 return data
             }
             throw error
+        }
+    }
+
+    private func loadFileData(
+        provider: NSItemProvider,
+        typeIdentifier: String
+    ) async throws -> Data {
+        try await withCheckedThrowingContinuation { continuation in
+            provider.loadFileRepresentation(forTypeIdentifier: typeIdentifier) { url, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else if let url {
+                    do {
+                        continuation.resume(returning: try Self.readFile(at: url))
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                } else {
+                    continuation.resume(throwing: LoadingError.unreadableAttachment)
+                }
+            }
         }
     }
 
