@@ -1384,9 +1384,10 @@ final class MissCatComposeAccountIsolationTests: XCTestCase {
         let capturedRequest = await transport.lastRequest()
         let request = try XCTUnwrap(capturedRequest)
         XCTAssertEqual(request.url?.host, "secondary.example")
-        let body = try XCTUnwrap(request.httpBody)
-        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
-        XCTAssertEqual(json["i"] as? String, "secondary-token")
+        XCTAssertEqual(
+            request.value(forHTTPHeaderField: "Authorization"),
+            "Bearer secondary-token"
+        )
     }
 
     func testInjectedPostScopesRejectAnUnauthorizedSubmissionAccount() async throws {
