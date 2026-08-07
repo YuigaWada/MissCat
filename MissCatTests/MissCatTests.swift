@@ -599,10 +599,12 @@ final class MissCatNativeAPIClientTests: XCTestCase {
             transport: transport
         )
 
-        XCTAssertEqual(
-            try await client.registerServiceWorker(endpoint: "https://push.example", auth: "a", publicKey: "p"),
-            .alreadySubscribed
+        let state = try await client.registerServiceWorker(
+            endpoint: "https://push.example",
+            auth: "a",
+            publicKey: "p"
         )
+        XCTAssertEqual(state, .alreadySubscribed)
         do {
             _ = try await client.currentAccount()
             XCTFail("Expected a server error")

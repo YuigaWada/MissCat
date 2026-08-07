@@ -92,9 +92,8 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
             return Self.response(for: request, json: [local])
         }
 
-        let note = try XCTUnwrap(
-            try await makeSubject().fetchPage(source: .home, cursor: nil, limit: 20).notes.first
-        )
+        let page = try await makeSubject().fetchPage(source: .home, cursor: nil, limit: 20)
+        let note = try XCTUnwrap(page.notes.first)
 
         XCTAssertEqual(note.emojis["party"], URL(string: "https://example.invalid/emoji/party.webp"))
         XCTAssertEqual(note.emojis["warning"], URL(string: "https://example.invalid/emoji/warning.webp"))
@@ -137,9 +136,8 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
             return Self.response(for: request, json: [remote])
         }
 
-        let note = try XCTUnwrap(
-            try await makeSubject().fetchPage(source: .home, cursor: nil, limit: 20).notes.first
-        )
+        let page = try await makeSubject().fetchPage(source: .home, cursor: nil, limit: 20)
+        let note = try XCTUnwrap(page.notes.first)
 
         XCTAssertEqual(
             note.emojis["party"],
