@@ -6,6 +6,7 @@ readonly script_dir="$(cd "$(dirname "$0")" && pwd -P)"
 readonly gate="$script_dir/compare-screenshot-regions.sh"
 readonly magick_bin="${MAGICK_BIN:-/opt/homebrew/bin/magick}"
 readonly canonical_manifest="$script_dir/fixtures/visual-regions/timeline-selftest-v1.json"
+readonly production_manifest="$script_dir/../docs/visual-regions/timeline-home-iphone11promax-v1.json"
 
 fail() {
     printf 'region self-test failed: %s\n' "$*" >&2
@@ -44,6 +45,29 @@ run_expect() {
 [[ -x "$magick_bin" ]] || fail "ImageMagick is unavailable: $magick_bin"
 [[ -x "$gate" ]] || fail "region comparison gate is not executable: $gate"
 [[ -f "$canonical_manifest" ]] || fail "missing canonical fixture manifest"
+[[ -f "$production_manifest" ]] || fail "missing production timeline manifest"
+
+# The fine-grained production contract intentionally excludes broad note-total
+# rectangles: these IDs prevent a later edit from diluting a sparse visual
+# regression with surrounding white pixels.
+/usr/bin/ruby -rjson -e '
+  expected = %w[
+    tabs
+    note1-header-avatar note1-body note1-media note1-reaction note1-actions note1-footer
+    note2-header-avatar note2-body note2-reaction note2-actions note2-footer
+    note3-header-avatar note3-body note3-reaction note3-actions note3-footer
+    note4-header-avatar note4-body
+    bottom-bar
+  ]
+  data = JSON.parse(File.read(ARGV.fetch(0)))
+  actual = data.fetch("required_region_ids")
+  ids = data.fetch("regions").map { |region| region.fetch("id") }
+  abort "production required IDs changed" unless actual == expected
+  abort "production definitions changed" unless ids == expected
+  action_ids = data.fetch("regions").select { |region| region.fetch("kind") == "action" }.map { |region| region.fetch("id") }
+  expected_actions = %w[tabs note1-media note1-reaction note1-actions note2-reaction note2-actions note3-reaction note3-actions bottom-bar]
+  abort "production action regions changed" unless action_ids == expected_actions
+' "$production_manifest" || fail "production timeline region contract regressed"
 
 fixture_dir=$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/misscat region gate test.XXXXXX")
 trap 'rm -rf "$fixture_dir"' EXIT

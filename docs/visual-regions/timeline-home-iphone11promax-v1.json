@@ -25,97 +25,207 @@
     "amplification": 4
   },
   "required_region_ids": [
-    "timeline-tabs",
-    "first-note-identity",
-    "first-note-content",
-    "first-note-actions",
-    "second-note-content",
-    "second-note-actions",
-    "third-note-content",
-    "third-note-actions",
-    "bottom-navigation"
+    "tabs",
+    "note1-header-avatar",
+    "note1-body",
+    "note1-media",
+    "note1-reaction",
+    "note1-actions",
+    "note1-footer",
+    "note2-header-avatar",
+    "note2-body",
+    "note2-reaction",
+    "note2-actions",
+    "note2-footer",
+    "note3-header-avatar",
+    "note3-body",
+    "note3-reaction",
+    "note3-actions",
+    "note3-footer",
+    "note4-header-avatar",
+    "note4-body",
+    "bottom-bar"
   ],
   "regions": [
     {
-      "id": "timeline-tabs",
+      "id": "tabs",
       "owner": "app",
       "kind": "action",
       "x": 0,
-      "y": 112,
+      "y": 130,
+      "width": 1242,
+      "height": 132
+    },
+    {
+      "id": "note1-header-avatar",
+      "owner": "app",
+      "kind": "content",
+      "x": 0,
+      "y": 262,
+      "width": 1242,
+      "height": 168
+    },
+    {
+      "id": "note1-body",
+      "owner": "app",
+      "kind": "content",
+      "x": 220,
+      "y": 420,
+      "width": 1000,
+      "height": 95
+    },
+    {
+      "id": "note1-media",
+      "owner": "app",
+      "kind": "action",
+      "x": 220,
+      "y": 510,
+      "width": 1000,
+      "height": 405
+    },
+    {
+      "id": "note1-reaction",
+      "owner": "app",
+      "kind": "action",
+      "x": 220,
+      "y": 905,
+      "width": 220,
+      "height": 105
+    },
+    {
+      "id": "note1-actions",
+      "owner": "app",
+      "kind": "action",
+      "x": 220,
+      "y": 1000,
+      "width": 1000,
+      "height": 147
+    },
+    {
+      "id": "note1-footer",
+      "owner": "app",
+      "kind": "content",
+      "x": 0,
+      "y": 1138,
+      "width": 1242,
+      "height": 20
+    },
+    {
+      "id": "note2-header-avatar",
+      "owner": "app",
+      "kind": "content",
+      "x": 0,
+      "y": 1150,
+      "width": 1242,
+      "height": 170
+    },
+    {
+      "id": "note2-body",
+      "owner": "app",
+      "kind": "content",
+      "x": 220,
+      "y": 1290,
+      "width": 1000,
+      "height": 110
+    },
+    {
+      "id": "note2-reaction",
+      "owner": "app",
+      "kind": "action",
+      "x": 220,
+      "y": 1395,
+      "width": 220,
+      "height": 115
+    },
+    {
+      "id": "note2-actions",
+      "owner": "app",
+      "kind": "action",
+      "x": 220,
+      "y": 1500,
+      "width": 1000,
+      "height": 142
+    },
+    {
+      "id": "note2-footer",
+      "owner": "app",
+      "kind": "content",
+      "x": 0,
+      "y": 1632,
+      "width": 1242,
+      "height": 20
+    },
+    {
+      "id": "note3-header-avatar",
+      "owner": "app",
+      "kind": "content",
+      "x": 0,
+      "y": 1645,
+      "width": 1242,
+      "height": 170
+    },
+    {
+      "id": "note3-body",
+      "owner": "app",
+      "kind": "content",
+      "x": 220,
+      "y": 1790,
+      "width": 1000,
+      "height": 145
+    },
+    {
+      "id": "note3-reaction",
+      "owner": "app",
+      "kind": "action",
+      "x": 220,
+      "y": 1930,
+      "width": 220,
+      "height": 115
+    },
+    {
+      "id": "note3-actions",
+      "owner": "app",
+      "kind": "action",
+      "x": 220,
+      "y": 2035,
+      "width": 1000,
+      "height": 144
+    },
+    {
+      "id": "note3-footer",
+      "owner": "app",
+      "kind": "content",
+      "x": 0,
+      "y": 2169,
+      "width": 1242,
+      "height": 20
+    },
+    {
+      "id": "note4-header-avatar",
+      "owner": "app",
+      "kind": "content",
+      "x": 0,
+      "y": 2182,
       "width": 1242,
       "height": 150
     },
     {
-      "id": "first-note-identity",
-      "owner": "app",
-      "kind": "content",
-      "x": 40,
-      "y": 262,
-      "width": 1158,
-      "height": 170
-    },
-    {
-      "id": "first-note-content",
+      "id": "note4-body",
       "owner": "app",
       "kind": "content",
       "x": 220,
-      "y": 410,
-      "width": 978,
-      "height": 520
+      "y": 2290,
+      "width": 1000,
+      "height": 131
     },
     {
-      "id": "first-note-actions",
-      "owner": "app",
-      "kind": "action",
-      "x": 220,
-      "y": 930,
-      "width": 978,
-      "height": 170
-    },
-    {
-      "id": "second-note-content",
-      "owner": "app",
-      "kind": "content",
-      "x": 40,
-      "y": 1100,
-      "width": 1158,
-      "height": 390
-    },
-    {
-      "id": "second-note-actions",
-      "owner": "app",
-      "kind": "action",
-      "x": 220,
-      "y": 1460,
-      "width": 978,
-      "height": 160
-    },
-    {
-      "id": "third-note-content",
-      "owner": "app",
-      "kind": "content",
-      "x": 40,
-      "y": 1620,
-      "width": 1158,
-      "height": 390
-    },
-    {
-      "id": "third-note-actions",
-      "owner": "app",
-      "kind": "action",
-      "x": 220,
-      "y": 1980,
-      "width": 978,
-      "height": 160
-    },
-    {
-      "id": "bottom-navigation",
+      "id": "bottom-bar",
       "owner": "app",
       "kind": "action",
       "x": 0,
-      "y": 2390,
+      "y": 2421,
       "width": 1242,
-      "height": 210
+      "height": 267
     }
   ]
 }
