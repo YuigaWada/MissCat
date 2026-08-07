@@ -401,6 +401,24 @@ final class MiAuthAuthenticationTests: XCTestCase {
         XCTAssertTrue(permissions.contains("write:messaging"))
     }
 
+    func testAuthorizationPermissionsCoverEveryTimelineMutation() {
+        let permissions = Set(MissCatAuthenticationService.appPermissions)
+        let requiredTimelinePermissions: Set<String> = [
+            "write:notes",
+            "write:reactions",
+            "write:favorites",
+            "write:mutes",
+            "write:blocks",
+            "write:report-abuse",
+            "write:votes"
+        ]
+
+        XCTAssertTrue(
+            requiredTimelinePermissions.isSubset(of: permissions),
+            "Missing timeline permissions: \(requiredTimelinePermissions.subtracting(permissions).sorted())"
+        )
+    }
+
     func testEveryLoginAttemptUsesAFreshUUID() async throws {
         let fixture = makeFixture(sessionIDs: [firstSession, secondSession])
 

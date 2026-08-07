@@ -89,9 +89,11 @@ final class MissCatFeedStoreTests: XCTestCase {
         let store = MissCatFeedStore(source: .home, repository: repository, pageSize: 2)
 
         await store.loadInitial()
+        XCTAssertEqual(store.refreshCompletionGeneration, 0)
         await store.refresh()
 
         XCTAssertEqual(store.notes.map(\.id), ["three", "two", "one"])
+        XCTAssertEqual(store.refreshCompletionGeneration, 1)
         XCTAssertEqual(repository.requestedPages.map(\.cursor), [nil, nil])
     }
 
@@ -323,6 +325,56 @@ final class MissCatFeedStoreTests: XCTestCase {
 
         XCTAssertTrue(repository.performedActions.isEmpty)
         XCTAssertEqual(store.notes.first?.poll, pollNote.poll)
+    }
+
+    func testTimelineModerationActionsUseRepositoryAndPreserveExpectedRows() async {
+        let blockRepository = MockMissCatFeedRepository()
+        blockRepository.pages = [.init(notes: [note("one"), note("two")], hasMore: false)]
+        let blockStore = MissCatFeedStore(source: .home, repository: blockRepository)
+        await blockStore.loadInitial()
+
+        await blockStore.blockUser(userID: "author")
+
+        XCTAssertEqual(blockRepository.performedActions, [.block(userID: "author")])
+        XCTAssertEqual(blockStore.phase, .empty)
+        XCTAssertTrue(blockStore.notes.isEmpty)
+
+        let reportRepository = MockMissCatFeedRepository()
+        reportRepository.pages = [.init(notes: [note("three")], hasMore: false)]
+        let reportStore = MissCatFeedStore(source: .home, repository: reportRepository)
+        await reportStore.loadInitial()
+
+        await reportStore.reportUser(userID: "author", comment: "  abusive post  ")
+
+        XCTAssertEqual(
+            reportRepository.performedActions,
+            [.report(userID: "author", comment: "abusive post")]
+        )
+        XCTAssertEqual(reportStore.notes.map(\.id), ["three"])
+        XCTAssertEqual(reportStore.phase, .loaded)
+    }
+
+    func testReportCommentAcceptsOneAnd2048CharactersButRejects2049() async {
+        let repository = MockMissCatFeedRepository()
+        repository.pages = [.init(notes: [note("report")], hasMore: false)]
+        let store = MissCatFeedStore(source: .home, repository: repository)
+        await store.loadInitial()
+        let maximum = String(repeating: "猫", count: 2_048)
+
+        await store.reportUser(userID: "one", comment: "x")
+        await store.reportUser(userID: "maximum", comment: maximum)
+        await store.reportUser(
+            userID: "too-long",
+            comment: String(repeating: "猫", count: 2_049)
+        )
+
+        XCTAssertEqual(
+            repository.performedActions,
+            [
+                .report(userID: "one", comment: "x"),
+                .report(userID: "maximum", comment: maximum)
+            ]
+        )
     }
 
     func testThreadFetchPreservesAncestorRootReplyOrderAndExpandsRoot() async {

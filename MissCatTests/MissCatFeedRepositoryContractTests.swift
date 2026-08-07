@@ -62,9 +62,16 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         XCTAssertEqual(note.id, "note-a")
         XCTAssertEqual(note.noteID, "note-a")
         XCTAssertEqual(note.reactions, [
-            MissCatReaction(name: ":party:", count: 2, isMine: true),
+            MissCatReaction(
+                name: ":party:",
+                count: 2,
+                isMine: true,
+                emojiURL: URL(string: "https://example.invalid/party.webp")
+            ),
             MissCatReaction(name: "like", count: 4, isMine: false),
         ])
+        XCTAssertEqual(note.emojis["party"], URL(string: "https://example.invalid/party.webp"))
+        XCTAssertEqual(note.author.emojis["party"], URL(string: "https://example.invalid/party.webp"))
         XCTAssertEqual(note.attachments.first?.kind, .image)
         XCTAssertEqual(note.attachments.first?.width, 640)
         XCTAssertEqual(note.poll?.choices.first?.votes, 3)
@@ -89,6 +96,36 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         XCTAssertEqual(hashtag["tag"] as? String, "SwiftUI")
         XCTAssertNil(hashtag["query"])
         XCTAssertNil(hashtag["untilId"])
+    }
+
+    func testMentionResolutionUsesUsersShowAndReturnsServerUserID() async throws {
+        var requests: [URLRequest] = []
+        FeedURLProtocolStub.handler = { request in
+            requests.append(request)
+            return Self.response(for: request, json: [
+                "id": "resolved-user",
+                "name": "Alice",
+                "username": "alice",
+                "host": NSNull(),
+                "avatarUrl": NSNull(),
+                "isCat": false,
+                "emojis": [:],
+            ])
+        }
+        let subject = makeSubject()
+
+        let localID = try await subject.resolveMention("alice@example.invalid")
+        let remoteID = try await subject.resolveMention("@alice@remote.invalid")
+
+        XCTAssertEqual(localID, "resolved-user")
+        XCTAssertEqual(remoteID, "resolved-user")
+        XCTAssertEqual(requests.compactMap { $0.url?.path }, ["/api/users/show", "/api/users/show"])
+        let localBody = try XCTUnwrap(requests[0].feedBodyData).feedJSONObject
+        XCTAssertEqual(localBody["i"] as? String, "account-token")
+        XCTAssertEqual(localBody["username"] as? String, "alice")
+        XCTAssertNil(localBody["host"])
+        let remoteBody = try XCTUnwrap(requests[1].feedBodyData).feedJSONObject
+        XCTAssertEqual(remoteBody["host"] as? String, "remote.invalid")
     }
 
     func testUserAndListFeedsUseScopedNativeRequestShapes() async throws {
@@ -200,6 +237,10 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         try await subject.perform(.removeReaction(noteID: "n4"))
         try await subject.perform(.renote(noteID: "n5"))
         try await subject.perform(.vote(noteID: "n6", choice: 2))
+        try await subject.perform(.delete(noteID: "n7"))
+        try await subject.perform(.mute(userID: "u8"))
+        try await subject.perform(.block(userID: "u9"))
+        try await subject.perform(.report(userID: "u10", comment: "abuse evidence"))
 
         XCTAssertEqual(
             requests.compactMap { $0.url?.path },
@@ -210,6 +251,10 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
                 "/api/notes/reactions/delete",
                 "/api/notes/create",
                 "/api/notes/polls/vote",
+                "/api/notes/delete",
+                "/api/mute/create",
+                "/api/blocking/create",
+                "/api/users/report-abuse",
             ]
         )
         let bodies = try requests.map { try XCTUnwrap($0.feedBodyData).feedJSONObject }
@@ -221,6 +266,39 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         XCTAssertEqual(bodies[5]["i"] as? String, "account-token")
         XCTAssertEqual(bodies[5]["noteId"] as? String, "n6")
         XCTAssertEqual(bodies[5]["choice"] as? Int, 2)
+        XCTAssertEqual(bodies[6] as NSDictionary, ["i": "account-token", "noteId": "n7"] as NSDictionary)
+        XCTAssertEqual(bodies[7] as NSDictionary, ["i": "account-token", "userId": "u8"] as NSDictionary)
+        XCTAssertEqual(bodies[8] as NSDictionary, ["i": "account-token", "userId": "u9"] as NSDictionary)
+        XCTAssertEqual(
+            bodies[9] as NSDictionary,
+            ["i": "account-token", "userId": "u10", "comment": "abuse evidence"] as NSDictionary
+        )
+    }
+
+    func testReportEndpointValidatesOne2048And2049CharacterBoundaries() async throws {
+        var requests: [URLRequest] = []
+        FeedURLProtocolStub.handler = { request in
+            requests.append(request)
+            return Self.response(for: request, status: 204, data: Data())
+        }
+        let subject = makeSubject()
+        let maximum = String(repeating: "猫", count: 2_048)
+
+        try await subject.perform(.report(userID: "one", comment: "x"))
+        try await subject.perform(.report(userID: "maximum", comment: maximum))
+        do {
+            try await subject.perform(
+                .report(userID: "too-long", comment: String(repeating: "猫", count: 2_049))
+            )
+            XCTFail("2049-character reports must be rejected before networking")
+        } catch {
+            XCTAssertEqual(error as? MissCatFeedRepositoryError, .invalidReportComment)
+        }
+
+        XCTAssertEqual(requests.count, 2)
+        let bodies = try requests.map { try XCTUnwrap($0.feedBodyData).feedJSONObject }
+        XCTAssertEqual(bodies[0]["comment"] as? String, "x")
+        XCTAssertEqual(bodies[1]["comment"] as? String, maximum)
     }
 
     func testSuccessfulWriteNeverBecomesDecodeFailure() async throws {

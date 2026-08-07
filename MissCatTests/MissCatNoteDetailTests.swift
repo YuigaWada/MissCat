@@ -63,6 +63,24 @@ final class MissCatNoteDetailTests: XCTestCase {
         XCTAssertEqual(String(rendered.characters), "first\nsecond")
     }
 
+    func testNativeMFMRendererStripsAttributedMotionTagsAndRoutesMentionAndHashtag() {
+        let rendered = MissCatNativeMFMRenderer.render(
+            #"<spin duration="1s">safe</spin> @alice@example.test #SwiftUI"#
+        )
+        let links = rendered.runs.compactMap(\.link)
+
+        XCTAssertEqual(String(rendered.characters), "safe @alice@example.test #SwiftUI")
+        XCTAssertTrue(links.contains(URL(string: "misscat-mfm://mention/alice@example.test")!))
+        XCTAssertTrue(links.contains(URL(string: "misscat-mfm://hashtag/SwiftUI")!))
+        XCTAssertEqual(
+            MissCatNativeMFMRenderer.interactiveValue(
+                from: URL(string: "misscat-mfm://hashtag/SwiftUI")!,
+                kind: "hashtag"
+            ),
+            "SwiftUI"
+        )
+    }
+
     func testPreviewURLDetectionIsStableDeduplicatedAndBounded() {
         let urls = MissCatNativeMFMRenderer.previewURLs(
             in: "https://one.test/a https://one.test/a https://two.test/b",
@@ -182,6 +200,58 @@ final class MissCatNoteDetailTests: XCTestCase {
         readiness.complete("image")
         try await Task.sleep(nanoseconds: 300_000_000)
         XCTAssertTrue(readiness.isReady)
+    }
+
+    @MainActor
+    func testCustomEmojiStoreCachesSuccessfulLoadsAcrossViews() async {
+        let url = URL(string: "https://example.test/emoji.webp")!
+        let cache = MissCatCustomEmojiCache(countLimit: 2)
+        let probe = CustomEmojiLoaderProbe(data: Data([1, 2, 3]))
+        let first = MissCatCustomEmojiStore(
+            emojis: ["cat": url],
+            readiness: nil,
+            cache: cache,
+            loader: { url in try await probe.load(url) }
+        )
+        await first.load()
+        let second = MissCatCustomEmojiStore(
+            emojis: ["cat": url],
+            readiness: nil,
+            cache: cache,
+            loader: { url in try await probe.load(url) }
+        )
+        await second.load()
+
+        XCTAssertEqual(probe.callCount, 1)
+        XCTAssertEqual(first.dataByName["cat"], Data([1, 2, 3]))
+        XCTAssertEqual(second.dataByName["cat"], Data([1, 2, 3]))
+    }
+
+    @MainActor
+    func testCustomEmojiCancellationCompletesEveryReadinessRegistration() async throws {
+        let readiness = MissCatNoteVisualReadiness()
+        readiness.setModelTerminal(true)
+        let probe = CustomEmojiLoaderProbe(data: Data([1]), delayNanoseconds: 5_000_000_000)
+        let store = MissCatCustomEmojiStore(
+            emojis: [
+                "cat": URL(string: "https://example.test/cat.webp")!,
+                "dog": URL(string: "https://example.test/dog.webp")!,
+            ],
+            readiness: readiness,
+            cache: MissCatCustomEmojiCache(countLimit: 2),
+            loader: { url in try await probe.load(url) }
+        )
+        let task = Task { await store.load() }
+        let didStartLoading = await waitUntil { probe.callCount == 1 }
+        XCTAssertTrue(didStartLoading)
+
+        task.cancel()
+        await task.value
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        XCTAssertTrue(store.dataByName.isEmpty)
+        XCTAssertTrue(readiness.isReady)
+        XCTAssertEqual(probe.callCount, 1)
     }
 
     @MainActor
@@ -427,6 +497,30 @@ final class MissCatNoteDetailTests: XCTestCase {
             body.append(buffer, count: count)
         }
         return body
+    }
+}
+
+private final class CustomEmojiLoaderProbe: @unchecked Sendable {
+    private let queue = DispatchQueue(label: "misscat.custom-emoji-loader-probe")
+    private let data: Data
+    private let delayNanoseconds: UInt64
+    private var storedCallCount = 0
+
+    init(data: Data, delayNanoseconds: UInt64 = 0) {
+        self.data = data
+        self.delayNanoseconds = delayNanoseconds
+    }
+
+    var callCount: Int {
+        queue.sync { storedCallCount }
+    }
+
+    func load(_ url: URL) async throws -> Data {
+        queue.sync { storedCallCount += 1 }
+        if delayNanoseconds > 0 {
+            try await Task.sleep(nanoseconds: delayNanoseconds)
+        }
+        return data
     }
 }
 

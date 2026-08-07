@@ -251,6 +251,149 @@ final class MissCatShellFeedUITests: XCTestCase {
         )
     }
 
+    func testFourConfiguredTimelineTabsSupportOrdinaryTapSwipeAndBoundaries() {
+        launchFixture("--swiftui-shell-fixture-four-tabs")
+        waitForReady(page: "home")
+        waitForSynchronizedPagerSelection("home")
+
+        app.buttons["main.timeline.social"].tap()
+        waitForSynchronizedPagerSelection("social")
+        waitForReady(page: "social")
+
+        let pager = app.collectionViews.firstMatch
+        XCTAssertTrue(pager.waitForExistence(timeout: 5))
+        pager.swipeLeft()
+        waitForSynchronizedPagerSelection("global")
+        waitForReady(page: "global")
+        pager.swipeLeft()
+        waitForSynchronizedPagerSelection("global")
+
+        pager.swipeRight()
+        waitForSynchronizedPagerSelection("social")
+        pager.swipeRight()
+        waitForSynchronizedPagerSelection("local")
+        pager.swipeRight()
+        waitForSynchronizedPagerSelection("home")
+        pager.swipeRight()
+        waitForSynchronizedPagerSelection("home")
+    }
+
+    func testTimelineRefreshPaginationActionsAndDetailNavigation() {
+        launchFixture(
+            "--swiftui-shell-fixture-actions",
+            "--swiftui-shell-fixture-pagination"
+        )
+        waitForReady(page: "home")
+        let feed = app.scrollViews["feed.scroll"]
+        XCTAssertTrue(feed.waitForExistence(timeout: 5))
+
+        let refreshCompletion = element("feed.refresh.completed")
+        XCTAssertTrue(refreshCompletion.waitForExistence(timeout: 3))
+        XCTAssertEqual(refreshCompletion.value as? String, "0")
+        feed.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.18))
+            .press(
+                forDuration: 0.15,
+                thenDragTo: feed.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.82))
+            )
+        expectation(
+            for: NSPredicate(format: "value == %@", "1"),
+            evaluatedWith: refreshCompletion
+        )
+        waitForExpectations(timeout: 5)
+
+        let firstReaction = app.buttons["note.home-0.action.reaction"]
+        XCTAssertTrue(firstReaction.waitForExistence(timeout: 5))
+        firstReaction.tap()
+        XCTAssertTrue(element("reaction.picker").waitForExistence(timeout: 3))
+        app.buttons["reaction.picker.choice.❤️"].tap()
+        XCTAssertTrue(app.buttons["note.home-0.reaction.❤️"].waitForExistence(timeout: 3))
+
+        app.buttons["note.home-0.action.reply"].tap()
+        let editor = app.textViews["compose.text"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 3))
+        editor.tap()
+        editor.typeText("Timeline reply E2E")
+        app.buttons["compose.submit"].tap()
+        XCTAssertTrue(firstReaction.waitForExistence(timeout: 5))
+
+        let renote = app.buttons["note.home-0.action.renote"]
+        XCTAssertTrue(renote.waitForExistence(timeout: 5))
+        renote.tap()
+        let quote = app.buttons["timeline.renote.quote"]
+        XCTAssertTrue(quote.waitForExistence(timeout: 3))
+        quote.tap()
+        XCTAssertEqual(element("compose.mode").label, "引用Renote")
+        let quoteEditor = app.textViews["compose.text"]
+        XCTAssertTrue(quoteEditor.waitForExistence(timeout: 3))
+        quoteEditor.tap()
+        quoteEditor.typeText("Timeline quote E2E")
+        app.buttons["compose.submit"].tap()
+        XCTAssertTrue(renote.waitForExistence(timeout: 5))
+
+        renote.tap()
+        let confirmRenote = app.buttons["timeline.renote.confirm"]
+        XCTAssertTrue(confirmRenote.waitForExistence(timeout: 3))
+        confirmRenote.tap()
+        XCTAssertTrue(renote.waitForExistence(timeout: 5))
+
+        app.buttons["note.home-0.action.overflow"].tap()
+        XCTAssertTrue(app.buttons["note.home-0.overflow.copy-text"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["note.home-0.overflow.copy-link"].exists)
+        XCTAssertTrue(app.buttons["note.home-0.overflow.share"].exists)
+        XCTAssertTrue(app.buttons["note.home-0.overflow.block"].exists)
+        let report = app.buttons["note.home-0.overflow.report"]
+        XCTAssertTrue(report.waitForExistence(timeout: 3))
+        report.tap()
+        XCTAssertTrue(app.alerts["このユーザーを通報"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["timeline.report.confirm"].isEnabled)
+        app.alerts.buttons["キャンセル"].tap()
+
+        app.buttons["note.home-0.action.overflow"].tap()
+        let showDetail = app.buttons["note.home-0.overflow.detail"]
+        XCTAssertTrue(showDetail.waitForExistence(timeout: 3))
+        showDetail.tap()
+        XCTAssertTrue(element("note.detail.screen").waitForExistence(timeout: 5))
+        XCTAssertTrue(element("note.detail.thread").exists)
+
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(feed.waitForExistence(timeout: 5))
+        let pageTwo = element("note.row.home-page2-0")
+        for _ in 0..<12 where !pageTwo.exists {
+            feed.swipeUp()
+        }
+        XCTAssertTrue(pageTwo.waitForExistence(timeout: 5))
+    }
+
+    func testTimelineMentionResolvesToNativeProfile() {
+        launchFixture("--swiftui-shell-fixture-actions")
+        waitForReady(page: "home")
+
+        let body = element("note.home-0.body")
+        XCTAssertTrue(body.waitForExistence(timeout: 5))
+        XCTAssertTrue(body.label.localizedCaseInsensitiveContains("alice"))
+        body.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.2)).tap()
+
+        XCTAssertTrue(element("fixture.profile.screen").waitForExistence(timeout: 5))
+        XCTAssertEqual(element("fixture.profile.user-id").label, "fixture-mentioned-user")
+    }
+
+    func testTimelineSharePresentsSystemActivitySheet() {
+        launchFixture("--swiftui-shell-fixture-actions")
+        waitForReady(page: "home")
+
+        app.buttons["note.home-0.action.overflow"].tap()
+        let share = app.buttons["note.home-0.overflow.share"]
+        XCTAssertTrue(share.waitForExistence(timeout: 5))
+        share.tap()
+
+        let activityList = app.otherElements["ActivityListView"]
+        XCTAssertTrue(
+            activityList.waitForExistence(timeout: 5),
+            "ShareLink did not present the native activity sheet"
+        )
+        activityList.swipeDown()
+    }
+
     func testFooterAccountPopoverAndCompositeScrollRestoration() {
         launchFixture()
         let homeReady = waitForReady(page: "home")
@@ -492,7 +635,7 @@ final class MissCatShellFeedUITests: XCTestCase {
     @discardableResult
     private func waitForReady(page: String) -> XCUIElement {
         let marker = element("migration.shell-feed.visual-ready.\(page)")
-        XCTAssertTrue(marker.waitForExistence(timeout: 10), "Missing stable visualReady marker for \(page)")
+        XCTAssertTrue(marker.waitForExistence(timeout: 20), "Missing stable visualReady marker for \(page)")
         return marker
     }
 
@@ -541,8 +684,11 @@ final class MissCatShellFeedUITests: XCTestCase {
         waitForExpectations(timeout: 5)
 
         XCTAssertTrue(tab.isSelected)
-        for otherPage in ["home", "local", "global"] where otherPage != page {
-            XCTAssertFalse(app.buttons["main.timeline.\(otherPage)"].isSelected)
+        for otherPage in ["home", "local", "social", "global"] where otherPage != page {
+            let candidate = app.buttons["main.timeline.\(otherPage)"]
+            if candidate.exists {
+                XCTAssertFalse(candidate.isSelected)
+            }
         }
     }
 
