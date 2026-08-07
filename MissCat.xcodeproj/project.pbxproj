@@ -60,6 +60,7 @@
 		C0DE0000000000000000002C /* MissCatFeedStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000002D /* MissCatFeedStoreTests.swift */; };
 		C0DE0000000000000000002E /* MissCatTimelinePager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000002F /* MissCatTimelinePager.swift */; };
 		B0A700000000000000000001 /* MissCatNoteDetailCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A700000000000000000002 /* MissCatNoteDetailCore.swift */; };
+		C11B00000000000000000001 /* MissCatSystemClipboardWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11B00000000000000000002 /* MissCatSystemClipboardWriter.swift */; };
 		B0A700000000000000000003 /* MissCatNoteDetailViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A700000000000000000004 /* MissCatNoteDetailViews.swift */; };
 		B0A700000000000000000005 /* MissCatNoteDetailTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A700000000000000000006 /* MissCatNoteDetailTests.swift */; };
 		B0A700000000000000000007 /* MissCatNoteDetailFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A700000000000000000008 /* MissCatNoteDetailFixture.swift */; };
@@ -390,6 +391,7 @@
 		C0DE0000000000000000002D /* MissCatFeedStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatFeedStoreTests.swift; sourceTree = "<group>"; };
 		C0DE0000000000000000002F /* MissCatTimelinePager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatTimelinePager.swift; sourceTree = "<group>"; };
 		B0A700000000000000000002 /* MissCatNoteDetailCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatNoteDetailCore.swift; sourceTree = "<group>"; };
+		C11B00000000000000000002 /* MissCatSystemClipboardWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatSystemClipboardWriter.swift; sourceTree = "<group>"; };
 		B0A700000000000000000004 /* MissCatNoteDetailViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatNoteDetailViews.swift; sourceTree = "<group>"; };
 		B0A700000000000000000006 /* MissCatNoteDetailTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatNoteDetailTests.swift; sourceTree = "<group>"; };
 		B0A700000000000000000008 /* MissCatNoteDetailFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatNoteDetailFixture.swift; sourceTree = "<group>"; };
@@ -789,6 +791,7 @@
 				C0DE00000000000000000029 /* MissCatNoteRow.swift */,
 				C0DE0000000000000000002F /* MissCatTimelinePager.swift */,
 				B0A700000000000000000002 /* MissCatNoteDetailCore.swift */,
+				C11B00000000000000000002 /* MissCatSystemClipboardWriter.swift */,
 				B0A700000000000000000004 /* MissCatNoteDetailViews.swift */,
 				B0A700000000000000000008 /* MissCatNoteDetailFixture.swift */,
 			);
@@ -2020,6 +2023,7 @@
 				C0DE0000000000000000002A /* MissCatFeedScreens.swift in Sources */,
 				C0DE0000000000000000002E /* MissCatTimelinePager.swift in Sources */,
 				B0A700000000000000000001 /* MissCatNoteDetailCore.swift in Sources */,
+				C11B00000000000000000001 /* MissCatSystemClipboardWriter.swift in Sources */,
 				B0A700000000000000000003 /* MissCatNoteDetailViews.swift in Sources */,
 				B0A700000000000000000007 /* MissCatNoteDetailFixture.swift in Sources */,
 				C0DE00000000000000000030 /* MissCatMiAuth.swift in Sources */,

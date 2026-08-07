@@ -1071,6 +1071,23 @@ public struct MissCatNoteDetailView: View {
                         contextRepository: contextRepository,
                         readiness: readiness
                     )
+                    .task {
+                        await store.loadNextPageIfNeeded(currentNoteID: note.id)
+                    }
+                }
+
+                if store.isLoadingNextPage {
+                    ProgressView()
+                        .tint(palette.accent)
+                        .padding(.vertical, 18)
+                        .accessibilityIdentifier("note.detail.pagination.loading")
+                } else if !store.canLoadMore {
+                    Text("返信をすべて表示しました")
+                        .font(.system(size: 12))
+                        .foregroundStyle(palette.strong)
+                        .padding(.vertical, 14)
+                        .accessibilityIdentifier("note.detail.pagination.terminal")
+                        .accessibilityValue("\(store.thread?.replies.count ?? 0)")
                 }
             }
         }
@@ -1078,6 +1095,20 @@ public struct MissCatNoteDetailView: View {
         .refreshable { await store.refresh() }
         .background(palette.base)
         .accessibilityIdentifier("note.detail.thread")
+        .overlay(alignment: .topLeading) {
+            VStack {
+                Color.clear
+                    .frame(width: 1, height: 1)
+                    .accessibilityElement()
+                    .accessibilityIdentifier("note.detail.pagination.cursor")
+                    .accessibilityValue(store.thread?.repliesCursor ?? "none")
+                Color.clear
+                    .frame(width: 1, height: 1)
+                    .accessibilityElement()
+                    .accessibilityIdentifier("note.detail.refresh.completed")
+                    .accessibilityValue("\(store.refreshCompletionGeneration)")
+            }
+        }
     }
 
     private enum ThreadRole: String {

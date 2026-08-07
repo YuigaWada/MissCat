@@ -9,12 +9,28 @@ public protocol MissCatFeedRepository: AnyObject {
 
     func fetchThread(noteID: String, replyLimit: Int) async throws -> MissCatNoteThread
 
+    func fetchReplies(noteID: String, cursor: String?, limit: Int) async throws -> MissCatNoteRepliesPage
+
     func realtimeEvents(
         source: MissCatFeedSource,
         capturing noteIDs: [String]
     ) -> AsyncStream<MissCatRealtimeEvent>
 
     func perform(_ action: MissCatFeedAction) async throws
+}
+
+public extension MissCatFeedRepository {
+    func fetchReplies(noteID: String, cursor: String?, limit: Int) async throws -> MissCatNoteRepliesPage {
+        guard cursor == nil else {
+            return MissCatNoteRepliesPage(replies: [], nextCursor: nil, hasMore: false)
+        }
+        let thread = try await fetchThread(noteID: noteID, replyLimit: limit)
+        return MissCatNoteRepliesPage(
+            replies: thread.replies,
+            nextCursor: thread.repliesCursor,
+            hasMore: thread.hasMoreReplies
+        )
+    }
 }
 
 public enum MissCatFeedRepositoryError: LocalizedError, Equatable {
@@ -274,15 +290,39 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
         }
 
         let boundedLimit = min(max(replyLimit, 1), 100)
-        let replies: [FeedNoteDTO] = try await post(
-            "notes/children",
-            body: FeedChildrenRequest(i: account.apiKey, noteId: noteID, limit: boundedLimit)
-        )
+        let repliesPage = try await fetchReplies(noteID: noteID, cursor: nil, limit: boundedLimit)
 
         return MissCatNoteThread(
             ancestors: ancestors.reversed().map { Self.convert($0) },
             note: Self.convert(root),
-            replies: replies.map { Self.convert($0) }
+            replies: repliesPage.replies,
+            repliesCursor: repliesPage.nextCursor,
+            hasMoreReplies: repliesPage.hasMore
+        )
+    }
+
+    public func fetchReplies(
+        noteID: String,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatNoteRepliesPage {
+        let boundedLimit = min(max(limit, 1), 100)
+        // Misskey's official endpoint declares untilId as a pagination cursor:
+        // https://github.com/misskey-dev/misskey/blob/00f66349766dc61298c66129ded5fdeb29e93f41/packages/backend/src/server/api/endpoints/notes/children.ts
+        let replies: [FeedNoteDTO] = try await post(
+            "notes/children",
+            body: FeedChildrenRequest(
+                i: account.apiKey,
+                noteId: noteID,
+                limit: boundedLimit,
+                untilId: cursor
+            )
+        )
+        let converted = replies.map { Self.convert($0) }
+        return MissCatNoteRepliesPage(
+            replies: converted,
+            nextCursor: converted.last?.noteID,
+            hasMore: replies.count >= boundedLimit
         )
     }
 
@@ -490,12 +530,7 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
     }
 
     private func makeRequest(path: String) throws -> URLRequest {
-        let raw = account.instance.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !raw.isEmpty else { throw MissCatFeedRepositoryError.invalidInstance }
-        let normalized = raw.contains("://") ? raw : "https://\(raw)"
-        guard let instanceURL = URL(string: normalized),
-              let scheme = instanceURL.scheme?.lowercased(),
-              scheme == "https" || scheme == "http" else {
+        guard let instanceURL = account.instanceOrigin else {
             throw MissCatFeedRepositoryError.invalidInstance
         }
 
@@ -511,34 +546,15 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
     }
 
     private func normalizedInstanceOrigin() throws -> URL {
-        let raw = account.instance.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !raw.isEmpty else { throw MissCatURLPreviewError.invalidInstance }
-        let normalized = raw.contains("://") ? raw : "https://\(raw)"
-        guard let components = URLComponents(string: normalized),
-              components.user == nil,
-              components.password == nil,
-              components.query == nil,
-              components.fragment == nil,
-              let scheme = components.scheme?.lowercased(),
-              scheme == "https" || scheme == "http",
-              let host = components.host,
-              !host.isEmpty,
-              let origin = components.url else {
+        guard let origin = account.instanceOrigin else {
             throw MissCatURLPreviewError.invalidInstance
         }
         return origin
     }
 
     private func makeStreamingRequest() throws -> URLRequest {
-        let raw = account.instance.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !raw.isEmpty else { throw MissCatFeedRepositoryError.invalidInstance }
-        let normalized = raw.contains("://") ? raw : "https://\(raw)"
-        guard var components = URLComponents(string: normalized),
-              components.scheme?.lowercased() == "https",
-              let host = components.host,
-              !host.isEmpty,
-              components.user == nil,
-              components.password == nil else {
+        guard let origin = account.instanceOrigin,
+              var components = URLComponents(url: origin, resolvingAgainstBaseURL: false) else {
             throw MissCatFeedRepositoryError.invalidInstance
         }
 
@@ -1084,6 +1100,7 @@ private struct FeedChildrenRequest: Encodable {
     let i: String
     let noteId: String
     let limit: Int
+    let untilId: String?
 }
 
 private struct FeedReactionRequest: Encodable {

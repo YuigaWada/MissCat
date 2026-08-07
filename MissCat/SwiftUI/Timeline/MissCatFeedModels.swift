@@ -21,12 +21,14 @@ public struct MissCatFeedSession: Equatable, Sendable {
     public let username: String
     public let instance: String
     public let apiKey: String
+    public let instanceOrigin: URL?
 
     public init(accountID: String, username: String, instance: String, apiKey: String) {
         self.accountID = accountID
         self.username = username
         self.instance = instance
         self.apiKey = apiKey
+        instanceOrigin = MissCatFeedInstanceOrigin.resolve(instance)
     }
 
     public var scope: MissCatShellAccountScope {
@@ -35,6 +37,43 @@ public struct MissCatFeedSession: Equatable, Sendable {
 
     public var compositeAccountID: String {
         MissCatAccountIdentity.storageKey(instance: instance, userId: accountID)
+    }
+}
+
+enum MissCatFeedInstanceOrigin {
+    static func resolve(_ rawValue: String) -> URL? {
+        let value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty else { return nil }
+
+        let normalized = value.contains("://") ? value : "https://\(value)"
+        guard !normalized.hasSuffix(":"),
+              var components = URLComponents(string: normalized),
+              components.scheme?.lowercased() == "https",
+              components.user == nil,
+              components.password == nil,
+              components.percentEncodedPath.isEmpty,
+              components.query == nil,
+              components.fragment == nil,
+              let host = components.host?.lowercased(),
+              !host.isEmpty,
+              !host.hasSuffix("."),
+              components.percentEncodedHost?.contains("%") != true,
+              components.url != nil else { return nil }
+
+        if let port = components.port, !(1 ... 65_535).contains(port) {
+            return nil
+        }
+
+        components.scheme = "https"
+        components.host = host
+        components.path = ""
+        if components.port == 443 {
+            components.port = nil
+        }
+        guard let origin = components.url,
+              origin.scheme == "https",
+              origin.host == host else { return nil }
+        return origin
     }
 }
 
@@ -66,7 +105,6 @@ public enum MissCatFeedSource: Equatable, Sendable {
     }
 
     public var supportsPagination: Bool {
-        if case .noteDetail = self { return false }
         return true
     }
 
@@ -312,15 +350,37 @@ public struct MissCatFeedPage: Equatable, Sendable {
     }
 }
 
+public struct MissCatNoteRepliesPage: Equatable, Sendable {
+    public let replies: [MissCatNote]
+    public let nextCursor: String?
+    public let hasMore: Bool
+
+    public init(replies: [MissCatNote], nextCursor: String?, hasMore: Bool) {
+        self.replies = replies
+        self.nextCursor = nextCursor
+        self.hasMore = hasMore
+    }
+}
+
 public struct MissCatNoteThread: Equatable, Sendable {
     public let ancestors: [MissCatNote]
     public let note: MissCatNote
     public let replies: [MissCatNote]
+    public let repliesCursor: String?
+    public let hasMoreReplies: Bool
 
-    public init(ancestors: [MissCatNote], note: MissCatNote, replies: [MissCatNote]) {
+    public init(
+        ancestors: [MissCatNote],
+        note: MissCatNote,
+        replies: [MissCatNote],
+        repliesCursor: String? = nil,
+        hasMoreReplies: Bool = false
+    ) {
         self.ancestors = ancestors
         self.note = note
         self.replies = replies
+        self.repliesCursor = repliesCursor
+        self.hasMoreReplies = hasMoreReplies
     }
 
     public var allNotes: [MissCatNote] { ancestors + [note] + replies }

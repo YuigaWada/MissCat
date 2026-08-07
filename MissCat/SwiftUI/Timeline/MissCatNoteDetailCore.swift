@@ -605,3 +605,25 @@ public enum MissCatNoteOverflowAction: Equatable, Sendable {
     case reportUser
     case delete
 }
+
+public protocol MissCatClipboardWriting: AnyObject {
+    @MainActor func write(_ value: String)
+}
+
+public struct MissCatNoteClipboardActions {
+    private let writer: any MissCatClipboardWriting
+
+    public init(writer: any MissCatClipboardWriting) {
+        self.writer = writer
+    }
+
+    @MainActor
+    public func copyText(_ text: String) {
+        writer.write(text)
+    }
+
+    @MainActor
+    public func copyLink(_ url: URL) {
+        writer.write(url.absoluteString)
+    }
+}

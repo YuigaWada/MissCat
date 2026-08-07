@@ -198,14 +198,30 @@ public final class MissCatFeedStore: ObservableObject {
         let capturedScope = accountScope
         let repository = repository
         let source = source
-        let cursor = notes.last?.id
+        let cursor = source.isNoteDetail ? thread?.repliesCursor : notes.last?.id
         let pageSize = pageSize
         let task = Task { @MainActor [weak self, repository] in
             do {
-                let page = try await repository.fetchPage(source: source, cursor: cursor, limit: pageSize)
+                let page: MissCatFeedPage?
+                let repliesPage: MissCatNoteRepliesPage?
+                if case let .noteDetail(noteID) = source {
+                    page = nil
+                    repliesPage = try await repository.fetchReplies(
+                        noteID: noteID,
+                        cursor: cursor,
+                        limit: pageSize
+                    )
+                } else {
+                    page = try await repository.fetchPage(source: source, cursor: cursor, limit: pageSize)
+                    repliesPage = nil
+                }
                 guard let self, self.accepts(generation: generation, scope: capturedScope) else { return }
-                self.notes = Self.appendingUnique(page.notes, to: self.notes)
-                self.canLoadMore = page.hasMore
+                if let repliesPage {
+                    self.applyNextRepliesPage(repliesPage)
+                } else if let page {
+                    self.notes = Self.appendingUnique(page.notes, to: self.notes)
+                    self.canLoadMore = page.hasMore
+                }
                 self.paginationTask = nil
                 self.isLoadingNextPage = false
             } catch is CancellationError {
@@ -490,9 +506,10 @@ public final class MissCatFeedStore: ObservableObject {
     private func applyInitialContent(_ content: InitialContent) {
         switch content {
         case let .thread(newThread):
-            thread = newThread
-            notes = newThread.allNotes
-            canLoadMore = false
+            let normalized = Self.normalized(newThread)
+            thread = normalized
+            notes = normalized.allNotes
+            canLoadMore = normalized.hasMoreReplies && normalized.repliesCursor != nil
         case let .page(page):
             thread = nil
             notes = Self.unique(page.notes)
@@ -504,9 +521,10 @@ public final class MissCatFeedStore: ObservableObject {
     private func applyRefreshContent(_ content: InitialContent) {
         switch content {
         case let .thread(newThread):
-            thread = newThread
-            notes = newThread.allNotes
-            canLoadMore = false
+            let normalized = Self.normalized(newThread)
+            thread = normalized
+            notes = normalized.allNotes
+            canLoadMore = normalized.hasMoreReplies && normalized.repliesCursor != nil
         case let .page(page):
             thread = nil
             notes = Self.prependingUnique(page.notes, to: notes)
@@ -596,7 +614,45 @@ public final class MissCatFeedStore: ObservableObject {
         thread = MissCatNoteThread(
             ancestors: current.ancestors.compactMap { byID[$0.id] },
             note: byID[current.note.id] ?? current.note,
-            replies: current.replies.compactMap { byID[$0.id] }
+            replies: current.replies.compactMap { byID[$0.id] },
+            repliesCursor: current.repliesCursor,
+            hasMoreReplies: current.hasMoreReplies
+        )
+    }
+
+    private func applyNextRepliesPage(_ page: MissCatNoteRepliesPage) {
+        guard let current = thread else {
+            canLoadMore = false
+            return
+        }
+        let reservedIDs = Set((current.ancestors + [current.note]).map(\.id))
+        let replies = Self.appendingUnique(page.replies, to: current.replies)
+            .filter { !reservedIDs.contains($0.id) }
+        let canContinue = page.hasMore
+            && page.nextCursor != nil
+            && page.nextCursor != current.repliesCursor
+        let updated = MissCatNoteThread(
+            ancestors: current.ancestors,
+            note: current.note,
+            replies: replies,
+            repliesCursor: page.nextCursor,
+            hasMoreReplies: canContinue
+        )
+        thread = updated
+        notes = updated.allNotes
+        canLoadMore = canContinue
+    }
+
+    private static func normalized(_ thread: MissCatNoteThread) -> MissCatNoteThread {
+        let ancestors = unique(thread.ancestors)
+        let reservedIDs = Set((ancestors + [thread.note]).map(\.id))
+        let replies = unique(thread.replies).filter { !reservedIDs.contains($0.id) }
+        return MissCatNoteThread(
+            ancestors: ancestors,
+            note: thread.note,
+            replies: replies,
+            repliesCursor: thread.repliesCursor,
+            hasMoreReplies: thread.hasMoreReplies
         )
     }
 

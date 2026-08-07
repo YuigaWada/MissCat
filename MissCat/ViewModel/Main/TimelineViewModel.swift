@@ -382,13 +382,16 @@ class TimelineViewModel: ViewModelType {
     
     // MARK: Misc
     
+    @MainActor
     func copyContents(_ note: NoteCell.Model) {
-        UIPasteboard.general.string = note.noteEntity.original?.text
+        guard let text = note.noteEntity.original?.text else { return }
+        MissCatSystemClipboardWriter().write(text)
     }
-    
+
+    @MainActor
     func copyLink(_ note: NoteCell.Model) {
         guard let noteUrl = getNoteUrl(note) else { return }
-        UIPasteboard.general.string = noteUrl
+        MissCatSystemClipboardWriter().write(noteUrl)
     }
     
     func openSafari(_ note: NoteCell.Model) {

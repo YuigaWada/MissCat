@@ -29,6 +29,7 @@ public struct MissCatNoteRow: View {
     public let contextRepository: (any MissCatNoteContextRepository)?
     public let readiness: MissCatNoteVisualReadiness?
     public let presentsMediaInternally: Bool
+    private let clipboardActions: MissCatNoteClipboardActions
 
     @State private var isContentWarningExpanded: Bool
     @State private var revealedSensitiveAttachmentIDs = Set<String>()
@@ -60,7 +61,8 @@ public struct MissCatNoteRow: View {
         onOverflowAction: @escaping (MissCatNoteOverflowAction) -> Void = { _ in },
         contextRepository: (any MissCatNoteContextRepository)? = nil,
         readiness: MissCatNoteVisualReadiness? = nil,
-        presentsMediaInternally: Bool = true
+        presentsMediaInternally: Bool = true,
+        clipboardWriter: any MissCatClipboardWriting = MissCatSystemClipboardWriter()
     ) {
         self.note = note
         self.palette = palette
@@ -87,6 +89,7 @@ public struct MissCatNoteRow: View {
         self.contextRepository = contextRepository
         self.readiness = readiness
         self.presentsMediaInternally = presentsMediaInternally
+        clipboardActions = MissCatNoteClipboardActions(writer: clipboardWriter)
         _isContentWarningExpanded = State(initialValue: expandsContentWarning || note.cw == nil)
     }
 
@@ -618,12 +621,18 @@ public struct MissCatNoteRow: View {
                 palette: palette,
                 permalink: contextRepository?.notePermalink(noteID: note.noteID),
                 isOwnNote: contextRepository?.currentServerUserID == note.author.id,
-                onCopyText: { onOverflowAction(.copyText) },
+                onCopyText: {
+                    clipboardActions.copyText(note.text)
+                    onOverflowAction(.copyText)
+                },
                 onFavorite: {
                     onToggleFavorite(note.noteID)
                     onOverflowAction(note.isFavorite ? .unfavorite : .favorite)
                 },
-                onCopyLink: { _ in onOverflowAction(.copyLink) },
+                onCopyLink: { permalink in
+                    clipboardActions.copyLink(permalink)
+                    onOverflowAction(.copyLink)
+                },
                 onOpenDetail: { onOpenNote(note.noteID) },
                 onOpenBrowser: { permalink in
                     openURL(permalink)
@@ -884,22 +893,19 @@ private struct MissCatNoteOverflowPanel: View {
                     )
                 }
 
-                ShareLink(item: note.text) {
-                    actionLabel("本文をコピー", symbol: "doc.on.doc")
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(palette.text)
-                .simultaneousGesture(TapGesture().onEnded(onCopyText))
-                .accessibilityIdentifier("note.\(note.id).overflow.copy-text")
+                actionButton(
+                    "本文をコピー",
+                    symbol: "doc.on.doc",
+                    identifier: "note.\(note.id).overflow.copy-text",
+                    action: onCopyText
+                )
 
                 if let permalink {
-                    ShareLink(item: permalink) {
-                        actionLabel("リンクをコピー", symbol: "doc.on.doc")
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(palette.text)
-                    .simultaneousGesture(TapGesture().onEnded { onCopyLink(permalink) })
-                    .accessibilityIdentifier("note.\(note.id).overflow.copy-link")
+                    actionButton(
+                        "リンクをコピー",
+                        symbol: "doc.on.doc",
+                        identifier: "note.\(note.id).overflow.copy-link"
+                    ) { onCopyLink(permalink) }
                     actionButton(
                         "ブラウザで開く",
                         symbol: "safari",
