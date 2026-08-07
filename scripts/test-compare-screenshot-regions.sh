@@ -61,12 +61,40 @@ run_expect() {
   ]
   data = JSON.parse(File.read(ARGV.fetch(0)))
   actual = data.fetch("required_region_ids")
-  ids = data.fetch("regions").map { |region| region.fetch("id") }
+  regions = data.fetch("regions")
+  ids = regions.map { |region| region.fetch("id") }
   abort "production required IDs changed" unless actual == expected
   abort "production definitions changed" unless ids == expected
-  action_ids = data.fetch("regions").select { |region| region.fetch("kind") == "action" }.map { |region| region.fetch("id") }
+  abort "production ownership changed" unless regions.all? { |region| region.fetch("owner") == "app" }
+  action_ids = regions.select { |region| region.fetch("kind") == "action" }.map { |region| region.fetch("id") }
   expected_actions = %w[tabs note1-media note1-reaction note1-actions note2-reaction note2-actions note3-reaction note3-actions bottom-bar]
   abort "production action regions changed" unless action_ids == expected_actions
+  audited_geometry = {
+    "tabs" => [0, 130, 1242, 132],
+    "note1-header-avatar" => [0, 262, 1242, 168],
+    "note1-body" => [220, 420, 1000, 95],
+    "note1-media" => [220, 510, 1000, 405],
+    "note1-reaction" => [220, 905, 220, 105],
+    "note1-actions" => [220, 1000, 1000, 147],
+    "note1-footer" => [0, 1138, 1242, 20],
+    "note2-header-avatar" => [0, 1150, 1242, 170],
+    "note2-body" => [220, 1290, 1000, 110],
+    "note2-reaction" => [220, 1395, 220, 115],
+    "note2-actions" => [220, 1500, 1000, 142],
+    "note2-footer" => [0, 1632, 1242, 20],
+    "note3-header-avatar" => [0, 1645, 1242, 170],
+    "note3-body" => [220, 1790, 1000, 145],
+    "note3-reaction" => [220, 1930, 220, 115],
+    "note3-actions" => [220, 2035, 1000, 144],
+    "note3-footer" => [0, 2169, 1242, 20],
+    "note4-header-avatar" => [0, 2182, 1242, 150],
+    "note4-body" => [220, 2290, 1000, 131],
+    "bottom-bar" => [0, 2421, 1242, 267]
+  }
+  actual_geometry = regions.to_h do |region|
+    [region.fetch("id"), %w[x y width height].map { |key| region.fetch(key) }]
+  end
+  abort "production audited geometry changed" unless actual_geometry == audited_geometry
 ' "$production_manifest" || fail "production timeline region contract regressed"
 
 fixture_dir=$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/misscat region gate test.XXXXXX")
