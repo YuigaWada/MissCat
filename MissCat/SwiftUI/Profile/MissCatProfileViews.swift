@@ -1,6 +1,5 @@
 import PhotosUI
 import SwiftUI
-import UIKit
 
 public struct MissCatProfileScreen: View {
     @StateObject private var store: MissCatProfileStore
@@ -870,8 +869,8 @@ public struct MissCatProfileEditorScreen: View {
             if store.phase == .loading { store.cancelSave() }
         }
         .sheet(item: $cameraTarget) { target in
-            MissCatProfileCameraPicker { data in
-                apply(data, target: target)
+            MissCatCameraCaptureView(configuration: .profile) { capture in
+                apply(capture.data, target: target)
                 cameraTarget = nil
             } onCancel: {
                 cameraTarget = nil
@@ -889,8 +888,12 @@ public struct MissCatProfileEditorScreen: View {
     private var bannerEditor: some View {
         ZStack(alignment: .bottomLeading) {
             Group {
-                if let data = store.bannerData, let image = UIImage(data: data) {
-                    Image(uiImage: image).resizable().scaledToFill()
+                if let data = store.bannerData,
+                   let image = MissCatCameraImageProcessor.decode(data)
+                {
+                    Image(decorative: image, scale: 1, orientation: .up)
+                        .resizable()
+                        .scaledToFill()
                 } else if let url = store.existingBannerURL {
 #if DEBUG
                     if url.scheme == "misscat-fixture" {
@@ -919,8 +922,12 @@ public struct MissCatProfileEditorScreen: View {
 
             HStack(alignment: .bottom) {
                 Group {
-                    if let data = store.avatarData, let image = UIImage(data: data) {
-                        Image(uiImage: image).resizable().scaledToFill()
+                    if let data = store.avatarData,
+                       let image = MissCatCameraImageProcessor.decode(data)
+                    {
+                        Image(decorative: image, scale: 1, orientation: .up)
+                            .resizable()
+                            .scaledToFill()
                     } else if let url = store.existingAvatarURL {
 #if DEBUG
                         if url.scheme == "misscat-fixture" {
@@ -972,7 +979,7 @@ public struct MissCatProfileEditorScreen: View {
             PhotosPicker(selection: pickerItem, matching: .images) {
                 Label("写真を選択", systemImage: "photo")
             }
-            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            if MissCatCameraAccessPolicy.hasVideoDevice {
                 Button { cameraTarget = target } label: { Label("カメラ", systemImage: "camera") }
             }
             if hasImage(target) {
@@ -1054,48 +1061,21 @@ public struct MissCatProfileEditorScreen: View {
     }
 
     private func apply(_ data: Data?, target: CameraTarget) {
+        let processed = data.flatMap {
+            MissCatCameraImageProcessor.profileJPEG(
+                from: $0,
+                target: target == .avatar ? .avatar : .banner
+            )
+        } ?? data
         switch target {
-        case .avatar: store.setAvatarData(data)
-        case .banner: store.setBannerData(data)
+        case .avatar: store.setAvatarData(processed)
+        case .banner: store.setBannerData(processed)
         }
     }
 
     private enum CameraTarget: String, Identifiable {
         case avatar, banner
         var id: String { rawValue }
-    }
-}
-
-public struct MissCatProfileCameraPicker: UIViewControllerRepresentable {
-    public let onImage: (Data?) -> Void
-    public let onCancel: () -> Void
-
-    public init(onImage: @escaping (Data?) -> Void, onCancel: @escaping () -> Void) {
-        self.onImage = onImage
-        self.onCancel = onCancel
-    }
-
-    public func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
-
-    public func makeUIViewController(context: Context) -> UIImagePickerController {
-        let controller = UIImagePickerController()
-        controller.sourceType = .camera
-        controller.delegate = context.coordinator
-        return controller
-    }
-
-    public func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-
-    public final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        private let parent: MissCatProfileCameraPicker
-        init(parent: MissCatProfileCameraPicker) { self.parent = parent }
-
-        public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            let image = info[.originalImage] as? UIImage
-            parent.onImage(image?.jpegData(compressionQuality: 0.9))
-        }
-
-        public func imagePickerControllerDidCancel(_ picker: UIImagePickerController) { parent.onCancel() }
     }
 }
 

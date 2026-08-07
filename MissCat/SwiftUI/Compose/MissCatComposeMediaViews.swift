@@ -2,7 +2,6 @@ import AVFoundation
 import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
-import UIKit
 
 struct MissCatMediaPickerView: View {
     let existingMedia: [MissCatComposeMedia]
@@ -38,10 +37,10 @@ struct MissCatMediaPickerView: View {
                 .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("compose.media.library")
 
-                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                if MissCatCameraAccessPolicy.hasVideoDevice {
                     NavigationLink {
-                        MissCatCameraPicker { item in
-                            onLoaded([item])
+                        MissCatCameraCaptureView(configuration: .compose) { capture in
+                            onLoaded([Self.media(from: capture)])
                             dismiss()
                         }
                         .ignoresSafeArea()
@@ -147,7 +146,20 @@ struct MissCatMediaPickerView: View {
         let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url))
         generator.appliesPreferredTrackTransform = true
         guard let image = try? generator.copyCGImage(at: .zero, actualTime: nil) else { return Data() }
-        return UIImage(cgImage: image).jpegData(compressionQuality: 0.75) ?? Data()
+        return MissCatCameraImageProcessor.jpegData(
+            from: image,
+            compressionQuality: 0.75
+        ) ?? Data()
+    }
+
+    private static func media(from capture: MissCatCameraCapture) -> MissCatComposeMedia {
+        MissCatComposeMedia(
+            kind: capture.kind == .photo ? .image : .video,
+            data: capture.data,
+            previewData: capture.previewData,
+            filename: UUID().uuidString + "." + capture.pathExtension,
+            mimeType: capture.mimeType
+        )
     }
 }
 
@@ -157,79 +169,6 @@ private struct MissCatPickedMovie: Transferable {
     static var transferRepresentation: some TransferRepresentation {
         DataRepresentation(importedContentType: .movie) { data in
             MissCatPickedMovie(data: data)
-        }
-    }
-}
-
-/// UIImagePickerController is retained only for the system camera, which has
-/// no native SwiftUI equivalent on iOS 17. All composer-owned surfaces remain
-/// SwiftUI views.
-struct MissCatCameraPicker: UIViewControllerRepresentable {
-    let onPicked: (MissCatComposeMedia) -> Void
-
-    func makeCoordinator() -> Coordinator { Coordinator(onPicked: onPicked) }
-
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.mediaTypes = UIImagePickerController.availableMediaTypes(for: .camera) ?? [UTType.image.identifier]
-        picker.videoQuality = .typeHigh
-        picker.delegate = context.coordinator
-        return picker
-    }
-
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-
-    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        private let onPicked: (MissCatComposeMedia) -> Void
-
-        init(onPicked: @escaping (MissCatComposeMedia) -> Void) {
-            self.onPicked = onPicked
-        }
-
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            picker.dismiss(animated: true)
-        }
-
-        func imagePickerController(
-            _ picker: UIImagePickerController,
-            didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
-        ) {
-            defer { picker.dismiss(animated: true) }
-            if let image = info[.originalImage] as? UIImage,
-               let data = image.jpegData(compressionQuality: 0.95)
-            {
-                onPicked(
-                    MissCatComposeMedia(
-                        kind: .image,
-                        data: data,
-                        filename: UUID().uuidString + ".jpeg",
-                        mimeType: "image/jpeg"
-                    )
-                )
-                return
-            }
-            if let url = info[.mediaURL] as? URL,
-               let data = try? Data(contentsOf: url),
-               !data.isEmpty
-            {
-                onPicked(
-                    MissCatComposeMedia(
-                        kind: .video,
-                        data: data,
-                        previewData: Self.videoThumbnailData(url: url),
-                        filename: UUID().uuidString + ".mov",
-                        mimeType: "video/quicktime"
-                    )
-                )
-            }
-        }
-
-        private static func videoThumbnailData(url: URL) -> Data {
-            let generator = AVAssetImageGenerator(asset: AVAsset(url: url))
-            generator.appliesPreferredTrackTransform = true
-            guard let image = try? generator.copyCGImage(at: .zero, actualTime: nil) else { return Data() }
-            return UIImage(cgImage: image).jpegData(compressionQuality: 0.75) ?? Data()
         }
     }
 }
@@ -434,8 +373,11 @@ struct MissCatMediaEditorView: View {
         )
         let renderer = ImageRenderer(content: content.frame(width: canvasSize.width, height: canvasSize.height))
         renderer.scale = min(3, 1_024 / max(canvasSize.width, 1))
-        guard let image = renderer.uiImage,
-              let data = image.jpegData(compressionQuality: 0.92)
+        guard let image = renderer.cgImage,
+              let data = MissCatCameraImageProcessor.jpegData(
+                  from: image,
+                  compressionQuality: 0.92
+              )
         else {
             errorMessage = "編集した画像を保存できませんでした"
             return
@@ -463,8 +405,8 @@ private struct MissCatEditableMediaCanvas: View {
     var body: some View {
         GeometryReader { proxy in
             ZStack {
-                if let image = UIImage(data: imageData) {
-                    Image(uiImage: image)
+                if let image = MissCatCameraImageProcessor.decode(imageData) {
+                    Image(decorative: image, scale: 1, orientation: .up)
                         .resizable()
                         .scaledToFill()
                         .scaleEffect(x: isMirrored ? -zoom : zoom, y: zoom)
