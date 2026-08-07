@@ -184,6 +184,77 @@ final class MissCatNativeMFMTests: XCTestCase {
         XCTAssertEqual(animation.firstFrame.height, 1)
     }
 
+    func testAnimatedEmojiPlaybackScheduleLoopsAcrossEveryFrame() throws {
+        let animation = try MissCatCustomEmojiImageDecoder.decodeAnimation(Self.twoFrameGIFData)
+
+        XCTAssertEqual(animation.frameIndex(at: 0), 0)
+        XCTAssertEqual(animation.frameIndex(at: 0.099), 0)
+        XCTAssertEqual(animation.frameIndex(at: 0.1), 1)
+        XCTAssertEqual(animation.frameIndex(at: 0.299), 1)
+        XCTAssertEqual(animation.frameIndex(at: 0.301), 0)
+        XCTAssertEqual(animation.frameIndex(at: -1), 0)
+        XCTAssertEqual(animation.totalDuration, 0.3, accuracy: 0.000_001)
+    }
+
+    func testAnimatedEmojiDecoderReadsGIFAPNGAndWebPDelayMetadata() {
+        let formats: [(CFString, CFString, CFString)] = [
+            (
+                kCGImagePropertyGIFDictionary,
+                kCGImagePropertyGIFUnclampedDelayTime,
+                kCGImagePropertyGIFDelayTime
+            ),
+            (
+                kCGImagePropertyPNGDictionary,
+                kCGImagePropertyAPNGUnclampedDelayTime,
+                kCGImagePropertyAPNGDelayTime
+            ),
+            (
+                kCGImagePropertyWebPDictionary,
+                kCGImagePropertyWebPUnclampedDelayTime,
+                kCGImagePropertyWebPDelayTime
+            ),
+        ]
+
+        for (dictionaryKey, unclampedKey, delayKey) in formats {
+            XCTAssertEqual(
+                MissCatCustomEmojiImageDecoder.frameDuration(
+                    properties: [dictionaryKey: [unclampedKey: 0.25]]
+                ),
+                0.25
+            )
+            XCTAssertEqual(
+                MissCatCustomEmojiImageDecoder.frameDuration(
+                    properties: [dictionaryKey: [delayKey: 0.4]]
+                ),
+                0.4
+            )
+        }
+    }
+
+    func testAnimatedEmojiViewOffersStableInlineAndReactionGeometry() throws {
+        let animation = try MissCatCustomEmojiImageDecoder.decodeAnimation(Self.twoFrameGIFData)
+        let inline = MissCatAnimatedEmojiGeometry.layout(
+            pixelWidth: 2,
+            pixelHeight: 1,
+            role: .inlineBody
+        )
+        let reaction = MissCatAnimatedEmojiGeometry.layout(
+            pixelWidth: 2,
+            pixelHeight: 1,
+            role: .reaction
+        )
+
+        XCTAssertEqual(inline.size, CGSize(width: 36, height: 18))
+        XCTAssertEqual(inline.firstTextBaseline, 16)
+        XCTAssertEqual(reaction.size, CGSize(width: 60, height: 30))
+        XCTAssertEqual(reaction.firstTextBaseline, 30)
+        _ = MissCatAnimatedEmojiView(
+            animation: animation,
+            role: .inlineBody,
+            accessibilityLabel: ":fixture:"
+        )
+    }
+
     private func text(_ source: String) -> String {
         String(MissCatNativeMFMRenderer.render(source).characters)
     }
