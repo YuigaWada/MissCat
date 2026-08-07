@@ -218,7 +218,7 @@ public struct MissCatDiscoveryScreen: View {
                     .simultaneousGesture(resultSwipeGesture)
                 userResults
                     .frame(width: proxy.size.width)
-                    .padding(.top, 8)
+                    .padding(.top, 7)
                     .simultaneousGesture(resultSwipeGesture)
             }
             .frame(width: proxy.size.width * 2, alignment: .leading)
@@ -442,7 +442,9 @@ private struct MissCatDiscoveryLegacyNoteRow: View {
         .frame(height: 148)
         .background(palette.base)
         .overlay(alignment: .bottom) {
-            Rectangle().fill(palette.border).frame(height: MissCatLegacyMetrics.hairlineWidth)
+            Rectangle()
+                .fill(Color(red: 226 / 255, green: 229 / 255, blue: 234 / 255))
+                .frame(height: MissCatLegacyMetrics.hairlineWidth)
         }
         .contentShape(Rectangle())
         .accessibilityElement(children: .contain)
@@ -453,7 +455,7 @@ private struct MissCatDiscoveryLegacyNoteRow: View {
             if case let .success(image) = phase {
                 image.resizable().scaledToFill()
             } else {
-                Circle().fill(palette.surface)
+                Circle().fill(Color(white: 0.92))
             }
         }
         .frame(width: 50, height: 50)
@@ -471,7 +473,7 @@ private struct MissCatDiscoveryLegacyUserRow: View {
                 if case let .success(image) = phase {
                     image.resizable().scaledToFill()
                 } else {
-                    Circle().fill(palette.surface)
+                    Circle().fill(Color(white: 0.92))
                 }
             }
             .frame(width: 50, height: 50)
@@ -502,7 +504,9 @@ private struct MissCatDiscoveryLegacyUserRow: View {
         .frame(height: 100, alignment: .top)
         .background(palette.base)
         .overlay(alignment: .bottom) {
-            Rectangle().fill(palette.border.opacity(0.7)).frame(height: MissCatLegacyMetrics.hairlineWidth)
+            Rectangle()
+                .fill(Color(red: 226 / 255, green: 229 / 255, blue: 234 / 255))
+                .frame(height: MissCatLegacyMetrics.hairlineWidth)
         }
         .accessibilityElement(children: .combine)
     }
