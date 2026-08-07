@@ -167,6 +167,90 @@ final class MissCatShellFeedUITests: XCTestCase {
         XCTAssertTrue(element("production.root").waitForExistence(timeout: 5))
     }
 
+    func testProductionRootOwnsProfileDiscoveryDetailReactionAndSystemShareRoutes() {
+        app.launchArguments = ["--misscat-production-root-e2e"]
+        app.launch()
+
+        XCTAssertTrue(element("production.root").waitForExistence(timeout: 10))
+        waitForProductionReady(page: "home")
+        assertProductionAccountGenerationIsPrimary()
+        waitForProductionRoute("root:home")
+
+        app.buttons["note.home-0.author"].tap()
+        waitForProductionRoute("profile:fixture-author-0")
+        XCTAssertTrue(element("profile.other.screen").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["profile.action.back"].waitForExistence(timeout: 5))
+        assertProductionAccountGenerationIsPrimary()
+        app.buttons["profile.action.back"].tap()
+        waitForProductionRoute("root:home")
+
+        let noteBody = element("note.home-0.body")
+        XCTAssertTrue(noteBody.waitForExistence(timeout: 5))
+        noteBody.tap()
+        waitForProductionRoute("note:home-0")
+        XCTAssertTrue(element("note.detail.screen").waitForExistence(timeout: 5))
+        XCTAssertTrue(element("note.detail.thread").waitForExistence(timeout: 5))
+        assertProductionAccountGenerationIsPrimary()
+        app.buttons["production.route.back"].tap()
+        waitForProductionRoute("root:home")
+
+        app.buttons["main.timeline.search"].tap()
+        waitForProductionRoute("discovery")
+        XCTAssertTrue(element("home.discovery.native-page").waitForExistence(timeout: 5))
+        XCTAssertTrue(element("discovery.trends.list").waitForExistence(timeout: 5))
+        app.buttons["discovery.trend.SwiftUI"].tap()
+        waitForProductionRoute("search:SwiftUI")
+        XCTAssertTrue(element("feed.search-results").waitForExistence(timeout: 5))
+        assertProductionAccountGenerationIsPrimary()
+        app.buttons["production.route.back"].tap()
+        waitForProductionRoute("discovery")
+        app.buttons["production.route.back"].tap()
+        waitForProductionRoute("root:home")
+
+        app.buttons["note.home-0.action.reaction"].tap()
+        waitForProductionSheet("reaction:home-0")
+        XCTAssertTrue(element("reaction.picker").waitForExistence(timeout: 5))
+        let thumbsUp = element("reaction.picker.choice.👍")
+        XCTAssertTrue(thumbsUp.waitForExistence(timeout: 5))
+        thumbsUp.tap()
+        XCTAssertTrue(element("feed.banner.error").waitForExistence(timeout: 5))
+        XCTAssertFalse(
+            element("note.home-0.reaction.👍").exists,
+            "Failed optimistic mutation must roll the reaction chip back"
+        )
+        app.buttons["feed.banner.dismiss"].tap()
+
+        app.buttons["note.home-0.action.reaction"].tap()
+        waitForProductionSheet("reaction:home-0")
+        let retryThumbsUp = element("reaction.picker.choice.👍")
+        XCTAssertTrue(retryThumbsUp.waitForExistence(timeout: 5))
+        retryThumbsUp.tap()
+        XCTAssertTrue(
+            element("note.home-0.reaction.👍").waitForExistence(timeout: 5),
+            "Successful retry must commit the reaction mutation"
+        )
+        XCTAssertFalse(element("feed.banner.error").exists)
+        assertProductionAccountGenerationIsPrimary()
+
+        app.buttons["note.home-0.action.overflow"].tap()
+        XCTAssertTrue(
+            app.buttons["note.home-0.overflow.share"].waitForExistence(timeout: 5)
+        )
+        app.buttons["note.home-0.overflow.share"].tap()
+        waitForProductionSheet("share:home-0")
+        XCTAssertTrue(element("share.sheet").waitForExistence(timeout: 5))
+        let shareLink = app.buttons["share.link"]
+        XCTAssertTrue(shareLink.waitForExistence(timeout: 5))
+        shareLink.tap()
+        let airDrop = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@", "AirDrop"))
+            .firstMatch
+        XCTAssertTrue(
+            airDrop.waitForExistence(timeout: 5),
+            "ShareLink must reach the system activity sheet"
+        )
+    }
+
     func testFooterAccountPopoverAndCompositeScrollRestoration() {
         launchFixture()
         let homeReady = waitForReady(page: "home")
@@ -417,6 +501,31 @@ final class MissCatShellFeedUITests: XCTestCase {
         let marker = element("production.root.visual-ready.\(page)")
         XCTAssertTrue(marker.waitForExistence(timeout: 10), "Missing production visualReady marker for \(page)")
         return marker
+    }
+
+    private func waitForProductionRoute(_ route: String) {
+        waitForProductionValue(identifier: "production.root.route", value: route)
+    }
+
+    private func waitForProductionSheet(_ destination: String) {
+        waitForProductionValue(identifier: "production.sheet.destination", value: destination)
+    }
+
+    private func waitForProductionValue(identifier: String, value: String) {
+        let marker = element(identifier)
+        XCTAssertTrue(marker.waitForExistence(timeout: 5), "Missing marker \(identifier)")
+        expectation(
+            for: NSPredicate(format: "value == %@", value),
+            evaluatedWith: marker
+        )
+        waitForExpectations(timeout: 5)
+    }
+
+    private func assertProductionAccountGenerationIsPrimary() {
+        waitForProductionValue(
+            identifier: "production.root.persisted-account",
+            value: "misscat-account-v2:Zml4dHVyZS5leGFtcGxl:Zml4dHVyZS1jYXQ="
+        )
     }
 
     private func element(_ identifier: String) -> XCUIElement {

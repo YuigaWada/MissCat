@@ -117,6 +117,46 @@ final class MissCatProductionRootCutoverTests: XCTestCase {
         XCTAssertFalse(support.contains("func persistSelectedAccount(id: String) {}"))
     }
 
+    func testProductionOrdinaryRoutesHaveShippingCallersAndBehavioralE2E() throws {
+        let root = try source(
+            named: "SwiftUI/ApplicationRoot/MissCatProductionApplicationRootView.swift"
+        )
+        let feed = try source(named: "SwiftUI/Timeline/MissCatFeedScreens.swift")
+        let row = try source(named: "SwiftUI/Timeline/MissCatNoteRow.swift")
+        let discovery = try source(named: "SwiftUI/Discovery/MissCatDiscoveryViews.swift")
+        let e2e = try String(
+            contentsOf: repositoryRoot
+                .appendingPathComponent("MissCatUITests/MissCatShellFeedUITests.swift"),
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(root.contains("applicationNavigationActions: discoveryNavigationActions"))
+        XCTAssertTrue(root.contains("openSearch: { rootStore.router.open(.search(query: $0)) }"))
+        XCTAssertTrue(root.contains("share: { rootStore.router.presentSheet(.share(noteID: $0)) }"))
+        XCTAssertTrue(root.contains("request.selectReaction(reaction)"))
+        XCTAssertTrue(root.contains("productionSheetE2EMarker(\"reaction:\\(noteID)\")"))
+        XCTAssertTrue(root.contains("productionSheetE2EMarker(\"share:\\(noteID)\")"))
+        XCTAssertTrue(feed.contains("MissCatFeedReactionRequest"))
+        XCTAssertTrue(feed.contains("await store.toggleReaction("))
+        XCTAssertTrue(row.contains("note.\\(note.id).overflow.share"))
+        XCTAssertTrue(discovery.contains("applicationNavigationActions"))
+
+        for destination in [
+            "profile:fixture-author-0",
+            "note:home-0",
+            "discovery",
+            "search:SwiftUI",
+            "reaction:home-0",
+            "share:home-0",
+        ] {
+            XCTAssertTrue(e2e.contains(destination), "Missing behavioral E2E for \(destination)")
+        }
+        XCTAssertTrue(e2e.contains("Failed optimistic mutation must roll the reaction chip back"))
+        XCTAssertTrue(e2e.contains("ShareLink must reach the system activity sheet"))
+        XCTAssertFalse(root.contains("UIViewControllerRepresentable"))
+        XCTAssertFalse(root.contains("UIActivityViewController"))
+    }
+
     private func source(named relativePath: String) throws -> String {
         return try String(
             contentsOf: repositoryRoot.appendingPathComponent("MissCat/\(relativePath)"),
