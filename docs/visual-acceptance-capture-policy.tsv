@@ -1,0 +1,5 @@
+# schema_version=1
+# Canonical full-resolution portrait Simulator captures. Scaled, rotated, cropped, and landscape screenshots are not acceptance evidence.
+device	orientation	pixel_width	pixel_height
+iphone-16-pro-ios18.6	portrait	1206	2622
+iphone-se-3-ios18.6	portrait	750	1334

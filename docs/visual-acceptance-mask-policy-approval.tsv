@@ -1,0 +1,4 @@
+# schema_version=1
+# A mask policy is usable only when its exact digest was pinned at the named prior policy commit. Evidence commits may not introduce or relax this approval.
+policy_sha256	policy_commit
+3b150c35879850eeee4018215a30f1bbef140e90c57d410fca62e31d26124d93	f347cff1397d6cf0f14db9b56a336c16e21c9869
