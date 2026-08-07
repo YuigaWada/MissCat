@@ -13,6 +13,12 @@ Run `scripts/verify-swiftui-share-framework-ratio.sh` to check the ratchet.
 The stricter `scripts/verify-swiftui-share-framework-complete.sh` intentionally
 fails while the system-required principal controller remains.
 
+Product-level progress is monitored by
+`scripts/verify-swiftui-framework-aggregate.rb`, which combines this extension
+with the `MissCat` App target without counting repository-wide storyboard/XIB
+artifacts twice. The current aggregate is `27 / 32` pure SwiftUI memberships,
+or exactly `84.375%` after neutral memberships are excluded.
+
 ## Why one UIKit boundary remains
 
 `com.apple.share-services` launches the class named by

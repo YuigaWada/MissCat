@@ -1,10 +1,52 @@
 # SwiftUI framework ratio gate
 
 `scripts/verify-swiftui-framework-ratio.rb` measures the Swift sources in the
-`MissCat` shipping target and prevents framework-migration debt from increasing.
+selected shipping target and prevents framework-migration debt from increasing.
 It resolves `PBXSourcesBuildPhase` membership from
 `MissCat.xcodeproj/project.pbxproj`; Swift files that merely exist in the
 repository are not counted.
+
+## Aggregate shipping progress
+
+The canonical product-level progress gate is:
+
+```sh
+scripts/verify-swiftui-framework-aggregate.rb
+scripts/test-verify-swiftui-framework-aggregate.sh
+```
+
+It reuses the same PBX membership resolver and source classifier for both
+shipping targets, `MissCat` and `MissCatShare`, and writes one JSON document
+containing each target plus their aggregate. Memberships are summed, so a Swift
+file built by both targets represents two shipping memberships. The
+repository-wide tracked Interface Builder count is reported for each target but
+is counted only once in the aggregate.
+
+The checked-in aggregate baseline is:
+
+| Scope | UIKit-only | SwiftUI-only | Hybrid | Neutral | Pure SwiftUI |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `MissCat` | 2 | 26 | 2 | 34 | 26 / 30 (86.667%) |
+| `MissCatShare` | 0 | 1 | 1 | 6 | 1 / 2 (50%) |
+| All shipping memberships | 2 | 27 | 3 | 40 | 27 / 32 (84.375%) |
+
+The aggregate JSON also reports Rx, PolioPager, active legacy-loader file and
+reference counts, and tracked storyboard/XIB artifacts for both targets and the
+combined gate. Its basis-point value is floored for integer ratcheting while
+`percent` is calculated from the exact fraction and rounded to three decimal
+places.
+
+Run the final-state check with:
+
+```sh
+scripts/verify-swiftui-framework-aggregate.rb --require-complete
+```
+
+That mode currently fails for two explicit architectural reasons: the App
+target still has UIKit-only and UIKit/SwiftUI hybrid source members, and
+`ShareViewController` is still the `NSExtensionPrincipalClass` hybrid boundary.
+The JSON exposes those reasons as structured `completion_blockers`; completion
+also requires zero Rx, PolioPager, active legacy-loader, and tracked IB debt.
 
 Run the ratchet and its shell-only fixtures with:
 
@@ -57,9 +99,12 @@ the ratchet compares the fraction itself by integer cross multiplication.
 ## Baseline policy
 
 The checked-in `config/swiftui-framework-ratio-baseline.json` records the
-current shipping-target state. Default mode rejects increases in UIKit-only,
+current App-target state. The canonical aggregate baseline is
+`config/swiftui-framework-aggregate-baseline.json`; it records both targets and
+requires its aggregate counts to equal their membership sum. Default mode
+rejects increases in UIKit-only,
 hybrid, Rx, Polio, active legacy-loader, or tracked IB counts, and rejects any
-decrease in pure-SwiftUI progress.
+decrease in pure-SwiftUI progress at either the target or aggregate scope.
 
 Update the baseline only in the same reviewed change that demonstrably improves
 the measured state. Do not raise a debt ceiling or lower the progress fraction
