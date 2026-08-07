@@ -31,6 +31,8 @@ The pinned commits make later parser drift explicit and reviewable.
 - Unknown or malformed syntax remains visible as literal text. Text must never
   be silently discarded.
 - `<plain>` content bypasses formatting and interactive-token discovery.
+- A silent labelled link (`?[label](https://example.com)`) remains tappable but
+  is excluded from URL-preview discovery, matching the official MFM contract.
 - The `*` and `_` alternatives follow the official ASCII-word leading-boundary
   rule, so identifiers such as `foo_bar_baz` are never reformatted.
 - A backslash before a formatting, function, or custom-emoji marker removes
@@ -45,7 +47,7 @@ The pinned commits make later parser drift explicit and reviewable.
 | Family | Native result | Executable behavior |
 | --- | --- | --- |
 | Mention, hashtag | MissCat route link | Native app route only |
-| HTTP(S) URL, `<URL>`, labelled and silent link | `AttributedString.link` | System URL action |
+| HTTP(S) URL, `<URL>`, labelled and silent link | `AttributedString.link`; silent link suppresses preview | System URL action |
 | Local/remote custom emoji marker | Marker preserved for emoji substitution and VoiceOver | None |
 | `**`, `__`, `<b>` | Strong presentation intent | None |
 | `*`, `_`, `<i>` | Emphasis presentation intent | None |
