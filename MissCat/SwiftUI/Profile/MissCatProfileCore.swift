@@ -1123,52 +1123,57 @@ public final class MissCatProfileEditorStore {
                 if avatarRemoved {
                     patch.avatarImage = .remove
                 } else if let avatarData {
-                    guard let progressStore = self else { throw CancellationError() }
                     let completedBeforeUpload = completedUploads
-                    let uploadTask = Task {
-                        try await repository.uploadProfileImage(data: avatarData, filename: "avatar.jpg") { value in
-                            Task { @MainActor [weak progressStore] in
-                                guard let progressStore,
-                                      progressStore.generation == generation
-                                else { return }
-                                progressStore.uploadProgress = (
-                                    Double(completedBeforeUpload) + value
-                                ) / Double(max(1, uploadCount))
-                            }
+                    let progressHandler: @Sendable (Double) -> Void = { [weak self] value in
+                        Task { @MainActor [weak self] in
+                            guard let self, self.generation == generation else { return }
+                            self.uploadProgress = (
+                                Double(completedBeforeUpload) + value
+                            ) / Double(max(1, uploadCount))
                         }
+                    }
+                    let uploadTask = Task {
+                        try await repository.uploadProfileImage(
+                            data: avatarData,
+                            filename: "avatar.jpg",
+                            progress: progressHandler
+                        )
                     }
                     let fileID = try await uploadTask.value
                     newlyUploadedIDs.append(fileID)
                     try Task.checkCancellation()
-                    guard let self, self.generation == generation else { throw CancellationError() }
+                    guard self?.generation == generation else { throw CancellationError() }
                     patch.avatarImage = .replace(fileID: fileID)
                     completedUploads += 1
                 }
                 if bannerRemoved {
                     patch.bannerImage = .remove
                 } else if let bannerData {
-                    guard let progressStore = self else { throw CancellationError() }
                     let completedBeforeUpload = completedUploads
-                    let uploadTask = Task {
-                        try await repository.uploadProfileImage(data: bannerData, filename: "banner.jpg") { value in
-                            Task { @MainActor [weak progressStore] in
-                                guard let progressStore,
-                                      progressStore.generation == generation
-                                else { return }
-                                progressStore.uploadProgress = (
-                                    Double(completedBeforeUpload) + value
-                                ) / Double(max(1, uploadCount))
-                            }
+                    let progressHandler: @Sendable (Double) -> Void = { [weak self] value in
+                        Task { @MainActor [weak self] in
+                            guard let self, self.generation == generation else { return }
+                            self.uploadProgress = (
+                                Double(completedBeforeUpload) + value
+                            ) / Double(max(1, uploadCount))
                         }
+                    }
+                    let uploadTask = Task {
+                        try await repository.uploadProfileImage(
+                            data: bannerData,
+                            filename: "banner.jpg",
+                            progress: progressHandler
+                        )
                     }
                     let fileID = try await uploadTask.value
                     newlyUploadedIDs.append(fileID)
                     try Task.checkCancellation()
-                    guard let self, self.generation == generation else { throw CancellationError() }
+                    guard self?.generation == generation else { throw CancellationError() }
                     patch.bannerImage = .replace(fileID: fileID)
                 }
 
                 try Task.checkCancellation()
+                guard self?.generation == generation else { throw CancellationError() }
                 let updated: MissCatProfileUser
                 if patch.isEmpty {
                     updated = baseline
