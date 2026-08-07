@@ -86,6 +86,46 @@ final class MissCatLoginProfileUITests: XCTestCase {
         XCTAssertTrue(app.links["認証を完了"].waitForExistence(timeout: 10))
     }
 
+    func testAuthenticationSystemCancellationRetriesTheSamePendingRequest() {
+        launch("--login-profile-auth", "--login-profile-auth-cancel-browser")
+        advanceToAuthorization()
+
+        let cancelSession = app.buttons["authentication.fixture.cancel-session"]
+        XCTAssertTrue(cancelSession.waitForExistence(timeout: 10))
+        cancelSession.tap()
+
+        let retry = app.buttons["authentication.retry"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 5))
+        retry.tap()
+
+        let completeSession = app.buttons["authentication.fixture.complete-session"]
+        XCTAssertTrue(completeSession.waitForExistence(timeout: 10))
+        completeSession.tap()
+        XCTAssertTrue(element("authentication.fixture.completed").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["fixture callback count: 1"].exists)
+        XCTAssertEqual(element("authentication.fixture.session-request-count").value as? String, "2")
+        XCTAssertEqual(element("authentication.fixture.authorization-request-count").value as? String, "1")
+    }
+
+    func testAuthenticationSignUpRequiresTermsAndExplicitLoginHandoff() {
+        launch("--login-profile-auth")
+        XCTAssertTrue(element("welcome.screen").waitForExistence(timeout: 10))
+        app.buttons["welcome.signup"].tap()
+        XCTAssertTrue(element("terms.screen").waitForExistence(timeout: 5))
+        app.buttons["terms.agree"].tap()
+
+        XCTAssertTrue(app.buttons["authentication.signup.continue"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["authentication.fixture.complete-session"].exists)
+        app.buttons["authentication.signup.continue"].tap()
+
+        let completeSession = app.buttons["authentication.fixture.complete-session"]
+        XCTAssertTrue(completeSession.waitForExistence(timeout: 10))
+        completeSession.tap()
+        XCTAssertTrue(element("authentication.fixture.completed").waitForExistence(timeout: 5))
+        XCTAssertEqual(element("authentication.fixture.registration-open-count").value as? String, "1")
+        XCTAssertEqual(element("authentication.fixture.authorization-request-count").value as? String, "2")
+    }
+
     func testSearchResultProfileTabsAndRelationshipNavigation() {
         launch("--login-profile-profile")
         waitForUserList()

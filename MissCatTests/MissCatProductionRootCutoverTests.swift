@@ -214,6 +214,74 @@ final class MissCatProductionRootCutoverTests: XCTestCase {
         XCTAssertTrue(info.contains("<string>misscat</string>"))
     }
 
+    func testAuthenticationLifecycleUsesObservationInsteadOfCombineStateWrappers() throws {
+        let app = try source(named: "Others/App/MissCatApp.swift")
+        let authenticationRoot = repositoryRoot
+            .appendingPathComponent("MissCat/SwiftUI/Authentication")
+        let authenticationSources = try FileManager.default
+            .contentsOfDirectory(
+                at: authenticationRoot,
+                includingPropertiesForKeys: nil
+            )
+            .filter { $0.pathExtension == "swift" }
+            .map { try String(contentsOf: $0, encoding: .utf8) }
+            .joined(separator: "\n")
+        let shippingAuthenticationState = app + "\n" + authenticationSources
+
+        XCTAssertTrue(app.contains("import Observation"))
+        XCTAssertTrue(app.contains("@Observable\nfinal class ApplicationState"))
+        XCTAssertTrue(app.contains("@State private var applicationState"))
+        XCTAssertTrue(app.contains("@Environment(ApplicationState.self)"))
+        XCTAssertTrue(app.contains(".environment(applicationState)"))
+
+        for retiredStateAPI in [
+            "import Combine",
+            "ObservableObject",
+            "@Published",
+            "@StateObject",
+            "@EnvironmentObject",
+        ] {
+            XCTAssertFalse(
+                shippingAuthenticationState.contains(retiredStateAPI),
+                "Shipping authentication state still uses \(retiredStateAPI)"
+            )
+        }
+    }
+
+    func testAuthenticationSurfacesExposeEveryPinnedVisualState() throws {
+        let app = try source(named: "Others/App/MissCatApp.swift")
+        let welcome = try source(
+            named: "SwiftUI/Authentication/MissCatWelcomeView.swift"
+        )
+        let terms = try source(
+            named: "SwiftUI/Authentication/MissCatTermsView.swift"
+        )
+        let instance = try source(
+            named: "SwiftUI/Authentication/MissCatInstanceEditorView.swift"
+        )
+        let browser = try source(
+            named: "SwiftUI/Authentication/MissCatAuthenticationBrowserView.swift"
+        )
+        let sources = [app, welcome, terms, instance, browser].joined(separator: "\n")
+
+        for visualState in [
+            "visual-ready.login-start.default",
+            "visual-ready.login-start.error",
+            "visual-ready.login-terms.top",
+            "visual-ready.login-terms.bottom",
+            "visual-ready.login-instance.default",
+            "visual-ready.login-instance.invalid",
+            "visual-ready.login-auth-browser.loading",
+            "visual-ready.login-auth-browser.error",
+            "visual-ready.login-auth-browser.callback",
+        ] {
+            XCTAssertTrue(
+                sources.contains(visualState),
+                "Missing deterministic visual-ready state: \(visualState)"
+            )
+        }
+    }
+
     func testSystemShareOracleUsesRemoteSystemIdentifiersInsteadOfAirDropAvailability() throws {
         let e2e = try String(
             contentsOf: repositoryRoot
