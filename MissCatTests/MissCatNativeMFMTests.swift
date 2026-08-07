@@ -172,6 +172,21 @@ final class MissCatNativeMFMTests: XCTestCase {
         )
     }
 
+    func testSilentLabelledLinkRemainsTappableWithoutCreatingPreview() {
+        let url = URL(string: "https://silent.example/path")!
+        let rendered = MissCatNativeMFMRenderer.render("?[label](\(url.absoluteString))")
+
+        XCTAssertEqual(String(rendered.characters), "label")
+        XCTAssertTrue(rendered.runs.compactMap(\.link).contains(url))
+        XCTAssertEqual(
+            MissCatNativeMFMRenderer.previewURLs(
+                in: "?[label](\(url.absoluteString)) https://visible.example/path",
+                limit: 10
+            ),
+            [URL(string: "https://visible.example/path")!]
+        )
+    }
+
     func testMFMRenderSegmentsKeepCustomEmojiInsideNestedFunctions() {
         let segments = MissCatNativeMFMRenderer.segments(
             "$[spin safe :blobcat: @alice@example.test]"
