@@ -43,6 +43,11 @@ enum MissCatAuthenticationBrowserPolicy {
         return error.domain == ASWebAuthenticationSessionErrorDomain
             && error.code == ASWebAuthenticationSessionError.Code.canceledLogin.rawValue
     }
+
+    static func userFacingFailureMessage(for error: Error) -> String {
+        _ = error
+        return "認証ページを開けませんでした。通信状態を確認して再試行してください"
+    }
 }
 
 enum MissCatAuthenticationBrowserError: LocalizedError {
@@ -55,6 +60,26 @@ enum MissCatAuthenticationBrowserError: LocalizedError {
             "認証ページを開けませんでした"
         case .invalidCallback:
             "認証結果を確認できませんでした"
+        }
+    }
+}
+
+enum MissCatAuthenticationBrowserPresentationState {
+    case registration
+    case loading
+    case error
+    case callback
+
+    var visualReadyIdentifier: String {
+        switch self {
+        case .registration:
+            "visual-ready.login-auth-registration"
+        case .loading:
+            "visual-ready.login-auth-browser.loading"
+        case .error:
+            "visual-ready.login-auth-browser.error"
+        case .callback:
+            "visual-ready.login-auth-browser.callback"
         }
     }
 }
@@ -253,13 +278,20 @@ public struct MissCatAuthenticationBrowserView: View {
     }
 
     private var visualReadyIdentifier: String {
+        presentationState.visualReadyIdentifier
+    }
+
+    private var presentationState: MissCatAuthenticationBrowserPresentationState {
+        if stage == .registration {
+            return .registration
+        }
         if hasReportedCallback {
-            return "visual-ready.login-auth-browser.callback"
+            return .callback
         }
         if authenticationFailureMessage != nil || authenticationWasCancelled {
-            return "visual-ready.login-auth-browser.error"
+            return .error
         }
-        return "visual-ready.login-auth-browser.loading"
+        return .loading
     }
 
     private func openRegistrationIfNeeded() {
@@ -320,7 +352,9 @@ public struct MissCatAuthenticationBrowserView: View {
               !authenticationWasCancelled
         else { return }
         guard let url = activeRequest.url else {
-            onFailure(MissCatAuthenticationBrowserError.missingAuthorizationURL)
+            authenticationFailureMessage = MissCatAuthenticationBrowserError
+                .missingAuthorizationURL
+                .localizedDescription
             return
         }
 
@@ -332,7 +366,6 @@ public struct MissCatAuthenticationBrowserView: View {
             guard callbackMatches(callbackURL) else {
                 let error = MissCatAuthenticationBrowserError.invalidCallback
                 authenticationFailureMessage = error.localizedDescription
-                onFailure(error)
                 return
             }
             guard !hasReportedCallback else { return }
@@ -342,9 +375,8 @@ public struct MissCatAuthenticationBrowserView: View {
             if MissCatAuthenticationBrowserPolicy.isCancellation(error) {
                 authenticationWasCancelled = true
             } else {
-                authenticationFailureMessage = (error as? LocalizedError)?.errorDescription
-                    ?? error.localizedDescription
-                onFailure(error)
+                authenticationFailureMessage = MissCatAuthenticationBrowserPolicy
+                    .userFacingFailureMessage(for: error)
             }
         }
     }

@@ -42,11 +42,15 @@ final class ApplicationState {
     private(set) var authenticationFlowGeneration = 0
     var errorMessage: String?
 
-    private let authenticationService = MissCatAuthenticationService()
+    private let authenticationService: MissCatAuthenticationService
     let applicationRootStore: MissCatApplicationRootStore
 
-    init() {
-        applicationRootStore = MissCatApplicationRootStore(
+    init(
+        authenticationService: MissCatAuthenticationService = MissCatAuthenticationService(),
+        applicationRootStore: MissCatApplicationRootStore? = nil
+    ) {
+        self.authenticationService = authenticationService
+        self.applicationRootStore = applicationRootStore ?? MissCatApplicationRootStore(
             sessionProvider: MissCatProductionSessionAdapter()
         )
     }
@@ -87,19 +91,23 @@ final class ApplicationState {
     }
 
     func completeAuthentication(callbackURL: URL) {
+        Task { @MainActor in
+            await completeAuthenticationAndRestore(callbackURL: callbackURL)
+        }
+    }
+
+    func completeAuthenticationAndRestore(callbackURL: URL) async {
         guard !isCompletingAuthentication else { return }
         canRetryAuthentication = false
         isCompletingAuthentication = true
 
-        Task { @MainActor in
-            defer { isCompletingAuthentication = false }
-            do {
-                _ = try await authenticationService.completeAuthentication(callbackURL: callbackURL)
-                await applicationRootStore.restore()
-            } catch {
-                present(error)
-                canRetryAuthentication = true
-            }
+        defer { isCompletingAuthentication = false }
+        do {
+            _ = try await authenticationService.completeAuthentication(callbackURL: callbackURL)
+            await applicationRootStore.restore()
+        } catch {
+            present(error)
+            canRetryAuthentication = true
         }
     }
 

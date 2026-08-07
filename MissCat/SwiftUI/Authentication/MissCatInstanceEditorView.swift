@@ -51,9 +51,13 @@ public struct MissCatInstanceEditorView: View {
                 }
             }
             .overlay {
-                VStack(spacing: 0) {
-                    MissCatAuthenticationMarker(identifier: "instance.screen")
-                    MissCatAuthenticationMarker(identifier: visualReadyIdentifier)
+                if isPresented {
+                    VStack(spacing: 0) {
+                        MissCatAuthenticationMarker(identifier: "instance.screen")
+                        if let visualReadyIdentifier {
+                            MissCatAuthenticationMarker(identifier: visualReadyIdentifier)
+                        }
+                    }
                 }
             }
     }
@@ -78,12 +82,11 @@ public struct MissCatInstanceEditorView: View {
         normalize(value.isEmpty ? "misskey.io" : value)
     }
 
-    private var visualReadyIdentifier: String {
-        let candidate = Self.resolve(draft)
-        if !draft.isEmpty, (try? MissCatInstance.normalize(candidate)) == nil {
-            return "visual-ready.login-instance.invalid"
-        }
-        return "visual-ready.login-instance.default"
+    private var visualReadyIdentifier: String? {
+        MissCatInstanceEditorVisualReadiness.identifier(
+            isPresented: isPresented,
+            draft: draft
+        )
     }
 
     private func apply() {
@@ -91,5 +94,16 @@ public struct MissCatInstanceEditorView: View {
         instance = resolved
         isPresented = false
         onApply(resolved)
+    }
+}
+
+enum MissCatInstanceEditorVisualReadiness {
+    static func identifier(isPresented: Bool, draft: String) -> String? {
+        guard isPresented else { return nil }
+        let candidate = MissCatInstanceEditorView.resolve(draft)
+        if !draft.isEmpty, (try? MissCatInstance.normalize(candidate)) == nil {
+            return "visual-ready.login-instance.invalid"
+        }
+        return "visual-ready.login-instance.default"
     }
 }

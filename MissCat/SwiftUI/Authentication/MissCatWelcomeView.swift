@@ -183,10 +183,11 @@ public struct MissCatWelcomeView: View {
         .overlay(alignment: .topLeading) {
             VStack(spacing: 0) {
                 MissCatAuthenticationMarker(identifier: "welcome.screen")
-                MissCatAuthenticationMarker(
-                    identifier: "visual-ready.login-start.default",
-                    value: visualIsReady ? "true" : "false"
-                )
+                if visualIsReady {
+                    MissCatAuthenticationMarker(
+                        identifier: "visual-ready.login-start.default"
+                    )
+                }
             }
         }
     }

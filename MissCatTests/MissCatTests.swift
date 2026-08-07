@@ -1213,7 +1213,8 @@ final class AuthenticationApplicationStateWiringTests: XCTestCase {
         XCTAssertEqual(accountStore.savedUser?.instance, "fixture.invalid")
         XCTAssertEqual(accountStore.currentUserID, account.id.rawValue)
         XCTAssertEqual(rootStore.phase.authenticatedSession?.currentAccount.id, account.id)
-        XCTAssertEqual(await provider.restoreCount, 1)
+        let restoreCount = await provider.restoreCount
+        XCTAssertEqual(restoreCount, 1)
         XCTAssertNil(state.errorMessage)
         XCTAssertFalse(state.canRetryAuthentication)
         XCTAssertFalse(state.isCompletingAuthentication)
@@ -1253,7 +1254,8 @@ final class AuthenticationApplicationStateWiringTests: XCTestCase {
         XCTAssertEqual(state.errorMessage, "アカウント情報を安全に保存できませんでした")
         XCTAssertTrue(state.canRetryAuthentication)
         XCTAssertFalse(state.isCompletingAuthentication)
-        XCTAssertEqual(await provider.restoreCount, 0)
+        let restoreCount = await provider.restoreCount
+        XCTAssertEqual(restoreCount, 0)
         XCTAssertEqual(rootStore.phase, .launching)
 
         state.retryAuthentication()
