@@ -1,4 +1,5 @@
 @testable import MissCat
+import ImageIO
 import UIKit
 import XCTest
 
@@ -307,6 +308,97 @@ final class MissCatNoteDetailTests: XCTestCase {
         XCTAssertEqual(probe.callCount, 1)
         XCTAssertEqual(first.imageByName["cat"]?.width, 1)
         XCTAssertEqual(second.imageByName["cat"]?.height, 1)
+    }
+
+    @MainActor
+    func testCustomEmojiStoreCoalescesConcurrentDownloadAndDecodeByURL() async {
+        let url = URL(string: "https://example.test/shared.webp")!
+        let cache = MissCatCustomEmojiCache(countLimit: 2)
+        let probe = CustomEmojiLoaderProbe(
+            data: Self.customEmojiPNGData,
+            delayNanoseconds: 100_000_000
+        )
+        let first = MissCatCustomEmojiStore(
+            emojis: ["first-name": url],
+            readiness: nil,
+            cache: cache,
+            loader: { url in try await probe.load(url) }
+        )
+        let second = MissCatCustomEmojiStore(
+            emojis: ["second-name": url],
+            readiness: nil,
+            cache: cache,
+            loader: { url in try await probe.load(url) }
+        )
+
+        let firstTask = Task { await first.load() }
+        let secondTask = Task { await second.load() }
+        await firstTask.value
+        await secondTask.value
+
+        XCTAssertEqual(probe.callCount, 1)
+        XCTAssertEqual(first.animationByName["first-name"]?.firstFrame.width, 1)
+        XCTAssertEqual(second.animationByName["second-name"]?.firstFrame.height, 1)
+    }
+
+    func testCustomEmojiLoopMetadataRejectsNonFiniteAndClampsOutOfRangeValues() {
+        let formats: [(CFString, CFString)] = [
+            (kCGImagePropertyGIFDictionary, kCGImagePropertyGIFLoopCount),
+            (kCGImagePropertyPNGDictionary, kCGImagePropertyAPNGLoopCount),
+            (kCGImagePropertyWebPDictionary, kCGImagePropertyWebPLoopCount),
+        ]
+
+        for (dictionaryKey, loopKey) in formats {
+            XCTAssertEqual(
+                MissCatCustomEmojiImageDecoder.loopCount(
+                    properties: [dictionaryKey: [loopKey: Double.nan]]
+                ),
+                0
+            )
+            XCTAssertEqual(
+                MissCatCustomEmojiImageDecoder.loopCount(
+                    properties: [dictionaryKey: [loopKey: Double.infinity]]
+                ),
+                0
+            )
+            XCTAssertEqual(
+                MissCatCustomEmojiImageDecoder.loopCount(
+                    properties: [dictionaryKey: [loopKey: -1]]
+                ),
+                0
+            )
+            XCTAssertEqual(
+                MissCatCustomEmojiImageDecoder.loopCount(
+                    properties: [dictionaryKey: [loopKey: 4.9]]
+                ),
+                4
+            )
+            XCTAssertEqual(
+                MissCatCustomEmojiImageDecoder.loopCount(
+                    properties: [dictionaryKey: [loopKey: Double.greatestFiniteMagnitude]]
+                ),
+                Int.max
+            )
+        }
+    }
+
+    func testCustomEmojiFramesNormalizeToOneStableCanvas() throws {
+        let source = try MissCatCustomEmojiImageDecoder.decode(Self.customEmojiPNGData)
+        let first = try MissCatCustomEmojiImageDecoder.normalizedFrame(
+            source,
+            canvasWidth: 3,
+            canvasHeight: 2
+        )
+        let second = try MissCatCustomEmojiImageDecoder.normalizedFrame(
+            source,
+            canvasWidth: 3,
+            canvasHeight: 2
+        )
+
+        XCTAssertEqual(first.width, 3)
+        XCTAssertEqual(first.height, 2)
+        XCTAssertEqual(second.width, first.width)
+        XCTAssertEqual(second.height, first.height)
     }
 
     @MainActor

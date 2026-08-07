@@ -141,6 +141,37 @@ final class MissCatNativeMFMTests: XCTestCase {
         )
     }
 
+    func testPreviewURLsFollowRenderedASTAndExcludePlainCodeAndUnknownFunctions() {
+        let urls = MissCatNativeMFMRenderer.previewURLs(
+            in: """
+            <plain>https://plain.example/path</plain>
+            `https://inline-code.example/path`
+            $[future https://unknown-function.example/path]
+            $[spin https://motion-child.example/path]
+            [label](https://label.example/path)
+            """,
+            limit: 10
+        )
+
+        XCTAssertEqual(
+            urls,
+            [
+                URL(string: "https://motion-child.example/path")!,
+                URL(string: "https://label.example/path")!,
+            ]
+        )
+    }
+
+    func testPreviewURLsKeepFirstASTOccurrenceAndHonorLimit() {
+        XCTAssertEqual(
+            MissCatNativeMFMRenderer.previewURLs(
+                in: "https://one.example [again](https://one.example) https://two.example",
+                limit: 1
+            ),
+            [URL(string: "https://one.example")!]
+        )
+    }
+
     func testMFMRenderSegmentsKeepCustomEmojiInsideNestedFunctions() {
         let segments = MissCatNativeMFMRenderer.segments(
             "$[spin safe :blobcat: @alice@example.test]"
