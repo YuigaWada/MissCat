@@ -97,6 +97,35 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
         }
     }
 
+    func testUnitTestUIKitImportsAreLimitedToSystemPasteboardIntegration() throws {
+        let unitTestRoot = repositoryRoot.appendingPathComponent("MissCatTests")
+        let uikitSources = try repositorySwiftSources()
+            .filter { $0.path.hasPrefix(unitTestRoot.path + "/") }
+            .filter { sourceURL in
+                let source = try String(contentsOf: sourceURL, encoding: .utf8)
+                return source.split(separator: "\n").contains("import UIKit")
+            }
+            .map(\.lastPathComponent)
+            .sorted()
+
+        XCTAssertEqual(uikitSources, ["MissCatNoteDetailTests.swift"])
+    }
+
+    func testRetiredLicenseGeneratorArtifactsAreAbsent() {
+        for relativePath in [
+            "python_utls/COMBINED_LICENSE",
+            "python_utls/library_list.txt",
+            "python_utls/licenser.py",
+        ] {
+            XCTAssertFalse(
+                FileManager.default.fileExists(
+                    atPath: repositoryRoot.appendingPathComponent(relativePath).path
+                ),
+                "Unreferenced retired dependency artifact remains: \(relativePath)"
+            )
+        }
+    }
+
     func testUIKitShippingSourcesExposeOnlyApprovedOSAdapterSymbols() throws {
         let project = try source(named: "MissCat.xcodeproj/project.pbxproj")
         let appSources = try objectBlock(
