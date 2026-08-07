@@ -168,14 +168,14 @@ struct MissCatRootView: View {
         } else if MissCatNoteDetailFixtureConfiguration.isEnabled {
             MissCatNoteDetailFixtureRoot()
         } else {
-            applicationRoot
+            rootContainer
         }
 #else
-        applicationRoot
+        rootContainer
 #endif
     }
 
-    private var applicationRoot: some View {
+    private var rootContainer: some View {
         ZStack {
             #if DEBUG
             if MissCatShellFixtureLaunch.isRequested {
