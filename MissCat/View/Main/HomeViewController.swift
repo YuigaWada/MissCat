@@ -106,6 +106,11 @@ class HomeViewController: PolioPagerViewController {
             backgroundColor: colorPattern?.ui.base ?? .white,
             normalColor: colorPattern?.ui.text ?? .black
         )
+#if DEBUG
+        if MissCatProfileOrdinaryRouteConfiguration.isEnabled {
+            return items.isEmpty ? [TabItem(title: "")] : items
+        }
+#endif
         return [discovery] + (items.isEmpty ? [TabItem(title: "")] : items)
     }
     
@@ -250,12 +255,19 @@ class HomeViewController: PolioPagerViewController {
     // MARK: Design
     
     private func setupPolioPager() {
-        needSearchTab = false
 #if DEBUG
-        initialIndex = MissCatProfileOrdinaryRouteConfiguration.isEnabled
-            ? 0
-            : (tabs.isEmpty ? 0 : 1)
+        if MissCatProfileOrdinaryRouteConfiguration.isEnabled {
+            // PolioPager owns the legacy search field and adds its search page
+            // before the storyboard Search controller. The accepted probe uses
+            // -1 to select that real controller after PolioPager's adjustment.
+            needSearchTab = true
+            initialIndex = -1
+        } else {
+            needSearchTab = false
+            initialIndex = tabs.isEmpty ? 0 : 1
+        }
 #else
+        needSearchTab = false
         initialIndex = tabs.isEmpty ? 0 : 1
 #endif
         needBorder = true
