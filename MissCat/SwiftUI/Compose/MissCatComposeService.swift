@@ -4,6 +4,12 @@ import MediaPlayer
 import MisskeyKit
 import UIKit
 
+enum MissCatComposeLegacyVisibilityAdapter {
+    static func value(_ visibility: MissCatComposeVisibility) -> Visibility? {
+        Visibility(rawValue: visibility.rawValue)
+    }
+}
+
 @MainActor
 final class MissCatComposeEnvironmentStore: MissCatComposeEnvironmentProviding {
     private let cache: Cache.UserDefaults
@@ -41,7 +47,7 @@ final class MissCatComposeEnvironmentStore: MissCatComposeEnvironmentProviding {
     }
 
     func persistVisibility(_ visibility: MissCatComposeVisibility) {
-        guard let value = Visibility(rawValue: visibility.rawValue) else { return }
+        guard let value = MissCatComposeLegacyVisibilityAdapter.value(visibility) else { return }
         cache.setCurrentVisibility(value)
     }
 }

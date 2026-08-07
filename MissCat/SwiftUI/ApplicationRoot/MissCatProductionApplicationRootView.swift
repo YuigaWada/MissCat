@@ -1,5 +1,4 @@
 import Combine
-import MisskeyKit
 import SwiftUI
 
 @MainActor
@@ -158,7 +157,7 @@ final class MissCatProductionAccountCoordinator: ObservableObject {
 #endif
         guard accountID == session.currentAccount.id.rawValue,
               Cache.UserDefaults.shared.getCurrentUserId() == session.currentAccount.id.rawValue,
-              let legacyVisibility = Visibility(rawValue: visibility.rawValue)
+              let legacyVisibility = MissCatComposeLegacyVisibilityAdapter.value(visibility)
         else { return }
         Cache.UserDefaults.shared.setCurrentVisibility(legacyVisibility)
     }
