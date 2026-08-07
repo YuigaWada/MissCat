@@ -775,11 +775,11 @@ final class MiAuthAuthenticationTests: XCTestCase {
         }
     }
 
-    func testSignUpStartsAtInstanceRootThenCreatesMiAuthSessionWithoutUsingWebToken() async throws {
+    func testSignUpOpensInstanceRegistrationThenCreatesMiAuthSessionWithoutUsingWebToken() async throws {
         let fixture = makeFixture()
 
         let signUp = try await fixture.service.makeAuthorizationRequest(intent: .signUp, instance: "misskey.io")
-        XCTAssertEqual(signUp.url?.absoluteString, "https://misskey.io")
+        XCTAssertEqual(signUp.url?.absoluteString, "https://misskey.io/signup")
 
         let login = try await fixture.service.makeLoginRequestAfterSignUp(instance: "misskey.io")
         XCTAssertEqual(login.url?.path, "/miauth/11111111-2222-3333-4444-555555555555")
