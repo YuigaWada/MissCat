@@ -94,6 +94,12 @@ The shell self-test generates tiny fixtures, including paths containing spaces, 
 scripts/test-compare-screenshots.sh
 ```
 
+Timeline screenshots also have a stricter named-region gate. See
+[`timeline-region-visual-regression.md`](timeline-region-visual-regression.md)
+for its versioned manifest, per-region thresholds, action-edge coverage, and
+amplified artifacts. That gate prevents a sparse icon or divider regression
+from being hidden by the timeline's large white background.
+
 ## Complete acceptance inventory
 
 `docs/visual-acceptance-requirements.tsv` is the pinned schema-v2 visual contract
