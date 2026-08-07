@@ -1,10 +1,71 @@
 #if DEBUG
 import Foundation
 import SwiftUI
+import UIKit
+
+/// Runs the production application root, Main.storyboard Home pager, legacy
+/// SearchViewController, and its production profile bridge without a saved
+/// account or a live network. The deterministic repository is injected only at
+/// Search's repository boundary; this is deliberately separate from the direct
+/// SwiftUI fixture above.
+@MainActor
+enum MissCatProfileOrdinaryRouteConfiguration {
+    static let launchArgument = "--login-profile-real-ordinary-route"
+    static let query = "fixture"
+
+    static var isEnabled: Bool {
+        CommandLine.arguments.contains(launchArgument)
+    }
+
+    static let account = MissCatProfileAccount(
+        userID: "fixture-self",
+        instance: "ordinary-route.invalid",
+        token: "ordinary-route-token-not-a-secret"
+    )
+
+    static let owner = SecureUser(
+        userId: account.userID,
+        username: "wada",
+        instance: account.instance,
+        apiKey: account.token
+    )
+
+    static let repository = MissCatProfileFixtureRepository(
+        account: account,
+        failUnfollowOnce: false,
+        failEditOnce: false
+    )
+
+    private static weak var actionMarker: UILabel?
+
+    static func installActionMarker(in view: UIView) {
+        let marker = UILabel(frame: CGRect(x: 1, y: 1, width: 2, height: 2))
+        marker.text = "ordinary profile action"
+        marker.textColor = .clear
+        marker.isAccessibilityElement = true
+        marker.accessibilityIdentifier = "profile.realOrdinary.lastAction"
+        marker.accessibilityLabel = "profile.realOrdinary.lastAction"
+        marker.accessibilityValue = "none"
+        view.addSubview(marker)
+        actionMarker = marker
+
+        view.isAccessibilityElement = false
+        view.accessibilityIdentifier = "profile.realOrdinary.home"
+    }
+
+    static func record(_ action: String) {
+        actionMarker?.accessibilityValue = action
+    }
+}
 
 enum MissCatLoginProfileFixtureRoute: Equatable {
     case authentication(failPreparationOnce: Bool, failBrowserOnce: Bool)
-    case profile(failUnfollowOnce: Bool, failEditOnce: Bool)
+    case profile(
+        failUnfollowOnce: Bool,
+        failEditOnce: Bool,
+        startsAtSelfProfile: Bool,
+        usesOuterShell: Bool
+    )
 
     static func parse(_ arguments: [String] = CommandLine.arguments) -> Self? {
         guard arguments.contains("--login-profile-fixture") else { return nil }
@@ -17,7 +78,9 @@ enum MissCatLoginProfileFixtureRoute: Equatable {
         if arguments.contains("--login-profile-profile") {
             return .profile(
                 failUnfollowOnce: arguments.contains("--login-profile-unfollow-error"),
-                failEditOnce: arguments.contains("--login-profile-edit-error")
+                failEditOnce: arguments.contains("--login-profile-edit-error"),
+                startsAtSelfProfile: arguments.contains("--login-profile-root-self"),
+                usesOuterShell: arguments.contains("--login-profile-ordinary-shell")
             )
         }
         return nil
@@ -34,10 +97,12 @@ struct MissCatLoginProfileFixtureRoot: View {
                 failPreparationOnce: failPreparationOnce,
                 failBrowserOnce: failBrowserOnce
             )
-        case let .profile(failUnfollowOnce, failEditOnce):
+        case let .profile(failUnfollowOnce, failEditOnce, startsAtSelfProfile, usesOuterShell):
             MissCatProfileFixtureHarness(
                 failUnfollowOnce: failUnfollowOnce,
-                failEditOnce: failEditOnce
+                failEditOnce: failEditOnce,
+                startsAtSelfProfile: startsAtSelfProfile,
+                usesOuterShell: usesOuterShell
             )
         }
     }
@@ -365,14 +430,23 @@ final class MissCatProfileFixtureRepository: MissCatProfileRepository {
 }
 
 private struct MissCatProfileFixtureHarness: View {
+    @StateObject private var actionRecorder = MissCatProfileFixtureActionRecorder()
+
     private let account = MissCatProfileAccount(
         userID: "fixture-self",
         instance: "fixture.invalid",
         token: "fixture-token-not-a-secret"
     )
     private let repository: MissCatProfileFixtureRepository
+    private let startsAtSelfProfile: Bool
+    private let usesOuterShell: Bool
 
-    init(failUnfollowOnce: Bool, failEditOnce: Bool) {
+    init(
+        failUnfollowOnce: Bool,
+        failEditOnce: Bool,
+        startsAtSelfProfile: Bool,
+        usesOuterShell: Bool
+    ) {
         let account = MissCatProfileAccount(
             userID: "fixture-self",
             instance: "fixture.invalid",
@@ -383,16 +457,96 @@ private struct MissCatProfileFixtureHarness: View {
             failUnfollowOnce: failUnfollowOnce,
             failEditOnce: failEditOnce
         )
+        self.startsAtSelfProfile = startsAtSelfProfile
+        self.usesOuterShell = usesOuterShell
     }
 
     var body: some View {
+        Group {
+            if usesOuterShell {
+                VStack(spacing: 0) {
+                    profileFamily(shellOwnership: .outerShell, actions: actionRecorder.actions)
+
+                    MissCatBottomBar(
+                        selectedSection: Binding(
+                            get: { actionRecorder.selectedSection },
+                            set: { actionRecorder.selectRoot($0) }
+                        ),
+                        palette: .legacyLight,
+                        onCompose: actionRecorder.compose,
+                        onReselect: actionRecorder.selectRoot
+                    )
+                }
+                .overlay(alignment: .topLeading) {
+                    MissCatProfileFixtureValueMarker(
+                        identifier: "profile.ordinaryShell.lastAction",
+                        value: actionRecorder.lastAction
+                    )
+                }
+            } else {
+                profileFamily(shellOwnership: .profileFamily, actions: .init())
+            }
+        }
+        .preferredColorScheme(.light)
+    }
+
+    private func profileFamily(
+        shellOwnership: MissCatProfileShellOwnership,
+        actions: MissCatProfileFamilyActions
+    ) -> some View {
         MissCatProfileFamilyView(
-            root: .searchResults(query: "fixture"),
+            root: startsAtSelfProfile ? .profile(userID: account.userID) : .searchResults(query: "fixture"),
             account: account,
             palette: .legacyLight,
-            repositoryFactory: { _ in repository }
+            shellOwnership: shellOwnership,
+            repositoryFactory: { _ in repository },
+            actions: actions
         )
-        .preferredColorScheme(.light)
+    }
+}
+
+@MainActor
+private final class MissCatProfileFixtureActionRecorder: ObservableObject {
+    @Published var selectedSection: MissCatRootSection = .profile
+    @Published private(set) var lastAction = "none"
+
+    var actions: MissCatProfileFamilyActions {
+        MissCatProfileFamilyActions(
+            onExit: { [weak self] in self?.record("exit") },
+            onOpenURL: { [weak self] _ in self?.record("url") },
+            onOpenImage: { [weak self] _ in self?.record("image") },
+            onOpenSettings: { [weak self] in self?.record("settings") },
+            onSelectRoot: { [weak self] in self?.selectRoot($0) },
+            onCompose: { [weak self] in self?.compose() }
+        )
+    }
+
+    func selectRoot(_ section: MissCatRootSection) {
+        selectedSection = section
+        record("root.\(section.rawValue)")
+    }
+
+    func compose() {
+        record("compose")
+    }
+
+    private func record(_ action: String) {
+        lastAction = action
+    }
+}
+
+private struct MissCatProfileFixtureValueMarker: View {
+    let identifier: String
+    let value: String
+
+    var body: some View {
+        Text("fixture action")
+            .font(.system(size: 1))
+            .frame(width: 1, height: 1)
+            .opacity(0.01)
+            .accessibilityLabel(identifier)
+            .accessibilityValue(value)
+            .accessibilityIdentifier(identifier)
     }
 }
 

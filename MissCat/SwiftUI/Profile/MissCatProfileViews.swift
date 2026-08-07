@@ -9,6 +9,7 @@ public struct MissCatProfileScreen: View {
 
     private let palette: MissCatVisualPalette
     private let repositoryFactory: (MissCatProfileAccount) -> MissCatProfileRepository
+    private let showsBack: Bool
     private let onBack: () -> Void
     private let onOpenURL: (URL) -> Void
     private let onOpenImage: (URL) -> Void
@@ -18,11 +19,13 @@ public struct MissCatProfileScreen: View {
     private let onOpenSettings: () -> Void
     private let onSelectRoot: (MissCatRootSection) -> Void
     private let onCompose: () -> Void
+    private let showsBottomBar: Bool
 
     public init(
         store: MissCatProfileStore,
         palette: MissCatVisualPalette = .legacyLight,
         repositoryFactory: @escaping (MissCatProfileAccount) -> MissCatProfileRepository = { MissCatRESTProfileRepository(account: $0) },
+        showsBack: Bool = true,
         onBack: @escaping () -> Void = {},
         onOpenURL: @escaping (URL) -> Void = { _ in },
         onOpenImage: @escaping (URL) -> Void = { _ in },
@@ -31,11 +34,13 @@ public struct MissCatProfileScreen: View {
         onEditProfile: @escaping (MissCatProfileUser) -> Void = { _ in },
         onOpenSettings: @escaping () -> Void = {},
         onSelectRoot: @escaping (MissCatRootSection) -> Void = { _ in },
-        onCompose: @escaping () -> Void = {}
+        onCompose: @escaping () -> Void = {},
+        showsBottomBar: Bool = true
     ) {
         _store = StateObject(wrappedValue: store)
         self.palette = palette
         self.repositoryFactory = repositoryFactory
+        self.showsBack = showsBack
         self.onBack = onBack
         self.onOpenURL = onOpenURL
         self.onOpenImage = onOpenImage
@@ -45,6 +50,7 @@ public struct MissCatProfileScreen: View {
         self.onOpenSettings = onOpenSettings
         self.onSelectRoot = onSelectRoot
         self.onCompose = onCompose
+        self.showsBottomBar = showsBottomBar
     }
 
     public var body: some View {
@@ -73,15 +79,17 @@ public struct MissCatProfileScreen: View {
             .tabViewStyle(.page(indexDisplayMode: .never))
             .accessibilityIdentifier("profile.timeline.pager")
 
-            MissCatBottomBar(
-                selectedSection: Binding(
-                    get: { .profile },
-                    set: { onSelectRoot($0) }
-                ),
-                palette: palette,
-                onCompose: onCompose,
-                onReselect: onSelectRoot
-            )
+            if showsBottomBar {
+                MissCatBottomBar(
+                    selectedSection: Binding(
+                        get: { .profile },
+                        set: { onSelectRoot($0) }
+                    ),
+                    palette: palette,
+                    onCompose: onCompose,
+                    onReselect: onSelectRoot
+                )
+            }
         }
         .background(palette.base.ignoresSafeArea())
         .ignoresSafeArea(edges: .top)
@@ -148,6 +156,7 @@ public struct MissCatProfileScreen: View {
                     isFollowing: store.isFollowing,
                     followPhase: store.followPhase,
                     palette: palette,
+                    showsBack: showsBack,
                     onBack: onBack,
                     onSettings: onOpenSettings,
                     onOpenImage: onOpenImage,
@@ -206,6 +215,7 @@ public struct MissCatProfileHeader: View {
     public let isFollowing: Bool
     public let followPhase: MissCatLoadPhase
     public let palette: MissCatVisualPalette
+    public let showsBack: Bool
     public let onBack: () -> Void
     public let onSettings: () -> Void
     public let onOpenImage: (URL) -> Void
@@ -310,7 +320,7 @@ public struct MissCatProfileHeader: View {
                 .zIndex(1)
                 .accessibilityIdentifier(isCurrentUser ? "profile.action.edit" : "profile.action.follow")
 
-                if !isCurrentUser {
+                if showsBack {
                     circularToolbarButton(symbol: "chevron.left", label: "戻る", identifier: "profile.action.back", action: onBack)
                         .position(x: 35, y: 59)
                 }

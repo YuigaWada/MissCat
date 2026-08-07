@@ -114,10 +114,150 @@ final class MissCatLoginProfileUITests: XCTestCase {
         capture("27-followers-current")
         app.buttons["profile.user.fixture-friend"].tap()
         waitForProfile("profile.other.screen")
+        XCTAssertTrue(app.buttons["profile.action.back"].isHittable)
         app.buttons["profile.action.back"].tap()
         waitForUserList()
         tapNavigationBack()
         waitForProfile("profile.other.screen")
+    }
+
+    func testSearchResultSelfProfileBackReturnsToTheSameResults() {
+        launch("--login-profile-profile")
+        waitForSearchResults()
+
+        app.buttons["profile.user.fixture-self"].tap()
+        waitForProfile("profile.self.screen")
+        let back = app.buttons["profile.action.back"]
+        XCTAssertTrue(back.waitForExistence(timeout: 5))
+        XCTAssertTrue(back.isHittable)
+        back.tap()
+
+        waitForSearchResults()
+        XCTAssertTrue(app.buttons["profile.user.fixture-target"].exists)
+        XCTAssertTrue(app.buttons["profile.user.fixture-self"].exists)
+    }
+
+    func testRootSelfProfileKeepsEditAndSettingsWithoutNestedBack() {
+        launch("--login-profile-profile", "--login-profile-root-self")
+        waitForProfile("profile.self.screen")
+
+        XCTAssertFalse(app.buttons["profile.action.back"].exists)
+        XCTAssertTrue(app.buttons["profile.action.edit"].isHittable)
+        XCTAssertTrue(app.buttons["profile.action.settings"].isHittable)
+        assertSingleBottomBar()
+    }
+
+    func testOrdinarySearchShellOwnsOneFooterAndPreservesAllNestedRoutes() {
+        launch("--login-profile-profile", "--login-profile-ordinary-shell")
+        waitForSearchResults()
+        assertSingleBottomBar()
+        capture("25-user-results-ordinary-shell-current")
+
+        app.buttons["profile.user.fixture-self"].tap()
+        waitForProfile("profile.self.screen")
+        XCTAssertTrue(app.buttons["profile.action.back"].isHittable)
+        assertSingleBottomBar()
+        app.buttons["profile.action.back"].tap()
+        waitForSearchResults()
+        XCTAssertTrue(app.buttons["profile.user.fixture-target"].exists)
+        XCTAssertTrue(app.buttons["profile.user.fixture-self"].exists)
+
+        app.buttons["profile.user.fixture-target"].tap()
+        waitForProfile("profile.other.screen")
+        assertSingleBottomBar()
+        capture("26-profile-ordinary-shell-current")
+
+        app.buttons["profile.action.settings"].tap()
+        waitForValue("settings", identifier: "profile.ordinaryShell.lastAction")
+        app.buttons["profile.avatar"].tap()
+        waitForValue("image", identifier: "profile.ordinaryShell.lastAction")
+        tapBiographyLink(horizontal: 0.9, vertical: 0.5)
+        waitForValue("url", identifier: "profile.ordinaryShell.lastAction")
+
+        app.buttons["profile.count.followers"].tap()
+        waitForUserList()
+        assertSingleBottomBar()
+        app.buttons["profile.user.fixture-self"].tap()
+        waitForProfile("profile.self.screen")
+        assertSingleBottomBar()
+        XCTAssertTrue(app.buttons["profile.action.back"].isHittable)
+
+        tapBiographyLink(horizontal: 0.2, vertical: 0.85)
+        waitForValue("url", identifier: "profile.ordinaryShell.lastAction")
+
+        app.buttons["profile.action.back"].tap()
+        waitForUserList()
+        XCTAssertEqual(app.navigationBars.firstMatch.identifier, "Followers")
+        tapNavigationBack()
+        waitForProfile("profile.other.screen")
+        app.buttons["profile.action.back"].tap()
+        waitForSearchResults()
+        XCTAssertTrue(app.buttons["profile.user.fixture-target"].exists)
+        XCTAssertTrue(app.buttons["profile.user.fixture-self"].exists)
+        assertSingleBottomBar()
+
+        app.buttons["main.action.compose"].tap()
+        waitForValue("compose", identifier: "profile.ordinaryShell.lastAction")
+        app.buttons["main.tab.profile"].tap()
+        waitForValue("root.profile", identifier: "profile.ordinaryShell.lastAction")
+        app.buttons["main.tab.home"].tap()
+        waitForValue("root.home", identifier: "profile.ordinaryShell.lastAction")
+    }
+
+    func testRealLegacyHomeSearchRouteHostsTheTypedProfileFamily() {
+        launchRealOrdinaryRoute()
+        XCTAssertFalse(app.launchArguments.contains("--login-profile-fixture"))
+
+        waitForSearchResults()
+        XCTAssertTrue(element("profile.realOrdinary.lastAction").waitForExistence(timeout: 5))
+        assertSingleBottomBar()
+        capture("25-user-results-real-ordinary-route-current")
+
+        app.buttons["profile.user.fixture-self"].tap()
+        waitForProfile("profile.self.screen")
+        XCTAssertTrue(app.buttons["profile.action.back"].isHittable)
+        assertSingleBottomBar()
+        app.buttons["profile.action.back"].tap()
+        waitForSearchResults()
+
+        app.buttons["profile.user.fixture-target"].tap()
+        waitForProfile("profile.other.screen")
+        assertSingleBottomBar()
+        capture("26-profile-real-ordinary-route-current")
+
+        app.buttons["profile.tab.media"].tap()
+        waitForSelectedTab("profile.tab.media")
+        let pager = element("profile.timeline.pager")
+        XCTAssertTrue(pager.waitForExistence(timeout: 5))
+        pager.swipeRight()
+        waitForSelectedTab("profile.tab.notesAndReplies")
+
+        app.buttons["profile.action.settings"].tap()
+        waitForValue("settings", identifier: "profile.realOrdinary.lastAction")
+        app.buttons["profile.avatar"].tap()
+        waitForValue("image", identifier: "profile.realOrdinary.lastAction")
+        tapBiographyLink(horizontal: 0.9, vertical: 0.5)
+        waitForValue("hashtag", identifier: "profile.realOrdinary.lastAction")
+
+        app.buttons["profile.count.followers"].tap()
+        waitForUserList()
+        XCTAssertEqual(app.navigationBars.firstMatch.identifier, "Followers")
+        assertSingleBottomBar()
+        app.buttons["profile.user.fixture-self"].tap()
+        waitForProfile("profile.self.screen")
+        XCTAssertTrue(app.buttons["profile.action.back"].isHittable)
+        assertSingleBottomBar()
+        app.buttons["profile.action.back"].tap()
+        waitForUserList()
+        tapNavigationBack()
+        waitForProfile("profile.other.screen")
+        app.buttons["profile.action.back"].tap()
+        waitForSearchResults()
+        assertSingleBottomBar()
+
+        XCTAssertTrue(app.buttons["main.action.compose"].isHittable)
+        XCTAssertTrue(app.buttons["main.tab.profile"].isHittable)
+        XCTAssertTrue(app.buttons["main.tab.home"].isHittable)
     }
 
     func testFollowUnfollowFailureRollsBackThenRetrySucceeds() {
@@ -188,6 +328,16 @@ final class MissCatLoginProfileUITests: XCTestCase {
         app.launch()
     }
 
+    private func launchRealOrdinaryRoute() {
+        app.launchArguments = ["--login-profile-real-ordinary-route"]
+        app.launchEnvironment = [
+            "AppleLanguages": "(ja)",
+            "AppleLocale": "ja_JP",
+            "TZ": "Asia/Tokyo"
+        ]
+        app.launch()
+    }
+
     private func relaunch(_ arguments: String...) {
         app.terminate()
         launch(arguments)
@@ -239,6 +389,11 @@ final class MissCatLoginProfileUITests: XCTestCase {
         XCTAssertTrue(element("profile.user.fixture-target").waitForExistence(timeout: 5) || element("profile.user.fixture-friend").exists)
     }
 
+    private func waitForSearchResults() {
+        XCTAssertTrue(element("profile.searchResults.root").waitForExistence(timeout: 10))
+        waitForUserList()
+    }
+
     private func waitForProfile(_ identifier: String) {
         XCTAssertTrue(element(identifier).waitForExistence(timeout: 10))
         let ready = element("profile.visualReady")
@@ -268,6 +423,23 @@ final class MissCatLoginProfileUITests: XCTestCase {
         let predicate = NSPredicate(format: "value == %@", value)
         expectation(for: predicate, evaluatedWith: marker)
         waitForExpectations(timeout: 5)
+    }
+
+    private func assertSingleBottomBar() {
+        XCTAssertEqual(app.buttons.matching(identifier: "main.action.compose").count, 1)
+        for section in ["home", "notifications", "messages", "profile"] {
+            XCTAssertEqual(app.buttons.matching(identifier: "main.tab.\(section)").count, 1)
+        }
+        let explicitMarkers = app.descendants(matching: .any).matching(identifier: "main.bottom-bar")
+        XCTAssertLessThanOrEqual(explicitMarkers.count, 1)
+    }
+
+    private func tapBiographyLink(horizontal: CGFloat, vertical: CGFloat) {
+        let biography = app.staticTexts["profile.biography"]
+        XCTAssertTrue(biography.waitForExistence(timeout: 5))
+        biography.coordinate(
+            withNormalizedOffset: CGVector(dx: horizontal, dy: vertical)
+        ).tap()
     }
 
     private func replaceText(identifier: String, with value: String) {

@@ -35,6 +35,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             return true
         }
 
+        if MissCatProfileOrdinaryRouteConfiguration.isEnabled {
+            UIView.setAnimationsEnabled(false)
+            setupMissCat()
+            return true
+        }
+
+        if MissCatLoginProfileFixtureRoute.parse() != nil {
+            setupMissCat()
+            return true
+        }
+
         // Automated tests must not trigger notification permission UI,
         // Firebase registration, or saved-account network side effects. The
         // ordinary application launch path below remains unchanged.

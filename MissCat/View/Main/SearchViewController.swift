@@ -50,6 +50,9 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     private var userListVC: UIViewController?
     
     private var selected: Tab = .note
+#if DEBUG
+    private var didStartOrdinaryProfileRoute = false
+#endif
     
     private var mainColor: UIColor = .systemBlue
     private let disposeBag: DisposeBag = .init()
@@ -65,6 +68,21 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+#if DEBUG
+        guard MissCatProfileOrdinaryRouteConfiguration.isEnabled,
+              !didStartOrdinaryProfileRoute else { return }
+        didStartOrdinaryProfileRoute = true
+        selected = .user
+        tabContainer.alpha = 1
+        tabContainer.isHidden = false
+        trendVC?.view.alpha = 0
+        trendVC?.view.isHidden = true
+        noteTab.setTitleColor(.lightGray, for: .normal)
+        userTab.setTitleColor(.white, for: .normal)
+        tabIndicator.frame = userTab.frame.insetBy(dx: -4, dy: 0)
+        searchTextField.text = MissCatProfileOrdinaryRouteConfiguration.query
+        search(with: MissCatProfileOrdinaryRouteConfiguration.query)
+#endif
     }
     
     // MARK: Design
@@ -283,7 +301,7 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
     
     private func generateUserListVC(query: String) -> UIViewController? {
         guard !query.isEmpty,
-              let owner = Cache.UserDefaults.shared.getCurrentUser(),
+              let owner = searchOwner,
               let viewController = MissCatProfileBridge.makeSearchResultsController(
                   query: query,
                   owner: owner,
@@ -297,6 +315,15 @@ class SearchViewController: UIViewController, PolioPagerSearchTabDelegate, UITex
         addChild(viewController)
         
         return viewController
+    }
+
+    private var searchOwner: SecureUser? {
+#if DEBUG
+        if MissCatProfileOrdinaryRouteConfiguration.isEnabled {
+            return MissCatProfileOrdinaryRouteConfiguration.owner
+        }
+#endif
+        return Cache.UserDefaults.shared.getCurrentUser()
     }
     
     private func getViewController(name: String) -> UIViewController {

@@ -57,7 +57,8 @@ final class ApplicationState: ObservableObject {
         guard root == .resolvingSession else { return }
 
 #if DEBUG
-        if MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
+        if MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled
+            || MissCatProfileOrdinaryRouteConfiguration.isEnabled {
             Theme.shared.reset()
             Theme.shared.set()
             root = .legacyApplication

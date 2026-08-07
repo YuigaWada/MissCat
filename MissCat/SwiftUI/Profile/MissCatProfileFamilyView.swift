@@ -1,5 +1,35 @@
 import SwiftUI
 
+public enum MissCatProfileShellOwnership: Hashable, Sendable {
+    case profileFamily
+    case outerShell
+}
+
+public struct MissCatProfileFamilyActions {
+    public let onExit: () -> Void
+    public let onOpenURL: (URL) -> Void
+    public let onOpenImage: (URL) -> Void
+    public let onOpenSettings: () -> Void
+    public let onSelectRoot: (MissCatRootSection) -> Void
+    public let onCompose: () -> Void
+
+    public init(
+        onExit: @escaping () -> Void = {},
+        onOpenURL: @escaping (URL) -> Void = { _ in },
+        onOpenImage: @escaping (URL) -> Void = { _ in },
+        onOpenSettings: @escaping () -> Void = {},
+        onSelectRoot: @escaping (MissCatRootSection) -> Void = { _ in },
+        onCompose: @escaping () -> Void = {}
+    ) {
+        self.onExit = onExit
+        self.onOpenURL = onOpenURL
+        self.onOpenImage = onOpenImage
+        self.onOpenSettings = onOpenSettings
+        self.onSelectRoot = onSelectRoot
+        self.onCompose = onCompose
+    }
+}
+
 /// A typed SwiftUI navigation owner for every profile and user-list route.
 ///
 /// The legacy home controller still supplies the outer compatibility host while
@@ -23,21 +53,18 @@ public struct MissCatProfileFamilyView: View {
     @State private var editRequestCount = 0
     @State private var profileRevision: [String: Int] = [:]
 
-    private let root: Root
-    private let account: MissCatProfileAccount
-    private let palette: MissCatVisualPalette
+    let root: Root
+    let account: MissCatProfileAccount
+    let palette: MissCatVisualPalette
+    let shellOwnership: MissCatProfileShellOwnership
+    let actions: MissCatProfileFamilyActions
     private let repositoryFactory: (MissCatProfileAccount) -> MissCatProfileRepository
-    private let onExit: () -> Void
-    private let onOpenURL: (URL) -> Void
-    private let onOpenImage: (URL) -> Void
-    private let onOpenSettings: () -> Void
-    private let onSelectRoot: (MissCatRootSection) -> Void
-    private let onCompose: () -> Void
 
     public init(
         root: Root,
         account: MissCatProfileAccount,
         palette: MissCatVisualPalette = .legacyLight,
+        shellOwnership: MissCatProfileShellOwnership = .profileFamily,
         repositoryFactory: @escaping (MissCatProfileAccount) -> MissCatProfileRepository = {
             MissCatRESTProfileRepository(account: $0)
         },
@@ -51,13 +78,34 @@ public struct MissCatProfileFamilyView: View {
         self.root = root
         self.account = account
         self.palette = palette
+        self.shellOwnership = shellOwnership
         self.repositoryFactory = repositoryFactory
-        self.onExit = onExit
-        self.onOpenURL = onOpenURL
-        self.onOpenImage = onOpenImage
-        self.onOpenSettings = onOpenSettings
-        self.onSelectRoot = onSelectRoot
-        self.onCompose = onCompose
+        actions = MissCatProfileFamilyActions(
+            onExit: onExit,
+            onOpenURL: onOpenURL,
+            onOpenImage: onOpenImage,
+            onOpenSettings: onOpenSettings,
+            onSelectRoot: onSelectRoot,
+            onCompose: onCompose
+        )
+    }
+
+    public init(
+        root: Root,
+        account: MissCatProfileAccount,
+        palette: MissCatVisualPalette = .legacyLight,
+        shellOwnership: MissCatProfileShellOwnership = .profileFamily,
+        repositoryFactory: @escaping (MissCatProfileAccount) -> MissCatProfileRepository = {
+            MissCatRESTProfileRepository(account: $0)
+        },
+        actions: MissCatProfileFamilyActions
+    ) {
+        self.root = root
+        self.account = account
+        self.palette = palette
+        self.shellOwnership = shellOwnership
+        self.repositoryFactory = repositoryFactory
+        self.actions = actions
     }
 
     public var body: some View {
@@ -113,24 +161,30 @@ public struct MissCatProfileFamilyView: View {
             ),
             palette: palette,
             repositoryFactory: repositoryFactory,
+            showsBack: MissCatProfileNavigationState.showsBack(
+                isRoot: isRoot,
+                userID: userID,
+                accountUserID: account.userID
+            ),
             onBack: {
                 if isRoot || path.isEmpty {
-                    onExit()
+                    actions.onExit()
                 } else {
                     path.removeLast()
                 }
             },
-            onOpenURL: onOpenURL,
-            onOpenImage: onOpenImage,
+            onOpenURL: actions.onOpenURL,
+            onOpenImage: actions.onOpenImage,
             onSelectUser: { path.append(.profile(userID: $0)) },
             onOpenUserList: { path.append(.userList($0)) },
             onEditProfile: { profile in
                 editRequestCount += 1
                 path.append(.editProfile(profile))
             },
-            onOpenSettings: onOpenSettings,
-            onSelectRoot: onSelectRoot,
-            onCompose: onCompose
+            onOpenSettings: actions.onOpenSettings,
+            onSelectRoot: actions.onSelectRoot,
+            onCompose: actions.onCompose,
+            showsBottomBar: shellOwnership == .profileFamily
         )
         .id("profile-\(userID)-\(profileRevision[userID, default: 0])")
         .toolbar(.hidden, for: .navigationBar)
@@ -212,6 +266,10 @@ public struct MissCatProfileNavigationState: Equatable, Sendable {
     public private(set) var path: [MissCatProfileFamilyView.Destination] = []
 
     public init() {}
+
+    public static func showsBack(isRoot: Bool, userID: String, accountUserID: String) -> Bool {
+        !isRoot || userID != accountUserID
+    }
 
     public mutating func openProfile(_ userID: String) {
         guard !userID.isEmpty else { return }

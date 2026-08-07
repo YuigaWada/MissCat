@@ -150,7 +150,15 @@ class HomeViewController: PolioPagerViewController {
         setTheme()
         
         super.viewDidLoad()
+#if DEBUG
+        if MissCatProfileOrdinaryRouteConfiguration.isEnabled {
+            MissCatProfileOrdinaryRouteConfiguration.installActionMarker(in: view)
+        } else {
+            searchBar.isHidden = true
+        }
+#else
         searchBar.isHidden = true
+#endif
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -170,7 +178,8 @@ class HomeViewController: PolioPagerViewController {
         
         setupFooterTab()
 #if DEBUG
-        if !MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
+        if !MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled
+            && !MissCatProfileOrdinaryRouteConfiguration.isEnabled {
             loadingBanner()
         }
 #else
@@ -242,7 +251,13 @@ class HomeViewController: PolioPagerViewController {
     
     private func setupPolioPager() {
         needSearchTab = false
+#if DEBUG
+        initialIndex = MissCatProfileOrdinaryRouteConfiguration.isEnabled
+            ? 0
+            : (tabs.isEmpty ? 0 : 1)
+#else
         initialIndex = tabs.isEmpty ? 0 : 1
+#endif
         needBorder = true
         selectedBarHeight = 2
         selectedBar.layer.cornerRadius = 2
@@ -327,6 +342,11 @@ class HomeViewController: PolioPagerViewController {
             currentInstance = MissCatDiscoveryOrdinaryRouteConfiguration.session.instance
             return
         }
+        if MissCatProfileOrdinaryRouteConfiguration.isEnabled {
+            logined = true
+            currentInstance = MissCatProfileOrdinaryRouteConfiguration.account.instance
+            return
+        }
 #endif
         guard let currentUser = Cache.UserDefaults.shared.getCurrentUser(),
               let apiKey = currentUser.apiKey,
@@ -358,6 +378,12 @@ class HomeViewController: PolioPagerViewController {
     
     private func setupFooterTab() {
         footerTab.frame = getFooterTabSize(height: footerTabHeight)
+        footerTab.accessibilityIdentifier = "main.bottom-bar"
+        footerTab.homeButton.accessibilityIdentifier = "main.tab.home"
+        footerTab.notificationButton.accessibilityIdentifier = "main.tab.notifications"
+        footerTab.postButton.accessibilityIdentifier = "main.action.compose"
+        footerTab.favButton.accessibilityIdentifier = "main.tab.messages"
+        footerTab.profileButton.accessibilityIdentifier = "main.tab.profile"
         view.addSubview(footerTab)
         
         footerTab.delegate = self
@@ -493,6 +519,16 @@ class HomeViewController: PolioPagerViewController {
     
     private func generateDiscoveryVC() -> UIViewController {
         if let discoveryViewController { return discoveryViewController }
+#if DEBUG
+        if MissCatProfileOrdinaryRouteConfiguration.isEnabled {
+            guard let controller = getViewController(name: "search") as? SearchViewController
+            else { fatalError("Internal Error.") }
+            controller.homeViewController = self
+            controller.view.backgroundColor = .clear
+            discoveryViewController = controller
+            return controller
+        }
+#endif
         let controller = MissCatDiscoveryPageFactory.makeController(
             owner: Cache.UserDefaults.shared.getCurrentUser()
         )

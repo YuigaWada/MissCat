@@ -41,6 +41,37 @@ final class MissCatProfileNavigationAcceptanceTests: XCTestCase {
         XCTAssertTrue(state.path.isEmpty)
     }
 
+    func testBackVisibilityDependsOnRouteNestingRatherThanProfileOwnership() {
+        XCTAssertFalse(
+            MissCatProfileNavigationState.showsBack(
+                isRoot: true,
+                userID: "fixture-self",
+                accountUserID: "fixture-self"
+            )
+        )
+        XCTAssertTrue(
+            MissCatProfileNavigationState.showsBack(
+                isRoot: false,
+                userID: "fixture-self",
+                accountUserID: "fixture-self"
+            )
+        )
+        XCTAssertTrue(
+            MissCatProfileNavigationState.showsBack(
+                isRoot: true,
+                userID: "fixture-target",
+                accountUserID: "fixture-self"
+            )
+        )
+        XCTAssertTrue(
+            MissCatProfileNavigationState.showsBack(
+                isRoot: false,
+                userID: "fixture-target",
+                accountUserID: "fixture-self"
+            )
+        )
+    }
+
     func testEveryLoginProfileFixtureRouteIsExplicitAndCredentialFree() {
         XCTAssertEqual(
             MissCatLoginProfileFixtureRoute.parse([
@@ -54,9 +85,152 @@ final class MissCatProfileNavigationAcceptanceTests: XCTestCase {
                 "MissCat", "--login-profile-fixture", "--login-profile-profile",
                 "--login-profile-unfollow-error", "--login-profile-edit-error"
             ]),
-            .profile(failUnfollowOnce: true, failEditOnce: true)
+            .profile(
+                failUnfollowOnce: true,
+                failEditOnce: true,
+                startsAtSelfProfile: false,
+                usesOuterShell: false
+            )
+        )
+        XCTAssertEqual(
+            MissCatLoginProfileFixtureRoute.parse([
+                "MissCat", "--login-profile-fixture", "--login-profile-profile",
+                "--login-profile-root-self"
+            ]),
+            .profile(
+                failUnfollowOnce: false,
+                failEditOnce: false,
+                startsAtSelfProfile: true,
+                usesOuterShell: false
+            )
+        )
+        XCTAssertEqual(
+            MissCatLoginProfileFixtureRoute.parse([
+                "MissCat", "--login-profile-fixture", "--login-profile-profile",
+                "--login-profile-ordinary-shell"
+            ]),
+            .profile(
+                failUnfollowOnce: false,
+                failEditOnce: false,
+                startsAtSelfProfile: false,
+                usesOuterShell: true
+            )
         )
         XCTAssertNil(MissCatLoginProfileFixtureRoute.parse(["MissCat"]))
+    }
+}
+
+@MainActor
+final class MissCatProfileBridgeWiringTests: XCTestCase {
+    func testProductionActionsForwardEveryProfileCallback() throws {
+        let owner = SecureUser(
+            userId: "fixture-self",
+            username: "fixture-owner",
+            instance: "fixture.invalid",
+            apiKey: "fixture-token-not-a-secret"
+        )
+        let router = ProfileHomeRouterSpy()
+        let actions = MissCatProfileBridge.productionActions(owner: owner, router: router)
+
+        actions.onExit()
+        actions.onOpenURL(try XCTUnwrap(URL(string: "misscat://user/@alice@remote.invalid")))
+        actions.onOpenURL(try XCTUnwrap(URL(string: "misscat://hashtag/SwiftUI")))
+        actions.onOpenURL(try XCTUnwrap(URL(string: "https://example.invalid/path")))
+        actions.onOpenImage(try XCTUnwrap(URL(string: "https://example.invalid/image.png")))
+        actions.onOpenSettings()
+        MissCatRootSection.allCases.forEach(actions.onSelectRoot)
+        actions.onCompose()
+
+        XCTAssertEqual(
+            router.events,
+            [
+                "exit",
+                "user:@alice@remote.invalid",
+                "hashtag:SwiftUI",
+                "url:https://example.invalid/path",
+                "image:https://example.invalid/image.png",
+                "settings",
+                "root:home",
+                "root:notifications",
+                "root:messages",
+                "root:profile",
+                "compose"
+            ]
+        )
+        XCTAssertTrue(router.openedUserOwner === owner)
+    }
+
+    func testExplicitShellOwnershipKeepsExactlyOneFooterOwner() {
+        let account = MissCatProfileAccount(
+            userID: "fixture-self",
+            instance: "fixture.invalid",
+            token: "fixture-token-not-a-secret"
+        )
+        let repository = MissCatProfileFixtureRepository(
+            account: account,
+            failUnfollowOnce: false,
+            failEditOnce: false
+        )
+        let actions = MissCatProfileFamilyActions()
+
+        let searchController = MissCatProfileBridge.makeFamilyController(
+            root: .searchResults(query: "fixture"),
+            account: account,
+            palette: .legacyLight,
+            shellOwnership: .outerShell,
+            repositoryFactory: { _ in repository },
+            actions: actions
+        )
+        let rootProfileController = MissCatProfileBridge.makeFamilyController(
+            root: .profile(userID: account.userID),
+            account: account,
+            palette: .legacyLight,
+            shellOwnership: .profileFamily,
+            repositoryFactory: { _ in repository },
+            actions: actions
+        )
+
+        XCTAssertEqual(searchController.rootView.shellOwnership, .outerShell)
+        XCTAssertEqual(rootProfileController.rootView.shellOwnership, .profileFamily)
+    }
+}
+
+@MainActor
+private final class ProfileHomeRouterSpy: MissCatProfileHomeRouting {
+    private(set) var events: [String] = []
+    private(set) weak var openedUserOwner: SecureUser?
+
+    func missCatProfileExit() {
+        events.append("exit")
+    }
+
+    func missCatProfileOpenUser(username: String, owner: SecureUser) {
+        events.append("user:\(username)")
+        openedUserOwner = owner
+    }
+
+    func missCatProfileOpenHashtag(_ hashtag: String) {
+        events.append("hashtag:\(hashtag)")
+    }
+
+    func missCatProfileOpenExternalURL(_ url: String) {
+        events.append("url:\(url)")
+    }
+
+    func missCatProfileOpenImage(_ url: URL) {
+        events.append("image:\(url.absoluteString)")
+    }
+
+    func missCatProfileOpenSettings() {
+        events.append("settings")
+    }
+
+    func missCatProfileSelectRoot(_ section: MissCatRootSection) {
+        events.append("root:\(section.rawValue)")
+    }
+
+    func missCatProfileCompose() {
+        events.append("compose")
     }
 }
 
