@@ -77,6 +77,141 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         XCTAssertEqual(note.poll?.choices.first?.votes, 3)
     }
 
+    func testTimelineSynthesizesCanonicalEmojiURLsWhenModernPayloadOmitsEmojiMaps() async throws {
+        FeedURLProtocolStub.handler = { request in
+            var local = Self.noteJSON(id: "note-local")
+            local["text"] = "Hello :party:"
+            local["cw"] = "CW :warning:"
+            local["emojis"] = NSNull()
+            local["reactionEmojis"] = NSNull()
+            local["reactions"] = [":party:": 2, ":wave@remote.example:": 1]
+            var user = try XCTUnwrap(local["user"] as? [String: Any])
+            user["name"] = "Alice :verified:"
+            user["emojis"] = NSNull()
+            local["user"] = user
+            return Self.response(for: request, json: [local])
+        }
+
+        let note = try XCTUnwrap(
+            try await makeSubject().fetchPage(source: .home, cursor: nil, limit: 20).notes.first
+        )
+
+        XCTAssertEqual(note.emojis["party"], URL(string: "https://example.invalid/emoji/party.webp"))
+        XCTAssertEqual(note.emojis["warning"], URL(string: "https://example.invalid/emoji/warning.webp"))
+        XCTAssertEqual(
+            note.author.emojis["verified"],
+            URL(string: "https://example.invalid/emoji/verified.webp")
+        )
+        XCTAssertEqual(
+            note.reactions.first(where: { $0.name == ":party:" })?.emojiURL,
+            URL(string: "https://example.invalid/emoji/party.webp")
+        )
+        XCTAssertEqual(
+            note.reactions.first(where: { $0.name == ":wave@remote.example:" })?.emojiURL,
+            URL(string: "https://example.invalid/emoji/wave@remote.example.webp")
+        )
+    }
+
+    func testRemoteTimelineSynthesizesAuthorScopedEmojiURLsForNamesBodyAndQuote() async throws {
+        FeedURLProtocolStub.handler = { request in
+            var remote = Self.noteJSON(id: "note-remote")
+            remote["text"] = "Remote :party:"
+            remote["cw"] = NSNull()
+            remote["emojis"] = NSNull()
+            remote["reactionEmojis"] = NSNull()
+            var remoteUser = try XCTUnwrap(remote["user"] as? [String: Any])
+            remoteUser["name"] = "Remote :verified:"
+            remoteUser["host"] = "remote.example"
+            remoteUser["emojis"] = NSNull()
+            remote["user"] = remoteUser
+
+            var quote = Self.noteJSON(id: "quoted-remote")
+            quote["text"] = "Quoted :quote:"
+            quote["emojis"] = NSNull()
+            var quoteUser = try XCTUnwrap(quote["user"] as? [String: Any])
+            quoteUser["name"] = "Quoted :badge:"
+            quoteUser["host"] = "quote.example"
+            quoteUser["emojis"] = NSNull()
+            quote["user"] = quoteUser
+            remote["renote"] = quote
+            return Self.response(for: request, json: [remote])
+        }
+
+        let note = try XCTUnwrap(
+            try await makeSubject().fetchPage(source: .home, cursor: nil, limit: 20).notes.first
+        )
+
+        XCTAssertEqual(
+            note.emojis["party"],
+            URL(string: "https://example.invalid/emoji/party@remote.example.webp")
+        )
+        XCTAssertEqual(
+            note.author.emojis["verified"],
+            URL(string: "https://example.invalid/emoji/verified@remote.example.webp")
+        )
+        XCTAssertEqual(
+            note.quotedNote?.emojis["quote"],
+            URL(string: "https://example.invalid/emoji/quote@quote.example.webp")
+        )
+        XCTAssertEqual(
+            note.quotedNote?.author.emojis["badge"],
+            URL(string: "https://example.invalid/emoji/badge@quote.example.webp")
+        )
+    }
+
+    func testReactionChoicesUseEmojiEndpointImagesAndExcludeRoleRestrictedEntries() async throws {
+        var requestedPaths: [String] = []
+        FeedURLProtocolStub.handler = { request in
+            requestedPaths.append(try XCTUnwrap(request.url?.path))
+            switch request.url?.path {
+            case "/api/emojis":
+                return Self.response(for: request, json: [
+                    "emojis": [
+                        [
+                            "name": "open",
+                            "aliases": ["everyone"],
+                            "category": "General",
+                            "url": "https://cdn.example/open.webp",
+                        ],
+                        [
+                            "name": "member",
+                            "aliases": [],
+                            "category": "Role",
+                            "url": "https://cdn.example/member.webp",
+                            "roleIdsThatCanBeUsedThisEmojiAsReaction": ["role-member"],
+                        ],
+                        [
+                            "name": "admin",
+                            "aliases": [],
+                            "category": "Role",
+                            "url": "https://cdn.example/admin.webp",
+                            "roleIdsThatCanBeUsedThisEmojiAsReaction": ["role-admin"],
+                        ],
+                    ],
+                ])
+            case "/api/i":
+                return Self.response(for: request, json: [
+                    "id": "me",
+                    "username": "alice",
+                    "roles": [["id": "role-member"]],
+                ])
+            default:
+                XCTFail("Unexpected endpoint: \(request.url?.path ?? "nil")")
+                return Self.response(for: request, status: 404, json: [:])
+            }
+        }
+
+        let choices = try await makeSubject().fetchReactionChoices()
+
+        XCTAssertEqual(Set(requestedPaths), Set(["/api/emojis", "/api/i"]))
+        XCTAssertEqual(choices.map(\.value), [":member:", ":open:"])
+        XCTAssertEqual(
+            choices.first(where: { $0.value == ":open:" })?.emojiURL,
+            URL(string: "https://cdn.example/open.webp")
+        )
+        XCTAssertFalse(choices.contains(where: { $0.value == ":admin:" }))
+    }
+
     func testSearchAndHashtagUseCurrentRequestShapes() async throws {
         var requests: [URLRequest] = []
         FeedURLProtocolStub.handler = { request in
