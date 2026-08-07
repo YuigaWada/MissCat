@@ -597,7 +597,6 @@ public enum MissCatNoteOverflowAction: Equatable, Sendable {
     case copyLink
     case share
     case openInBrowser
-    case share
     case favorite
     case unfavorite
     case muteUser

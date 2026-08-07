@@ -607,14 +607,16 @@ public struct MissCatNoteRow: View {
     }
 
     private var overflowMenu: some View {
-        Button { showsOverflowActions = true } label: {
-            Text(note.isFavorite ? "\u{f005}" : "\u{f141}")
-                .font(.custom("FontAwesome5Free-Solid", size: 15))
-                .frame(width: 30, height: 40)
-        }
-        .buttonStyle(.plain)
+        AnyView(
+            Button { showsOverflowActions = true } label: {
+                Text(note.isFavorite ? "\u{f005}" : "\u{f141}")
+                    .font(.custom("FontAwesome5Free-Solid", size: 15))
+                    .frame(width: 30, height: 40)
+            }
+            .accessibilityIdentifier("note.\(note.id).action.overflow")
+            .buttonStyle(.plain)
+        )
         .accessibilityLabel("その他")
-        .accessibilityIdentifier("note.\(note.id).action.overflow")
         .fullScreenCover(isPresented: $showsOverflowActions) {
             MissCatNoteOverflowPanel(
                 note: note,
