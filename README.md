@@ -41,13 +41,9 @@ MissCatのミッションは以下の<u>5つ</u>です。
 
 Misskeyにはカスタム絵文字というモノが存在します。
 
-一般に、複数行の文字列表示にはUITextViewを使いますが、純正のUITextViewが対応しているのは静止画(UIImage)の挿入のみで、GIFアニメやAPNGといったアニメーション画像を挿入することはできません。また、非同期で取得した画像を挿入することもできません。
-
-そこで、UITextViewをベースに、任意のUIViewを挿入することができる[YanagiText](https://github.com/YuigaWada/YanagiText)というライブラリを作りました。
-
-MissCatではこの[YanagiText](https://github.com/YuigaWada/YanagiText)がカスタム絵文字を支える大きな基盤となっています。
-
-また、APNGの表示は[APNGKit](https://github.com/onevcat/APNGKit), アニメGIFの表示は[Gifu](https://github.com/kaishin/Gifu)を利用しています。
+現在のMissCatはSwiftUIの`Text`とネイティブ画像デコーダーで、静止画・GIF・APNGの
+カスタム絵文字をインライン表示します。旧`UITextView`/`UIView`基盤、YanagiText、
+APNGKit、Gifuには依存していません。
 
 
 
@@ -56,26 +52,24 @@ MissCatではこの[YanagiText](https://github.com/YuigaWada/YanagiText)がカ�
 
 Misskeyでは、独自の構文MFMを用いることで文章の修飾をすることができます。([参照](https://join.misskey.page/ja/wiki/usage/mfm))
 
-MissCatでは、Foundationの[NSAttributedString](https://developer.apple.com/documentation/foundation/nsattributedstring)を利用することで一部のMFMに対応しています。
+MissCatではFoundationでMFMを構文解析し、SwiftUIの`Text`へ直接変換します。
+WebViewやUIKitのテキストビューを介さず、リンク、メンション、ハッシュタグ、装飾、
+コード、カスタム絵文字を表示します。
 
 <br><br>
 
 ### 通知
-MissCatはWeb版のMisskeyと同じように、WebPushと呼ばれる技術を利用して通知システムを構築しています。
-
-<br>
-
-Web版Misskeyは[`'sw/register'`](https://misskey.io/api-doc#operation/sw/register)というエンドポイントを叩き、イベントが発生した際に通知がブラウザにPushされるよう登録します。
-
-MissCatでは、この仕組みを利用して、Misskey側で発火した通知イベントを、そのままサーバーへ送るよう[`'sw/register'`](https://misskey.io/api-doc#operation/sw/register)へ登録します。サーバー側は暗号化された通知メッセージを受け取ると、メッセージを復号して、適切なフォーマットに変換し、Firebaseへ投げることで各端末に通知を届けます。
-
-※WebPushはprime256v1と言う楕円曲線暗号を元にメッセージが暗号化されているため、サーバーで通知メッセージを受け取った後、適切なカタチで復号してあげる必要があります。そこで、通知の実装にあたり、サーバー側で通知メッセージを復号するモジュールを作りました。[webPushDecipher.js](https://github.com/YuigaWada/MissCat/blob/develop/ApiServer/webPushDecipher.js)
+アプリ内の通知一覧は、アカウント単位のMisskey APIとストリームをSwift Concurrencyで
+処理します。旧Node/Firebaseリレーと、その認証情報・テスト用トークンは削除しました。
+リモートPush通知は現在の移行範囲では明示的に保留しており、将来はFirebaseを前提とせず、
+レビュー済みのAPNsアーキテクチャとして別途実装します。
 
 <br><br>
 
 ### タブ
 
-上タブは私の作った[PolioPager](https://github.com/YuigaWada/PolioPager)というライブラリを使っています。
+上タブとページ選択はSwiftUIで実装され、タップと横スワイプが同一の選択状態へ同期します。
+旧PolioPagerには依存していません。
 
 <br><br>
 ## Others

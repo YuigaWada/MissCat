@@ -77,6 +77,16 @@ Dir.mktmpdir("misscat-legacy-resource-") do |directory|
   abort "background mode diagnostic absent" unless stderr.include?("retired Info.plist capability remains")
   File.write(root.join("MissCat/Info.plist"), plist(fonts: fonts))
 
+  retired_server = root.join("ApiServer/notification.js")
+  FileUtils.mkdir_p(retired_server.dirname)
+  File.write(retired_server, "retired relay")
+  system("/usr/bin/git", "-C", root.to_s, "add", retired_server.to_s, exception: true)
+  _, stderr, status = run_verifier(verifier, root)
+  abort "retired ApiServer unexpectedly passed" if status.success?
+  abort "ApiServer diagnostic absent" unless stderr.include?("retired ApiServer material is still tracked")
+  FileUtils.rm_rf(root.join("ApiServer"))
+  system("/usr/bin/git", "-C", root.to_s, "add", "-u", exception: true)
+
   brand = "MissCat/Resources/Font Awesome 5 Brands-Regular-400.otf"
   File.binwrite(root.join(brand), "5.9.0")
   system("/usr/bin/git", "-C", root.to_s, "add", brand, exception: true)

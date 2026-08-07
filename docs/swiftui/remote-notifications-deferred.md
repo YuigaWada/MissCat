@@ -4,7 +4,11 @@ Remote push transport and the in-app push banner are intentionally out of scope
 for this revision. The app ships no dormant implementation: there is no
 `UIApplicationDelegateAdaptor`, application delegate, APNs registration,
 Firebase/FCM dependency, messaging delegate, push mailbox, push resolver, or
-push-banner state.
+push-banner state. The retired `ApiServer` Node/Firebase relay, including its
+credential-shaped and device-token fixtures, is absent from the current tree.
+External credential rotation and repository-history remediation are still
+required operational follow-ups; deleting the working-tree files does not
+invalidate previously issued credentials.
 
 This does not remove the ordinary Notifications feature. Surface 33 continues
 to fetch `i/notifications`, consume account-scoped realtime notification events,

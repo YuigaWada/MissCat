@@ -97,14 +97,12 @@
       "rationale": "Eleven protected legacy visual baselines; never delete as application cache."
     }
   ],
-  "excluded_sensitive_paths": [
+  "retired_sensitive_roots": [
     {
-      "path": "ApiServer/key",
-      "rationale": "Credential-shaped tracked legacy material was not opened, modified, copied, or deleted; security remediation requires separate authority and history rotation."
-    },
-    {
-      "path": "ApiServer/test",
-      "rationale": "Credential-shaped tracked legacy fixtures were not opened, modified, copied, or deleted; security remediation requires separate authority and history rotation."
+      "path": "ApiServer",
+      "tracked_at_audit": true,
+      "runtime_references": [],
+      "rationale": "The retired Node/Firebase relay, credential-shaped key files, device-token fixtures, payload logging, and relay tests were not referenced by any current app or Xcode target and have been removed from the working tree. External credential rotation and repository-history remediation remain separate operational requirements."
     }
   ]
 }

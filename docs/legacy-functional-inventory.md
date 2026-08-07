@@ -4,7 +4,7 @@
 
 This is the migration baseline for replacing the UIKit application and share extension with SwiftUI. It distinguishes implemented behavior from dead, partial, or broken legacy paths so that “all functions work” does not accidentally mean reproducing a known defect.
 
-The inventory is based on the checked-in source, `MissCat/View/Base.lproj/Main.storyboard`, `MissCatShare/Base.lproj/MainInterface.storyboard`, all XIBs under `MissCat/View`, `Podfile.lock`, target plists/entitlements, the Node push relay under `ApiServer`, and the eleven historic simulator captures under `images/ScreenShot`. No backend, account, or live Misskey instance was invoked during this audit. Secret/key file contents were deliberately not read or reproduced.
+The inventory was originally based on the legacy source, `MissCat/View/Base.lproj/Main.storyboard`, `MissCatShare/Base.lproj/MainInterface.storyboard`, all XIBs under `MissCat/View`, `Podfile.lock`, target plists/entitlements, the former Node push relay under `ApiServer`, and the eleven historic simulator captures under `images/ScreenShot`. No backend, account, or live Misskey instance was invoked during this audit. Secret/key file contents were deliberately not read or reproduced. The retired `ApiServer` tree has since been removed from the migration branch; its description below remains historical input rather than current shipping architecture.
 
 The historic screenshots are:
 
@@ -142,7 +142,7 @@ All calls below must be represented by protocols and deterministic test doubles 
 | Image/user/preview cache | In-memory `NSCache`; remote custom emoji data may be persisted under Application Support using URL hash | `Cache.swift`; `MFMImageView.swift`; persistence existence check mixes URL string/path and needs correction |
 | Badge/notification | Badge cleared on foreground; latest notification ID stored | `AppDelegate.swift`; `NotificationModel.swift` |
 
-API tokens, Firebase credentials, WebPush private material, and test device tokens must never enter defaults, fixtures, screenshots, documentation, or commits. The repository currently contains credential-shaped files under `ApiServer/key` and `ApiServer/test`; their contents were not inspected. Rotate/remove from history and replace with environment/secret-manager inputs as a separate security gate.
+API tokens, Firebase credentials, WebPush private material, and test device tokens must never enter defaults, fixtures, screenshots, documentation, or new commits. Credential-shaped files formerly tracked under `ApiServer/key` and `ApiServer/test` were removed from the current tree without inspecting or reproducing their contents. Any issued credentials must still be rotated, and repository-history remediation remains a separate security gate.
 
 ## Share extension: intended contract and legacy failures
 

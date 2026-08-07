@@ -45,6 +45,15 @@ expected_manifest_paths = Set.new([
 ])
 errors << "resource audit manifest candidate set differs" unless manifest_paths == expected_manifest_paths
 
+retired_sensitive_roots = Array(manifest["retired_sensitive_roots"]).map { |entry| entry["path"] }.to_set
+expected_sensitive_roots = Set.new(["ApiServer"])
+errors << "retired sensitive root set differs" unless retired_sensitive_roots == expected_sensitive_roots
+tracked_api_server = tracked.grep(%r{\AApiServer(?:/|\z)})
+unless tracked_api_server.empty?
+  errors << "retired ApiServer material is still tracked: #{tracked_api_server.sort.join(', ')}"
+end
+errors << "retired ApiServer directory still exists" if root.join("ApiServer").exist?
+
 brand_path = "MissCat/Resources/Font Awesome 5 Brands-Regular-400.otf"
 brand_name = File.basename(brand_path)
 errors << "unused Brands font is still tracked" if tracked.include?(brand_path)
@@ -87,4 +96,4 @@ unless errors.empty?
   exit 1
 end
 
-puts "Legacy resource boundary verified: removed=5 retained_fonts=2 protected_screenshots=11 settings_fixtures=4"
+puts "Legacy resource boundary verified: removed=5 retired_sensitive_roots=1 retained_fonts=2 protected_screenshots=11 settings_fixtures=4"
