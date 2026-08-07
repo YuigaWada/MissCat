@@ -78,12 +78,59 @@ final class MissCatShellFeedUITests: XCTestCase {
         swipeProductionPagerLeft()
         waitForProductionPagerSelection("global")
 
+        app.buttons["main.header.account"].tap()
+        app.buttons["main.account.https://fixture.example|fixture-cat"].tap()
+        waitForProductionReady(page: "home")
+        waitForAccount("https://fixture.example|fixture-cat")
+
+        let persistedAccount = element("production.root.persisted-account")
+        XCTAssertTrue(persistedAccount.waitForExistence(timeout: 5))
+        let persistedAccountBeforeCompose = persistedAccount.value as? String
+        XCTAssertFalse(persistedAccountBeforeCompose?.isEmpty ?? true)
+        let secondaryComposeAccountID =
+            "misscat-account-v2:c29jaWFsLmV4YW1wbGU=:Zml4dHVyZS1jYXQ="
+
         app.buttons["main.action.compose"].tap()
         XCTAssertTrue(app.buttons["compose.cancel"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.alerts["エラー"].exists)
+        app.buttons["compose.account"].tap()
+        XCTAssertTrue(element("compose.account.screen").waitForExistence(timeout: 5))
+        let composeAccounts = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "compose.account.misscat-account-v2:")
+        )
+        XCTAssertEqual(
+            composeAccounts.count,
+            2,
+            "Production Compose must preserve every root-authorized account"
+        )
+        app.buttons["compose.account.\(secondaryComposeAccountID)"].tap()
         app.buttons["compose.cancel"].tap()
         XCTAssertTrue(element("production.root").waitForExistence(timeout: 5))
         XCTAssertFalse(app.alerts["エラー"].exists)
+        XCTAssertEqual(persistedAccount.value as? String, persistedAccountBeforeCompose)
+        XCTAssertEqual(
+            element("production.root.compose-selection-request").value as? String,
+            secondaryComposeAccountID
+        )
+        waitForAccount("https://fixture.example|fixture-cat")
+
+        app.buttons["main.action.compose"].tap()
+        XCTAssertTrue(app.buttons["compose.cancel"].waitForExistence(timeout: 5))
+        app.buttons["compose.account"].tap()
+        XCTAssertTrue(element("compose.account.screen").waitForExistence(timeout: 5))
+        app.buttons["compose.account.\(secondaryComposeAccountID)"].tap()
+        let composeText = app.textViews["compose.text"]
+        XCTAssertTrue(composeText.waitForExistence(timeout: 5))
+        composeText.tap()
+        composeText.typeText("production scope isolation")
+        app.buttons["compose.submit"].tap()
+        XCTAssertTrue(element("production.root").waitForExistence(timeout: 10))
+        XCTAssertEqual(persistedAccount.value as? String, persistedAccountBeforeCompose)
+        XCTAssertEqual(
+            element("production.root.compose-submission-account").value as? String,
+            secondaryComposeAccountID
+        )
+        waitForAccount("https://fixture.example|fixture-cat")
 
         app.buttons["main.tab.messages"].tap()
         XCTAssertTrue(element("messages.history.screen").waitForExistence(timeout: 5))

@@ -94,6 +94,29 @@ final class MissCatProductionRootCutoverTests: XCTestCase {
         XCTAssertFalse(source.contains("rootViewController"))
     }
 
+    func testProductionComposeUsesRootBoundAuthorizedScopesInsteadOfGlobalAccountSelection() throws {
+        let root = try source(
+            named: "SwiftUI/ApplicationRoot/MissCatProductionApplicationRootView.swift"
+        )
+        let compose = try source(named: "SwiftUI/Compose/MissCatComposeService.swift")
+        let support = try source(
+            named: "SwiftUI/ApplicationRoot/MissCatProductionApplicationSupport.swift"
+        )
+
+        XCTAssertTrue(root.contains("session: composeSession"))
+        XCTAssertTrue(root.contains("MissCatComposeProductionSession("))
+        XCTAssertTrue(root.contains("session.accounts.compactMap"))
+        XCTAssertTrue(root.contains("visibilityPersistence: coordinator.persistComposeVisibility"))
+        XCTAssertFalse(root.contains("return MissCatComposeFactory.makeViewModel(mode: mode)"))
+        XCTAssertTrue(compose.contains("scopesByAccountID"))
+        XCTAssertTrue(compose.contains("injectedScopes[submission.accountID]"))
+        XCTAssertFalse(compose.contains("cache.changeCurrentUser"))
+        XCTAssertTrue(support.contains("persistedAccountID"))
+        XCTAssertTrue(support.contains("recordComposeSubmissionScope"))
+        XCTAssertFalse(support.contains("MissCatProductionRootE2EComposePosting"))
+        XCTAssertFalse(support.contains("func persistSelectedAccount(id: String) {}"))
+    }
+
     private func source(named relativePath: String) throws -> String {
         return try String(
             contentsOf: repositoryRoot.appendingPathComponent("MissCat/\(relativePath)"),

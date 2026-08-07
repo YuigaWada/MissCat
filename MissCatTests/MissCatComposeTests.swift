@@ -1298,6 +1298,130 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
 }
 
 @MainActor
+final class MissCatComposeAccountIsolationTests: XCTestCase {
+    func testEnvironmentSelectionCannotMutatePersistedCurrentAccount() throws {
+        let suiteName = "yuwd.MissCatTests.ComposeIsolation.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let cache = Cache.UserDefaults(
+            userDefaults: defaults,
+            apiKeyStore: ComposeIsolationAPIKeyStore()
+        )
+        let primary = SecureUser(
+            userId: "primary-user",
+            username: "primary",
+            instance: "primary.example",
+            apiKey: "primary-token"
+        )
+        let secondary = SecureUser(
+            userId: "secondary-user",
+            username: "secondary",
+            instance: "secondary.example",
+            apiKey: "secondary-token"
+        )
+        let primaryID = primary.accountIdentifier
+        let secondaryID = secondary.accountIdentifier
+        XCTAssertTrue(cache.saveUser(primary))
+        XCTAssertTrue(cache.saveUser(secondary))
+        XCTAssertTrue(cache.changeCurrentUser(userId: primaryID))
+
+        MissCatComposeEnvironmentStore(cache: cache).persistSelectedAccount(id: secondaryID)
+
+        XCTAssertEqual(cache.getCurrentUserId(), primaryID)
+        XCTAssertEqual(cache.getCurrentUser()?.accountIdentifier, primaryID)
+    }
+
+    func testProductionFactorySwitchesOnlyWithinImmutableAuthorizedScopes() async throws {
+        let primary = try MissCatComposeProductionSession.Authorization(
+            accountID: "primary-account",
+            username: "primary",
+            instance: "primary.example",
+            accessToken: "primary-token"
+        )
+        let secondary = try MissCatComposeProductionSession.Authorization(
+            accountID: "secondary-account",
+            username: "secondary",
+            instance: "secondary.example",
+            accessToken: "secondary-token"
+        )
+        let session = try MissCatComposeProductionSession(
+            authorizations: [primary, secondary],
+            selectedAccountID: "primary-account",
+            visibility: .followers
+        )
+        var selectionRequests: [String] = []
+        var visibilityRequests: [(String, MissCatComposeVisibility)] = []
+        var submissionScopes: [String] = []
+        let transport = SuccessfulComposeHTTPTransport()
+        let viewModel = MissCatComposeFactory.makeViewModel(
+            mode: .note,
+            session: session,
+            accountSelectionObserver: { selectionRequests.append($0) },
+            visibilityPersistence: { visibilityRequests.append(($0, $1)) },
+            transport: transport,
+            scopeSelectionObserver: { submissionScopes.append($0) }
+        )
+
+        await viewModel.load()
+        viewModel.selectAccount("off-session-account")
+
+        XCTAssertEqual(viewModel.phase, .ready)
+        XCTAssertEqual(viewModel.accounts.map(\.id), ["primary-account", "secondary-account"])
+        XCTAssertEqual(viewModel.selectedAccountID, "primary-account")
+        XCTAssertTrue(selectionRequests.isEmpty)
+
+        viewModel.selectAccount("secondary-account")
+        XCTAssertEqual(selectionRequests, ["secondary-account"])
+        viewModel.selectVisibility(.home)
+        XCTAssertEqual(visibilityRequests.map(\.0), ["secondary-account"])
+        XCTAssertEqual(visibilityRequests.map(\.1), [.home])
+        viewModel.draft.text = "secondary post"
+        let didSubmit = await viewModel.submit()
+        XCTAssertTrue(didSubmit)
+        XCTAssertEqual(submissionScopes, ["secondary-account"])
+
+        let capturedRequest = await transport.lastRequest()
+        let request = try XCTUnwrap(capturedRequest)
+        XCTAssertEqual(request.url?.host, "secondary.example")
+        let body = try XCTUnwrap(request.httpBody)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertEqual(json["i"] as? String, "secondary-token")
+    }
+
+    func testInjectedPostScopesRejectAnUnauthorizedSubmissionAccount() async throws {
+        let authorization = try MissCatComposeProductionSession.Authorization(
+            accountID: "authorized-account",
+            username: "authorized",
+            instance: "authorized.example",
+            accessToken: "authorized-token"
+        )
+        let transport = SuccessfulComposeHTTPTransport()
+        let service = MissCatComposePostService(
+            scopesByAccountID: [authorization.account.id: authorization.scope],
+            transport: transport,
+            journal: MemoryComposeJournal()
+        )
+        var draft = MissCatComposeDraft()
+        draft.text = "must not leave the device"
+        let submission = try MissCatComposeSubmissionBuilder.build(
+            mode: .note,
+            draft: draft,
+            accountID: "unauthorized-account"
+        )
+
+        do {
+            try await service.submit(submission) { _ in }
+            XCTFail("An account outside the immutable root generation must be rejected")
+        } catch MissCatComposePostService.ServiceError.accountUnavailable {
+            // Expected: no request can be constructed without an injected scope.
+        }
+        let requestCount = await transport.requestCount()
+        XCTAssertEqual(requestCount, 0)
+    }
+}
+
+@MainActor
 final class MissCatComposeViewModelTests: XCTestCase {
     func testLoadUsesCurrentAccountAndSavedVisibility() async {
         let environment = FakeComposeEnvironment(
@@ -1500,6 +1624,42 @@ private final class FakeComposeEnvironment: MissCatComposeEnvironmentProviding {
     func persistVisibility(_ visibility: MissCatComposeVisibility) {
         persistedVisibilities.append(visibility)
     }
+}
+
+private final class ComposeIsolationAPIKeyStore: AccountAPIKeyStoring {
+    private var values: [String: String] = [:]
+
+    func apiKey(for accountID: String) throws -> String? { values[accountID] }
+
+    func setAPIKey(_ apiKey: String, for accountID: String) throws {
+        values[accountID] = apiKey
+    }
+
+    func removeAPIKey(for accountID: String) throws {
+        values.removeValue(forKey: accountID)
+    }
+
+    func allAccountIDs() throws -> [String] { Array(values.keys) }
+}
+
+private actor SuccessfulComposeHTTPTransport: MissCatComposeHTTPTransport {
+    private var request: URLRequest?
+    private var count = 0
+
+    func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        count += 1
+        self.request = request
+        let response = HTTPURLResponse(
+            url: request.url!,
+            statusCode: 200,
+            httpVersion: "HTTP/1.1",
+            headerFields: ["Content-Type": "application/json"]
+        )!
+        return (Data(#"{"createdNote":{"id":"created-note"}}"#.utf8), response)
+    }
+
+    func lastRequest() -> URLRequest? { request }
+    func requestCount() -> Int { count }
 }
 
 @MainActor
