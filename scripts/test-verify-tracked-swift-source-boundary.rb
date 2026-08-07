@@ -26,6 +26,7 @@ class BoundaryFixture
       ],
       "MissCatTests" => ["MissCatTests/BoundaryTests.swift"]
     }
+    @extra_file_references = []
   end
 
   def run
@@ -33,6 +34,7 @@ class BoundaryFixture
     assert_clean_fixture
     assert_unowned_source_is_rejected
     assert_membership_mutation_is_observed
+    assert_dangling_pbx_references_are_rejected
     assert_retired_patterns_are_rejected
     assert_manifest_reappearance_is_rejected
     assert_rx_and_polio_are_rejected
@@ -76,8 +78,14 @@ class BoundaryFixture
       "owned_unique_swift" => 6,
       "unowned_swift" => 0,
       "tracked_ib_artifacts" => 0,
+      "pbx_swift_file_references" => 6,
+      "duplicate_pbx_swift_file_references" => 0,
+      "dangling_pbx_swift_file_references" => 0,
+      "unreferenced_managed_swift" => 0,
+      "pbx_ib_file_references" => 0,
       "retired_reappearances" => 0,
       "retired_pattern_paths" => 0,
+      "retired_pbx_reference_paths" => 0,
       "rx_or_polio_sources" => 0,
       "shipping_uikit_imports" => 3
     }, "clean fixture counts changed")
@@ -88,6 +96,7 @@ class BoundaryFixture
     status, data = verify
     assert(status == 1, "unowned source did not fail")
     assert(data.fetch("unowned_swift") == ["Loose.swift"], "wrong unowned source result")
+    assert(data.fetch("unreferenced_managed_swift") == ["Loose.swift"], "missing PBX reference was not reported")
     untrack("Loose.swift")
   end
 
@@ -105,6 +114,33 @@ class BoundaryFixture
     @memberships.fetch("MissCatTests").delete("MissCatTests/AddedTests.swift")
     write_project
     untrack("MissCatTests/AddedTests.swift")
+  end
+
+  def assert_dangling_pbx_references_are_rejected
+    @extra_file_references << "Retired/Removed.swift"
+    write_project
+    status, data = verify
+    assert(status == 1, "dangling PBX Swift reference did not fail")
+    assert(
+      data.fetch("dangling_pbx_swift_file_references") == ["Retired/Removed.swift"],
+      "dangling PBX Swift reference was not reported"
+    )
+    assert(
+      data.fetch("retired_pbx_reference_paths") == ["Retired/Removed.swift"],
+      "manifest-listed PBX reference was not reported"
+    )
+    @extra_file_references.delete("Retired/Removed.swift")
+
+    @extra_file_references << "MissCat/Legacy.storyboard"
+    write_project
+    status, data = verify
+    assert(status == 1, "dangling PBX storyboard reference did not fail")
+    assert(
+      data.fetch("pbx_ib_file_references") == ["MissCat/Legacy.storyboard"],
+      "PBX storyboard reference was not reported"
+    )
+    @extra_file_references.delete("MissCat/Legacy.storyboard")
+    write_project
   end
 
   def assert_retired_patterns_are_rejected
@@ -168,7 +204,7 @@ class BoundaryFixture
   end
 
   def write_project
-    paths = @memberships.values.flatten.uniq.sort
+    paths = (@memberships.values.flatten + @extra_file_references).uniq.sort
     file_ids = paths.each_with_index.to_h { |path, index| [path, "F#{index + 1}"] }
     build_index = 0
     build_files = []

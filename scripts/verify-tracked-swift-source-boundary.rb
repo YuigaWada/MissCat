@@ -41,8 +41,9 @@ MANAGED_SOURCE_EXCLUDED_COMPONENTS = Set.new(%w[
 IMPORT_PATTERN = /^\s*import\s+([A-Za-z_][A-Za-z0-9_]*)\b/.freeze
 
 class NativeTargetCatalog
-  def initialize(project_path)
+  def initialize(project_path, repository_root)
     @project_path = project_path
+    @repository_root = repository_root
   end
 
   def names
@@ -58,9 +59,30 @@ class NativeTargetCatalog
       .sort
   end
 
+  def file_reference_paths(*extensions)
+    normalized_extensions = extensions.map(&:downcase).to_set
+    parent_by_child = {}
+    objects.each do |identifier, object|
+      next unless %w[PBXGroup PBXVariantGroup].include?(object["isa"])
+
+      Array(object["children"]).each { |child| parent_by_child[child] = identifier }
+    end
+
+    objects.each_with_object([]) do |(identifier, object), paths|
+      next unless object["isa"] == "PBXFileReference"
+
+      raw_path = object["path"] || object["name"]
+      next unless normalized_extensions.include?(File.extname(raw_path.to_s).downcase)
+
+      paths << resolve_file_reference(identifier, object, parent_by_child)
+    end.sort
+  end
+
   private
 
   def objects
+    return @objects if defined?(@objects)
+
     stdout, stderr, status = Open3.capture3(
       "/usr/bin/plutil",
       "-convert",
@@ -74,9 +96,59 @@ class NativeTargetCatalog
       raise VerificationError, "PBX project could not be parsed: #{detail}"
     end
 
-    JSON.parse(stdout).fetch("objects")
+    @objects = JSON.parse(stdout).fetch("objects")
   rescue JSON::ParserError, KeyError => error
     raise VerificationError, "PBX project JSON is invalid: #{error.message}"
+  end
+
+  def resolve_file_reference(identifier, object, parent_by_child)
+    raw_path = object["path"] || object["name"]
+    source_tree = object.fetch("sourceTree", "<group>")
+    candidate = case source_tree
+                when "<group>"
+                  group_base(parent_by_child[identifier], parent_by_child).join(raw_path)
+                when "SOURCE_ROOT"
+                  @repository_root.join(raw_path)
+                when "<absolute>"
+                  Pathname.new(raw_path)
+                else
+                  raise VerificationError,
+                        "unsupported PBX file-reference source tree #{source_tree.inspect} for #{raw_path}"
+                end
+    relative_path(candidate)
+  end
+
+  def group_base(identifier, parent_by_child, visiting = Set.new)
+    return @repository_root unless identifier
+    raise VerificationError, "PBX group hierarchy contains a cycle at #{identifier}" if visiting.include?(identifier)
+
+    visiting = visiting.dup.add(identifier)
+    object = objects.fetch(identifier) do
+      raise VerificationError, "PBX parent group is missing: #{identifier}"
+    end
+    source_tree = object.fetch("sourceTree", "<group>")
+    parent_base = case source_tree
+                  when "<group>"
+                    group_base(parent_by_child[identifier], parent_by_child, visiting)
+                  when "SOURCE_ROOT"
+                    @repository_root
+                  when "<absolute>"
+                    Pathname.new(File::SEPARATOR)
+                  else
+                    raise VerificationError,
+                          "unsupported PBX group source tree #{source_tree.inspect} for #{identifier}"
+                  end
+    raw_path = object["path"]
+    raw_path.to_s.empty? ? parent_base : parent_base.join(raw_path)
+  end
+
+  def relative_path(candidate)
+    expanded = Pathname.new(File.expand_path(candidate.to_s))
+    repository_prefix = @repository_root.to_s + File::SEPARATOR
+    unless expanded.to_s.start_with?(repository_prefix)
+      raise VerificationError, "PBX file reference escapes repository root: #{expanded}"
+    end
+    expanded.relative_path_from(@repository_root).to_s
   end
 end
 
@@ -166,7 +238,10 @@ class TrackedSourceBoundary
     managed_swift, excluded_swift = tracked_swift.partition { |path| managed_source?(path) }
     tracked_ib = tracked.matching("*.storyboard", "*.xib")
 
-    targets = NativeTargetCatalog.new(@project_path).names
+    project_catalog = NativeTargetCatalog.new(@project_path, @repository_root)
+    targets = project_catalog.names
+    pbx_swift_file_references = project_catalog.file_reference_paths(".swift")
+    pbx_ib_file_references = project_catalog.file_reference_paths(".storyboard", ".xib")
     target_membership = targets.to_h do |target|
       paths = ProjectSources.new(
         project_path: @project_path,
@@ -183,13 +258,33 @@ class TrackedSourceBoundary
     owned_swift = owners.keys.sort
     unowned_swift = managed_swift.reject { |path| owners.key?(path) }
     retired_manifest_paths = RetiredSourceManifest.new(@manifest_path).paths.to_set
+    duplicate_pbx_swift_file_references = pbx_swift_file_references
+      .group_by(&:itself)
+      .select { |_path, entries| entries.length > 1 }
+      .keys
+      .sort
+    unique_pbx_swift_file_references = pbx_swift_file_references.uniq.sort
+    dangling_pbx_swift_file_references = unique_pbx_swift_file_references - managed_swift
+    unreferenced_managed_swift = managed_swift - unique_pbx_swift_file_references
 
     violations = []
     tracked_ib.each do |path|
       violations << "tracked Interface Builder artifact is forbidden: #{path}"
     end
+    pbx_ib_file_references.each do |path|
+      violations << "PBX Interface Builder file reference is forbidden: #{path}"
+    end
     unowned_swift.each do |path|
       violations << "tracked Swift source has no PBX native target membership: #{path}"
+    end
+    duplicate_pbx_swift_file_references.each do |path|
+      violations << "PBX contains duplicate Swift file references: #{path}"
+    end
+    dangling_pbx_swift_file_references.each do |path|
+      violations << "PBX Swift file reference is not a tracked managed source: #{path}"
+    end
+    unreferenced_managed_swift.each do |path|
+      violations << "tracked managed Swift source has no PBX file reference: #{path}"
     end
 
     retired_reappearances = managed_swift.select { |path| retired_manifest_paths.include?(path) }
@@ -200,6 +295,12 @@ class TrackedSourceBoundary
     retired_pattern_paths = managed_swift.select { |path| retired_pattern?(path) }
     retired_pattern_paths.each do |path|
       violations << "retired source pattern is forbidden: #{path}"
+    end
+    retired_pbx_reference_paths = unique_pbx_swift_file_references.select do |path|
+      retired_manifest_paths.include?(path) || retired_pattern?(path)
+    end
+    retired_pbx_reference_paths.each do |path|
+      violations << "retired source path remains in PBX file references: #{path}"
     end
 
     rx_or_polio = []
@@ -244,8 +345,14 @@ class TrackedSourceBoundary
         "owned_unique_swift" => owned_swift.length,
         "unowned_swift" => unowned_swift.length,
         "tracked_ib_artifacts" => tracked_ib.length,
+        "pbx_swift_file_references" => pbx_swift_file_references.length,
+        "duplicate_pbx_swift_file_references" => duplicate_pbx_swift_file_references.length,
+        "dangling_pbx_swift_file_references" => dangling_pbx_swift_file_references.length,
+        "unreferenced_managed_swift" => unreferenced_managed_swift.length,
+        "pbx_ib_file_references" => pbx_ib_file_references.length,
         "retired_reappearances" => retired_reappearances.length,
         "retired_pattern_paths" => retired_pattern_paths.length,
+        "retired_pbx_reference_paths" => retired_pbx_reference_paths.length,
         "rx_or_polio_sources" => rx_or_polio.length,
         "shipping_uikit_imports" => shipping_uikit_imports.length
       },
@@ -253,8 +360,14 @@ class TrackedSourceBoundary
       "managed_exclusions" => excluded_swift,
       "unowned_swift" => unowned_swift,
       "tracked_ib_artifacts" => tracked_ib,
+      "pbx_swift_file_references" => pbx_swift_file_references,
+      "duplicate_pbx_swift_file_references" => duplicate_pbx_swift_file_references,
+      "dangling_pbx_swift_file_references" => dangling_pbx_swift_file_references,
+      "unreferenced_managed_swift" => unreferenced_managed_swift,
+      "pbx_ib_file_references" => pbx_ib_file_references,
       "retired_reappearances" => retired_reappearances,
       "retired_pattern_paths" => retired_pattern_paths,
+      "retired_pbx_reference_paths" => retired_pbx_reference_paths,
       "rx_or_polio_sources" => rx_or_polio,
       "uikit_imports" => uikit_imports,
       "shipping_uikit_imports" => shipping_uikit_imports,

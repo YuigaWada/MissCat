@@ -22,8 +22,12 @@ invalid.
 - Every tracked first-party `*.swift` file belongs to at least one native
   target. Sources below `Pods`, vendor/third-party, or generated directories are
   reported separately and excluded from first-party ownership checks.
-- Every tracked `*.storyboard` and `*.xib` is rejected. Interface Builder
-  artifact count must remain exactly zero.
+- Every tracked first-party Swift source has exactly one resolved PBX file
+  reference, and every PBX Swift file reference resolves to a tracked managed
+  source. Dormant, duplicate, and dangling project references are rejected.
+- Every tracked or PBX-referenced `*.storyboard` and `*.xib` is rejected.
+  Interface Builder artifact and project-reference counts must remain exactly
+  zero.
 - The retired `Entity`, `MFMEngine`, `Model`, `View`, and `ViewModel` trees,
   `SceneDelegate.swift`, legacy `ViewController.swift` names, and legacy
   `ViewModel.swift` names cannot return.
