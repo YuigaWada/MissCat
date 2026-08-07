@@ -1001,8 +1001,8 @@ private actor MissCatFeedRealtimeConnection {
                 noteDTO,
                 instanceOrigin: instanceOrigin
             )
-            if capturedNoteIDs.insert(note.noteID).inserted {
-                try await sendSubscribe(noteID: note.noteID, to: socket)
+            for noteID in Self.identities(for: note) where capturedNoteIDs.insert(noteID).inserted {
+                try await sendSubscribe(noteID: noteID, to: socket)
             }
             guard isCurrent(socket, generation: generation) else { return }
             continuation.yield(.inserted(note))
@@ -1054,14 +1054,17 @@ private actor MissCatFeedRealtimeConnection {
         // The store prepends inserts, so replay oldest-to-newest to preserve REST order.
         for note in page.notes.reversed() {
             guard isCurrent(socket, generation: generation) else { return }
-            if capturedNoteIDs.contains(note.noteID) {
-                continuation.yield(.replaced(note))
-            } else {
-                capturedNoteIDs.insert(note.noteID)
-                try await sendSubscribe(noteID: note.noteID, to: socket)
-                continuation.yield(.inserted(note))
+            let noteIDs = Self.identities(for: note)
+            let wasCaptured = noteIDs.contains { capturedNoteIDs.contains($0) }
+            for noteID in noteIDs where capturedNoteIDs.insert(noteID).inserted {
+                try await sendSubscribe(noteID: noteID, to: socket)
             }
+            continuation.yield(wasCaptured ? .replaced(note) : .inserted(note))
         }
+    }
+
+    private static func identities(for note: MissCatNote) -> [String] {
+        Array(Set([note.id, note.noteID])).sorted()
     }
 
     private func subscribeToCapturedNotes(

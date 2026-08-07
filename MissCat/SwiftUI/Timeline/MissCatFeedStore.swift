@@ -537,7 +537,7 @@ public final class MissCatFeedStore: ObservableObject {
 
     private func startRealtimeIfNeeded() {
         guard source.supportsRealtime, realtimeTask == nil else { return }
-        let capturedIDs = notes.map(\.noteID)
+        let capturedIDs = Array(Set(notes.flatMap { [$0.id, $0.noteID] })).sorted()
         let streamGeneration = UUID()
         let generation = contentGeneration
         let capturedScope = accountScope
