@@ -21,16 +21,38 @@ final class MissCatDiscoveryUITests: XCTestCase {
 
         app.buttons["discovery.trend.SwiftUI"].tap()
         XCTAssertTrue(noteResult.waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["投稿"].isSelected)
+        XCTAssertTrue(notesTab.isSelected)
 
-        app.buttons["ユーザー"].tap()
+        // Swiping right at the first page is a boundary no-op. This begins in
+        // the center of the result pane rather than on the tab strip.
+        XCTAssertTrue(noteList.waitForExistence(timeout: 4))
+        noteList.swipeRight()
+        XCTAssertTrue(notesTab.isSelected)
+        XCTAssertTrue(noteResult.exists)
+
+        usersTab.tap()
         XCTAssertTrue(firstUser.waitForExistence(timeout: 4))
-        XCTAssertTrue(app.buttons["ユーザー"].isSelected)
+        XCTAssertTrue(usersTab.isSelected)
         attachScreenshot("discovery-search-users")
-        dragResults(from: app.buttons["投稿"], to: app.buttons["ユーザー"])
+
+        // A real right swipe starts in the user result pane and returns to the
+        // note page. It must update the same selected-tab state as a tap.
+        XCTAssertTrue(userList.waitForExistence(timeout: 4))
+        userList.swipeRight()
         XCTAssertTrue(noteResult.waitForExistence(timeout: 4))
-        dragResults(from: app.buttons["ユーザー"], to: app.buttons["投稿"])
+        XCTAssertTrue(notesTab.isSelected)
+
+        // A real left swipe starts in the note result pane and advances to the
+        // user page. A second left swipe proves the last-page boundary.
+        XCTAssertTrue(noteList.waitForExistence(timeout: 4))
+        noteList.swipeLeft()
         XCTAssertTrue(firstUser.waitForExistence(timeout: 4))
+        XCTAssertTrue(usersTab.isSelected)
+        XCTAssertTrue(userList.waitForExistence(timeout: 4))
+        userList.swipeLeft()
+        XCTAssertTrue(usersTab.isSelected)
+        XCTAssertTrue(firstUser.exists)
+        attachScreenshot("discovery-result-pane-swipe-boundaries")
     }
 
     func testKeyboardSearchAndResultNavigation() {
@@ -89,6 +111,17 @@ final class MissCatDiscoveryUITests: XCTestCase {
         }
     }
 
+    func testLoadingStateIsVisibleAndDoesNotClaimVisualReadiness() {
+        app = launch(state: "loading")
+
+        let loading = app.descendants(matching: .any)["discovery.trends.loading"]
+        XCTAssertTrue(loading.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["トレンドを読み込み中…"].exists)
+        XCTAssertFalse(app.staticTexts["discovery.visualReady"].exists)
+        XCTAssertFalse(app.staticTexts["discovery.visualReady"].waitForExistence(timeout: 0.5))
+        attachScreenshot("discovery-loading-unready")
+    }
+
     private func launch(state: String) -> XCUIApplication {
         let application = XCUIApplication()
         application.launchArguments = ["--discovery-fixture"]
@@ -112,10 +145,20 @@ final class MissCatDiscoveryUITests: XCTestCase {
         app.buttons["discovery.user.fixture-user-0"]
     }
 
-    private func dragResults(from source: XCUIElement, to destination: XCUIElement) {
-        let start = source.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-        let end = destination.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-        start.press(forDuration: 0.05, thenDragTo: end)
+    private var notesTab: XCUIElement {
+        app.buttons["discovery.tab.notes"]
+    }
+
+    private var usersTab: XCUIElement {
+        app.buttons["discovery.tab.users"]
+    }
+
+    private var noteList: XCUIElement {
+        app.scrollViews["discovery.notes.list"]
+    }
+
+    private var userList: XCUIElement {
+        app.scrollViews["discovery.users.list"]
     }
 
     private func attachScreenshot(_ name: String) {
