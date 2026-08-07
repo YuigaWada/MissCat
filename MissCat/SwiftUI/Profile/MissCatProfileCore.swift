@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import SwiftUI
 
 // MARK: - Account-scoped domain
@@ -686,7 +687,8 @@ public struct MissCatProfileTabSelectionState: Equatable, Sendable {
 // MARK: - Profile and timeline state
 
 @MainActor
-public final class MissCatProfileStore: ObservableObject {
+@Observable
+public final class MissCatProfileStore {
     public struct TimelineState: Equatable {
         public var notes: [MissCatProfileNote] = []
         public var phase: MissCatLoadPhase = .idle
@@ -694,14 +696,14 @@ public final class MissCatProfileStore: ObservableObject {
         public var topVisibleNoteID: String?
     }
 
-    @Published public private(set) var profile: MissCatProfileUser?
-    @Published public private(set) var profilePhase: MissCatLoadPhase = .idle
-    @Published public private(set) var isFollowing = false
-    @Published public private(set) var followPhase: MissCatLoadPhase = .idle
-    @Published public var selectedTab: MissCatProfileTimelineTab = .notes
-    @Published public private(set) var timelines: [MissCatProfileTimelineTab: TimelineState] = [:]
-    @Published public private(set) var account: MissCatProfileAccount
-    @Published public private(set) var userID: String
+    public private(set) var profile: MissCatProfileUser?
+    public private(set) var profilePhase: MissCatLoadPhase = .idle
+    public private(set) var isFollowing = false
+    public private(set) var followPhase: MissCatLoadPhase = .idle
+    public var selectedTab: MissCatProfileTimelineTab = .notes
+    public private(set) var timelines: [MissCatProfileTimelineTab: TimelineState] = [:]
+    public private(set) var account: MissCatProfileAccount
+    public private(set) var userID: String
 
     public var isCurrentUser: Bool { account.userID == userID }
     public var followErrorMessage: String? {
@@ -709,12 +711,12 @@ public final class MissCatProfileStore: ObservableObject {
         return message
     }
 
-    private let repositoryFactory: (MissCatProfileAccount) -> MissCatProfileRepository
-    private var repository: MissCatProfileRepository
-    private var generation = UUID()
-    private var profileTask: Task<Void, Never>?
-    private var followTask: Task<Void, Never>?
-    private var timelineTasks: [MissCatProfileTimelineTab: Task<Void, Never>] = [:]
+    @ObservationIgnored private let repositoryFactory: (MissCatProfileAccount) -> MissCatProfileRepository
+    @ObservationIgnored private var repository: MissCatProfileRepository
+    @ObservationIgnored private var generation = UUID()
+    @ObservationIgnored private var profileTask: Task<Void, Never>?
+    @ObservationIgnored private var followTask: Task<Void, Never>?
+    @ObservationIgnored private var timelineTasks: [MissCatProfileTimelineTab: Task<Void, Never>] = [:]
 
     public init(
         account: MissCatProfileAccount,
@@ -892,18 +894,19 @@ public final class MissCatProfileStore: ObservableObject {
 // MARK: - Generic user lists and search
 
 @MainActor
-public final class MissCatUserListStore: ObservableObject {
-    @Published public private(set) var users: [MissCatProfileUser] = []
-    @Published public private(set) var phase: MissCatLoadPhase = .idle
-    @Published public var query: String
-    @Published public private(set) var account: MissCatProfileAccount
+@Observable
+public final class MissCatUserListStore {
+    public private(set) var users: [MissCatProfileUser] = []
+    public private(set) var phase: MissCatLoadPhase = .idle
+    public var query: String
+    public private(set) var account: MissCatProfileAccount
     public private(set) var kind: MissCatUserListKind
 
-    private let repositoryFactory: (MissCatProfileAccount) -> MissCatProfileRepository
-    private var repository: MissCatProfileRepository
-    private var nextCursor: String?
-    private var task: Task<Void, Never>?
-    private var generation = UUID()
+    @ObservationIgnored private let repositoryFactory: (MissCatProfileAccount) -> MissCatProfileRepository
+    @ObservationIgnored private var repository: MissCatProfileRepository
+    @ObservationIgnored private var nextCursor: String?
+    @ObservationIgnored private var task: Task<Void, Never>?
+    @ObservationIgnored private var generation = UUID()
 
     public init(
         account: MissCatProfileAccount,
@@ -991,24 +994,25 @@ public final class MissCatUserListStore: ObservableObject {
 // MARK: - Partial profile editor and upload state
 
 @MainActor
-public final class MissCatProfileEditorStore: ObservableObject {
-    @Published public var name: String
-    @Published public var biography: String
-    @Published public var isCat: Bool
-    @Published public private(set) var avatarData: Data?
-    @Published public private(set) var bannerData: Data?
-    @Published public private(set) var avatarRemoved = false
-    @Published public private(set) var bannerRemoved = false
-    @Published public private(set) var phase: MissCatLoadPhase = .idle
-    @Published public private(set) var uploadProgress = 0.0
-    @Published public private(set) var savedProfile: MissCatProfileUser?
-    @Published public private(set) var account: MissCatProfileAccount
+@Observable
+public final class MissCatProfileEditorStore {
+    public var name: String
+    public var biography: String
+    public var isCat: Bool
+    public private(set) var avatarData: Data?
+    public private(set) var bannerData: Data?
+    public private(set) var avatarRemoved = false
+    public private(set) var bannerRemoved = false
+    public private(set) var phase: MissCatLoadPhase = .idle
+    public private(set) var uploadProgress = 0.0
+    public private(set) var savedProfile: MissCatProfileUser?
+    public private(set) var account: MissCatProfileAccount
 
-    private var baseline: MissCatProfileUser
-    private let repositoryFactory: (MissCatProfileAccount) -> MissCatProfileRepository
-    private var repository: MissCatProfileRepository
-    private var saveTask: Task<Void, Never>?
-    private var generation = UUID()
+    @ObservationIgnored private var baseline: MissCatProfileUser
+    @ObservationIgnored private let repositoryFactory: (MissCatProfileAccount) -> MissCatProfileRepository
+    @ObservationIgnored private var repository: MissCatProfileRepository
+    @ObservationIgnored private var saveTask: Task<Void, Never>?
+    @ObservationIgnored private var generation = UUID()
 
     public var existingAvatarURL: URL? { avatarRemoved ? nil : baseline.avatarURL }
     public var existingBannerURL: URL? { bannerRemoved ? nil : baseline.bannerURL }

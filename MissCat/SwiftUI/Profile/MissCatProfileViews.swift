@@ -2,7 +2,7 @@ import PhotosUI
 import SwiftUI
 
 public struct MissCatProfileScreen: View {
-    @StateObject private var store: MissCatProfileStore
+    @State private var store: MissCatProfileStore
     @State private var presentedList: MissCatUserListKind?
     @State private var confirmsUnfollow = false
 
@@ -36,7 +36,7 @@ public struct MissCatProfileScreen: View {
         onCompose: @escaping () -> Void = {},
         showsBottomBar: Bool = true
     ) {
-        _store = StateObject(wrappedValue: store)
+        _store = State(initialValue: store)
         self.palette = palette
         self.repositoryFactory = repositoryFactory
         self.showsBack = showsBack
@@ -57,7 +57,8 @@ public struct MissCatProfileScreen: View {
     }
 
     private var profileContent: some View {
-        VStack(spacing: 0) {
+        @Bindable var store = store
+        return VStack(spacing: 0) {
             profileHeader
                 .frame(height: MissCatProfileMetrics.headerHeight)
 
@@ -446,7 +447,7 @@ public struct MissCatProfileTabBar: View {
 }
 
 public struct MissCatProfileTimelinePage: View {
-    @ObservedObject public var store: MissCatProfileStore
+    public let store: MissCatProfileStore
     public let tab: MissCatProfileTimelineTab
     public let palette: MissCatVisualPalette
 
@@ -620,12 +621,12 @@ public struct MissCatProfileMediaGrid: View {
 // MARK: - Followers, following, generic lists, and search
 
 public struct MissCatFollowersScreen: View {
-    @StateObject private var store: MissCatUserListStore
+    @State private var store: MissCatUserListStore
     private let palette: MissCatVisualPalette
     private let onSelectUser: (String) -> Void
 
     public init(store: MissCatUserListStore, palette: MissCatVisualPalette = .legacyLight, onSelectUser: @escaping (String) -> Void = { _ in }) {
-        _store = StateObject(wrappedValue: store)
+        _store = State(initialValue: store)
         self.palette = palette
         self.onSelectUser = onSelectUser
     }
@@ -640,12 +641,12 @@ public struct MissCatFollowersScreen: View {
 }
 
 public struct MissCatFollowingScreen: View {
-    @StateObject private var store: MissCatUserListStore
+    @State private var store: MissCatUserListStore
     private let palette: MissCatVisualPalette
     private let onSelectUser: (String) -> Void
 
     public init(store: MissCatUserListStore, palette: MissCatVisualPalette = .legacyLight, onSelectUser: @escaping (String) -> Void = { _ in }) {
-        _store = StateObject(wrappedValue: store)
+        _store = State(initialValue: store)
         self.palette = palette
         self.onSelectUser = onSelectUser
     }
@@ -660,7 +661,7 @@ public struct MissCatFollowingScreen: View {
 }
 
 public struct MissCatUserListScreen: View {
-    @ObservedObject public var store: MissCatUserListStore
+    public let store: MissCatUserListStore
     public let palette: MissCatVisualPalette
     public let onSelectUser: (String) -> Void
 
@@ -714,17 +715,18 @@ public struct MissCatUserListScreen: View {
 }
 
 public struct MissCatUserSearchScreen: View {
-    @StateObject private var store: MissCatUserListStore
+    @State private var store: MissCatUserListStore
     private let palette: MissCatVisualPalette
     private let onSelectUser: (String) -> Void
 
     public init(store: MissCatUserListStore, palette: MissCatVisualPalette = .legacyLight, onSelectUser: @escaping (String) -> Void = { _ in }) {
-        _store = StateObject(wrappedValue: store)
+        _store = State(initialValue: store)
         self.palette = palette
         self.onSelectUser = onSelectUser
     }
 
     public var body: some View {
+        @Bindable var store = store
         VStack(spacing: 0) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass").foregroundStyle(palette.strong)
@@ -794,7 +796,7 @@ public struct MissCatUserRow: View {
 // MARK: - Profile editing
 
 public struct MissCatProfileEditorScreen: View {
-    @StateObject private var store: MissCatProfileEditorStore
+    @State private var store: MissCatProfileEditorStore
     @State private var avatarItem: PhotosPickerItem?
     @State private var bannerItem: PhotosPickerItem?
     @State private var cameraTarget: CameraTarget?
@@ -810,13 +812,14 @@ public struct MissCatProfileEditorScreen: View {
         onCancel: (() -> Void)? = nil,
         onSaved: @escaping (MissCatProfileUser) -> Void = { _ in }
     ) {
-        _store = StateObject(wrappedValue: store)
+        _store = State(initialValue: store)
         self.palette = palette
         self.onCancel = onCancel
         self.onSaved = onSaved
     }
 
     public var body: some View {
+        @Bindable var store = store
         Form {
             Section {
                 bannerEditor

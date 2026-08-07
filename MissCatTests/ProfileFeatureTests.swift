@@ -409,6 +409,7 @@ final class MissCatProfileStoreTests: XCTestCase {
         var screen: MissCatProfileScreen? = MissCatProfileScreen(store: store!)
 
         store = nil
+        XCTAssertNotNil(screen)
         XCTAssertNotNil(retainedStore)
 
         screen = nil
