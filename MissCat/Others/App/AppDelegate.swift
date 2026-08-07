@@ -32,7 +32,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Firebase registration, or saved-account network side effects. The
         // ordinary application launch path below remains unchanged.
         if MissCatNoteDetailFixtureConfiguration.isAutomatedTestRun
-            || MissCatDiscoveryFixtureConfiguration.isAutomatedTestRun {
+            || MissCatDiscoveryFixtureConfiguration.isAutomatedTestRun
+            || MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
             setupMissCat()
             return true
         }

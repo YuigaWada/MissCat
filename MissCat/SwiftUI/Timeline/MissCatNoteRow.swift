@@ -21,6 +21,7 @@ public struct MissCatNoteRow: View {
     public let onOverflowAction: (MissCatNoteOverflowAction) -> Void
     public let contextRepository: (any MissCatNoteContextRepository)?
     public let readiness: MissCatNoteVisualReadiness?
+    public let presentsMediaInternally: Bool
 
     @State private var isContentWarningExpanded: Bool
     @State private var revealedSensitiveAttachmentIDs = Set<String>()
@@ -45,7 +46,8 @@ public struct MissCatNoteRow: View {
         onMuteUser: @escaping (String) -> Void = { _ in },
         onOverflowAction: @escaping (MissCatNoteOverflowAction) -> Void = { _ in },
         contextRepository: (any MissCatNoteContextRepository)? = nil,
-        readiness: MissCatNoteVisualReadiness? = nil
+        readiness: MissCatNoteVisualReadiness? = nil,
+        presentsMediaInternally: Bool = true
     ) {
         self.note = note
         self.palette = palette
@@ -66,6 +68,7 @@ public struct MissCatNoteRow: View {
         self.onOverflowAction = onOverflowAction
         self.contextRepository = contextRepository
         self.readiness = readiness
+        self.presentsMediaInternally = presentsMediaInternally
         _isContentWarningExpanded = State(initialValue: expandsContentWarning || note.cw == nil)
     }
 
@@ -278,12 +281,14 @@ public struct MissCatNoteRow: View {
         return Button {
             if sensitiveIsHidden {
                 revealedSensitiveAttachmentIDs.insert(attachment.id)
-            } else {
+            } else if presentsMediaInternally {
                 MissCatNoteMediaTapRouter.route(
                     attachment,
                     presentNatively: { selectedAttachment = $0 },
                     legacyPresentation: onOpenAttachment
                 )
+            } else {
+                onOpenAttachment(attachment)
             }
         } label: {
             ZStack {

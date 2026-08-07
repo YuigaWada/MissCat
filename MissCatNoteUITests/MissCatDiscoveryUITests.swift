@@ -122,6 +122,32 @@ final class MissCatDiscoveryUITests: XCTestCase {
         attachScreenshot("discovery-loading-unready")
     }
 
+    func testOrdinaryHomeIndexZeroUsesNativeFactoryWithoutFixtureRoot() {
+        let application = XCUIApplication()
+        application.launchArguments = ["--discovery-ordinary-route"]
+        application.launchEnvironment = [
+            "AppleLanguages": "(ja)",
+            "AppleLocale": "ja_JP",
+        ]
+        XCTAssertFalse(application.launchArguments.contains("--discovery-fixture"))
+        application.launch()
+        app = application
+
+        XCTAssertTrue(
+            app.descendants(matching: .any)["home.discovery.native-page"]
+                .waitForExistence(timeout: 8)
+        )
+        XCTAssertTrue(app.staticTexts["Ordinary-route.invalidでのトレンド"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["discovery.trend.OrdinaryRoute"].exists)
+        app.buttons["discovery.trend.OrdinaryRoute"].tap()
+        XCTAssertTrue(
+            app.staticTexts.matching(
+                NSPredicate(format: "label CONTAINS %@", "reached native discovery through Home index 0")
+            ).firstMatch.waitForExistence(timeout: 5)
+        )
+        attachScreenshot("discovery-ordinary-home-index-zero")
+    }
+
     private func launch(state: String) -> XCUIApplication {
         let application = XCUIApplication()
         application.launchArguments = ["--discovery-fixture"]

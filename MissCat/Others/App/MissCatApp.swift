@@ -55,6 +55,15 @@ final class ApplicationState: ObservableObject {
     func resolveInitialRoute() {
         guard root == .resolvingSession else { return }
 
+#if DEBUG
+        if MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
+            Theme.shared.reset()
+            Theme.shared.set()
+            root = .legacyApplication
+            return
+        }
+#endif
+
         let cache = Cache.UserDefaults.shared
         guard let currentUser = cache.getCurrentUser(),
               !currentUser.userId.isEmpty,

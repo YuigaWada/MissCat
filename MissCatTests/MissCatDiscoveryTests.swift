@@ -103,6 +103,33 @@ final class MissCatDiscoveryTests: XCTestCase {
         )
     }
 
+    func testNativeHashtagDestinationUsesTagFeedContract() async throws {
+        var request: URLRequest?
+        DiscoveryURLProtocolStub.handler = { value in
+            request = value
+            return Self.response(value, json: [])
+        }
+        let repository = MissCatMisskeyFeedRepository(session: Self.feedSession, urlSession: session)
+
+        _ = try await repository.fetchPage(
+            source: .hashtag(tag: "ExternalRoute"),
+            cursor: "cursor-tag",
+            limit: 40
+        )
+
+        let captured = try XCTUnwrap(request)
+        XCTAssertEqual(captured.url?.path, "/api/notes/search-by-tag")
+        XCTAssertEqual(
+            try Self.body(captured),
+            [
+                "i": "test-token",
+                "tag": "ExternalRoute",
+                "limit": 40,
+                "untilId": "cursor-tag",
+            ]
+        )
+    }
+
     func testUserTimelineRejectsInvalidRepliesAndMediaCombinationBeforeNetwork() async {
         var count = 0
         DiscoveryURLProtocolStub.handler = { request in
@@ -168,6 +195,110 @@ final class MissCatDiscoveryTests: XCTestCase {
         XCTAssertEqual(store.committedQuery, "new")
         XCTAssertEqual(store.noteResults.items.map(\.id), ["note-new"])
         XCTAssertEqual(store.userResults.items.map(\.id), ["user-new"])
+    }
+
+    @MainActor
+    func testExternalHashtagEntryMutatesNativeStoreAndStartsAccountScopedSearch() async {
+        let repository = DiscoveryRepositoryStub()
+        let store = MissCatDiscoveryStore(repository: repository)
+
+        store.search(hashtag: "  #NativeRoute  ")
+        await store.waitForPendingTasksForTesting()
+
+        XCTAssertEqual(store.query, "#NativeRoute")
+        XCTAssertEqual(store.committedQuery, "#NativeRoute")
+        XCTAssertEqual(store.selectedTab, .notes)
+        XCTAssertEqual(repository.noteQueries, ["#NativeRoute"])
+        XCTAssertEqual(repository.userQueries, ["#NativeRoute"])
+    }
+
+    @MainActor
+    func testAccountSwitchCancelsOldGenerationAndRejectsLateResults() async throws {
+        let oldRepository = CancellationDiscoveryRepository(accountIdentifier: "one.example::same")
+        let oldGeneration = MissCatDiscoveryAccountGeneration(
+            session: .init(accountID: "same", username: "one", instance: "one.example", apiKey: "one-token"),
+            discoveryRepository: oldRepository,
+            feedRepository: MissCatMisskeyFeedRepository(
+                session: .init(accountID: "same", username: "one", instance: "one.example", apiKey: "one-token")
+            )
+        )
+        let coordinator = MissCatDiscoveryAccountCoordinator(generation: oldGeneration)
+        oldGeneration.store.query = "old-account"
+        oldGeneration.store.submitSearch()
+        try await Task.sleep(nanoseconds: 20_000_000)
+
+        let nextRepository = DiscoveryRepositoryStub(accountIdentifier: "two.example::same")
+        let nextGeneration = MissCatDiscoveryAccountGeneration(
+            session: .init(accountID: "same", username: "two", instance: "two.example", apiKey: "two-token"),
+            discoveryRepository: nextRepository,
+            feedRepository: MissCatMisskeyFeedRepository(
+                session: .init(accountID: "same", username: "two", instance: "two.example", apiKey: "two-token")
+            )
+        )
+        XCTAssertTrue(coordinator.replace(with: nextGeneration))
+        try await Task.sleep(nanoseconds: 40_000_000)
+
+        XCTAssertEqual(coordinator.generation.id, nextGeneration.id)
+        XCTAssertEqual(coordinator.generation.accountIdentifier, nextGeneration.session.compositeAccountID)
+        XCTAssertGreaterThanOrEqual(oldRepository.cancellationCount, 2)
+        XCTAssertTrue(oldGeneration.store.noteResults.items.isEmpty)
+        XCTAssertTrue(oldGeneration.store.userResults.items.isEmpty)
+    }
+
+    func testTypedDiscoveryRoutesCoverEveryNativeDestinationFamily() {
+        let routes: Set<MissCatDiscoveryRoute> = [
+            .note("note"),
+            .profile("user"),
+            .userTimeline(userID: "user", includesReplies: true, onlyFiles: false),
+            .userList("list"),
+            .search(query: "query", tab: .users),
+            .media("media"),
+            .hashtag("tag"),
+        ]
+
+        XCTAssertEqual(routes.count, 7)
+    }
+
+    @MainActor
+    func testOrdinaryPageFactoryBuildsNativeHostingBoundaryFromImmutableOwnerSnapshot() throws {
+        let owner = SecureUser(
+            userId: "server-user",
+            username: "wada",
+            instance: "factory.example",
+            apiKey: "factory-token"
+        )
+
+        let controller = try XCTUnwrap(
+            MissCatDiscoveryPageFactory.makeController(owner: owner) as? MissCatDiscoveryHostingController
+        )
+        owner.apiKey = "later-token"
+
+        XCTAssertEqual(
+            controller.accountIdentifier,
+            MissCatAccountIdentity.storageKey(instance: "factory.example", userId: "server-user")
+        )
+        controller.retire()
+    }
+
+    func testOrdinaryHomeRouteHasNoProductionLegacySearchConstructionOrFallback() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let home = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("MissCat/View/Main/HomeViewController.swift"),
+            encoding: .utf8
+        )
+        let project = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("MissCat.xcodeproj/project.pbxproj"),
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(home.contains("[generateDiscoveryVC()] + setViewControllers"))
+        XCTAssertFalse(home.contains("SearchViewController"))
+        XCTAssertFalse(home.contains("TrendViewController"))
+        XCTAssertFalse(home.contains("search.searchNote"))
+        XCTAssertFalse(project.contains("SearchViewController.swift in Sources"))
+        XCTAssertFalse(project.contains("TrendViewController.swift in Sources"))
     }
 
     @MainActor
@@ -250,7 +381,7 @@ final class MissCatDiscoveryTests: XCTestCase {
 }
 
 private final class DiscoveryRepositoryStub: MissCatDiscoveryRepository {
-    let accountIdentifier = "fixture.example::fixture-me"
+    let accountIdentifier: String
     let currentServerUserID = "fixture-me"
     var trends: [MissCatTrend] = [.init(tag: "SwiftUI")]
     var notePages: [MissCatDiscoveryPage<MissCatNote>] = []
@@ -259,6 +390,10 @@ private final class DiscoveryRepositoryStub: MissCatDiscoveryRepository {
     var userQueries: [String] = []
     var delayedByQuery: [String: UInt64] = [:]
     var error: Error?
+
+    init(accountIdentifier: String = "fixture.example::fixture-me") {
+        self.accountIdentifier = accountIdentifier
+    }
 
     func fetchTrends() async throws -> [MissCatTrend] {
         if let error { throw error }
@@ -286,6 +421,49 @@ private final class DiscoveryRepositoryStub: MissCatDiscoveryRepository {
         if let error { throw error }
         if !userPages.isEmpty { return userPages.removeFirst() }
         return .init(items: [.init(id: "user-\(query)", username: query)], nextCursor: nil)
+    }
+}
+
+private final class CancellationDiscoveryRepository: MissCatDiscoveryRepository {
+    let accountIdentifier: String
+    let currentServerUserID = "same"
+    private let queue = DispatchQueue(label: "discovery-cancellation-test")
+    private var cancellations = 0
+
+    init(accountIdentifier: String) {
+        self.accountIdentifier = accountIdentifier
+    }
+
+    var cancellationCount: Int {
+        queue.sync { cancellations }
+    }
+
+    func fetchTrends() async throws -> [MissCatTrend] { [] }
+
+    func searchNotes(
+        query: String,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatDiscoveryPage<MissCatNote> {
+        try await delayedResult(.init(items: [], nextCursor: nil))
+    }
+
+    func searchUsers(
+        query: String,
+        offset: Int,
+        limit: Int
+    ) async throws -> MissCatDiscoveryPage<MissCatProfileUser> {
+        try await delayedResult(.init(items: [], nextCursor: nil))
+    }
+
+    private func delayedResult<Value>(_ value: Value) async throws -> Value {
+        do {
+            try await Task.sleep(nanoseconds: 3_600_000_000_000)
+            return value
+        } catch {
+            queue.sync { cancellations += 1 }
+            throw error
+        }
     }
 }
 

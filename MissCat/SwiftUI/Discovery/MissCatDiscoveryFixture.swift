@@ -21,72 +21,53 @@ enum MissCatDiscoveryFixtureConfiguration {
     }
 }
 
-private enum MissCatDiscoveryFixtureRoute: Hashable {
-    case note(String)
-    case user(String)
+/// Exercises the real application root, UIKit Home pager, page-zero factory,
+/// hosting boundary, and typed SwiftUI hierarchy without installing a secret.
+/// It is intentionally distinct from the direct visual-state fixture above.
+enum MissCatDiscoveryOrdinaryRouteConfiguration {
+    static let launchArgument = "--discovery-ordinary-route"
+
+    static var isEnabled: Bool {
+        CommandLine.arguments.contains(launchArgument)
+    }
+
+    static let session = MissCatFeedSession(
+        accountID: "ordinary-route-user",
+        username: "route-probe",
+        instance: "ordinary-route.invalid",
+        apiKey: ""
+    )
 }
 
+@MainActor
 struct MissCatDiscoveryFixtureRoot: View {
-    @State private var path: [MissCatDiscoveryFixtureRoute] = []
-    private let repository: MissCatDiscoveryFixtureRepository
-    private let store: MissCatDiscoveryStore
+    private let generation: MissCatDiscoveryAccountGeneration
 
     init() {
         let repository = MissCatDiscoveryFixtureRepository(
             state: MissCatDiscoveryFixtureConfiguration.state
         )
-        self.repository = repository
-        store = MissCatDiscoveryStore(repository: repository, pageSize: 8)
+        generation = MissCatDiscoveryAccountGeneration(
+            session: .init(
+                accountID: repository.currentServerUserID,
+                username: "wada",
+                instance: "fixture.example",
+                apiKey: ""
+            ),
+            discoveryRepository: repository,
+            feedRepository: repository,
+            previewProfile: repository.fixtureUser,
+            pageSize: 8
+        )
     }
 
     var body: some View {
-        NavigationStack(path: $path) {
-            MissCatDiscoveryScreen(
-                store: store,
-                instanceDisplayName: "fixture.example",
-                navigationActions: .init(
-                    openUser: { path.append(.user($0)) },
-                    openNote: { path.append(.note($0)) }
-                )
-            )
-            .navigationTitle("検索")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationDestination(for: MissCatDiscoveryFixtureRoute.self) { route in
-                switch route {
-                case let .note(noteID):
-                    MissCatNoteDetailView(noteID: noteID, repository: repository)
-                case let .user(userID):
-                    MissCatDiscoveryFixtureProfile(
-                        user: repository.fixtureUser(userID: userID)
-                    )
-                }
-            }
-        }
+        MissCatDiscoveryRoot(generation: generation)
         .preferredColorScheme(
             ProcessInfo.processInfo.environment["MISS_CAT_DISCOVERY_FIXTURE_APPEARANCE"] == "dark"
                 ? .dark
                 : .light
         )
-    }
-}
-
-private struct MissCatDiscoveryFixtureProfile: View {
-    let user: MissCatProfileUser
-
-    var body: some View {
-        VStack(spacing: 0) {
-            MissCatUserRow(user: user, palette: .legacyLight)
-            VStack(spacing: 8) {
-                Text(user.displayName).font(.title2.weight(.semibold))
-                Text(user.acct).foregroundStyle(.secondary)
-                Text(user.description ?? "")
-            }
-            .padding(24)
-            Spacer()
-        }
-        .navigationTitle(user.displayName)
-        .navigationBarTitleDisplayMode(.inline)
-        .accessibilityIdentifier("discovery.profile.destination")
     }
 }
 
@@ -241,6 +222,94 @@ private final class MissCatDiscoveryFixtureRepository: MissCatDiscoveryRepositor
             followersCount: 100 + index,
             followingCount: 20 + index,
             notesCount: 500 + index
+        )
+    }
+}
+
+/// Deterministic, credential-free data used only after the ordinary app route
+/// has reached Home's production page factory. It does not replace the app root.
+final class MissCatDiscoveryOrdinaryRouteRepository: MissCatDiscoveryRepository, MissCatNoteContextRepository {
+    let accountIdentifier = MissCatDiscoveryOrdinaryRouteConfiguration.session.compositeAccountID
+    let currentServerUserID = MissCatDiscoveryOrdinaryRouteConfiguration.session.accountID
+
+    func fetchTrends() async throws -> [MissCatTrend] {
+        [
+            .init(tag: "OrdinaryRoute", chart: [1, 2, 3], usersCount: 3),
+            .init(tag: "SwiftUI", chart: [3, 2, 1], usersCount: 2),
+        ]
+    }
+
+    func searchNotes(
+        query: String,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatDiscoveryPage<MissCatNote> {
+        .init(items: cursor == nil ? [Self.note(query: query)] : [], nextCursor: nil)
+    }
+
+    func searchUsers(
+        query: String,
+        offset: Int,
+        limit: Int
+    ) async throws -> MissCatDiscoveryPage<MissCatProfileUser> {
+        .init(items: offset == 0 ? [user("ordinary-route-profile")] : [], nextCursor: nil)
+    }
+
+    func user(_ userID: String) -> MissCatProfileUser {
+        .init(
+            id: userID,
+            name: "Ordinary Route",
+            username: "route-probe",
+            description: "Production Home page-zero route"
+        )
+    }
+
+    func fetchPage(
+        source: MissCatFeedSource,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatFeedPage {
+        let query: String
+        switch source {
+        case let .search(value): query = value
+        case let .hashtag(tag): query = "#\(tag)"
+        default: query = "OrdinaryRoute"
+        }
+        return .init(notes: cursor == nil ? [Self.note(query: query)] : [], hasMore: false)
+    }
+
+    func fetchThread(noteID: String, replyLimit: Int) async throws -> MissCatNoteThread {
+        .init(ancestors: [], note: Self.note(query: noteID), replies: [])
+    }
+
+    func realtimeEvents(
+        source: MissCatFeedSource,
+        capturing noteIDs: [String]
+    ) -> AsyncStream<MissCatRealtimeEvent> {
+        AsyncStream { $0.finish() }
+    }
+
+    func perform(_ action: MissCatFeedAction) async throws {}
+
+    func notePermalink(noteID: String) -> URL? {
+        URL(string: "https://ordinary-route.invalid/notes/\(noteID)")
+    }
+
+    func fetchURLPreview(for url: URL) async throws -> MissCatURLPreview {
+        .init(sourceURL: url, title: "Ordinary route")
+    }
+
+    private static func note(query: String) -> MissCatNote {
+        .init(
+            id: "ordinary-route-note",
+            author: .init(
+                id: "ordinary-route-profile",
+                name: "Ordinary Route",
+                username: "route-probe"
+            ),
+            createdAt: Date(timeIntervalSince1970: 1_700_000_000),
+            text: "\(query) reached native discovery through Home index 0.",
+            tags: ["OrdinaryRoute"]
         )
     }
 }

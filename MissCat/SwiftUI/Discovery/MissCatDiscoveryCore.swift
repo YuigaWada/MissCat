@@ -25,7 +25,7 @@ public struct MissCatDiscoveryPage<Element: Equatable & Sendable>: Equatable, Se
     }
 }
 
-public enum MissCatDiscoveryTab: String, CaseIterable, Identifiable, Sendable {
+public enum MissCatDiscoveryTab: String, CaseIterable, Hashable, Identifiable, Sendable {
     case notes
     case users
 
@@ -239,7 +239,7 @@ public final class MissCatDiscoveryStore: ObservableObject {
     @Published public private(set) var accountIdentifier: String
     @Published public private(set) var currentServerUserID: String
 
-    private var repository: MissCatDiscoveryRepository
+    private let repository: MissCatDiscoveryRepository
     private let pageSize: Int
     private var generation = UUID()
     private var trendGeneration = UUID()
@@ -286,7 +286,18 @@ public final class MissCatDiscoveryStore: ObservableObject {
     }
 
     public func activateTrend(_ trend: MissCatTrend) {
-        query = "#\(trend.tag)"
+        search(hashtag: trend.tag)
+    }
+
+    /// Entry point for hashtags arriving from outside the discovery hierarchy.
+    /// The value is applied to this account generation's native store; callers
+    /// never need to reach through the UIKit boundary or a legacy controller.
+    public func search(hashtag rawTag: String) {
+        let tag = rawTag
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+        guard !tag.isEmpty else { return }
+        query = "#\(tag)"
         selectedTab = .notes
         submitSearch()
     }
@@ -361,21 +372,13 @@ public final class MissCatDiscoveryStore: ObservableObject {
         requestUsers(offset: offset, append: true)
     }
 
-    public func switchRepository(_ repository: MissCatDiscoveryRepository) {
+    /// Invalidates every in-flight request before an account generation is
+    /// discarded. Network implementations also receive task cancellation, and
+    /// UUID checks prevent non-cooperative transports from publishing late data.
+    public func cancelForAccountSwitch() {
         cancelAllTasks()
         generation = UUID()
         trendGeneration = UUID()
-        self.repository = repository
-        accountIdentifier = repository.accountIdentifier
-        currentServerUserID = repository.currentServerUserID
-        query = ""
-        committedQuery = ""
-        selectedTab = .notes
-        trends = []
-        trendPhase = .idle
-        noteResults = MissCatDiscoveryResultState()
-        userResults = MissCatDiscoveryResultState()
-        loadTrends()
     }
 
     func waitForPendingTasksForTesting() async {
