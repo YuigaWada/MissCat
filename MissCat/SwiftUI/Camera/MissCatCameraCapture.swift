@@ -1,6 +1,7 @@
 import AVFoundation
 import CoreImage
 import ImageIO
+import Observation
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -221,20 +222,21 @@ struct MissCatCameraCaptureView: View {
     let onCapture: (MissCatCameraCapture) -> Void
     let onCancel: () -> Void
 
-    @StateObject private var model: MissCatCameraCaptureModel
+    @State private var model: MissCatCameraCaptureModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
 
     init(
         configuration: MissCatCameraConfiguration,
         onCapture: @escaping (MissCatCameraCapture) -> Void,
-        onCancel: @escaping () -> Void = {}
+        onCancel: @escaping () -> Void = {},
+        model: MissCatCameraCaptureModel? = nil
     ) {
         self.configuration = configuration
         self.onCapture = onCapture
         self.onCancel = onCancel
-        _model = StateObject(
-            wrappedValue: MissCatCameraCaptureModel(configuration: configuration)
+        _model = State(
+            initialValue: model ?? MissCatCameraCaptureModel(configuration: configuration)
         )
     }
 
@@ -289,7 +291,8 @@ struct MissCatCameraCaptureView: View {
     }
 
     private var cameraContent: some View {
-        GeometryReader { proxy in
+        @Bindable var model = model
+        return GeometryReader { proxy in
             ZStack {
                 if let frame = model.previewFrame {
                     Image(decorative: frame, scale: 1, orientation: .up)
@@ -422,22 +425,23 @@ enum MissCatCameraMode: Equatable, Sendable {
 }
 
 @MainActor
-private final class MissCatCameraCaptureModel: ObservableObject {
-    @Published var accessState: MissCatCameraAccessState = .idle
-    @Published var previewFrame: CGImage?
-    @Published var mode: MissCatCameraMode = .photo
-    @Published var isCapturingPhoto = false
-    @Published var isRecording = false
-    @Published var capture: MissCatCameraCapture?
-    @Published private(set) var audioAccessState: MissCatCameraAudioAccessState = .idle
+@Observable
+final class MissCatCameraCaptureModel {
+    var accessState: MissCatCameraAccessState = .idle
+    var previewFrame: CGImage?
+    var mode: MissCatCameraMode = .photo
+    var isCapturingPhoto = false
+    var isRecording = false
+    var capture: MissCatCameraCapture?
+    private(set) var audioAccessState: MissCatCameraAudioAccessState = .idle
 
-    private let configuration: MissCatCameraConfiguration
-    private var engine: MissCatCameraEngine?
-    private var audioPermissionFlow = MissCatCameraAudioPermissionFlow()
-    private var audioPreparationTask: Task<Void, Never>?
-    private var audioPreparationGeneration = 0
-    private var recordAfterAudioPreparation = false
-    private var started = false
+    @ObservationIgnored private let configuration: MissCatCameraConfiguration
+    @ObservationIgnored private var engine: MissCatCameraEngine?
+    @ObservationIgnored private var audioPermissionFlow = MissCatCameraAudioPermissionFlow()
+    @ObservationIgnored private var audioPreparationTask: Task<Void, Never>?
+    @ObservationIgnored private var audioPreparationGeneration = 0
+    @ObservationIgnored private var recordAfterAudioPreparation = false
+    @ObservationIgnored private var started = false
 
     init(configuration: MissCatCameraConfiguration) {
         self.configuration = configuration
@@ -467,10 +471,10 @@ private final class MissCatCameraCaptureModel: ObservableObject {
             for: .video,
             position: .back
         )
-        accessState = MissCatCameraAccessPolicy.state(
+        applyAccessState(MissCatCameraAccessPolicy.state(
             for: status,
             hasVideoDevice: device != nil
-        )
+        ))
         guard accessState == .ready, let device else { return }
 
         let engine = MissCatCameraEngine(
@@ -480,9 +484,7 @@ private final class MissCatCameraCaptureModel: ObservableObject {
                 self?.previewFrame = frame
             },
             onCapture: { [weak self] capture in
-                self?.isCapturingPhoto = false
-                self?.isRecording = false
-                self?.capture = capture
+                self?.receiveCapture(capture)
             },
             onRecordingChange: { [weak self] isRecording in
                 self?.isRecording = isRecording
@@ -506,6 +508,16 @@ private final class MissCatCameraCaptureModel: ObservableObject {
         case .movie:
             prepareAudio(startRecording: false)
         }
+    }
+
+    func applyAccessState(_ state: MissCatCameraAccessState) {
+        accessState = state
+    }
+
+    func receiveCapture(_ capture: MissCatCameraCapture) {
+        isCapturingPhoto = false
+        isRecording = false
+        self.capture = capture
     }
 
     func triggerCapture() {

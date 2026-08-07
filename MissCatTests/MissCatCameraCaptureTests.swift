@@ -129,6 +129,7 @@ final class MissCatCameraCaptureTests: XCTestCase {
         )
 
         model = nil
+        XCTAssertNotNil(screen)
         XCTAssertNotNil(retainedModel)
 
         screen = nil
