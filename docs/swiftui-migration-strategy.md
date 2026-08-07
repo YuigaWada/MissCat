@@ -354,7 +354,7 @@ Each endpoint moves only with request/response/error contract fixtures. Do not e
 
 ### Final dependency inventory
 
-The target is CocoaPods zero. Remove PolioPager, RxSwift/RxCocoa/RxDataSources, Agrume, SkeletonView, FloatingPanel, XLActionController, XLPagerTabStrip, MessageKit/InputBarAccessoryView, Eureka, ChromaColorPicker, SwiftLinkPreview/Cache, iOSPhotoEditor, APNGKit/Gifu/SVGKit, KeychainAccess, MisskeyKit, and Starscream after their bundle exits pass.
+The target is CocoaPods zero. Remove PolioPager, RxSwift/RxCocoa/RxDataSources, Agrume, SkeletonView, FloatingPanel, XLActionController, XLPagerTabStrip, MessageKit/InputBarAccessoryView, Eureka, ChromaColorPicker, SwiftLinkPreview/Cache, iOSPhotoEditor, APNGKit/Gifu/SVGKit, MisskeyKit, and Starscream after their bundle exits pass. Native Security storage has already replaced the former credential wrapper.
 
 Final shipping dependencies should be:
 

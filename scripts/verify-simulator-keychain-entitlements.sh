@@ -191,8 +191,8 @@ share_info="$share_path/Info.plist"
 }
 [[ -d "$share_path" && -f "$share_info" ]] || fail "embedded MissCatShare.appex was not found"
 
-main_access_group=$(plist_value "$main_info" MissCatKeychainAccessGroup) || fail "main Info.plist has no Keychain access group"
-share_access_group=$(plist_value "$share_info" MissCatKeychainAccessGroup) || fail "share Info.plist has no Keychain access group"
+main_access_group=$(plist_value "$main_info" MissCatSecureStoreAccessGroup) || fail "main Info.plist has no Keychain access group"
+share_access_group=$(plist_value "$share_info" MissCatSecureStoreAccessGroup) || fail "share Info.plist has no Keychain access group"
 [[ -n "$main_access_group" && "$main_access_group" == "$share_access_group" ]] || {
     fail "main app and MissCatShare Info.plist Keychain access groups disagree"
 }

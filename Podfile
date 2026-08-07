@@ -3,7 +3,6 @@ use_frameworks!
 
 target 'MissCatShare' do
 pod 'MisskeyKit'
-pod 'KeychainAccess'
 end
 
 
@@ -13,7 +12,6 @@ pod 'MisskeyKit'
 pod 'PolioPager'
 pod 'Starscream','3.1.1'
 
-pod 'KeychainAccess'
 pod 'Firebase/Messaging'
 pod 'RxSwift', '~> 5'
 pod 'RxCocoa', '~> 5'

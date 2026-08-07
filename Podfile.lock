@@ -62,7 +62,6 @@ PODS:
     - InputBarAccessoryView/Core (= 5.1.0)
   - InputBarAccessoryView/Core (5.1.0)
   - iOSPhotoEditor (1.0.0)
-  - KeychainAccess (4.2.2)
   - MessageKit (3.3.0):
     - InputBarAccessoryView (~> 5.1.0)
   - MisskeyKit (3.0.4):
@@ -109,7 +108,6 @@ DEPENDENCIES:
   - FloatingPanel (= 1.7.4)
   - Gifu
   - iOSPhotoEditor
-  - KeychainAccess
   - MessageKit
   - MisskeyKit
   - PolioPager
@@ -145,7 +143,6 @@ SPEC REPOS:
     - GoogleUtilities
     - InputBarAccessoryView
     - iOSPhotoEditor
-    - KeychainAccess
     - MessageKit
     - MisskeyKit
     - nanopb
@@ -191,7 +188,6 @@ SPEC CHECKSUMS:
   GoogleUtilities: f8a43108b38a68eebe8b3540e1f4f2d28843ce20
   InputBarAccessoryView: 19953f486a23e846e9487099f92bbe3456e46ce5
   iOSPhotoEditor: 2951f35246a31dcb428b6292248a9c065582d03e
-  KeychainAccess: c0c4f7f38f6fc7bbe58f5702e25f7bd2f65abf51
   MessageKit: 1f07618183be6d92b648ba7a384aafa097362a00
   MisskeyKit: 1cb91ffb613a9ecdbb1f05788c1c69ade345d806
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
@@ -209,6 +205,6 @@ SPEC CHECKSUMS:
   XLActionController: 24140d835ab9e260270711afebc5efabebe9d392
   XLPagerTabStrip: 61c57fd61f611ee5f01ff1495ad6fbee8bf496c5
 
-PODFILE CHECKSUM: c89159752b8e6d04f4a23a7c19c9331f99b50de3
+PODFILE CHECKSUM: 024c1ddddaf2302dcf4a4eb6432c8942da3141b7
 
 COCOAPODS: 1.16.2

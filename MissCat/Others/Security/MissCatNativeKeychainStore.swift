@@ -3,7 +3,7 @@ import Security
 
 /// The only adapter around the Security framework used by both the app and
 /// Share extension. Its generic-password schema deliberately matches the
-/// former KeychainAccess defaults so existing credentials remain readable:
+/// former generic-password wrapper defaults so existing credentials remain readable:
 /// service + account + access group, UTF-8 data, non-synchronizable, and
 /// accessible after the first device unlock.
 struct MissCatNativeKeychainStore {
@@ -155,7 +155,7 @@ struct MissCatNativeKeychainStore {
 
     private func matchingQuery(account: String?) -> [String: Any] {
         var query = itemIdentity(account: account)
-        // KeychainAccess ignored the synchronizable attribute for reads,
+        // The former wrapper ignored the synchronizable attribute for reads,
         // updates, removals, and enumeration. Keep that migration contract.
         query[String(kSecAttrSynchronizable)] = kSecAttrSynchronizableAny
         return query

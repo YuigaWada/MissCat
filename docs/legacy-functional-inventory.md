@@ -103,7 +103,7 @@ Migration ownership and acceptance are tracked separately in `docs/ui-migration-
 | Settings | Settings root | Design, Reaction, LICENSE, About MissCat. About is wired by Storyboard segue. | Implemented. `SettingsViewController.swift`; Storyboard `settings` |
 | Settings | Design | Reorder/add/delete/rename tabs; assign account; light/dark mode; custom main color. Saves on exit and chooses partial/full relaunch. | Implemented. `DesignSettingsViewController.swift`; `Theme.swift` |
 | Settings | Reactions | Select instance, view favorites, add via picker, delete in edit mode, long-press reorder; saves on exit. Picker shows favorites/history/custom/default groups and search. | Implemented. `InstanceViewController.swift`; `ReactionSettingsViewController.swift`; `ReactionGenViewController.swift` |
-| Settings | Licenses | Dependency list and embedded license text/detail. | Implemented, but inventory omits some linked pods such as KeychainAccess, Firebase, and SVGKit. `LicenseViewController.swift` |
+| Settings | Licenses | Dependency list and embedded license text/detail. | Implemented, but inventory omits some linked pods such as Firebase and SVGKit. `LicenseViewController.swift` |
 | Settings | About | Legacy gradient/logo animation, version, developer Twitter and Misskey links. | Implemented. `AboutMisskeyViewController.swift` |
 | Settings | Legacy account/theme controllers | Account logout screen is in Storyboard; `ThemeViewController` source is fully commented. | Account screen appears unreachable; theme controller is dead. |
 | Empty/error | Placeholder and banners | Sad cat image, “No Data / 表示するデータがありません”; nano loading/success/error banner styles. | Storyboard/XIB implemented reusable states. |
@@ -176,7 +176,7 @@ Versions are from `Podfile.lock`; all are 2020-era and should be treated as inco
 | SwiftLinkPreview + Cache | URL metadata/cache | URLSession metadata service and bounded actor cache |
 | iOSPhotoEditor | Attachment/profile image edits | Modern PhotosUI/camera plus equivalent crop/draw/filter behavior, or maintained internal package |
 | Firebase/Messaging 8.0.0 | Remote push transport | Upgrade to supported SDK/current APNs integration and revalidate token rotation and foreground payload handling |
-| KeychainAccess | API tokens | May be retained at supported version or replaced with Security framework adapter; migration compatibility is mandatory |
+| Native Security storage | API tokens | Replaced the former wrapper while preserving its generic-password schema for migration compatibility |
 
 The old license screen must be regenerated from the final dependency graph, including every binary/source dependency and required attribution.
 

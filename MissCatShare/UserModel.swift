@@ -35,7 +35,7 @@ class UserModel {
     private static let appGroup = "group.yuwd.MissCat"
     private static let keychainService = "yuwd.MissCat"
     private static var keychainAccessGroup: String {
-        guard let accessGroup = Bundle.main.object(forInfoDictionaryKey: "MissCatKeychainAccessGroup") as? String,
+        guard let accessGroup = Bundle.main.object(forInfoDictionaryKey: "MissCatSecureStoreAccessGroup") as? String,
               !accessGroup.isEmpty else { fatalError("Missing shared Keychain access group") }
         return accessGroup
     }

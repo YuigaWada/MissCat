@@ -57,12 +57,6 @@
       "acknowledgementSHA256": "5ddc23ec1c3d7493c3ab16f75e2a30025dae18ce810abaa25a2826b1aa0acb09"
     },
     {
-      "name": "KeychainAccess",
-      "version": "4.2.2",
-      "sourceURL": "https://github.com/kishikawakatsumi/KeychainAccess.git",
-      "acknowledgementSHA256": "0fef8bd822a7d7a36255b10b548aa57c70083c036b370f71d65c814a9fcc7d82"
-    },
-    {
       "name": "MessageKit",
       "version": "3.3.0",
       "sourceURL": "https://github.com/MessageKit/MessageKit.git",
