@@ -121,6 +121,11 @@ final class MissCatShellFeedUITests: XCTestCase {
             element("production.root.compose-selection-request").value as? String,
             secondaryComposeAccountID
         )
+        app.buttons["main.tab.notifications"].tap()
+        XCTAssertTrue(element("notifications.screen").waitForExistence(timeout: 5))
+        waitForAccount("https://fixture.example|fixture-cat")
+        app.buttons["main.tab.home"].tap()
+        waitForProductionReady(page: "home")
 
         app.buttons["main.action.compose"].tap()
         XCTAssertTrue(app.buttons["compose.cancel"].waitForExistence(timeout: 5))
@@ -148,6 +153,9 @@ final class MissCatShellFeedUITests: XCTestCase {
         isolationEvidence.name = "production-compose-account-isolation-state"
         isolationEvidence.lifetime = .keepAlways
         add(isolationEvidence)
+        app.buttons["main.tab.notifications"].tap()
+        XCTAssertTrue(element("notifications.screen").waitForExistence(timeout: 5))
+        waitForAccount("https://fixture.example|fixture-cat")
 
         app.buttons["main.tab.messages"].tap()
         XCTAssertTrue(element("messages.history.screen").waitForExistence(timeout: 5))
