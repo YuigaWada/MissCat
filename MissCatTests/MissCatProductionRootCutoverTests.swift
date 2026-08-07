@@ -157,6 +157,18 @@ final class MissCatProductionRootCutoverTests: XCTestCase {
         XCTAssertFalse(root.contains("UIActivityViewController"))
     }
 
+    func testSharedKeychainProbeUsesNativeShareLinkWithoutUIKitBridge() throws {
+        let app = try source(named: "Others/App/MissCatApp.swift")
+
+        XCTAssertTrue(app.contains("ShareLink("))
+        XCTAssertTrue(app.contains("MissCat non-live shared-Keychain fixture"))
+        XCTAssertTrue(app.contains("keychain-probe.launch-share"))
+        XCTAssertFalse(app.contains("import UIKit"))
+        XCTAssertFalse(app.contains("UIViewControllerRepresentable"))
+        XCTAssertFalse(app.contains("UIActivityViewController"))
+        XCTAssertFalse(app.contains("MissCatSharedKeychainActivityView"))
+    }
+
     private func source(named relativePath: String) throws -> String {
         return try String(
             contentsOf: repositoryRoot.appendingPathComponent("MissCat/\(relativePath)"),

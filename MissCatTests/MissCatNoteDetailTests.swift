@@ -25,7 +25,7 @@ final class MissCatNoteDetailTests: XCTestCase {
         XCTAssertEqual(writer.read(), "system pasteboard 🐈\nexact")
     }
 
-    func testPasteboardAPIIsIsolatedToAuditableAdapterAndDomainStaysUIKitFree() throws {
+    func testCustomCopyActionKeepsPasteboardInOneAuditableAdapterAndDomainStaysUIKitFree() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
