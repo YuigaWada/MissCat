@@ -114,8 +114,8 @@ struct MissCatShellFixtureView: View {
         .onDisappear { store.cancelConfigurationTasks() }
         .onReceive(
             NotificationCenter.default.publisher(for: MissCatSystemClipboardWriter.didWriteNotification)
-        ) { _ in
-            clipboardProbeValue = MissCatSystemClipboardWriter().read() ?? ""
+        ) { notification in
+            clipboardProbeValue = notification.object as? String ?? ""
         }
         .overlay(alignment: .topLeading) {
             Color.clear

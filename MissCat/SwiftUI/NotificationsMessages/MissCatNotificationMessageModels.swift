@@ -1,4 +1,26 @@
 import Foundation
+import Observation
+
+/// Transport-independent push registration state consumed by the SwiftUI root.
+/// Firebase, UserNotifications, and UIApplication never cross this boundary.
+@MainActor
+@Observable
+final class MissCatPushLifecycleState {
+    enum Phase: Equatable {
+        case idle
+        case authorizationRequested
+        case remoteRegistrationRequested
+        case registered
+        case failed(message: String)
+    }
+
+    private(set) var phase: Phase = .idle
+
+    func authorizationRequested() { phase = .authorizationRequested }
+    func remoteRegistrationRequested() { phase = .remoteRegistrationRequested }
+    func registered() { phase = .registered }
+    func registrationFailed(message: String) { phase = .failed(message: message) }
+}
 
 public struct MissCatAccountScope: Equatable, Sendable {
     public let accountID: String
@@ -225,6 +247,26 @@ public enum MissCatPushOwnerResolver {
             ownerAccountIdentifier: owner.accountIdentifier,
             ownerAPIUserID: owner.apiUserID,
             notificationID: envelope.notificationID
+        )
+    }
+}
+
+public enum MissCatApplicationPushResolver {
+    public static func resolve(
+        _ envelope: MissCatPushEnvelope,
+        accounts: [MissCatPushAccountIdentity],
+        opensRoute: Bool
+    ) -> MissCatApplicationPush? {
+        guard let resolved = MissCatPushOwnerResolver.resolve(envelope, accounts: accounts)
+        else { return nil }
+        let action: MissCatApplicationPush.Action = opensRoute
+            ? .openNotification(notificationID: resolved.notificationID)
+            : .refreshNotifications(notificationID: resolved.notificationID)
+        let deliveryKind = opensRoute ? "open" : "refresh"
+        return MissCatApplicationPush(
+            id: "\(resolved.ownerAccountIdentifier):\(resolved.notificationID):\(deliveryKind)",
+            accountID: MissCatApplicationAccountID(rawValue: resolved.ownerAccountIdentifier),
+            action: action
         )
     }
 }
