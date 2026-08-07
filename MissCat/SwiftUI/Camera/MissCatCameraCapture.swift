@@ -35,6 +35,74 @@ enum MissCatCameraAccessPolicy {
     }
 }
 
+enum MissCatCameraAudioAccessState: Equatable, Sendable {
+    case idle
+    case requesting
+    case available
+    case silentDenied
+    case silentUnavailable
+
+    var recordsAudio: Bool { self == .available }
+
+    var statusMessage: String? {
+        switch self {
+        case .idle:
+            return nil
+        case .requesting:
+            return "マイクへのアクセスを確認中です。"
+        case .available:
+            return "音声付きで録画します。"
+        case .silentDenied:
+            return "マイクが許可されていないため、ビデオは無音で録画されます。"
+        case .silentUnavailable:
+            return "利用可能なマイクがないため、ビデオは無音で録画されます。"
+        }
+    }
+}
+
+struct MissCatCameraAudioPermissionFlow: Equatable, Sendable {
+    private(set) var state: MissCatCameraAudioAccessState = .idle
+
+    @discardableResult
+    mutating func begin(
+        status: AVAuthorizationStatus,
+        hasAudioDevice: Bool
+    ) -> Bool {
+        switch status {
+        case .notDetermined:
+            state = .requesting
+            return true
+        case .authorized:
+            state = hasAudioDevice ? .available : .silentUnavailable
+        case .denied, .restricted:
+            state = .silentDenied
+        @unknown default:
+            state = .silentDenied
+        }
+        return false
+    }
+
+    mutating func resolve(
+        status: AVAuthorizationStatus,
+        hasAudioDevice: Bool
+    ) {
+        _ = begin(status: status, hasAudioDevice: hasAudioDevice)
+    }
+
+    mutating func cancelRequest() {
+        guard state == .requesting else { return }
+        state = .idle
+    }
+
+    mutating func retry() {
+        state = .idle
+    }
+
+    mutating func markAudioInputUnavailable() {
+        state = .silentUnavailable
+    }
+}
+
 struct MissCatCameraConfiguration: Equatable, Sendable {
     let allowsVideo: Bool
 
@@ -179,6 +247,9 @@ struct MissCatCameraCaptureView: View {
         .toolbar(.hidden, for: .navigationBar)
         .task { await model.start() }
         .onDisappear { model.stop() }
+        .onChange(of: model.mode) { _, mode in
+            model.modeChanged(to: mode)
+        }
         .onChange(of: model.capture) { _, capture in
             guard let capture else { return }
             onCapture(capture)
@@ -258,6 +329,30 @@ struct MissCatCameraCaptureView: View {
                         .colorScheme(.dark)
                         .disabled(model.isRecording)
                         .accessibilityIdentifier("camera.capture.mode")
+
+                        if model.mode == .movie,
+                           let message = model.audioAccessState.statusMessage
+                        {
+                            VStack(spacing: 6) {
+                                Text(message)
+                                    .font(.caption)
+                                    .multilineTextAlignment(.center)
+                                    .accessibilityIdentifier("camera.capture.audio-status")
+                                if model.audioAccessState == .silentDenied {
+                                    HStack(spacing: 12) {
+                                        if let settingsURL = URL(string: "app-settings:") {
+                                            Button("設定を開く") { openURL(settingsURL) }
+                                                .accessibilityIdentifier("camera.capture.audio-settings")
+                                        }
+                                        Button("再確認") { model.retryAudioPermission() }
+                                            .accessibilityIdentifier("camera.capture.audio-retry")
+                                    }
+                                    .font(.caption.weight(.semibold))
+                                }
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.top, 8)
+                        }
                     }
 
                     Button(action: model.triggerCapture) {
@@ -334,9 +429,14 @@ private final class MissCatCameraCaptureModel: ObservableObject {
     @Published var isCapturingPhoto = false
     @Published var isRecording = false
     @Published var capture: MissCatCameraCapture?
+    @Published private(set) var audioAccessState: MissCatCameraAudioAccessState = .idle
 
     private let configuration: MissCatCameraConfiguration
     private var engine: MissCatCameraEngine?
+    private var audioPermissionFlow = MissCatCameraAudioPermissionFlow()
+    private var audioPreparationTask: Task<Void, Never>?
+    private var audioPreparationGeneration = 0
+    private var recordAfterAudioPreparation = false
     private var started = false
 
     init(configuration: MissCatCameraConfiguration) {
@@ -373,38 +473,39 @@ private final class MissCatCameraCaptureModel: ObservableObject {
         )
         guard accessState == .ready, let device else { return }
 
-        if configuration.allowsVideo,
-           AVCaptureDevice.authorizationStatus(for: .audio) == .notDetermined
-        {
-            _ = await AVCaptureDevice.requestAccess(for: .audio)
-        }
-
         let engine = MissCatCameraEngine(
             device: device,
             allowsVideo: configuration.allowsVideo,
             onFrame: { [weak self] frame in
-                DispatchQueue.main.async { self?.previewFrame = frame }
+                self?.previewFrame = frame
             },
             onCapture: { [weak self] capture in
-                DispatchQueue.main.async {
-                    self?.isCapturingPhoto = false
-                    self?.isRecording = false
-                    self?.capture = capture
-                }
+                self?.isCapturingPhoto = false
+                self?.isRecording = false
+                self?.capture = capture
             },
             onRecordingChange: { [weak self] isRecording in
-                DispatchQueue.main.async { self?.isRecording = isRecording }
+                self?.isRecording = isRecording
             },
             onError: { [weak self] message in
-                DispatchQueue.main.async {
-                    self?.isCapturingPhoto = false
-                    self?.isRecording = false
-                    self?.accessState = .failed(message)
-                }
+                self?.isCapturingPhoto = false
+                self?.isRecording = false
+                self?.accessState = .failed(message)
             }
         )
         self.engine = engine
-        engine.start()
+        await engine.start()
+    }
+
+    func modeChanged(to mode: MissCatCameraMode) {
+        switch mode {
+        case .photo:
+            cancelAudioPreparation()
+            audioPermissionFlow.cancelRequest()
+            audioAccessState = audioPermissionFlow.state
+        case .movie:
+            prepareAudio(startRecording: false)
+        }
     }
 
     func triggerCapture() {
@@ -413,54 +514,148 @@ private final class MissCatCameraCaptureModel: ObservableObject {
         case .photo:
             guard !isCapturingPhoto else { return }
             isCapturingPhoto = true
-            engine?.capturePhoto()
+            guard let engine else { return }
+            Task { await engine.capturePhoto() }
         case .movie:
             if isRecording {
-                engine?.stopRecording()
+                guard let engine else { return }
+                Task { await engine.stopRecording() }
             } else {
-                engine?.startRecording()
+                prepareAudio(startRecording: true)
             }
         }
     }
 
+    func retryAudioPermission() {
+        cancelAudioPreparation()
+        audioPermissionFlow.retry()
+        audioAccessState = audioPermissionFlow.state
+        guard mode == .movie else { return }
+        prepareAudio(startRecording: false)
+    }
+
     func cancel() {
-        engine?.cancelRecording()
+        cancelAudioPreparation()
+        audioPermissionFlow.cancelRequest()
+        audioAccessState = audioPermissionFlow.state
+        guard let engine else { return }
+        Task { await engine.cancelRecording() }
     }
 
     func stop() {
-        engine?.stop()
+        cancelAudioPreparation()
+        let currentEngine = engine
         engine = nil
         started = false
+        guard let currentEngine else { return }
+        Task { await currentEngine.stop() }
+    }
+
+    private func prepareAudio(startRecording: Bool) {
+        if startRecording { recordAfterAudioPreparation = true }
+        guard audioPreparationTask == nil else { return }
+        audioPreparationGeneration += 1
+        let generation = audioPreparationGeneration
+        audioPreparationTask = Task { [weak self] in
+            await self?.prepareAudioAndOptionallyRecord(generation: generation)
+        }
+    }
+
+    private func prepareAudioAndOptionallyRecord(generation: Int) async {
+        defer {
+            if generation == audioPreparationGeneration {
+                audioPreparationTask = nil
+                recordAfterAudioPreparation = false
+            }
+        }
+        let initialStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+        let shouldRequest = audioPermissionFlow.begin(
+            status: initialStatus,
+            hasAudioDevice: AVCaptureDevice.default(for: .audio) != nil
+        )
+        audioAccessState = audioPermissionFlow.state
+
+        if shouldRequest {
+            _ = await AVCaptureDevice.requestAccess(for: .audio)
+            guard !Task.isCancelled, generation == audioPreparationGeneration else { return }
+            audioPermissionFlow.resolve(
+                status: AVCaptureDevice.authorizationStatus(for: .audio),
+                hasAudioDevice: AVCaptureDevice.default(for: .audio) != nil
+            )
+            audioAccessState = audioPermissionFlow.state
+        }
+
+        guard recordAfterAudioPreparation,
+              !Task.isCancelled,
+              generation == audioPreparationGeneration,
+              let engine
+        else {
+            return
+        }
+        let result = await engine.startRecording(includeAudio: audioAccessState.recordsAudio)
+        guard !Task.isCancelled, generation == audioPreparationGeneration else {
+            await engine.cancelRecording()
+            return
+        }
+        if audioAccessState.recordsAudio, result.started, !result.recordsAudio {
+            audioPermissionFlow.markAudioInputUnavailable()
+            audioAccessState = audioPermissionFlow.state
+        }
+    }
+
+    private func cancelAudioPreparation() {
+        audioPreparationGeneration += 1
+        audioPreparationTask?.cancel()
+        audioPreparationTask = nil
+        recordAfterAudioPreparation = false
     }
 }
 
-private final class MissCatCameraEngine: NSObject {
+private struct MissCatCameraRecordingStart: Equatable, Sendable {
+    let started: Bool
+    let recordsAudio: Bool
+
+    static let notStarted = MissCatCameraRecordingStart(started: false, recordsAudio: false)
+}
+
+private actor MissCatCameraEngine {
     private let session = AVCaptureSession()
     private let device: AVCaptureDevice
     private let allowsVideo: Bool
     private let photoOutput = AVCapturePhotoOutput()
     private let videoOutput = AVCaptureVideoDataOutput()
     private let movieOutput = AVCaptureMovieFileOutput()
-    private let sessionQueue = DispatchQueue(label: "misscat.camera.session")
     private let videoQueue = DispatchQueue(label: "misscat.camera.preview")
-    private let imageContext = CIContext(options: [.cacheIntermediates: false])
     private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
     private var rotationObservation: NSKeyValueObservation?
+    private var audioInput: AVCaptureDeviceInput?
     private var configured = false
     private var discardMovie = false
 
-    private let onFrame: (CGImage) -> Void
-    private let onCapture: (MissCatCameraCapture) -> Void
-    private let onRecordingChange: (Bool) -> Void
-    private let onError: (String) -> Void
+    private let onFrame: @MainActor @Sendable (CGImage) -> Void
+    private let onCapture: @MainActor @Sendable (MissCatCameraCapture) -> Void
+    private let onRecordingChange: @MainActor @Sendable (Bool) -> Void
+    private let onError: @MainActor @Sendable (String) -> Void
+
+    private lazy var captureDelegate = MissCatCameraCaptureDelegate(
+        onFrame: { [weak self] frame in
+            Task { await self?.receive(frame: frame) }
+        },
+        onPhoto: { [weak self] data, failed in
+            Task { await self?.receivePhoto(data: data, failed: failed) }
+        },
+        onMovie: { [weak self] url, failed in
+            Task { await self?.receiveMovie(url: url, failed: failed) }
+        }
+    )
 
     init(
         device: AVCaptureDevice,
         allowsVideo: Bool,
-        onFrame: @escaping (CGImage) -> Void,
-        onCapture: @escaping (MissCatCameraCapture) -> Void,
-        onRecordingChange: @escaping (Bool) -> Void,
-        onError: @escaping (String) -> Void
+        onFrame: @escaping @MainActor @Sendable (CGImage) -> Void,
+        onCapture: @escaping @MainActor @Sendable (MissCatCameraCapture) -> Void,
+        onRecordingChange: @escaping @MainActor @Sendable (Bool) -> Void,
+        onError: @escaping @MainActor @Sendable (String) -> Void
     ) {
         self.device = device
         self.allowsVideo = allowsVideo
@@ -468,75 +663,62 @@ private final class MissCatCameraEngine: NSObject {
         self.onCapture = onCapture
         self.onRecordingChange = onRecordingChange
         self.onError = onError
-        super.init()
     }
 
-    func start() {
-        sessionQueue.async { [weak self] in
-            guard let self else { return }
-            do {
-                if !configured { try configure() }
-                guard !session.isRunning else { return }
-                session.startRunning()
-            } catch {
-                onError("カメラの準備に失敗しました。")
-            }
+    func start() async {
+        do {
+            if !configured { try configure() }
+            guard !session.isRunning else { return }
+            session.startRunning()
+        } catch {
+            await onError("カメラの準備に失敗しました。")
         }
     }
 
     func stop() {
-        sessionQueue.async { [self] in
-            if movieOutput.isRecording {
-                discardMovie = true
-                movieOutput.stopRecording()
-            }
-            if session.isRunning { session.stopRunning() }
-        }
-    }
-
-    func capturePhoto() {
-        sessionQueue.async { [weak self] in
-            guard let self, configured else { return }
-            applyCaptureRotation()
-            let settings: AVCapturePhotoSettings
-            if photoOutput.availablePhotoCodecTypes.contains(.jpeg) {
-                settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])
-            } else {
-                settings = AVCapturePhotoSettings()
-            }
-            settings.photoQualityPrioritization = .balanced
-            photoOutput.capturePhoto(with: settings, delegate: self)
-        }
-    }
-
-    func startRecording() {
-        guard allowsVideo else { return }
-        sessionQueue.async { [weak self] in
-            guard let self, configured, !movieOutput.isRecording else { return }
-            discardMovie = false
-            applyCaptureRotation()
-            let url = FileManager.default.temporaryDirectory
-                .appendingPathComponent("misscat-camera-\(UUID().uuidString)")
-                .appendingPathExtension("mov")
-            try? FileManager.default.removeItem(at: url)
-            movieOutput.startRecording(to: url, recordingDelegate: self)
-            onRecordingChange(true)
-        }
-    }
-
-    func stopRecording() {
-        sessionQueue.async { [weak self] in
-            guard let self, movieOutput.isRecording else { return }
-            movieOutput.stopRecording()
-        }
-    }
-
-    func cancelRecording() {
-        sessionQueue.async { [weak self] in
-            guard let self, movieOutput.isRecording else { return }
+        if movieOutput.isRecording {
             discardMovie = true
             movieOutput.stopRecording()
         }
+        if session.isRunning { session.stopRunning() }
+    }
+
+    func capturePhoto() {
+        guard configured else { return }
+        applyCaptureRotation()
+        let settings: AVCapturePhotoSettings
+        if photoOutput.availablePhotoCodecTypes.contains(.jpeg) {
+            settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])
+        } else {
+            settings = AVCapturePhotoSettings()
+        }
+        settings.photoQualityPrioritization = .balanced
+        photoOutput.capturePhoto(with: settings, delegate: captureDelegate)
+    }
+
+    func startRecording(includeAudio: Bool) async -> MissCatCameraRecordingStart {
+        guard allowsVideo, configured, !movieOutput.isRecording else { return .notStarted }
+        let recordsAudio = configureAudioInput(enabled: includeAudio)
+        discardMovie = false
+        applyCaptureRotation()
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("misscat-camera-\(UUID().uuidString)")
+            .appendingPathExtension("mov")
+        try? FileManager.default.removeItem(at: url)
+        movieOutput.startRecording(to: url, recordingDelegate: captureDelegate)
+        await onRecordingChange(true)
+        return MissCatCameraRecordingStart(started: true, recordsAudio: recordsAudio)
+    }
+
+    func stopRecording() {
+        guard movieOutput.isRecording else { return }
+        movieOutput.stopRecording()
+    }
+
+    func cancelRecording() {
+        guard movieOutput.isRecording else { return }
+        discardMovie = true
+        movieOutput.stopRecording()
     }
 
     private func configure() throws {
@@ -548,20 +730,11 @@ private final class MissCatCameraEngine: NSObject {
         guard session.canAddInput(videoInput) else { throw CameraError.configuration }
         session.addInput(videoInput)
 
-        if allowsVideo,
-           AVCaptureDevice.authorizationStatus(for: .audio) == .authorized,
-           let audioDevice = AVCaptureDevice.default(for: .audio),
-           let audioInput = try? AVCaptureDeviceInput(device: audioDevice),
-           session.canAddInput(audioInput)
-        {
-            session.addInput(audioInput)
-        }
-
         videoOutput.alwaysDiscardsLateVideoFrames = true
         videoOutput.videoSettings = [
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
         ]
-        videoOutput.setSampleBufferDelegate(self, queue: videoQueue)
+        videoOutput.setSampleBufferDelegate(captureDelegate, queue: videoQueue)
         guard session.canAddOutput(videoOutput) else { throw CameraError.configuration }
         session.addOutput(videoOutput)
 
@@ -580,10 +753,37 @@ private final class MissCatCameraEngine: NSObject {
             options: [.initial, .new]
         ) { [weak self] _, change in
             guard let angle = change.newValue else { return }
-            self?.sessionQueue.async { [weak self] in self?.applyRotation(angle) }
+            Task { await self?.applyRotation(angle) }
         }
         applyCaptureRotation()
         configured = true
+    }
+
+    private func configureAudioInput(enabled: Bool) -> Bool {
+        if !enabled {
+            guard let audioInput else { return false }
+            session.beginConfiguration()
+            session.removeInput(audioInput)
+            session.commitConfiguration()
+            self.audioInput = nil
+            return false
+        }
+        if audioInput != nil { return movieOutput.connection(with: .audio) != nil }
+        guard AVCaptureDevice.authorizationStatus(for: .audio) == .authorized,
+              let audioDevice = AVCaptureDevice.default(for: .audio),
+              let input = try? AVCaptureDeviceInput(device: audioDevice)
+        else {
+            return false
+        }
+        session.beginConfiguration()
+        guard session.canAddInput(input) else {
+            session.commitConfiguration()
+            return false
+        }
+        session.addInput(input)
+        audioInput = input
+        session.commitConfiguration()
+        return movieOutput.connection(with: .audio) != nil
     }
 
     private func applyCaptureRotation() {
@@ -606,56 +806,34 @@ private final class MissCatCameraEngine: NSObject {
     private enum CameraError: Error {
         case configuration
     }
-}
 
-extension MissCatCameraEngine: AVCaptureVideoDataOutputSampleBufferDelegate {
-    func captureOutput(
-        _ output: AVCaptureOutput,
-        didOutput sampleBuffer: CMSampleBuffer,
-        from connection: AVCaptureConnection
-    ) {
-        guard let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        let image = CIImage(cvPixelBuffer: buffer)
-        guard let frame = imageContext.createCGImage(image, from: image.extent) else { return }
-        onFrame(frame)
+    private func receive(frame: CGImage) async {
+        await onFrame(frame)
     }
-}
 
-extension MissCatCameraEngine: AVCapturePhotoCaptureDelegate {
-    func photoOutput(
-        _ output: AVCapturePhotoOutput,
-        didFinishProcessingPhoto photo: AVCapturePhoto,
-        error: Error?
-    ) {
-        guard error == nil,
-              let data = photo.fileDataRepresentation(),
+    private func receivePhoto(data: Data?, failed: Bool) async {
+        guard !failed,
+              let data,
               let jpeg = MissCatCameraImageProcessor.normalizedJPEG(from: data)
         else {
-            onError("写真を保存できませんでした。")
+            await onError("写真を保存できませんでした。")
             return
         }
-        onCapture(.photo(jpeg))
+        await onCapture(.photo(jpeg))
     }
-}
 
-extension MissCatCameraEngine: AVCaptureFileOutputRecordingDelegate {
-    func fileOutput(
-        _ output: AVCaptureFileOutput,
-        didFinishRecordingTo outputFileURL: URL,
-        from connections: [AVCaptureConnection],
-        error: Error?
-    ) {
+    private func receiveMovie(url outputFileURL: URL, failed: Bool) async {
         defer { try? FileManager.default.removeItem(at: outputFileURL) }
-        onRecordingChange(false)
+        await onRecordingChange(false)
         guard !discardMovie else {
             discardMovie = false
             return
         }
-        guard error == nil,
+        guard !failed,
               let data = try? Data(contentsOf: outputFileURL),
               !data.isEmpty
         else {
-            onError("ビデオを保存できませんでした。")
+            await onError("ビデオを保存できませんでした。")
             return
         }
 
@@ -670,6 +848,56 @@ extension MissCatCameraEngine: AVCaptureFileOutputRecordingDelegate {
         } else {
             previewData = Data()
         }
-        onCapture(.movie(data: data, previewData: previewData))
+        await onCapture(.movie(data: data, previewData: previewData))
+    }
+}
+
+private final class MissCatCameraCaptureDelegate: NSObject,
+    AVCaptureVideoDataOutputSampleBufferDelegate,
+    AVCapturePhotoCaptureDelegate,
+    AVCaptureFileOutputRecordingDelegate
+{
+    private let imageContext = CIContext(options: [.cacheIntermediates: false])
+    private let onFrame: @Sendable (CGImage) -> Void
+    private let onPhoto: @Sendable (Data?, Bool) -> Void
+    private let onMovie: @Sendable (URL, Bool) -> Void
+
+    init(
+        onFrame: @escaping @Sendable (CGImage) -> Void,
+        onPhoto: @escaping @Sendable (Data?, Bool) -> Void,
+        onMovie: @escaping @Sendable (URL, Bool) -> Void
+    ) {
+        self.onFrame = onFrame
+        self.onPhoto = onPhoto
+        self.onMovie = onMovie
+        super.init()
+    }
+
+    func captureOutput(
+        _ output: AVCaptureOutput,
+        didOutput sampleBuffer: CMSampleBuffer,
+        from connection: AVCaptureConnection
+    ) {
+        guard let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        let image = CIImage(cvPixelBuffer: buffer)
+        guard let frame = imageContext.createCGImage(image, from: image.extent) else { return }
+        onFrame(frame)
+    }
+
+    func photoOutput(
+        _ output: AVCapturePhotoOutput,
+        didFinishProcessingPhoto photo: AVCapturePhoto,
+        error: Error?
+    ) {
+        onPhoto(error == nil ? photo.fileDataRepresentation() : nil, error != nil)
+    }
+
+    func fileOutput(
+        _ output: AVCaptureFileOutput,
+        didFinishRecordingTo outputFileURL: URL,
+        from connections: [AVCaptureConnection],
+        error: Error?
+    ) {
+        onMovie(outputFileURL, error != nil)
     }
 }
