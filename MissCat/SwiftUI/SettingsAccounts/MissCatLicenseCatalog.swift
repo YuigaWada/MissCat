@@ -1,9 +1,9 @@
 import Foundation
 
-/// Reads the reviewed CocoaPods acknowledgement resource without retaining the
-/// retired Eureka/Rx license view controllers in the application target.
+/// Provides the third-party package licenses that are actually linked by the app.
+/// The dependency-free build currently has no package acknowledgement entries.
 enum MissCatLicenseCatalog {
-    static let dependencyNames = ["Firebase"]
+    static let dependencyNames: [String] = []
 
     static func acknowledgements(in bundle: Bundle = .main) -> [String: String] {
         guard let url = bundle.url(
