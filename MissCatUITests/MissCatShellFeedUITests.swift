@@ -78,10 +78,13 @@ final class MissCatShellFeedUITests: XCTestCase {
         swipeProductionPagerLeft()
         waitForProductionPagerSelection("global")
 
+        app.buttons["main.tab.notifications"].tap()
+        XCTAssertTrue(element("notifications.screen").waitForExistence(timeout: 5))
         app.buttons["main.header.account"].tap()
         app.buttons["main.account.https://fixture.example|fixture-cat"].tap()
-        waitForProductionReady(page: "home")
         waitForAccount("https://fixture.example|fixture-cat")
+        app.buttons["main.tab.home"].tap()
+        waitForProductionReady(page: "home")
 
         let persistedAccount = element("production.root.persisted-account")
         XCTAssertTrue(persistedAccount.waitForExistence(timeout: 5))
