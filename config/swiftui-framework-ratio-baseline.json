@@ -2,15 +2,15 @@
   "schema_version": 1,
   "target": "MissCat",
   "counts": {
-    "total_swift": 194,
-    "uikit_only": 88,
-    "swiftui_only": 20,
-    "hybrid": 11,
-    "neutral": 75,
-    "rx_files": 83,
-    "polio_files": 1,
-    "legacy_loader_files": 34,
-    "legacy_loader_refs": 63,
+    "total_swift": 64,
+    "uikit_only": 3,
+    "swiftui_only": 22,
+    "hybrid": 6,
+    "neutral": 33,
+    "rx_files": 0,
+    "polio_files": 0,
+    "legacy_loader_files": 0,
+    "legacy_loader_refs": 0,
     "tracked_ib_artifacts": 0
   }
 }

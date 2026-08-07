@@ -35,19 +35,19 @@ production_json="${fixture_dir}/production.json"
 env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" >"$production_json"
 assert_json "$production_json" '
   expected = {
-    "total_swift" => 194,
-    "uikit_only" => 88,
-    "swiftui_only" => 20,
-    "hybrid" => 11,
-    "neutral" => 75,
-    "rx_files" => 83,
-    "polio_files" => 1,
-    "legacy_loader_files" => 34,
-    "legacy_loader_refs" => 63,
+    "total_swift" => 64,
+    "uikit_only" => 3,
+    "swiftui_only" => 22,
+    "hybrid" => 6,
+    "neutral" => 33,
+    "rx_files" => 0,
+    "polio_files" => 0,
+    "legacy_loader_files" => 0,
+    "legacy_loader_refs" => 0,
     "tracked_ib_artifacts" => 0
   }
   abort unless data.fetch("passed") && data.fetch("counts") == expected
-  abort unless data.fetch("pure_swiftui_progress").values_at("numerator", "denominator", "basis_points") == [20, 119, 1680]
+  abort unless data.fetch("pure_swiftui_progress").values_at("numerator", "denominator", "basis_points") == [22, 31, 7096]
 '
 
 production_complete_json="${fixture_dir}/production-complete.json"
@@ -56,8 +56,10 @@ expect_gate_failure "$production_complete_json" \
 assert_json "$production_complete_json" '
   abort if data.fetch("passed")
   abort unless data.fetch("mode") == "require-complete"
-  required = %w[uikit_only hybrid rx_files polio_files legacy_loader_files legacy_loader_refs]
+  required = %w[uikit_only hybrid]
+  retired = %w[rx_files polio_files legacy_loader_files legacy_loader_refs tracked_ib_artifacts]
   abort unless required.all? { |key| data.fetch("violations").any? { |message| message.start_with?(key) } }
+  abort if retired.any? { |key| data.fetch("violations").any? { |message| message.start_with?(key) } }
 '
 
 fixture_repository="${fixture_dir}/repository"
