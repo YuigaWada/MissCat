@@ -300,10 +300,11 @@ def progress_regressed?(current_counts, baseline_counts)
   current_numerator * baseline_denominator < baseline_numerator * current_denominator
 end
 
-options = {
-  target: DEFAULT_TARGET,
-  require_complete: false
-}
+if $PROGRAM_NAME == __FILE__
+  options = {
+    target: DEFAULT_TARGET,
+    require_complete: false
+  }
 
 parser = OptionParser.new do |arguments|
   arguments.banner = <<~USAGE
@@ -385,4 +386,5 @@ rescue OptionParser::ParseError => error
 rescue VerificationError => error
   warn "SwiftUI framework ratio verification failed: #{error.message}"
   exit 2
+end
 end

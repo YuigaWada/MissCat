@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "targets": {
+    "MissCat": {
+      "counts": {
+        "total_swift": 64,
+        "uikit_only": 2,
+        "swiftui_only": 26,
+        "hybrid": 2,
+        "neutral": 34,
+        "rx_files": 0,
+        "polio_files": 0,
+        "legacy_loader_files": 0,
+        "legacy_loader_refs": 0,
+        "tracked_ib_artifacts": 0
+      }
+    },
+    "MissCatShare": {
+      "counts": {
+        "total_swift": 8,
+        "uikit_only": 0,
+        "swiftui_only": 1,
+        "hybrid": 1,
+        "neutral": 6,
+        "rx_files": 0,
+        "polio_files": 0,
+        "legacy_loader_files": 0,
+        "legacy_loader_refs": 0,
+        "tracked_ib_artifacts": 0
+      }
+    }
+  },
+  "aggregate": {
+    "counts": {
+      "total_swift": 72,
+      "uikit_only": 2,
+      "swiftui_only": 27,
+      "hybrid": 3,
+      "neutral": 40,
+      "rx_files": 0,
+      "polio_files": 0,
+      "legacy_loader_files": 0,
+      "legacy_loader_refs": 0,
+      "tracked_ib_artifacts": 0
+    }
+  }
+}
