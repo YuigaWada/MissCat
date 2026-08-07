@@ -85,22 +85,25 @@ final class MissCatProductionRootCutoverTests: XCTestCase {
         XCTAssertFalse(shippingSource.contains("struct LegacyApplicationView"))
     }
 
-    func testAppDelegateDeliversResolvedPushesToApplicationMailbox() throws {
-        let source = try source(named: "Others/App/AppDelegate.swift")
+    func testProductionRootDefersRemotePushTransportWithoutRetainingFCMScaffolding() throws {
+        let app = try source(named: "Others/App/MissCatApp.swift")
         let support = try source(
             named: "SwiftUI/ApplicationRoot/MissCatProductionApplicationSupport.swift"
         )
+        let rootStore = try source(
+            named: "SwiftUI/ApplicationRoot/MissCatApplicationRootStore.swift"
+        )
+        let authentication = try source(
+            named: "SwiftUI/Authentication/MissCatAuthenticationService.swift"
+        )
 
-        XCTAssertTrue(source.contains("MissCatApplicationLifecycleCoordinator.shared"))
-        XCTAssertTrue(source.contains("registerForRemoteNotifications()"))
-        XCTAssertFalse(source.contains("MissCatApplicationPushIngress"))
-        XCTAssertFalse(source.contains("MissCatPushOwnerResolver"))
-        XCTAssertFalse(source.contains("HomeViewController"))
-        XCTAssertFalse(source.contains("rootViewController"))
-        XCTAssertTrue(support.contains("MissCatApplicationPushIngress"))
-        XCTAssertTrue(support.contains("MissCatApplicationPushResolver"))
-        XCTAssertTrue(support.contains("UNUserNotificationCenterDelegate"))
-        XCTAssertTrue(support.contains("MessagingDelegate"))
+        for source in [app, support, rootStore, authentication] {
+            XCTAssertFalse(source.contains("UIApplicationDelegateAdaptor"))
+            XCTAssertFalse(source.contains("Firebase"))
+            XCTAssertFalse(source.contains("Messaging"))
+            XCTAssertFalse(source.contains("registerForRemoteNotifications"))
+            XCTAssertFalse(source.contains("MissCatApplicationPush"))
+        }
     }
 
     func testProductionComposeUsesRootBoundAuthorizedScopesInsteadOfGlobalAccountSelection() throws {

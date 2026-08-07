@@ -130,120 +130,6 @@ final class MissCatApplicationRootTests: XCTestCase {
         XCTAssertEqual(router.path.last, .profileUserList(.followers(userID: profile.id)))
     }
 
-    func testMailboxQueuesBeforeReadinessFlushesFIFOAndRejectsWrongAccount() async {
-        let firstAccount = account(instance: "one.example", userID: "one", username: "cat")
-        let secondAccount = account(instance: "two.example", userID: "two", username: "dog")
-        let mailbox = MissCatApplicationPushMailbox(capacity: 4)
-        let first = push("delivery-1", account: firstAccount, notificationID: "notification-1")
-        let second = push("delivery-2", account: firstAccount, notificationID: "notification-2")
-        let wrong = push("delivery-3", account: secondAccount, notificationID: "notification-3")
-        let wrongAfterReady = push(
-            "delivery-4",
-            account: secondAccount,
-            notificationID: "notification-4"
-        )
-
-        let firstAdmission = await mailbox.enqueue(first)
-        let secondAdmission = await mailbox.enqueue(second)
-        let wrongAdmission = await mailbox.enqueue(wrong)
-        let duplicateAdmission = await mailbox.enqueue(first)
-        XCTAssertEqual(firstAdmission, .queued)
-        XCTAssertEqual(secondAdmission, .queued)
-        XCTAssertEqual(wrongAdmission, .queued)
-        XCTAssertEqual(duplicateAdmission, .duplicate)
-
-        let deliveries = await mailbox.setRootReady(for: firstAccount.id)
-        XCTAssertEqual(deliveries, [first, second])
-        let readyWrongAdmission = await mailbox.enqueue(wrongAfterReady)
-        XCTAssertEqual(
-            readyWrongAdmission,
-            .rejected(.accountMismatch(expected: firstAccount.id, received: secondAccount.id))
-        )
-        let snapshot = await mailbox.snapshot()
-        XCTAssertTrue(snapshot.isRootReady)
-        XCTAssertEqual(snapshot.pendingCount, 0)
-        XCTAssertEqual(snapshot.rejectedCount, 2)
-        XCTAssertEqual(snapshot.duplicateCount, 1)
-    }
-
-    func testMailboxIsBoundedAndReportsDroppedPushes() async {
-        let owner = account(instance: "one.example", userID: "one", username: "cat")
-        let mailbox = MissCatApplicationPushMailbox(capacity: 2)
-        let first = push("delivery-1", account: owner, notificationID: "notification-1")
-        let second = push("delivery-2", account: owner, notificationID: "notification-2")
-        let third = push("delivery-3", account: owner, notificationID: "notification-3")
-
-        let firstAdmission = await mailbox.enqueue(first)
-        let secondAdmission = await mailbox.enqueue(second)
-        let thirdAdmission = await mailbox.enqueue(third)
-        XCTAssertEqual(firstAdmission, .queued)
-        XCTAssertEqual(secondAdmission, .queued)
-        XCTAssertEqual(thirdAdmission, .queued)
-        let snapshot = await mailbox.snapshot()
-        XCTAssertEqual(snapshot.pendingCount, 2)
-        XCTAssertEqual(snapshot.droppedCount, 1)
-        let deliveries = await mailbox.setRootReady(for: owner.id)
-        XCTAssertEqual(deliveries, [second, third])
-    }
-
-    func testPushQueuedBeforeRestoreRoutesOnlyAfterMatchingRootIsReady() async {
-        let owner = account(instance: "one.example", userID: "one", username: "cat")
-        let provider = ImmediateApplicationSessionProvider(restored: session(account: owner))
-        let store = MissCatApplicationRootStore(sessionProvider: provider)
-        let pending = push("delivery-1", account: owner, notificationID: "notification-1")
-
-        let admission = await store.receivePush(pending)
-        XCTAssertEqual(admission, .queued)
-        XCTAssertNil(store.router.latestPush)
-
-        await store.restore()
-
-        XCTAssertEqual(store.phase.authenticatedSession?.currentAccount.id, owner.id)
-        XCTAssertEqual(store.router.selectedSection, .notifications)
-        XCTAssertEqual(store.router.path, [.notification(id: "notification-1")])
-        XCTAssertEqual(store.router.latestPush, pending)
-    }
-
-    func testPushForAnotherAccountIsRejectedWhenRestoreCompletes() async {
-        let current = account(instance: "one.example", userID: "same", username: "cat")
-        let other = account(instance: "two.example", userID: "same", username: "cat")
-        let provider = ImmediateApplicationSessionProvider(restored: session(account: current))
-        let store = MissCatApplicationRootStore(sessionProvider: provider)
-        let pending = push("delivery-1", account: other, notificationID: "notification-1")
-
-        let admission = await store.receivePush(pending)
-        XCTAssertEqual(admission, .queued)
-        await store.restore()
-
-        XCTAssertNil(store.router.latestPush)
-        XCTAssertTrue(store.router.path.isEmpty)
-        let snapshot = await store.pushMailbox.snapshot()
-        XCTAssertEqual(snapshot.rejectedCount, 1)
-        XCTAssertEqual(
-            snapshot.lastRejection,
-            .accountMismatch(expected: current.id, received: other.id)
-        )
-    }
-
-    func testPushAfterReadinessDeliversImmediatelyAndRefreshDoesNotNavigate() async {
-        let owner = account(instance: "one.example", userID: "one", username: "cat")
-        let provider = ImmediateApplicationSessionProvider(restored: session(account: owner))
-        let store = MissCatApplicationRootStore(sessionProvider: provider)
-        await store.restore()
-        let refresh = MissCatApplicationPush(
-            id: "delivery-refresh",
-            accountID: owner.id,
-            action: .refreshNotifications(notificationID: "notification-1")
-        )
-
-        let admission = await store.receivePush(refresh)
-        XCTAssertEqual(admission, .delivered)
-        XCTAssertEqual(store.router.latestPush, refresh)
-        XCTAssertEqual(store.router.pushDeliveryGeneration, 1)
-        XCTAssertEqual(store.router.selectedSection, .home)
-        XCTAssertTrue(store.router.path.isEmpty)
-    }
-
     func testLaterAccountSwitchWinsWhenCanceledProviderReturnsLate() async {
         let primary = account(instance: "one.example", userID: "one", username: "cat")
         let secondary = account(instance: "two.example", userID: "two", username: "dog")
@@ -300,7 +186,7 @@ final class MissCatApplicationRootTests: XCTestCase {
         XCTAssertEqual(store.lastErrorMessage, "The selected account did not match the restored session.")
     }
 
-    func testSignOutClearsAccountNavigationPresentationAndMailbox() async {
+    func testSignOutClearsAccountNavigationAndPresentation() async {
         let owner = account(instance: "one.example", userID: "one", username: "cat")
         let provider = ImmediateApplicationSessionProvider(restored: session(account: owner))
         let store = MissCatApplicationRootStore(sessionProvider: provider)
@@ -314,9 +200,6 @@ final class MissCatApplicationRootTests: XCTestCase {
         XCTAssertNil(store.router.activeAccountID)
         XCTAssertTrue(store.router.path.isEmpty)
         XCTAssertNil(store.router.sheetDestination)
-        let snapshot = await store.pushMailbox.snapshot()
-        XCTAssertFalse(snapshot.isRootReady)
-        XCTAssertEqual(snapshot.pendingCount, 0)
     }
 
     private func waitUntil(
@@ -440,17 +323,5 @@ private func session(account: MissCatApplicationAccount) -> MissCatApplicationSe
         accounts: [account],
         timelineTabs: [tab("home"), tab("local"), tab("global")],
         selectedTimelineID: "home"
-    )
-}
-
-private func push(
-    _ id: String,
-    account: MissCatApplicationAccount,
-    notificationID: String
-) -> MissCatApplicationPush {
-    MissCatApplicationPush(
-        id: id,
-        accountID: account.id,
-        action: .openNotification(notificationID: notificationID)
     )
 }

@@ -16,7 +16,6 @@ private final class MockNotificationMessagingRepository:
     var notificationRequests: [(cursor: String?, limit: Int)] = []
     var notificationError: Error?
     var notificationDelay: UInt64 = 0
-    var resolvedNotifications: [String: MissCatNotification] = [:]
     var realtimeContinuation: AsyncStream<MissCatNotificationRealtimeEvent>.Continuation?
 
     var conversations: [MissCatConversation] = []
@@ -45,11 +44,6 @@ private final class MockNotificationMessagingRepository:
         return notificationPages.isEmpty
             ? MissCatNotificationPage(notifications: [], hasMore: false)
             : notificationPages.removeFirst()
-    }
-
-    func resolveNotification(id: String) async throws -> MissCatNotification? {
-        if let notificationError { throw notificationError }
-        return resolvedNotifications[id]
     }
 
     func realtimeNotifications() -> AsyncStream<MissCatNotificationRealtimeEvent> {
@@ -188,29 +182,6 @@ final class MissCatNotificationMessageStoreTests: XCTestCase {
 
         XCTAssertEqual(store.accountScope.accountID, "new")
         XCTAssertEqual(store.notifications.map(\.id), ["fresh"])
-    }
-
-    func testForegroundPushFiltersOwnerAndExposesTypedRoute() async {
-        let repository = MockNotificationMessagingRepository(accountID: "owner")
-        let resolved = notification("push", kind: .mention)
-        repository.resolvedNotifications["push"] = resolved
-        let store = MissCatNotificationsStore(repository: repository)
-
-        await store.handleForegroundPush(.init(
-            ownerAccountIdentifier: "other-account",
-            ownerAPIUserID: "other",
-            notificationID: "push"
-        ))
-        XCTAssertNil(store.banner)
-
-        await store.handleForegroundPush(.init(
-            ownerAccountIdentifier: "owner-account",
-            ownerAPIUserID: "owner",
-            notificationID: "push"
-        ))
-        XCTAssertEqual(store.banner?.notification.id, "push")
-        XCTAssertEqual(store.takeBannerRoute(), .note("note-mention"))
-        XCTAssertNil(store.banner)
     }
 
     func testHistorySortsLatestAndDeduplicatesPeer() async {
@@ -410,6 +381,40 @@ final class MissCatNotificationMessageStoreTests: XCTestCase {
 }
 
 final class MissCatNotificationMessageContractTests: XCTestCase {
+    func testRemotePushBannerIsDeferredWhileNotificationListAPIRemainsShipping() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let featureRoot = repositoryRoot.appendingPathComponent(
+            "MissCat/SwiftUI/NotificationsMessages"
+        )
+        let repository = try String(
+            contentsOf: featureRoot.appendingPathComponent(
+                "MissCatNotificationMessageRepository.swift"
+            ),
+            encoding: .utf8
+        )
+        let store = try String(
+            contentsOf: featureRoot.appendingPathComponent(
+                "MissCatNotificationMessageStores.swift"
+            ),
+            encoding: .utf8
+        )
+        let views = try String(
+            contentsOf: featureRoot.appendingPathComponent(
+                "MissCatNotificationsViews.swift"
+            ),
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(repository.contains("fetchNotifications"))
+        XCTAssertTrue(repository.contains("\"i/notifications\""))
+        XCTAssertFalse(repository.contains("resolveNotification"))
+        XCTAssertFalse(store.contains("handleForegroundPush"))
+        XCTAssertFalse(views.contains("MissCatInAppNotificationBannerView"))
+        XCTAssertFalse(views.contains("notification.banner"))
+    }
+
     func testCapabilitySelectsOnlyCompleteCurrentOrLegacySets() {
         XCTAssertEqual(
             MissCatAPIEndpointCapabilities(endpoints: [
@@ -427,160 +432,6 @@ final class MissCatNotificationMessageContractTests: XCTestCase {
             MissCatAPIEndpointCapabilities(endpoints: ["chat/history"]).directMessageAPI,
             .unavailable
         )
-    }
-
-    func testPushEnvelopeRequiresOwnerAndNotificationIdentifiers() {
-        XCTAssertEqual(
-            MissCatPushEnvelope(payload: ["ownerId": "owner", "notificationId": "notification"]),
-            .init(ownerIdentifier: "owner", notificationID: "notification")
-        )
-        XCTAssertNil(MissCatPushEnvelope(payload: ["notificationId": "notification"]))
-        XCTAssertNil(MissCatPushEnvelope(payload: ["ownerId": "owner"]))
-        XCTAssertEqual(
-            MissCatPushEnvelope(payload: ["owner_id": "owner", "notification_id": "notification"]),
-            .init(ownerIdentifier: "owner", notificationID: "notification")
-        )
-    }
-
-    func testPushOwnerResolutionPrefersCompositeAccountIdentifier() throws {
-        let accounts = pushAccountsWithDuplicateUserID()
-        let second = accounts[1]
-        let envelope = MissCatPushEnvelope(
-            ownerIdentifier: second.accountIdentifier,
-            ownerInstance: accounts[0].instance,
-            notificationID: "notification"
-        )
-
-        let resolved = try XCTUnwrap(MissCatPushOwnerResolver.resolve(envelope, accounts: accounts))
-
-        XCTAssertEqual(resolved.ownerAccountIdentifier, second.accountIdentifier)
-        XCTAssertEqual(resolved.ownerAPIUserID, second.apiUserID)
-    }
-
-    func testPushOwnerResolutionAllowsUniqueLegacyAPIUserID() throws {
-        let account = MissCatPushAccountIdentity(
-            accountIdentifier: MissCatAccountIdentity.storageKey(
-                instance: "only.example",
-                userId: "legacy-owner"
-            ),
-            apiUserID: "legacy-owner",
-            instance: "only.example"
-        )
-        let envelope = MissCatPushEnvelope(
-            ownerIdentifier: "legacy-owner",
-            notificationID: "notification"
-        )
-
-        XCTAssertEqual(
-            MissCatPushOwnerResolver.resolve(envelope, accounts: [account])?.ownerAccountIdentifier,
-            account.accountIdentifier
-        )
-    }
-
-    func testPushOwnerResolutionRejectsAmbiguousLegacyAPIUserID() {
-        let envelope = MissCatPushEnvelope(
-            ownerIdentifier: "same-owner",
-            notificationID: "notification"
-        )
-
-        XCTAssertNil(MissCatPushOwnerResolver.resolve(
-            envelope,
-            accounts: pushAccountsWithDuplicateUserID()
-        ))
-    }
-
-    func testPushOwnerResolutionUsesExactInstanceProofForLegacyAPIUserID() throws {
-        let accounts = pushAccountsWithDuplicateUserID()
-        let envelope = MissCatPushEnvelope(
-            ownerIdentifier: "same-owner",
-            ownerInstance: "HTTPS://SECOND.EXAMPLE:443/",
-            notificationID: "notification"
-        )
-
-        let resolved = try XCTUnwrap(MissCatPushOwnerResolver.resolve(envelope, accounts: accounts))
-
-        XCTAssertEqual(resolved.ownerAccountIdentifier, accounts[1].accountIdentifier)
-        XCTAssertNil(MissCatPushOwnerResolver.resolve(
-            .init(
-                ownerIdentifier: "same-owner",
-                ownerInstance: "unknown.example",
-                notificationID: "notification"
-            ),
-            accounts: accounts
-        ))
-    }
-
-    func testPushPayloadPrefersCompositeOwnerFieldOverLegacyOwnerField() {
-        let envelope = MissCatPushEnvelope(payload: [
-            "ownerAccountId": "composite-owner",
-            "ownerId": "legacy-owner",
-            "ownerInstance": "example.test",
-            "notificationId": "notification"
-        ])
-
-        XCTAssertEqual(
-            envelope,
-            .init(
-                ownerIdentifier: "composite-owner",
-                ownerInstance: "example.test",
-                notificationID: "notification"
-            )
-        )
-    }
-
-    func testApplicationPushResolverBuildsAccountScopedRefreshAndOpenActions() throws {
-        let account = MissCatPushAccountIdentity(
-            accountIdentifier: "instance.example|owner",
-            apiUserID: "owner",
-            instance: "instance.example"
-        )
-        let envelope = MissCatPushEnvelope(
-            ownerIdentifier: account.accountIdentifier,
-            notificationID: "notification"
-        )
-
-        let refresh = try XCTUnwrap(MissCatApplicationPushResolver.resolve(
-            envelope,
-            accounts: [account],
-            opensRoute: false
-        ))
-        let open = try XCTUnwrap(MissCatApplicationPushResolver.resolve(
-            envelope,
-            accounts: [account],
-            opensRoute: true
-        ))
-
-        XCTAssertEqual(refresh.accountID.rawValue, account.accountIdentifier)
-        XCTAssertEqual(refresh.action, .refreshNotifications(notificationID: "notification"))
-        XCTAssertEqual(open.action, .openNotification(notificationID: "notification"))
-        XCTAssertEqual(refresh.id, "instance.example|owner:notification:refresh")
-        XCTAssertEqual(open.id, "instance.example|owner:notification:open")
-    }
-
-    @MainActor
-    func testPushLifecycleStateRecordsRegistrationWithoutTransportTypes() {
-        let state = MissCatPushLifecycleState()
-
-        state.authorizationRequested()
-        state.remoteRegistrationRequested()
-        state.registered()
-        XCTAssertEqual(state.phase, .registered)
-
-        state.registrationFailed(message: "offline")
-        XCTAssertEqual(state.phase, .failed(message: "offline"))
-    }
-
-    private func pushAccountsWithDuplicateUserID() -> [MissCatPushAccountIdentity] {
-        ["first.example", "second.example"].map { instance in
-            MissCatPushAccountIdentity(
-                accountIdentifier: MissCatAccountIdentity.storageKey(
-                    instance: instance,
-                    userId: "same-owner"
-                ),
-                apiUserID: "same-owner",
-                instance: instance
-            )
-        }
     }
 
     func testNativeNotificationRequestUsesCurrentEndpointAndBearerContract() async throws {

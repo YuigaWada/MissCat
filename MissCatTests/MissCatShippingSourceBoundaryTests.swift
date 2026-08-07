@@ -10,10 +10,12 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
         )
         let sourceNames = try swiftSourceNames(in: appSources)
 
-        XCTAssertEqual(sourceNames.count, 65)
+        XCTAssertEqual(sourceNames.count, 63)
         XCTAssertTrue(sourceNames.contains("MissCatNativeAPI.swift"))
         XCTAssertTrue(sourceNames.contains("MissCatCameraCapture.swift"))
         for forbiddenMembership in [
+            "AppDelegate.swift in Sources",
+            "MisscatApi.swift in Sources",
             "ViewController.swift in Sources",
             "ViewModel.swift in Sources",
             "MFMEngine.swift in Sources",
@@ -71,11 +73,13 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
             .split(separator: "\n")
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { $0.hasPrefix("pod ") }
-        XCTAssertEqual(Set(directPods), Set(["pod 'Firebase/Messaging'"]))
+        XCTAssertTrue(directPods.isEmpty)
         XCTAssertFalse(podfile.contains("target 'MissCatShare'"))
+        XCTAssertFalse(podfile.contains("Firebase"))
+        XCTAssertFalse(project.contains("GoogleService-Info.plist"))
 
         let lock = try source(named: "Podfile.lock")
-        for retiredPod in ["MisskeyKit", "Starscream"] {
+        for retiredPod in ["MisskeyKit", "Starscream", "Firebase"] {
             XCTAssertFalse(lock.contains(retiredPod), "Retired pod remains locked: \(retiredPod)")
             XCTAssertFalse(project.contains("\"\(retiredPod)\""), "Retired framework remains linked: \(retiredPod)")
         }
@@ -103,23 +107,29 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
         XCTAssertEqual(
             UIKitSymbolsBySource,
             [
-                "AppDelegate.swift": [
-                    "UIApplication",
-                    "UIApplicationDelegate",
-                    "UIBackgroundFetchResult",
-                ],
                 "MissCatSystemClipboardWriter.swift": ["UIPasteboard"],
             ]
         )
 
-        let appDelegate = try source(named: "MissCat/Others/App/AppDelegate.swift")
-        XCTAssertFalse(appDelegate.contains("FirebaseApp"))
-        XCTAssertFalse(appDelegate.contains("Messaging.messaging"))
-        XCTAssertFalse(appDelegate.contains("UNUserNotificationCenter"))
-        XCTAssertFalse(appDelegate.contains("MissCatPushOwnerResolver"))
-        XCTAssertFalse(appDelegate.contains("MissCatApplicationPushIngress"))
-        XCTAssertFalse(appDelegate.contains("Cache.UserDefaults"))
-        XCTAssertFalse(appDelegate.contains("Theme.shared"))
+        let shippingSource = try sourceNames.map { sourceName in
+            try String(
+                contentsOf: XCTUnwrap(
+                    repositorySources.first { $0.lastPathComponent == sourceName }
+                ),
+                encoding: .utf8
+            )
+        }.joined(separator: "\n")
+        for deferredTransportSymbol in [
+            "import FirebaseCore",
+            "import FirebaseMessaging",
+            "MessagingDelegate",
+            "registerForRemoteNotifications",
+            "MissCatApplicationPushIngress",
+            "MissCatApplicationPushMailbox",
+            "MissCatPushEnvelope",
+        ] {
+            XCTAssertFalse(shippingSource.contains(deferredTransportSymbol), deferredTransportSymbol)
+        }
 
         let clipboard = try source(
             named: "MissCat/Others/Platform/MissCatSystemClipboardWriter.swift"
@@ -196,7 +206,7 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
         return Set(expression.matches(in: source, range: range).compactMap { match in
             guard let range = Range(match.range, in: source) else { return nil }
             return String(source[range])
-        })
+        }.filter { $0 != "UIKit" })
     }
 
     private var legacySourcePrefixes: [String] {
