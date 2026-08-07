@@ -186,7 +186,6 @@ public struct MissCatAccountsScreen: View {
     private let onOpenProfile: (MissCatAccountSummary) -> Void
     private let onAccountSwitched: () -> Void
     private let onConfiguredTabsChanged: () -> Void
-    private let onAllAccountsDeleted: () -> Void
 
     public init(
         store: MissCatAccountStore,
@@ -194,8 +193,7 @@ public struct MissCatAccountsScreen: View {
         onAddAccount: @escaping () -> Void,
         onOpenProfile: @escaping (MissCatAccountSummary) -> Void,
         onAccountSwitched: @escaping () -> Void,
-        onConfiguredTabsChanged: @escaping () -> Void,
-        onAllAccountsDeleted: @escaping () -> Void
+        onConfiguredTabsChanged: @escaping () -> Void
     ) {
         self.store = store
         self.palette = palette
@@ -203,7 +201,6 @@ public struct MissCatAccountsScreen: View {
         self.onOpenProfile = onOpenProfile
         self.onAccountSwitched = onAccountSwitched
         self.onConfiguredTabsChanged = onConfiguredTabsChanged
-        self.onAllAccountsDeleted = onAllAccountsDeleted
     }
 
     public var body: some View {
@@ -235,10 +232,7 @@ public struct MissCatAccountsScreen: View {
         ) {
             Button("閉じる", role: .cancel) { store.cancelDeletion() }
             Button("はい", role: .destructive) {
-                store.confirmDeletion(
-                    onConfiguredTabsChanged: onConfiguredTabsChanged,
-                    onAllAccountsDeleted: onAllAccountsDeleted
-                )
+                store.confirmDeletion(onConfiguredTabsChanged: onConfiguredTabsChanged)
             }
         }
         .alert(
@@ -407,19 +401,22 @@ public struct MissCatAccountsRootView: View {
     private let profileDestination: (MissCatAccountSummary, @escaping () -> Void) -> AnyView
     private let onAccountSwitched: () -> Void
     private let onConfiguredTabsChanged: () -> Void
+    private let automaticallyPresentsRequiredAccountRecovery: Bool
 
     public init(
         store: MissCatAccountStore,
         palette: MissCatVisualPalette = .legacyLight,
         profileDestination: @escaping (MissCatAccountSummary, @escaping () -> Void) -> AnyView,
         onAccountSwitched: @escaping () -> Void = {},
-        onConfiguredTabsChanged: @escaping () -> Void = {}
+        onConfiguredTabsChanged: @escaping () -> Void = {},
+        automaticallyPresentsRequiredAccountRecovery: Bool = true
     ) {
         _store = StateObject(wrappedValue: store)
         self.palette = palette
         self.profileDestination = profileDestination
         self.onAccountSwitched = onAccountSwitched
         self.onConfiguredTabsChanged = onConfiguredTabsChanged
+        self.automaticallyPresentsRequiredAccountRecovery = automaticallyPresentsRequiredAccountRecovery
     }
 
     public var body: some View {
@@ -430,8 +427,7 @@ public struct MissCatAccountsRootView: View {
                 onAddAccount: { addAccountPresentation = .cancelable },
                 onOpenProfile: { path.append(.profile(accountID: $0.id)) },
                 onAccountSwitched: onAccountSwitched,
-                onConfiguredTabsChanged: onConfiguredTabsChanged,
-                onAllAccountsDeleted: { addAccountPresentation = .required }
+                onConfiguredTabsChanged: onConfiguredTabsChanged
             )
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: MissCatAccountsRoute.self) { route in
@@ -454,6 +450,10 @@ public struct MissCatAccountsRootView: View {
             }
         }
         .tint(palette.accent)
+        .onChange(of: store.requiresAccountRecovery, initial: true) { _, requiresRecovery in
+            guard automaticallyPresentsRequiredAccountRecovery, requiresRecovery else { return }
+            addAccountPresentation = .required
+        }
         .fullScreenCover(item: $addAccountPresentation) { presentation in
             MissCatAddAccountSheet(
                 allowsCancel: presentation == .cancelable,
@@ -866,13 +866,8 @@ public struct MissCatReactionInstanceScreen: View {
             } else {
                 List(store.accounts) { account in
                     NavigationLink(value: MissCatSettingsRoute.reactions(accountID: account.id)) {
-                        HStack {
-                            Text(account.instance)
-                                .font(.system(size: 17, weight: .bold))
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(palette.muted)
-                        }
+                        Text(account.instance)
+                            .font(.system(size: 17, weight: .bold))
                         .frame(minHeight: 44)
                     }
                     .listRowBackground(palette.base)
@@ -1204,13 +1199,8 @@ public struct MissCatLicensesScreen: View {
             Section("License") {
                 ForEach(entries) { entry in
                     NavigationLink(value: MissCatSettingsRoute.license(name: entry.name)) {
-                        HStack {
-                            Text(entry.name)
-                                .font(.system(size: 17, weight: .bold))
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(palette.muted)
-                        }
+                        Text(entry.name)
+                            .font(.system(size: 17, weight: .bold))
                         .frame(height: 60)
                     }
                     .listRowBackground(palette.base)
@@ -1230,6 +1220,7 @@ public struct MissCatLicensesScreen: View {
 }
 
 public struct MissCatLicenseDetailScreen: View {
+    @State private var isVisuallyReady = false
     public let entry: MissCatLicenseEntry?
     public let palette: MissCatVisualPalette
 
@@ -1250,8 +1241,18 @@ public struct MissCatLicenseDetailScreen: View {
         .background(palette.base.ignoresSafeArea())
         .navigationTitle(entry?.name ?? "LICENSE")
         .navigationBarTitleDisplayMode(.inline)
+        .task(id: entry?.id) {
+            isVisuallyReady = false
+            // Let the navigation bar and the text viewport finish their first
+            // layout pass before a screenshot consumer observes readiness.
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            isVisuallyReady = true
+        }
         .overlay(alignment: .bottomTrailing) {
-            MissCatSettingsVisualReadyMarker(ready: true, identifier: "settings.license.detail.visualReady")
+            MissCatSettingsVisualReadyMarker(
+                ready: isVisuallyReady,
+                identifier: "settings.license.detail.visualReady"
+            )
         }
     }
 }

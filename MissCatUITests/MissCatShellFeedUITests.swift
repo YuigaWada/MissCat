@@ -121,6 +121,10 @@ final class MissCatShellFeedUITests: XCTestCase {
         captureAccountsSettingsScreens(["design", "about"])
     }
 
+    func testReviewerStateIntegrityAcceptanceScreenshots() {
+        captureAccountsSettingsScreens(["reaction-instances", "licenses", "license-detail"])
+    }
+
     private func captureAccountsSettingsScreens(_ screens: [String]) {
         for screen in screens {
             launchAccountsSettingsFixture(screen: screen)
@@ -167,6 +171,27 @@ final class MissCatShellFeedUITests: XCTestCase {
         XCTAssertTrue(element("accounts.list").exists)
     }
 
+    func testLastTabOwningAccountDeletionKeepsRequiredRecoveryOnProductionBridge() {
+        launchAccountsSettingsFixture(screen: "accounts-last-recovery")
+        waitForAccountsSettingsVisualReady(screen: "accounts-last-recovery")
+        XCTAssertTrue(element("accounts.card.fixture-wada").exists)
+        XCTAssertFalse(element("accounts.card.fixture-sub").exists)
+
+        app.buttons["accounts.edit"].tap()
+        app.buttons["accounts.delete.fixture-wada"].tap()
+        XCTAssertTrue(app.alerts["本当に削除しますか？"].waitForExistence(timeout: 5))
+        app.alerts.buttons["はい"].tap()
+
+        let required = element("accounts.add.required")
+        XCTAssertTrue(required.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["accounts.add.close"].exists)
+        XCTAssertFalse(element("accounts.card.fixture-wada").exists)
+
+        app.swipeDown()
+        XCTAssertTrue(required.waitForExistence(timeout: 2))
+        XCTAssertFalse(app.buttons["accounts.add.close"].exists)
+    }
+
     func testSettingsTypedNavigationAndInteractiveEditors() {
         launchAccountsSettingsFixture(screen: "settings-root")
         XCTAssertTrue(element("settings.root.visualReady").waitForExistence(timeout: 5))
@@ -188,7 +213,13 @@ final class MissCatShellFeedUITests: XCTestCase {
 
         app.buttons["settings.licenses"].tap()
         XCTAssertTrue(element("settings.licenses.visualReady").waitForExistence(timeout: 5))
-        app.buttons["settings.license.MisskeyKit"].tap()
+        let rxSwiftLicense = app.buttons["settings.license.RxSwift"]
+        for _ in 0..<5 where !rxSwiftLicense.exists || !rxSwiftLicense.isHittable {
+            app.swipeUp()
+        }
+        XCTAssertTrue(rxSwiftLicense.waitForExistence(timeout: 5))
+        XCTAssertTrue(rxSwiftLicense.isHittable)
+        rxSwiftLicense.tap()
         XCTAssertTrue(element("settings.license.detail.visualReady").waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "MIT License")).firstMatch.exists)
         app.navigationBars.buttons.element(boundBy: 0).tap()
@@ -218,7 +249,7 @@ final class MissCatShellFeedUITests: XCTestCase {
     private func waitForAccountsSettingsVisualReady(screen: String) {
         let identifier: String
         switch screen {
-        case "accounts", "accounts-empty", "accounts-error":
+        case "accounts", "accounts-empty", "accounts-error", "accounts-last-recovery":
             identifier = "accounts.visualReady"
         case "settings-root":
             identifier = "settings.root.visualReady"

@@ -23,6 +23,7 @@ public final class MissCatAccountStore: ObservableObject {
     @Published public var accountPendingDeletion: MissCatAccountSummary?
     @Published public private(set) var busyAccountID: String?
     @Published public var presentation: MissCatSettingsPresentation?
+    @Published public private(set) var requiresAccountRecovery = false
 
     private let repository: any MissCatAccountManaging
     private var operation: Task<Void, Never>?
@@ -66,8 +67,7 @@ public final class MissCatAccountStore: ObservableObject {
     }
 
     public func confirmDeletion(
-        onConfiguredTabsChanged: @escaping () -> Void = {},
-        onAllAccountsDeleted: @escaping () -> Void = {}
+        onConfiguredTabsChanged: @escaping () -> Void = {}
     ) {
         guard let account = accountPendingDeletion else { return }
         accountPendingDeletion = nil
@@ -83,8 +83,13 @@ public final class MissCatAccountStore: ObservableObject {
                 apply(result.snapshot)
                 phase = .loaded
                 presentation = .banner(message: "アカウントを削除しました")
-                if result.removedConfiguredTabs { onConfiguredTabsChanged() }
-                if result.snapshot.accounts.isEmpty { onAllAccountsDeleted() }
+                // Empty-account recovery belongs to the live SwiftUI root. Never
+                // synchronously rebuild/detach that root before it can present the
+                // required add-account flow. A non-empty tab mutation still needs
+                // the authenticated shell to rebuild its configured pager.
+                if !requiresAccountRecovery, result.removedConfiguredTabs {
+                    onConfiguredTabsChanged()
+                }
             } catch is CancellationError {
                 return
             } catch {
@@ -124,6 +129,7 @@ public final class MissCatAccountStore: ObservableObject {
     private func apply(_ snapshot: MissCatAccountSnapshot) {
         accounts = snapshot.accounts
         currentAccountID = snapshot.currentAccountID
+        requiresAccountRecovery = snapshot.accounts.isEmpty
     }
 
     private func replaceOperation(_ body: @escaping @MainActor () async -> Void) {

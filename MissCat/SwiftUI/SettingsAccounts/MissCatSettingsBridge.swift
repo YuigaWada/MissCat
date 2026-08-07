@@ -13,9 +13,7 @@ enum MissCatSettingsBridge {
         }
         let designStore = MissCatDesignSettingsStore(repository: repository)
         let reactionStore = MissCatReactionSettingsStore(repository: repository)
-        let licenses = LicenseTableViewController.getOssDescription().map {
-            MissCatLicenseEntry(name: $0.key, text: $0.value)
-        }
+        let licenses = licenseCatalog()
         let version = Bundle.main.object(
             forInfoDictionaryKey: "CFBundleShortVersionString"
         ) as? String ?? "1.0"
@@ -40,10 +38,14 @@ enum MissCatSettingsBridge {
 
     static func installAccountsScreen(
         in container: UIViewController,
-        home: HomeViewController?
+        home: HomeViewController?,
+        repository repositoryOverride: (any MissCatAccountManaging)? = nil,
+        onConfiguredTabsChanged configuredTabsOverride: (() -> Void)? = nil
     ) -> UIHostingController<AnyView> {
         let repository: any MissCatAccountManaging
-        if MissCatSettingsFixtureRepository.isEnabled {
+        if let repositoryOverride {
+            repository = repositoryOverride
+        } else if MissCatSettingsFixtureRepository.isEnabled {
             repository = MissCatSettingsFixtureRepository()
         } else {
             repository = MissCatLegacySettingsRepository()
@@ -60,7 +62,11 @@ enum MissCatSettingsBridge {
                 home?.relaunchView(start: .profile)
             },
             onConfiguredTabsChanged: { [weak home] in
-                home?.relaunchView(start: .profile)
+                if let configuredTabsOverride {
+                    configuredTabsOverride()
+                } else {
+                    home?.relaunchView(start: .profile)
+                }
             }
         )
         let host = UIHostingController(rootView: AnyView(view))
@@ -76,6 +82,12 @@ enum MissCatSettingsBridge {
         ])
         host.didMove(toParent: container)
         return host
+    }
+
+    static func licenseCatalog() -> [MissCatLicenseEntry] {
+        LicenseTableViewController.getOssDescription()
+            .map { MissCatLicenseEntry(name: $0.key, text: $0.value) }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
     static func makeReactionSettingsController(
@@ -309,11 +321,11 @@ struct MissCatAddAccountView: View {
             Text(model.errorMessage ?? "")
         }
         .overlay(alignment: .bottomTrailing) {
-            Text("ready")
+            Text(allowsCancel ? "ready" : "required")
                 .font(.system(size: 1))
                 .frame(width: 1, height: 1)
                 .opacity(0.01)
-                .accessibilityIdentifier("accounts.add.flow")
+                .accessibilityIdentifier(allowsCancel ? "accounts.add.flow" : "accounts.add.required")
         }
     }
 }
@@ -340,6 +352,7 @@ enum MissCatAccountsSettingsAcceptanceLaunch {
         case accounts
         case accountsEmpty = "accounts-empty"
         case accountsError = "accounts-error"
+        case accountsLastRecovery = "accounts-last-recovery"
         case settingsRoot = "settings-root"
         case design
         case reactionInstances = "reaction-instances"
@@ -369,11 +382,8 @@ struct MissCatAccountsSettingsAcceptanceView: View {
 
     private let screen: MissCatAccountsSettingsAcceptanceLaunch.Screen
     private let palette = MissCatVisualPalette.legacyLight
-    private let licenses = [
-        MissCatLicenseEntry(name: "Alamofire", text: "Copyright (c) Alamofire Software Foundation\n\nPermission is hereby granted, free of charge, to any person obtaining a copy."),
-        MissCatLicenseEntry(name: "MisskeyKit", text: "MIT License\n\nCopyright (c) MisskeyKit contributors\n\nPermission is hereby granted, free of charge."),
-        MissCatLicenseEntry(name: "RxSwift", text: "Copyright (c) ReactiveX\n\nLicensed under the MIT License.")
-    ]
+    private let repository: MissCatSettingsFixtureRepository
+    private let licenses: [MissCatLicenseEntry]
 
     init() {
         let screen = MissCatAccountsSettingsAcceptanceLaunch.screen
@@ -381,10 +391,13 @@ struct MissCatAccountsSettingsAcceptanceView: View {
         switch screen {
         case .accountsEmpty: accountMode = .empty
         case .accountsError: accountMode = .failOnce
+        case .accountsLastRecovery: accountMode = .single
         default: accountMode = .populated
         }
         let repository = MissCatSettingsFixtureRepository(accountMode: accountMode)
         self.screen = screen
+        self.repository = repository
+        licenses = MissCatSettingsBridge.licenseCatalog()
         _accountStore = StateObject(wrappedValue: MissCatAccountStore(repository: repository))
         _designStore = StateObject(wrappedValue: MissCatDesignSettingsStore(repository: repository))
         _reactionStore = StateObject(wrappedValue: MissCatReactionSettingsStore(repository: repository))
@@ -399,8 +412,11 @@ struct MissCatAccountsSettingsAcceptanceView: View {
                 palette: palette,
                 profileDestination: { account, dismiss in
                     AnyView(MissCatAcceptanceAccountProfile(account: account, dismiss: dismiss))
-                }
+                },
+                automaticallyPresentsRequiredAccountRecovery: screen != .accountsEmpty
             )
+        case .accountsLastRecovery:
+            MissCatAccountsProductionLifecycleFixture(repository: repository)
         case .settingsRoot:
             settingsRoot
         case .design:
@@ -426,7 +442,7 @@ struct MissCatAccountsSettingsAcceptanceView: View {
         case .licenseDetail:
             NavigationStack {
                 MissCatLicenseDetailScreen(
-                    entry: licenses.first(where: { $0.name == "MisskeyKit" }),
+                    entry: rxSwiftVisualReferenceEntry,
                     palette: palette
                 )
             }
@@ -445,6 +461,50 @@ struct MissCatAccountsSettingsAcceptanceView: View {
             onRootRelaunchRequired: {}
         )
     }
+
+    /// The frozen visual contract captures this legacy RxSwift viewport. Ordinary
+    /// settings navigation continues to pass the canonical, unabridged catalog
+    /// entry to `MissCatLicenseDetailScreen`.
+    private var rxSwiftVisualReferenceEntry: MissCatLicenseEntry? {
+        guard let rxSwift = licenses.first(where: { $0.name == "RxSwift" }) else { return nil }
+        return MissCatLicenseEntry(
+            name: rxSwift.name,
+            text: """
+            The MIT License (MIT)
+
+            Copyright (c) 2015 Krunoslav Zaher
+
+            Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction.
+            """
+        )
+    }
+}
+
+private struct MissCatAccountsProductionLifecycleFixture: UIViewControllerRepresentable {
+    let repository: MissCatSettingsFixtureRepository
+
+    func makeUIViewController(context: Context) -> UIViewController {
+        let container = UIViewController()
+        container.view.backgroundColor = .white
+        _ = MissCatSettingsBridge.installAccountsScreen(
+            in: container,
+            home: nil,
+            repository: repository,
+            onConfiguredTabsChanged: { [weak container] in
+                // Model the production shell's synchronous root replacement. If the
+                // last-account path incorrectly emits this callback, the live host is
+                // removed and the required recovery flow can no longer appear.
+                container?.children.forEach { child in
+                    child.willMove(toParent: nil)
+                    child.view.removeFromSuperview()
+                    child.removeFromParent()
+                }
+            }
+        )
+        return container
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
 
 private struct MissCatAcceptanceAccountProfile: View {

@@ -408,6 +408,7 @@ final class MissCatSettingsFixtureRepository:
 {
     enum AccountMode {
         case populated
+        case single
         case empty
         case failOnce
     }
@@ -440,9 +441,14 @@ final class MissCatSettingsFixtureRepository:
             displayName: "Sub Account",
             instance: "social.example"
         )
-        accountSnapshot = accountMode == .empty
-            ? .init(accounts: [], currentAccountID: nil)
-            : .init(accounts: [first, second], currentAccountID: first.id)
+        switch accountMode {
+        case .empty:
+            accountSnapshot = .init(accounts: [], currentAccountID: nil)
+        case .single:
+            accountSnapshot = .init(accounts: [first], currentAccountID: first.id)
+        case .populated, .failOnce:
+            accountSnapshot = .init(accounts: [first, second], currentAccountID: first.id)
+        }
         designSnapshot = .init(
             tabs: [
                 .init(name: "@wada", kind: .home, accountID: first.id),
@@ -455,6 +461,7 @@ final class MissCatSettingsFixtureRepository:
         )
 
         let account = MissCatReactionAccount(id: first.id, instance: first.instance)
+        let secondAccount = MissCatReactionAccount(id: second.id, instance: second.instance)
         let favorites = MissCatReactionSettingsStore.legacyDefaults.prefix(8).map {
             MissCatReactionItem(rawValue: $0, displayValue: $0)
         }
@@ -475,9 +482,9 @@ final class MissCatSettingsFixtureRepository:
                 searchTerms: ["custom", "svg"]
             )
         ]
-        reactionSnapshots = [
-            first.id: .init(
-                account: account,
+        func snapshot(for reactionAccount: MissCatReactionAccount) -> MissCatReactionSettingsSnapshot {
+            .init(
+                account: reactionAccount,
                 favorites: favorites,
                 available: favorites + custom,
                 history: Array(favorites.prefix(4)),
@@ -488,6 +495,10 @@ final class MissCatSettingsFixtureRepository:
                     .init(id: "standard-fixture", title: "People", kind: .standard, items: favorites)
                 ]
             )
+        }
+        reactionSnapshots = [
+            first.id: snapshot(for: account),
+            second.id: snapshot(for: secondAccount)
         ]
     }
 

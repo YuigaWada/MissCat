@@ -188,7 +188,7 @@ final class MissCatAccountStoreTests: XCTestCase {
         XCTAssertEqual(store.accounts, [one])
     }
 
-    func testDeletionPublishesTabAndLastAccountEffectsAfterSuccess() async {
+    func testDeletingLastTabOwnerPublishesRequiredRecoveryWithoutRootRelaunch() async {
         let one = account("one")
         let repository = FakeAccountRepository(
             snapshot: .init(accounts: [one], currentAccountID: one.id)
@@ -201,18 +201,60 @@ final class MissCatAccountStoreTests: XCTestCase {
         store.load()
         await eventually { store.phase == .loaded }
         var tabsChanged = 0
-        var allDeleted = 0
 
         store.requestDeletion(one)
-        store.confirmDeletion(
-            onConfiguredTabsChanged: { tabsChanged += 1 },
-            onAllAccountsDeleted: { allDeleted += 1 }
-        )
+        store.confirmDeletion(onConfiguredTabsChanged: { tabsChanged += 1 })
         await eventually { store.accounts.isEmpty && repository.deletedIDs == [one.id] }
 
-        XCTAssertEqual(tabsChanged, 1)
-        XCTAssertEqual(allDeleted, 1)
+        XCTAssertEqual(tabsChanged, 0)
+        XCTAssertTrue(store.requiresAccountRecovery)
+        XCTAssertEqual(store.phase, .loaded)
         XCTAssertNil(store.currentAccountID)
+        XCTAssertEqual(store.presentation, .banner(message: "アカウントを削除しました"))
+    }
+
+    func testLoadingEmptySnapshotRequiresAccountRecoveryUntilAnAccountExists() async {
+        let one = account("one")
+        let repository = FakeAccountRepository(
+            snapshot: .init(accounts: [], currentAccountID: nil)
+        )
+        let store = MissCatAccountStore(repository: repository)
+
+        store.load()
+        await eventually { store.phase == .loaded }
+        XCTAssertTrue(store.requiresAccountRecovery)
+        XCTAssertTrue(store.accounts.isEmpty)
+
+        repository.snapshot = .init(accounts: [one], currentAccountID: one.id)
+        store.load()
+        await eventually { store.accounts == [one] }
+
+        XCTAssertFalse(store.requiresAccountRecovery)
+        XCTAssertEqual(store.currentAccountID, one.id)
+    }
+
+    func testDeletingTabOwnerWithAnotherAccountRelaunchesFromPersistedSnapshot() async {
+        let one = account("one")
+        let two = account("two")
+        let repository = FakeAccountRepository(
+            snapshot: .init(accounts: [one, two], currentAccountID: one.id)
+        )
+        repository.deletionResult = .init(
+            snapshot: .init(accounts: [two], currentAccountID: two.id),
+            removedConfiguredTabs: true
+        )
+        let store = MissCatAccountStore(repository: repository)
+        store.load()
+        await eventually { store.phase == .loaded }
+        var tabsChanged = 0
+
+        store.requestDeletion(one)
+        store.confirmDeletion(onConfiguredTabsChanged: { tabsChanged += 1 })
+        await eventually { store.accounts == [two] && repository.deletedIDs == [one.id] }
+
+        XCTAssertEqual(tabsChanged, 1)
+        XCTAssertFalse(store.requiresAccountRecovery)
+        XCTAssertEqual(store.currentAccountID, two.id)
         XCTAssertEqual(store.presentation, .banner(message: "アカウントを削除しました"))
     }
 
@@ -1056,6 +1098,21 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
         for name in expected {
             XCTAssertEqual(catalog[name], authoritative[name], "Acknowledgement text differs for \(name)")
         }
+    }
+
+    @MainActor
+    func testAcceptanceFixturesUseCanonicalReactionInstancesAndLicenseCatalog() async throws {
+        let repository = MissCatSettingsFixtureRepository()
+        let instances = try await repository.loadReactionAccounts()
+        let licenses = MissCatSettingsBridge.licenseCatalog()
+        let expectedLicenseNames = LicenseTableViewController.podfileLockDependencyNames.sorted {
+            $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
+        }
+
+        XCTAssertEqual(instances.map(\.instance), ["misskey.example", "social.example"])
+        XCTAssertEqual(licenses.map(\.name), expectedLicenseNames)
+        XCTAssertEqual(licenses.count, 22)
+        XCTAssertTrue(try XCTUnwrap(licenses.first { $0.name == "RxSwift" }).text.contains("2015"))
     }
 
     func testSettingsRoutesCoverAllLegacyDestinations() {
