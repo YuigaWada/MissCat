@@ -215,11 +215,9 @@ public struct MissCatDiscoveryScreen: View {
                 noteResults
                     .frame(width: proxy.size.width)
                     .padding(.top, 8)
-                    .simultaneousGesture(resultSwipeGesture)
                 userResults
                     .frame(width: proxy.size.width)
                     .padding(.top, 7)
-                    .simultaneousGesture(resultSwipeGesture)
             }
             .frame(width: proxy.size.width * 2, alignment: .leading)
             .offset(x: store.selectedTab == .notes ? 0 : -proxy.size.width)
@@ -227,6 +225,7 @@ public struct MissCatDiscoveryScreen: View {
             .contentShape(Rectangle())
         }
         .clipped()
+        .highPriorityGesture(resultSwipeGesture)
     }
 
     private var resultSwipeGesture: some Gesture {
