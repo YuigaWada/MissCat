@@ -43,7 +43,7 @@ The explicit request keys match the current Misskey endpoint schemas pinned at
 | Contract | Unit/integration evidence |
 | --- | --- |
 | Correct channel and secret-safe connection | `MissCatFeedRepositoryContractTests.testStreamingUsesSecretSafeRequestAndExactConnectAcknowledgement` and `testStreamingMapsAllCurrentTimelineChannelNames` |
-| Insert and per-note subscription | `testStreamingDecodesCurrentDictionaryNoteEnvelopeAndSubscribesToIt` |
+| Insert and per-note subscription | `testStreamingDecodesCurrentDictionaryNoteEnvelopeAndSubscribesToIt`, `testPureRenoteSubscribesOuterAndCanonicalIDsAndReceivesOuterDelete`, and `MissCatFeedStoreTests.testPureRenoteRealtimeCapturesOuterAndCanonicalNoteIdentities` |
 | Reaction, unreaction, delete, poll and self/other identity | `testStreamingDecodesEveryCurrentNoteUpdatedVariantAndIsMine`, `MissCatFeedStoreTests.testRealtimeInsertReactionAndDeleteUpdateLoadedFeed`, `testOtherUsersReactionEventsPreserveMyReactionSelection`, and `testRealtimeDuplicateInsertAndPollVoteReconcileOneRow` |
 | Reconnect, catch-up, replacement/insert dedupe, stale-socket rejection | `testReconnectResubscribesThenPerformsRESTResyncAndIgnoresStaleSocket` |
 | Malformed/cross-channel isolation | `testSiblingStreamsIgnoreOtherChannelAndCapturedNoteEvents` and `testMalformedUnknownAndWrongIdentifiersAreIgnored` |
@@ -61,6 +61,9 @@ The explicit request keys match the current Misskey endpoint schemas pinned at
   non-cooperative older write cannot win the final stored state.
 - Repository lookup is limited to the current authorized account snapshot and
   cached repositories are released when an account disappears.
+- Pure renotes subscribe both the outer timeline-row identity and the canonical
+  note identity, so outer delete events and canonical note updates both reach
+  the store after initial load, live insert, and reconnect catch-up.
 
 The integration branch must still execute the cited UI/E2E tests on the newest
 iOS runtime. This audit intentionally did not boot, install to, or read data
