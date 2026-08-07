@@ -148,36 +148,39 @@ final class MissCatDiscoveryUITests: XCTestCase {
         attachScreenshot("discovery-ordinary-home-index-zero")
     }
 
-    func testCaptureFrozenUIKitReferences() {
+    func testCaptureSwiftUICandidates() {
+        app = launch(state: "content")
+        XCTAssertTrue(app.staticTexts["Fixture.exampleでのトレンド"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["discovery.visualReady"].value as? String, "true")
+        attachScreenshot("discovery-swiftui-candidate-trends")
+
+        app.buttons["discovery.trend.SwiftUI"].tap()
+        XCTAssertTrue(noteResult.waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["discovery.visualReady"].value as? String, "true")
+        attachScreenshot("discovery-swiftui-candidate-notes")
+
+        usersTab.tap()
+        XCTAssertTrue(firstUser.waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["discovery.visualReady"].value as? String, "true")
+        attachScreenshot("discovery-swiftui-candidate-users")
+
+        app.terminate()
+        app = launch(state: "loading")
+        XCTAssertTrue(app.staticTexts["トレンドを読み込み中…"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["discovery.visualReady"].exists)
+        XCTAssertFalse(app.staticTexts["discovery.visualReady"].waitForExistence(timeout: 0.5))
+        attachScreenshot("discovery-swiftui-candidate-loading")
+
         for (state, title) in [
-            ("trends", "Fixture.exampleでのトレンド"),
-            ("notes", "SwiftUI の検索結果 1 — SwiftUIで同じ操作感を再現しています。"),
-            ("users", "MissCatのSwiftUI検索fixtureユーザーです。"),
-            ("loading", "トレンドを読み込み中…"),
             ("empty", "トレンドはありません"),
             ("error", "トレンドを読み込めませんでした"),
             ("offline", "オフラインです"),
         ] {
-            app?.terminate()
-            let application = XCUIApplication()
-            application.launchArguments = ["--discovery-uikit-reference"]
-            application.launchEnvironment = [
-                "MISS_CAT_DISCOVERY_REFERENCE_STATE": state,
-                "AppleLanguages": "(ja)",
-                "AppleLocale": "ja_JP",
-            ]
-            application.launch()
-            app = application
-
+            app.terminate()
+            app = launch(state: state)
             XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 5), state)
-            let ready = app.descendants(matching: .any)["discovery.reference.ready"]
-            if state == "loading" {
-                XCTAssertFalse(ready.exists)
-                XCTAssertFalse(ready.waitForExistence(timeout: 0.5))
-            } else {
-                XCTAssertEqual(ready.value as? String, "true", state)
-            }
-            attachScreenshot("discovery-uikit-reference-\(state)")
+            XCTAssertEqual(app.staticTexts["discovery.visualReady"].value as? String, "true", state)
+            attachScreenshot("discovery-swiftui-candidate-\(state)")
         }
     }
 

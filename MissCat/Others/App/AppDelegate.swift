@@ -33,8 +33,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // ordinary application launch path below remains unchanged.
         if MissCatNoteDetailFixtureConfiguration.isAutomatedTestRun
             || MissCatDiscoveryFixtureConfiguration.isAutomatedTestRun
-            || MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled
-            || MissCatDiscoveryUIKitReferenceConfiguration.isEnabled {
+            || MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
             setupMissCat()
             return true
         }
