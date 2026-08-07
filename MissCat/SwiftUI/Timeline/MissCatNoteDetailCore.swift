@@ -32,12 +32,30 @@ public struct MissCatURLPreview: Equatable, Sendable {
 public struct MissCatReactionChoice: Identifiable, Equatable, Sendable {
     public let value: String
     public let label: String
+    public let emojiURL: URL?
+    public let aliases: [String]
+    public let category: String?
+    public let isLocalOnly: Bool
+    public let isSensitive: Bool
 
     public var id: String { value }
 
-    public init(value: String, label: String? = nil) {
+    public init(
+        value: String,
+        label: String? = nil,
+        emojiURL: URL? = nil,
+        aliases: [String] = [],
+        category: String? = nil,
+        isLocalOnly: Bool = false,
+        isSensitive: Bool = false
+    ) {
         self.value = value
         self.label = label ?? value
+        self.emojiURL = emojiURL
+        self.aliases = aliases
+        self.category = category
+        self.isLocalOnly = isLocalOnly
+        self.isSensitive = isSensitive
     }
 
     public static let legacyDefaults = [
@@ -375,6 +393,8 @@ final class MissCatCustomEmojiStore: ObservableObject {
         var request = URLRequest(url: url)
         request.cachePolicy = .returnCacheDataElseLoad
         request.timeoutInterval = 20
+        request.setValue("image/avif,image/webp,image/apng,image/*,*/*;q=0.8", forHTTPHeaderField: "Accept")
+        request.setValue("MissCat/SwiftUI", forHTTPHeaderField: "User-Agent")
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else {
             throw MissCatCustomEmojiLoadError.invalidResponse
@@ -559,6 +579,8 @@ public final class MissCatReactionPickerStore: ObservableObject {
         return choices.filter {
             $0.value.localizedCaseInsensitiveContains(query)
                 || $0.label.localizedCaseInsensitiveContains(query)
+                || $0.aliases.contains(where: { $0.localizedCaseInsensitiveContains(query) })
+                || ($0.category?.localizedCaseInsensitiveContains(query) ?? false)
         }
     }
 

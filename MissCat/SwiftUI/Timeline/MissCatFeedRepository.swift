@@ -178,7 +178,12 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
             )
             return MissCatFeedPage(
                 notes: favorites.map {
-                    Self.convert($0.note, isFavorite: true, itemID: $0.id)
+                    Self.convert(
+                        $0.note,
+                        isFavorite: true,
+                        itemID: $0.id,
+                        instanceOrigin: account.instanceOrigin
+                    )
                 },
                 hasMore: favorites.count >= boundedLimit
             )
@@ -260,7 +265,7 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
         }
 
         return MissCatFeedPage(
-            notes: notes.map { Self.convert($0) },
+            notes: notes.map { Self.convert($0, instanceOrigin: account.instanceOrigin) },
             hasMore: notes.count >= boundedLimit
         )
     }
@@ -293,8 +298,10 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
         let repliesPage = try await fetchReplies(noteID: noteID, cursor: nil, limit: boundedLimit)
 
         return MissCatNoteThread(
-            ancestors: ancestors.reversed().map { Self.convert($0) },
-            note: Self.convert(root),
+            ancestors: ancestors.reversed().map {
+                Self.convert($0, instanceOrigin: account.instanceOrigin)
+            },
+            note: Self.convert(root, instanceOrigin: account.instanceOrigin),
             replies: repliesPage.replies,
             repliesCursor: repliesPage.nextCursor,
             hasMoreReplies: repliesPage.hasMore
@@ -318,7 +325,7 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
                 untilId: cursor
             )
         )
-        let converted = replies.map { Self.convert($0) }
+        let converted = replies.map { Self.convert($0, instanceOrigin: account.instanceOrigin) }
         return MissCatNoteRepliesPage(
             replies: converted,
             nextCursor: converted.last?.noteID,
@@ -351,6 +358,7 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
             channel: channel,
             streamID: makeStreamID(),
             accountID: account.accountID,
+            instanceOrigin: account.instanceOrigin,
             initialNoteIDs: Set(noteIDs.filter { !$0.isEmpty }),
             webSocketFactory: webSocketFactory,
             configuration: realtimeConfiguration,
@@ -505,6 +513,46 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
         )
     }
 
+    public func fetchReactionChoices() async throws -> [MissCatReactionChoice] {
+        async let emojiResponse: FeedEmojisResponse = post(
+            "emojis",
+            body: FeedTokenRequest(i: account.apiKey)
+        )
+        async let meResponse: FeedMeRolesDTO = post(
+            "i",
+            body: FeedTokenRequest(i: account.apiKey)
+        )
+        let (emojiEnvelope, me) = try await (emojiResponse, meResponse)
+        let roleIDs = Set((me.roles ?? []).map(\.id))
+
+        return emojiEnvelope.emojis
+            .filter { emoji in
+                guard let restrictedRoleIDs = emoji.roleIdsThatCanBeUsedThisEmojiAsReaction,
+                      !restrictedRoleIDs.isEmpty else { return true }
+                return !roleIDs.isDisjoint(with: restrictedRoleIDs)
+            }
+            .compactMap { emoji in
+                let emojiURL = MissCatEmojiURLResolver.resolvedURL(
+                    explicitURL: emoji.url,
+                    name: emoji.name,
+                    instanceOrigin: account.instanceOrigin
+                )
+                guard let emojiURL else { return nil }
+                return MissCatReactionChoice(
+                    value: ":\(emoji.name):",
+                    label: emoji.name,
+                    emojiURL: emojiURL,
+                    aliases: emoji.aliases,
+                    category: emoji.category,
+                    isLocalOnly: emoji.localOnly ?? false,
+                    isSensitive: emoji.isSensitive ?? false
+                )
+            }
+            .sorted { lhs, rhs in
+                lhs.value.localizedStandardCompare(rhs.value) == .orderedAscending
+            }
+    }
+
     private func post<Request: Encodable, Response: Decodable>(
         _ path: String,
         body: Request
@@ -598,7 +646,8 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
     fileprivate static func convert(
         _ outer: FeedNoteDTO,
         isFavorite: Bool = false,
-        itemID: String? = nil
+        itemID: String? = nil,
+        instanceOrigin: URL? = nil
     ) -> MissCatNote {
         let isPureRenote = outer.renote != nil && (outer.text ?? "").isEmpty
         let content = isPureRenote ? (outer.renote ?? outer) : outer
@@ -609,7 +658,11 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
                     name: name,
                     count: count,
                     isMine: name == myReaction,
-                    emojiURL: reactionEmojiURL(for: name, in: content.reactionEmojis)
+                    emojiURL: MissCatEmojiURLResolver.reactionURL(
+                        for: name,
+                        explicit: content.reactionEmojis,
+                        instanceOrigin: instanceOrigin
+                    )
                 )
             }
             .sorted { $0.name < $1.name }
@@ -618,11 +671,16 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
         if !isPureRenote, let quoted = outer.renote {
             quote = MissCatQuotedNote(
                 noteID: quoted.id,
-                author: convert(quoted.user),
+                author: convert(quoted.user, instanceOrigin: instanceOrigin),
                 text: quoted.text ?? "",
                 cw: nonEmpty(quoted.cw),
                 attachments: convert(quoted.files),
-                emojis: convertEmojis(quoted.emojis)
+                emojis: MissCatEmojiURLResolver.mergedURLs(
+                    explicit: quoted.emojis,
+                    sources: [quoted.text, quoted.cw] + (quoted.poll?.choices.map(\.text) ?? []),
+                    authorHost: quoted.user.host,
+                    instanceOrigin: instanceOrigin
+                )
             )
         } else {
             quote = nil
@@ -646,11 +704,12 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
         return MissCatNote(
             id: itemID ?? outer.id,
             noteID: content.id,
-            author: convert(content.user),
+            author: convert(content.user, instanceOrigin: instanceOrigin),
             createdAt: parseDate(content.createdAt),
             text: content.text ?? "",
             cw: nonEmpty(content.cw),
             visibility: content.visibility,
+            reactionAcceptance: content.reactionAcceptance,
             attachments: convert(content.files),
             reactions: reactions,
             repliesCount: content.repliesCount,
@@ -661,12 +720,22 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
             isFavorite: isFavorite,
             poll: poll,
             quotedNote: quote,
-            renotedBy: isPureRenote ? convert(outer.user) : nil,
-            emojis: convertEmojis(content.emojis)
+            renotedBy: isPureRenote
+                ? convert(outer.user, instanceOrigin: instanceOrigin)
+                : nil,
+            emojis: MissCatEmojiURLResolver.mergedURLs(
+                explicit: content.emojis,
+                sources: [content.text, content.cw] + (content.poll?.choices.map(\.text) ?? []),
+                authorHost: content.user.host,
+                instanceOrigin: instanceOrigin
+            )
         )
     }
 
-    private static func convert(_ model: FeedUserDTO) -> MissCatNoteAuthor {
+    private static func convert(
+        _ model: FeedUserDTO,
+        instanceOrigin: URL? = nil
+    ) -> MissCatNoteAuthor {
         MissCatNoteAuthor(
             id: model.id,
             name: nonEmpty(model.name) ?? model.username,
@@ -674,7 +743,12 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
             host: nonEmpty(model.host),
             avatarURL: model.avatarUrl.flatMap(URL.init(string:)),
             isCat: model.isCat ?? false,
-            emojis: convertEmojis(model.emojis)
+            emojis: MissCatEmojiURLResolver.mergedURLs(
+                explicit: model.emojis,
+                sources: [model.name],
+                authorHost: model.host,
+                instanceOrigin: instanceOrigin
+            )
         )
     }
 
@@ -711,21 +785,6 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
         return value
     }
 
-    private static func convertEmojis(_ values: [String: String]?) -> [String: URL] {
-        Dictionary(uniqueKeysWithValues: (values ?? [:]).compactMap { name, rawURL in
-            URL(string: rawURL).map { (name, $0) }
-        })
-    }
-
-    private static func reactionEmojiURL(
-        for reaction: String,
-        in values: [String: String]?
-    ) -> URL? {
-        let normalizedName = reaction.trimmingCharacters(in: CharacterSet(charactersIn: ":"))
-        return values?[reaction].flatMap(URL.init(string:))
-            ?? values?[normalizedName].flatMap(URL.init(string:))
-    }
-
     private static func parseDate(_ value: String?) -> Date? {
         guard let value else { return nil }
         if let date = fractionalDateFormatter.date(from: value) { return date }
@@ -748,6 +807,7 @@ private actor MissCatFeedRealtimeConnection {
     private let channel: String
     private let streamID: String
     private let accountID: String
+    private let instanceOrigin: URL?
     private let webSocketFactory: any MissCatFeedWebSocketFactory
     private let configuration: MissCatFeedRealtimeConfiguration
     private let reconnectSleep: MissCatFeedReconnectSleep
@@ -765,6 +825,7 @@ private actor MissCatFeedRealtimeConnection {
         channel: String,
         streamID: String,
         accountID: String,
+        instanceOrigin: URL?,
         initialNoteIDs: Set<String>,
         webSocketFactory: any MissCatFeedWebSocketFactory,
         configuration: MissCatFeedRealtimeConfiguration,
@@ -775,6 +836,7 @@ private actor MissCatFeedRealtimeConnection {
         self.channel = channel
         self.streamID = streamID
         self.accountID = accountID
+        self.instanceOrigin = instanceOrigin
         capturedNoteIDs = initialNoteIDs
         self.webSocketFactory = webSocketFactory
         self.configuration = configuration
@@ -902,7 +964,10 @@ private actor MissCatFeedRealtimeConnection {
 
             let data = try JSONSerialization.data(withJSONObject: noteObject)
             let noteDTO = try decoder.decode(FeedNoteDTO.self, from: data)
-            let note = MissCatMisskeyFeedRepository.convert(noteDTO)
+            let note = MissCatMisskeyFeedRepository.convert(
+                noteDTO,
+                instanceOrigin: instanceOrigin
+            )
             if capturedNoteIDs.insert(note.noteID).inserted {
                 try await sendSubscribe(noteID: note.noteID, to: socket)
             }
@@ -1053,6 +1118,32 @@ private actor MissCatFeedRealtimeConnection {
     }
 }
 
+private struct FeedTokenRequest: Encodable {
+    let i: String
+}
+
+private struct FeedEmojisResponse: Decodable, Sendable {
+    let emojis: [FeedEmojiDTO]
+}
+
+private struct FeedEmojiDTO: Decodable, Sendable {
+    let name: String
+    let aliases: [String]
+    let category: String?
+    let url: String?
+    let localOnly: Bool?
+    let isSensitive: Bool?
+    let roleIdsThatCanBeUsedThisEmojiAsReaction: [String]?
+}
+
+private struct FeedMeRolesDTO: Decodable, Sendable {
+    struct Role: Decodable, Sendable {
+        let id: String
+    }
+
+    let roles: [Role]?
+}
+
 private struct FeedPageRequest: Encodable {
     let i: String
     let limit: Int
@@ -1166,6 +1257,7 @@ private final class FeedNoteDTO: Decodable {
     let replyId: String?
     let renote: FeedNoteDTO?
     let visibility: String
+    let reactionAcceptance: String?
     let files: [FeedFileDTO]?
     let tags: [String]?
     let poll: FeedPollDTO?
@@ -1177,7 +1269,7 @@ private final class FeedNoteDTO: Decodable {
     let myReaction: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, createdAt, text, cw, user, replyId, renote, visibility
+        case id, createdAt, text, cw, user, replyId, renote, visibility, reactionAcceptance
         case files, tags, poll, emojis, reactionEmojis, reactions, renoteCount, repliesCount, myReaction
     }
 
@@ -1191,6 +1283,7 @@ private final class FeedNoteDTO: Decodable {
         replyId = try values.decodeIfPresent(String.self, forKey: .replyId)
         renote = try values.decodeIfPresent(FeedNoteDTO.self, forKey: .renote)
         visibility = try values.decodeIfPresent(String.self, forKey: .visibility) ?? "public"
+        reactionAcceptance = try values.decodeIfPresent(String.self, forKey: .reactionAcceptance)
         files = try values.decodeIfPresent([FeedFileDTO].self, forKey: .files)
         tags = try values.decodeIfPresent([String].self, forKey: .tags)
         poll = try values.decodeIfPresent(FeedPollDTO.self, forKey: .poll)

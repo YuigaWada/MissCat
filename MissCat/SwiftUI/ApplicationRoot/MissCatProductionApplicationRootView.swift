@@ -530,6 +530,8 @@ struct MissCatProductionApplicationRootView: View {
                 MissCatReactionPickerView(
                     noteID: noteID,
                     existingReactions: request.existingReactions,
+                    noteAuthorHost: request.noteAuthorHost,
+                    reactionAcceptance: request.reactionAcceptance,
                     repository: repository,
                     palette: configuration.appearance.palette
                 ) { _, reaction in

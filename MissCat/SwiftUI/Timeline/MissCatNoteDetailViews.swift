@@ -293,18 +293,24 @@ public struct MissCatReactionPickerView: View {
 
     private let noteID: String
     private let existingReactions: [MissCatReaction]
+    private let noteAuthorHost: String?
+    private let reactionAcceptance: String?
     private let palette: MissCatVisualPalette
     private let onSelect: (String, String) -> Void
 
     public init(
         noteID: String,
         existingReactions: [MissCatReaction],
+        noteAuthorHost: String? = nil,
+        reactionAcceptance: String? = nil,
         repository: any MissCatNoteContextRepository,
         palette: MissCatVisualPalette = .legacyLight,
         onSelect: @escaping (String, String) -> Void
     ) {
         self.noteID = noteID
         self.existingReactions = existingReactions
+        self.noteAuthorHost = noteAuthorHost
+        self.reactionAcceptance = reactionAcceptance
         self.palette = palette
         self.onSelect = onSelect
         _store = StateObject(wrappedValue: MissCatReactionPickerStore(repository: repository))
@@ -364,10 +370,7 @@ public struct MissCatReactionPickerView: View {
                             onSelect(noteID, choice.value)
                             dismiss()
                         } label: {
-                            Text(choice.label)
-                                .font(.system(size: 24))
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.55)
+                            MissCatReactionChoiceIcon(choice: choice, palette: palette)
                                 .frame(maxWidth: .infinity, minHeight: 42)
                         }
                         .buttonStyle(.plain)
@@ -381,8 +384,62 @@ public struct MissCatReactionPickerView: View {
 
     private var allChoices: [MissCatReactionChoice] {
         var values = Set<String>()
-        let existing = existingReactions.map { MissCatReactionChoice(value: $0.name) }
-        return (store.filteredChoices + existing).filter { values.insert($0.value).inserted }
+        let existing = existingReactions.map {
+            MissCatReactionChoice(value: $0.name, emojiURL: $0.emojiURL)
+        }
+        return (store.filteredChoices + existing).filter { choice in
+            guard values.insert(choice.value).inserted else { return false }
+            if choice.isLocalOnly, noteAuthorHost != nil { return false }
+            if choice.isSensitive,
+               reactionAcceptance == "nonSensitiveOnly"
+                || reactionAcceptance == "nonSensitiveOnlyForLocalLikeOnlyForRemote" {
+                return false
+            }
+            return true
+        }
+    }
+}
+
+private struct MissCatReactionChoiceIcon: View {
+    let choice: MissCatReactionChoice
+    let palette: MissCatVisualPalette
+
+    var body: some View {
+        Group {
+            if let emojiURL = choice.emojiURL {
+                AsyncImage(url: emojiURL) { phase in
+                    switch phase {
+                    case let .success(image):
+                        image
+                            .resizable()
+                            .interpolation(.high)
+                            .scaledToFit()
+                    case .empty:
+                        ProgressView().controlSize(.mini)
+                    case .failure:
+                        fallback
+                    @unknown default:
+                        fallback
+                    }
+                }
+                .frame(width: 32, height: 32)
+            } else {
+                Text(choice.label)
+                    .font(.system(size: 24))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.55)
+            }
+        }
+        .foregroundStyle(palette.text)
+    }
+
+    private var fallback: some View {
+        Text(choice.label)
+            .font(.system(size: 9, weight: .medium))
+            .lineLimit(2)
+            .minimumScaleFactor(0.5)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(palette.strong)
     }
 }
 

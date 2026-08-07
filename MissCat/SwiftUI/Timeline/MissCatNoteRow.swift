@@ -98,8 +98,17 @@ public struct MissCatNoteRow: View {
             if let renotedBy = note.renotedBy {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.2.squarepath")
-                    Text("\(renotedBy.name)さんがRenoteしました")
-                        .lineLimit(1)
+                    MissCatNativeMFMText(
+                        source: renotedBy.name,
+                        emojis: renotedBy.emojis,
+                        localEmojis: renotedBy.localEmojis,
+                        font: .system(size: 12),
+                        palette: palette,
+                        readiness: readiness,
+                        onOpenMention: onOpenMention,
+                        onOpenHashtag: onOpenHashtag
+                    )
+                    Text("さんがRenoteしました").lineLimit(1)
                 }
                 .font(.system(size: 12))
                 .foregroundStyle(palette.strong)
@@ -232,9 +241,15 @@ public struct MissCatNoteRow: View {
         VStack(alignment: .leading, spacing: 8) {
             if let cw = note.cw {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(cw)
-                        .font(.system(size: 14))
-                        .foregroundStyle(palette.text)
+                    MissCatNativeMFMText(
+                        source: cw,
+                        emojis: note.emojis,
+                        font: .system(size: 14),
+                        palette: palette,
+                        readiness: readiness,
+                        onOpenMention: onOpenMention,
+                        onOpenHashtag: onOpenHashtag
+                    )
                         .fixedSize(horizontal: false, vertical: true)
 
                     Button(isContentWarningExpanded ? "隠す" : "もっと見る") {
@@ -472,7 +487,15 @@ public struct MissCatNoteRow: View {
                     .lineLimit(1)
 
                     if let cw = quoted.cw {
-                        Text(cw).fontWeight(.medium)
+                        MissCatNativeMFMText(
+                            source: cw,
+                            emojis: quoted.emojis,
+                            font: .system(size: 13, weight: .medium),
+                            palette: palette,
+                            readiness: readiness,
+                            onOpenMention: onOpenMention,
+                            onOpenHashtag: onOpenHashtag
+                        )
                     } else {
                         MissCatNativeMFMText(
                             source: quoted.text,
@@ -509,7 +532,15 @@ public struct MissCatNoteRow: View {
                 } label: {
                     HStack {
                         Image(systemName: choice.isVoted ? "checkmark.circle.fill" : "circle")
-                        Text(choice.text)
+                        MissCatNativeMFMText(
+                            source: choice.text,
+                            emojis: note.emojis,
+                            font: .system(size: 13),
+                            palette: palette,
+                            readiness: readiness,
+                            onOpenMention: onOpenMention,
+                            onOpenHashtag: onOpenHashtag
+                        )
                             .frame(maxWidth: .infinity, alignment: .leading)
                         Text("\(choice.votes)")
                     }
@@ -704,6 +735,8 @@ public struct MissCatNoteRow: View {
         }
         note.emojis.values.forEach { readiness?.register(assetKey($0)) }
         note.author.emojis.values.forEach { readiness?.register(assetKey($0)) }
+        note.quotedNote?.emojis.values.forEach { readiness?.register(assetKey($0)) }
+        note.quotedNote?.author.emojis.values.forEach { readiness?.register(assetKey($0)) }
         note.reactions.compactMap(\.emojiURL).forEach { readiness?.register(assetKey($0)) }
     }
 

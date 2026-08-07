@@ -25,10 +25,16 @@ struct MissCatNativeAccount: Decodable, Equatable, Sendable {
     let username: String
 }
 
-struct MissCatNativeEmoji: Decodable, Equatable, Sendable {
+struct MissCatNativeEmoji: Equatable, Sendable {
     let name: String
     let url: String
     let category: String?
+
+    init(name: String, url: String, category: String?) {
+        self.name = name
+        self.url = url
+        self.category = category
+    }
 }
 
 enum MissCatNativeServiceWorkerState: String, Decodable, Equatable, Sendable {
@@ -72,8 +78,14 @@ enum MissCatNativeAPIError: LocalizedError, Equatable {
 struct MissCatNativeAPIClient: Sendable {
     static let defaultTimeout: TimeInterval = 30
 
-    private struct MetaResponse: Decodable {
-        let emojis: [MissCatNativeEmoji]?
+    private struct EmojisResponse: Decodable {
+        struct Emoji: Decodable {
+            let name: String
+            let url: String?
+            let category: String?
+        }
+
+        let emojis: [Emoji]?
     }
 
     private struct ServiceWorkerResponse: Decodable {
@@ -145,8 +157,22 @@ struct MissCatNativeAPIClient: Sendable {
     }
 
     func customEmojis() async throws -> [MissCatNativeEmoji] {
-        let response: MetaResponse = try await post(endpoint: "meta", body: [:])
-        return response.emojis ?? []
+        let response: EmojisResponse = try await post(endpoint: "emojis", body: [:])
+        return (response.emojis ?? []).compactMap { emoji in
+            let resolvedURL = emoji.url.flatMap { rawValue -> URL? in
+                guard let url = URL(string: rawValue) else { return nil }
+                return url.scheme == nil
+                    ? URL(string: rawValue, relativeTo: origin)?.absoluteURL
+                    : url
+            } ?? origin
+                .appendingPathComponent("emoji", isDirectory: true)
+                .appendingPathComponent("\(emoji.name).webp")
+            return MissCatNativeEmoji(
+                name: emoji.name,
+                url: resolvedURL.absoluteString,
+                category: emoji.category
+            )
+        }
     }
 
     func registerServiceWorker(

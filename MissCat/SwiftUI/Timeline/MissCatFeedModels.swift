@@ -77,6 +77,110 @@ enum MissCatFeedInstanceOrigin {
     }
 }
 
+/// Resolves the two custom-emoji response shapes shipped by Misskey servers.
+/// Older/current-compatible payloads can include explicit URL dictionaries,
+/// while Misskey 2023.12+ also defines canonical `/emoji/<name>.webp` routes.
+enum MissCatEmojiURLResolver {
+    private static let shortcodeExpression = try! NSRegularExpression(
+        pattern: #":([A-Za-z0-9_+\-]+(?:@[A-Za-z0-9.-]+)?):"#
+    )
+
+    static func mergedURLs(
+        explicit values: [String: String]?,
+        sources: [String?],
+        authorHost: String?,
+        instanceOrigin: URL?
+    ) -> [String: URL] {
+        var result = Dictionary(uniqueKeysWithValues: (values ?? [:]).compactMap { key, value in
+            resolvedExplicitURL(value, relativeTo: instanceOrigin).map { (normalizedName(key), $0) }
+        })
+        for source in sources.compactMap({ $0 }) {
+            for name in shortcodeNames(in: source) where result[name] == nil {
+                result[name] = canonicalURL(
+                    for: name,
+                    authorHost: authorHost,
+                    instanceOrigin: instanceOrigin
+                )
+            }
+        }
+        return result
+    }
+
+    static func reactionURL(
+        for reaction: String,
+        explicit values: [String: String]?,
+        instanceOrigin: URL?
+    ) -> URL? {
+        let name = normalizedName(reaction)
+        if let rawURL = values?[reaction] ?? values?[name],
+           let explicitURL = resolvedExplicitURL(rawURL, relativeTo: instanceOrigin) {
+            return explicitURL
+        }
+        guard reaction.hasPrefix(":"), reaction.hasSuffix(":"), reaction.count > 2 else {
+            return nil
+        }
+        return canonicalURL(for: name, authorHost: nil, instanceOrigin: instanceOrigin)
+    }
+
+    static func resolvedURL(
+        explicitURL: String?,
+        name: String,
+        instanceOrigin: URL?
+    ) -> URL? {
+        if let explicitURL,
+           let resolved = resolvedExplicitURL(explicitURL, relativeTo: instanceOrigin) {
+            return resolved
+        }
+        return canonicalURL(for: name, authorHost: nil, instanceOrigin: instanceOrigin)
+    }
+
+    static func shortcodeNames(in source: String) -> Set<String> {
+        let range = NSRange(source.startIndex..., in: source)
+        return Set(shortcodeExpression.matches(in: source, range: range).compactMap { match in
+            guard match.numberOfRanges == 2,
+                  let range = Range(match.range(at: 1), in: source) else { return nil }
+            return normalizedName(String(source[range]))
+        })
+    }
+
+    static func canonicalURL(
+        for rawName: String,
+        authorHost: String?,
+        instanceOrigin: URL?
+    ) -> URL? {
+        guard let instanceOrigin else { return nil }
+        var name = normalizedName(rawName)
+        guard !name.isEmpty, !name.contains("/"), !name.contains("\\") else { return nil }
+
+        if name.hasSuffix("@.") {
+            name.removeLast(2)
+        } else if !name.contains("@"),
+                  let host = authorHost?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !host.isEmpty {
+            name += "@\(host.lowercased())"
+        }
+        guard !name.isEmpty else { return nil }
+        return instanceOrigin
+            .appendingPathComponent("emoji", isDirectory: true)
+            .appendingPathComponent("\(name).webp")
+    }
+
+    private static func normalizedName(_ rawValue: String) -> String {
+        var value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        if value.hasPrefix(":"), value.hasSuffix(":"), value.count >= 2 {
+            value.removeFirst()
+            value.removeLast()
+        }
+        return value
+    }
+
+    private static func resolvedExplicitURL(_ rawValue: String, relativeTo origin: URL?) -> URL? {
+        guard let url = URL(string: rawValue) else { return nil }
+        if url.scheme != nil { return url }
+        return origin.flatMap { URL(string: rawValue, relativeTo: $0)?.absoluteURL }
+    }
+}
+
 public enum MissCatFeedSource: Equatable, Sendable {
     case home
     case local
@@ -284,6 +388,7 @@ public struct MissCatNote: Identifiable, Equatable, Sendable {
     public var text: String
     public var cw: String?
     public var visibility: String
+    public var reactionAcceptance: String?
     public var attachments: [MissCatNoteAttachment]
     public var reactions: [MissCatReaction]
     public var repliesCount: Int
@@ -305,6 +410,7 @@ public struct MissCatNote: Identifiable, Equatable, Sendable {
         text: String = "",
         cw: String? = nil,
         visibility: String = "public",
+        reactionAcceptance: String? = nil,
         attachments: [MissCatNoteAttachment] = [],
         reactions: [MissCatReaction] = [],
         repliesCount: Int = 0,
@@ -325,6 +431,7 @@ public struct MissCatNote: Identifiable, Equatable, Sendable {
         self.text = text
         self.cw = cw
         self.visibility = visibility
+        self.reactionAcceptance = reactionAcceptance
         self.attachments = attachments
         self.reactions = reactions
         self.repliesCount = repliesCount

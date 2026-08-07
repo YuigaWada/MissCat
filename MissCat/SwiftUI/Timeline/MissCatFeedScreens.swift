@@ -3,15 +3,21 @@ import SwiftUI
 public struct MissCatFeedReactionRequest {
     public let noteID: String
     public let existingReactions: [MissCatReaction]
+    public let noteAuthorHost: String?
+    public let reactionAcceptance: String?
     public let selectReaction: (String) -> Void
 
     public init(
         noteID: String,
         existingReactions: [MissCatReaction],
+        noteAuthorHost: String? = nil,
+        reactionAcceptance: String? = nil,
         selectReaction: @escaping (String) -> Void
     ) {
         self.noteID = noteID
         self.existingReactions = existingReactions
+        self.noteAuthorHost = noteAuthorHost
+        self.reactionAcceptance = reactionAcceptance
         self.selectReaction = selectReaction
     }
 }
@@ -177,6 +183,8 @@ public struct MissCatFeedView: View {
                     MissCatReactionPickerView(
                         noteID: sheet.note.noteID,
                         existingReactions: sheet.note.reactions,
+                        noteAuthorHost: sheet.note.author.host,
+                        reactionAcceptance: sheet.note.reactionAcceptance,
                         repository: contextRepository,
                         palette: palette
                     ) { noteID, reaction in
@@ -312,6 +320,8 @@ public struct MissCatFeedView: View {
                                     MissCatFeedReactionRequest(
                                         noteID: noteID,
                                         existingReactions: note.reactions,
+                                        noteAuthorHost: note.author.host,
+                                        reactionAcceptance: note.reactionAcceptance,
                                         selectReaction: { reaction in
                                             Task {
                                                 await store.toggleReaction(
@@ -853,6 +863,8 @@ public struct MissCatNoteDetailView: View {
                     MissCatReactionPickerView(
                         noteID: sheet.note.noteID,
                         existingReactions: sheet.note.reactions,
+                        noteAuthorHost: sheet.note.author.host,
+                        reactionAcceptance: sheet.note.reactionAcceptance,
                         repository: contextRepository,
                         palette: palette
                     ) { noteID, reaction in
@@ -1042,6 +1054,8 @@ public struct MissCatNoteDetailView: View {
                                     MissCatFeedReactionRequest(
                                         noteID: note.noteID,
                                         existingReactions: note.reactions,
+                                        noteAuthorHost: note.author.host,
+                                        reactionAcceptance: note.reactionAcceptance,
                                         selectReaction: { reaction in
                                             Task {
                                                 await store.toggleReaction(
