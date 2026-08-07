@@ -7,11 +7,142 @@
 //
 
 @testable import MissCat
+#if DEBUG
+import CryptoKit
+#endif
 import MisskeyKit
 import Security
 import UIKit
 import WebKit
 import XCTest
+
+#if DEBUG
+final class MissCatAuthenticationBackupCodecTests: XCTestCase {
+    private let credential = "unit-backup-token-not-a-live-credential"
+    private let key = Data(repeating: 0xA5, count: 32)
+
+    func testSealedBackupRoundTripsCredentialWithoutPlaintext() throws {
+        let user = SecureUser(
+            userId: "backup-user",
+            username: "backup-fixture",
+            instance: "MISSKEY.IO/",
+            apiKey: credential
+        )
+        let encrypted = try MissCatAuthenticationBackupCodec.seal(
+            user: user,
+            keyData: key,
+            createdAt: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+
+        XCTAssertNil(encrypted.range(of: Data(credential.utf8)))
+        let restored = try MissCatAuthenticationBackupCodec.open(
+            encrypted: encrypted,
+            keyData: key
+        )
+        XCTAssertTrue(restored.userId == user.userId)
+        XCTAssertTrue(restored.username == user.username)
+        XCTAssertTrue(restored.instance == "misskey.io")
+        XCTAssertTrue(restored.apiKey == credential)
+        XCTAssertThrowsError(
+            try MissCatAuthenticationBackupCodec.open(
+                encrypted: encrypted,
+                keyData: Data(repeating: 0x5A, count: 32)
+            )
+        )
+    }
+
+    func testSealedBackupRejectsTamperTruncationAndUnsupportedVersion() throws {
+        let user = SecureUser(
+            userId: "backup-user",
+            username: "backup-fixture",
+            instance: "misskey.io",
+            apiKey: credential
+        )
+        let encrypted = try MissCatAuthenticationBackupCodec.seal(
+            user: user,
+            keyData: key
+        )
+
+        var tampered = encrypted
+        tampered[tampered.index(before: tampered.endIndex)] ^= 0x01
+        XCTAssertThrowsError(
+            try MissCatAuthenticationBackupCodec.open(encrypted: tampered, keyData: key)
+        )
+        XCTAssertThrowsError(
+            try MissCatAuthenticationBackupCodec.open(
+                encrypted: Data(encrypted.prefix(8)),
+                keyData: key
+            )
+        )
+
+        let unsupported = MissCatAuthenticationBackupCodec.Payload(
+            version: 2,
+            userID: user.userId,
+            username: user.username,
+            instance: user.instance,
+            accessToken: credential,
+            createdAt: Date()
+        )
+        let unsupportedData = try MissCatAuthenticationBackupCodec.seal(
+            payload: unsupported,
+            keyData: key
+        )
+        XCTAssertThrowsError(
+            try MissCatAuthenticationBackupCodec.open(encrypted: unsupportedData, keyData: key)
+        )
+    }
+
+    func testClearRequiresFreshMatchingPreflightReceipt() {
+        let user = SecureUser(
+            userId: "backup-user",
+            username: "backup-fixture",
+            instance: "misskey.io",
+            apiKey: credential
+        )
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        XCTAssertFalse(
+            MissCatAuthenticationBackupClearPolicy.permitsClear(
+                receipt: nil,
+                user: user,
+                now: now
+            )
+        )
+        XCTAssertFalse(
+            MissCatAuthenticationBackupClearPolicy.permitsClear(
+                receipt: .init(
+                    accountIdentifier: user.accountIdentifier,
+                    backupDigest: String(repeating: "a", count: 64),
+                    completedAt: now.addingTimeInterval(-301)
+                ),
+                user: user,
+                now: now
+            )
+        )
+        XCTAssertFalse(
+            MissCatAuthenticationBackupClearPolicy.permitsClear(
+                receipt: .init(
+                    accountIdentifier: "different-account",
+                    backupDigest: String(repeating: "a", count: 64),
+                    completedAt: now
+                ),
+                user: user,
+                now: now
+            )
+        )
+        XCTAssertTrue(
+            MissCatAuthenticationBackupClearPolicy.permitsClear(
+                receipt: .init(
+                    accountIdentifier: user.accountIdentifier,
+                    backupDigest: String(repeating: "a", count: 64),
+                    completedAt: now
+                ),
+                user: user,
+                now: now
+            )
+        )
+    }
+}
+#endif
 
 class MissCatTests: XCTestCase {
     override func setUp() {

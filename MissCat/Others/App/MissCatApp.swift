@@ -60,9 +60,16 @@ final class ApplicationState: ObservableObject {
 
     func resolveInitialRoute() async {
         guard case .launching = applicationRootStore.phase else { return }
+#if DEBUG
+        let cache = Cache.UserDefaults.shared
+        let restoredUser = MissCatAuthenticationBackupBridge.restoreIfRequested(cache: cache)
+#endif
         await applicationRootStore.restore()
 #if DEBUG
-        if let currentUser = Cache.UserDefaults.shared.getCurrentUser() {
+        if let currentUser = restoredUser ?? cache.getCurrentUser() {
+            MissCatAuthenticationBackupBridge.preflightIfRequested(user: currentUser)
+            MissCatAuthenticationBackupBridge.exportIfRequested(user: currentUser)
+            MissCatAuthenticationBackupBridge.clearIfRequested(cache: cache, user: currentUser)
             MissCatAuthenticationProbe.runIfRequested(user: currentUser)
         }
 #endif
@@ -506,6 +513,299 @@ private struct MissCatSharedKeychainActivityView: UIViewControllerRepresentable 
 #endif
 
 #if DEBUG
+enum MissCatAuthenticationBackupCodec {
+    struct Payload: Codable {
+        let version: Int
+        let userID: String
+        let username: String
+        let instance: String
+        let accessToken: String
+        let createdAt: Date
+    }
+
+    static func seal(user: SecureUser, keyData: Data, createdAt: Date = Date()) throws -> Data {
+        guard keyData.count == 32 else { throw CodecError.invalidKey }
+        guard let token = user.apiKey, !token.isEmpty else { throw CodecError.invalidPayload }
+        let payload = Payload(
+            version: 1,
+            userID: user.userId,
+            username: user.username,
+            instance: user.normalizedInstance,
+            accessToken: token,
+            createdAt: createdAt
+        )
+        return try seal(payload: payload, keyData: keyData)
+    }
+
+    static func seal(payload: Payload, keyData: Data) throws -> Data {
+        guard keyData.count == 32 else { throw CodecError.invalidKey }
+        let plaintext = try JSONEncoder().encode(payload)
+        let sealed = try AES.GCM.seal(plaintext, using: SymmetricKey(data: keyData))
+        guard let combined = sealed.combined else { throw CodecError.couldNotSeal }
+        return combined
+    }
+
+    static func open(encrypted: Data, keyData: Data) throws -> SecureUser {
+        guard keyData.count == 32 else { throw CodecError.invalidKey }
+        let sealed = try AES.GCM.SealedBox(combined: encrypted)
+        let plaintext = try AES.GCM.open(sealed, using: SymmetricKey(data: keyData))
+        let payload = try JSONDecoder().decode(Payload.self, from: plaintext)
+        guard payload.version == 1,
+              !payload.userID.isEmpty,
+              !payload.username.isEmpty,
+              !payload.instance.isEmpty,
+              !payload.accessToken.isEmpty
+        else { throw CodecError.invalidPayload }
+        return SecureUser(
+            userId: payload.userID,
+            username: payload.username,
+            instance: payload.instance,
+            apiKey: payload.accessToken
+        )
+    }
+
+    enum CodecError: Error {
+        case invalidKey
+        case couldNotSeal
+        case invalidPayload
+    }
+}
+
+struct MissCatAuthenticationBackupClearPolicy {
+    struct Receipt: Codable {
+        let accountIdentifier: String
+        let backupDigest: String
+        let completedAt: Date
+    }
+
+    static func permitsClear(
+        receipt: Receipt?,
+        user: SecureUser,
+        now: Date = Date()
+    ) -> Bool {
+        guard let receipt,
+              receipt.accountIdentifier == user.accountIdentifier,
+              receipt.backupDigest.count == 64,
+              now.timeIntervalSince(receipt.completedAt) >= 0,
+              now.timeIntervalSince(receipt.completedAt) <= 300
+        else { return false }
+        return true
+    }
+}
+
+private enum MissCatAuthenticationBackupBridge {
+    private static let appGroup = "group.yuwd.MissCat"
+    private static let exportArgument = "--auth-backup-export"
+    private static let restoreArgument = "--auth-backup-restore"
+    private static let clearArgument = "--auth-backup-clear"
+    private static let preflightArgument = "--auth-backup-preflight"
+    private static let nonceArgument = "--auth-backup-nonce"
+    private static let keyFilename = ".misscat-auth-backup-key"
+    private static let inputFilename = ".misscat-auth-backup-input.enc"
+    private static let outputFilename = ".misscat-auth-backup-output.enc"
+    private static let resultKey = "auth-backup-result"
+    private static let preflightReceiptKey = "auth-backup-preflight-receipt"
+
+    static func preflightIfRequested(user: SecureUser) {
+        guard CommandLine.arguments.contains(preflightArgument) else { return }
+        guard let nonce = requestNonce(),
+              let container = containerURL(),
+              let defaults = UserDefaults(suiteName: appGroup)
+        else {
+            record(operation: "preflight", success: false, nonce: requestNonce())
+            return
+        }
+
+        let keyURL = container.appendingPathComponent(keyFilename)
+        let inputURL = container.appendingPathComponent(inputFilename)
+        defer {
+            try? FileManager.default.removeItem(at: keyURL)
+            try? FileManager.default.removeItem(at: inputURL)
+        }
+
+        do {
+            let keyData = try Data(contentsOf: keyURL)
+            let encrypted = try Data(contentsOf: inputURL)
+            let candidate = try MissCatAuthenticationBackupCodec.open(
+                encrypted: encrypted,
+                keyData: keyData
+            )
+            guard candidate.accountIdentifier == user.accountIdentifier,
+                  candidate.apiKey == user.apiKey
+            else { throw BackupError.identityMismatch }
+            let receipt = MissCatAuthenticationBackupClearPolicy.Receipt(
+                accountIdentifier: candidate.accountIdentifier,
+                backupDigest: SHA256.hash(data: encrypted).map { String(format: "%02x", $0) }.joined(),
+                completedAt: Date()
+            )
+            defaults.set(try JSONEncoder().encode(receipt), forKey: preflightReceiptKey)
+            guard defaults.synchronize() else { throw BackupError.couldNotPersist }
+            record(
+                operation: "preflight",
+                success: true,
+                nonce: nonce,
+                instance: candidate.normalizedInstance
+            )
+        } catch {
+            defaults.removeObject(forKey: preflightReceiptKey)
+            defaults.synchronize()
+            record(operation: "preflight", success: false, nonce: nonce)
+        }
+    }
+
+    static func exportIfRequested(user: SecureUser) {
+        guard CommandLine.arguments.contains(exportArgument) else { return }
+        guard let nonce = requestNonce(),
+              let container = containerURL(),
+              let defaults = UserDefaults(suiteName: appGroup),
+              user.apiKey?.isEmpty == false
+        else {
+            record(operation: "export", success: false, nonce: requestNonce())
+            return
+        }
+
+        let keyURL = container.appendingPathComponent(keyFilename)
+        let outputURL = container.appendingPathComponent(outputFilename)
+        defer { try? FileManager.default.removeItem(at: keyURL) }
+
+        do {
+            let keyData = try Data(contentsOf: keyURL)
+            let combined = try MissCatAuthenticationBackupCodec.seal(
+                user: user,
+                keyData: keyData
+            )
+            try combined.write(to: outputURL, options: .atomic)
+            try FileManager.default.setAttributes(
+                [.posixPermissions: 0o600],
+                ofItemAtPath: outputURL.path
+            )
+            defaults.removeObject(forKey: resultKey)
+            record(
+                operation: "export",
+                success: true,
+                nonce: nonce,
+                instance: user.normalizedInstance
+            )
+        } catch {
+            try? FileManager.default.removeItem(at: outputURL)
+            record(operation: "export", success: false, nonce: nonce)
+        }
+    }
+
+    static func restoreIfRequested(cache: Cache.UserDefaults) -> SecureUser? {
+        guard CommandLine.arguments.contains(restoreArgument) else { return nil }
+        guard let nonce = requestNonce(),
+              let container = containerURL()
+        else {
+            record(operation: "restore", success: false, nonce: requestNonce())
+            return nil
+        }
+
+        let keyURL = container.appendingPathComponent(keyFilename)
+        let inputURL = container.appendingPathComponent(inputFilename)
+        defer {
+            try? FileManager.default.removeItem(at: keyURL)
+            try? FileManager.default.removeItem(at: inputURL)
+        }
+
+        do {
+            let keyData = try Data(contentsOf: keyURL)
+            let encrypted = try Data(contentsOf: inputURL)
+            let candidate = try MissCatAuthenticationBackupCodec.open(
+                encrypted: encrypted,
+                keyData: keyData
+            )
+            guard let restored = cache.installAuthenticatedUser(candidate),
+                  restored.accountIdentifier == candidate.accountIdentifier,
+                  restored.apiKey == candidate.apiKey
+            else { throw BackupError.couldNotPersist }
+
+            record(
+                operation: "restore",
+                success: true,
+                nonce: nonce,
+                instance: restored.normalizedInstance
+            )
+            return restored
+        } catch {
+            record(operation: "restore", success: false, nonce: nonce)
+            return nil
+        }
+    }
+
+    static func clearIfRequested(cache: Cache.UserDefaults, user: SecureUser) {
+        guard CommandLine.arguments.contains(clearArgument) else { return }
+        guard let nonce = requestNonce(),
+              let defaults = UserDefaults(suiteName: appGroup),
+              let receiptData = defaults.data(forKey: preflightReceiptKey),
+              let receipt = try? JSONDecoder().decode(
+                  MissCatAuthenticationBackupClearPolicy.Receipt.self,
+                  from: receiptData
+              ),
+              MissCatAuthenticationBackupClearPolicy.permitsClear(
+                  receipt: receipt,
+                  user: user
+              )
+        else {
+            record(operation: "clear", success: false, nonce: requestNonce())
+            return
+        }
+        defaults.removeObject(forKey: preflightReceiptKey)
+        guard defaults.synchronize() else {
+            record(operation: "clear", success: false, nonce: nonce)
+            return
+        }
+        let accountIdentifier = user.accountIdentifier
+        let removed = cache.removeUser(userId: accountIdentifier)
+        let credentialStillExists = (try? cache.hasPersistedCredentialForVerification(
+            accountIdentifier: accountIdentifier
+        )) ?? true
+        record(
+            operation: "clear",
+            success: removed && !credentialStillExists && cache.getUser(userId: accountIdentifier) == nil,
+            nonce: nonce,
+            instance: user.normalizedInstance
+        )
+    }
+
+    private static func containerURL() -> URL? {
+        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)
+    }
+
+    private static func requestNonce() -> String? {
+        let arguments = CommandLine.arguments
+        guard let index = arguments.firstIndex(of: nonceArgument),
+              arguments.indices.contains(index + 1)
+        else { return nil }
+        let value = arguments[index + 1]
+        guard UUID(uuidString: value) != nil else { return nil }
+        return value.lowercased()
+    }
+
+    private static func record(
+        operation: String,
+        success: Bool,
+        nonce: String?,
+        instance: String? = nil
+    ) {
+        guard let defaults = UserDefaults(suiteName: appGroup) else { return }
+        var value: [String: Any] = [
+            "operation": operation,
+            "success": success,
+            "nonce": nonce ?? "invalid",
+            "completedAt": Date().timeIntervalSince1970
+        ]
+        if let instance { value["instance"] = instance }
+        defaults.set(value, forKey: resultKey)
+        defaults.synchronize()
+    }
+
+    private enum BackupError: Error {
+        case couldNotPersist
+        case identityMismatch
+    }
+}
+
 private enum MissCatAuthenticationProbe {
     private static let launchArgument = "--auth-api-probe"
     private static let appGroup = "group.yuwd.MissCat"
