@@ -175,7 +175,7 @@ final class MissCatNativeMFMTests: XCTestCase {
         XCTAssertEqual(text("$[spin $[jump nested]]"), "nested")
     }
 
-    func testAnimatedEmojiFixtureExposesEveryFrameAndDurationForPlaybackFollowUp() throws {
+    func testAnimatedEmojiFixtureExposesEveryFrameAndDurationForPlayback() throws {
         let animation = try MissCatCustomEmojiImageDecoder.decodeAnimation(Self.twoFrameGIFData)
 
         XCTAssertEqual(animation.frames.count, 2)
@@ -194,6 +194,15 @@ final class MissCatNativeMFMTests: XCTestCase {
         XCTAssertEqual(animation.frameIndex(at: 0.301), 0)
         XCTAssertEqual(animation.frameIndex(at: -1), 0)
         XCTAssertEqual(animation.totalDuration, 0.3, accuracy: 0.000_001)
+    }
+
+    func testFiniteAnimatedEmojiStopsOnItsLastFrame() throws {
+        let decoded = try MissCatCustomEmojiImageDecoder.decodeAnimation(Self.twoFrameGIFData)
+        let animation = MissCatCustomEmojiAnimation(frames: decoded.frames, loopCount: 1)
+
+        XCTAssertEqual(animation.frameIndex(at: 0.299), 1)
+        XCTAssertEqual(animation.frameIndex(at: 0.301), 1)
+        XCTAssertEqual(animation.frameIndex(at: 30), 1)
     }
 
     func testAnimatedEmojiDecoderReadsGIFAPNGAndWebPDelayMetadata() {
