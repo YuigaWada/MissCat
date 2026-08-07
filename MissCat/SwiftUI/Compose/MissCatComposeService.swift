@@ -16,13 +16,13 @@ final class MissCatComposeEnvironmentStore: MissCatComposeEnvironmentProviding {
         let users = cache.getUsers()
         let accounts = users.map {
             MissCatComposeAccount(
-                id: $0.userId,
+                id: $0.accountIdentifier,
                 username: $0.username,
                 instance: $0.instance,
                 avatarURL: nil
             )
         }
-        let currentID = cache.getCurrentUser()?.userId
+        let currentID = cache.getCurrentUserId()
         let visibility = cache.getCurrentVisibility()
             .flatMap { MissCatComposeVisibility(rawValue: $0.rawValue) }
             ?? .public
@@ -63,63 +63,304 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
         case accountUnavailable
         case unsupportedMedia
         case imageEncodingFailed
-        case uploadFailed
-        case postFailed
 
         var errorDescription: String? {
             switch self {
             case .accountUnavailable: "投稿に使うアカウント情報を取得できませんでした"
             case .unsupportedMedia: "添付ファイルを読み込めませんでした"
             case .imageEncodingFailed: "画像を投稿用に変換できませんでした"
-            case .uploadFailed: "添付ファイルのアップロードに失敗しました"
-            case .postFailed: "送信に失敗しました。通信状態を確認して再試行してください"
             }
         }
     }
 
     private let userProvider: (String) -> SecureUser?
+    private let transport: any MissCatComposeHTTPTransport
+    private let requestTimeout: TimeInterval
+    private let journal: MissCatComposeOperationJournalStoring
+    private var activeSubmissionTask: Task<Void, Error>?
 
-    init(userProvider: @escaping (String) -> SecureUser? = { Cache.UserDefaults.shared.getUser(userId: $0) }) {
+    init(
+        userProvider: @escaping (String) -> SecureUser? = { Cache.UserDefaults.shared.getUser(userId: $0) },
+        transport: any MissCatComposeHTTPTransport = MissCatComposeURLSessionTransport(),
+        requestTimeout: TimeInterval = MissCatNativeComposeAPIClient.defaultTimeout,
+        journal: MissCatComposeOperationJournalStoring = MissCatComposeOperationJournal()
+    ) {
         self.userProvider = userProvider
+        self.transport = transport
+        self.requestTimeout = requestTimeout
+        self.journal = journal
     }
 
     func submit(
         _ submission: MissCatComposeSubmission,
         progress: @escaping (MissCatComposeUploadProgress) -> Void
     ) async throws {
+        guard activeSubmissionTask == nil else {
+            throw MissCatNativeComposeAPIError.alreadySubmitting
+        }
+
+        let task = Task { @MainActor [weak self] in
+            guard let self else { throw CancellationError() }
+            try await performSubmission(submission, progress: progress)
+        }
+        activeSubmissionTask = task
+        defer { activeSubmissionTask = nil }
+        try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
+    func cancelActiveSubmission() {
+        activeSubmissionTask?.cancel()
+    }
+
+    private func performSubmission(
+        _ submission: MissCatComposeSubmission,
+        progress: @escaping (MissCatComposeUploadProgress) -> Void
+    ) async throws {
+
         guard let user = userProvider(submission.accountID),
+              user.accountIdentifier == submission.accountID,
               let apiKey = user.apiKey,
               !apiKey.isEmpty
         else {
             throw ServiceError.accountUnavailable
         }
 
-        let misskey = MisskeyKit()
-        misskey.changeInstance(instance: user.instance)
-        misskey.auth.setAPIKey(apiKey)
-
-        var fileIDs: [String] = []
-        for (index, media) in submission.media.enumerated() {
-            let upload = try await preparedUpload(for: media)
-            let fileID = try await uploadFile(upload, media: media, using: misskey)
-            fileIDs.append(fileID)
-            progress(MissCatComposeUploadProgress(completed: index + 1, total: submission.media.count))
-        }
-
-        let poll = submission.poll.map {
-            Poll(
-                choices: $0.choices,
-                multiple: $0.allowsMultiple,
-                expiresAt: $0.expiresAtMilliseconds.map(String.init),
-                expiredAfter: $0.expiresAfterMilliseconds.map(String.init)
-            )
-        }
-        try await createNote(
-            submission,
-            fileIDs: fileIDs,
-            poll: poll,
-            using: misskey
+        let scope = try MissCatComposeAccountScope(
+            accountID: submission.accountID,
+            instance: user.instance,
+            accessToken: apiKey
         )
+        let client = MissCatNativeComposeAPIClient(
+            scope: scope,
+            transport: transport,
+            timeout: requestTimeout
+        )
+
+        let identity = operationIdentity(for: submission, scope: scope)
+        let fingerprint = identity.fingerprint
+        var record = try resumableRecord(identity: identity)
+
+        do {
+            var fileIDs = Array(record.knownFileIDs.prefix(submission.media.count))
+            if !fileIDs.isEmpty {
+                progress(MissCatComposeUploadProgress(completed: fileIDs.count, total: submission.media.count))
+            }
+            for (index, media) in submission.media.enumerated() where index >= fileIDs.count {
+                try Task.checkCancellation()
+                let upload = try await preparedUpload(for: media)
+                record.phase = .uploadRequestStarted
+                record.uncertainEndpoint = nil
+                try saveJournal(record)
+                let fileID = try await client.upload(
+                    MissCatComposeAPIUpload(
+                        data: upload.data,
+                        mimeType: upload.mimeType,
+                        filename: upload.filename,
+                        comment: media.altText.isEmpty ? nil : media.altText,
+                        isSensitive: media.isSensitive
+                    )
+                )
+                fileIDs.append(fileID)
+                record.knownFileIDs = fileIDs
+                record.phase = .uploading
+                record.uncertainEndpoint = nil
+                try saveJournal(record)
+                progress(MissCatComposeUploadProgress(completed: index + 1, total: submission.media.count))
+            }
+
+            let poll = submission.poll.map {
+                MissCatComposeAPIPoll(
+                    choices: $0.choices,
+                    multiple: $0.allowsMultiple,
+                    expiresAt: $0.expiresAtMilliseconds,
+                    expiredAfter: $0.expiresAfterMilliseconds
+                )
+            }
+            record.phase = .readyToCreateNote
+            record.uncertainEndpoint = nil
+            try saveJournal(record)
+            try Task.checkCancellation()
+            record.phase = .noteRequestStarted
+            record.uncertainEndpoint = nil
+            try saveJournal(record)
+            let noteID = try await client.createNote(
+                MissCatComposeAPINote(
+                    visibility: submission.visibility.composeAPIVisibility,
+                    visibleUserIDs: submission.visibleUserIDs,
+                    text: submission.text,
+                    contentWarning: submission.contentWarning,
+                    localOnly: submission.localOnly,
+                    noExtractMentions: submission.noExtractMentions,
+                    noExtractHashtags: submission.noExtractHashtags,
+                    noExtractEmojis: false,
+                    fileIDs: fileIDs,
+                    replyID: submission.replyID,
+                    renoteID: submission.renoteID,
+                    poll: poll
+                )
+            )
+            record.createdNoteID = noteID
+            record.phase = .noteCreated
+            record.uncertainEndpoint = nil
+            try saveJournal(record)
+            try Task.checkCancellation()
+            guard journal.remove(fingerprint: fingerprint) else {
+                throw MissCatNativeComposeAPIError.journalUnavailable
+            }
+        } catch let error as MissCatNativeComposeAPIError {
+            if case let .outcomeUnknown(endpoint) = error {
+                record.phase = .outcomeUnknown
+                record.uncertainEndpoint = endpoint
+                _ = journal.save(record)
+            } else {
+                let cleanupIsUnknown = await compensateOrClean(record: &record, client: client)
+                if !cleanupIsUnknown { _ = journal.remove(fingerprint: fingerprint) }
+            }
+            throw error
+        } catch {
+            let cleanupIsUnknown = await compensateOrClean(record: &record, client: client)
+            if !cleanupIsUnknown { _ = journal.remove(fingerprint: fingerprint) }
+            throw error
+        }
+    }
+
+    private func resumableRecord(
+        identity: MissCatComposeOperationRecord.Identity
+    ) throws -> MissCatComposeOperationRecord {
+        guard var existing = journal.record(fingerprint: identity.fingerprint) else {
+            let record = MissCatComposeOperationRecord(identity: identity)
+            try saveJournal(record)
+            return record
+        }
+        guard existing.isValid(for: identity) else {
+            let blocked = MissCatComposeOperationRecord(
+                identity: identity,
+                phase: .outcomeUnknown,
+                uncertainEndpoint: "journal"
+            )
+            _ = journal.save(blocked)
+            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: "journal")
+        }
+        switch existing.phase {
+        case .outcomeUnknown:
+            _ = journal.save(existing)
+            throw MissCatNativeComposeAPIError.outcomeUnknown(
+                endpoint: existing.uncertainEndpoint ?? "journal"
+            )
+        case .uploadRequestStarted:
+            existing.phase = .outcomeUnknown
+            existing.uncertainEndpoint = "drive/files/create"
+            _ = journal.save(existing)
+            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: "drive/files/create")
+        case .noteRequestStarted:
+            existing.phase = .outcomeUnknown
+            existing.uncertainEndpoint = "notes/create"
+            _ = journal.save(existing)
+            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: "notes/create")
+        case .cleanupPending:
+            let endpoint = existing.createdNoteID == nil ? "drive/files/delete" : "notes/delete"
+            existing.phase = .outcomeUnknown
+            existing.uncertainEndpoint = endpoint
+            _ = journal.save(existing)
+            throw MissCatNativeComposeAPIError.outcomeUnknown(endpoint: endpoint)
+        case .noteCreated:
+            throw MissCatNativeComposeAPIError.alreadyCreated
+        case .preparing, .uploading, .readyToCreateNote:
+            return existing
+        }
+    }
+
+    private func saveJournal(_ record: MissCatComposeOperationRecord) throws {
+        guard journal.save(record) else {
+            throw MissCatNativeComposeAPIError.journalUnavailable
+        }
+    }
+
+    private func compensateOrClean(
+        record: inout MissCatComposeOperationRecord,
+        client: MissCatNativeComposeAPIClient
+    ) async -> Bool {
+        if let noteID = record.createdNoteID {
+            guard !record.noteDeleteAttempted else { return true }
+            record.noteDeleteAttempted = true
+            record.phase = .cleanupPending
+            record.uncertainEndpoint = nil
+            guard journal.save(record) else { return true }
+            let cleanup = Task { try await client.deleteNote(id: noteID) }
+            if (try? await cleanup.value) == nil {
+                record.phase = .outcomeUnknown
+                record.uncertainEndpoint = "notes/delete"
+                _ = journal.save(record)
+                return true
+            }
+            return false
+        }
+
+        for fileID in record.knownFileIDs where !record.cleanupAttemptedFileIDs.contains(fileID) {
+            record.cleanupAttemptedFileIDs.append(fileID)
+            record.phase = .cleanupPending
+            record.uncertainEndpoint = nil
+            guard journal.save(record) else { return true }
+            let cleanup = Task { try await client.deleteFile(id: fileID) }
+            if (try? await cleanup.value) == nil {
+                record.phase = .outcomeUnknown
+                record.uncertainEndpoint = "drive/files/delete"
+                _ = journal.save(record)
+                return true
+            }
+        }
+        return false
+    }
+
+    func operationFingerprint(for submission: MissCatComposeSubmission) -> String {
+        var parts = [
+            Data(submission.accountID.utf8),
+            Data(operation(for: submission.mode).rawValue.utf8),
+            Data(submission.text.utf8),
+            Data((submission.contentWarning ?? "").utf8),
+            Data(submission.visibility.rawValue.utf8),
+            Data(submission.visibleUserIDs.joined(separator: "\u{1f}").utf8),
+            Data("\(submission.localOnly)|\(submission.noExtractMentions)|\(submission.noExtractHashtags)".utf8),
+            Data((submission.replyID ?? "").utf8),
+            Data((submission.renoteID ?? "").utf8)
+        ]
+        for media in submission.media {
+            parts.append(Data("\(media.kind.rawValue)|\(media.filename)|\(media.mimeType)|\(media.altText)|\(media.isSensitive)".utf8))
+            parts.append(media.data)
+        }
+        if let poll = submission.poll {
+            parts.append(Data(poll.choices.joined(separator: "\u{1f}").utf8))
+            parts.append(Data("\(poll.allowsMultiple)|\(poll.expiresAtMilliseconds ?? -1)|\(poll.expiresAfterMilliseconds ?? -1)".utf8))
+        }
+        return MissCatComposeOperationFingerprint.make(parts: parts)
+    }
+
+    func operationIdentity(
+        for submission: MissCatComposeSubmission,
+        scope: MissCatComposeAccountScope
+    ) -> MissCatComposeOperationRecord.Identity {
+        MissCatComposeOperationRecord.Identity(
+            fingerprint: operationFingerprint(for: submission),
+            operation: operation(for: submission.mode),
+            accountIdentifierHash: MissCatComposeOperationFingerprint.accountHash(submission.accountID),
+            instanceOriginHash: MissCatComposeOperationFingerprint.make(parts: [Data(scope.origin.absoluteString.utf8)]),
+            mediaCount: submission.media.count
+        )
+    }
+
+    private func operation(
+        for mode: MissCatComposeMode
+    ) -> MissCatComposeOperationRecord.Identity.Operation {
+        switch mode {
+        case .note: .note
+        case .reply: .reply
+        case .quote: .quote
+        case .renote: .renote
+        }
     }
 
     private func preparedUpload(for media: MissCatComposeMedia) async throws -> (data: Data, mimeType: String, filename: String) {
@@ -168,94 +409,36 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
         exporter.shouldOptimizeForNetworkUse = true
         let exporterBox = MissCatUncheckedSendableBox(exporter)
 
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            exporterBox.value.exportAsynchronously {
-                let exporter = exporterBox.value
-                if exporter.status == .completed {
-                    continuation.resume(returning: ())
-                } else {
-                    continuation.resume(throwing: ServiceError.unsupportedMedia)
+        try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                exporterBox.value.exportAsynchronously {
+                    let exporter = exporterBox.value
+                    if exporter.status == .completed {
+                        continuation.resume(returning: ())
+                    } else if exporter.status == .cancelled {
+                        continuation.resume(throwing: CancellationError())
+                    } else {
+                        continuation.resume(throwing: ServiceError.unsupportedMedia)
+                    }
                 }
             }
+        } onCancel: {
+            exporterBox.value.cancelExport()
         }
         guard let converted = try? Data(contentsOf: outputURL), !converted.isEmpty else {
             throw ServiceError.unsupportedMedia
         }
         return converted
     }
+}
 
-    private func uploadFile(
-        _ upload: (data: Data, mimeType: String, filename: String),
-        media: MissCatComposeMedia,
-        using misskey: MisskeyKit
-    ) async throws -> String {
-        try await withCheckedThrowingContinuation { continuation in
-            misskey.drive.createFile(
-                fileData: upload.data,
-                fileType: upload.mimeType,
-                name: upload.filename,
-                isSensitive: media.isSensitive,
-                force: false,
-                comment: media.altText
-            ) { result, error in
-                if error == nil, let id = result?.id, !id.isEmpty {
-                    continuation.resume(returning: id)
-                } else {
-                    continuation.resume(throwing: ServiceError.uploadFailed)
-                }
-            }
-        }
-    }
-
-    private func createNote(
-        _ submission: MissCatComposeSubmission,
-        fileIDs: [String],
-        poll: Poll?,
-        using misskey: MisskeyKit
-    ) async throws {
-        let visibility = Visibility(rawValue: submission.visibility.rawValue) ?? .public
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            let callback: OneNoteCallBack = { note, error in
-                if note != nil, error == nil {
-                    continuation.resume(returning: ())
-                } else {
-                    continuation.resume(throwing: ServiceError.postFailed)
-                }
-            }
-
-            if let renoteID = submission.renoteID {
-                misskey.notes.renote(
-                    renoteId: renoteID,
-                    quote: submission.text,
-                    visibility: visibility,
-                    visibleUserIds: submission.visibleUserIDs,
-                    cw: submission.contentWarning ?? "",
-                    viaMobile: true,
-                    localOnly: submission.localOnly,
-                    noExtractMentions: submission.noExtractMentions,
-                    noExtractHashtags: submission.noExtractHashtags,
-                    noExtractEmojis: false,
-                    fileIds: fileIDs,
-                    poll: poll,
-                    completion: callback
-                )
-            } else {
-                misskey.notes.createNote(
-                    visibility: visibility,
-                    visibleUserIds: submission.visibleUserIDs,
-                    text: submission.text,
-                    cw: submission.contentWarning ?? "",
-                    viaMobile: true,
-                    localOnly: submission.localOnly,
-                    noExtractMentions: submission.noExtractMentions,
-                    noExtractHashtags: submission.noExtractHashtags,
-                    noExtractEmojis: false,
-                    fileIds: fileIDs,
-                    replyId: submission.replyID ?? "",
-                    poll: poll,
-                    completion: callback
-                )
-            }
+private extension MissCatComposeVisibility {
+    var composeAPIVisibility: MissCatComposeAPIVisibility {
+        switch self {
+        case .public: .public
+        case .home: .home
+        case .followers: .followers
+        case .specified: .specified
         }
     }
 }

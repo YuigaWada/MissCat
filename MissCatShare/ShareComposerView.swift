@@ -68,6 +68,7 @@ struct ShareComposerView: View {
                 }
                 .padding(16)
             }
+            .disabled(viewModel.phase == .posting)
             .background(Color(uiColor: .systemGroupedBackground))
         }
         .overlay {
@@ -81,6 +82,7 @@ struct ShareComposerView: View {
                 .accessibilityIdentifier(
                     viewModel.phase == .posting ? "share.compose.posting" : "share.compose.loading"
                 )
+                .allowsHitTesting(false)
             }
         }
         .sheet(isPresented: $showsAccountPicker) {
@@ -101,7 +103,7 @@ struct ShareComposerView: View {
         ) {
             if viewModel.canPost {
                 Button("再試行") { submit() }
-            } else if !viewModel.accounts.isEmpty {
+            } else if viewModel.canReloadInput {
                 Button("再読込") { onReloadInput() }
             }
             Button("閉じる", role: .cancel) { viewModel.clearError() }

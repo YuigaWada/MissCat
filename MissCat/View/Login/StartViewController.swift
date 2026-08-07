@@ -190,7 +190,7 @@ class StartViewController: UIViewController {
             let success = Cache.UserDefaults.shared.saveUser(secureUser)
             
             guard success else { self.showAlert(); return }
-            Cache.UserDefaults.shared.changeCurrentUser(userId: user.id)
+            Cache.UserDefaults.shared.changeCurrentUser(secureUser)
             secureUser.apiKey = apiKey // saveUserでapiKeyが抜き消されるので詰め直す
             completion(secureUser)
         }

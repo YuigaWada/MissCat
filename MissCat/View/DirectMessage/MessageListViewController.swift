@@ -120,7 +120,7 @@ class MessageListViewController: UIViewController, UITableViewDelegate {
 
 extension MessageListViewController: NavBarDelegate {
     func changeUser(_ user: SecureUser) {
-        guard user.userId != viewModel.owner?.userId else { return } // 同じアカウントへの切り替えを防ぐ
+        guard user.accountIdentifier != viewModel.owner?.accountIdentifier else { return }
         viewModel.owner = user
         viewModel.removeAll()
         viewModel.load()

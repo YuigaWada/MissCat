@@ -59,9 +59,9 @@ enum MissCatAuthenticationCallbackMatcher {
 }
 
 protocol MissCatAuthenticationAccountStoring: AnyObject {
-    func saveUser(_ user: SecureUser) -> Bool
-    func changeCurrentUser(userId id: String)
-    func getUser(userId: String) -> SecureUser?
+    /// Persists the credential/metadata and changes the current selection as a
+    /// single rollback-safe operation, returning only a fully verified account.
+    func installAuthenticatedUser(_ user: SecureUser) -> SecureUser?
 }
 
 extension Cache.UserDefaults: MissCatAuthenticationAccountStoring {}
@@ -236,12 +236,7 @@ final class MissCatAuthenticationService {
             instance: session.instance.identifier,
             apiKey: apiKey
         )
-        guard accountStore.saveUser(secureUser) else {
-            throw AuthenticationError.couldNotPersistAccount
-        }
-
-        accountStore.changeCurrentUser(userId: user.id)
-        guard let persistedUser = accountStore.getUser(userId: user.id),
+        guard let persistedUser = accountStore.installAuthenticatedUser(secureUser),
               persistedUser.userId == user.id,
               persistedUser.instance == session.instance.identifier,
               persistedUser.apiKey == apiKey

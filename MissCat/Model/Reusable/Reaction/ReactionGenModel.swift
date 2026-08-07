@@ -28,7 +28,9 @@ class EmojiRepository {
     var userEmojisList: [UserEmojis] = []
     
     func getUserEmojis(of kind: Kind, owner: SecureUser) -> [EmojiView.EmojiModel] {
-        let userEmojisOption = userEmojisList.filter { $0.owner.userId == owner.userId }
+        let userEmojisOption = userEmojisList.filter {
+            $0.owner.accountIdentifier == owner.accountIdentifier
+        }
         
         var userEmojis: UserEmojis
         if userEmojisOption.count > 0 {
@@ -54,7 +56,7 @@ class EmojiRepository {
     
     func updateUserEmojis(to kind: Kind, owner: SecureUser, new emojis: [EmojiView.EmojiModel]) {
         for i in 0 ..< userEmojisList.count {
-            guard userEmojisList[i].owner.userId == owner.userId else { break }
+            guard userEmojisList[i].owner.accountIdentifier == owner.accountIdentifier else { continue }
             switch kind {
             case .favs:
                 userEmojisList[i].favs = emojis

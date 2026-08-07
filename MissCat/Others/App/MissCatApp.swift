@@ -16,8 +16,17 @@ struct MissCatApp: App {
 
     var body: some Scene {
         WindowGroup {
+#if DEBUG
+            if let probeMode = MissCatSharedKeychainE2EMode.current {
+                MissCatSharedKeychainE2EView(mode: probeMode)
+            } else {
+                MissCatRootView()
+                    .environmentObject(applicationState)
+            }
+#else
             MissCatRootView()
                 .environmentObject(applicationState)
+#endif
         }
     }
 }
@@ -60,7 +69,7 @@ final class ApplicationState: ObservableObject {
         // getCurrentUser() falls back to the first saved account when the
         // persisted current ID is absent or stale. Persist that fallback so
         // the legacy Theme tab resolver sees the same account.
-        cache.changeCurrentUser(userId: currentUser.userId)
+        cache.changeCurrentUser(currentUser)
 #if DEBUG
         MissCatAuthenticationProbe.runIfRequested(user: currentUser)
 #endif
@@ -202,6 +211,172 @@ struct LegacyApplicationView: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
+
+#if DEBUG
+private enum MissCatSharedKeychainE2EMode {
+    case prepare
+    case cleanup
+
+    static var current: Self? {
+        if CommandLine.arguments.contains("--misscat-shared-keychain-e2e-cleanup") {
+            return .cleanup
+        }
+        if CommandLine.arguments.contains("--misscat-shared-keychain-e2e") {
+            return .prepare
+        }
+        return nil
+    }
+}
+
+/// Debug-only host for an XCTest-driven, signed app-to-extension Keychain
+/// check. The fixture instance uses the reserved `.invalid` TLD and its value
+/// is never sent to the network or returned by the Share process.
+private struct MissCatSharedKeychainE2EView: View {
+    private enum Phase: Equatable {
+        case working
+        case ready
+        case cleaned
+        case failed
+    }
+
+    private enum Fixture {
+        static let appGroup = "group.yuwd.MissCat"
+        static let requestKey = "share-credential-proof.requested"
+        static let resultKey = "share-credential-proof.available"
+        static let accountHashKey = "share-credential-proof.account-hash"
+        static let previousAccountKey = "share-credential-proof.previous-account"
+        static let userID = "misscat-shared-keychain-fixture"
+        static let username = "non-live-fixture"
+        static let instance = "shared-keychain-probe.invalid"
+        static let credential = "misscat-non-live-fixture-credential-v1"
+
+        static var accountIdentifier: String {
+            MissCatAccountIdentity.storageKey(instance: instance, userId: userID)
+        }
+    }
+
+    let mode: MissCatSharedKeychainE2EMode
+    @State private var phase: Phase = .working
+    @State private var isPresentingShareSheet = false
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Text("MissCat shared-Keychain E2E")
+                .font(.headline)
+
+            switch phase {
+            case .working:
+                ProgressView()
+                    .accessibilityIdentifier("keychain-probe.working")
+            case .ready:
+                Text("Fixture ready")
+                    .accessibilityIdentifier("keychain-probe.ready")
+                Button("Open MissCat Share Extension") {
+                    isPresentingShareSheet = true
+                }
+                .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("keychain-probe.launch-share")
+            case .cleaned:
+                Text("Fixture cleaned")
+                    .accessibilityIdentifier("keychain-probe.cleaned")
+            case .failed:
+                Text("Fixture operation failed")
+                    .accessibilityIdentifier("keychain-probe.failed")
+            }
+        }
+        .padding(32)
+        .task {
+            switch mode {
+            case .prepare:
+                phase = prepareFixture() ? .ready : .failed
+            case .cleanup:
+                phase = cleanupFixture() ? .cleaned : .failed
+            }
+        }
+        .sheet(isPresented: $isPresentingShareSheet) {
+            MissCatSharedKeychainActivityView(
+                activityItems: ["MissCat non-live shared-Keychain fixture"]
+            )
+        }
+    }
+
+    private func prepareFixture() -> Bool {
+        guard let defaults = Foundation.UserDefaults(suiteName: Fixture.appGroup) else {
+            return false
+        }
+
+        let cache = Cache.UserDefaults.shared
+        let stalePrevious = defaults.string(forKey: Fixture.previousAccountKey)
+        let currentAccount = cache.getCurrentUserId()
+        let previousAccount = currentAccount == Fixture.accountIdentifier
+            ? stalePrevious
+            : currentAccount
+
+        _ = cache.removeUser(userId: Fixture.accountIdentifier)
+        if let previousAccount, previousAccount != Fixture.accountIdentifier {
+            defaults.set(previousAccount, forKey: Fixture.previousAccountKey)
+        } else {
+            defaults.removeObject(forKey: Fixture.previousAccountKey)
+        }
+        defaults.removeObject(forKey: Fixture.resultKey)
+        defaults.removeObject(forKey: Fixture.accountHashKey)
+        defaults.set(false, forKey: Fixture.requestKey)
+
+        let fixture = SecureUser(
+            userId: Fixture.userID,
+            username: Fixture.username,
+            instance: Fixture.instance,
+            apiKey: Fixture.credential
+        )
+        guard let installed = cache.installAuthenticatedUser(fixture),
+              installed.accountIdentifier == Fixture.accountIdentifier,
+              installed.apiKey == Fixture.credential,
+              cache.getCurrentUserId() == Fixture.accountIdentifier
+        else {
+            return false
+        }
+
+        defaults.set(true, forKey: Fixture.requestKey)
+        defaults.synchronize()
+        return true
+    }
+
+    private func cleanupFixture() -> Bool {
+        guard let defaults = Foundation.UserDefaults(suiteName: Fixture.appGroup) else {
+            return false
+        }
+
+        let cache = Cache.UserDefaults.shared
+        let fixtureExists = cache.getUser(userId: Fixture.accountIdentifier) != nil
+        if fixtureExists, !cache.removeUser(userId: Fixture.accountIdentifier) {
+            return false
+        }
+
+        if let previousAccount = defaults.string(forKey: Fixture.previousAccountKey),
+           previousAccount != Fixture.accountIdentifier
+        {
+            _ = cache.changeCurrentUser(userId: previousAccount)
+        }
+
+        defaults.removeObject(forKey: Fixture.requestKey)
+        defaults.removeObject(forKey: Fixture.resultKey)
+        defaults.removeObject(forKey: Fixture.accountHashKey)
+        defaults.removeObject(forKey: Fixture.previousAccountKey)
+        defaults.synchronize()
+        return cache.getUser(userId: Fixture.accountIdentifier) == nil
+    }
+}
+
+private struct MissCatSharedKeychainActivityView: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+#endif
 
 #if DEBUG
 private enum MissCatAuthenticationProbe {

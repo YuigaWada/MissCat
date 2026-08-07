@@ -196,10 +196,18 @@ final class MissCatNotificationMessageStoreTests: XCTestCase {
         repository.resolvedNotifications["push"] = resolved
         let store = MissCatNotificationsStore(repository: repository)
 
-        await store.handleForegroundPush(.init(ownerAccountID: "other", notificationID: "push"))
+        await store.handleForegroundPush(.init(
+            ownerAccountIdentifier: "other-account",
+            ownerAPIUserID: "other",
+            notificationID: "push"
+        ))
         XCTAssertNil(store.banner)
 
-        await store.handleForegroundPush(.init(ownerAccountID: "owner", notificationID: "push"))
+        await store.handleForegroundPush(.init(
+            ownerAccountIdentifier: "owner-account",
+            ownerAPIUserID: "owner",
+            notificationID: "push"
+        ))
         XCTAssertEqual(store.banner?.notification.id, "push")
         XCTAssertEqual(store.takeBannerRoute(), .note("note-mention"))
         XCTAssertNil(store.banner)
@@ -424,14 +432,113 @@ final class MissCatNotificationMessageContractTests: XCTestCase {
     func testPushEnvelopeRequiresOwnerAndNotificationIdentifiers() {
         XCTAssertEqual(
             MissCatPushEnvelope(payload: ["ownerId": "owner", "notificationId": "notification"]),
-            .init(ownerAccountID: "owner", notificationID: "notification")
+            .init(ownerIdentifier: "owner", notificationID: "notification")
         )
         XCTAssertNil(MissCatPushEnvelope(payload: ["notificationId": "notification"]))
         XCTAssertNil(MissCatPushEnvelope(payload: ["ownerId": "owner"]))
         XCTAssertEqual(
             MissCatPushEnvelope(payload: ["owner_id": "owner", "notification_id": "notification"]),
-            .init(ownerAccountID: "owner", notificationID: "notification")
+            .init(ownerIdentifier: "owner", notificationID: "notification")
         )
+    }
+
+    func testPushOwnerResolutionPrefersCompositeAccountIdentifier() throws {
+        let accounts = pushAccountsWithDuplicateUserID()
+        let second = accounts[1]
+        let envelope = MissCatPushEnvelope(
+            ownerIdentifier: second.accountIdentifier,
+            ownerInstance: accounts[0].instance,
+            notificationID: "notification"
+        )
+
+        let resolved = try XCTUnwrap(MissCatPushOwnerResolver.resolve(envelope, accounts: accounts))
+
+        XCTAssertEqual(resolved.ownerAccountIdentifier, second.accountIdentifier)
+        XCTAssertEqual(resolved.ownerAPIUserID, second.apiUserID)
+    }
+
+    func testPushOwnerResolutionAllowsUniqueLegacyAPIUserID() throws {
+        let account = MissCatPushAccountIdentity(
+            accountIdentifier: MissCatAccountIdentity.storageKey(
+                instance: "only.example",
+                userId: "legacy-owner"
+            ),
+            apiUserID: "legacy-owner",
+            instance: "only.example"
+        )
+        let envelope = MissCatPushEnvelope(
+            ownerIdentifier: "legacy-owner",
+            notificationID: "notification"
+        )
+
+        XCTAssertEqual(
+            MissCatPushOwnerResolver.resolve(envelope, accounts: [account])?.ownerAccountIdentifier,
+            account.accountIdentifier
+        )
+    }
+
+    func testPushOwnerResolutionRejectsAmbiguousLegacyAPIUserID() {
+        let envelope = MissCatPushEnvelope(
+            ownerIdentifier: "same-owner",
+            notificationID: "notification"
+        )
+
+        XCTAssertNil(MissCatPushOwnerResolver.resolve(
+            envelope,
+            accounts: pushAccountsWithDuplicateUserID()
+        ))
+    }
+
+    func testPushOwnerResolutionUsesExactInstanceProofForLegacyAPIUserID() throws {
+        let accounts = pushAccountsWithDuplicateUserID()
+        let envelope = MissCatPushEnvelope(
+            ownerIdentifier: "same-owner",
+            ownerInstance: "HTTPS://SECOND.EXAMPLE:443/",
+            notificationID: "notification"
+        )
+
+        let resolved = try XCTUnwrap(MissCatPushOwnerResolver.resolve(envelope, accounts: accounts))
+
+        XCTAssertEqual(resolved.ownerAccountIdentifier, accounts[1].accountIdentifier)
+        XCTAssertNil(MissCatPushOwnerResolver.resolve(
+            .init(
+                ownerIdentifier: "same-owner",
+                ownerInstance: "unknown.example",
+                notificationID: "notification"
+            ),
+            accounts: accounts
+        ))
+    }
+
+    func testPushPayloadPrefersCompositeOwnerFieldOverLegacyOwnerField() {
+        let envelope = MissCatPushEnvelope(payload: [
+            "ownerAccountId": "composite-owner",
+            "ownerId": "legacy-owner",
+            "ownerInstance": "example.test",
+            "notificationId": "notification"
+        ])
+
+        XCTAssertEqual(
+            envelope,
+            .init(
+                ownerIdentifier: "composite-owner",
+                ownerInstance: "example.test",
+                notificationID: "notification"
+            )
+        )
+    }
+
+    private func pushAccountsWithDuplicateUserID() -> [MissCatPushAccountIdentity] {
+        ["first.example", "second.example"].map { instance in
+            MissCatPushAccountIdentity(
+                accountIdentifier: MissCatAccountIdentity.storageKey(
+                    instance: instance,
+                    userId: "same-owner"
+                ),
+                apiUserID: "same-owner",
+                instance: instance
+            )
+        }
     }
 
     func testNativeNotificationRequestUsesCurrentEndpointAndBearerContract() async throws {
@@ -606,8 +713,9 @@ final class MissCatNotificationMessageOrdinaryRouteTests: XCTestCase {
             MissCatNotificationMessageBridge.makeMessagesController(owner: owner, home: home)
         )
 
-        XCTAssertEqual(notifications.ownerID, "owner")
-        XCTAssertEqual(messages.ownerID, "owner")
+        XCTAssertEqual(notifications.ownerID, owner.accountIdentifier)
+        XCTAssertEqual(messages.ownerID, owner.accountIdentifier)
+        XCTAssertNotEqual(notifications.ownerID, owner.userId)
     }
 
     func testOrdinaryControllersRejectMissingCredentialsWithoutNetwork() {

@@ -7,10 +7,15 @@ final class ShareViewController: UIViewController {
 
     private var hostingController: UIHostingController<ShareComposerView>?
     private var viewModel: ShareComposerViewModel?
-    private var hasFinishedRequest = false
+    private let terminalArbiter = ShareRequestTerminalArbiter()
 
     override func viewDidLoad() {
         super.viewDidLoad()
+#if DEBUG
+        if installCredentialReadProofIfRequested() {
+            return
+        }
+#endif
         installSwiftUIComposer()
         loadSharedContent()
     }
@@ -18,11 +23,11 @@ final class ShareViewController: UIViewController {
     private func installSwiftUIComposer() {
         let users = userModel.getUsers()
         let accounts = users.map {
-            ShareAccount(id: $0.userId, username: $0.username, instance: $0.instance)
+            ShareAccount(userID: $0.userId, username: $0.username, instance: $0.instance)
         }
-        let currentUserID = userModel.getCurrentUser()?.userId
-        let selectedAccountID = accounts.contains(where: { $0.id == currentUserID })
-            ? currentUserID
+        let currentAccountID = userModel.getCurrentUser()?.accountIdentifier
+        let selectedAccountID = accounts.contains(where: { $0.id == currentAccountID })
+            ? currentAccountID
             : accounts.first?.id
         let visibility = userModel.getCurrentVisibility()
             .flatMap { ShareVisibility(rawValue: $0.rawValue) }
@@ -32,7 +37,7 @@ final class ShareViewController: UIViewController {
             accounts: accounts,
             selectedAccountID: selectedAccountID,
             visibility: visibility,
-            posting: SharePostService(userModel: userModel)
+            posting: SharePostService(userProvider: userModel.getUser(accountIdentifier:))
         )
         self.viewModel = viewModel
 
@@ -57,32 +62,86 @@ final class ShareViewController: UIViewController {
         hostingController.didMove(toParent: self)
     }
 
+#if DEBUG
+    /// Runs inside the signed Share extension process. The app-group flag is
+    /// used because extension processes do not inherit the containing app's
+    /// launch arguments. Neither the credential nor the raw account ID crosses
+    /// this boundary.
+    private func installCredentialReadProofIfRequested() -> Bool {
+        guard let defaults = UserDefaults(suiteName: ShareCredentialReadProbe.appGroup),
+              defaults.bool(forKey: ShareCredentialReadProbe.requestKey)
+        else { return false }
+
+        var proof: ShareCredentialReadProof?
+        let invoked = ShareCredentialReadProbe.invokeIfRequested(
+            arguments: ProcessInfo.processInfo.arguments + [ShareCredentialReadProbe.launchArgument],
+            accountIdentifier: userModel.getCurrentUserId(),
+            read: userModel.credentialReadProof(accountIdentifier:),
+            store: { proof = $0 }
+        )
+        guard invoked, let proof else { return false }
+
+        defaults.set(proof.credentialAvailable, forKey: ShareCredentialReadProbe.resultKey)
+        defaults.set(proof.accountIdentifierHash, forKey: ShareCredentialReadProbe.accountHashKey)
+        defaults.synchronize()
+
+        let title = UILabel()
+        title.font = .preferredFont(forTextStyle: .headline)
+        title.text = "Shared Keychain proof"
+
+        let available = UILabel()
+        available.accessibilityIdentifier = "share-keychain-proof.available"
+        available.font = .monospacedSystemFont(ofSize: 17, weight: .regular)
+        available.text = proof.credentialAvailable ? "true" : "false"
+
+        let accountHash = UILabel()
+        accountHash.accessibilityIdentifier = "share-keychain-proof.account-hash"
+        accountHash.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        accountHash.numberOfLines = 0
+        accountHash.text = proof.accountIdentifierHash
+
+        let stack = UIStackView(arrangedSubviews: [title, available, accountHash])
+        stack.axis = .vertical
+        stack.alignment = .fill
+        stack.spacing = 16
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        view.backgroundColor = .systemBackground
+        view.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 24),
+            stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -24),
+            stack.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor)
+        ])
+        return true
+    }
+#endif
+
     private func loadSharedContent() {
-        guard !hasFinishedRequest, let viewModel else { return }
+        guard terminalArbiter.terminal == nil, let viewModel else { return }
         viewModel.beginLoading()
         let inputItems = extensionContext?.inputItems ?? []
 
         Task { @MainActor in
             do {
                 let draft = try await inputLoader.load(inputItems: inputItems)
-                guard !hasFinishedRequest else { return }
+                guard terminalArbiter.terminal == nil else { return }
                 viewModel.load(draft)
             } catch {
-                guard !hasFinishedRequest else { return }
+                guard terminalArbiter.terminal == nil else { return }
                 viewModel.failLoading(error)
             }
         }
     }
 
     private func completeRequest() {
-        guard !hasFinishedRequest else { return }
-        hasFinishedRequest = true
+        guard terminalArbiter.resolve(.completed) else { return }
         extensionContext?.completeRequest(returningItems: nil, completionHandler: nil)
     }
 
     private func cancelRequest() {
-        guard !hasFinishedRequest else { return }
-        hasFinishedRequest = true
+        viewModel?.cancel()
+        guard terminalArbiter.resolve(.cancelled) else { return }
         let error = NSError(
             domain: NSCocoaErrorDomain,
             code: NSUserCancelledError,

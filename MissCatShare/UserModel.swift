@@ -6,6 +6,7 @@
 //  Copyright © 2020 Yuiga Wada. All rights reserved.
 //
 
+import Foundation
 import KeychainAccess
 import MisskeyKit
 
@@ -20,6 +21,12 @@ class SecureUser: Codable {
         self.username = username
         self.instance = instance
         self.apiKey = apiKey
+    }
+}
+
+extension SecureUser {
+    var accountIdentifier: String {
+        MissCatAccountIdentity.storageKey(instance: instance, userId: userId)
     }
 }
 
@@ -49,18 +56,31 @@ class UserModel {
     /// 保存されている全てのユーザー情報を取得する
     func getUsers() -> [SecureUser] {
         guard let data = userDefaults.data(forKey: savedUserKey),
-              let users = try? JSONDecoder().decode([SecureUser].self, from: data),
-              users.count > 0 else { return [] }
+              let decodedUsers = try? JSONDecoder().decode([SecureUser].self, from: data),
+              !decodedUsers.isEmpty else { return [] }
+        let users = deduplicatedMetadata(decodedUsers)
 
         var availableUsers: [SecureUser] = []
         var availableMetadata: [SecureUser] = []
+        let legacyUserIDCounts = Dictionary(grouping: users, by: \.userId).mapValues(\.count)
 
         do {
             for user in users {
-                var apiKey = try keychain.get(user.userId)
+                let accountID = user.accountIdentifier
+                var apiKey = try keychain.get(accountID)
+                if apiKey == nil,
+                   legacyUserIDCounts[user.userId] == 1,
+                   let legacyAPIKey = try keychain.get(user.userId)
+                {
+                    try keychain.set(legacyAPIKey, key: accountID)
+                    guard try keychain.get(accountID) == legacyAPIKey else {
+                        throw AccountPersistenceError.keychainVerificationFailed
+                    }
+                    apiKey = legacyAPIKey
+                }
                 if apiKey == nil, let legacyAPIKey = user.apiKey {
-                    try keychain.set(legacyAPIKey, key: user.userId)
-                    guard try keychain.get(user.userId) == legacyAPIKey else {
+                    try keychain.set(legacyAPIKey, key: accountID)
+                    guard try keychain.get(accountID) == legacyAPIKey else {
                         throw AccountPersistenceError.keychainVerificationFailed
                     }
                     apiKey = legacyAPIKey
@@ -69,9 +89,14 @@ class UserModel {
                 guard let resolvedAPIKey = apiKey else { continue }
                 availableUsers.append(SecureUser(userId: user.userId,
                                                  username: user.username,
-                                                 instance: user.instance,
+                                                 instance: MissCatAccountIdentity.normalizedInstance(user.instance),
                                                  apiKey: resolvedAPIKey))
-                availableMetadata.append(user)
+                availableMetadata.append(SecureUser(
+                    userId: user.userId,
+                    username: user.username,
+                    instance: MissCatAccountIdentity.normalizedInstance(user.instance),
+                    apiKey: nil
+                ))
             }
         } catch {
             if let metadata = encodeMetadata(users) {
@@ -92,18 +117,23 @@ class UserModel {
         let savedUsers = getUsers()
         repairCurrentUserId(availableUsers: savedUsers)
         guard let currentUserId = getCurrentUserId() else { return nil }
-        return savedUsers.first(where: { $0.userId == currentUserId })
+        return resolveUser(identifier: currentUserId, in: savedUsers)
     }
     
-    /// 指定されたuserIdのユーザーを取得する
-    func getUser(userId: String) -> SecureUser? {
-        var user: SecureUser?
-        let savedUser = getUsers()
-        savedUser.forEach {
-            if userId == $0.userId { user = $0; return }
-        }
-        
-        return user
+    /// 複合アカウントIDに一致するユーザーを取得する
+    func getUser(accountIdentifier: String) -> SecureUser? {
+        getUsers().first { $0.accountIdentifier == accountIdentifier }
+    }
+
+    /// A credential-free hook for signed-extension verification. Callers can
+    /// prove that the extension read the exact composite account's Keychain
+    /// entry without receiving, logging, or serializing the token.
+    func credentialReadProof(accountIdentifier: String) -> ShareCredentialReadProof {
+        let exactUser = getUsers().first { $0.accountIdentifier == accountIdentifier }
+        return ShareCredentialReadProof(
+            accountIdentifierHash: ShareCredentialReadProof.accountHash(accountIdentifier),
+            credentialAvailable: exactUser?.apiKey?.isEmpty == false
+        )
     }
     
     /// 現在ログイン中のユーザーのuserIdを取得する
@@ -119,23 +149,48 @@ class UserModel {
         let metadata = users.map {
             SecureUser(userId: $0.userId,
                        username: $0.username,
-                       instance: $0.instance,
+                       instance: MissCatAccountIdentity.normalizedInstance($0.instance),
                        apiKey: nil)
         }
         return try? JSONEncoder().encode(metadata)
     }
 
     private func repairCurrentUserId(availableUsers: [SecureUser]) {
-        let availableUserIds = availableUsers.map { $0.userId }
-        if let currentUserId = getCurrentUserId(), availableUserIds.contains(currentUserId) {
+        if let currentUserId = getCurrentUserId(),
+           let resolved = resolveUser(identifier: currentUserId, in: availableUsers)
+        {
+            if currentUserId != resolved.accountIdentifier {
+                userDefaults.set(resolved.accountIdentifier, forKey: currentUserIdKey)
+            }
             return
         }
 
-        if let replacementUserId = availableUserIds.first {
-            userDefaults.set(replacementUserId, forKey: currentUserIdKey)
+        if let replacement = availableUsers.first {
+            userDefaults.set(replacement.accountIdentifier, forKey: currentUserIdKey)
         } else {
             userDefaults.removeObject(forKey: currentUserIdKey)
         }
+    }
+
+    private func deduplicatedMetadata(_ users: [SecureUser]) -> [SecureUser] {
+        var seen = Set<String>()
+        let deduplicated: [SecureUser] = users.reversed().compactMap { user -> SecureUser? in
+            guard seen.insert(user.accountIdentifier).inserted else { return nil }
+            return user
+        }
+        return Array(deduplicated.reversed())
+    }
+
+    private func resolveUser(identifier: String, in users: [SecureUser]) -> SecureUser? {
+        if let exact = users.first(where: { $0.accountIdentifier == identifier }) { return exact }
+        let legacyMatches = users.filter { $0.userId == identifier }
+        guard legacyMatches.count > 1 else { return legacyMatches.first }
+        if let current = getCurrentUserId(),
+           let selected = legacyMatches.first(where: { $0.accountIdentifier == current })
+        {
+            return selected
+        }
+        return legacyMatches.first
     }
     
     // MARK: Visiblity

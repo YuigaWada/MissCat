@@ -572,11 +572,19 @@ class HomeViewController: PolioPagerViewController {
         emulateFooterTabTap(tab: .notifications)
     }
 
-    func handlePush(_ envelope: MissCatPushEnvelope, opensRoute: Bool) {
+    func handlePush(
+        _ envelope: MissCatResolvedPushEnvelope,
+        owner: SecureUser,
+        opensRoute: Bool
+    ) {
         setupNotificationsVC()
         guard let notificationsViewController else { return }
         Task { @MainActor in
-            await notificationsViewController.handlePush(envelope, opensRoute: opensRoute)
+            await notificationsViewController.handlePush(
+                envelope,
+                owner: owner,
+                opensRoute: opensRoute
+            )
         }
     }
 }

@@ -172,7 +172,6 @@ struct MissCatComposeScreen: View {
             Button(action: requestCancel) {
                 Image(systemName: "xmark").frame(width: 38, height: 38)
             }
-            .disabled(isBusy)
             .accessibilityLabel("キャンセル")
             .accessibilityIdentifier("compose.cancel")
 
@@ -369,7 +368,7 @@ struct MissCatComposeScreen: View {
             )
         case .submitting:
             busyOverlay(label: "送信中", progress: nil, identifier: "compose.submitting")
-        case .ready, .failed, .completed, .cancelled:
+        case .ready, .failed, .outcomeUnknown, .completed, .cancelled:
             EmptyView()
         }
     }
@@ -389,6 +388,7 @@ struct MissCatComposeScreen: View {
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
         .accessibilityIdentifier(identifier)
+        .allowsHitTesting(false)
     }
 
     private func toolbarButton(
@@ -411,7 +411,7 @@ struct MissCatComposeScreen: View {
     private var isBusy: Bool {
         switch viewModel.phase {
         case .loading, .uploading, .submitting: true
-        case .ready, .failed, .completed, .cancelled: false
+        case .ready, .failed, .outcomeUnknown, .completed, .cancelled: false
         }
     }
 
@@ -452,7 +452,9 @@ struct MissCatComposeScreen: View {
 
     private func requestCancel() {
         focusedField = nil
-        if viewModel.hasUnsavedChanges {
+        if isBusy {
+            cancelNow()
+        } else if viewModel.hasUnsavedChanges {
             showsDiscardConfirmation = true
         } else {
             cancelNow()

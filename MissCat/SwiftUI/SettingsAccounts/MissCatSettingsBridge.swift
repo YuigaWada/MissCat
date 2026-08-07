@@ -5,7 +5,12 @@ import UIKit
 @MainActor
 enum MissCatSettingsBridge {
     static func makeSettingsController(home: HomeViewController) -> UIViewController {
-        let repository = MissCatLegacySettingsRepository()
+        let repository: any MissCatDesignSettingsManaging & MissCatReactionSettingsManaging
+        if MissCatSettingsFixtureRepository.isEnabled {
+            repository = MissCatSettingsFixtureRepository()
+        } else {
+            repository = MissCatLegacySettingsRepository()
+        }
         let designStore = MissCatDesignSettingsStore(repository: repository)
         let reactionStore = MissCatReactionSettingsStore(repository: repository)
         let licenses = LicenseTableViewController.getOssDescription().map {
@@ -37,7 +42,12 @@ enum MissCatSettingsBridge {
         in container: UIViewController,
         home: HomeViewController?
     ) -> UIHostingController<AnyView> {
-        let repository = MissCatLegacySettingsRepository()
+        let repository: any MissCatAccountManaging
+        if MissCatSettingsFixtureRepository.isEnabled {
+            repository = MissCatSettingsFixtureRepository()
+        } else {
+            repository = MissCatLegacySettingsRepository()
+        }
         let store = MissCatAccountStore(repository: repository)
         let palette = currentPalette
         let view = MissCatAccountsScreen(
@@ -50,9 +60,10 @@ enum MissCatSettingsBridge {
                     home.relaunchView(start: .profile)
                 }
             },
-            onOpenProfile: { [weak home] userID in
+            onOpenProfile: { [weak home] account in
                 guard let home,
-                      let owner = Cache.UserDefaults.shared.getUser(userId: userID)
+                      let owner = Cache.UserDefaults.shared.getUser(userId: account.id),
+                      let userID = profileUserID(for: account, owner: owner)
                 else { return }
                 home.move2Profile(userId: userID, owner: owner)
             },
@@ -82,6 +93,15 @@ enum MissCatSettingsBridge {
         ])
         host.didMove(toParent: container)
         return host
+    }
+
+    static func profileUserID(
+        for account: MissCatAccountSummary,
+        owner: SecureUser
+    ) -> String? {
+        guard account.id == owner.accountIdentifier,
+              account.userID == owner.userId else { return nil }
+        return owner.userId
     }
 
     private static func presentAddAccount(

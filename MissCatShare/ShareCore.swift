@@ -1,13 +1,98 @@
 import Combine
+import CryptoKit
 import Foundation
+
+enum MissCatAccountIdentity {
+    private static let prefix = "misscat-account-v2"
+
+    static func normalizedInstance(_ rawValue: String) -> String {
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let candidate = trimmed.contains("://") ? trimmed : "https://\(trimmed)"
+        if let components = URLComponents(string: candidate),
+           let host = components.host?.lowercased(),
+           !host.isEmpty
+        {
+            if let port = components.port, port != 443 { return "\(host):\(port)" }
+            return host
+        }
+        return trimmed.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    }
+
+    static func storageKey(instance: String, userId: String) -> String {
+        let instanceValue = Data(normalizedInstance(instance).utf8).base64EncodedString()
+        let userValue = Data(userId.utf8).base64EncodedString()
+        return "\(prefix):\(instanceValue):\(userValue)"
+    }
+}
 
 struct ShareAccount: Identifiable, Equatable, Sendable {
     let id: String
     let username: String
     let instance: String
 
+    init(id: String, username: String, instance: String) {
+        self.id = id
+        self.username = username
+        self.instance = instance
+    }
+
+    init(userID: String, username: String, instance: String) {
+        id = MissCatAccountIdentity.storageKey(instance: instance, userId: userID)
+        self.username = username
+        self.instance = MissCatAccountIdentity.normalizedInstance(instance)
+    }
+
     var displayName: String {
         "\(username)@\(instance)"
+    }
+}
+
+/// Safe result for a signed-extension credential-read check. It intentionally
+/// cannot carry or describe the credential itself.
+struct ShareCredentialReadProof: Equatable, Sendable, CustomStringConvertible {
+    let accountIdentifierHash: String
+    let credentialAvailable: Bool
+
+    var description: String {
+        "ShareCredentialReadProof(accountIdentifierHash: \(accountIdentifierHash), credentialAvailable: \(credentialAvailable))"
+    }
+
+    static func accountHash(_ accountIdentifier: String) -> String {
+        SHA256.hash(data: Data(accountIdentifier.utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
+    }
+}
+
+enum ShareCredentialReadProbe {
+    static let launchArgument = "--misscat-share-credential-proof"
+    static let appGroup = "group.yuwd.MissCat"
+    static let requestKey = "share-credential-proof.requested"
+    static let resultKey = "share-credential-proof.available"
+    static let accountHashKey = "share-credential-proof.account-hash"
+
+    @discardableResult
+    static func invokeIfRequested(
+        arguments: [String],
+        accountIdentifier: String?,
+        read: (String) -> ShareCredentialReadProof,
+        store: (ShareCredentialReadProof) -> Void
+    ) -> Bool {
+        guard arguments.contains(launchArgument), let accountIdentifier else { return false }
+        store(read(accountIdentifier))
+        return true
+    }
+}
+
+@MainActor
+final class ShareRequestTerminalArbiter {
+    enum Terminal: Equatable { case completed, cancelled }
+    private(set) var terminal: Terminal?
+
+    func resolve(_ candidate: Terminal) -> Bool {
+        guard terminal == nil else { return false }
+        terminal = candidate
+        return true
     }
 }
 
@@ -80,6 +165,15 @@ protocol SharePosting: AnyObject {
         accountID: String,
         visibility: ShareVisibility
     ) async throws
+    func cancelActiveSubmission()
+}
+
+protocol ShareOutcomeUnknownError: Error {
+    var isOutcomeUnknown: Bool { get }
+}
+
+extension SharePosting {
+    func cancelActiveSubmission() {}
 }
 
 @MainActor
@@ -91,7 +185,9 @@ final class ShareComposerViewModel: ObservableObject {
         case ready
         case posting
         case failed
+        case outcomeUnknown
         case completed
+        case cancelled
     }
 
     @Published var text = ""
@@ -103,6 +199,8 @@ final class ShareComposerViewModel: ObservableObject {
 
     let accounts: [ShareAccount]
     private let posting: SharePosting
+    private var submissionTask: Task<Bool, Never>?
+    private var submissionID: UUID?
 
     init(
         accounts: [ShareAccount],
@@ -122,15 +220,22 @@ final class ShareComposerViewModel: ObservableObject {
     }
 
     var canPost: Bool {
-        phase != .loading
-            && phase != .posting
+        (phase == .ready || phase == .failed)
             && selectedAccount != nil
             && text.count <= Self.maximumTextLength
             && ShareDraft(text: text, imageData: imageData).hasContent
     }
 
+    var canReloadInput: Bool {
+        phase == .failed && !accounts.isEmpty
+    }
+
     func beginLoading() {
-        guard phase != .posting, phase != .completed else { return }
+        guard phase != .posting,
+              phase != .outcomeUnknown,
+              phase != .completed,
+              phase != .cancelled
+        else { return }
         errorMessage = nil
         phase = .loading
     }
@@ -157,6 +262,7 @@ final class ShareComposerViewModel: ObservableObject {
     }
 
     func submit() async -> Bool {
+        guard phase == .ready || phase == .failed else { return false }
         guard let selectedAccountID, selectedAccount != nil else {
             errorMessage = "投稿に使うアカウントを選択してください"
             phase = .failed
@@ -178,18 +284,60 @@ final class ShareComposerViewModel: ObservableObject {
         phase = .posting
         errorMessage = nil
 
-        do {
-            try await posting.submit(
-                draft: draft,
-                accountID: selectedAccountID,
-                visibility: visibility
-            )
-            phase = .completed
-            return true
-        } catch {
-            errorMessage = error.localizedDescription
-            phase = .failed
-            return false
+        let operationID = UUID()
+        submissionID = operationID
+        let task = Task { @MainActor [weak self] in
+            guard let self else { return false }
+            do {
+                try await posting.submit(
+                    draft: draft,
+                    accountID: selectedAccountID,
+                    visibility: visibility
+                )
+                return resolveTerminal(.completed, operationID: operationID)
+            } catch let error as ShareOutcomeUnknownError {
+                if error.isOutcomeUnknown {
+                    errorMessage = error.localizedDescription
+                    _ = resolveTerminal(.outcomeUnknown, operationID: operationID)
+                } else if !isTerminal {
+                    errorMessage = error.localizedDescription
+                    phase = .failed
+                }
+                return false
+            } catch is CancellationError {
+                _ = resolveTerminal(.cancelled, operationID: operationID)
+                return false
+            } catch {
+                guard !isTerminal else { return false }
+                errorMessage = error.localizedDescription
+                phase = .failed
+                return false
+            }
         }
+        submissionTask = task
+        let result = await task.value
+        if submissionID == operationID {
+            submissionTask = nil
+            submissionID = nil
+        }
+        return result
+    }
+
+    func cancel() {
+        guard !isTerminal else { return }
+        phase = .cancelled
+        posting.cancelActiveSubmission()
+        submissionTask?.cancel()
+    }
+
+    private var isTerminal: Bool {
+        phase == .completed || phase == .cancelled || phase == .outcomeUnknown
+    }
+
+    @discardableResult
+    private func resolveTerminal(_ terminal: Phase, operationID: UUID) -> Bool {
+        guard submissionID == operationID, !isTerminal else { return false }
+        phase = terminal
+        return true
     }
 }

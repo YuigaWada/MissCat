@@ -10,29 +10,59 @@ import Foundation
 import RxCocoa
 import RxSwift
 
+struct ThemeModelStorage {
+    let data: (_ key: String) -> Data?
+    let setData: (_ data: Data?, _ key: String) -> Void
+
+    static let standard = ThemeModelStorage(
+        data: { UserDefaults.standard.data(forKey: $0) },
+        setData: { data, key in
+            if let data {
+                UserDefaults.standard.set(data, forKey: key)
+            } else {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
+    )
+}
+
 // MARK: Theme
 
 public class Theme {
     static var shared: Theme = .init()
-    
+
+    enum PersistenceError: Error {
+        case writeOrReadbackFailed
+        case rollbackFailed
+    }
+
     var currentModel: Theme.Model?
     var theme: PublishRelay<Theme.Model> = .init()
-    
+
+    private let modelStorage: ThemeModelStorage
+    private let persistencePublishObserver: ((Theme.Model) -> Void)?
+
+    init(
+        modelStorage: ThemeModelStorage = .standard,
+        persistencePublishObserver: ((Theme.Model) -> Void)? = nil
+    ) {
+        self.modelStorage = modelStorage
+        self.persistencePublishObserver = persistencePublishObserver
+    }
+
     /// currentModelをsetします
     func set() {
-        var currentModel = Model.get()
-        if currentModel == nil {
+        var candidate = Model.get(storage: modelStorage)
+        if candidate == nil {
             guard let defaultModel = Model.getDefault() else { return }
-            Model.save(with: defaultModel) // 存在しない場合はデフォルトの設定を保存しておく
-            currentModel = defaultModel
+            candidate = defaultModel
         }
-        
-        currentModel?.tab = checkTabs(currentModel?.tab) // 有効なフォーマットかチェックしておく
-        self.currentModel = currentModel
-        
-        if let currentModel = currentModel {
-            Model.save(with: currentModel)
-        }
+
+        guard let candidate else { return }
+        let normalized = candidate.copy()
+        normalized.tab = checkTabs(normalized.tab) // 有効なフォーマットかチェックしておく
+        guard let persisted = try? Model.saveChecked(with: normalized, storage: modelStorage) else { return }
+        currentModel = persisted
     }
     
     func reset() {
@@ -42,18 +72,39 @@ public class Theme {
     /// 有効なタブのみ取り出し、紐付けられたアカウント情報を詰めていく
     private func checkTabs(_ tabs: [Theme.Tab]?) -> [Theme.Tab] {
         guard let tabs = tabs else { return [] }
-        
+
+        let cache = Cache.UserDefaults.shared
+        let users = cache.getUsers()
+        let currentAccountIdentifier = cache.getCurrentUserId().flatMap { current in
+            users.first(where: { $0.accountIdentifier == current })?.accountIdentifier
+        } ?? users.first?.accountIdentifier
+
         let transformed: [Theme.Tab] = tabs.compactMap {
-            guard let userId = $0.userId ?? Cache.UserDefaults.shared.getCurrentUserId() else { return nil }
+            guard let accountIdentifier = Self.resolvedTabOwnerIdentifier(
+                $0.userId,
+                users: users,
+                fallbackAccountIdentifier: currentAccountIdentifier
+            ) else { return nil }
             
             // userIdを持たないhomeタブ、またはデフォルト値のhomeタブは名前を@usernameに変更する
             if $0.kind == .home, $0.userId == nil || $0.name == "___Home___" {
-                let username = Cache.UserDefaults.shared.getUser(userId: userId)?.username ?? ""
-                return Theme.Tab(name: "@\(username)", kind: $0.kind, userId: userId, listId: $0.listId)
+                let username = users.first {
+                    $0.accountIdentifier == accountIdentifier
+                }?.username ?? ""
+                return Theme.Tab(
+                    name: "@\(username)",
+                    kind: $0.kind,
+                    userId: accountIdentifier,
+                    listId: $0.listId
+                )
             }
             
-            // userIdを持たない場合はgetCurrentUserId()が代入される
-            return Theme.Tab(name: $0.name, kind: $0.kind, userId: userId, listId: $0.listId)
+            return Theme.Tab(
+                name: $0.name,
+                kind: $0.kind,
+                userId: accountIdentifier,
+                listId: $0.listId
+            )
         }
         
         // 有効なタブが存在しなかった場合
@@ -65,17 +116,37 @@ public class Theme {
         
         return transformed
     }
+
+    /// Theme archives historically stored a bare server user ID. Preserve exact
+    /// instance-scoped IDs, migrate a bare ID only when it has one match, and route
+    /// missing/ambiguous owners through the deterministic current-account fallback.
+    static func resolvedTabOwnerIdentifier(
+        _ storedIdentifier: String?,
+        users: [SecureUser],
+        fallbackAccountIdentifier: String?
+    ) -> String? {
+        let fallback = fallbackAccountIdentifier.flatMap { identifier in
+            users.first(where: { $0.accountIdentifier == identifier })?.accountIdentifier
+        } ?? users.first?.accountIdentifier
+
+        guard let storedIdentifier else { return fallback }
+        if let exact = users.first(where: { $0.accountIdentifier == storedIdentifier }) {
+            return exact.accountIdentifier
+        }
+
+        let legacyMatches = users.filter { $0.userId == storedIdentifier }
+        guard legacyMatches.count == 1 else { return fallback }
+        return legacyMatches[0].accountIdentifier
+    }
     
     /// currentModelのタブ情報を全て削除する
     func removeAllTabs() {
         if currentModel == nil { set() }
-        
-        if let currentModel = currentModel {
-            currentModel.tab = Model.getDefault()?.tab ?? [] // デフォルトのタブに戻す
-            
-            Model.save(with: currentModel)
-            self.currentModel = currentModel
-        }
+
+        guard let currentModel else { return }
+        let candidate = currentModel.copy()
+        candidate.tab = Model.getDefault()?.tab ?? [] // デフォルトのタブに戻す
+        _ = try? saveAtomically(with: candidate)
     }
     
     /// 削除しようとしているアカウントが紐付けられたタブを削除しておく
@@ -83,22 +154,56 @@ public class Theme {
     func removeUserTabs(for user: SecureUser) -> Bool {
         if currentModel == nil { set() }
         
-        if let currentModel = currentModel {
-            let currentTabCount = currentModel.tab.count
-            currentModel.tab = currentModel.tab.filter { $0.userId != user.userId }
-            
-            // タブが0個になったらデフォルトのタブに戻しておく
-            if currentModel.tab.count == 0 {
-                currentModel.tab = Model.getDefault()?.tab ?? []
+        if let currentModel {
+            let hasAnotherLegacyMatch = Cache.UserDefaults.shared.getUsers().contains {
+                $0.userId == user.userId && $0.accountIdentifier != user.accountIdentifier
             }
+            let result = Self.removingTabs(
+                forAccountIdentifier: user.accountIdentifier,
+                legacyUserID: hasAnotherLegacyMatch ? nil : user.userId,
+                from: currentModel.tab,
+                defaults: Model.getDefault()?.tab ?? []
+            )
+            let candidate = currentModel.copy()
+            candidate.tab = result.tabs
+
+            guard (try? saveAtomically(with: candidate)) != nil else { return false }
             
-            Model.save(with: currentModel)
-            self.currentModel = currentModel
-            
-            return currentTabCount != currentModel.tab.count // remove後もタブ数が同じならタブは変更していない
+            // Three account-bound tabs are replaced by the three defaults. Comparing
+            // only the count reports that as unchanged and prevents the main shell
+            // from rebuilding with the repaired configuration.
+            return result.changed
         }
         
         return false
+    }
+
+    static func removingTabs(
+        for userID: String,
+        from tabs: [Theme.Tab],
+        defaults: [Theme.Tab]
+    ) -> (tabs: [Theme.Tab], changed: Bool) {
+        removingTabs(
+            forAccountIdentifier: userID,
+            legacyUserID: nil,
+            from: tabs,
+            defaults: defaults
+        )
+    }
+
+    static func removingTabs(
+        forAccountIdentifier accountIdentifier: String,
+        legacyUserID: String?,
+        from tabs: [Theme.Tab],
+        defaults: [Theme.Tab]
+    ) -> (tabs: [Theme.Tab], changed: Bool) {
+        let filtered = tabs.filter { tab in
+            guard tab.userId != accountIdentifier else { return false }
+            guard let legacyUserID else { return true }
+            return tab.userId != legacyUserID
+        }
+        let repaired = filtered.isEmpty ? defaults : filtered
+        return (repaired, repaired != tabs)
     }
     
     /// viewの再launchが必要か
@@ -114,19 +219,41 @@ public class Theme {
         return !sameColorMode
     }
     
-    /// 新しいモデルを保存します
-    /// - Parameter newModel: Theme.Model
+    /// Compatibility entry point for legacy callers that cannot surface persistence
+    /// failures. New settings code must use `saveAtomically(with:)`.
     func save(with newModel: Theme.Model) {
-        // 同じならばsaveしない
-        if let currentModel = currentModel, currentModel.isEqual(to: newModel) {
-            return
+        _ = try? saveAtomically(with: newModel)
+    }
+
+    /// Writes, reads back, and verifies the complete theme before publishing it.
+    /// A failed write restores the exact previous bytes and leaves runtime state
+    /// untouched. If restoration itself cannot be verified, a distinct error is
+    /// returned so callers never mistake the candidate for committed state.
+    @discardableResult
+    func saveAtomically(with newModel: Theme.Model) throws -> Theme.Model {
+        let oldPersistedData = modelStorage.data(Model.storageKey)
+        let oldRuntimeModel = currentModel
+        let normalized = newModel.copy()
+        normalized.tab = checkTabs(normalized.tab)
+
+        do {
+            let persisted = try Model.saveChecked(with: normalized, storage: modelStorage)
+            let changed = oldRuntimeModel.map { !$0.isEqual(to: persisted) } ?? true
+            currentModel = persisted
+            if changed {
+                theme.accept(persisted)
+                persistencePublishObserver?(persisted)
+            }
+            return persisted
+        } catch {
+            modelStorage.setData(oldPersistedData, Model.storageKey)
+            guard modelStorage.data(Model.storageKey) == oldPersistedData else {
+                currentModel = oldRuntimeModel
+                throw PersistenceError.rollbackFailed
+            }
+            currentModel = oldRuntimeModel
+            throw PersistenceError.writeOrReadbackFailed
         }
-        
-        newModel.tab = checkTabs(newModel.tab) // 有効なフォーマットかチェックしておく
-        Model.save(with: newModel)
-        
-        currentModel = newModel
-        theme.accept(newModel)
     }
 }
 
@@ -280,39 +407,75 @@ public extension Theme {
             }
             return true
         }
+
+        func copy() -> Model {
+            Model(tab: tab, mainColorHex: mainColorHex, colorMode: colorMode)
+        }
         
         // MARK: GET/SET
         
         static func get() -> Model? {
-            let key = getKey()
-            guard let data = UserDefaults.standard.data(forKey: key),
-                  let model = try? JSONDecoder().decode(Model.self, from: data) else { return nil }
+            get(storage: .standard)
+        }
+
+        static func get(storage: ThemeModelStorage) -> Model? {
+            guard let data = storage.data(storageKey),
+                  let model = decode(data) else { return nil }
             
-            // userIdが存在しなかったら現在ログイン中のアカウントのuserIdを詰める
-            let currentUser = Cache.UserDefaults.shared.getCurrentUser()
-            var hasNonUserTab: Bool = false
-            
+            let cache = Cache.UserDefaults.shared
+            let users = cache.getUsers()
+            let currentAccountIdentifier = cache.getCurrentUserId().flatMap { current in
+                users.first(where: { $0.accountIdentifier == current })?.accountIdentifier
+            } ?? users.first?.accountIdentifier
+            var migratedOwner = false
+
             model.tab = model.tab.map {
-                hasNonUserTab = ($0.userId == nil) || hasNonUserTab // userIdを持たないタブが存在したら記録しておく
-                return .init(name: $0.name, kind: $0.kind, userId: $0.userId ?? currentUser?.userId, listId: $0.listId)
+                let resolved = Theme.resolvedTabOwnerIdentifier(
+                    $0.userId,
+                    users: users,
+                    fallbackAccountIdentifier: currentAccountIdentifier
+                )
+                migratedOwner = migratedOwner || resolved != $0.userId
+                return .init(
+                    name: $0.name,
+                    kind: $0.kind,
+                    userId: resolved,
+                    listId: $0.listId
+                )
             }
             
-            if hasNonUserTab {
-                save(with: model)
+            if migratedOwner {
+                _ = try? saveChecked(with: model, storage: storage)
             }
             
             return model
         }
         
         static func save(with target: Model) {
-            let key = getKey()
-            let data = try? JSONEncoder().encode(target)
-            UserDefaults.standard.set(data, forKey: key)
+            _ = try? saveChecked(with: target, storage: .standard)
         }
-        
-        private static func getKey() -> String {
-            return "theme-key"
+
+        @discardableResult
+        static func saveChecked(
+            with target: Model,
+            storage: ThemeModelStorage
+        ) throws -> Model {
+            let encoded = try JSONEncoder().encode(target)
+            storage.setData(encoded, storageKey)
+            guard let readback = storage.data(storageKey),
+                  let decoded = decode(readback),
+                  decoded.isEqual(to: target)
+            else {
+                throw Theme.PersistenceError.writeOrReadbackFailed
+            }
+            return decoded
         }
+
+        static func decode(_ data: Data) -> Model? {
+            try? JSONDecoder().decode(Model.self, from: data)
+        }
+
+        static let storageKey = "theme-key"
         
         static func getDefault() -> Model? {
             guard let data = defaultJson.data(using: .utf8) else { return nil }

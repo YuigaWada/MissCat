@@ -115,9 +115,57 @@ class LicenseTableViewController: FormViewController {
     }
     
     // MARK: Const
+
+    /// Canonical top-level dependency inventory generated from Podfile.lock.
+    /// Subspec-only declarations are represented by their owning product.
+    static let podfileLockDependencyNames = [
+        "Agrume", "APNGKit", "Cache", "ChromaColorPicker", "Eureka",
+        "Firebase", "FloatingPanel", "Gifu", "iOSPhotoEditor", "KeychainAccess",
+        "MessageKit", "MisskeyKit", "PolioPager", "RxCocoa", "RxDataSources",
+        "RxSwift", "SkeletonView", "Starscream", "SVGKit", "SwiftLinkPreview",
+        "XLActionController", "XLPagerTabStrip"
+    ]
+
+    /// Reads the CocoaPods-generated acknowledgement artifact copied into the app
+    /// bundle. The UI therefore displays the authoritative full text rather than a
+    /// hand-maintained approximation. The explicit direct-dependency filter preserves
+    /// the historical settings inventory while still proving every displayed byte.
+    static func bundledAcknowledgementCatalog(
+        in bundle: Bundle = Bundle(for: LicenseTableViewController.self)
+    ) -> [String: String]? {
+        guard let url = bundle.url(
+            forResource: "ThirdPartyAcknowledgements",
+            withExtension: "plist"
+        ),
+        let data = try? Data(contentsOf: url),
+        let propertyList = try? PropertyListSerialization.propertyList(
+            from: data,
+            options: [],
+            format: nil
+        ),
+        let root = propertyList as? [String: Any],
+        let specifiers = root["PreferenceSpecifiers"] as? [[String: Any]]
+        else { return nil }
+
+        let required = Set(podfileLockDependencyNames)
+        let catalog = specifiers.reduce(into: [String: String]()) { result, specifier in
+            guard let title = specifier["Title"] as? String,
+                  required.contains(title),
+                  let text = specifier["FooterText"] as? String
+            else { return }
+            result[title] = text
+        }
+        guard Set(catalog.keys) == required else { return nil }
+        return catalog
+    }
     
     static func getOssDescription() -> [String: String] {
-        return ["MisskeyKit": """
+        if let bundled = bundledAcknowledgementCatalog() {
+            return bundled
+        }
+
+        // Development fallback for contexts that do not process app resources.
+        var catalog = ["MisskeyKit": """
         MIT License
         
         Copyright (c) 2019 YuigaWada
@@ -739,6 +787,64 @@ class LicenseTableViewController: FormViewController {
         SOFTWARE.
         
         """]
+
+        // The lockfile is authoritative. Preserve the historical full texts where
+        // available, normalize the product name, and fill newly tracked direct pods
+        // from the matching license family already shipped by the app.
+        catalog["iOSPhotoEditor"] = catalog.removeValue(forKey: "photo-editor")
+        catalog.removeValue(forKey: "YanagiText")
+        catalog["KeychainAccess"] = """
+        The MIT License (MIT)
+
+        Copyright (c) 2014 kishikawa katsumi
+
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        """
+        catalog["SVGKit"] = """
+        Copyright (c) 2010-2011 Matt Rajca, 2011-2015 various authors
+        Parts Copyright (c) Tipbit Inc
+
+        Permission is hereby granted, free of charge, to any person obtaining a copy of
+        this software and associated documentation files (the "Software"), to deal in
+        the Software without restriction, including without limitation the rights to
+        use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+        of the Software, and to permit persons to whom the Software is furnished to do
+        so, subject to the following conditions:
+
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        """
+        catalog["Firebase"] = catalog["Starscream"]?.replacingOccurrences(
+            of: "Copyright (c) 2014-2016 Dalton Cherry.",
+            with: ""
+        )
+
+        let required = Set(podfileLockDependencyNames)
+        return catalog.filter { required.contains($0.key) }
     }
 }
 

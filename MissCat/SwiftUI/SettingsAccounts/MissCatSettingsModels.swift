@@ -1,7 +1,10 @@
 import Foundation
 
 public struct MissCatAccountSummary: Identifiable, Equatable, Sendable {
+    /// Stable instance-scoped identifier used only for local selection and persistence.
     public let id: String
+    /// Misskey's server-side user identifier used only in API and navigation requests.
+    public let userID: String
     public let username: String
     public let displayName: String
     public let instance: String
@@ -9,12 +12,14 @@ public struct MissCatAccountSummary: Identifiable, Equatable, Sendable {
 
     public init(
         id: String,
+        userID: String? = nil,
         username: String,
         displayName: String? = nil,
         instance: String,
         avatarURL: URL? = nil
     ) {
         self.id = id
+        self.userID = userID ?? id
         self.username = username
         self.displayName = displayName?.isEmpty == false ? displayName! : "@\(username)"
         self.instance = instance
@@ -168,12 +173,55 @@ public struct MissCatReactionItem: Identifiable, Equatable, Hashable, Sendable {
     public let rawValue: String
     public let displayValue: String?
     public let imageURL: URL?
+    public let searchTerms: [String]
 
-    public init(rawValue: String, displayValue: String? = nil, imageURL: URL? = nil) {
+    public init(
+        rawValue: String,
+        displayValue: String? = nil,
+        imageURL: URL? = nil,
+        searchTerms: [String] = []
+    ) {
         self.id = "\(rawValue)|\(imageURL?.absoluteString ?? "")"
         self.rawValue = rawValue
         self.displayValue = displayValue
         self.imageURL = imageURL
+        self.searchTerms = searchTerms
+    }
+
+    public func matches(_ query: String) -> Bool {
+        let normalized = query.trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+        guard !normalized.isEmpty else { return true }
+        return ([rawValue, displayValue ?? ""] + searchTerms).contains { value in
+            value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+                .localizedStandardContains(normalized)
+        }
+    }
+}
+
+public enum MissCatReactionSectionKind: String, Equatable, Hashable, Sendable {
+    case favorites
+    case history
+    case custom
+    case standard
+}
+
+public struct MissCatReactionSection: Identifiable, Equatable, Sendable {
+    public let id: String
+    public let title: String
+    public let kind: MissCatReactionSectionKind
+    public let items: [MissCatReactionItem]
+
+    public init(
+        id: String,
+        title: String,
+        kind: MissCatReactionSectionKind,
+        items: [MissCatReactionItem]
+    ) {
+        self.id = id
+        self.title = title
+        self.kind = kind
+        self.items = items
     }
 }
 
@@ -190,16 +238,22 @@ public struct MissCatReactionAccount: Identifiable, Equatable, Sendable {
 public struct MissCatReactionSettingsSnapshot: Equatable, Sendable {
     public var account: MissCatReactionAccount
     public var favorites: [MissCatReactionItem]
+    public var history: [MissCatReactionItem]
     public var available: [MissCatReactionItem]
+    public var sections: [MissCatReactionSection]
 
     public init(
         account: MissCatReactionAccount,
         favorites: [MissCatReactionItem],
-        available: [MissCatReactionItem]
+        available: [MissCatReactionItem],
+        history: [MissCatReactionItem] = [],
+        sections: [MissCatReactionSection] = []
     ) {
         self.account = account
         self.favorites = favorites
+        self.history = Array(history.prefix(14))
         self.available = available
+        self.sections = sections
     }
 }
 
@@ -235,4 +289,3 @@ public enum MissCatSettingsPresentation: Equatable, Sendable {
     case error(title: String, message: String)
     case banner(message: String)
 }
-
