@@ -1,0 +1,854 @@
+{
+  "schema_version": 1,
+  "base_commit": "bc71a4d36ebe65c6d72db70a0a0141149e1d120c",
+  "tracked_swift_before": 229,
+  "owned_unique_before": 92,
+  "retired_unowned_count": 137,
+  "target_membership_counts_before": {
+    "MissCat": 65,
+    "MissCatLoginProfileUITests": 1,
+    "MissCatNoteUITests": 2,
+    "MissCatShare": 8,
+    "MissCatShareKeychainUITests": 1,
+    "MissCatTests": 18,
+    "MissCatUITests": 1
+  },
+  "tracked_ib_artifacts_before": 0,
+  "reference_audit": {
+    "scope": [
+      "MissCatTests",
+      "scripts"
+    ],
+    "exact_candidate_path_hits": 0,
+    "reviewed_symbol_hits": [
+      "negative PBX membership assertions for MFMEngine, EmojiHandler, SceneDelegate, RxEureka, and legacy view controllers",
+      "co-retired MissCatTests/MFMTests.swift references co-retired MissCat/MFMEngine sources",
+      "PostModel basename hits resolve to active MissCatShare/PostModel.swift, not MissCat/Model/Main/PostModel.swift"
+    ],
+    "dynamic_loading": "Swift source files are compiled from PBXSourcesBuildPhase membership and are not dynamically loaded."
+  },
+  "files": [
+    {
+      "path": "MissCat/Entity/NoteEntity.swift",
+      "sha256": "bbe456d8e82a761971507a8156438798d383fc407c5a9ecd05e73f2e3e9160c0",
+      "bytes": 2251,
+      "category": "legacy_entity"
+    },
+    {
+      "path": "MissCat/Entity/ReactionEntity.swift",
+      "sha256": "3e7bc82b274759aeb39a84791a76f6434b470023b2a55b7dddefb04f69acc9fa",
+      "bytes": 1987,
+      "category": "legacy_entity"
+    },
+    {
+      "path": "MissCat/Entity/UrlSummalyEntity.swift",
+      "sha256": "c8ca366798b8b9567ee0861eafb194110c48b0c341c307c77fa009c0a256dcd4",
+      "bytes": 736,
+      "category": "legacy_entity"
+    },
+    {
+      "path": "MissCat/Entity/UserEntity.swift",
+      "sha256": "cdf8e13018e57c51ff47ca4427b6ec29e54578e30c7f28de4b74df74016ecbdb",
+      "bytes": 1792,
+      "category": "legacy_entity"
+    },
+    {
+      "path": "MissCat/MFMEngine/EmojiHandler.swift",
+      "sha256": "91a3b473ca3df8b4e32e038bdb016197cca4f8cfc11fb9179d3e80ae575facf6",
+      "bytes": 9201,
+      "category": "legacy_mfm"
+    },
+    {
+      "path": "MissCat/MFMEngine/MFMEngine.swift",
+      "sha256": "42af9a2420e292afba42c6a69a10b14227f7fdaf4cdc7d5b5f4eb19282f18bab",
+      "bytes": 19610,
+      "category": "legacy_mfm"
+    },
+    {
+      "path": "MissCat/MFMEngine/MFMImageView.swift",
+      "sha256": "3a3de340955121df87aff98fed8ad0d68d159f721a08abb64826f0e77ac8476f",
+      "bytes": 8886,
+      "category": "legacy_mfm"
+    },
+    {
+      "path": "MissCat/MFMEngine/MisskeyTextView.swift",
+      "sha256": "90027d911aaaef914c7c2931be852b0b83d9e8615403f59b2bec37d54ab727b0",
+      "bytes": 10224,
+      "category": "legacy_mfm"
+    },
+    {
+      "path": "MissCat/Model/Details/PostDetailModel.swift",
+      "sha256": "9340111ed5e7948b6408584b9d29f3cb4aa959d1be7e8fbd598e2136bffa4d8b",
+      "bytes": 2091,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Details/ProfileModel.swift",
+      "sha256": "6a7291b5b5d1d5c9c88ebacdcdc582a66a1e40edea9b24308cb9993bed315c20",
+      "bytes": 962,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/DirectMessage/DirectMessageModel.swift",
+      "sha256": "d029b987be301e051dac49fa904fc67920a1422c816f10e604d4edf447f30484",
+      "bytes": 3079,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/DirectMessage/MessageListModel.swift",
+      "sha256": "8690615a35f0e64bd537223a983b803d9ea15bb655e1d2ebbd1819db7c7c02fc",
+      "bytes": 2508,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Main/AccountsListModel.swift",
+      "sha256": "cca36c4668800765440bc21c92ff4d30d46d05bf4cf33686faac9da7656f24a6",
+      "bytes": 672,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Main/HomeModel.swift",
+      "sha256": "cbb4c4a7074643e8ff4bb7e095a13f9ed68ea557ebe61cb363c6da77ec47185c",
+      "bytes": 728,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Main/NotificationModel.swift",
+      "sha256": "6a98fe3950648d5fe702390601ed6b669eb80bf58a9b4f8ba3578db1e66842d0",
+      "bytes": 10927,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Main/PostModel.swift",
+      "sha256": "739d595600a0a4e402381181c1ebf0cc64029e1b02064daf18ae24357abde74c",
+      "bytes": 3760,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Main/SearchModel.swift",
+      "sha256": "65fe967661f96b4c0a9d4ccfda02611b66dd1f05902ea894478a391fc3a92a6a",
+      "bytes": 945,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Main/TimelineModel.swift",
+      "sha256": "3948f8794702e9c3e47a1b1ad8e6505bdabae6c317fade0c86f280abdb228adc",
+      "bytes": 18846,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Reusable/Accounts/AccountCellModel.swift",
+      "sha256": "7c46bfff83a3c90fd180f24ee68a1821da21adf1007f725611b70932da9ec356",
+      "bytes": 470,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Reusable/NoteCell/NoteCellModel.swift",
+      "sha256": "807c9ae6687a5137c66f2bc614cbbb6e043602e9ba55d3be0e881c9d28bfb58d",
+      "bytes": 763,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Reusable/NoteCell/UrlPreviewerModel.swift",
+      "sha256": "c027d4cdc41f008cca76ea8e59b5e3c337c3024814f41fcef7259a4b5e93097e",
+      "bytes": 3285,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Reusable/Notification/NotificationBannerModel.swift",
+      "sha256": "a1c5af534a05dd85be5d9ca3e13b0d9127c52a4c92f8403e2e5a1402fee22310",
+      "bytes": 411,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Reusable/Notification/NotificationCellModel.swift",
+      "sha256": "2a2c142c85497a8218d595de0ed64a8ae491fedefc8939c71e8c819a9b1b1624",
+      "bytes": 580,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Reusable/Reaction/ReactionGenModel.swift",
+      "sha256": "9240b49e2639ceb18940a08e04ff4e50176fbba571247d2d317839629a73fa2d",
+      "bytes": 9751,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Reusable/Tab/NavBarModel.swift",
+      "sha256": "4568de5c526f355cdf58b3320f11b4d684505ca3f9493d50845493cc8ddcf088",
+      "bytes": 479,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Reusable/User/UserCellModel.swift",
+      "sha256": "52f44a7e77e88caf3abf46130a1b1fe59890f1463de4a114f7e50059c22ece15",
+      "bytes": 155,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Reusable/User/UserListModel.swift",
+      "sha256": "8f01c55e7efe4d48448d5efd1aee365a200646dce5587b0d9cc2eef7661a54c9",
+      "bytes": 2937,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Model/Settings/ProfileSettingsModel.swift",
+      "sha256": "68a7759e20a66628ade9d9dc51ea61b30ad43bbc43dca567b66d6bc3adac0d68",
+      "bytes": 1788,
+      "category": "legacy_model"
+    },
+    {
+      "path": "MissCat/Others/App/SceneDelegate.swift",
+      "sha256": "dea79e02b0299204729094a619905d3ea32525c149ffde32cc27fc87dba29fe6",
+      "bytes": 2642,
+      "category": "retired_scene_delegate"
+    },
+    {
+      "path": "MissCat/Others/Extension/AVKit+MissCat.swift",
+      "sha256": "8fc1dddec050074de3f1a0a669a800913be9692c4e901d2369b9089f505764ce",
+      "bytes": 2011,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/Double+MissCat.swift",
+      "sha256": "939b591432fff33717b677e17c2bd48a66e1a6f0c015ae59a43d9e1e707c6ba5",
+      "bytes": 1324,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/NSMutableAttributedString+MissCat.swift",
+      "sha256": "6098297f55596bcc14c8199c296723ab54021ab292e34c839efbeb19f59ae388",
+      "bytes": 1252,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/NoteModel+MissCat.swift",
+      "sha256": "cfe2e6ccbaacc4cf9dc6a30378e84908d19163fa1470b4e2a22391a8f0617281",
+      "bytes": 3008,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/String+MissCat.swift",
+      "sha256": "07e10b307fc72a1e296f00606f754d0e3bc3e1f692448655fbd76e7887750404",
+      "bytes": 6065,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/UIColor+MissCat.swift",
+      "sha256": "e463bca290144304e50edc933597b53342901736991f40335ab92c659f8262ee",
+      "bytes": 1277,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/UIFont+MissCat.swift",
+      "sha256": "6a8b303f7808a7d5860a88e31f16984d356fd849d0fafe36b4a1b6f21594df6a",
+      "bytes": 607,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/UIImage+MissCat.swift",
+      "sha256": "d5dbe2ccdae0491cdc877cd6968c49e1c8d96f4fdf7e48f5ae904a6cf34c695c",
+      "bytes": 3107,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/UIView+MissCat.swift",
+      "sha256": "7fd227c9cec5b8cc43faec75cdf6e12588aec569ecd12ae689491a983e2eb407",
+      "bytes": 4612,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/UIViewController+ImageViewer.swift",
+      "sha256": "24b412f3e6dc2a6a62cce2cea10333ea57b43b09a5101ccb1d75f6cf56b00012",
+      "bytes": 3108,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/UIViewController+MissCat.swift",
+      "sha256": "e186e593242d7ce75d5a61c894fe9631ad6aa8cbf5513d7632704c8f84b0e2e1",
+      "bytes": 8977,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/UIViewController+NavigationController.swift",
+      "sha256": "37c700a7129c6e177b4b9409de46b1462fb8f92326a6a93239cdb7a99d774e5d",
+      "bytes": 997,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/UIViewController+PhotoEditor.swift",
+      "sha256": "df985fd0fba6d3e860284220b213a7902d5fb5c1a867ac6c2a936079c3392d8e",
+      "bytes": 3769,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/URL+MissCat.swift",
+      "sha256": "883c8150f23c338e99bfc60f2eaf6a1d6c52902dcd39b7dc5152cc6a4426b222",
+      "bytes": 1220,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Extension/UserModel+MissCat.swift",
+      "sha256": "b8f80b738785b0ea7608c5fe51b1a40f8ee51def64dfe13ac883d1c096c801ca",
+      "bytes": 188,
+      "category": "retired_extension"
+    },
+    {
+      "path": "MissCat/Others/Utilities/CellModel.swift",
+      "sha256": "c35e37543b2bc5ba2ca959f88985f2cbfc2baf7fc41bdd7d15975003ae5281b0",
+      "bytes": 595,
+      "category": "retired_utility"
+    },
+    {
+      "path": "MissCat/Others/Utilities/CustomNavigationController.swift",
+      "sha256": "524ba84e559b13b17e78877990215b8932b64f8414fdece49042afb75b212287",
+      "bytes": 416,
+      "category": "retired_utility"
+    },
+    {
+      "path": "MissCat/Others/Utilities/ImageManager.swift",
+      "sha256": "fa3f881418f9fabf0636bda77d7c8d7f1a804078f994722dafffff655e587622",
+      "bytes": 5229,
+      "category": "retired_utility"
+    },
+    {
+      "path": "MissCat/Others/Utilities/MissCatImageView.swift",
+      "sha256": "897fbdb5cbf7d34f30bb1b9a1931ee24104ac64e94cf371d692d63ab534f0dc8",
+      "bytes": 488,
+      "category": "retired_utility"
+    },
+    {
+      "path": "MissCat/Others/Utilities/MissCatTableView.swift",
+      "sha256": "98c33eb87172066f86939cbc9d34cfaeb66e59181529a2d37e9ccb6c24506a68",
+      "bytes": 4047,
+      "category": "retired_utility"
+    },
+    {
+      "path": "MissCat/Others/Utilities/PlaceholderTableView.swift",
+      "sha256": "a0084a49617a139c3f17ec5b59bc13d91245fae3574fc8decaf5ce5ea99d954d",
+      "bytes": 3096,
+      "category": "retired_utility"
+    },
+    {
+      "path": "MissCat/Others/Utilities/Requestor.swift",
+      "sha256": "904cb626b52551e38e3d804e73494ef5c0d17ecf1c9eee6a6de322e4fbf91efe",
+      "bytes": 4519,
+      "category": "retired_utility"
+    },
+    {
+      "path": "MissCat/Others/Utilities/RxEureka.swift",
+      "sha256": "bc25717a7f4a291d95ddfdb9448c99f410271a12470b2713943597914386b2df",
+      "bytes": 764,
+      "category": "retired_utility"
+    },
+    {
+      "path": "MissCat/SwiftUI/NotificationsMessages/MissCatNotificationMessageBridge.swift",
+      "sha256": "ceade11ad09f138753c8639bda4ab7926915721d6fb5e5d1397d55892477dadf",
+      "bytes": 12133,
+      "category": "retired_swiftui_bridge"
+    },
+    {
+      "path": "MissCat/SwiftUI/Profile/MissCatProfileBridge.swift",
+      "sha256": "fcc574880665ffdea8c57adef75ade77b7b38bf12009d4078c282108d3ad21df",
+      "bytes": 7783,
+      "category": "retired_swiftui_bridge"
+    },
+    {
+      "path": "MissCat/View/Details/PostDetailViewController.swift",
+      "sha256": "1f85d546e5d5dd4f85fd586350be987b0c558d6907fa11083f5008ac3b84e9a9",
+      "bytes": 7434,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Details/ProfileViewController.swift",
+      "sha256": "b34a637bae6a9a1bc98b7a808d2b0572fa3f7e8cd979c8f73f7e6ab289a812c5",
+      "bytes": 23140,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/DirectMessage/ChatViewController.swift",
+      "sha256": "0c31a17bc306cc40ad5ea3c871c0b03b64abdd1aaf5539f414d56d3f3fec539b",
+      "bytes": 18797,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/DirectMessage/DirectMessageViewController.swift",
+      "sha256": "1abbbe5b282a6c56a44ee5fe658911e367af0383656ee13a04127897bea9d004",
+      "bytes": 2417,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/DirectMessage/MessageListViewController.swift",
+      "sha256": "e83cc858af96a3da8801f8cfd1274a97efd3d121118d855292d67f2e2289fc2f",
+      "bytes": 4700,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/DirectMessage/Reusable/SenderCell.swift",
+      "sha256": "b0856cdf20c2704388b243253addabeac6fd0581718ce4ee690e1a7bf752b380",
+      "bytes": 3836,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Login/AuthWebViewController.swift",
+      "sha256": "868e520dfd728764ce209c342bb9c4260b516c711e93dedba46666ba2791376c",
+      "bytes": 6205,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Login/StartViewController.swift",
+      "sha256": "bf7a1dfc9e81a9fc7b49914a1c12446f655fa9678fde1c78374ece9c662ed041",
+      "bytes": 12765,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Login/TosViewController.swift",
+      "sha256": "96a6c5a19b2e0f0f37f917566bb3bc8cee226565142a6f5497c7679645e8af43",
+      "bytes": 808,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Main/AccountsListViewController.swift",
+      "sha256": "7063ce81bd12219a475e77cbe36612c346b5466954ccba45d1981805ca71f9b8",
+      "bytes": 630,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Main/HomeViewController.swift",
+      "sha256": "df7833cb34c16d9290933fa5f9d9be9a011e36453eb3214cd7ca2ac06f6bba9e",
+      "bytes": 35131,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Main/NotificationsViewController.swift",
+      "sha256": "700446bc6ed3c18a74165422f26f2ae03bffb7d76bc3399c8e981637653001ea",
+      "bytes": 8467,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Main/PostViewController.swift",
+      "sha256": "0b7dace2defcd8bec327003b760796daae4d9475a11019f4c6b11e7c7bcd734f",
+      "bytes": 29501,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Main/SearchViewController.swift",
+      "sha256": "936d28fdc4b46cfdaed0b6f0aa25f68eed0eff53b566f7e3994d95bb9f9808d8",
+      "bytes": 14589,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Main/TimelineViewController.swift",
+      "sha256": "2a89a09bf52d7a60b8d82c612c8fe821b2c2fb34122b52a6beae6ebd79fc1478",
+      "bytes": 25173,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Accounts/AccountCell.swift",
+      "sha256": "9c701c6a28649e45008e9dda2cda15d4ffce20910103d5916f486e3f2ec9d2bf",
+      "bytes": 5012,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Accounts/AccountsDropdownMenu.swift",
+      "sha256": "8802de02ccbf97a29100a0c4ddcf1634ed56429bb2a6cd08acd29e4f387ce3c1",
+      "bytes": 5817,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Emoji/EmojiViewCell.swift",
+      "sha256": "42d87f81f6929212fb844127c9830ea15894ad7e552b769812de512fba927e4d",
+      "bytes": 246,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/NoteCell/FileContainer.swift",
+      "sha256": "c0b55c70bcaa587d106328494262dd968ff6ff047c3a2207e53d2609136931ad",
+      "bytes": 10929,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/NoteCell/FileContainerCell.swift",
+      "sha256": "1364b78b188094fa5cb010054cef285485bd7cee4da7dee972875ec74e80ba61",
+      "bytes": 2701,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/NoteCell/NoteCell.FileView.swift",
+      "sha256": "be00f8bf8084d911a62180b41d7ea179d221c9b749865b8d7a5a29feb2c244f6",
+      "bytes": 7960,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/NoteCell/NoteCell.Model.swift",
+      "sha256": "0b37c1a0d9cee99ac756764deee3bf6c3cd23133f22dddd184e3f0affcc01b4c",
+      "bytes": 4723,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/NoteCell/NoteCell.swift",
+      "sha256": "ef3d2f11eb663d452a314d9c485941c4909f019ca54600e80946ca4b7f37a6fe",
+      "bytes": 28269,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/NoteCell/PollView.swift",
+      "sha256": "ceee25f2e5df2e10f8d2a5d3ef92202046ac0ef89b427c3607b613293391f144",
+      "bytes": 28610,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/NoteCell/PromotionCell.swift",
+      "sha256": "449eaf2eda59e84d1a83d323fdaeea28031c45eea8b125bc497f33f4ab0eab56",
+      "bytes": 700,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/NoteCell/ReactionCell.swift",
+      "sha256": "b6186d221e1234b287d3d1539441439c699fcf13aa8847eacfc95233c3eb630e",
+      "bytes": 5907,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/NoteCell/RenoteeCell.swift",
+      "sha256": "50397285a753a7a15a002b8cfc001e093f2361e9432adf56ce73f122ac7f17c9",
+      "bytes": 1048,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/NoteCell/UrlPreviewer.swift",
+      "sha256": "7ba3469d69b3c8e9e9902cf127d8b59fcb1b0a1d8a3f89c99b3e914a4d248906",
+      "bytes": 3136,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Notification/NanoNotificationBanner.swift",
+      "sha256": "dc887e80255ed16110703e9cb95c714d088186807cef8e4822738e6f5b6dfc7c",
+      "bytes": 5068,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Notification/NotificationBanner.swift",
+      "sha256": "ed35edca7b3d33494593f95e27fae441a5687489e6f79c0d8320bed43367ac20",
+      "bytes": 11429,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Notification/NotificationCell.swift",
+      "sha256": "2be77b8377b9915bcf36125b0bfb05d06c340f427b15599ff6060be2133d50ba",
+      "bytes": 12203,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Others/ComponentType.swift",
+      "sha256": "8371aadba541250988e321efcf9c1eb5251308b611ac96d49e3f64211e58cbf3",
+      "bytes": 291,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Others/DropdownMenuViewController.swift",
+      "sha256": "bfcf36ce5f1a5fab73d9b60a3043814486bde6f8d6fb0a6d6f091cb3499b62dc",
+      "bytes": 4038,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Others/NoteDisplay.swift",
+      "sha256": "0730f16ad7d340d48422988058bde4931946140cebc764a0fc45fbc1f4cdb0a2",
+      "bytes": 2657,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Others/PanelMenuViewController.swift",
+      "sha256": "6cd10998499579e1744991322c6bb437eafe08864c357469775df7e4c537b413",
+      "bytes": 8291,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Post/AttachmentCell.swift",
+      "sha256": "b7946bb1ef94ab8e609c1e4488db7d0d401fd37b7da0ccd3e61b4bcf98648edd",
+      "bytes": 2264,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Post/EditablePollView.swift",
+      "sha256": "cd60d601c2a5ed39030af068c0c252d455f27fd24eb5323fdb1e8526678d2eb3",
+      "bytes": 6952,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Reaction/ReactionCollectionHeader.swift",
+      "sha256": "06cad95c33a527d112d5403ee6a426a3506bac8ab3da74a3229fdb7d701ec451",
+      "bytes": 443,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Reaction/ReactionGenPanel.swift",
+      "sha256": "2f464eca94f92a9353a929fa31ec7832a4c031d358c99e4bf2b90c51c31c9e23",
+      "bytes": 1389,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Reaction/ReactionGenViewController.swift",
+      "sha256": "c6e1cbc5e0ca0bea11765b69e51404dbb35a5a4469f5faf62ced950cb7c5b47c",
+      "bytes": 14247,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Tab/NavBar.swift",
+      "sha256": "f54a530418eb3743a48ef7b7c6598a5bc7fb58fb136ce7fbc0239d53522f828c",
+      "bytes": 5206,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Tab/TabBar.swift",
+      "sha256": "94214a17e9db31b6a07304c88d4886ca8fc52c39d1d486a912a0c2efe1bd93df",
+      "bytes": 6023,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/Trend/TrendViewController.swift",
+      "sha256": "40eea27e50383e0b649a7d04dac51c8bcdba01fbcbd26225ad5b2adce1b593e4",
+      "bytes": 4047,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/User/UserCell.swift",
+      "sha256": "ee219de4ff3070ed301db1fe50d05e50c638ab1bf5c6160ee5fd39df7a4f73a3",
+      "bytes": 5642,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Reusable/User/UserListViewController.swift",
+      "sha256": "b81ceedb99f30eaeebd281a6ed6e4e85509538f34de89dc21dd64a7dc120da4d",
+      "bytes": 6738,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Settings/AboutMisskeyViewController.swift",
+      "sha256": "42f0c99566c933c7f92dbf9fb26e6101270e531b6a78682267bb9b56dba84cb8",
+      "bytes": 6662,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Settings/AccountViewController.swift",
+      "sha256": "bc5f1dfcfc52025171cfe79df0180e7875b52c01e9a42b6eaae77597d628b6d0",
+      "bytes": 3939,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Settings/Cell/ColorPickerCell.swift",
+      "sha256": "88d4ce9e06c946b03b7977b2cb197d59b0052e3d714d479b064f7c9ddea17e14",
+      "bytes": 4021,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Settings/Cell/TabSettingsCell.swift",
+      "sha256": "b8d749da2fb61c9e00bfb944a8f75b967f7f6b24d2b84efb986dd05a5b273647",
+      "bytes": 2984,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Settings/ColorPicker.swift",
+      "sha256": "9a970cd1e3f12c526095f513fd29f99f927d42ad32fa20e5b1fa02bba7ada4f2",
+      "bytes": 2855,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Settings/DesignSettingsViewController.swift",
+      "sha256": "f1251fb295a7b7a678896047bcaccb18476f01f58474ba1c85cb83a16f712f6a",
+      "bytes": 10263,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Settings/InstanceViewController.swift",
+      "sha256": "c6e2fb2f3a3be99baec135777ef0ea78b1107236ce01192eb916d4cf624e49b5",
+      "bytes": 4187,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Settings/LicenseViewController.swift",
+      "sha256": "306b830b8b6c9931210126d4f49182b3d9927ad0e5461025b229282fc9357ddb",
+      "bytes": 45396,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Settings/ProfileSettingsViewController.swift",
+      "sha256": "c1f6a0bf1f6d8e6846772c6900852a4d0851bda504e10a6a8355836370395bd8",
+      "bytes": 20162,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Settings/ReactionSettingsViewController.swift",
+      "sha256": "3e698b717ec78f90dcd51ba4a0a586681bf069f22ff439f1c1e35ab08925c3ed",
+      "bytes": 10007,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Settings/SettingsViewController.swift",
+      "sha256": "71e7e79ea1a89d55cbebdbf43792327a336ef1f4bd24ba689275f117beea51f8",
+      "bytes": 4410,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/View/Settings/ThemeViewController.swift",
+      "sha256": "91563a0dca4837f8a30fedf293185208b25f9bfdcb4116ef5c82df747a24de78",
+      "bytes": 13337,
+      "category": "legacy_view_controller"
+    },
+    {
+      "path": "MissCat/ViewModel/Details/PostDetailViewModel.swift",
+      "sha256": "2123a20e8ce73f5fff2461e481bfdbae8a45bfa45388ad02d07d7db60d0145b6",
+      "bytes": 2157,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Details/ProfileViewModel.swift",
+      "sha256": "e11e8930b1472f1055e51f2674b5e889fb8b62ec8054209cb4f2d564437c7a78",
+      "bytes": 10425,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/DirectMessage/DirectMessageViewModel.swift",
+      "sha256": "a1645d9edcf9f7a5e46af2a85a950ef31d6ef9b797bf41d5f6f8a9e0692c5e5a",
+      "bytes": 2173,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/DirectMessage/MessageListViewModel.swift",
+      "sha256": "2fdde64709da613b2e983e3972a5ac56dff281efadd323c09c5c06aa6c43ede3",
+      "bytes": 2878,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Main/AccountsListViewModel.swift",
+      "sha256": "fbcf75524edce64a8930dd5d376fc97f648570b23765fde2f305d314d5d1c202",
+      "bytes": 3323,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Main/HomeViewModel.swift",
+      "sha256": "0035d46b4a391626b2c9042f7d1c164930c5cc07a7a1c805e009006c9270ae64",
+      "bytes": 558,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Main/NotificationsViewModel.swift",
+      "sha256": "e63f8a2ec3574e33b44647d31c9c3150b0349c91eca016bf42ca49c360c03526",
+      "bytes": 6143,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Main/PostViewModel.swift",
+      "sha256": "4afcf4f284c00e9df2fe74f9d5ab262fb586799e1982bd2bfabd67ff1a018c24",
+      "bytes": 13908,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Main/SearchViewModel.swift",
+      "sha256": "b4d00c56d6d6d2c5dd0caddde66115b7598321fd6c7c294526ffc464df65ff56",
+      "bytes": 468,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Main/TimelineViewModel.swift",
+      "sha256": "02238ba107228bd15ff5aaefebcf0293a750d4f7810b6ede68ddf3d825feb74a",
+      "bytes": 17214,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Others/ViewModelType.swift",
+      "sha256": "cfea6f4fea1f4b1d905fcf4c9f08232a08db57a0bda65d494498510b8a6402bf",
+      "bytes": 458,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Reusable/Accounts/AccountCellViewModel.swift",
+      "sha256": "25f3940571847ec7a1d31eb9b295222cffc1529814d1eecb0ddd62fef8b2a9ff",
+      "bytes": 3176,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Reusable/NoteCell/FileContainerViewModel.swift",
+      "sha256": "e8b333c276318fa42fc140f75325c1898d640709599bec41df6b3342ea9fe165",
+      "bytes": 2470,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Reusable/NoteCell/NoteCellViewModel.swift",
+      "sha256": "ba542e8909bf6eee50d3a4bc03920a36912f422477c7af5b638838ebf76ee217",
+      "bytes": 11708,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Reusable/NoteCell/UrlPreviewerViewModel.swift",
+      "sha256": "351ce9e3f42fe9a188c2d3e98a7398b7c6b3360fe7fef572407ce90bf224522b",
+      "bytes": 2077,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Reusable/Notification/NotificationBannerViewModel.swift",
+      "sha256": "b3c618a2bf8de98de7f52fd22e975a2ba24d2305c210592d7bb5a7ad20a3af74",
+      "bytes": 1370,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Reusable/Notification/NotificationCellViewModel.swift",
+      "sha256": "e95113e9818dc2a9cd80a817563b0afdd8e4e273e12ccb200e1512fd499f2ff0",
+      "bytes": 7432,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Reusable/Reaction/ReactionGenViewModel.swift",
+      "sha256": "f3e384e1cccff333e263e0ed84124e1fe333bbf509c7765b0f800096438ec88f",
+      "bytes": 4158,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Reusable/Tab/NavBarViewModel.swift",
+      "sha256": "b1ce6ef38cbd92666cd7d2ecae827ace803a37ddf50ea476ec49fa8c6d767be8",
+      "bytes": 1460,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Reusable/User/UserCellViewModel.swift",
+      "sha256": "8a84e0d68646e8f953ed64eb1137f7c0786806546d409913022cd9b97fe6f12f",
+      "bytes": 2026,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Reusable/User/UserListViewModel.swift",
+      "sha256": "9fea2d7fb5b769b90401eb5c315d9544644bcff16c629a152493a7816063931f",
+      "bytes": 3382,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Settings/ProfileSettingsViewModel.swift",
+      "sha256": "7f275b719dee1d47e3653968ebc517df911248ae276d11362a3116853fb727cf",
+      "bytes": 6004,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCat/ViewModel/Settings/ReactionSettingsViewModel.swift",
+      "sha256": "840fae19f6ee2c337a7de0d3b260fd33cdb4ba45b1a44dbad422d5af27bce731",
+      "bytes": 3582,
+      "category": "legacy_view_model"
+    },
+    {
+      "path": "MissCatShare/AccountsViewController.swift",
+      "sha256": "0c343d40b912ead866ddab4cfb3d2fd8a7299d8c227a040423af065a9231e493",
+      "bytes": 1498,
+      "category": "retired_share_controller"
+    },
+    {
+      "path": "MissCatShare/VisibilityViewController.swift",
+      "sha256": "7779037682a6a3cf4405729df27e5a45547a698e0a6d042cb523c006723486c1",
+      "bytes": 1453,
+      "category": "retired_share_controller"
+    },
+    {
+      "path": "MissCatTests/MFMTests.swift",
+      "sha256": "c788ef76f7dd881d21f15cc922e7889f2929ad4c2c9f04a2be58af2690adc7b0",
+      "bytes": 7995,
+      "category": "retired_test"
+    }
+  ]
+}
