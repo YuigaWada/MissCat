@@ -440,7 +440,12 @@ private final class CancellationDiscoveryRepository: MissCatDiscoveryRepository 
 }
 
 private final class DiscoveryURLProtocolStub: URLProtocol {
-    static var handler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
+    typealias Handler = (URLRequest) throws -> (HTTPURLResponse, Data)
+    private static let handlerState = MissCatTestLockedState<Handler?>(nil)
+    static var handler: Handler? {
+        get { handlerState.value }
+        set { handlerState.value = newValue }
+    }
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

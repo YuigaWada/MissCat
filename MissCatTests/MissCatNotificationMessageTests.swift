@@ -7,9 +7,11 @@ private enum NotificationMessageTestError: LocalizedError {
     var errorDescription: String? { "test failure" }
 }
 
+/// Store tests create and mutate this fake only from their `@MainActor` test case.
 private final class MockNotificationMessagingRepository:
     MissCatNotificationsRepository,
-    MissCatMessagingRepository
+    MissCatMessagingRepository,
+    @unchecked Sendable
 {
     let accountScope: MissCatAccountScope
     var notificationPages: [MissCatNotificationPage] = []

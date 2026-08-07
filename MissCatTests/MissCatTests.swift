@@ -15,6 +15,36 @@ import Security
 import UIKit
 import XCTest
 
+/// Test-only shared state with a single lock guarding every read and write.
+final class MissCatTestLockedState<Value>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storedValue: Value
+
+    init(_ value: Value) {
+        storedValue = value
+    }
+
+    var value: Value {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return storedValue
+        }
+        set {
+            lock.lock()
+            storedValue = newValue
+            lock.unlock()
+        }
+    }
+
+    @discardableResult
+    func mutate<Result>(_ body: (inout Value) throws -> Result) rethrows -> Result {
+        lock.lock()
+        defer { lock.unlock() }
+        return try body(&storedValue)
+    }
+}
+
 #if DEBUG
 final class MissCatAuthenticationBackupCodecTests: XCTestCase {
     private let credential = "unit-backup-token-not-a-live-credential"
@@ -153,7 +183,7 @@ class MissCatTests: XCTestCase {
     }
     
     func testExample() {
-        let text = NSTextAttachment()
+        _ = NSTextAttachment()
     }
 }
 
@@ -431,7 +461,8 @@ private enum FakeMiAuthTransportError: Error {
     case failed
 }
 
-private final class FakeMiAuthTransport: MissCatMiAuthTransport {
+/// Authentication tests serialize the one-shot send and inspect state only after awaiting it.
+private final class FakeMiAuthTransport: MissCatMiAuthTransport, @unchecked Sendable {
     var results: [Result<MissCatMiAuthHTTPResponse, Error>]
     private(set) var requests: [URLRequest] = []
 
@@ -964,9 +995,9 @@ final class MiAuthAuthenticationTests: XCTestCase {
         MissCatMiAuthHTTPResponse(data: Data(body.utf8), statusCode: statusCode)
     }
 
-    private func XCTAssertThrowsAuthenticationError<T>(
+    private func XCTAssertThrowsAuthenticationError(
         _ expected: MissCatAuthenticationService.AuthenticationError,
-        operation: () async throws -> T,
+        operation: @MainActor () async throws -> Void,
         file: StaticString = #filePath,
         line: UInt = #line
     ) async {

@@ -1,6 +1,7 @@
 import CryptoKit
 import XCTest
 
+@MainActor
 final class MissCatShareKeychainUITests: XCTestCase {
     private static let appBundleIdentifier = "yuwd.MissCat"
     private static let fixtureUserID = "misscat-shared-keychain-fixture"

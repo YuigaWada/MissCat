@@ -1,16 +1,11 @@
 import XCTest
 
+@MainActor
 final class MissCatLoginProfileUITests: XCTestCase {
-    private var app: XCUIApplication!
+    private var app = XCUIApplication()
 
     override func setUp() {
         continueAfterFailure = false
-        app = XCUIApplication()
-    }
-
-    override func tearDown() {
-        app?.terminate()
-        app = nil
     }
 
     func testProductionLaunchWithoutFixtureArgumentsUsesSwiftUIAuthenticationRoot() {

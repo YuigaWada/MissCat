@@ -297,13 +297,18 @@ final class MissCatComposeTextInsertionTests: XCTestCase {
 
 @MainActor
 final class MissCatNativeComposeAPIContractTests: XCTestCase {
-    private var urlSession: URLSession!
+    private lazy var urlSession: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [ComposeURLProtocolStub.self]
+        return URLSession(configuration: configuration)
+    }()
 
     override func setUp() {
         super.setUp()
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [ComposeURLProtocolStub.self]
-        urlSession = URLSession(configuration: configuration)
+        ComposeURLProtocolStub.handler = nil
+        ComposeURLProtocolStub.suspendsRequests = false
+        ComposeURLProtocolStub.onStart = nil
+        ComposeURLProtocolStub.onStop = nil
     }
 
     override func tearDown() {
@@ -311,8 +316,6 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
         ComposeURLProtocolStub.suspendsRequests = false
         ComposeURLProtocolStub.onStart = nil
         ComposeURLProtocolStub.onStop = nil
-        urlSession.invalidateAndCancel()
-        urlSession = nil
         super.tearDown()
     }
 
@@ -1864,10 +1867,31 @@ private final class ComposeRequestRecorder: @unchecked Sendable {
 }
 
 private final class ComposeURLProtocolStub: URLProtocol {
-    static var handler: ((URLRequest) throws -> (status: Int, data: Data))?
-    static var suspendsRequests = false
-    static var onStart: (() -> Void)?
-    static var onStop: (() -> Void)?
+    typealias Handler = (URLRequest) throws -> (status: Int, data: Data)
+    private static let handlerState = MissCatTestLockedState<Handler?>(nil)
+    private static let suspendsRequestsState = MissCatTestLockedState(false)
+    private static let onStartState = MissCatTestLockedState<(() -> Void)?>(nil)
+    private static let onStopState = MissCatTestLockedState<(() -> Void)?>(nil)
+
+    static var handler: Handler? {
+        get { handlerState.value }
+        set { handlerState.value = newValue }
+    }
+
+    static var suspendsRequests: Bool {
+        get { suspendsRequestsState.value }
+        set { suspendsRequestsState.value = newValue }
+    }
+
+    static var onStart: (() -> Void)? {
+        get { onStartState.value }
+        set { onStartState.value = newValue }
+    }
+
+    static var onStop: (() -> Void)? {
+        get { onStopState.value }
+        set { onStopState.value = newValue }
+    }
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

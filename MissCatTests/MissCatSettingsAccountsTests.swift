@@ -864,6 +864,7 @@ final class MissCatEmojiArchiveTests: XCTestCase {
     }
 }
 
+@MainActor
 final class MissCatThemeProductionContractTests: XCTestCase {
     func testTabOwnerMigrationUsesCompositeIDsAndRepairsAmbiguousOrMissingOwners() {
         let first = SecureUser(
@@ -1295,7 +1296,11 @@ private final class HostileEmojiArchiveObject: NSObject, NSSecureCoding {
 
 @objc(HostileEmojiModelSubclass)
 private final class HostileEmojiModelSubclass: MissCatEmojiArchive.EmojiModel {
-    static var decodeCount = 0
+    private static let decodeCountState = MissCatTestLockedState(0)
+    static var decodeCount: Int {
+        get { decodeCountState.value }
+        set { decodeCountState.value = newValue }
+    }
     override class var supportsSecureCoding: Bool { true }
 
     override init(
@@ -1407,7 +1412,12 @@ private final class SettingsIntegrationAPIKeyStore: AccountAPIKeyStoring {
 }
 
 private final class SettingsURLProtocolStub: URLProtocol {
-    static var handler: ((URLRequest) throws -> (Int, Data))?
+    typealias Handler = (URLRequest) throws -> (Int, Data)
+    private static let handlerState = MissCatTestLockedState<Handler?>(nil)
+    static var handler: Handler? {
+        get { handlerState.value }
+        set { handlerState.value = newValue }
+    }
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

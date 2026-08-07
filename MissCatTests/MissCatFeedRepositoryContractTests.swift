@@ -1317,7 +1317,8 @@ private enum FeedFakeWebSocketError: Error {
     case connectionLost
 }
 
-private final class FeedFakeWebSocket: MissCatFeedWebSocket {
+/// Every mutable field is protected by `lock`; continuations are resumed exactly once.
+private final class FeedFakeWebSocket: MissCatFeedWebSocket, @unchecked Sendable {
     private typealias MessageResult = Result<URLSessionWebSocketTask.Message, Error>
 
     private let lock = NSLock()
@@ -1407,7 +1408,8 @@ private final class FeedFakeWebSocket: MissCatFeedWebSocket {
     }
 }
 
-private final class FeedFakeWebSocketFactory: MissCatFeedWebSocketFactory {
+/// `lock` serializes both request recording and destructive socket selection.
+private final class FeedFakeWebSocketFactory: MissCatFeedWebSocketFactory, @unchecked Sendable {
     private let lock = NSLock()
     private var sockets: [FeedFakeWebSocket]
     private var storedRequests: [URLRequest] = []
@@ -1452,7 +1454,12 @@ private extension NSLock {
 }
 
 private final class FeedURLProtocolStub: URLProtocol {
-    static var handler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
+    typealias Handler = (URLRequest) throws -> (HTTPURLResponse, Data)
+    private static let handlerState = MissCatTestLockedState<Handler?>(nil)
+    static var handler: Handler? {
+        get { handlerState.value }
+        set { handlerState.value = newValue }
+    }
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 final class MissCatDiscoveryUITests: XCTestCase {
     private var app: XCUIApplication!
 
@@ -9,8 +10,6 @@ final class MissCatDiscoveryUITests: XCTestCase {
     }
 
     override func tearDown() {
-        app?.terminate()
-        app = nil
         super.tearDown()
     }
 

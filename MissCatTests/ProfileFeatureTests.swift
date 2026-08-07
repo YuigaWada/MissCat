@@ -527,7 +527,8 @@ final class MissCatProfileEditorAndUserListTests: XCTestCase {
     }
 }
 
-private final class ProfileRepositorySpy: MissCatProfileRepository {
+/// The `@MainActor` profile tests serialize all access to this mutable spy.
+private final class ProfileRepositorySpy: MissCatProfileRepository, @unchecked Sendable {
     let account: MissCatProfileAccount
     var profileValue: MissCatProfileUser
     var profileDelayNanoseconds: UInt64 = 0
@@ -582,7 +583,11 @@ private final class ProfileRepositorySpy: MissCatProfileRepository {
         if let followError { throw followError }
     }
 
-    func uploadProfileImage(data: Data, filename: String, progress: @escaping (Double) -> Void) async throws -> String {
+    func uploadProfileImage(
+        data: Data,
+        filename: String,
+        progress: @escaping @Sendable (Double) -> Void
+    ) async throws -> String {
         uploadFilenames.append(filename)
         uploadData.append(data)
         progress(0.5)
@@ -604,7 +609,12 @@ private final class ProfileRepositorySpy: MissCatProfileRepository {
 }
 
 private final class ProfileURLProtocolStub: URLProtocol {
-    static var handler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
+    typealias Handler = (URLRequest) throws -> (HTTPURLResponse, Data)
+    private static let handlerState = MissCatTestLockedState<Handler?>(nil)
+    static var handler: Handler? {
+        get { handlerState.value }
+        set { handlerState.value = newValue }
+    }
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

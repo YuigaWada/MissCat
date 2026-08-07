@@ -2,6 +2,7 @@
 import UIKit
 import XCTest
 
+@MainActor
 final class MissCatNoteDetailTests: XCTestCase {
     @MainActor
     func testClipboardActionsWriteExactTextAndPermalinkThroughBoundary() {
@@ -20,20 +21,20 @@ final class MissCatNoteDetailTests: XCTestCase {
     @MainActor
     func testSystemClipboardAdapterWritesExactValueAndPublishesFixtureProbe() {
         let writer = MissCatSystemClipboardWriter()
-        var observedValue: String?
+        let observedValue = MissCatTestLockedState<String?>(nil)
         let observer = NotificationCenter.default.addObserver(
             forName: MissCatSystemClipboardWriter.didWriteNotification,
             object: nil,
             queue: nil
         ) { notification in
-            observedValue = notification.object as? String
+            observedValue.value = notification.object as? String
         }
         defer { NotificationCenter.default.removeObserver(observer) }
 
         writer.write("system pasteboard 🐈\nexact")
 
         XCTAssertEqual(UIPasteboard.general.string, "system pasteboard 🐈\nexact")
-        XCTAssertEqual(observedValue, "system pasteboard 🐈\nexact")
+        XCTAssertEqual(observedValue.value, "system pasteboard 🐈\nexact")
     }
 
     func testCustomCopyActionKeepsPasteboardInOneAuditableAdapterAndDomainStaysUIKitFree() throws {
@@ -100,19 +101,19 @@ final class MissCatNoteDetailTests: XCTestCase {
         XCTAssertEqual(legacyPresentations, 0)
     }
 
-    private var session: URLSession!
+    private lazy var session: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [NoteDetailURLProtocolStub.self]
+        return URLSession(configuration: configuration)
+    }()
 
     override func setUp() {
         super.setUp()
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [NoteDetailURLProtocolStub.self]
-        session = URLSession(configuration: configuration)
+        NoteDetailURLProtocolStub.handler = nil
     }
 
     override func tearDown() {
         NoteDetailURLProtocolStub.handler = nil
-        session.invalidateAndCancel()
-        session = nil
         super.tearDown()
     }
 
@@ -762,7 +763,11 @@ private final class CustomEmojiLoaderProbe: @unchecked Sendable {
     }
 }
 
-private final class NoteDetailContextRepositoryStub: MissCatNoteContextRepository {
+/// The `@MainActor` note-detail tests serialize all access to this mutable fake.
+private final class NoteDetailContextRepositoryStub:
+    MissCatNoteContextRepository,
+    @unchecked Sendable
+{
     var accountIdentifier = "misscat-account-v2:test:test"
     var currentServerUserID = "me"
     var thread = MissCatNoteThread(
@@ -815,7 +820,12 @@ private final class NoteDetailContextRepositoryStub: MissCatNoteContextRepositor
 }
 
 private final class NoteDetailURLProtocolStub: URLProtocol {
-    static var handler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
+    typealias Handler = (URLRequest) throws -> (HTTPURLResponse, Data)
+    private static let handlerState = MissCatTestLockedState<Handler?>(nil)
+    static var handler: Handler? {
+        get { handlerState.value }
+        set { handlerState.value = newValue }
+    }
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

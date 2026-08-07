@@ -1,16 +1,11 @@
 import XCTest
 
+@MainActor
 final class MissCatShellFeedUITests: XCTestCase {
-    private var app: XCUIApplication!
+    private var app = XCUIApplication()
 
     override func setUp() {
         continueAfterFailure = false
-        app = XCUIApplication()
-    }
-
-    override func tearDown() {
-        app?.terminate()
-        app = nil
     }
 
     func testTimelineTabsSupportTapAndSwipe() {

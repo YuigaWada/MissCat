@@ -1,7 +1,8 @@
 @testable import MissCat
 import XCTest
 
-final class MockMissCatFeedRepository: MissCatFeedRepository {
+/// The `@MainActor` feed-store tests serialize all access to this mutable fake.
+final class MockMissCatFeedRepository: MissCatFeedRepository, @unchecked Sendable {
     struct PageRequest: Equatable {
         let source: MissCatFeedSource
         let cursor: String?
@@ -1017,7 +1018,8 @@ final class MissCatFeedStoreTests: XCTestCase {
     }
 }
 
-private final class NonCooperativeFeedRepository: MissCatFeedRepository {
+/// The owning `@MainActor` tests serialize continuation installation and resumption.
+private final class NonCooperativeFeedRepository: MissCatFeedRepository, @unchecked Sendable {
     private var pageContinuation: CheckedContinuation<MissCatFeedPage, Never>?
 
     var hasPendingPage: Bool { pageContinuation != nil }
