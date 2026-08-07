@@ -18,6 +18,15 @@ final class ShareExtensionSwiftUIBoundaryTests: XCTestCase {
         XCTAssertTrue(entry.contains("final class ShareViewController: UIViewController"))
         XCTAssertTrue(entry.contains("UIHostingController"))
         XCTAssertTrue(entry.contains("extensionContext"))
+        XCTAssertTrue(entry.contains("ShareExtensionRootView"))
+        for misplacedResponsibility in [
+            "ShareInputLoader", "ShareComposerViewModel", "SharePostService", "loadSharedContent"
+        ] {
+            XCTAssertFalse(
+                entry.contains(misplacedResponsibility),
+                "Principal boundary owns non-host responsibility: \(misplacedResponsibility)"
+            )
+        }
         for forbidden in ["UILabel", "UIStackView", "UIImage", "UIViewRepresentable"] {
             XCTAssertFalse(entry.contains(forbidden), "Principal boundary leaked visual UIKit: \(forbidden)")
         }
