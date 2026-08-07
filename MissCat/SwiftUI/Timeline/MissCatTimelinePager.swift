@@ -4,11 +4,21 @@ public struct MissCatTimelinePage: Identifiable, Equatable, Sendable {
     public let id: String
     public let title: String
     public let source: MissCatFeedSource
+    public let accountScope: MissCatShellAccountScope?
+    public let accessibilityID: String
 
-    public init(id: String, title: String, source: MissCatFeedSource) {
+    public init(
+        id: String,
+        title: String,
+        source: MissCatFeedSource,
+        accountScope: MissCatShellAccountScope? = nil,
+        accessibilityID: String? = nil
+    ) {
         self.id = id
         self.title = title
         self.source = source
+        self.accountScope = accountScope
+        self.accessibilityID = accessibilityID ?? id
     }
 
     public static let networkDefaults: [MissCatTimelinePage] = [
@@ -24,6 +34,34 @@ public enum MissCatTimelineSelectionOrigin: Equatable, Sendable {
     case tap
     case swipe
     case pagesChanged
+}
+
+public struct MissCatTimelineScrollKey: Hashable, Sendable {
+    public let accountScope: MissCatShellAccountScope
+    public let pageID: String
+
+    public init(accountScope: MissCatShellAccountScope, pageID: String) {
+        self.accountScope = accountScope
+        self.pageID = pageID
+    }
+}
+
+public struct MissCatTimelineScrollPositionState: Equatable, Sendable {
+    private var positions: [MissCatTimelineScrollKey: String] = [:]
+
+    public init() {}
+
+    public func position(for key: MissCatTimelineScrollKey) -> String? {
+        positions[key]
+    }
+
+    public mutating func setPosition(_ noteID: String?, for key: MissCatTimelineScrollKey) {
+        if let noteID, !noteID.isEmpty {
+            positions[key] = noteID
+        } else {
+            positions.removeValue(forKey: key)
+        }
+    }
 }
 
 /// Pure state shared by tap and swipe selection. Keeping this independent of SwiftUI
@@ -81,13 +119,19 @@ public struct MissCatTimelineSelectionState: Equatable, Sendable {
 /// `MissCatTimelineTabs`, so header taps and page swipes always update one source of truth.
 public struct MissCatTimelinePager: View {
     @Binding private var selectedID: String
-    @State private var scrollPositions: [String: String] = [:]
+    @State private var scrollPositions = MissCatTimelineScrollPositionState()
 
-    private let accountID: String
+    private let accountScope: MissCatShellAccountScope
     private let pages: [MissCatTimelinePage]
-    private let repository: MissCatFeedRepository
+    private let repositoryProvider: (MissCatShellAccountScope) -> (any MissCatFeedRepository)?
     private let palette: MissCatVisualPalette
     private let navigationActions: MissCatFeedNavigationActions
+    private let scrollToTopTrigger: Int
+    private let relativeDateReference: Date
+    private let visualReadyPrefix: String?
+    private let allowsLoadingVisualReady: Bool
+    private let externalScrollPosition: ((MissCatTimelineScrollKey) -> Binding<String?>)?
+    private let onSelection: (String, MissCatTimelineSelectionOrigin) -> Void
 
     public init(
         accountID: String,
@@ -97,41 +141,72 @@ public struct MissCatTimelinePager: View {
         palette: MissCatVisualPalette = .legacyLight,
         navigationActions: MissCatFeedNavigationActions = .init()
     ) {
-        self.accountID = accountID
+        let scope = MissCatShellAccountScope(instance: "legacy.invalid", userID: accountID, username: "")
+        accountScope = scope
         self.pages = pages
         _selectedID = selectedID
-        self.repository = repository
+        repositoryProvider = { _ in repository }
         self.palette = palette
         self.navigationActions = navigationActions
+        scrollToTopTrigger = 0
+        relativeDateReference = Date()
+        visualReadyPrefix = nil
+        allowsLoadingVisualReady = false
+        externalScrollPosition = nil
+        onSelection = { _, _ in }
+    }
+
+    public init(
+        accountScope: MissCatShellAccountScope,
+        pages: [MissCatTimelinePage],
+        selectedID: Binding<String>,
+        repositoryProvider: @escaping (MissCatShellAccountScope) -> (any MissCatFeedRepository)?,
+        palette: MissCatVisualPalette = .legacyLight,
+        scrollToTopTrigger: Int = 0,
+        relativeDateReference: Date = Date(),
+        visualReadyPrefix: String? = nil,
+        allowsLoadingVisualReady: Bool = false,
+        scrollPosition: ((MissCatTimelineScrollKey) -> Binding<String?>)? = nil,
+        navigationActions: MissCatFeedNavigationActions = .init(),
+        onSelection: @escaping (String, MissCatTimelineSelectionOrigin) -> Void = { _, _ in }
+    ) {
+        self.accountScope = accountScope
+        self.pages = pages
+        _selectedID = selectedID
+        self.repositoryProvider = repositoryProvider
+        self.palette = palette
+        self.scrollToTopTrigger = scrollToTopTrigger
+        self.relativeDateReference = relativeDateReference
+        self.visualReadyPrefix = visualReadyPrefix
+        self.allowsLoadingVisualReady = allowsLoadingVisualReady
+        externalScrollPosition = scrollPosition
+        self.navigationActions = navigationActions
+        self.onSelection = onSelection
     }
 
     public var body: some View {
         TabView(selection: selection) {
             ForEach(pages) { page in
-                MissCatFeedView(
-                    source: page.source,
-                    repository: repository,
-                    palette: palette,
-                    scrollPositionID: scrollPosition(for: page.id),
-                    navigationActions: navigationActions
-                )
-                .id("\(accountID):\(page.id)")
+                timelinePage(page)
+                .id("\(accountScope.id):\(page.id)")
                 .tag(page.id)
-                .accessibilityIdentifier("timeline.page.\(page.id)")
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("timeline.page.\(page.accessibilityID)")
             }
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
         .background(palette.base)
         .onAppear(perform: normalizeSelection)
         .onChange(of: pageIDs) { _, _ in normalizeSelection() }
-        .onChange(of: accountID) { _, _ in scrollPositions.removeAll() }
-        .accessibilityIdentifier("timeline.pager.\(accountID)")
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("timeline.pager")
+        .accessibilityValue(selectedID)
     }
 
     private var pageIDs: [String] { pages.map(\.id) }
 
     private var selection: Binding<String> {
-        Binding(
+        return Binding(
             get: { selectedID },
             set: { candidate in
                 var state = MissCatTimelineSelectionState(
@@ -139,15 +214,24 @@ public struct MissCatTimelinePager: View {
                     selectedID: selectedID
                 )
                 guard state.select(candidate, origin: .swipe) else { return }
-                selectedID = state.selectedID
+                guard state.selectedID != selectedID else { return }
+                onSelection(state.selectedID, .swipe)
+                if selectedID != state.selectedID { selectedID = state.selectedID }
             }
         )
     }
 
-    private func scrollPosition(for pageID: String) -> Binding<String?> {
-        Binding(
-            get: { scrollPositions[pageID] },
-            set: { scrollPositions[pageID] = $0 }
+    private func scrollPosition(for page: MissCatTimelinePage) -> Binding<String?> {
+        let key = MissCatTimelineScrollKey(
+            accountScope: page.accountScope ?? accountScope,
+            pageID: page.id
+        )
+        if let externalScrollPosition {
+            return externalScrollPosition(key)
+        }
+        return Binding(
+            get: { scrollPositions.position(for: key) },
+            set: { scrollPositions.setPosition($0, for: key) }
         )
     }
 
@@ -155,6 +239,33 @@ public struct MissCatTimelinePager: View {
         let state = MissCatTimelineSelectionState(pageIDs: pageIDs, selectedID: selectedID)
         if state.selectedID != selectedID {
             selectedID = state.selectedID
+        }
+    }
+
+    @ViewBuilder
+    private func timelinePage(_ page: MissCatTimelinePage) -> some View {
+        let scope = page.accountScope ?? accountScope
+        if let repository = repositoryProvider(scope) {
+            MissCatFeedView(
+                source: page.source,
+                repository: repository,
+                accountScope: scope,
+                palette: palette,
+                scrollPositionID: scrollPosition(for: page),
+                scrollToTopTrigger: selectedID == page.id ? scrollToTopTrigger : 0,
+                relativeDateReference: relativeDateReference,
+                visualReadyIdentifier: visualReadyPrefix.map { "\($0).\(page.accessibilityID)" },
+                allowsLoadingVisualReady: allowsLoadingVisualReady,
+                navigationActions: navigationActions
+            )
+        } else {
+            ContentUnavailableView {
+                Label("アカウントを読み込めません", systemImage: "person.crop.circle.badge.exclamationmark")
+            } description: {
+                Text("アカウント設定を確認してください")
+            }
+            .foregroundStyle(palette.strong)
+            .accessibilityIdentifier("feed.account-unavailable")
         }
     }
 }

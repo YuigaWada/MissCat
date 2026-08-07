@@ -10,6 +10,7 @@
 		E2E000000000000000000001 /* MissCatShareKeychainUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E000000000000000000002 /* MissCatShareKeychainUITests.swift */; };
 		C0A900000000000000000001 /* MissCatNativeComposeAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A900000000000000000003 /* MissCatNativeComposeAPI.swift */; };
 		C0A900000000000000000002 /* MissCatNativeComposeAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A900000000000000000003 /* MissCatNativeComposeAPI.swift */; };
+		FEE100000000000000000001 /* MissCatShellFeedUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEE100000000000000000002 /* MissCatShellFeedUITests.swift */; };
 		C0DE00000000000000000001 /* MissCatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000002 /* MissCatApp.swift */; };
 		C0DE00000000000000000003 /* MissCatVisualTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000004 /* MissCatVisualTokens.swift */; };
 		C0DE00000000000000000005 /* MissCatAuthenticationBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000006 /* MissCatAuthenticationBrowserView.swift */; };
@@ -20,6 +21,8 @@
 		C0DE0000000000000000000F /* MissCatTermsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000010 /* MissCatTermsView.swift */; };
 		C0DE00000000000000000011 /* MissCatWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000012 /* MissCatWelcomeView.swift */; };
 		C0DE00000000000000000013 /* MissCatMainShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000014 /* MissCatMainShellView.swift */; };
+		F11E00000000000000000001 /* MissCatShellState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11E00000000000000000002 /* MissCatShellState.swift */; };
+		F11E00000000000000000003 /* MissCatShellFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11E00000000000000000004 /* MissCatShellFixture.swift */; };
 		C0DE00000000000000000019 /* MissCatAuthenticationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001A /* MissCatAuthenticationService.swift */; };
 		C0DE0000000000000000001B /* ShareCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001C /* ShareCore.swift */; };
 		C0DE0000000000000000001D /* ShareInputLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0000000000000000001E /* ShareInputLoader.swift */; };
@@ -261,6 +264,13 @@
 			remoteGlobalIDString = 8D4A2A11237437BE00503685;
 			remoteInfo = MissCat;
 		};
+		FEE100000000000000000009 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8D4A2A0A237437BE00503685 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D4A2A11237437BE00503685;
+			remoteInfo = MissCat;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -281,6 +291,8 @@
 		E2E000000000000000000002 /* MissCatShareKeychainUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatShareKeychainUITests.swift; sourceTree = "<group>"; };
 		E2E000000000000000000003 /* MissCatShareKeychainUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MissCatShareKeychainUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0A900000000000000000003 /* MissCatNativeComposeAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatNativeComposeAPI.swift; sourceTree = "<group>"; };
+		FEE100000000000000000002 /* MissCatShellFeedUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatShellFeedUITests.swift; sourceTree = "<group>"; };
+		FEE100000000000000000003 /* MissCatUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MissCatUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0DE10000000000000000002 /* MissCatProfileCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatProfileCore.swift; sourceTree = "<group>"; };
 		C0DE10000000000000000005 /* MissCatProfileViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatProfileViews.swift; sourceTree = "<group>"; };
 		C0DE10000000000000000007 /* MissCatProfileBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatProfileBridge.swift; sourceTree = "<group>"; };
@@ -307,6 +319,8 @@
 		C0DE00000000000000000010 /* MissCatTermsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatTermsView.swift; sourceTree = "<group>"; };
 		C0DE00000000000000000012 /* MissCatWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatWelcomeView.swift; sourceTree = "<group>"; };
 		C0DE00000000000000000014 /* MissCatMainShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatMainShellView.swift; sourceTree = "<group>"; };
+		F11E00000000000000000002 /* MissCatShellState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatShellState.swift; sourceTree = "<group>"; };
+		F11E00000000000000000004 /* MissCatShellFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatShellFixture.swift; sourceTree = "<group>"; };
 		C0DE0000000000000000001A /* MissCatAuthenticationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatAuthenticationService.swift; sourceTree = "<group>"; };
 		C0DE0000000000000000001C /* ShareCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCore.swift; sourceTree = "<group>"; };
 		C0DE0000000000000000001E /* ShareInputLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareInputLoader.swift; sourceTree = "<group>"; };
@@ -535,6 +549,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		FEE100000000000000000007 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D1A4BF724DD7BFF00EFD826 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -645,6 +666,8 @@
 			isa = PBXGroup;
 			children = (
 				C0DE00000000000000000014 /* MissCatMainShellView.swift */,
+				F11E00000000000000000002 /* MissCatShellState.swift */,
+				F11E00000000000000000004 /* MissCatShellFixture.swift */,
 			);
 			path = MainShell;
 			sourceTree = "<group>";
@@ -878,6 +901,7 @@
 				8D4A2A14237437BE00503685 /* MissCat */,
 				8D4A2A2B237437C100503685 /* MissCatTests */,
 				E2E000000000000000000004 /* MissCatShareKeychainUITests */,
+				FEE100000000000000000004 /* MissCatUITests */,
 				8D1A4BFB24DD7BFF00EFD826 /* MissCatShare */,
 				8D4A2A13237437BE00503685 /* Products */,
 				8D4A2A372374388300503685 /* Frameworks */,
@@ -890,6 +914,7 @@
 			children = (
 				8D4A2A12237437BE00503685 /* MissCat.app */,
 				8D4A2A28237437C100503685 /* MissCatTests.xctest */,
+				FEE100000000000000000003 /* MissCatUITests.xctest */,
 				8D1A4BFA24DD7BFF00EFD826 /* MissCatShare.appex */,
 				E2E000000000000000000003 /* MissCatShareKeychainUITests.xctest */,
 			);
@@ -937,6 +962,14 @@
 				E2E000000000000000000002 /* MissCatShareKeychainUITests.swift */,
 			);
 			path = MissCatShareKeychainUITests;
+			sourceTree = "<group>";
+		};
+		FEE100000000000000000004 /* MissCatUITests */ = {
+			isa = PBXGroup;
+			children = (
+				FEE100000000000000000002 /* MissCatShellFeedUITests.swift */,
+			);
+			path = MissCatUITests;
 			sourceTree = "<group>";
 		};
 		8D4A2A372374388300503685 /* Frameworks */ = {
@@ -1505,6 +1538,24 @@
 			productReference = E2E000000000000000000003 /* MissCatShareKeychainUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		FEE100000000000000000005 /* MissCatUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FEE10000000000000000000D /* Build configuration list for PBXNativeTarget "MissCatUITests" */;
+			buildPhases = (
+				FEE100000000000000000006 /* Sources */,
+				FEE100000000000000000007 /* Frameworks */,
+				FEE100000000000000000008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FEE10000000000000000000A /* PBXTargetDependency */,
+			);
+			name = MissCatUITests;
+			productName = MissCatUITests;
+			productReference = FEE100000000000000000003 /* MissCatUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -1528,6 +1579,10 @@
 					E2E000000000000000000005 = {
 						CreatedOnToolsVersion = 16.4;
 					};
+					FEE100000000000000000005 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 8D4A2A11237437BE00503685;
+					};
 				};
 			};
 			buildConfigurationList = 8D4A2A0D237437BE00503685 /* Build configuration list for PBXProject "MissCat" */;
@@ -1545,6 +1600,7 @@
 			targets = (
 				8D4A2A11237437BE00503685 /* MissCat */,
 				8D4A2A27237437C100503685 /* MissCatTests */,
+				FEE100000000000000000005 /* MissCatUITests */,
 				8D1A4BF924DD7BFF00EFD826 /* MissCatShare */,
 				E2E000000000000000000005 /* MissCatShareKeychainUITests */,
 			);
@@ -1552,6 +1608,13 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		FEE100000000000000000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D1A4BF824DD7BFF00EFD826 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1683,6 +1746,14 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		FEE100000000000000000006 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FEE100000000000000000001 /* MissCatShellFeedUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D1A4BF624DD7BFF00EFD826 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1725,6 +1796,8 @@
 				C0DE0000000000000000000F /* MissCatTermsView.swift in Sources */,
 				C0DE00000000000000000011 /* MissCatWelcomeView.swift in Sources */,
 				C0DE00000000000000000013 /* MissCatMainShellView.swift in Sources */,
+				F11E00000000000000000001 /* MissCatShellState.swift in Sources */,
+				F11E00000000000000000003 /* MissCatShellFixture.swift in Sources */,
 				C0DE00000000000000000019 /* MissCatAuthenticationService.swift in Sources */,
 				C0DE00000000000000000022 /* MissCatFeedModels.swift in Sources */,
 				C0DE00000000000000000024 /* MissCatFeedRepository.swift in Sources */,
@@ -1922,6 +1995,11 @@
 			target = 8D4A2A11237437BE00503685 /* MissCat */;
 			targetProxy = 8D4A2A29237437C100503685 /* PBXContainerItemProxy */;
 		};
+		FEE10000000000000000000A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8D4A2A11237437BE00503685 /* MissCat */;
+			targetProxy = FEE100000000000000000009 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
@@ -1952,6 +2030,48 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		FEE10000000000000000000B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 4LMTSU8RLS;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCatUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = MissCat;
+			};
+			name = Debug;
+		};
+		FEE10000000000000000000C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 4LMTSU8RLS;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = yuwd.MissCatUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = MissCat;
+			};
+			name = Release;
+		};
 		8D1A4C0624DD7BFF00EFD826 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 79B7AD7D002BC8FC43933AF9 /* Pods-MissCatShare.debug.xcconfig */;
@@ -2398,6 +2518,15 @@
 			buildConfigurations = (
 				E2E00000000000000000000B /* Debug */,
 				E2E00000000000000000000C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FEE10000000000000000000D /* Build configuration list for PBXNativeTarget "MissCatUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FEE10000000000000000000B /* Debug */,
+				FEE10000000000000000000C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

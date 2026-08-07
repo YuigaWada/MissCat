@@ -188,6 +188,26 @@ public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
                 "notes/global-timeline",
                 body: FeedPageRequest(i: account.apiKey, limit: boundedLimit, untilId: cursor)
             )
+        case let .user(userID):
+            notes = try await post(
+                "users/notes",
+                body: FeedUserNotesRequest(
+                    i: account.apiKey,
+                    userId: userID,
+                    limit: boundedLimit,
+                    untilId: cursor
+                )
+            )
+        case let .list(listID):
+            notes = try await post(
+                "notes/user-list-timeline",
+                body: FeedListRequest(
+                    i: account.apiKey,
+                    listId: listID,
+                    limit: boundedLimit,
+                    untilId: cursor
+                )
+            )
         case let .search(query):
             notes = try await post(
                 "notes/search",
@@ -433,7 +453,7 @@ public final class MissCatMisskeyFeedRepository: MissCatFeedRepository {
         case .local: "localTimeline"
         case .social: "hybridTimeline"
         case .global: "globalTimeline"
-        case .favorites, .search, .hashtag, .noteDetail: nil
+        case .favorites, .user, .list, .search, .hashtag, .noteDetail: nil
         }
     }
 
@@ -881,6 +901,20 @@ private struct FeedPageRequest: Encodable {
 private struct FeedSearchRequest: Encodable {
     let i: String
     let query: String
+    let limit: Int
+    let untilId: String?
+}
+
+private struct FeedUserNotesRequest: Encodable {
+    let i: String
+    let userId: String
+    let limit: Int
+    let untilId: String?
+}
+
+private struct FeedListRequest: Encodable {
+    let i: String
+    let listId: String
     let limit: Int
     let untilId: String?
 }

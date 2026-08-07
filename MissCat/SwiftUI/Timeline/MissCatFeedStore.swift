@@ -4,6 +4,7 @@ import Foundation
 @MainActor
 public final class MissCatFeedStore: ObservableObject {
     public let source: MissCatFeedSource
+    public let accountScope: MissCatShellAccountScope?
 
     @Published public private(set) var phase: MissCatFeedPhase = .idle
     @Published public private(set) var notes: [MissCatNote] = []
@@ -16,7 +17,12 @@ public final class MissCatFeedStore: ObservableObject {
 
     private let repository: MissCatFeedRepository
     private let pageSize: Int
+    private var initialLoadTask: Task<Void, Never>?
+    private var refreshTask: Task<Void, Never>?
+    private var paginationTask: Task<Void, Never>?
+    private var contentGeneration: UInt64 = 0
     private var realtimeTask: Task<Void, Never>?
+    private var realtimeGeneration = UUID()
     private var inFlightMutations = Set<MutationKey>()
 
     private enum MutationKey: Hashable {
@@ -26,60 +32,129 @@ public final class MissCatFeedStore: ObservableObject {
         case vote(String)
     }
 
+    private enum InitialContent {
+        case page(MissCatFeedPage)
+        case thread(MissCatNoteThread)
+    }
+
     public init(
         source: MissCatFeedSource,
         repository: MissCatFeedRepository,
+        accountScope: MissCatShellAccountScope? = nil,
         pageSize: Int = 20
     ) {
         self.source = source
         self.repository = repository
+        self.accountScope = accountScope
         self.pageSize = pageSize
     }
 
     deinit {
+        initialLoadTask?.cancel()
+        refreshTask?.cancel()
+        paginationTask?.cancel()
         realtimeTask?.cancel()
     }
 
     public func loadInitial() async {
+        if phase == .loaded || phase == .empty {
+            startRealtimeIfNeeded()
+            return
+        }
+        if let initialLoadTask {
+            await initialLoadTask.value
+            return
+        }
         guard phase == .idle || isFailed else { return }
+        cancelContentTasks(incrementingGeneration: true)
         phase = .loading
         actionErrorMessage = nil
-
-        do {
-            try await replaceWithInitialContent()
-            startRealtimeIfNeeded()
-        } catch {
-            phase = .failed(message: Self.message(for: error))
+        let generation = contentGeneration
+        let capturedScope = accountScope
+        let repository = repository
+        let source = source
+        let pageSize = pageSize
+        let task = Task { @MainActor [weak self, repository] in
+            do {
+                let content: InitialContent
+                switch source {
+                case let .noteDetail(noteID):
+                    content = .thread(try await repository.fetchThread(noteID: noteID, replyLimit: pageSize))
+                default:
+                    content = .page(try await repository.fetchPage(source: source, cursor: nil, limit: pageSize))
+                }
+                guard let self, self.accepts(generation: generation, scope: capturedScope) else { return }
+                self.applyInitialContent(content)
+                self.initialLoadTask = nil
+                self.startRealtimeIfNeeded()
+            } catch is CancellationError {
+                guard let self, self.accepts(generation: generation, scope: capturedScope) else { return }
+                self.initialLoadTask = nil
+                self.phase = self.notes.isEmpty ? .idle : .loaded
+            } catch {
+                guard let self, self.accepts(generation: generation, scope: capturedScope) else { return }
+                self.initialLoadTask = nil
+                self.phase = .failed(message: Self.message(for: error))
+            }
         }
+        initialLoadTask = task
+        await task.value
     }
 
     public func retry() async {
-        stopRealtime()
+        cancelAllFeedTasks()
         phase = .idle
         await loadInitial()
     }
 
     public func refresh() async {
-        guard !isRefreshing else { return }
-        isRefreshing = true
-        defer { isRefreshing = false }
-
-        do {
-            switch source {
-            case let .noteDetail(noteID):
-                let newThread = try await repository.fetchThread(noteID: noteID, replyLimit: pageSize)
-                thread = newThread
-                notes = newThread.allNotes
-                phase = .loaded
-            default:
-                let page = try await repository.fetchPage(source: source, cursor: nil, limit: pageSize)
-                notes = Self.prependingUnique(page.notes, to: notes)
-                canLoadMore = canLoadMore || page.hasMore
-                phase = notes.isEmpty ? .empty : .loaded
-            }
-        } catch {
-            actionErrorMessage = Self.message(for: error)
+        if let refreshTask {
+            await refreshTask.value
+            return
         }
+        guard !isRefreshing else { return }
+        initialLoadTask?.cancel()
+        initialLoadTask = nil
+        paginationTask?.cancel()
+        paginationTask = nil
+        isLoadingNextPage = false
+        stopRealtime()
+        contentGeneration &+= 1
+        let generation = contentGeneration
+        let capturedScope = accountScope
+        let repository = repository
+        let source = source
+        let pageSize = pageSize
+        isRefreshing = true
+        let task = Task { @MainActor [weak self, repository] in
+            do {
+                let content: InitialContent
+                switch source {
+                case let .noteDetail(noteID):
+                    content = .thread(try await repository.fetchThread(noteID: noteID, replyLimit: pageSize))
+                default:
+                    content = .page(try await repository.fetchPage(source: source, cursor: nil, limit: pageSize))
+                }
+                guard let self, self.accepts(generation: generation, scope: capturedScope) else { return }
+                self.applyRefreshContent(content)
+                self.refreshTask = nil
+                self.isRefreshing = false
+                self.startRealtimeIfNeeded()
+            } catch is CancellationError {
+                guard let self, self.accepts(generation: generation, scope: capturedScope) else { return }
+                self.refreshTask = nil
+                self.isRefreshing = false
+                self.startRealtimeIfNeeded()
+            } catch {
+                guard let self, self.accepts(generation: generation, scope: capturedScope) else { return }
+                self.refreshTask = nil
+                self.isRefreshing = false
+                self.actionErrorMessage = Self.message(for: error)
+                self.startRealtimeIfNeeded()
+            }
+        }
+        refreshTask = task
+        await task.value
     }
 
     public func loadNextPageIfNeeded(currentNoteID: String) async {
@@ -88,20 +163,38 @@ public final class MissCatFeedStore: ObservableObject {
               !isLoadingNextPage,
               notes.suffix(3).contains(where: { $0.id == currentNoteID }) else { return }
 
-        isLoadingNextPage = true
-        defer { isLoadingNextPage = false }
-
-        do {
-            let page = try await repository.fetchPage(
-                source: source,
-                cursor: notes.last?.id,
-                limit: pageSize
-            )
-            notes = Self.appendingUnique(page.notes, to: notes)
-            canLoadMore = page.hasMore
-        } catch {
-            actionErrorMessage = Self.message(for: error)
+        if let paginationTask {
+            await paginationTask.value
+            return
         }
+        isLoadingNextPage = true
+        let generation = contentGeneration
+        let capturedScope = accountScope
+        let repository = repository
+        let source = source
+        let cursor = notes.last?.id
+        let pageSize = pageSize
+        let task = Task { @MainActor [weak self, repository] in
+            do {
+                let page = try await repository.fetchPage(source: source, cursor: cursor, limit: pageSize)
+                guard let self, self.accepts(generation: generation, scope: capturedScope) else { return }
+                self.notes = Self.appendingUnique(page.notes, to: self.notes)
+                self.canLoadMore = page.hasMore
+                self.paginationTask = nil
+                self.isLoadingNextPage = false
+            } catch is CancellationError {
+                guard let self, self.accepts(generation: generation, scope: capturedScope) else { return }
+                self.paginationTask = nil
+                self.isLoadingNextPage = false
+            } catch {
+                guard let self, self.accepts(generation: generation, scope: capturedScope) else { return }
+                self.paginationTask = nil
+                self.isLoadingNextPage = false
+                self.actionErrorMessage = Self.message(for: error)
+            }
+        }
+        paginationTask = task
+        await task.value
     }
 
     public func dismissActionError() {
@@ -248,9 +341,18 @@ public final class MissCatFeedStore: ObservableObject {
     }
 
     public func stopRealtime() {
+        realtimeGeneration = UUID()
         realtimeTask?.cancel()
         realtimeTask = nil
         isRealtimeConnected = false
+    }
+
+    public func cancelAllFeedTasks() {
+        cancelContentTasks(incrementingGeneration: true)
+        stopRealtime()
+        if phase == .loading {
+            phase = notes.isEmpty ? .idle : .loaded
+        }
     }
 
     private var isFailed: Bool {
@@ -258,15 +360,31 @@ public final class MissCatFeedStore: ObservableObject {
         return false
     }
 
-    private func replaceWithInitialContent() async throws {
-        switch source {
-        case let .noteDetail(noteID):
-            let newThread = try await repository.fetchThread(noteID: noteID, replyLimit: pageSize)
+    private func cancelContentTasks(incrementingGeneration: Bool) {
+        if incrementingGeneration {
+            contentGeneration &+= 1
+        }
+        initialLoadTask?.cancel()
+        refreshTask?.cancel()
+        paginationTask?.cancel()
+        initialLoadTask = nil
+        refreshTask = nil
+        paginationTask = nil
+        isRefreshing = false
+        isLoadingNextPage = false
+    }
+
+    private func accepts(generation: UInt64, scope: MissCatShellAccountScope?) -> Bool {
+        !Task.isCancelled && contentGeneration == generation && accountScope == scope
+    }
+
+    private func applyInitialContent(_ content: InitialContent) {
+        switch content {
+        case let .thread(newThread):
             thread = newThread
             notes = newThread.allNotes
             canLoadMore = false
-        default:
-            let page = try await repository.fetchPage(source: source, cursor: nil, limit: pageSize)
+        case let .page(page):
             thread = nil
             notes = Self.unique(page.notes)
             canLoadMore = page.hasMore
@@ -274,15 +392,43 @@ public final class MissCatFeedStore: ObservableObject {
         phase = notes.isEmpty ? .empty : .loaded
     }
 
+    private func applyRefreshContent(_ content: InitialContent) {
+        switch content {
+        case let .thread(newThread):
+            thread = newThread
+            notes = newThread.allNotes
+            canLoadMore = false
+        case let .page(page):
+            thread = nil
+            notes = Self.prependingUnique(page.notes, to: notes)
+            canLoadMore = canLoadMore || page.hasMore
+        }
+        phase = notes.isEmpty ? .empty : .loaded
+    }
+
     private func startRealtimeIfNeeded() {
         guard source.supportsRealtime, realtimeTask == nil else { return }
         let capturedIDs = notes.map(\.noteID)
-        realtimeTask = Task { [weak self] in
-            guard let self else { return }
+        let streamGeneration = UUID()
+        let generation = contentGeneration
+        let capturedScope = accountScope
+        let repository = repository
+        let source = source
+        realtimeGeneration = streamGeneration
+        realtimeTask = Task { @MainActor [weak self, repository] in
             for await event in repository.realtimeEvents(source: source, capturing: capturedIDs) {
-                guard !Task.isCancelled else { return }
-                apply(event)
+                guard let self,
+                      self.realtimeGeneration == streamGeneration,
+                      self.accepts(generation: generation, scope: capturedScope)
+                else { return }
+                self.apply(event)
             }
+            guard let self,
+                  self.realtimeGeneration == streamGeneration,
+                  self.accepts(generation: generation, scope: capturedScope)
+            else { return }
+            self.realtimeTask = nil
+            self.isRealtimeConnected = false
         }
     }
 

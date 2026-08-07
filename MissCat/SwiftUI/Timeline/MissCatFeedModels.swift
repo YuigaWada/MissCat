@@ -14,6 +14,10 @@ public struct MissCatFeedSession: Equatable, Sendable {
         self.instance = instance
         self.apiKey = apiKey
     }
+
+    public var scope: MissCatShellAccountScope {
+        MissCatShellAccountScope(instance: instance, userID: accountID, username: username)
+    }
 }
 
 public enum MissCatFeedSource: Equatable, Sendable {
@@ -22,6 +26,8 @@ public enum MissCatFeedSource: Equatable, Sendable {
     case social
     case global
     case favorites
+    case user(userID: String)
+    case list(listID: String)
     case search(query: String)
     case hashtag(tag: String)
     case noteDetail(noteID: String)
@@ -33,6 +39,8 @@ public enum MissCatFeedSource: Equatable, Sendable {
         case .social: "social"
         case .global: "global"
         case .favorites: "favorites"
+        case .user: "user"
+        case .list: "list"
         case .search: "search-results"
         case .hashtag: "hashtag-results"
         case .noteDetail: "note-detail"
@@ -47,7 +55,7 @@ public enum MissCatFeedSource: Equatable, Sendable {
     public var supportsRealtime: Bool {
         switch self {
         case .home, .local, .social, .global: true
-        case .favorites, .search, .hashtag, .noteDetail: false
+        case .favorites, .user, .list, .search, .hashtag, .noteDetail: false
         }
     }
 }
