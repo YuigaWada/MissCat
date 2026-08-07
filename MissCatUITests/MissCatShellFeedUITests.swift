@@ -100,40 +100,6 @@ final class MissCatShellFeedUITests: XCTestCase {
         XCTAssertTrue(element("main.banner.error").waitForExistence(timeout: 5))
     }
 
-    func testFrozenLegacyAccountsSettingsReferences() {
-        let surfaces = [
-            "accounts",
-            "accounts-empty",
-            "accounts-error",
-            "settings-root",
-            "design",
-            "reaction-instances",
-            "reactions",
-            "licenses",
-            "license-detail",
-            "about"
-        ]
-
-        for surface in surfaces {
-            app.terminate()
-            app.launchArguments = [
-                "--frozen-legacy-accounts-settings-reference",
-                "--frozen-legacy-accounts-settings-screen", surface,
-                "-AppleLanguages", "(ja)",
-                "-AppleLocale", "ja_JP",
-                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"
-            ]
-            app.launch()
-
-            let ready = element("legacy.accounts-settings.visualReady")
-            XCTAssertTrue(ready.waitForExistence(timeout: 10), "Missing frozen legacy screen: \(surface)")
-            let attachment = XCTAttachment(screenshot: app.screenshot())
-            attachment.name = "legacy-accounts-settings-\(surface)"
-            attachment.lifetime = .keepAlways
-            add(attachment)
-        }
-    }
-
     private func launchFixture(_ extraArguments: String...) {
         app.launchArguments = ["--swiftui-shell-fixture"] + extraArguments
         app.launch()

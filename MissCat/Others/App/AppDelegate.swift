@@ -33,7 +33,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // through the complete startup path below.
         if MissCatShellFixtureLaunch.isRequested
             || MissCatPersistenceProbeLaunch.isRequested
-            || MissCatFrozenLegacySettingsReferenceLaunch.isRequested
         {
             return true
         }
