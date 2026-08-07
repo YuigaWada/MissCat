@@ -8,6 +8,7 @@
 
 @testable import MissCat
 import MisskeyKit
+import Security
 import UIKit
 import WebKit
 import XCTest
@@ -1420,5 +1421,183 @@ final class AccountKeychainMigrationTests: XCTestCase {
         XCTAssertTrue(AccountKeychainMigrator().migrate(from: old, to: new))
         XCTAssertEqual(new.values["corrupt-entry"], "recovered-value")
         XCTAssertEqual(new.values[AccountKeychainMigrator.completionMarker], "true")
+    }
+}
+
+private final class NativeKeychainSecurityRecorder {
+    var copyResults: [(OSStatus, Any?)] = []
+    var addResults: [OSStatus] = []
+    var updateResults: [OSStatus] = []
+    var deleteResults: [OSStatus] = []
+
+    private(set) var copyQueries: [[String: Any]] = []
+    private(set) var addAttributes: [[String: Any]] = []
+    private(set) var updateCalls: [([String: Any], [String: Any])] = []
+    private(set) var deleteQueries: [[String: Any]] = []
+
+    func client() -> MissCatNativeKeychainStore.SecurityClient {
+        MissCatNativeKeychainStore.SecurityClient(
+            copyMatching: { [unowned self] query in
+                copyQueries.append(query)
+                return copyResults.removeFirst()
+            },
+            add: { [unowned self] attributes in
+                addAttributes.append(attributes)
+                return addResults.removeFirst()
+            },
+            update: { [unowned self] query, attributes in
+                updateCalls.append((query, attributes))
+                return updateResults.removeFirst()
+            },
+            delete: { [unowned self] query in
+                deleteQueries.append(query)
+                return deleteResults.removeFirst()
+            }
+        )
+    }
+}
+
+final class NativeKeychainStoreTests: XCTestCase {
+    private let service = "yuwd.MissCat"
+    private let accessGroup = "TESTTEAM.yuwd.MissCat"
+
+    func testReadsFormerKeychainAccessGenericPasswordSchema() throws {
+        let recorder = NativeKeychainSecurityRecorder()
+        recorder.copyResults = [(errSecSuccess, Data("test-token".utf8))]
+        let store = makeStore(recorder)
+
+        XCTAssertEqual(try store.string(forKey: "instance.example|account"), "test-token")
+
+        let query = try XCTUnwrap(recorder.copyQueries.first)
+        XCTAssertEqual(query[String(kSecClass)] as? String, kSecClassGenericPassword as String)
+        XCTAssertEqual(query[String(kSecAttrService)] as? String, service)
+        XCTAssertEqual(query[String(kSecAttrAccount)] as? String, "instance.example|account")
+        XCTAssertEqual(query[String(kSecAttrAccessGroup)] as? String, accessGroup)
+        XCTAssertEqual(
+            query[String(kSecAttrSynchronizable)] as? String,
+            kSecAttrSynchronizableAny as String
+        )
+        XCTAssertEqual(query[String(kSecMatchLimit)] as? String, kSecMatchLimitOne as String)
+        XCTAssertEqual(query[String(kSecReturnData)] as? Bool, true)
+    }
+
+    func testMissingReadReturnsNilAndInvalidUTF8FailsClosed() throws {
+        let missing = NativeKeychainSecurityRecorder()
+        missing.copyResults = [(errSecItemNotFound, nil)]
+        XCTAssertNil(try makeStore(missing).string(forKey: "missing"))
+
+        let invalid = NativeKeychainSecurityRecorder()
+        invalid.copyResults = [(errSecSuccess, Data([0xFF]))]
+        XCTAssertThrowsError(try makeStore(invalid).string(forKey: "invalid")) { error in
+            XCTAssertEqual(error as? MissCatNativeKeychainStore.StoreError, .invalidUTF8)
+        }
+    }
+
+    func testExistingValueUsesUpdateWithoutAdding() throws {
+        let recorder = NativeKeychainSecurityRecorder()
+        recorder.updateResults = [errSecSuccess]
+
+        try makeStore(recorder).set("replacement", forKey: "account")
+
+        XCTAssertTrue(recorder.addAttributes.isEmpty)
+        let (query, attributes) = try XCTUnwrap(recorder.updateCalls.first)
+        XCTAssertEqual(query[String(kSecAttrAccount)] as? String, "account")
+        XCTAssertEqual(query[String(kSecAttrAccessGroup)] as? String, accessGroup)
+        XCTAssertEqual(attributes[String(kSecValueData)] as? Data, Data("replacement".utf8))
+        XCTAssertEqual(
+            attributes[String(kSecAttrAccessible)] as? String,
+            kSecAttrAccessibleAfterFirstUnlock as String
+        )
+        XCTAssertEqual(attributes[String(kSecAttrSynchronizable)] as? Bool, false)
+    }
+
+    func testMissingValueAddsCompatibleGenericPasswordAttributes() throws {
+        let recorder = NativeKeychainSecurityRecorder()
+        recorder.updateResults = [errSecItemNotFound]
+        recorder.addResults = [errSecSuccess]
+
+        try makeStore(recorder).set("new-value", forKey: "new-account")
+
+        let attributes = try XCTUnwrap(recorder.addAttributes.first)
+        XCTAssertEqual(attributes[String(kSecClass)] as? String, kSecClassGenericPassword as String)
+        XCTAssertEqual(attributes[String(kSecAttrService)] as? String, service)
+        XCTAssertEqual(attributes[String(kSecAttrAccount)] as? String, "new-account")
+        XCTAssertEqual(attributes[String(kSecAttrAccessGroup)] as? String, accessGroup)
+        XCTAssertEqual(attributes[String(kSecValueData)] as? Data, Data("new-value".utf8))
+        XCTAssertEqual(
+            attributes[String(kSecAttrAccessible)] as? String,
+            kSecAttrAccessibleAfterFirstUnlock as String
+        )
+        XCTAssertEqual(attributes[String(kSecAttrSynchronizable)] as? Bool, false)
+    }
+
+    func testConcurrentDuplicateAddRetriesUpdate() throws {
+        let recorder = NativeKeychainSecurityRecorder()
+        recorder.updateResults = [errSecItemNotFound, errSecSuccess]
+        recorder.addResults = [errSecDuplicateItem]
+
+        try makeStore(recorder).set("value", forKey: "account")
+
+        XCTAssertEqual(recorder.updateCalls.count, 2)
+        XCTAssertEqual(recorder.addAttributes.count, 1)
+    }
+
+    func testWriteFailurePreservesSecurityStatus() {
+        let recorder = NativeKeychainSecurityRecorder()
+        recorder.updateResults = [errSecInteractionNotAllowed]
+
+        XCTAssertThrowsError(try makeStore(recorder).set("value", forKey: "account")) { error in
+            XCTAssertEqual(
+                error as? MissCatNativeKeychainStore.StoreError,
+                .security(errSecInteractionNotAllowed)
+            )
+        }
+    }
+
+    func testRemoveTreatsMissingAsSuccessAndUsesSharedIdentity() throws {
+        let recorder = NativeKeychainSecurityRecorder()
+        recorder.deleteResults = [errSecItemNotFound]
+
+        try makeStore(recorder).removeValue(forKey: "missing")
+
+        let query = try XCTUnwrap(recorder.deleteQueries.first)
+        XCTAssertEqual(query[String(kSecAttrAccount)] as? String, "missing")
+        XCTAssertEqual(query[String(kSecAttrService)] as? String, service)
+        XCTAssertEqual(query[String(kSecAttrAccessGroup)] as? String, accessGroup)
+    }
+
+    func testListsSortedKeysWithoutReadingCredentialData() throws {
+        let recorder = NativeKeychainSecurityRecorder()
+        recorder.copyResults = [
+            (errSecSuccess, [
+                [String(kSecAttrAccount): "z-account"],
+                [String(kSecAttrAccount): "a-account"],
+                [String(kSecAttrLabel): "ignored-without-account"],
+            ])
+        ]
+
+        XCTAssertEqual(try makeStore(recorder).allKeys(), ["a-account", "z-account"])
+
+        let query = try XCTUnwrap(recorder.copyQueries.first)
+        XCTAssertEqual(query[String(kSecMatchLimit)] as? String, kSecMatchLimitAll as String)
+        XCTAssertEqual(query[String(kSecReturnAttributes)] as? Bool, true)
+        XCTAssertNil(query[String(kSecReturnData)])
+    }
+
+    func testLegacyStoreOmitsAccessGroupForAppOnlyMigrationReadback() throws {
+        let recorder = NativeKeychainSecurityRecorder()
+        recorder.copyResults = [(errSecItemNotFound, nil)]
+        let store = MissCatNativeKeychainStore(service: service, client: recorder.client())
+
+        XCTAssertNil(try store.string(forKey: "legacy-account"))
+        XCTAssertNil(recorder.copyQueries.first?[String(kSecAttrAccessGroup)])
+    }
+
+    private func makeStore(_ recorder: NativeKeychainSecurityRecorder) -> MissCatNativeKeychainStore {
+        MissCatNativeKeychainStore(
+            service: service,
+            accessGroup: accessGroup,
+            client: recorder.client()
+        )
     }
 }
