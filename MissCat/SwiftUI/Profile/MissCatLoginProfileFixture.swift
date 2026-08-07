@@ -248,13 +248,8 @@ private final class MissCatAuthenticationFixtureController: ObservableObject {
             shouldFailPreparation = false
             throw FixtureError.preparation
         }
-        if shouldFailBrowser {
-            shouldFailBrowser = false
-            return URLRequest(
-                url: URL(fileURLWithPath: "/misscat-fixture/missing-authentication.html")
-            )
-        }
-        return URLRequest(url: Self.authorizationDocumentURL(intent: intent))
+        let path = intent == .signUp ? "/signup" : "/miauth/fixture-session"
+        return URLRequest(url: URL(string: "https://fixture.invalid\(path)")!)
     }
 
     func makeLoginRequestAfterSignUp(instance: String) async throws -> URLRequest {
@@ -262,7 +257,30 @@ private final class MissCatAuthenticationFixtureController: ObservableObject {
     }
 
     func callbackMatches(_ url: URL) -> Bool {
-        url.scheme == "misscat-fixture" && url.host == "authentication" && url.path == "/complete"
+        url.scheme == "misscat"
+            && url.host == "auth"
+            && url.path.isEmpty
+            && URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
+                == [URLQueryItem(name: "session", value: "fixture-session")]
+    }
+
+    func runAuthenticationSession(
+        url: URL,
+        callbackScheme: String,
+        sessionKind: MissCatAuthenticationBrowserSessionKind
+    ) async throws -> URL {
+        precondition(url.scheme == "https")
+        precondition(callbackScheme == MissCatAuthenticationBrowserPolicy.callbackScheme)
+        _ = sessionKind
+        if shouldFailBrowser {
+            shouldFailBrowser = false
+            throw FixtureError.browser
+        }
+        return URL(string: "misscat://auth?session=fixture-session")!
+    }
+
+    func openRegistration(_ url: URL) {
+        precondition(url == URL(string: "https://fixture.invalid/signup"))
     }
 
     func complete(_ url: URL) {
@@ -282,17 +300,6 @@ private final class MissCatAuthenticationFixtureController: ObservableObject {
         generation += 1
     }
 
-    private static func authorizationDocumentURL(intent: MissCatAuthenticationIntent) -> URL {
-        let title = intent == .logIn ? "ログインを許可" : "新規登録を続ける"
-        let html = """
-        <!doctype html><html lang='ja'><head>
-        <meta name='viewport' content='width=device-width,initial-scale=1'>
-        <style>body{font-family:-apple-system;background:#fff;color:#222;margin:0;padding:32px}main{max-width:560px;margin:auto}.card{border:1px solid #ddd;border-radius:14px;padding:24px}a{display:block;background:#86b900;color:white;text-align:center;text-decoration:none;border-radius:24px;padding:13px;margin-top:28px;font-weight:600}</style>
-        </head><body><main><div class='card'><h1>\(title)</h1><p>fixture.invalid が MissCat へのアクセスを要求しています。</p><ul><li>アカウント情報を見る</li><li>投稿とフォローを操作する</li></ul><a href='misscat-fixture://authentication/complete'>認証を完了</a></div></main></body></html>
-        """
-        let encoded = html.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-        return URL(string: "data:text/html;charset=utf-8,\(encoded)")!
-    }
 }
 
 private struct MissCatAuthenticationFixtureHarness: View {
@@ -327,6 +334,8 @@ private struct MissCatAuthenticationFixtureHarness: View {
                     makeLoginRequestAfterSignUp: controller.makeLoginRequestAfterSignUp,
                     callbackMatches: controller.callbackMatches,
                     onCallback: controller.complete,
+                    authenticationSessionRunner: controller.runAuthenticationSession,
+                    registrationURLHandler: controller.openRegistration,
                     onFailure: controller.fail
                 )
                 .id(controller.generation)

@@ -27,6 +27,8 @@ public struct MissCatAuthenticationFlowView: View {
     private let callbackMatches: (URL) -> Bool
     private let onCallback: (URL) -> Void
     private let onFailure: (Error) -> Void
+    private let authenticationSessionRunner: MissCatAuthenticationBrowserView.AuthenticationSessionRunner?
+    private let registrationURLHandler: MissCatAuthenticationBrowserView.RegistrationURLHandler?
 
     public init(
         initialInstance: String = "misskey.io",
@@ -36,11 +38,35 @@ public struct MissCatAuthenticationFlowView: View {
         onCallback: @escaping (URL) -> Void,
         onFailure: @escaping (Error) -> Void
     ) {
+        self.init(
+            initialInstance: initialInstance,
+            makeAuthorizationRequest: makeAuthorizationRequest,
+            makeLoginRequestAfterSignUp: makeLoginRequestAfterSignUp,
+            callbackMatches: callbackMatches,
+            onCallback: onCallback,
+            authenticationSessionRunner: nil,
+            registrationURLHandler: nil,
+            onFailure: onFailure
+        )
+    }
+
+    init(
+        initialInstance: String = "misskey.io",
+        makeAuthorizationRequest: @escaping AuthorizationRequestProvider,
+        makeLoginRequestAfterSignUp: @escaping LoginRequestProvider,
+        callbackMatches: @escaping (URL) -> Bool,
+        onCallback: @escaping (URL) -> Void,
+        authenticationSessionRunner: MissCatAuthenticationBrowserView.AuthenticationSessionRunner?,
+        registrationURLHandler: MissCatAuthenticationBrowserView.RegistrationURLHandler?,
+        onFailure: @escaping (Error) -> Void
+    ) {
         _instance = State(initialValue: MissCatInstanceEditorView.normalize(initialInstance))
         self.makeAuthorizationRequest = makeAuthorizationRequest
         self.makeLoginRequestAfterSignUp = makeLoginRequestAfterSignUp
         self.callbackMatches = callbackMatches
         self.onCallback = onCallback
+        self.authenticationSessionRunner = authenticationSessionRunner
+        self.registrationURLHandler = registrationURLHandler
         self.onFailure = onFailure
     }
 
@@ -63,6 +89,8 @@ public struct MissCatAuthenticationFlowView: View {
                             callbackMatches: callbackMatches,
                             onCallback: onCallback,
                             makeLoginRequestAfterSignUp: signUpLoginRequestProvider,
+                            authenticationSessionRunner: authenticationSessionRunner,
+                            registrationURLHandler: registrationURLHandler,
                             onFailure: onFailure
                         )
                     }

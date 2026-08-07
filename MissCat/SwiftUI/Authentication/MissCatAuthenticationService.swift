@@ -67,7 +67,8 @@ extension Cache.UserDefaults: MissCatAuthenticationAccountStoring {}
 
 @MainActor
 final class MissCatAuthenticationService {
-    static let callbackURLString = "https://misscat.dev"
+    static let callbackURLString = "misscat://auth"
+    static let legacyCallbackURLString = "https://misscat.dev"
     static let appPermissions = [
         "read:account",
         "write:account",
@@ -143,7 +144,13 @@ final class MissCatAuthenticationService {
         switch intent {
         case .signUp:
             pendingSignUpInstance = normalizedInstance
-            return URLRequest(url: normalizedInstance.origin)
+            guard let registrationURL = URL(
+                string: "/signup",
+                relativeTo: normalizedInstance.origin
+            )?.absoluteURL else {
+                throw AuthenticationError.invalidInstance
+            }
+            return URLRequest(url: registrationURL)
         case .logIn:
             return try makeFreshLoginRequest(instance: normalizedInstance)
         }
@@ -162,21 +169,13 @@ final class MissCatAuthenticationService {
               pendingSession.state == .awaitingCallback
         else { return false }
 
-        return MissCatAuthenticationCallbackMatcher.matches(
-            url,
-            expectedURLString: Self.callbackURLString,
-            expectedSessionID: pendingSession.id
-        )
+        return matchesPendingCallback(url, sessionID: pendingSession.id)
     }
 
     func completeAuthentication(callbackURL: URL) async throws -> SecureUser {
         guard var session = pendingSession,
               session.state == .awaitingCallback,
-              MissCatAuthenticationCallbackMatcher.matches(
-                  callbackURL,
-                  expectedURLString: Self.callbackURLString,
-                  expectedSessionID: session.id
-              )
+              matchesPendingCallback(callbackURL, sessionID: session.id)
         else {
             throw AuthenticationError.invalidCallback
         }
@@ -270,6 +269,16 @@ final class MissCatAuthenticationService {
             permissions: Self.appPermissions
         )
         return URLRequest(url: url)
+    }
+
+    private func matchesPendingCallback(_ url: URL, sessionID: UUID) -> Bool {
+        [Self.callbackURLString, Self.legacyCallbackURLString].contains { expectedURLString in
+            MissCatAuthenticationCallbackMatcher.matches(
+                url,
+                expectedURLString: expectedURLString,
+                expectedSessionID: sessionID
+            )
+        }
     }
 
     private func registerPushNotifications(for user: SecureUser) {

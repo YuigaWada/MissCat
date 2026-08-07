@@ -1,107 +1,79 @@
+import AuthenticationServices
 import Foundation
 import SwiftUI
-import WebKit
 
 public enum MissCatAuthenticationIntent: String, Hashable, Sendable {
     case signUp
     case logIn
 }
 
-/// Controls the browser's signed-in website session independently from the
-/// native MissCat account selected after MiAuth completes.
+/// Controls whether the system authentication browser reuses its signed-in
+/// session. The explicit account-switch case is isolated without deleting any
+/// browser or application data.
 public enum MissCatAuthenticationWebsiteDataPolicy: Hashable, Sendable {
-    /// Normal login, retry, and relaunch behavior. Cookies and site data remain
-    /// in WebKit's persistent default store so a server sign-in is reusable.
     case preserveSession
-
-    /// A destructive, explicit account-switch action. This must never be used
-    /// for automatic error recovery or an ordinary login attempt.
     case clearForExplicitAccountSwitch
 }
 
-enum MissCatAuthenticationInitialLoadPlan: Equatable {
-    case loadImmediately
-    case clearSelectedInstanceThenLoad(host: String)
+enum MissCatAuthenticationBrowserSessionKind: Equatable, Sendable {
+    case shared
+    case ephemeral
 }
 
 enum MissCatAuthenticationBrowserPolicy {
-    static func configuration() -> WKWebViewConfiguration {
-        let configuration = WKWebViewConfiguration()
-        configuration.websiteDataStore = .default()
-        return configuration
-    }
+    static let callbackScheme = "misscat"
 
-    static func initialLoadPlan(
-        for request: URLRequest,
-        websiteDataPolicy: MissCatAuthenticationWebsiteDataPolicy
-    ) -> MissCatAuthenticationInitialLoadPlan {
-        guard websiteDataPolicy == .clearForExplicitAccountSwitch,
-              let host = request.url?.host?.lowercased(),
-              !host.isEmpty
-        else {
-            return .loadImmediately
+    static func sessionKind(
+        for websiteDataPolicy: MissCatAuthenticationWebsiteDataPolicy
+    ) -> MissCatAuthenticationBrowserSessionKind {
+        switch websiteDataPolicy {
+        case .preserveSession:
+            .shared
+        case .clearForExplicitAccountSwitch:
+            .ephemeral
         }
-        return .clearSelectedInstanceThenLoad(host: host)
     }
 
-    static func shouldClearRecord(displayName: String, selectedHost: String) -> Bool {
-        let record = displayName.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "."))
-        let host = selectedHost.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "."))
-        guard !record.isEmpty, !host.isEmpty else { return false }
-        return record == host
-            || record.hasSuffix(".\(host)")
-            || host.hasSuffix(".\(record)")
-    }
+    static func isCancellation(_ error: Error) -> Bool {
+        if error is CancellationError {
+            return true
+        }
 
-    static func performInitialLoad(
-        plan: MissCatAuthenticationInitialLoadPlan,
-        load: @escaping () -> Void,
-        clearSelectedInstance: (_ host: String, _ completion: @escaping () -> Void) -> Void
-    ) {
-        switch plan {
-        case .loadImmediately:
-            load()
-        case let .clearSelectedInstanceThenLoad(host):
-            clearSelectedInstance(host, load)
+        let error = error as NSError
+        return error.domain == ASWebAuthenticationSessionErrorDomain
+            && error.code == ASWebAuthenticationSessionError.Code.canceledLogin.rawValue
+    }
+}
+
+enum MissCatAuthenticationBrowserError: LocalizedError {
+    case missingAuthorizationURL
+    case invalidCallback
+
+    var errorDescription: String? {
+        switch self {
+        case .missingAuthorizationURL:
+            "認証ページを開けませんでした"
+        case .invalidCallback:
+            "認証結果を確認できませんでした"
         }
     }
 }
 
-struct MissCatAuthenticationCallbackGate {
-    private(set) var hasReportedCallback = false
-
-    mutating func shouldReport(
-        _ url: URL,
-        matching callbackMatches: (URL) -> Bool
-    ) -> Bool {
-        guard !hasReportedCallback, callbackMatches(url) else { return false }
-        hasReportedCallback = true
-        return true
-    }
-}
-
-enum MissCatAuthenticationOriginMatcher {
-    static func matches(_ candidate: URL, origin: URL) -> Bool {
-        guard let actual = URLComponents(url: candidate, resolvingAgainstBaseURL: false),
-              let expected = URLComponents(url: origin, resolvingAgainstBaseURL: false),
-              actual.scheme?.lowercased() == "https",
-              actual.user == nil,
-              actual.password == nil,
-              actual.percentEncodedHost?.contains("%") != true
-        else { return false }
-
-        return actual.host?.lowercased() == expected.host?.lowercased()
-            && normalizedPort(actual) == normalizedPort(expected)
-    }
-
-    private static func normalizedPort(_ components: URLComponents) -> Int {
-        components.port ?? 443
-    }
-}
-
-/// A WKWebView-backed authentication surface matching the legacy full-safe-area browser.
-/// Token exchange stays in the authentication service; this view only reports callback URLs.
+/// A SwiftUI-owned authentication surface. Login is delegated to the system
+/// authentication browser so the app never reads credentials or web storage.
 public struct MissCatAuthenticationBrowserView: View {
+    typealias AuthenticationSessionRunner = @MainActor (
+        URL,
+        String,
+        MissCatAuthenticationBrowserSessionKind
+    ) async throws -> URL
+    typealias RegistrationURLHandler = @MainActor (URL) -> Void
+
+    private enum Stage: String {
+        case registration
+        case authentication
+    }
+
     public let request: URLRequest
     public let callbackMatches: (URL) -> Bool
     public let onCallback: (URL) -> Void
@@ -109,7 +81,20 @@ public struct MissCatAuthenticationBrowserView: View {
     public let onFailure: (Error) -> Void
     public let websiteDataPolicy: MissCatAuthenticationWebsiteDataPolicy
 
-    @State private var reloadToken = 0
+    @Environment(\.openURL) private var openURL
+    @Environment(\.webAuthenticationSession) private var webAuthenticationSession
+
+    @State private var activeRequest: URLRequest
+    @State private var stage: Stage
+    @State private var attempt = 0
+    @State private var isAuthenticating = false
+    @State private var isPreparingLogin = false
+    @State private var hasOpenedRegistration = false
+    @State private var hasReportedCallback = false
+    @State private var authenticationWasCancelled = false
+
+    private let authenticationSessionRunner: AuthenticationSessionRunner?
+    private let registrationURLHandler: RegistrationURLHandler?
 
     public init(
         request: URLRequest,
@@ -119,235 +104,235 @@ public struct MissCatAuthenticationBrowserView: View {
         websiteDataPolicy: MissCatAuthenticationWebsiteDataPolicy = .preserveSession,
         onFailure: @escaping (Error) -> Void = { _ in }
     ) {
+        self.init(
+            request: request,
+            callbackMatches: callbackMatches,
+            onCallback: onCallback,
+            makeLoginRequestAfterSignUp: makeLoginRequestAfterSignUp,
+            websiteDataPolicy: websiteDataPolicy,
+            authenticationSessionRunner: nil,
+            registrationURLHandler: nil,
+            onFailure: onFailure
+        )
+    }
+
+    init(
+        request: URLRequest,
+        callbackMatches: @escaping (URL) -> Bool,
+        onCallback: @escaping (URL) -> Void,
+        makeLoginRequestAfterSignUp: (@MainActor () async throws -> URLRequest)? = nil,
+        websiteDataPolicy: MissCatAuthenticationWebsiteDataPolicy = .preserveSession,
+        authenticationSessionRunner: AuthenticationSessionRunner?,
+        registrationURLHandler: RegistrationURLHandler?,
+        onFailure: @escaping (Error) -> Void = { _ in }
+    ) {
         self.request = request
         self.callbackMatches = callbackMatches
         self.onCallback = onCallback
         self.makeLoginRequestAfterSignUp = makeLoginRequestAfterSignUp
         self.websiteDataPolicy = websiteDataPolicy
+        self.authenticationSessionRunner = authenticationSessionRunner
+        self.registrationURLHandler = registrationURLHandler
         self.onFailure = onFailure
+        _activeRequest = State(initialValue: request)
+        _stage = State(
+            initialValue: makeLoginRequestAfterSignUp == nil ? .authentication : .registration
+        )
     }
 
     public var body: some View {
-        MissCatWebView(
-            request: request,
-            reloadToken: reloadToken,
-            callbackMatches: callbackMatches,
-            onCallback: onCallback,
-            makeLoginRequestAfterSignUp: makeLoginRequestAfterSignUp,
-            websiteDataPolicy: websiteDataPolicy,
-            onFailure: onFailure
-        )
-        .background(Color(hex: MissCatLegacyColorHex.authenticationBrowserBackground))
+        ZStack {
+            Color(hex: MissCatLegacyColorHex.authenticationBrowserBackground)
+                .ignoresSafeArea()
+
+            switch stage {
+            case .registration:
+                registrationInstructions
+            case .authentication:
+                authenticationStatus
+            }
+        }
         .navigationBarTitleDisplayMode(.inline)
         .missCatLegacyOnboardingNavigationBar()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    reloadToken += 1
-                } label: {
+                Button(action: retryCurrentStage) {
                     Image(systemName: "arrow.clockwise")
                 }
+                .disabled(isAuthenticating || isPreparingLogin)
                 .accessibilityLabel("再読み込み")
                 .accessibilityIdentifier("authentication.reload")
             }
         }
         .accessibilityIdentifier("authentication.browser")
-    }
-}
-
-private struct MissCatWebView: UIViewRepresentable {
-    let request: URLRequest
-    let reloadToken: Int
-    let callbackMatches: (URL) -> Bool
-    let onCallback: (URL) -> Void
-    let makeLoginRequestAfterSignUp: (@MainActor () async throws -> URLRequest)?
-    let websiteDataPolicy: MissCatAuthenticationWebsiteDataPolicy
-    let onFailure: (Error) -> Void
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(
-            callbackMatches: callbackMatches,
-            onCallback: onCallback,
-            makeLoginRequestAfterSignUp: makeLoginRequestAfterSignUp,
-            onFailure: onFailure
-        )
-    }
-
-    func makeUIView(context: Context) -> WKWebView {
-        let configuration = MissCatAuthenticationBrowserPolicy.configuration()
-
-        let webView = WKWebView(frame: .zero, configuration: configuration)
-        webView.navigationDelegate = context.coordinator
-        webView.uiDelegate = context.coordinator
-        webView.isOpaque = false
-        let legacyBackground = UIColor(
-            Color(hex: MissCatLegacyColorHex.authenticationBrowserBackground)
-        )
-        webView.backgroundColor = legacyBackground
-        webView.scrollView.backgroundColor = legacyBackground
-        context.coordinator.loadedURL = request.url
-        context.coordinator.loadInitialRequest(
-            request,
-            websiteDataPolicy: websiteDataPolicy,
-            dataStore: configuration.websiteDataStore,
-            in: webView
-        )
-        return webView
-    }
-
-    func updateUIView(_ webView: WKWebView, context: Context) {
-        context.coordinator.callbackMatches = callbackMatches
-        context.coordinator.onCallback = onCallback
-        context.coordinator.makeLoginRequestAfterSignUp = makeLoginRequestAfterSignUp
-        context.coordinator.onFailure = onFailure
-
-        if context.coordinator.reloadToken != reloadToken {
-            context.coordinator.reloadToken = reloadToken
-            webView.reload()
-        } else if context.coordinator.loadedURL != request.url {
-            context.coordinator.loadedURL = request.url
-            webView.load(request)
+        .onAppear(perform: openRegistrationIfNeeded)
+        .task(id: authenticationTaskID) {
+            await authenticateIfNeeded()
         }
     }
 
-    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
-        var callbackMatches: (URL) -> Bool
-        var onCallback: (URL) -> Void
-        var makeLoginRequestAfterSignUp: (@MainActor () async throws -> URLRequest)?
-        var onFailure: (Error) -> Void
-        var loadedURL: URL?
-        var reloadToken = 0
-        private var callbackGate = MissCatAuthenticationCallbackGate()
-        private var requestedLoginAfterSignUp = false
+    private var registrationInstructions: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "person.crop.circle.badge.plus")
+                .font(.system(size: 42, weight: .regular))
+            Text("アカウント登録")
+                .font(.title3.weight(.semibold))
+            Text("ブラウザで登録を完了してから、MissCatに戻ってログインへ進んでください。")
+                .font(.body)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
 
-        init(
-            callbackMatches: @escaping (URL) -> Bool,
-            onCallback: @escaping (URL) -> Void,
-            makeLoginRequestAfterSignUp: (@MainActor () async throws -> URLRequest)?,
-            onFailure: @escaping (Error) -> Void
-        ) {
-            self.callbackMatches = callbackMatches
-            self.onCallback = onCallback
-            self.makeLoginRequestAfterSignUp = makeLoginRequestAfterSignUp
-            self.onFailure = onFailure
-        }
-
-        func loadInitialRequest(
-            _ request: URLRequest,
-            websiteDataPolicy: MissCatAuthenticationWebsiteDataPolicy,
-            dataStore: WKWebsiteDataStore,
-            in webView: WKWebView
-        ) {
-            let plan = MissCatAuthenticationBrowserPolicy.initialLoadPlan(
-                for: request,
-                websiteDataPolicy: websiteDataPolicy
-            )
-            MissCatAuthenticationBrowserPolicy.performInitialLoad(
-                plan: plan,
-                load: { webView.load(request) },
-                clearSelectedInstance: { host, completion in
-                    self.clearWebsiteData(
-                        for: host,
-                        in: dataStore,
-                        completion: completion
-                    )
-                }
-            )
-        }
-
-        private func clearWebsiteData(
-            for selectedHost: String,
-            in dataStore: WKWebsiteDataStore,
-            completion: @escaping () -> Void
-        ) {
-            let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
-            dataStore.fetchDataRecords(ofTypes: dataTypes) { records in
-                let selectedRecords = records.filter {
-                    MissCatAuthenticationBrowserPolicy.shouldClearRecord(
-                        displayName: $0.displayName,
-                        selectedHost: selectedHost
-                    )
-                }
-                guard !selectedRecords.isEmpty else {
-                    DispatchQueue.main.async(execute: completion)
-                    return
-                }
-                dataStore.removeData(ofTypes: dataTypes, for: selectedRecords) {
-                    DispatchQueue.main.async(execute: completion)
-                }
-            }
-        }
-
-        func webView(
-            _ webView: WKWebView,
-            decidePolicyFor navigationAction: WKNavigationAction,
-            decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void
-        ) {
-            if callbackGate.hasReportedCallback {
-                decisionHandler(.cancel)
-                return
-            }
-
-            if let url = navigationAction.request.url,
-               callbackMatches(url) {
-                if callbackGate.shouldReport(url, matching: callbackMatches) {
-                    onCallback(url)
-                }
-                decisionHandler(.cancel)
-                return
-            }
-            decisionHandler(.allow)
-        }
-
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation?) {
-            guard !requestedLoginAfterSignUp,
-                  let makeLoginRequestAfterSignUp,
-                  let signUpOrigin = loadedURL,
-                  let currentURL = webView.url,
-                  MissCatAuthenticationOriginMatcher.matches(currentURL, origin: signUpOrigin)
-            else { return }
-
-            // The legacy web flow used the localStorage token itself as a signal.
-            // Only inspect a boolean on the selected instance origin; the token
-            // never leaves the web content process or enters native logs/state.
-            let script = "(() => { try { return localStorage.getItem('i') !== null; } catch (_) { return false; } })()"
-            webView.evaluateJavaScript(script) { result, _ in
-                guard result as? Bool == true else { return }
-                self.requestedLoginAfterSignUp = true
-
-                Task { @MainActor in
-                    do {
-                        let request = try await makeLoginRequestAfterSignUp()
-                        self.loadedURL = request.url
-                        webView.load(request)
-                    } catch {
-                        self.requestedLoginAfterSignUp = false
-                        self.onFailure(error)
+            Button(action: continueAfterSignUp) {
+                HStack(spacing: 8) {
+                    if isPreparingLogin {
+                        ProgressView().tint(.white)
                     }
+                    Text("登録後にログインへ進む")
+                    Image(systemName: "arrow.right")
                 }
+                .font(.headline)
+                .foregroundStyle(.white)
+                .padding(.horizontal, 24)
+                .frame(minHeight: 48)
+                .background(Color(hex: "86B900"), in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .disabled(isPreparingLogin)
+            .accessibilityIdentifier("authentication.signup.continue")
+        }
+        .foregroundStyle(.white)
+        .padding(28)
+        .frame(maxWidth: 420)
+    }
+
+    @ViewBuilder
+    private var authenticationStatus: some View {
+        VStack(spacing: 18) {
+            if authenticationWasCancelled {
+                Image(systemName: "xmark.circle")
+                    .font(.system(size: 40, weight: .regular))
+                Text("認証がキャンセルされました")
+                    .font(.headline)
+                Button("再試行", action: retryAuthentication)
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color(hex: "86B900"))
+                    .accessibilityIdentifier("authentication.retry")
+            } else {
+                ProgressView()
+                    .controlSize(.large)
+                    .tint(.white)
+                Text("認証ページを開いています")
+                    .font(.headline)
             }
         }
+        .foregroundStyle(.white)
+        .padding(28)
+    }
 
-        func webView(
-            _ webView: WKWebView,
-            didFail navigation: WKNavigation?,
-            withError error: Error
-        ) {
-            reportNavigationFailure(error)
+    private var authenticationTaskID: String {
+        "\(stage.rawValue):\(attempt):\(activeRequest.url?.absoluteString ?? "missing")"
+    }
+
+    private func openRegistrationIfNeeded() {
+        guard stage == .registration, !hasOpenedRegistration else { return }
+        hasOpenedRegistration = true
+        openRegistration()
+    }
+
+    private func openRegistration() {
+        guard let url = activeRequest.url else {
+            onFailure(MissCatAuthenticationBrowserError.missingAuthorizationURL)
+            return
         }
 
-        func webView(
-            _ webView: WKWebView,
-            didFailProvisionalNavigation navigation: WKNavigation?,
-            withError error: Error
-        ) {
-            reportNavigationFailure(error)
+        if let registrationURLHandler {
+            registrationURLHandler(url)
+        } else {
+            openURL(url)
+        }
+    }
+
+    private func continueAfterSignUp() {
+        guard let makeLoginRequestAfterSignUp, !isPreparingLogin else { return }
+        isPreparingLogin = true
+
+        Task { @MainActor in
+            defer { isPreparingLogin = false }
+            do {
+                activeRequest = try await makeLoginRequestAfterSignUp()
+                authenticationWasCancelled = false
+                stage = .authentication
+            } catch {
+                onFailure(error)
+            }
+        }
+    }
+
+    private func retryCurrentStage() {
+        switch stage {
+        case .registration:
+            openRegistration()
+        case .authentication:
+            retryAuthentication()
+        }
+    }
+
+    private func retryAuthentication() {
+        authenticationWasCancelled = false
+        attempt += 1
+    }
+
+    @MainActor
+    private func authenticateIfNeeded() async {
+        guard stage == .authentication,
+              !isAuthenticating,
+              !hasReportedCallback,
+              !authenticationWasCancelled
+        else { return }
+        guard let url = activeRequest.url else {
+            onFailure(MissCatAuthenticationBrowserError.missingAuthorizationURL)
+            return
         }
 
-        private func reportNavigationFailure(_ error: Error) {
-            let nsError = error as NSError
-            guard nsError.domain != NSURLErrorDomain || nsError.code != NSURLErrorCancelled else { return }
-            onFailure(error)
+        isAuthenticating = true
+        defer { isAuthenticating = false }
+
+        do {
+            let callbackURL = try await runAuthenticationSession(using: url)
+            guard callbackMatches(callbackURL) else {
+                onFailure(MissCatAuthenticationBrowserError.invalidCallback)
+                return
+            }
+            guard !hasReportedCallback else { return }
+            hasReportedCallback = true
+            onCallback(callbackURL)
+        } catch {
+            if MissCatAuthenticationBrowserPolicy.isCancellation(error) {
+                authenticationWasCancelled = true
+            } else {
+                onFailure(error)
+            }
         }
+    }
+
+    @MainActor
+    private func runAuthenticationSession(using url: URL) async throws -> URL {
+        let kind = MissCatAuthenticationBrowserPolicy.sessionKind(for: websiteDataPolicy)
+        if let authenticationSessionRunner {
+            return try await authenticationSessionRunner(
+                url,
+                MissCatAuthenticationBrowserPolicy.callbackScheme,
+                kind
+            )
+        }
+
+        let browserSession: WebAuthenticationSession.BrowserSession = switch kind {
+        case .shared: .shared
+        case .ephemeral: .ephemeral
+        }
+        return try await webAuthenticationSession.authenticate(using: url,
+            callbackURLScheme: MissCatAuthenticationBrowserPolicy.callbackScheme,
+            preferredBrowserSession: browserSession
+        )
     }
 }
