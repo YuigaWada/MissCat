@@ -1,16 +1,16 @@
 # Accounts and settings retirement map
 
-This document fixes the ownership boundary for the grouped Accounts / Settings
-migration. It is intentionally narrower than the final authenticated-root cutover.
+This document records the ownership boundary for the grouped Accounts / Settings
+migration after the authenticated-root cutover and physical legacy-source removal.
 
 ## Ordinary routes after this bundle
 
-| Route | Principal content | Temporary boundary |
+| Route | Principal content | Remaining acceptance boundary |
 | --- | --- | --- |
-| Accounts footer tab | `MissCatAccountsRootView` / `MissCatAccountsScreen` | `AccountsListViewController` is only the temporary root `UIHostingController` container while `HomeViewController` owns the app shell. |
+| Accounts footer tab | `MissCatAccountsRootView` / `MissCatAccountsScreen` | The native SwiftUI shell owns the route; authenticated live-service and final visual acceptance remain. |
 | Accounts → add | `MissCatAddAccountView` using the existing native SwiftUI MiAuth flow | SwiftUI `fullScreenCover`; no UIKit presentation and no legacy login controller. |
 | Accounts → profile | Existing `MissCatProfileScreen` | Typed `MissCatAccountsRoute.profile(accountID:)` inside the Accounts `NavigationStack`; no UIKit profile destination. |
-| Profile cog / Settings cog | `MissCatSettingsRootView` | A hosting controller hides the legacy navigation bar while the SwiftUI `NavigationStack` is active. |
+| Profile cog / Settings cog | `MissCatSettingsRootView` | The production SwiftUI router and `NavigationStack` own presentation and back navigation. |
 | Design / reactions / licenses / About | Native SwiftUI destinations in the same navigation stack | Persistence adapters call the existing data stores only. |
 
 All tokens remain inside `Cache.UserDefaults` / Keychain-backed adapters. The
@@ -21,32 +21,30 @@ navigation value, accessibility value, fixture value, or log field.
 
 ## Explicitly retired ordinary controllers
 
-- `AccountViewController` (`accounts-settings`) has no ordinary route. Its logout
-  behavior is replaced by verified per-account deletion and the non-dismissible
-  native add-account flow when the last account is removed.
-- `ThemeViewController.swift` is historical commented source. Its storyboard scene
-  is not reachable; the active Light/Dark and accent behavior belongs to
-  `MissCatDesignSettingsScreen`.
+- `AccountViewController` (`accounts-settings`) was physically removed. Its logout
+  behavior is replaced by per-account deletion and the non-dismissible native
+  add-account flow when the last account is removed.
+- `ThemeViewController.swift` and its storyboard scene were physically removed; the
+  active Light/Dark and accent behavior belongs to `MissCatDesignSettingsScreen`.
 - `SettingsViewController`, `DesignSettingsViewController`,
   `InstanceViewController`, `ReactionSettingsViewController`,
   `LicenseTableViewController`, `LicenseViewController`, and
-  `AboutMisskeyViewController` remain compiled only as legacy visual/behavior
-  baselines. `HomeViewController.openSettings()` no longer instantiates them.
-- The old `StartViewController` add-account route is no longer used by Accounts.
+  `AboutMisskeyViewController` were physically removed with the retired
+  `HomeViewController` shell.
+- The old `StartViewController` add-account route was physically removed.
 
-## Physical removal gate
+## Physical removal status
 
-The inert storyboard scenes and legacy controller sources must be physically removed
-with `Main.storyboard` at the authenticated-root cutover. Removing them earlier would
-mix an unrelated storyboard graph rewrite into this bundle and discard the source of
-truth needed for screenshot comparison. The final removal must verify:
+The authenticated-root cutover and physical cleanup are complete. The tracked-source
+boundary verifies that every tracked Swift source has explicit PBX ownership, no
+retired controller source or PBX reference has reappeared, and no storyboard or XIB is
+tracked. The production app launches through the native SwiftUI root rather than the
+retired `HomeViewController` graph.
 
-1. no storyboard identifier or segue references the retired scenes;
-2. the app launches directly into the native authenticated root;
-3. Accounts add/switch/delete, all Settings destinations, and back navigation pass E2E;
-4. deterministic 402×874-point iPhone 16 Pro / iOS 18.6 reference captures
-   satisfy both >=0.90 changed-pixel similarity and >=0.90 SSIM without masks;
-5. the project has no source-build entry for the retired controllers.
+Physical removal does not imply final feature acceptance. Authenticated live-service
+coverage for Accounts add/switch/delete and every Settings destination, plus the final
+402x874-point iPhone 16 Pro / iOS 18.6 screenshot comparison at >=0.90 similarity and
+>=0.90 SSIM, remains part of the migrating acceptance work.
 
 ## Persistence invariants
 
