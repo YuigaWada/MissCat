@@ -7,7 +7,7 @@ readonly repository_root="$(cd "${script_dir}/.." && pwd -P)"
 readonly verifier="${script_dir}/verify-visual-acceptance.sh"
 readonly validator="${script_dir}/validate-visual-evidence-json.rb"
 readonly magick_bin="${MAGICK_BIN:-/opt/homebrew/bin/magick}"
-readonly expected_digest="8c119a005579a70d5f373d3d82a0b9a33f62eabb896cfadd820487d48a087c50"
+readonly expected_digest="165e3faaaffe757219c684eb0d910149a79f5bf68a933e11309ae7edd2bfc2e5"
 readonly production_capture_policy_digest="a4e8ae8bbfd9476a6e44c339b0e2a4f1d7c920936b6af86444af6c746b76b048"
 
 fail() {
@@ -15,14 +15,14 @@ fail() {
     exit 1
 }
 
-fixture_case_limit=710
+fixture_case_limit=698
 fixture_verification_mode="--require-complete"
-fixture_success_contract="visual_cases=710 recorded=710 missing=0 route_audits=1"
-fixture_success_label="710 unique cases"
+fixture_success_contract="visual_cases=698 recorded=698 missing=0 route_audits=1 deferred=1"
+fixture_success_label="698 unique cases"
 if [[ "${1:-}" == "--targeted" ]]; then
     fixture_case_limit=2
     fixture_verification_mode="--inventory"
-    fixture_success_contract="visual_cases=710 recorded=2 missing=708 route_audits=1"
+    fixture_success_contract="visual_cases=698 recorded=2 missing=696 route_audits=1 deferred=1"
     fixture_success_label="2 targeted cases"
     shift
 fi
@@ -37,8 +37,8 @@ trap 'rm -rf "$fixture_dir"' EXIT
 fixture_repository="${fixture_dir}/repository"
 
 inventory_output=$($verifier --inventory)
-[[ "$inventory_output" == *"surfaces=45 visual_cases=710 recorded=0 missing=710 route_audits=1"* ]] || \
-    fail "repository inventory is not the pinned 710-case contract"
+[[ "$inventory_output" == *"surfaces=45 visual_cases=698 recorded=0 missing=698 route_audits=1 deferred=1"* ]] || \
+    fail "repository inventory is not the pinned 698-case contract"
 [[ "$inventory_output" == *"requirements_sha256=${expected_digest}"* ]] || \
     fail "repository inventory did not report the pinned requirements digest"
 
@@ -60,6 +60,7 @@ $verifier --require-complete > /dev/null 2>&1 || incomplete_status=$?
 /usr/bin/awk -F '\t' 'BEGIN { OFS="\t" }
     /^#/ || NF == 0 { print; next }
     $1 == "id" { print; next }
+    $1 == "34" { print; next }
     { $4="swiftui"; $5="accepted"; print }
 ' "${repository_root}/docs/ui-migration-surfaces.tsv" > "${fixture_repository}/docs/ui-migration-surfaces.tsv"
 
@@ -136,7 +137,7 @@ cases = []
 File.foreach(requirements) do |line|
   next if line.start_with?("#") || line.strip.empty? || line.start_with?("surface_id\t")
   surface, group, states, appearances, devices, locales, sizes, focused, policy = line.chomp.split("\t", -1)
-  next if policy == "route-audit"
+  next unless policy == "visual"
   states.split("|").product(appearances.split("|"), devices.split("|"), locales.split("|"), sizes.split("|")).each do |state, appearance, device, locale, size|
     cases << [surface, group, state, appearance, device, locale, size]
   end
@@ -147,7 +148,7 @@ File.foreach(requirements) do |line|
     end
   end
 end
-abort "fixture expansion did not produce 710 cases" unless cases.length == 710
+abort "fixture expansion did not produce 698 cases" unless cases.length == 698
 
 def png_chunk(type, data)
   type = type.b

@@ -98,12 +98,13 @@ scripts/test-compare-screenshots.sh
 
 `docs/visual-acceptance-requirements.tsv` is the pinned schema-v2 visual contract
 joined to the 45-row migration ledger. Its exact digest is
-`8c119a005579a70d5f373d3d82a0b9a33f62eabb896cfadd820487d48a087c50` and it
-expands to exactly 710 visual cases. Base cases cover state, appearance, device,
+`165e3faaaffe757219c684eb0d910149a79f5bf68a933e11309ae7edd2bfc2e5` and it
+expands to exactly 698 visual cases. Base cases cover state, appearance, device,
 locale, and content-size axes. Focused cases add long Japanese and Latin text,
 RTL safety, accessibility Dynamic Type, keyboard presentation, compose media
 counts, settings editors, and share text/URL/one-to-four-image combinations.
-Surface 43 alone is a removal-only route audit.
+Surface 34 is explicitly deferred with no remote-notification runtime or visual
+case in this revision. Surface 43 alone is a removal-only route audit.
 
 `docs/visual-acceptance-evidence.tsv` is intentionally empty today. A future row
 must bind the case, deterministic fixture, locale, content size, and exact

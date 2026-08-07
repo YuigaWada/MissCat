@@ -110,8 +110,21 @@ Update the baseline only in the same reviewed change that demonstrably improves
 the measured state. Do not raise a debt ceiling or lower the progress fraction
 to make a regression pass.
 
-The current App-target baseline is 65 Swift files: 2 UIKit-only, 29
-SwiftUI-only, 0 hybrid, and 34 neutral. Rx, PolioPager, active legacy loaders,
+The current App-target baseline is 63 Swift files: 1 UIKit-only, 29
+SwiftUI-only, 0 hybrid, and 33 neutral. Rx, PolioPager, active legacy loaders,
 and tracked Interface Builder artifacts are all zero. Pure-SwiftUI progress is
-the exact fraction `29 / 31` (approximately `93.5484%`; the emitted floor is
-`9354` basis points or `93.54%`).
+the exact fraction `29 / 30` (approximately `96.6667%`; the emitted floor is
+`9666` basis points or `96.66%`).
+
+The one UIKit-only file is an intentional, audited OS adapter rather than a
+screen implementation:
+
+- `MissCatSystemClipboardWriter.swift` preserves the custom one-tap copy action
+  with one `UIPasteboard` write method.
+
+Remote push transport is deferred and no application delegate or dormant
+Firebase/APNs ingress ships. Moving OS integration, routing state, or fixture
+probes into neutral files does not increase the numerator and is not counted as
+migration progress. Strict completion remains honestly red with exactly this
+one UIKit-only file; the default ratchet merely prevents the boundary from
+growing.

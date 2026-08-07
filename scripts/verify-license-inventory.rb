@@ -20,8 +20,7 @@ locked = dependency_block.lines.map do |line|
   declaration = line[/^  - ([^\s(]+)/, 1]
   next unless declaration
 
-  product = declaration.split("/").first
-  product == "Firebase" ? "Firebase" : product
+  declaration.split("/").first
 end.compact.uniq.sort
 
 constant = source[/static let dependencyNames = \[(?<body>.*?)\]/m, :body]

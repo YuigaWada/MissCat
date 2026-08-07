@@ -1,7 +1,7 @@
 # schema_version=2
 # One row per fixed migration surface. Base states expand across appearances, devices, locales, and content sizes.
 # focused_cases adds exact state@appearance@device@locale@content-size cases without an accidental Cartesian explosion.
-# policy=route-audit is reserved exclusively for removal-only surface 43; every other surface is visual.
+# policy=deferred is reserved for out-of-scope surface 34; policy=route-audit is reserved for removal-only surface 43; every other surface is visual.
 surface_id	case_group	states	appearances	devices	locales	content_sizes	focused_cases	policy
 01	shell-home-pager	home|search|selected-page	light|dark	iphone-16-pro-ios18.6|iphone-se-3-ios18.6	ja-jp	medium	none	visual
 02	shell-footer	home|notifications|messages|settings|accounts|reselected	light|dark	iphone-16-pro-ios18.6|iphone-se-3-ios18.6	ja-jp	medium	none	visual
@@ -36,7 +36,7 @@ surface_id	case_group	states	appearances	devices	locales	content_sizes	focused_c
 31	compose-extras	cw|now-playing|now-playing-unavailable|emoji	light|dark	iphone-16-pro-ios18.6|iphone-se-3-ios18.6	ja-jp	medium	none	visual
 32	compose-poll	poll|no-location-control	light|dark	iphone-16-pro-ios18.6|iphone-se-3-ios18.6	ja-jp	medium	none	visual
 33	notifications	mixed|loading|empty|error	light|dark	iphone-16-pro-ios18.6|iphone-se-3-ios18.6	ja-jp	medium	none	visual
-34	push-banner	note|reaction|follow	light|dark	iphone-16-pro-ios18.6|iphone-se-3-ios18.6	ja-jp	medium	none	visual
+34	push-banner	deferred	none	none	none	none	none	deferred
 35	message-history	history|loading|empty|unsupported|error	light|dark	iphone-16-pro-ios18.6|iphone-se-3-ios18.6	ja-jp	medium	none	visual
 36	message-conversation	conversation|keyboard|loading-older|sending|error	light|dark	iphone-16-pro-ios18.6|iphone-se-3-ios18.6	ja-jp	medium	keyboard@dark@iphone-se-3-ios18.6@ar@accessibility-xxxl	visual
 37	accounts	list|delete|empty|error	light|dark	iphone-16-pro-ios18.6|iphone-se-3-ios18.6	ja-jp	medium	none	visual

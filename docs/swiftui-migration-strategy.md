@@ -28,20 +28,22 @@ The canonical ledger is `docs/ui-migration-surfaces.tsv`, with exactly the 45 ro
 
 The primary fields have deliberately different meanings:
 
-- `runtime_owner=swiftui|uikit`: the framework rendering the ordinary reachable route in the current integrated commit. A source file, preview, launch argument, or test-only route does not alter this value.
-- `migration_state=legacy|migrating|accepted`: delivery status. `migrating` includes detached or incomplete SwiftUI work. `accepted` is permitted only when `runtime_owner=swiftui` and all evidence below exists.
+- `runtime_owner=swiftui|uikit|none`: the framework rendering the ordinary reachable route in the current integrated commit. `none` is reserved for an explicitly deferred surface with no shipped runtime. A source file, preview, launch argument, or test-only route does not alter this value.
+- `migration_state=legacy|migrating|accepted|deferred`: delivery status. `migrating` includes detached or incomplete SwiftUI work. `accepted` is permitted only when `runtime_owner=swiftui` and all evidence below exists; `deferred` requires `runtime_owner=none`.
 
 The production-root cutover state is:
 
 | Metric | Count | Ratio |
 | --- | ---: | ---: |
-| SwiftUI ordinary runtime owner | 45 / 45 | 100.0% |
+| SwiftUI ordinary runtime owner | 44 / 45 | 97.8% |
 | UIKit ordinary runtime owner | 0 / 45 | 0.0% |
+| Deferred / no runtime | 1 / 45 | 2.2% |
 | Accepted | 0 / 45 | 0.0% |
-| Migrating | 45 / 45 | 100.0% |
+| Migrating | 44 / 45 | 97.8% |
 | Legacy | 0 / 45 | 0.0% |
+| Deferred | 1 / 45 | 2.2% |
 
-All fixed-ledger surfaces now have a SwiftUI ordinary runtime owner. This is a routing milestone, not acceptance: visual parity, complete live-service evidence, reviewer sign-off, and legacy source/resource retirement remain open, so every row stays `migrating`.
+Forty-four fixed-ledger surfaces have a SwiftUI ordinary runtime owner. Surface 34 has no shipped remote-push runtime and is explicitly `deferred`; the remaining rows stay `migrating` until their acceptance evidence is complete.
 
 `accepted` requires all of the following for that row:
 
@@ -214,11 +216,11 @@ The complete SwiftUI root now owns the ordinary authenticated route. Its UI-test
 
 The 25 app/share-owned Storyboard and XIB files, their project/resource references, and their launch/share-extension plist keys are removed. Obsolete legacy source loaders remain unaccepted retirement debt. Embedded third-party frameworks also continue to contribute compiled Interface Builder artifacts until their legacy callers and Pods are retired in G.
 
-### F — Push and share extension (`N=8`)
+### F — Share extension; remote notifications deferred (`N=8`)
 
-Ledger focus: notification/banner state `34` and share `45`. Acceptance focus: NOTIF-02, SHARE-01 through SHARE-03, PUSH-01.
+Ledger focus: deferred notification/banner state `34` and share `45`. Acceptance focus for this revision: SHARE-01 through SHARE-03.
 
-The bundle includes permission states, APNs/FCM token rotation, per-account WebPush registration/removal, foreground presentation, background tap/deep link, malformed/wrong-owner payloads, relay security/observability, share text/URL/1–4 ordered images, account/visibility persistence, progress/cancel/retry, and exactly-once host completion.
+Remote notification transport is removed and explicitly deferred; this revision does not ship APNs/FCM registration, WebPush state, push ingress, or an in-app push banner. The active bundle includes share text/URL/1–4 ordered images, account/visibility persistence, progress/cancel/retry, and exactly-once host completion.
 
 The extension uses `NSExtensionPrincipalClass` with the minimum UIKit host required by Apple and SwiftUI-owned content. `MainInterface.storyboard` is removed; the unused UIKit account/visibility controllers remain retirement work. App and extension share the same account/keychain module and signed access group.
 
@@ -268,7 +270,6 @@ The root bootstrap order is fixed: migrate persistent data, resolve account meta
 - account-keyed repositories;
 - in-memory cache namespace;
 - upload coordinator;
-- push registration coordinator;
 - cancellation registry.
 
 The API token is resolved inside the client from the keychain vault and is never exposed to a view or stored in `UserDefaults`. Every repository method receives or captures the scope at operation creation. Results include their generation; stale generations are discarded even if a lower-level callback ignores cancellation.
@@ -348,7 +349,7 @@ Keep a temporary `LegacyMisskeyAdapter` behind repository protocols, then replac
 5. create/upload/reply/renote/reaction/vote/delete/favorite mutations;
 6. profile, relationship, follow, edit, and user lists;
 7. notifications and direct messages;
-8. push/WebPush registration;
+8. future remote notification transport only after surface 34 is deliberately resumed;
 9. share-extension posting;
 10. remove `MisskeyKit`, Starscream 3.1.1, and every legacy callback type.
 
@@ -358,13 +359,11 @@ Each endpoint moves only with request/response/error contract fixtures. Do not e
 
 The target is CocoaPods zero. Remove PolioPager, RxSwift/RxCocoa/RxDataSources, Agrume, SkeletonView, FloatingPanel, XLActionController, XLPagerTabStrip, MessageKit/InputBarAccessoryView, Eureka, ChromaColorPicker, SwiftLinkPreview/Cache, iOSPhotoEditor, APNGKit/Gifu/SVGKit, MisskeyKit, and Starscream after their bundle exits pass. Native Security storage has already replaced the former credential wrapper.
 
-Final shipping dependencies should be:
-
-- Apple frameworks and MissCat-owned typed modules for UI, REST/WebSocket, Security, media, and caches;
-- optionally the current supported Firebase Messaging package through Swift Package Manager **only** if the accepted push architecture retains the FCM relay;
-- no Firebase dependency if B6 proves and adopts direct APNs delivery instead.
-
-The push choice is recorded before B6 implementation, with device evidence and relay migration impact. The final license screen is generated from the actual resolved Swift package graph plus checked-in third-party source notices.
+Final shipping dependencies should be Apple frameworks and MissCat-owned typed
+modules for UI, REST/WebSocket, Security, media, and caches. Firebase is absent;
+remote notifications are deferred rather than represented by a dormant package
+or adapter. The final license screen is generated from the actual resolved
+dependency graph plus checked-in third-party source notices.
 
 ## Test and evidence architecture
 
@@ -404,17 +403,17 @@ For all eleven historic states and all additional states in `docs/migration-test
 9. have a reviewer inspect the overlay at 100% even after numerical pass.
 
 The comparator calculates changed-pixel similarity and SSIM independently. The
-pinned 45-ID requirement inventory expands to 710 cases across state, device,
+pinned 45-ID requirement inventory expands to 698 cases across state, device,
 appearance, locale, and content-size axes; focused cases cover long Japanese and
-Latin content, RTL, accessibility Dynamic Type, and keyboards. Surface 43 alone
-is a route audit. The evidence verifier rejects missing or replayed captures
+Latin content, RTL, accessibility Dynamic Type, and keyboards. Surface 34 is
+deferred without a visual case; surface 43 alone is a route audit. The evidence verifier rejects missing or replayed captures
 using one decoded-pixel ownership registry across baseline and candidate roles,
 while preserving raw PNG hash provenance. It also hard-pins the full-resolution
 device capture policy and rejects hash drift, relaxed or malformed metrics,
 unapproved masks, metadata mismatch, unreviewed overlays, and invalid
 artifact/reviewer commit ancestry. The evidence manifest is currently empty,
-so keep every surface in `migrating` until that
-strict gate and its functional requirements both pass.
+so keep every implemented surface in `migrating` until that strict gate and its
+functional requirements both pass.
 
 ### Mandatory tab and account behavior suite
 
@@ -494,8 +493,8 @@ These are source facts, not claims that all tests or user flows pass.
 
 ### Unaccepted or incomplete
 
-- all 45 ordinary runtime owners are SwiftUI, but no row has cleared the independent visual/reviewer gate;
-- live authentication, current-server compatibility, device push, and share-host journeys still need retained release evidence;
+- 44 ordinary runtime owners are SwiftUI, surface 34 is explicitly deferred, and no row has cleared the independent visual/reviewer gate;
+- live authentication, current-server compatibility, and share-host journeys still need retained release evidence;
 - streaming reconnect/catch-up and long-running multi-account stress evidence remain incomplete;
 - shell glyphs and feature layouts still require the full deterministic visual matrix against approved references;
 - share content has a principal-class SwiftUI host and still carries legacy dependency-retirement and host-E2E work;
@@ -517,7 +516,7 @@ P0 blockers:
 5. no fixture-backed UI/E2E/snapshot targets or current CI;
 6. no complete visual comparator or 11-state passing evidence;
 7. share Storyboard/duplicate persistence/no host E2E;
-8. push relay, entitlement, token-rotation, and per-account evidence gaps;
+8. remote notifications are deferred and must not be represented as shipped or accepted;
 9. credential-shaped files/fixed secrets requiring removal, rotation, and secret-manager inputs;
 10. no clean-checkout release evidence on the newest supported stable toolchain/runtime.
 
@@ -550,7 +549,7 @@ P1 blockers include exact shell assets/geometry, full MFM/animated emoji/media, 
 
 Completion is proven only when every item has authoritative current-commit evidence:
 
-- [x] `scripts/report-ui-migration.sh` reports SwiftUI owner `45/45`.
+- [x] `scripts/report-ui-migration.sh` reports SwiftUI owner `44/45`, UIKit owner `0/45`, and one explicitly deferred surface.
 - [ ] `scripts/report-ui-migration.sh` reports accepted `45/45` (currently `0/45`).
 - [ ] Every P0 and P1 acceptance-matrix row maps to passing evidence; no unresolved defects remain.
 - [ ] App, share extension, unit, contract/integration, UI/E2E, and snapshot targets build from a clean checkout.
@@ -565,7 +564,7 @@ Completion is proven only when every item has authoritative current-commit evide
 - [ ] Existing accounts, tokens, current account, visibility, theme/tabs/color, reactions/history, and latest notification migrate idempotently without re-login.
 - [ ] Tokens remain keychain-only; app/share signed access groups match; logs/artifacts/defaults/screenshots contain no secret.
 - [ ] Live auth and current-server compatibility pass on the designated simulator/device with a redacted checklist only.
-- [ ] Push permission/token/register/unregister/foreground/background/deep-link/multi-account cases pass; relay deployment evidence passes if retained.
+- [ ] If remote notifications return in a future project, define and prove permission/token/foreground/background/deep-link/multi-account behavior before removing the deferred status.
 - [ ] Share text/URL/1–4 images, state, progress, error, retry, cancel, and exactly-once completion pass in host E2E.
 - [ ] `Main.storyboard`, `MainInterface.storyboard`, app UI XIBs, and every legacy screen/controller/view-model are removed from target and repository.
 - [ ] No ordinary source call loads a Storyboard, nib, or legacy controller; only documented Apple adapters remain.

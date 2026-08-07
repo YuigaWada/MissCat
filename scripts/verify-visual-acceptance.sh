@@ -10,10 +10,10 @@ readonly REQUIREMENTS_SCHEMA_VERSION=2
 readonly EVIDENCE_SCHEMA_VERSION=2
 readonly SUMMARY_SCHEMA_VERSION=4
 readonly REVIEW_SCHEMA_VERSION=1
-readonly EXPECTED_REQUIREMENTS_SHA256="8c119a005579a70d5f373d3d82a0b9a33f62eabb896cfadd820487d48a087c50"
+readonly EXPECTED_REQUIREMENTS_SHA256="165e3faaaffe757219c684eb0d910149a79f5bf68a933e11309ae7edd2bfc2e5"
 readonly EXPECTED_CAPTURE_POLICY_SHA256="a4e8ae8bbfd9476a6e44c339b0e2a4f1d7c920936b6af86444af6c746b76b048"
 readonly EXPECTED_SURFACES=45
-readonly EXPECTED_VISUAL_CASES=710
+readonly EXPECTED_VISUAL_CASES=698
 
 requirements="${repository_root}/docs/visual-acceptance-requirements.tsv"
 evidence="${repository_root}/docs/visual-acceptance-evidence.tsv"
@@ -31,9 +31,10 @@ usage: scripts/verify-visual-acceptance.sh [--inventory|--require-complete]
        [--capture-policy PATH] [--mask-policy PATH]
        [--mask-policy-approval PATH] [--magick PATH]
 
---inventory validates the pinned 45-surface/710-case contract and every
+--inventory validates the pinned 45-surface/698-case contract and every
 recorded evidence row. --require-complete additionally rejects missing visual
-cases and any surface not yet SwiftUI-owned and accepted in the route ledger.
+cases and any non-deferred surface not yet SwiftUI-owned and accepted in the
+route ledger.
 USAGE
 }
 
@@ -300,7 +301,7 @@ header == 0 {
     if (id !~ /^[0-9][0-9]$/) invalid("invalid surface id " id)
     if (seen_id[id]++) invalid("duplicate surface id " id)
     if (!token($2)) invalid("invalid case group at " id)
-    if ((id == "43" && $9 != "route-audit") || (id != "43" && $9 != "visual")) {
+    if ((id == "34" && $9 != "deferred") || (id == "43" && $9 != "route-audit") || (id != "34" && id != "43" && $9 != "visual")) {
         invalid("surface policy mismatch at " id)
     }
 
@@ -320,6 +321,13 @@ header == 0 {
     for (i = 1; i <= locale_count; i++) if (!token(locales[i]) || seen_locale[locales[i]]++) invalid("invalid or duplicate locale at " id)
     for (i = 1; i <= content_count; i++) if (!token(content_sizes[i]) || seen_content[content_sizes[i]]++) invalid("invalid or duplicate content size at " id)
 
+    if ($9 == "deferred") {
+        if (id != "34" || $3 != "deferred" || $4 != "none" || $5 != "none" || $6 != "none" || $7 != "none" || $8 != "none") {
+            invalid("surface 34 deferred axes must be exact")
+        }
+        deferred_count++
+        next
+    }
     if ($9 == "route-audit") {
         if (id != "43" || $3 != "ordinary-route-absent" || $4 != "none" || $5 != "none" || $6 != "none" || $7 != "none" || $8 != "none") {
             invalid("surface 43 route-audit axes must be exact")
@@ -354,6 +362,7 @@ END {
     if (!header) invalid("missing requirements header")
     if (length(seen_id) != expected_surfaces) invalid("expected 45 requirement rows, found " length(seen_id))
     if (route_count != 1) invalid("exactly one route-audit row is required")
+    if (deferred_count != 1) invalid("exactly one deferred row is required")
     if (visual_count != expected_visual) invalid("expected " expected_visual " visual cases, found " visual_count)
     if (bad) exit 65
 }
@@ -678,6 +687,7 @@ done < "$evidence"
 if [[ "$mode" == "--require-complete" ]]; then
     [[ "$missing_count" -eq 0 ]] || fail "missing ${missing_count}/${expected_count} visual evidence cases (first: $(head -n 1 "$missing" | tr '\t' '/'))"
     for surface in $(seq -w 1 "$EXPECTED_SURFACES"); do
+        [[ "$surface" == "34" ]] && continue
         awk -F '\t' -v id="$surface" '
             $1 == id {
                 found = 1
@@ -689,5 +699,6 @@ if [[ "$mode" == "--require-complete" ]]; then
 fi
 
 route_count=$(wc -l < "$route_audits" | tr -d ' ')
-printf 'visual acceptance inventory valid: surfaces=%s visual_cases=%s recorded=%s missing=%s route_audits=%s requirements_sha256=%s mode=%s\n' \
-    "$EXPECTED_SURFACES" "$expected_count" "$recorded_count" "$missing_count" "$route_count" "$actual_requirements_sha" "$mode"
+deferred_count=$(awk -F '\t' '$9 == "deferred" { count++ } END { print count + 0 }' "$requirements")
+printf 'visual acceptance inventory valid: surfaces=%s visual_cases=%s recorded=%s missing=%s route_audits=%s deferred=%s requirements_sha256=%s mode=%s\n' \
+    "$EXPECTED_SURFACES" "$expected_count" "$recorded_count" "$missing_count" "$route_count" "$deferred_count" "$actual_requirements_sha" "$mode"
