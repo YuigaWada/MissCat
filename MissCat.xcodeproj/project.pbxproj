@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A77000000000000000000002 /* MissCatApplicationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77000000000000000000001 /* MissCatApplicationModels.swift */; };
+		A77000000000000000000004 /* MissCatApplicationRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77000000000000000000003 /* MissCatApplicationRouter.swift */; };
+		A77000000000000000000006 /* MissCatApplicationRootStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77000000000000000000005 /* MissCatApplicationRootStore.swift */; };
+		A77000000000000000000008 /* MissCatApplicationRootTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77000000000000000000007 /* MissCatApplicationRootTests.swift */; };
 		AACC00000000000000000001 /* MissCatProfileFamilyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC00000000000000000002 /* MissCatProfileFamilyView.swift */; };
 		AACC00000000000000000003 /* MissCatLoginProfileFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC00000000000000000004 /* MissCatLoginProfileFixture.swift */; };
 		AACC00000000000000000005 /* MissCatLoginProfileAcceptanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC00000000000000000006 /* MissCatLoginProfileAcceptanceTests.swift */; };
@@ -314,6 +318,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A77000000000000000000001 /* MissCatApplicationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatApplicationModels.swift; sourceTree = "<group>"; };
+		A77000000000000000000003 /* MissCatApplicationRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatApplicationRouter.swift; sourceTree = "<group>"; };
+		A77000000000000000000005 /* MissCatApplicationRootStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatApplicationRootStore.swift; sourceTree = "<group>"; };
+		A77000000000000000000007 /* MissCatApplicationRootTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatApplicationRootTests.swift; sourceTree = "<group>"; };
 		AACC00000000000000000002 /* MissCatProfileFamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatProfileFamilyView.swift; sourceTree = "<group>"; };
 		AACC00000000000000000004 /* MissCatLoginProfileFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatLoginProfileFixture.swift; sourceTree = "<group>"; };
 		AACC00000000000000000006 /* MissCatLoginProfileAcceptanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatLoginProfileAcceptanceTests.swift; sourceTree = "<group>"; };
@@ -659,6 +667,7 @@
 		C0DE00000000000000000015 /* SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
+				A7700000000000000000000A /* ApplicationRoot */,
 				C0DE00000000000000000016 /* Authentication */,
 				C05E0000000000000000000B /* Compose */,
 				C0DE00000000000000000017 /* DesignSystem */,
@@ -670,6 +679,16 @@
 				C0DE00000000000000000021 /* Timeline */,
 			);
 			path = SwiftUI;
+			sourceTree = "<group>";
+		};
+		A7700000000000000000000A /* ApplicationRoot */ = {
+			isa = PBXGroup;
+			children = (
+				A77000000000000000000001 /* MissCatApplicationModels.swift */,
+				A77000000000000000000003 /* MissCatApplicationRouter.swift */,
+				A77000000000000000000005 /* MissCatApplicationRootStore.swift */,
+			);
+			path = ApplicationRoot;
 			sourceTree = "<group>";
 		};
 		D15C0000000000000000000B /* Discovery */ = {
@@ -1029,6 +1048,7 @@
 		8D4A2A2B237437C100503685 /* MissCatTests */ = {
 			isa = PBXGroup;
 			children = (
+				A77000000000000000000007 /* MissCatApplicationRootTests.swift */,
 				D15C00000000000000000008 /* MissCatDiscoveryTests.swift */,
 				AACC00000000000000000006 /* MissCatLoginProfileAcceptanceTests.swift */,
 				E0DE0000000000000000000C /* MissCatSettingsAccountsTests.swift */,
@@ -1947,6 +1967,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A77000000000000000000002 /* MissCatApplicationModels.swift in Sources */,
+				A77000000000000000000004 /* MissCatApplicationRouter.swift in Sources */,
+				A77000000000000000000006 /* MissCatApplicationRootStore.swift in Sources */,
 				D15C00000000000000000001 /* MissCatDiscoveryCore.swift in Sources */,
 				D15C00000000000000000003 /* MissCatDiscoveryViews.swift in Sources */,
 				D15C00000000000000000005 /* MissCatDiscoveryFixture.swift in Sources */,
@@ -2141,6 +2164,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A77000000000000000000008 /* MissCatApplicationRootTests.swift in Sources */,
 				D15C00000000000000000007 /* MissCatDiscoveryTests.swift in Sources */,
 				AACC00000000000000000005 /* MissCatLoginProfileAcceptanceTests.swift in Sources */,
 				E0DE0000000000000000000D /* MissCatSettingsAccountsTests.swift in Sources */,
