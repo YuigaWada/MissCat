@@ -241,7 +241,14 @@ public final class MissCatNoteVisualReadiness: ObservableObject {
 final class MissCatCustomEmojiCache {
     static let shared = MissCatCustomEmojiCache()
 
+    private struct InFlightLoad {
+        let token: UUID
+        let task: Task<Void, Never>
+        var waiters: [UUID: CheckedContinuation<MissCatCustomEmojiAnimation, any Error>]
+    }
+
     private let storage = NSCache<NSURL, MissCatCustomEmojiAnimationBox>()
+    private var inFlightLoads: [URL: InFlightLoad] = [:]
 
     init(countLimit: Int = 256) {
         storage.countLimit = countLimit
@@ -261,6 +268,96 @@ final class MissCatCustomEmojiCache {
             forKey: url as NSURL,
             cost: cost
         )
+    }
+
+    func loadAnimation(
+        for url: URL,
+        loader: @escaping MissCatCustomEmojiStore.DataLoader
+    ) async throws -> MissCatCustomEmojiAnimation {
+        try Task.checkCancellation()
+        if let cached = animation(for: url) { return cached }
+
+        let waiterID = UUID()
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                addWaiter(
+                    continuation,
+                    id: waiterID,
+                    for: url,
+                    loader: loader
+                )
+            }
+        } onCancel: {
+            Task { @MainActor [weak self] in
+                self?.cancelWaiter(id: waiterID, for: url)
+            }
+        }
+    }
+
+    private func addWaiter(
+        _ continuation: CheckedContinuation<MissCatCustomEmojiAnimation, any Error>,
+        id waiterID: UUID,
+        for url: URL,
+        loader: @escaping MissCatCustomEmojiStore.DataLoader
+    ) {
+        guard !Task.isCancelled else {
+            continuation.resume(throwing: CancellationError())
+            return
+        }
+        if let cached = animation(for: url) {
+            continuation.resume(returning: cached)
+            return
+        }
+        if var existing = inFlightLoads[url] {
+            existing.waiters[waiterID] = continuation
+            inFlightLoads[url] = existing
+            return
+        }
+
+        let token = UUID()
+        let task = Task.detached(priority: .utility) { [weak self] in
+            let result: Result<MissCatCustomEmojiAnimation, any Error>
+            do {
+                let data = try await loader(url)
+                try Task.checkCancellation()
+                let animation = try MissCatCustomEmojiImageDecoder.decodeAnimation(data)
+                try Task.checkCancellation()
+                result = .success(animation)
+            } catch {
+                result = .failure(error)
+            }
+            await self?.finishLoad(for: url, token: token, result: result)
+        }
+        inFlightLoads[url] = InFlightLoad(
+            token: token,
+            task: task,
+            waiters: [waiterID: continuation]
+        )
+    }
+
+    private func cancelWaiter(id waiterID: UUID, for url: URL) {
+        guard var load = inFlightLoads[url],
+              let continuation = load.waiters.removeValue(forKey: waiterID) else { return }
+        continuation.resume(throwing: CancellationError())
+        if load.waiters.isEmpty {
+            load.task.cancel()
+            inFlightLoads[url] = nil
+        } else {
+            inFlightLoads[url] = load
+        }
+    }
+
+    private func finishLoad(
+        for url: URL,
+        token: UUID,
+        result: Result<MissCatCustomEmojiAnimation, any Error>
+    ) {
+        guard let load = inFlightLoads[url], load.token == token else { return }
+        inFlightLoads[url] = nil
+        if case let .success(animation) = result {
+            insert(animation, for: url)
+        }
+        load.waiters.values.forEach { $0.resume(with: result) }
     }
 }
 
@@ -306,33 +403,94 @@ enum MissCatCustomEmojiImageDecoder {
             kCGImageSourceShouldCache: true,
             kCGImageSourceShouldCacheImmediately: true,
         ]
-        var decodedPixels = 0
-        var frames: [MissCatCustomEmojiFrame] = []
-        frames.reserveCapacity(count)
+        let globalProperties = CGImageSourceCopyProperties(source, nil) as? [CFString: Any] ?? [:]
+        var canvasWidth = (globalProperties[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue ?? 0
+        var canvasHeight = (globalProperties[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue ?? 0
+        var durations: [TimeInterval] = []
+        durations.reserveCapacity(count)
         for index in 0 ..< count {
+            try Task.checkCancellation()
             guard let properties = CGImageSourceCopyPropertiesAtIndex(source, index, nil)
                 as? [CFString: Any],
                 let width = (properties[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue,
                 let height = (properties[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue
             else { throw MissCatCustomEmojiLoadError.invalidImage }
             try validateDimensions(width: width, height: height)
-            let pixels = width * height
-            guard decodedPixels <= maximumAnimationDecodedPixels - pixels else {
-                throw MissCatCustomEmojiLoadError.dimensionsTooLarge
-            }
-            decodedPixels += pixels
+            canvasWidth = max(canvasWidth, width)
+            canvasHeight = max(canvasHeight, height)
+            durations.append(frameDuration(properties: properties))
+        }
+        try validateDimensions(width: canvasWidth, height: canvasHeight)
+        let canvasPixels = canvasWidth * canvasHeight
+        guard canvasPixels <= maximumAnimationDecodedPixels / count else {
+            throw MissCatCustomEmojiLoadError.dimensionsTooLarge
+        }
+
+        var frames: [MissCatCustomEmojiFrame] = []
+        frames.reserveCapacity(count)
+        for (index, duration) in durations.enumerated() {
+            try Task.checkCancellation()
             guard let image = CGImageSourceCreateImageAtIndex(source, index, options as CFDictionary)
             else { throw MissCatCustomEmojiLoadError.invalidImage }
+            try validateDimensions(width: image.width, height: image.height)
+            guard image.width <= canvasWidth, image.height <= canvasHeight else {
+                throw MissCatCustomEmojiLoadError.invalidImage
+            }
             frames.append(MissCatCustomEmojiFrame(
-                image: image,
-                duration: frameDuration(properties: properties)
+                image: try normalizedFrame(
+                    image,
+                    canvasWidth: canvasWidth,
+                    canvasHeight: canvasHeight
+                ),
+                duration: duration
             ))
         }
-        let globalProperties = CGImageSourceCopyProperties(source, nil) as? [CFString: Any] ?? [:]
         return MissCatCustomEmojiAnimation(
             frames: frames,
             loopCount: loopCount(properties: globalProperties)
         )
+    }
+
+    nonisolated static func normalizedFrame(
+        _ image: CGImage,
+        canvasWidth: Int,
+        canvasHeight: Int
+    ) throws -> CGImage {
+        try validateDimensions(width: canvasWidth, height: canvasHeight)
+        guard image.width > 0, image.height > 0 else {
+            throw MissCatCustomEmojiLoadError.invalidImage
+        }
+        if image.width == canvasWidth, image.height == canvasHeight { return image }
+
+        let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(
+            data: nil,
+            width: canvasWidth,
+            height: canvasHeight,
+            bitsPerComponent: 8,
+            bytesPerRow: canvasWidth * 4,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+                | CGBitmapInfo.byteOrder32Big.rawValue
+        ) else { throw MissCatCustomEmojiLoadError.invalidImage }
+
+        let widthScale = CGFloat(canvasWidth) / CGFloat(image.width)
+        let heightScale = CGFloat(canvasHeight) / CGFloat(image.height)
+        let scale = min(widthScale, heightScale)
+        let width = CGFloat(image.width) * scale
+        let height = CGFloat(image.height) * scale
+        let destination = CGRect(
+            x: (CGFloat(canvasWidth) - width) / 2,
+            y: (CGFloat(canvasHeight) - height) / 2,
+            width: width,
+            height: height
+        )
+        context.interpolationQuality = .high
+        context.draw(image, in: destination)
+        guard let normalized = context.makeImage() else {
+            throw MissCatCustomEmojiLoadError.invalidImage
+        }
+        return normalized
     }
 
     nonisolated static func validateDimensions(width: Int, height: Int) throws {
@@ -387,7 +545,7 @@ enum MissCatCustomEmojiImageDecoder {
         return defaultFrameDuration
     }
 
-    private nonisolated static func loopCount(properties: [CFString: Any]) -> Int {
+    nonisolated static func loopCount(properties: [CFString: Any]) -> Int {
         let formats: [(CFString, CFString)] = [
             (kCGImagePropertyGIFDictionary, kCGImagePropertyGIFLoopCount),
             (kCGImagePropertyPNGDictionary, kCGImagePropertyAPNGLoopCount),
@@ -396,7 +554,9 @@ enum MissCatCustomEmojiImageDecoder {
         for (dictionaryKey, loopKey) in formats {
             guard let dictionary = properties[dictionaryKey] as? [CFString: Any],
                   let value = number(dictionary[loopKey]) else { continue }
-            return max(Int(value), 0)
+            guard value.isFinite, value > 0 else { return 0 }
+            if value >= Double(Int.max) { return Int.max }
+            return Int(value)
         }
         return 0
     }
@@ -489,20 +649,9 @@ final class MissCatCustomEmojiStore: ObservableObject {
             imageByName[name] = nil
             animationByName[name] = nil
             loadedURLsByName[name] = nil
-            if let animation = cache.animation(for: url) {
-                animationByName[name] = animation
-                imageByName[name] = animation.firstFrame
-                loadedURLsByName[name] = url
-                currentReadiness?.complete(assetKey(url))
-                terminalKeys.insert(assetKey(url))
-                continue
-            }
             do {
-                let data = try await loader(url)
+                let animation = try await cache.loadAnimation(for: url, loader: loader)
                 try Task.checkCancellation()
-                let animation = try await MissCatCustomEmojiImageDecoder.decodeAnimationOffMain(data)
-                try Task.checkCancellation()
-                cache.insert(animation, for: url)
                 animationByName[name] = animation
                 imageByName[name] = animation.firstFrame
                 loadedURLsByName[name] = url

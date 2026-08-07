@@ -11,7 +11,7 @@ indirect enum MissCatMFMNode: Equatable, Sendable {
     case text(String)
     case plain(String)
     case styled(Style, [MissCatMFMNode])
-    case link(URL, [MissCatMFMNode])
+    case link(URL, [MissCatMFMNode], suppressPreview: Bool)
     case mention(String)
     case hashtag(String)
     case customEmoji(String)
@@ -451,7 +451,7 @@ enum MissCatNativeMFMParser {
             let label = String(source[labelStart ..< labelEnd])
             guard !label.isEmpty, !label.contains("\n") else { return nil }
             return Token(
-                nodes: [.link(url, childParser(label))],
+                nodes: [.link(url, childParser(label), suppressPreview: silent)],
                 end: source.index(after: urlEnd)
             )
         }
@@ -461,7 +461,10 @@ enum MissCatNativeMFMParser {
                   let close = source[index...].firstIndex(of: ">") else { return nil }
             let start = source.index(after: index)
             guard let url = URL(string: String(source[start ..< close])), isHTTP(url) else { return nil }
-            return Token(nodes: [.link(url, [.text(url.absoluteString)])], end: source.index(after: close))
+            return Token(
+                nodes: [.link(url, [.text(url.absoluteString)], suppressPreview: false)],
+                end: source.index(after: close)
+            )
         }
 
         private func url(at index: String.Index) -> Token? {
@@ -490,7 +493,7 @@ enum MissCatNativeMFMParser {
                 end = source.index(before: end)
             }
             guard let url = URL(string: candidate), isHTTP(url) else { return nil }
-            return Token(nodes: [.link(url, [.text(candidate)])], end: end)
+            return Token(nodes: [.link(url, [.text(candidate)], suppressPreview: false)], end: end)
         }
 
         private func mention(at index: String.Index) -> Token? {
@@ -625,19 +628,52 @@ public enum MissCatNativeMFMRenderer {
     }
 
     public static func previewURLs(in source: String, limit: Int = 1) -> [URL] {
-        guard limit > 0,
-              let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
-        else { return [] }
-
-        let range = NSRange(source.startIndex..., in: source)
+        guard limit > 0 else { return [] }
         var seen = Set<String>()
-        return detector.matches(in: source, range: range).compactMap { match in
-            guard let url = match.url,
-                  let scheme = url.scheme?.lowercased(),
-                  scheme == "https" || scheme == "http",
-                  seen.insert(url.absoluteString).inserted else { return nil }
-            return url
-        }.prefix(limit).map { $0 }
+        var result: [URL] = []
+        collectPreviewURLs(
+            nodes: MissCatNativeMFMParser.parse(source),
+            limit: limit,
+            seen: &seen,
+            result: &result
+        )
+        return result
+    }
+
+    private static func collectPreviewURLs(
+        nodes: [MissCatMFMNode],
+        limit: Int,
+        seen: inout Set<String>,
+        result: inout [URL]
+    ) {
+        for node in nodes where result.count < limit {
+            switch node {
+            case let .link(url, _, suppressPreview):
+                if !suppressPreview, seen.insert(url.absoluteString).inserted {
+                    result.append(url)
+                }
+            case let .styled(_, children),
+                 let .quote(children),
+                 let .center(children):
+                collectPreviewURLs(
+                    nodes: children,
+                    limit: limit,
+                    seen: &seen,
+                    result: &result
+                )
+            case let .function(name, _, children, _):
+                if staticFunctionNames.contains(name) {
+                    collectPreviewURLs(
+                        nodes: children,
+                        limit: limit,
+                        seen: &seen,
+                        result: &result
+                    )
+                }
+            case .text, .plain, .mention, .hashtag, .customEmoji, .code, .search:
+                break
+            }
+        }
     }
 
     private static func flatten(_ segments: [MissCatMFMRenderSegment]) -> AttributedString {
@@ -669,7 +705,7 @@ public enum MissCatNativeMFMRenderer {
                 apply(intent(for: style), to: &value)
                 return .attributed(value)
             }
-        case let .link(url, children):
+        case let .link(url, children, _):
             return renderSegments(nodes: children).map { segment in
                 switch segment {
                 case .attributed(var value):
