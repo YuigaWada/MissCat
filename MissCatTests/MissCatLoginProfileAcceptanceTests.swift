@@ -118,6 +118,15 @@ final class MissCatProfileNavigationAcceptanceTests: XCTestCase {
         )
         XCTAssertNil(MissCatLoginProfileFixtureRoute.parse(["MissCat"]))
     }
+
+    @MainActor
+    func testOrdinaryRouteAccessibilityActionUsesObservableSwiftUIState() {
+        let state = MissCatProfileOrdinaryActionState()
+
+        XCTAssertEqual(state.lastAction, "none")
+        state.record("settings")
+        XCTAssertEqual(state.lastAction, "settings")
+    }
 }
 
 final class MissCatLoginProfileFixtureRepositoryTests: XCTestCase {

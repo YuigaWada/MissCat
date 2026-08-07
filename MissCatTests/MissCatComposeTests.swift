@@ -1,5 +1,6 @@
 @testable import MissCat
 import Foundation
+import ImageIO
 import UIKit
 import XCTest
 
@@ -1294,6 +1295,67 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
             UIColor(red: red, green: green, blue: 0, alpha: 1).setFill()
             context.fill(CGRect(x: 0, y: 0, width: 2, height: 2))
         }.jpegData(compressionQuality: 1)!
+    }
+}
+
+final class MissCatComposeImageCodecTests: XCTestCase {
+    func testJPEGPreparationRejectsInvalidImageData() {
+        let invalid = Data("not-an-image".utf8)
+
+        XCTAssertNil(MissCatComposeImageCodec.decode(invalid))
+        XCTAssertNil(
+            MissCatComposeImageCodec.jpegData(
+                from: invalid,
+                maximumWidth: 1_024,
+                compressionQuality: 0.5
+            )
+        )
+    }
+
+    func testJPEGPreparationPreservesSmallWidthAndLimitsLargeWidth() throws {
+        let small = makeImage(width: 320, height: 120)
+        let large = makeImage(width: 1_600, height: 800)
+
+        let preparedSmall = try XCTUnwrap(
+            MissCatComposeImageCodec.jpegData(
+                from: small,
+                maximumWidth: 1_024,
+                compressionQuality: 0.5
+            )
+        )
+        let preparedLarge = try XCTUnwrap(
+            MissCatComposeImageCodec.jpegData(
+                from: large,
+                maximumWidth: 1_024,
+                compressionQuality: 0.5
+            )
+        )
+
+        XCTAssertEqual(try dimensions(of: preparedSmall), CGSize(width: 320, height: 120))
+        XCTAssertEqual(try dimensions(of: preparedLarge), CGSize(width: 1_024, height: 512))
+    }
+
+    private func makeImage(width: CGFloat, height: CGFloat) -> Data {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(
+            size: CGSize(width: width, height: height),
+            format: format
+        )
+        return renderer.image { context in
+            UIColor(red: 0.2, green: 0.6, blue: 0.8, alpha: 1).setFill()
+            context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        }.pngData()!
+    }
+
+    private func dimensions(of data: Data) throws -> CGSize {
+        let source = try XCTUnwrap(CGImageSourceCreateWithData(data as CFData, nil))
+        let properties = try XCTUnwrap(
+            CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+        )
+        let width = try XCTUnwrap(properties[kCGImagePropertyPixelWidth] as? NSNumber)
+        let height = try XCTUnwrap(properties[kCGImagePropertyPixelHeight] as? NSNumber)
+        return CGSize(width: width.doubleValue, height: height.doubleValue)
     }
 }
 
