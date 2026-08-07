@@ -1,5 +1,33 @@
 import SwiftUI
 
+struct MissCatWelcomeFrameGeometry {
+    let contentSize: CGSize
+    let safeTop: CGFloat
+    let safeBottom: CGFloat
+
+    init(proposedSize: CGSize, proposedSafeTop: CGFloat, proposedSafeBottom: CGFloat) {
+        contentSize = proposedSize
+        safeTop = proposedSafeTop
+        safeBottom = proposedSafeBottom
+    }
+
+    var canvasHeight: CGFloat {
+        contentSize.height + safeTop + safeBottom
+    }
+
+    var logoWidth: CGFloat {
+        contentSize.width - (MissCatLegacyMetrics.welcomeLogoHorizontalInset * 2)
+    }
+
+    var buttonWidth: CGFloat {
+        MissCatLegacyMetrics.welcomeButtonWidth(canvasWidth: contentSize.width)
+    }
+
+    var buttonHeight: CGFloat {
+        MissCatLegacyMetrics.welcomeButtonHeight(canvasHeight: canvasHeight)
+    }
+}
+
 public struct MissCatWelcomeView: View {
     public let instance: String
     public let onSignUp: () -> Void
@@ -22,16 +50,21 @@ public struct MissCatWelcomeView: View {
 
     public var body: some View {
         GeometryReader { proxy in
-            let size = proxy.size
-            let safeTop = proxy.safeAreaInsets.top
-            let safeBottom = proxy.safeAreaInsets.bottom
+            let frameGeometry = MissCatWelcomeFrameGeometry(
+                proposedSize: proxy.size,
+                proposedSafeTop: proxy.safeAreaInsets.top,
+                proposedSafeBottom: proxy.safeAreaInsets.bottom
+            )
+            let size = frameGeometry.contentSize
+            let safeTop = frameGeometry.safeTop
+            let safeBottom = frameGeometry.safeBottom
             let layout = MissCatWelcomeLayout(
                 contentSize: size,
                 safeTop: safeTop,
                 safeBottom: safeBottom
             )
-            let buttonHeight = layout.buttonHeight
-            let buttonWidth = MissCatLegacyMetrics.welcomeButtonWidth(canvasWidth: size.width)
+            let buttonHeight = frameGeometry.buttonHeight
+            let buttonWidth = frameGeometry.buttonWidth
             let buttonGap = max(
                 0,
                 size.width
@@ -58,7 +91,7 @@ public struct MissCatWelcomeView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(
-                        width: size.width - (MissCatLegacyMetrics.welcomeLogoHorizontalInset * 2),
+                        width: frameGeometry.logoWidth,
                         height: MissCatLegacyMetrics.welcomeLogoHeight
                     )
                     .position(

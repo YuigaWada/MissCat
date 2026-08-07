@@ -208,6 +208,14 @@ public struct MissCatProfileScreen: View {
     }
 }
 
+enum MissCatProfileHeaderLayout {
+    static let identityReservedWidth: CGFloat = 126
+
+    static func identityMaxWidth(containerWidth: CGFloat) -> CGFloat {
+        containerWidth - identityReservedWidth
+    }
+}
+
 public struct MissCatProfileHeader: View {
     public let profile: MissCatProfileUser
     public let isCurrentUser: Bool
@@ -274,7 +282,12 @@ public struct MissCatProfileHeader: View {
                         .lineLimit(1)
                 }
                 .foregroundStyle(.white)
-                .frame(maxWidth: proxy.size.width - 126, alignment: .leading)
+                .frame(
+                    maxWidth: MissCatProfileHeaderLayout.identityMaxWidth(
+                        containerWidth: proxy.size.width
+                    ),
+                    alignment: .leading
+                )
                 .position(x: (proxy.size.width + 106) / 2 - 10, y: 131)
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("profile.identity")

@@ -2,6 +2,35 @@
 import Foundation
 import XCTest
 
+final class MissCatProfileHeaderLayoutTests: XCTestCase {
+    func testIdentityWidthAlwaysProducesAValidSwiftUIFrameDimension() {
+        let proposedWidths: [CGFloat] = [
+            -.infinity,
+            -1,
+            0,
+            125,
+            .nan,
+            .infinity
+        ]
+
+        for proposedWidth in proposedWidths {
+            let identityWidth = MissCatProfileHeaderLayout.identityMaxWidth(
+                containerWidth: proposedWidth
+            )
+
+            XCTAssertTrue(identityWidth.isFinite, "Invalid width for \(proposedWidth)")
+            XCTAssertGreaterThanOrEqual(identityWidth, 0, "Negative width for \(proposedWidth)")
+        }
+    }
+
+    func testIdentityWidthPreservesLegacyGeometryWhenContainerIsWideEnough() {
+        XCTAssertEqual(
+            MissCatProfileHeaderLayout.identityMaxWidth(containerWidth: 390),
+            264
+        )
+    }
+}
+
 final class MissCatProfileTransportContractTests: XCTestCase {
     private var session: URLSession!
     private let account = MissCatProfileAccount(userID: "me", instance: "example.invalid", token: "account-token")

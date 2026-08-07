@@ -277,6 +277,62 @@ final class CodeOnlyInterfaceResourceTests: XCTestCase {
 }
 
 final class WelcomeVisualLayoutTests: XCTestCase {
+    func testFrameGeometryAlwaysProducesValidSwiftUIFrameDimensions() {
+        let proposals: [(CGSize, CGFloat, CGFloat)] = [
+            (CGSize(width: -1, height: -1), -1, -1),
+            (CGSize(width: 0, height: 0), 0, 0),
+            (CGSize(width: 79, height: 1), 0, 0),
+            (
+                CGSize(width: CGFloat.nan, height: CGFloat.nan),
+                CGFloat.nan,
+                CGFloat.nan
+            ),
+            (
+                CGSize(width: CGFloat.infinity, height: CGFloat.infinity),
+                CGFloat.infinity,
+                CGFloat.infinity
+            )
+        ]
+
+        for (size, safeTop, safeBottom) in proposals {
+            let geometry = MissCatWelcomeFrameGeometry(
+                proposedSize: size,
+                proposedSafeTop: safeTop,
+                proposedSafeBottom: safeBottom
+            )
+            let dimensions = [
+                geometry.contentSize.width,
+                geometry.contentSize.height,
+                geometry.canvasHeight,
+                geometry.logoWidth,
+                geometry.buttonWidth,
+                geometry.buttonHeight
+            ]
+
+            for dimension in dimensions {
+                XCTAssertTrue(dimension.isFinite, "Invalid dimension for \(size)")
+                XCTAssertGreaterThanOrEqual(dimension, 0, "Negative dimension for \(size)")
+            }
+        }
+    }
+
+    func testFrameGeometryPreservesReferenceCanvasDimensions() {
+        let geometry = MissCatWelcomeFrameGeometry(
+            proposedSize: CGSize(width: 414, height: 814),
+            proposedSafeTop: 48,
+            proposedSafeBottom: 34
+        )
+
+        XCTAssertEqual(geometry.contentSize, CGSize(width: 414, height: 814))
+        XCTAssertEqual(geometry.canvasHeight, 896)
+        XCTAssertEqual(geometry.logoWidth, 334)
+        XCTAssertEqual(
+            geometry.buttonWidth,
+            MissCatLegacyMetrics.welcomeButtonWidth(canvasWidth: 414)
+        )
+        XCTAssertEqual(geometry.buttonHeight, 51, accuracy: 0.001)
+    }
+
     func testReferenceStoryboardFramesAreRecoveredFromSafeAreaLayout() {
         let safeTop: CGFloat = 48
         let layout = MissCatWelcomeLayout(
