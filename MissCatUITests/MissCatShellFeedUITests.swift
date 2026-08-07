@@ -625,16 +625,7 @@ final class MissCatShellFeedUITests: XCTestCase {
 
         app.buttons["settings.licenses"].tap()
         XCTAssertTrue(element("settings.licenses.visualReady").waitForExistence(timeout: 5))
-        let firebaseLicense = app.buttons["settings.license.Firebase"]
-        for _ in 0..<5 where !firebaseLicense.exists || !firebaseLicense.isHittable {
-            app.swipeUp()
-        }
-        XCTAssertTrue(firebaseLicense.waitForExistence(timeout: 5))
-        XCTAssertTrue(firebaseLicense.isHittable)
-        firebaseLicense.tap()
-        XCTAssertTrue(element("settings.license.detail.visualReady").waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Apache License")).firstMatch.exists)
-        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertFalse(app.buttons["settings.license.Firebase"].exists)
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
         app.buttons["settings.about"].tap()

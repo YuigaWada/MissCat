@@ -3,11 +3,11 @@
   "targets": {
     "MissCat": {
       "counts": {
-        "total_swift": 65,
-        "uikit_only": 2,
+        "total_swift": 62,
+        "uikit_only": 1,
         "swiftui_only": 29,
         "hybrid": 0,
-        "neutral": 34,
+        "neutral": 32,
         "rx_files": 0,
         "polio_files": 0,
         "legacy_loader_files": 0,
@@ -32,11 +32,11 @@
   },
   "aggregate": {
     "counts": {
-      "total_swift": 73,
-      "uikit_only": 2,
+      "total_swift": 70,
+      "uikit_only": 1,
       "swiftui_only": 30,
       "hybrid": 1,
-      "neutral": 40,
+      "neutral": 38,
       "rx_files": 0,
       "polio_files": 0,
       "legacy_loader_files": 0,

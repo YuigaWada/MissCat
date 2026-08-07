@@ -35,11 +35,11 @@ production_json="${fixture_dir}/production.json"
 env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" >"$production_json"
 assert_json "$production_json" '
   expected = {
-    "total_swift" => 63,
+    "total_swift" => 62,
     "uikit_only" => 1,
     "swiftui_only" => 29,
     "hybrid" => 0,
-    "neutral" => 33,
+    "neutral" => 32,
     "rx_files" => 0,
     "polio_files" => 0,
     "legacy_loader_files" => 0,

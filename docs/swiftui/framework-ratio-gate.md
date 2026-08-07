@@ -26,9 +26,9 @@ The checked-in aggregate baseline is:
 
 | Scope | UIKit-only | SwiftUI-only | Hybrid | Neutral | Pure SwiftUI |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `MissCat` | 2 | 29 | 0 | 34 | 29 / 31 (93.548%) |
+| `MissCat` | 1 | 29 | 0 | 32 | 29 / 30 (96.667%) |
 | `MissCatShare` | 0 | 1 | 1 | 6 | 1 / 2 (50%) |
-| All shipping memberships | 2 | 30 | 1 | 40 | 30 / 33 (90.909%) |
+| All shipping memberships | 1 | 30 | 1 | 38 | 30 / 32 (93.75%) |
 
 The aggregate JSON also reports Rx, PolioPager, active legacy-loader file and
 reference counts, and tracked storyboard/XIB artifacts for both targets and the
@@ -43,7 +43,7 @@ scripts/verify-swiftui-framework-aggregate.rb --require-complete
 ```
 
 That mode currently fails for two explicit architectural reasons: the App
-target still has UIKit-only source members, and
+target still has one UIKit-only source member, and
 `ShareViewController` is still the `NSExtensionPrincipalClass` hybrid boundary.
 The JSON exposes those reasons as structured `completion_blockers`; completion
 also requires zero Rx, PolioPager, active legacy-loader, and tracked IB debt.
@@ -110,8 +110,8 @@ Update the baseline only in the same reviewed change that demonstrably improves
 the measured state. Do not raise a debt ceiling or lower the progress fraction
 to make a regression pass.
 
-The current App-target baseline is 63 Swift files: 1 UIKit-only, 29
-SwiftUI-only, 0 hybrid, and 33 neutral. Rx, PolioPager, active legacy loaders,
+The current App-target baseline is 62 Swift files: 1 UIKit-only, 29
+SwiftUI-only, 0 hybrid, and 32 neutral. Rx, PolioPager, active legacy loaders,
 and tracked Interface Builder artifacts are all zero. Pure-SwiftUI progress is
 the exact fraction `29 / 30` (approximately `96.6667%`; the emitted floor is
 `9666` basis points or `96.66%`).

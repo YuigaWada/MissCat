@@ -33,10 +33,10 @@ invalid.
   `ViewModel.swift` names cannot return.
 - Any import whose module begins with `Rx`, and any `PolioPager` import, is
   rejected across managed Swift sources.
-- Shipping-target UIKit imports are limited to the three active OS integration
-  boundaries: application delegation, system clipboard access, and the share
-  extension principal controller. Test-only UIKit imports do not count as
-  shipping architecture.
+- Shipping-target UIKit imports are limited to two active OS integration
+  boundaries: system clipboard access and the share-extension principal
+  controller. Application delegation was removed with remote push transport.
+  Test-only UIKit imports do not count as shipping architecture.
 - `docs/retired-swift-source-manifest.json` is the immutable pre-deletion
   checksum ledger. Reintroducing any path from that ledger fails independently
   of PBX membership.

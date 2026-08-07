@@ -12,11 +12,11 @@ The ordinary logged-out and authenticated routes now enter the SwiftUI applicati
 
 ## Release-blocking findings
 
-### 1. ARCH-01: authenticated runtime cutover is implemented; retirement remains
+### 1. ARCH-01: authenticated runtime cutover and physical retirement are implemented; acceptance remains
 
 `ApplicationState` now restores `MissCatApplicationRootStore`, and the authenticated phase constructs `MissCatProductionApplicationRootView`. Its root-owned `NavigationStack`, shell, feature destinations, account generation, and modal routing are exercised through the ordinary production assembly. Remote push ingress is not shipped in this revision. `MissCatLegacyApplicationView` and its project references have been removed.
 
-Static cutover tests reject any legacy application host in shipping Swift sources or the project file, and reject Storyboard/Home-controller construction from the app entry, delegate, and production root. Ordinary-root UI tests cover the native timeline, account switch, compose, notifications, messages, profile, and settings routes. The 3 Storyboards and 22 XIBs owned by the app and share extension have now been removed from the repository and project. Orphan UIKit controller sources and their runtime loader calls still require retirement before release.
+Static cutover tests reject any legacy application host in shipping Swift sources or the project file, and reject Storyboard/Home-controller construction from the app entry and production root. Ordinary-root UI tests cover the native timeline, account switch, compose, notifications, messages, profile, and settings routes. The 3 Storyboards, 22 XIBs, orphan UIKit controller sources, and their runtime loader calls have been physically removed from the repository and project. Live-service and visual acceptance remain before release.
 
 The share extension is further along: `ShareViewController` installs `ShareComposerView` in a `UIHostingController`, and its extension entry now uses `NSExtensionPrincipalClass` instead of `MainInterface.storyboard`. Share-host E2E and visual-parity evidence remain open. This SwiftUI content migration does not change the main-app verdict.
 

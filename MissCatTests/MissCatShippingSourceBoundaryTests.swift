@@ -10,11 +10,12 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
         )
         let sourceNames = try swiftSourceNames(in: appSources)
 
-        XCTAssertEqual(sourceNames.count, 63)
+        XCTAssertEqual(sourceNames.count, 62)
         XCTAssertTrue(sourceNames.contains("MissCatNativeAPI.swift"))
         XCTAssertTrue(sourceNames.contains("MissCatCameraCapture.swift"))
         for forbiddenMembership in [
             "AppDelegate.swift in Sources",
+            "ApiKeyManager.swift in Sources",
             "MisscatApi.swift in Sources",
             "ViewController.swift in Sources",
             "ViewModel.swift in Sources",
@@ -47,7 +48,7 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
         }
     }
 
-    func testShareAndPodBoundariesStaySlim() throws {
+    func testShareAndDependencyFreeBoundariesStaySlim() throws {
         let project = try source(named: "MissCat.xcodeproj/project.pbxproj")
         let shareSources = try objectBlock(
             identifier: "8D1A4BF624DD7BFF00EFD826",
@@ -66,22 +67,33 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
                 "PostModel.swift",
             ])
         )
-        XCTAssertFalse(project.contains("Pods-MissCatShare"))
-
-        let podfile = try source(named: "Podfile")
-        let directPods = podfile
-            .split(separator: "\n")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { $0.hasPrefix("pod ") }
-        XCTAssertTrue(directPods.isEmpty)
-        XCTAssertFalse(podfile.contains("target 'MissCatShare'"))
-        XCTAssertFalse(podfile.contains("Firebase"))
-        XCTAssertFalse(project.contains("GoogleService-Info.plist"))
-
-        let lock = try source(named: "Podfile.lock")
-        for retiredPod in ["MisskeyKit", "Starscream", "Firebase"] {
-            XCTAssertFalse(lock.contains(retiredPod), "Retired pod remains locked: \(retiredPod)")
-            XCTAssertFalse(project.contains("\"\(retiredPod)\""), "Retired framework remains linked: \(retiredPod)")
+        let absentPaths = [
+            "Podfile",
+            "Podfile.lock",
+            "Pods",
+            "MissCat/GoogleService-Info.plist",
+            "MissCat/Resources/ThirdPartyAcknowledgements.plist",
+            "config/third-party-acknowledgements.lock.json",
+        ]
+        for path in absentPaths {
+            XCTAssertFalse(
+                FileManager.default.fileExists(atPath: repositoryRoot.appendingPathComponent(path).path),
+                "Retired dependency artifact remains: \(path)"
+            )
+        }
+        for retiredReference in [
+            "Pods_MissCat",
+            "Pods-MissCat",
+            "[CP]",
+            "PODS_ROOT",
+            "baseConfigurationReference",
+            "Firebase",
+            "MisskeyKit",
+            "ApiKeyManager",
+            "Starscream",
+            "ThirdPartyAcknowledgements",
+        ] {
+            XCTAssertFalse(project.contains(retiredReference), retiredReference)
         }
     }
 

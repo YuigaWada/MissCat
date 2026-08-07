@@ -37,143 +37,63 @@ mutate_once() {
 }
 
 [[ -x "$verifier" ]] || fail "verifier is not executable"
-
 env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" >/dev/null
 
 fixture_dir=$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/misscat-pod-linkage.XXXXXX")
 trap 'rm -rf "$fixture_dir"' EXIT
 
 fixture_repository="${fixture_dir}/repository"
-/bin/mkdir -p \
-    "${fixture_repository}/MissCat.xcodeproj" \
-    "${fixture_repository}/MissCat.xcworkspace"
+/bin/mkdir -p "${fixture_repository}/MissCat.xcodeproj" "${fixture_repository}/MissCat.xcworkspace"
 
 reset_project() {
-    /bin/cp \
-        "${repository_root}/MissCat.xcodeproj/project.pbxproj" \
-        "${fixture_repository}/MissCat.xcodeproj/project.pbxproj"
-}
-
-reset_podfile() {
-    /bin/cp "${repository_root}/Podfile" "${fixture_repository}/Podfile"
-}
-
-reset_lock() {
-    /bin/cp "${repository_root}/Podfile.lock" "${fixture_repository}/Podfile.lock"
+    /bin/cp "${repository_root}/MissCat.xcodeproj/project.pbxproj" "${fixture_repository}/MissCat.xcodeproj/project.pbxproj"
 }
 
 reset_workspace() {
-    /bin/cp \
-        "${repository_root}/MissCat.xcworkspace/contents.xcworkspacedata" \
-        "${fixture_repository}/MissCat.xcworkspace/contents.xcworkspacedata"
+    /bin/cp "${repository_root}/MissCat.xcworkspace/contents.xcworkspacedata" "${fixture_repository}/MissCat.xcworkspace/contents.xcworkspacedata"
 }
 
 reset_project
-reset_podfile
-reset_lock
 reset_workspace
-
 fixture_arguments=(--repository-root "$fixture_repository")
-env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
-    "$verifier" "${fixture_arguments[@]}" >/dev/null
+env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}" >/dev/null
 
 project_path="${fixture_repository}/MissCat.xcodeproj/project.pbxproj"
+workspace_path="${fixture_repository}/MissCat.xcworkspace/contents.xcworkspacedata"
 failure_output="${fixture_dir}/failure.out"
+app_debug_prefix=$'\t\t8D4A2A32237437C100503685 /* Debug */ = {\n\t\t\tisa = XCBuildConfiguration;\n\t\t\tbuildSettings = {\n'
 
-mutate_once \
-    "$project_path" \
-    $'\t\t\t\t\t"\\"UIKit\\"",\n' \
-    $'\t\t\t\t\t"\\"UIKit\\"",\n\t\t\t\t\t"-framework",\n\t\t\t\t\t"\\"RxSwift\\"",\n'
-expect_boundary_failure \
-    "retired framework" \
-    "Debug OTHER_LDFLAGS" \
-    "$failure_output" \
+touch "${fixture_repository}/Podfile"
+expect_boundary_failure "Podfile" "forbidden dependency artifact exists: Podfile" "$failure_output" \
     env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}"
+rm "${fixture_repository}/Podfile"
 
+/bin/mkdir "${fixture_repository}/Pods"
+expect_boundary_failure "Pods sandbox" "forbidden dependency artifact exists: Pods" "$failure_output" \
+    env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}"
+/bin/rmdir "${fixture_repository}/Pods"
+
+mutate_once "$project_path" "$app_debug_prefix" \
+    $'\t\t8D4A2A32237437C100503685 /* Debug */ = {\n\t\t\tisa = XCBuildConfiguration;\n\t\t\tbaseConfigurationReference = DEADBEEFDEADBEEFDEADBEEF;\n\t\t\tbuildSettings = {\n'
+expect_boundary_failure "base configuration" "Debug base configuration must be absent" "$failure_output" \
+    env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}"
 reset_project
-mutate_once \
-    "$project_path" \
-    $'\t\t\t\tFRAMEWORK_SEARCH_PATHS = (\n\t\t\t\t\t"$(inherited)",\n\t\t\t\t);' \
-    $'\t\t\t\tFRAMEWORK_SEARCH_PATHS = (\n\t\t\t\t\t"$(inherited)",\n\t\t\t\t\t"$(PROJECT_DIR)/Pods/_Prebuild/GeneratedFrameworks/Agrume",\n\t\t\t\t);'
-expect_boundary_failure \
-    "retired search path" \
-    "Debug FRAMEWORK_SEARCH_PATHS" \
-    "$failure_output" \
-    env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}"
 
+mutate_once "$project_path" "$app_debug_prefix" \
+    $'\t\t8D4A2A32237437C100503685 /* Debug */ = {\n\t\t\tisa = XCBuildConfiguration;\n\t\t\tbuildSettings = {\n\t\t\t\tFRAMEWORK_SEARCH_PATHS = "$(inherited)";\n'
+expect_boundary_failure "framework search path" "Debug FRAMEWORK_SEARCH_PATHS must be absent" "$failure_output" \
+    env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}"
 reset_project
-mutate_once \
-    "$project_path" \
-    $'\t\t\t\t\t"-framework",\n\t\t\t\t\t"\\"UIKit\\"",\n' \
-    ''
-expect_boundary_failure \
-    "missing current framework" \
-    "Debug OTHER_LDFLAGS" \
-    "$failure_output" \
-    env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}"
 
+mutate_once "$project_path" "$app_debug_prefix" \
+    $'\t\t8D4A2A32237437C100503685 /* Debug */ = {\n\t\t\tisa = XCBuildConfiguration;\n\t\t\tbuildSettings = {\n\t\t\t\tOTHER_LDFLAGS = "$(inherited)";\n'
+expect_boundary_failure "linker flags" "Debug OTHER_LDFLAGS must be absent" "$failure_output" \
+    env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}"
 reset_project
-mutate_once \
-    "$project_path" \
-    'path = "Target Support Files/Pods-MissCat/Pods-MissCat.debug.xcconfig";' \
-    'path = "Target Support Files/Pods-MissCat/Retired.debug.xcconfig";'
-expect_boundary_failure \
-    "missing CocoaPods base configuration" \
-    "Debug base configuration" \
-    "$failure_output" \
-    env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}"
 
-reset_project
-mutate_once \
-    "$project_path" \
-    'path = Pods_MissCat.framework;' \
-    'path = Retired.framework;'
-expect_boundary_failure \
-    "missing aggregate framework" \
-    "app Frameworks phase" \
-    "$failure_output" \
-    env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}"
-
-reset_project
-printf '%s\n' "pod 'RxSwift'" >>"${fixture_repository}/Podfile"
-expect_boundary_failure \
-    "retired direct dependency" \
-    "Podfile direct dependencies" \
-    "$failure_output" \
-    env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}"
-reset_podfile
-
-mutate_once \
-    "${fixture_repository}/Podfile.lock" \
-    '  FirebaseMessaging:' \
-    '  RetiredFirebaseMessaging:'
-expect_boundary_failure \
-    "changed locked graph" \
-    "Podfile.lock root pods" \
-    "$failure_output" \
-    env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}"
-reset_lock
-
-mutate_once \
-    "${fixture_repository}/MissCat.xcworkspace/contents.xcworkspacedata" \
-    'location = "group:Pods/Pods.xcodeproj"' \
-    'location = "group:Retired/Retired.xcodeproj"'
-expect_boundary_failure \
-    "missing Pods workspace reference" \
-    "workspace must reference" \
-    "$failure_output" \
-    env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}"
-reset_workspace
-
-/bin/mkdir -p "${fixture_repository}/Pods"
-/bin/cp "${fixture_repository}/Podfile.lock" "${fixture_repository}/Pods/Manifest.lock"
-env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
-    "$verifier" "${fixture_arguments[@]}" >/dev/null
-printf '\nmanifest drift\n' >>"${fixture_repository}/Pods/Manifest.lock"
-expect_boundary_failure \
-    "manifest drift" \
-    "Pods/Manifest.lock differs" \
-    "$failure_output" \
+mutate_once "$workspace_path" '</Workspace>' \
+    $'   <FileRef location = "group:Pods/Pods.xcodeproj"></FileRef>\n</Workspace>'
+expect_boundary_failure "workspace" "workspace retains a CocoaPods reference" "$failure_output" \
     env LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "$verifier" "${fixture_arguments[@]}"
 
 printf 'Pod linkage boundary verifier fixtures passed.\n'

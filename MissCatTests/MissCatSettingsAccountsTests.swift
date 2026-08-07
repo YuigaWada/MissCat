@@ -1081,18 +1081,12 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
         XCTAssertEqual(MissCatSettingsLegacyMetrics.aboutDeveloperRowHeight, 70)
     }
 
-    func testLicenseCatalogExactlyMatchesBundledCocoaPodsAcknowledgementContent() throws {
+    func testLicenseCatalogIsEmptyForDependencyFreeBuild() {
         let bundle = Bundle(for: MissCatLegacySettingsRepository.self)
         let catalog = MissCatLicenseCatalog.acknowledgements(in: bundle)
-        let expected = MissCatLicenseCatalog.dependencyNames
-        let authoritative = MissCatLicenseCatalog.acknowledgements(in: bundle)
-
-        XCTAssertEqual(catalog.keys.sorted(), expected.sorted())
-        XCTAssertEqual(catalog, authoritative)
-        XCTAssertEqual(catalog.count, expected.count)
-        for name in expected {
-            XCTAssertEqual(catalog[name], authoritative[name], "Acknowledgement text differs for \(name)")
-        }
+        XCTAssertTrue(MissCatLicenseCatalog.dependencyNames.isEmpty)
+        XCTAssertTrue(catalog.isEmpty)
+        XCTAssertTrue(MissCatLicenseCatalog.entries(in: bundle).isEmpty)
     }
 
     @MainActor
@@ -1109,8 +1103,8 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
         XCTAssertEqual(instances.map(\.instance), ["misskey.example", "social.example"])
         XCTAssertEqual(licenses.map(\.name), expectedLicenseNames)
         XCTAssertEqual(licenses.count, expectedLicenseNames.count)
-        XCTAssertEqual(expectedLicenseNames, ["Firebase"])
-        XCTAssertFalse(try XCTUnwrap(licenses.first).text.isEmpty)
+        XCTAssertTrue(expectedLicenseNames.isEmpty)
+        XCTAssertTrue(licenses.isEmpty)
     }
 
     func testSettingsRoutesCoverAllLegacyDestinations() {
@@ -1119,7 +1113,7 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
             .reactionInstances,
             .reactions(accountID: "fixture"),
             .licenses,
-            .license(name: "Firebase"),
+            .license(name: "fixture-package"),
             .about
         ]
         XCTAssertEqual(Set(routes).count, 6)

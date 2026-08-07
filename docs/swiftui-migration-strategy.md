@@ -15,7 +15,7 @@ The migration is governed by these decisions:
 1. **Progress is measured over the fixed 45 inventory surfaces.** `docs/ui-migration-surfaces.tsv` is the single source of truth. Runtime ownership and acceptance are separate. A detached SwiftUI type does not change runtime ownership.
 2. **The authenticated root is cut over atomically, not screen by screen.** A fixture-only SwiftUI root is wired early for automated testing. The ordinary user route changes only after the root-cutover gate in this document passes; it then has no Storyboard fallback.
 3. **Every request is account scoped at creation.** New code may not read `MisskeyKit.shared`, a global current user, or `Theme.shared` while an operation is in flight. Account switches cancel the old scope before the new one becomes visible.
-4. **The 2020 Pods are a temporary legacy build aid, not the new architecture.** Existing source patches are frozen. A SwiftUI surface cannot be accepted while its live path depends on a patched Pod API.
+4. **The 2020 CocoaPods graph is retired.** `Podfile`, lock, sandbox references, source patches, and CocoaPods project phases/configurations are absent from the shipping build.
 5. **Visual parity is quantitative and state matched.** Both SSIM and changed-pixel similarity must independently be at least `0.90`; a passing average is not sufficient. Every accepted surface also needs functional and test evidence.
 6. **`build-for-testing` is only compilation evidence.** It is never recorded as a passed test. Test evidence requires an executed test action and a retained `.xcresult` with zero unexpected failures and zero required skips.
 7. **Live credentials are supplemental E2E input only.** They never enter CI, fixtures, screenshots, logs, shell history committed to the repository, or archived artifacts.
@@ -214,7 +214,7 @@ Do not replace `ApplicationState.Root.legacyApplication` in production merely be
 
 The complete SwiftUI root now owns the ordinary authenticated route. Its UI-test launch argument injects deterministic account-scoped dependencies into the same production assembly; it is not an alternate fixture-only root. The legacy root case, wrapper, and automatic Storyboard fallback are absent.
 
-The 25 app/share-owned Storyboard and XIB files, their project/resource references, and their launch/share-extension plist keys are removed. Obsolete legacy source loaders remain unaccepted retirement debt. Embedded third-party frameworks also continue to contribute compiled Interface Builder artifacts until their legacy callers and Pods are retired in G.
+The 25 app/share-owned Storyboard and XIB files, their project/resource references, launch/share-extension plist keys, obsolete source loaders, and embedded third-party frameworks are removed. Live-service and visual acceptance remain independently tracked.
 
 ### F — Share extension; remote notifications deferred (`N=8`)
 
@@ -222,7 +222,7 @@ Ledger focus: deferred notification/banner state `34` and share `45`. Acceptance
 
 Remote notification transport is removed and explicitly deferred; this revision does not ship APNs/FCM registration, WebPush state, push ingress, or an in-app push banner. The active bundle includes share text/URL/1–4 ordered images, account/visibility persistence, progress/cancel/retry, and exactly-once host completion.
 
-The extension uses `NSExtensionPrincipalClass` with the minimum UIKit host required by Apple and SwiftUI-owned content. `MainInterface.storyboard` is removed; the unused UIKit account/visibility controllers remain retirement work. App and extension share the same account/keychain module and signed access group.
+The extension uses `NSExtensionPrincipalClass` with the minimum UIKit host required by Apple and SwiftUI-owned content. `MainInterface.storyboard` and the unused UIKit account/visibility controllers are removed. App and extension share the same account/keychain module and signed access group.
 
 ### G — Legacy removal and release audit (`N=10`)
 
@@ -326,11 +326,10 @@ A third-party dependency may ship only when all conditions hold:
 
 If one condition fails, replace it with Apple frameworks or a small checked-in module with tests.
 
-### Locked-source patch deadline
+### Retired source-patch boundary
 
-The shipping `Podfile` no longer mutates dependency sources. Its only
-post-install setting keeps the retained Firebase graph at the deployment
-target shared by the app. The former dependency-family patches remain banned:
+The shipping repository has no `Podfile`, lock, CocoaPods sandbox reference, or
+dependency-source mutation. The former dependency-family patches remain banned:
 
 - no new dependency-family source patch may be added;
 - every future compatibility workaround must have a named replacement endpoint/component and a hash/assertion so it fails loudly if upstream source changes;
@@ -357,13 +356,13 @@ Each endpoint moves only with request/response/error contract fixtures. Do not e
 
 ### Final dependency inventory
 
-The target is CocoaPods zero. Remove PolioPager, RxSwift/RxCocoa/RxDataSources, Agrume, SkeletonView, FloatingPanel, XLActionController, XLPagerTabStrip, MessageKit/InputBarAccessoryView, Eureka, ChromaColorPicker, SwiftLinkPreview/Cache, iOSPhotoEditor, APNGKit/Gifu/SVGKit, MisskeyKit, and Starscream after their bundle exits pass. Native Security storage has already replaced the former credential wrapper.
+The shipping CocoaPods inventory is zero. PolioPager, RxSwift/RxCocoa/RxDataSources, Agrume, SkeletonView, FloatingPanel, XLActionController, XLPagerTabStrip, MessageKit/InputBarAccessoryView, Eureka, ChromaColorPicker, SwiftLinkPreview/Cache, iOSPhotoEditor, APNGKit/Gifu/SVGKit, MisskeyKit, Starscream, and Firebase are removed. Native Security storage replaces the former credential wrapper.
 
 Final shipping dependencies should be Apple frameworks and MissCat-owned typed
 modules for UI, REST/WebSocket, Security, media, and caches. Firebase is absent;
 remote notifications are deferred rather than represented by a dormant package
-or adapter. The final license screen is generated from the actual resolved
-dependency graph plus checked-in third-party source notices.
+or adapter. The native license screen reflects the resolved package graph and
+therefore presents its tested empty state in this dependency-free revision.
 
 ## Test and evidence architecture
 
@@ -431,7 +430,7 @@ Official implementation subagents are newly created `gpt-5.6-sol` agents at `xhi
 
 Each agent works in a full independent clone such as `/private/tmp/misscat-<bundle>.<random>/repo` and a branch `agent/<bundle>`. Do not use or mutate the dirty primary worktree. Each clone has its own:
 
-- CocoaPods sandbox and lock verification while Pods remain;
+- dependency-free project-boundary verification;
 - DerivedData directory;
 - test result and visual-artifact directory;
 - simulator selection/clone when UI execution is required;
@@ -499,7 +498,7 @@ These are source facts, not claims that all tests or user flows pass.
 - shell glyphs and feature layouts still require the full deterministic visual matrix against approved references;
 - share content has a principal-class SwiftUI host and still carries legacy dependency-retirement and host-E2E work;
 - the fixture-backed UI targets and `visualReady` markers exist, while the complete batch snapshot manifest and current CI release gate remain unfinished;
-- orphan UIKit controllers and runtime Storyboard/nib loader calls, Rx code, patched Pods with compiled Interface Builder resources, and old build settings remain retirement debt even though the ordinary application root no longer constructs them.
+- orphan UIKit controllers, runtime Storyboard/nib loaders, Rx code, patched Pods, compiled Interface Builder resources, and their old build settings are physically absent; live behavior and visual evidence remain separate acceptance work.
 
 ### Test evidence boundary
 
@@ -566,9 +565,9 @@ Completion is proven only when every item has authoritative current-commit evide
 - [ ] Live auth and current-server compatibility pass on the designated simulator/device with a redacted checklist only.
 - [ ] If remote notifications return in a future project, define and prove permission/token/foreground/background/deep-link/multi-account behavior before removing the deferred status.
 - [ ] Share text/URL/1–4 images, state, progress, error, retry, cancel, and exactly-once completion pass in host E2E.
-- [ ] `Main.storyboard`, `MainInterface.storyboard`, app UI XIBs, and every legacy screen/controller/view-model are removed from target and repository.
+- [x] `Main.storyboard`, `MainInterface.storyboard`, app UI XIBs, and every legacy screen/controller/view-model are removed from target and repository.
 - [ ] No ordinary source call loads a Storyboard, nib, or legacy controller; only documented Apple adapters remain.
-- [ ] MisskeyKit, Starscream 3.1.1, Rx, old UI/media Pods, post-install source patches, CocoaPods phases/configs, and duplicate models are removed.
+- [x] MisskeyKit, Starscream 3.1.1, Rx, old UI/media Pods, post-install source patches, CocoaPods phases/configs, and duplicate models are removed.
 - [ ] Final Swift package inventory is minimal, maintained, pinned, licensed, and represented exactly in Settings.
 - [ ] Credential-shaped repository material is removed and rotated; CI/deployment use secret-manager values.
 - [ ] Warning audit, static/concurrency audit, leak/performance check, secret scan, and reviewer traceability report pass on the release commit.

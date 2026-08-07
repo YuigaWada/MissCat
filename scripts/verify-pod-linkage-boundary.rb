@@ -5,28 +5,23 @@ require "open3"
 require "optparse"
 require "pathname"
 
-EXPECTED_DIRECT_DEPENDENCIES = %w[
-  Firebase/Messaging
-].freeze
-
-EXPECTED_ROOT_PODS = %w[
-  Firebase
-  FirebaseCore
-  FirebaseCoreDiagnostics
-  FirebaseInstallations
-  FirebaseMessaging
-  GoogleDataTransport
-  GoogleUtilities
-  PromisesObjC
-  nanopb
-].freeze
-
 EXPECTED_CONFIGURATIONS = %w[Debug Release].freeze
-EXPECTED_APP_FRAMEWORKS = %w[Foundation UIKit].freeze
-EXPECTED_SEARCH_PATHS = ["$(inherited)"].freeze
-EXPECTED_POD_PHASES = [
-  "[CP] Check Pods Manifest.lock",
-  "[CP] Embed Pods Frameworks"
+FORBIDDEN_ROOT_ARTIFACTS = %w[
+  Podfile
+  Podfile.lock
+  Pods
+  MissCat/Resources/ThirdPartyAcknowledgements.plist
+  config/third-party-acknowledgements.lock.json
+].freeze
+FORBIDDEN_PROJECT_TOKENS = %w[
+  Pods_MissCat.framework
+  Pods-MissCat
+  PODS_ROOT
+  PODS_PODFILE_DIR_PATH
+  ThirdPartyAcknowledgements
+  Firebase
+  MisskeyKit
+  Starscream
 ].freeze
 
 class BoundaryError < StandardError; end
@@ -35,43 +30,6 @@ def read_file(path)
   File.read(path, encoding: "UTF-8")
 rescue Errno::ENOENT
   raise BoundaryError, "required file is missing: #{path}"
-end
-
-def parse_top_level_block(text, heading)
-  lines = text.lines
-  start_index = lines.index { |line| line.chomp == "#{heading}:" }
-  raise BoundaryError, "Podfile.lock has no #{heading} block" unless start_index
-
-  block = []
-  lines[(start_index + 1)..-1].each do |line|
-    break if line.match?(/\A\S/)
-
-    block << line
-  end
-  block
-end
-
-def podfile_dependencies(text)
-  declaration_pattern = Regexp.new("^\\s*pod\\s+['\"]([^'\"]+)['\"]")
-  text.each_line.each_with_object([]) do |line, dependencies|
-    match = line.match(declaration_pattern)
-    dependencies << match[1] if match
-  end
-end
-
-def lock_dependencies(text)
-  parse_top_level_block(text, "DEPENDENCIES").each_with_object([]) do |line, dependencies|
-    next unless line =~ /^  - (.+)$/
-
-    dependencies << Regexp.last_match(1).sub(/ \(.+\)$/, "")
-  end
-end
-
-def lock_root_pods(text)
-  parse_top_level_block(text, "SPEC CHECKSUMS").each_with_object([]) do |line, pods|
-    match = line.match(/^  ([^:]+):\s*[0-9a-f]+\s*$/)
-    pods << match[1] if match
-  end
 end
 
 def project_objects(project_path)
@@ -93,24 +51,12 @@ rescue JSON::ParserError, KeyError => error
   raise BoundaryError, "PBX project JSON is invalid: #{error.message}"
 end
 
-def expected_ldflags
-  ["$(inherited)"] + EXPECTED_APP_FRAMEWORKS.flat_map do |framework|
-    ["-framework", %Q{"#{framework}"}]
-  end
-end
-
 options = {}
 parser = OptionParser.new do |arguments|
   arguments.banner = "usage: scripts/verify-pod-linkage-boundary.rb [options]"
-  arguments.on("--repository-root PATH", "repository root") do |value|
-    options[:repository_root] = value
-  end
-  arguments.on("--project PATH", "project.pbxproj path") do |value|
-    options[:project] = value
-  end
-  arguments.on("--target NAME", "app target (default: MissCat)") do |value|
-    options[:target] = value
-  end
+  arguments.on("--repository-root PATH", "repository root") { |value| options[:repository_root] = value }
+  arguments.on("--project PATH", "project.pbxproj path") { |value| options[:project] = value }
+  arguments.on("--target NAME", "app target (default: MissCat)") { |value| options[:target] = value }
   arguments.on("-h", "--help", "show this help") do
     puts arguments
     exit 0
@@ -125,44 +71,28 @@ begin
     File.expand_path(options[:repository_root] || File.expand_path("..", __dir__))
   )
   project_path = Pathname.new(
-    File.expand_path(
-      options[:project] || repository_root.join("MissCat.xcodeproj/project.pbxproj")
-    )
+    File.expand_path(options[:project] || repository_root.join("MissCat.xcodeproj/project.pbxproj"))
   )
   target_name = options[:target] || "MissCat"
-
   violations = []
-  podfile = read_file(repository_root.join("Podfile"))
-  lock = read_file(repository_root.join("Podfile.lock"))
 
-  direct_in_podfile = podfile_dependencies(podfile).sort
-  direct_in_lock = lock_dependencies(lock).sort
-  expected_direct = EXPECTED_DIRECT_DEPENDENCIES.sort
-  unless direct_in_podfile == expected_direct
-    violations << "Podfile direct dependencies must be #{expected_direct.inspect}; found #{direct_in_podfile.inspect}"
-  end
-  unless direct_in_lock == expected_direct
-    violations << "Podfile.lock direct dependencies must be #{expected_direct.inspect}; found #{direct_in_lock.inspect}"
+  FORBIDDEN_ROOT_ARTIFACTS.each do |relative_path|
+    path = repository_root.join(relative_path)
+    violations << "forbidden dependency artifact exists: #{relative_path}" if path.exist?
   end
 
-  root_pods = lock_root_pods(lock).sort
-  expected_roots = EXPECTED_ROOT_PODS.sort
-  unless root_pods == expected_roots
-    violations << "Podfile.lock root pods must be #{expected_roots.inspect}; found #{root_pods.inspect}"
+  project_source = read_file(project_path)
+  FORBIDDEN_PROJECT_TOKENS.each do |token|
+    violations << "project retains dependency reference: #{token}" if project_source.include?(token)
   end
-
-  manifest_path = repository_root.join("Pods/Manifest.lock")
-  manifest_status = "absent"
-  if manifest_path.file?
-    manifest_status = "verified"
-    manifest = read_file(manifest_path)
-    violations << "Pods/Manifest.lock differs from Podfile.lock" unless manifest == lock
-  end
+  violations << "project retains a CocoaPods build phase" if project_source.include?("[CP]")
 
   workspace = read_file(repository_root.join("MissCat.xcworkspace/contents.xcworkspacedata"))
-  unless workspace.include?('location = "group:MissCat.xcodeproj"') &&
-         workspace.include?('location = "group:Pods/Pods.xcodeproj"')
-    violations << "workspace must reference both MissCat.xcodeproj and Pods/Pods.xcodeproj"
+  unless workspace.include?('location = "group:MissCat.xcodeproj"')
+    violations << "workspace must reference MissCat.xcodeproj"
+  end
+  if workspace.match?(/Pods|Podfile|\.xcconfig/i)
+    violations << "workspace retains a CocoaPods reference"
   end
 
   objects = project_objects(project_path)
@@ -184,49 +114,32 @@ begin
     configuration = configurations[name]
     next unless configuration
 
+    violations << "#{name} base configuration must be absent" if configuration.key?("baseConfigurationReference")
     settings = configuration.fetch("buildSettings", {})
-    search_paths = Array(settings["FRAMEWORK_SEARCH_PATHS"])
-    unless search_paths == EXPECTED_SEARCH_PATHS
-      violations << "#{name} FRAMEWORK_SEARCH_PATHS must contain only $(inherited); found #{search_paths.inspect}"
-    end
-
-    ldflags = Array(settings["OTHER_LDFLAGS"])
-    unless ldflags == expected_ldflags
-      violations << "#{name} OTHER_LDFLAGS must preserve only inherited and current frameworks; found #{ldflags.inspect}"
-    end
-
-    base_reference_id = configuration["baseConfigurationReference"]
-    base_reference = base_reference_id && objects[base_reference_id]
-    expected_path = "Target Support Files/Pods-MissCat/Pods-MissCat.#{name.downcase}.xcconfig"
-    unless base_reference && base_reference["path"] == expected_path
-      found = base_reference && base_reference["path"]
-      violations << "#{name} base configuration must be #{expected_path}; found #{found.inspect}"
-    end
+    violations << "#{name} FRAMEWORK_SEARCH_PATHS must be absent" if settings.key?("FRAMEWORK_SEARCH_PATHS")
+    violations << "#{name} OTHER_LDFLAGS must be absent" if settings.key?("OTHER_LDFLAGS")
   end
 
   build_phases = Array(target["buildPhases"]).map { |identifier| objects.fetch(identifier) }
-  pod_phase_names = build_phases.select do |phase|
-    phase["isa"] == "PBXShellScriptBuildPhase" && phase["name"].to_s.start_with?("[CP]")
-  end.map { |phase| phase["name"] }.sort
-  unless pod_phase_names == EXPECTED_POD_PHASES.sort
-    violations << "CocoaPods build phases must be #{EXPECTED_POD_PHASES.inspect}; found #{pod_phase_names.inspect}"
-  end
+  shell_phases = build_phases.select { |phase| phase["isa"] == "PBXShellScriptBuildPhase" }
+  violations << "app target must not contain shell dependency phases" unless shell_phases.empty?
 
   framework_paths = build_phases.select do |phase|
     phase["isa"] == "PBXFrameworksBuildPhase"
   end.flat_map do |phase|
-    Array(phase["files"]).map do |build_file_id|
+    Array(phase["files"]).each_with_object([]) do |build_file_id, paths|
       build_file = objects.fetch(build_file_id)
       file_reference = objects[build_file["fileRef"]]
-      file_reference && file_reference["path"]
+      path = file_reference && (file_reference["path"] || file_reference["name"])
+      paths << path if path
     end
-  end.compact.sort
-  unless framework_paths == ["Pods_MissCat.framework"]
-    violations << "app Frameworks phase must contain only Pods_MissCat.framework; found #{framework_paths.inspect}"
+  end
+  unless framework_paths.empty?
+    violations << "app Frameworks phase must be empty; found #{framework_paths.sort.inspect}"
   end
 
   if violations.empty?
-    puts "Pod linkage boundary verified: target=#{target_name} direct=#{expected_direct.length} roots=#{expected_roots.length} manifest=#{manifest_status}"
+    puts "Pod linkage boundary verified: target=#{target_name} direct=0 roots=0 references=0"
     exit 0
   end
 

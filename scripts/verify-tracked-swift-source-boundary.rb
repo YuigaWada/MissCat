@@ -11,7 +11,6 @@ require_relative "verify-swiftui-framework-ratio"
 SOURCE_BOUNDARY_SCHEMA_VERSION = 1
 SHIPPING_TARGETS = Set.new(%w[MissCat MissCatShare]).freeze
 SHIPPING_UIKIT_ALLOWLIST = Set.new([
-  "MissCat/Others/App/AppDelegate.swift",
   "MissCat/Others/Platform/MissCatSystemClipboardWriter.swift",
   "MissCatShare/ShareViewController.swift"
 ]).freeze

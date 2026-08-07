@@ -16,7 +16,6 @@ class BoundaryFixture
     @manifest = @root.join("retired.json")
     @memberships = {
       "MissCat" => [
-        "MissCat/Others/App/AppDelegate.swift",
         "MissCat/Others/Platform/MissCatSystemClipboardWriter.swift",
         "MissCat/App.swift"
       ],
@@ -47,7 +46,6 @@ class BoundaryFixture
   private
 
   def create_repository
-    write("MissCat/Others/App/AppDelegate.swift", "import UIKit\n")
     write("MissCat/Others/Platform/MissCatSystemClipboardWriter.swift", "import UIKit\n")
     write("MissCat/App.swift", "import SwiftUI\n")
     write("MissCatShare/ShareViewController.swift", "import SwiftUI\nimport UIKit\n")
@@ -72,13 +70,13 @@ class BoundaryFixture
     assert(data.fetch("passed"), "clean fixture did not pass")
     assert(data.fetch("counts") == {
       "native_targets" => 3,
-      "tracked_swift" => 9,
-      "managed_swift" => 6,
+      "tracked_swift" => 8,
+      "managed_swift" => 5,
       "excluded_swift" => 3,
-      "owned_unique_swift" => 6,
+      "owned_unique_swift" => 5,
       "unowned_swift" => 0,
       "tracked_ib_artifacts" => 0,
-      "pbx_swift_file_references" => 6,
+      "pbx_swift_file_references" => 5,
       "duplicate_pbx_swift_file_references" => 0,
       "dangling_pbx_swift_file_references" => 0,
       "unreferenced_managed_swift" => 0,
@@ -87,7 +85,7 @@ class BoundaryFixture
       "retired_pattern_paths" => 0,
       "retired_pbx_reference_paths" => 0,
       "rx_or_polio_sources" => 0,
-      "shipping_uikit_imports" => 3
+      "shipping_uikit_imports" => 2
     }, "clean fixture counts changed")
   end
 
