@@ -77,6 +77,7 @@ enum MissCatNativeMFMParser {
         }
 
         private func token(at index: String.Index, allowBlocks: Bool) -> Token? {
+            if let escaped = escapedMarker(at: index) { return escaped }
             if allowBlocks, isLineStart(index) {
                 if let code = blockCode(at: index) { return code }
                 if let quote = quote(at: index) { return quote }
@@ -106,9 +107,24 @@ enum MissCatNativeMFMParser {
             if let big = delimited(at: index, marker: "***", style: nil) { return big }
             if let bold = delimited(at: index, marker: "**", style: .strong) { return bold }
             if let strike = delimited(at: index, marker: "~~", style: .strikethrough) { return strike }
-            if let italic = delimited(at: index, marker: "*", style: .emphasis) { return italic }
-            if let bold = delimited(at: index, marker: "__", style: .strong) { return bold }
-            if let italic = delimited(at: index, marker: "_", style: .emphasis) { return italic }
+            if let italic = wordDelimited(
+                at: index,
+                marker: "*",
+                style: .emphasis,
+                requiresLeadingBoundary: true
+            ) { return italic }
+            if let bold = wordDelimited(
+                at: index,
+                marker: "__",
+                style: .strong,
+                requiresLeadingBoundary: false
+            ) { return bold }
+            if let italic = wordDelimited(
+                at: index,
+                marker: "_",
+                style: .emphasis,
+                requiresLeadingBoundary: true
+            ) { return italic }
             if let code = inlineCode(at: index) { return code }
             if let math = inlineMath(at: index) { return math }
             if let link = labelledLink(at: index) { return link }
@@ -118,6 +134,23 @@ enum MissCatNativeMFMParser {
             if let hashtag = hashtag(at: index) { return hashtag }
             if let emoji = customEmoji(at: index) { return emoji }
             return nil
+        }
+
+        /// MFM has no executable escape nodes. Treat a slash before a known
+        /// marker as literal text so malformed or user-authored input cannot
+        /// accidentally activate formatting, callbacks, or emoji loading.
+        private func escapedMarker(at index: String.Index) -> Token? {
+            guard source[index] == "\\" else { return nil }
+            let markerStart = source.index(after: index)
+            guard markerStart < source.endIndex else { return nil }
+            let markers = ["***", "**", "~~", "__", "$[", "*", "_", ":", "`", "<"]
+            guard let marker = markers.first(where: { hasPrefix($0, at: markerStart) }) else {
+                return nil
+            }
+            return Token(
+                nodes: [.text(marker)],
+                end: source.index(markerStart, offsetBy: marker.count)
+            )
         }
 
         private func childParser(_ text: String, allowBlocks: Bool = false) -> [MissCatMFMNode] {
@@ -322,7 +355,11 @@ enum MissCatNativeMFMParser {
                             of: #"^[A-Za-z0-9_.-]+$"#,
                             options: .regularExpression
                           ) != nil else { return nil }
-                    arguments[String(key)] = pair.count == 2 ? String(pair[1]) : nil
+                    if pair.count == 2 {
+                        arguments[String(key)] = String(pair[1])
+                    } else {
+                        arguments.updateValue(nil, forKey: String(key))
+                    }
                 }
             }
             return (String(namePiece).lowercased(), arguments)
@@ -344,6 +381,37 @@ enum MissCatNativeMFMParser {
             let children = childParser(content)
             return Token(
                 nodes: style.map { [.styled($0, children)] } ?? children,
+                end: close.upperBound
+            )
+        }
+
+        /// Mirrors the constrained `italicAsta`, `italicUnder`, and
+        /// `boldUnder` parsers in the official mfm.js grammar.
+        private func wordDelimited(
+            at index: String.Index,
+            marker: String,
+            style: MissCatMFMNode.Style,
+            requiresLeadingBoundary: Bool
+        ) -> Token? {
+            guard hasPrefix(marker, at: index) else { return nil }
+            if requiresLeadingBoundary, index > source.startIndex {
+                let previous = source[source.index(before: index)]
+                guard !(previous.isASCII && (previous.isLetter || previous.isNumber)) else {
+                    return nil
+                }
+            }
+            let contentStart = source.index(index, offsetBy: marker.count)
+            guard let close = source.range(
+                of: marker,
+                range: contentStart ..< source.endIndex
+            ), close.lowerBound > contentStart else { return nil }
+            let content = String(source[contentStart ..< close.lowerBound])
+            guard content.allSatisfy({ character in
+                character.isASCII && (character.isLetter || character.isNumber)
+                    || character == " " || character == "\t"
+            }) else { return nil }
+            return Token(
+                nodes: [.styled(style, [.text(content)])],
                 end: close.upperBound
             )
         }
@@ -515,10 +583,12 @@ enum MissCatNativeMFMParser {
     }
 }
 
+enum MissCatMFMRenderSegment: Equatable, Sendable {
+    case attributed(AttributedString)
+    case customEmoji(name: String, link: URL?)
+}
+
 public enum MissCatNativeMFMRenderer {
-    private static let customEmojiExpression = try! NSRegularExpression(
-        pattern: #":([A-Za-z0-9_+\-]+(?:@[A-Za-z0-9.-]+)?):"#
-    )
     private static let staticFunctionNames: Set<String> = [
         "tada", "jelly", "twitch", "shake", "spin", "jump", "bounce",
         "flip", "x2", "x3", "x4", "font", "blur", "rainbow", "sparkle",
@@ -528,23 +598,24 @@ public enum MissCatNativeMFMRenderer {
     /// Swift-native, side-effect-free rendering. Motion and callbacks are
     /// deliberately represented as static attributed text.
     public static func render(_ source: String) -> AttributedString {
-        render(nodes: MissCatNativeMFMParser.parse(source))
+        flatten(segments(source))
+    }
+
+    /// Produces display segments from the parsed MFM tree. Custom emoji are
+    /// emitted only for actual custom-emoji nodes, never by rescanning raw
+    /// source. This preserves emoji inside functions while keeping `<plain>`
+    /// completely literal.
+    static func segments(_ source: String) -> [MissCatMFMRenderSegment] {
+        mergeAdjacentAttributed(renderSegments(nodes: MissCatNativeMFMParser.parse(source)))
     }
 
     public static func accessibilityText(_ source: String) -> String {
-        var result = String(render(source).characters)
-        let matches = customEmojiExpression.matches(
-            in: result,
-            range: NSRange(result.startIndex..., in: result)
-        )
-        for match in matches.reversed() {
-            guard match.numberOfRanges == 2,
-                  let markerRange = Range(match.range(at: 0), in: result),
-                  let nameRange = Range(match.range(at: 1), in: result) else { continue }
-            let name = String(result[nameRange])
-            result.replaceSubrange(markerRange, with: "\(name) 絵文字")
-        }
-        return result
+        segments(source).map { segment in
+            switch segment {
+            case let .attributed(value): String(value.characters)
+            case let .customEmoji(name, _): "\(name) 絵文字"
+            }
+        }.joined()
     }
 
     public static func interactiveValue(from url: URL, kind: String) -> String? {
@@ -569,24 +640,45 @@ public enum MissCatNativeMFMRenderer {
         }.prefix(limit).map { $0 }
     }
 
-    private static func render(nodes: [MissCatMFMNode]) -> AttributedString {
+    private static func flatten(_ segments: [MissCatMFMRenderSegment]) -> AttributedString {
         var result = AttributedString()
-        for node in nodes { result.append(render(node: node)) }
+        for segment in segments {
+            switch segment {
+            case let .attributed(value):
+                result.append(value)
+            case let .customEmoji(name, link):
+                var marker = AttributedString(":\(name):")
+                marker.link = link
+                result.append(marker)
+            }
+        }
         return result
     }
 
-    private static func render(node: MissCatMFMNode) -> AttributedString {
+    private static func renderSegments(nodes: [MissCatMFMNode]) -> [MissCatMFMRenderSegment] {
+        nodes.flatMap(renderSegments(node:))
+    }
+
+    private static func renderSegments(node: MissCatMFMNode) -> [MissCatMFMRenderSegment] {
         switch node {
         case let .text(value), let .plain(value):
-            return AttributedString(value)
+            return [.attributed(AttributedString(value))]
         case let .styled(style, children):
-            var result = render(nodes: children)
-            apply(intent(for: style), to: &result)
-            return result
+            return renderSegments(nodes: children).map { segment in
+                guard case .attributed(var value) = segment else { return segment }
+                apply(intent(for: style), to: &value)
+                return .attributed(value)
+            }
         case let .link(url, children):
-            var result = render(nodes: children)
-            result.link = url
-            return result
+            return renderSegments(nodes: children).map { segment in
+                switch segment {
+                case .attributed(var value):
+                    value.link = url
+                    return .attributed(value)
+                case let .customEmoji(name, _):
+                    return .customEmoji(name: name, link: url)
+                }
+            }
         case let .mention(value):
             var result = AttributedString(value)
             let account = String(value.dropFirst())
@@ -594,38 +686,38 @@ public enum MissCatNativeMFMRenderer {
                let url = URL(string: "misscat-mfm://mention/\(encoded)") {
                 result.link = url
             }
-            return result
+            return [.attributed(result)]
         case let .hashtag(value):
             var result = AttributedString("#\(value)")
             if let encoded = value.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
                let url = URL(string: "misscat-mfm://hashtag/\(encoded)") {
                 result.link = url
             }
-            return result
+            return [.attributed(result)]
         case let .customEmoji(name):
-            return AttributedString(":\(name):")
+            return [.customEmoji(name: name, link: nil)]
         case let .code(value, _, _):
             var result = AttributedString(value)
             apply(.code, to: &result)
-            return result
+            return [.attributed(result)]
         case let .quote(children):
-            var result = AttributedString("▎ ")
-            result.append(render(nodes: children))
-            return result
+            return [.attributed(AttributedString("▎ "))] + renderSegments(nodes: children)
         case let .center(children):
-            return render(nodes: children)
+            return renderSegments(nodes: children)
         case let .function(name, _, children, literal):
-            if name == "ruby" { return renderRuby(children) }
-            if name == "unixtime" { return renderUnixTime(children) ?? AttributedString(literal) }
-            if staticFunctionNames.contains(name) { return render(nodes: children) }
-            return AttributedString(literal)
+            if name == "ruby" { return [.attributed(renderRuby(children))] }
+            if name == "unixtime" {
+                return [.attributed(renderUnixTime(children) ?? AttributedString(literal))]
+            }
+            if staticFunctionNames.contains(name) { return renderSegments(nodes: children) }
+            return [.attributed(AttributedString(literal))]
         case let .search(query):
-            return AttributedString("\(query) 🔍")
+            return [.attributed(AttributedString("\(query) 🔍"))]
         }
     }
 
     private static func renderRuby(_ children: [MissCatMFMNode]) -> AttributedString {
-        let rendered = render(nodes: children)
+        let rendered = flatten(renderSegments(nodes: children))
         let text = String(rendered.characters)
         guard let split = text.lastIndex(where: { $0.isWhitespace }) else { return rendered }
         let base = String(text[..<split]).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -635,7 +727,7 @@ public enum MissCatNativeMFMRenderer {
     }
 
     private static func renderUnixTime(_ children: [MissCatMFMNode]) -> AttributedString? {
-        let raw = String(render(nodes: children).characters)
+        let raw = String(flatten(renderSegments(nodes: children)).characters)
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard let seconds = TimeInterval(raw), seconds.isFinite else { return nil }
         let formatter = DateFormatter()
@@ -644,6 +736,26 @@ public enum MissCatNativeMFMRenderer {
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss 'UTC'"
         return AttributedString("🕒 \(formatter.string(from: Date(timeIntervalSince1970: seconds)))")
+    }
+
+    private static func mergeAdjacentAttributed(
+        _ segments: [MissCatMFMRenderSegment]
+    ) -> [MissCatMFMRenderSegment] {
+        var result: [MissCatMFMRenderSegment] = []
+        for segment in segments {
+            guard case let .attributed(value) = segment else {
+                result.append(segment)
+                continue
+            }
+            guard !value.characters.isEmpty else { continue }
+            if case .attributed(var previous)? = result.last {
+                previous.append(value)
+                result[result.index(before: result.endIndex)] = .attributed(previous)
+            } else {
+                result.append(.attributed(value))
+            }
+        }
+        return result
     }
 
     private static func intent(for style: MissCatMFMNode.Style) -> InlinePresentationIntent {

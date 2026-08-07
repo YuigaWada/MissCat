@@ -31,6 +31,14 @@ The pinned commits make later parser drift explicit and reviewable.
 - Unknown or malformed syntax remains visible as literal text. Text must never
   be silently discarded.
 - `<plain>` content bypasses formatting and interactive-token discovery.
+- The `*` and `_` alternatives follow the official ASCII-word leading-boundary
+  rule, so identifiers such as `foo_bar_baz` are never reformatted.
+- A backslash before a formatting, function, or custom-emoji marker removes
+  the backslash and keeps the marker literal. This is a safety extension for
+  user-authored source; it never enables executable behavior.
+- Rendering emits typed AST segments. Custom emoji substitution is driven only
+  by `.customEmoji` nodes, so emoji nested in safe static functions still
+  animate while emoji-shaped text inside `<plain>` remains literal.
 
 ## Audited syntax matrix
 
@@ -54,6 +62,7 @@ The pinned commits make later parser drift explicit and reviewable.
 | `$[font]`, `$[blur]`, `$[rainbow]`, `$[sparkle]`, `$[fg]`, `$[bg]`, `$[border]` | Static children | Dynamic styling disabled |
 | `$[clickable]` | Static children | Callback disabled |
 | `<plain>` | Exact literal content | Parsing and routing disabled |
+| Backslash-escaped marker | Marker preserved as literal text | Parsing disabled |
 | Unknown/malformed syntax | Exact visible literal | None |
 
 Every row is represented in `MissCatNativeMFMTests`, including nested
