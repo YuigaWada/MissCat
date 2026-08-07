@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import KeychainAccess
 import MisskeyKit
 
 class SecureUser: Codable {
@@ -42,8 +41,10 @@ class UserModel {
     }
     
     private lazy var userDefaults = Foundation.UserDefaults(suiteName: Self.appGroup)!
-    private lazy var keychain = Keychain(service: Self.keychainService,
-                                         accessGroup: Self.keychainAccessGroup)
+    private lazy var keychain = MissCatNativeKeychainStore(
+        service: Self.keychainService,
+        accessGroup: Self.keychainAccessGroup
+    )
     
     // MARK: Keys
     
@@ -67,20 +68,20 @@ class UserModel {
         do {
             for user in users {
                 let accountID = user.accountIdentifier
-                var apiKey = try keychain.get(accountID)
+                var apiKey = try keychain.string(forKey: accountID)
                 if apiKey == nil,
                    legacyUserIDCounts[user.userId] == 1,
-                   let legacyAPIKey = try keychain.get(user.userId)
+                   let legacyAPIKey = try keychain.string(forKey: user.userId)
                 {
-                    try keychain.set(legacyAPIKey, key: accountID)
-                    guard try keychain.get(accountID) == legacyAPIKey else {
+                    try keychain.set(legacyAPIKey, forKey: accountID)
+                    guard try keychain.string(forKey: accountID) == legacyAPIKey else {
                         throw AccountPersistenceError.keychainVerificationFailed
                     }
                     apiKey = legacyAPIKey
                 }
                 if apiKey == nil, let legacyAPIKey = user.apiKey {
-                    try keychain.set(legacyAPIKey, key: accountID)
-                    guard try keychain.get(accountID) == legacyAPIKey else {
+                    try keychain.set(legacyAPIKey, forKey: accountID)
+                    guard try keychain.string(forKey: accountID) == legacyAPIKey else {
                         throw AccountPersistenceError.keychainVerificationFailed
                     }
                     apiKey = legacyAPIKey

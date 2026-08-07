@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import KeychainAccess
 import MisskeyKit
 import SwiftLinkPreview
 import UIKit
@@ -68,26 +67,26 @@ private enum AccountPersistenceRecoveryKeys {
 }
 
 private struct KeychainAccountAPIKeyStore: AccountAPIKeyStoring {
-    private let keychain: Keychain
+    private let keychain: MissCatNativeKeychainStore
 
-    init(keychain: Keychain) {
+    init(keychain: MissCatNativeKeychainStore) {
         self.keychain = keychain
     }
 
     func apiKey(for accountID: String) throws -> String? {
-        return try keychain.get(accountID)
+        return try keychain.string(forKey: accountID)
     }
 
     func setAPIKey(_ apiKey: String, for accountID: String) throws {
-        try keychain.set(apiKey, key: accountID)
+        try keychain.set(apiKey, forKey: accountID)
     }
 
     func removeAPIKey(for accountID: String) throws {
-        try keychain.remove(accountID)
+        try keychain.removeValue(forKey: accountID)
     }
 
     func allAccountIDs() throws -> [String] {
-        keychain.allKeys()
+        try keychain.allKeys()
     }
 }
 
@@ -325,8 +324,10 @@ extension Cache {
             if let injectedAPIKeyStore = injectedAPIKeyStore {
                 return injectedAPIKeyStore
             }
-            let keychain = Keychain(service: Self.keychainService,
-                                    accessGroup: Self.keychainAccessGroup)
+            let keychain = MissCatNativeKeychainStore(
+                service: Self.keychainService,
+                accessGroup: Self.keychainAccessGroup
+            )
             let sharedStore = KeychainAccountAPIKeyStore(keychain: keychain)
             migrateKeyChainToAppGroups(sharedStore)
             return sharedStore
@@ -985,7 +986,7 @@ extension Cache {
         
         func migrateKeyChainToAppGroups(_ newStore: AccountAPIKeyStoring) {
             let oldStore = KeychainAccountAPIKeyStore(
-                keychain: Keychain(service: Self.keychainService)
+                keychain: MissCatNativeKeychainStore(service: Self.keychainService)
             )
             if !AccountKeychainMigrator().migrate(from: oldStore, to: newStore) {
                 // No account IDs or values are logged. The absent marker makes
