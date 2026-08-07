@@ -20,7 +20,8 @@ final class ShareExtensionSwiftUIBoundaryTests: XCTestCase {
         XCTAssertTrue(entry.contains("extensionContext"))
         XCTAssertTrue(entry.contains("ShareExtensionRootView"))
         for misplacedResponsibility in [
-            "ShareInputLoader", "ShareComposerViewModel", "SharePostService", "loadSharedContent"
+            "ShareInputLoader", "ShareComposerViewModel", "SharePostService", "loadSharedContent",
+            "ShareCredentialReadProbe", "UserDefaults", "ProcessInfo"
         ] {
             XCTAssertFalse(
                 entry.contains(misplacedResponsibility),
