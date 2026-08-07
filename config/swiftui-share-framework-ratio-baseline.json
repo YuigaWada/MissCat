@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "target": "MissCatShare",
+  "counts": {
+    "total_swift": 8,
+    "uikit_only": 0,
+    "swiftui_only": 1,
+    "hybrid": 1,
+    "neutral": 6,
+    "rx_files": 0,
+    "polio_files": 0,
+    "legacy_loader_files": 0,
+    "legacy_loader_refs": 0,
+    "tracked_ib_artifacts": 0
+  }
+}
