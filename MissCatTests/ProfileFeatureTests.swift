@@ -527,6 +527,30 @@ final class MissCatProfileEditorAndUserListTests: XCTestCase {
         XCTAssertEqual(store.avatarData, Data([1]))
     }
 
+    func testDroppingEditorDuringSuspendedUploadDeallocatesAndDeletesLateOrphan() async {
+        let repository = SuspendedProfileUploadRepository(account: account)
+        var store: MissCatProfileEditorStore? = MissCatProfileEditorStore(
+            account: account,
+            profile: makeUser(id: "me"),
+            repositoryFactory: { _ in repository }
+        )
+        weak var releasedStore = store
+        store?.setAvatarData(Data([1]))
+
+        store?.save()
+        await repository.waitUntilUploadStarted()
+        store = nil
+
+        XCTAssertNil(releasedStore)
+
+        repository.resolveUpload(fileID: "late-orphan")
+        await waitUntil { repository.deletedFileIDs == ["late-orphan"] }
+
+        XCTAssertEqual(repository.deletedFileIDs, ["late-orphan"])
+        XCTAssertTrue(repository.updatePatches.isEmpty)
+        XCTAssertNil(releasedStore)
+    }
+
     func testSupersedingInFlightUploadCleansOldFileAndSavesReplacement() async {
         let repository = ProfileRepositorySpy(account: account)
         repository.profileValue = makeUser(id: "me")
@@ -699,6 +723,67 @@ private final class ProfileRepositorySpy: MissCatProfileRepository, @unchecked S
         updatePatches.append(patch)
         if let updateError { throw updateError }
         return profileValue
+    }
+}
+
+/// The owning `@MainActor` test serializes this deliberately non-cooperative repository.
+private final class SuspendedProfileUploadRepository: MissCatProfileRepository, @unchecked Sendable {
+    let account: MissCatProfileAccount
+    private var uploadContinuation: CheckedContinuation<String, Never>?
+    private var uploadWaiters: [CheckedContinuation<Void, Never>] = []
+    private(set) var deletedFileIDs: [String] = []
+    private(set) var updatePatches: [MissCatProfileUpdatePatch] = []
+
+    init(account: MissCatProfileAccount) {
+        self.account = account
+    }
+
+    func profile(userID: String) async throws -> MissCatProfileUser { makeUser(id: userID) }
+    func relationship(userID: String) async throws -> Bool { false }
+    func notes(
+        userID: String,
+        tab: MissCatProfileTimelineTab,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatProfilePage<MissCatProfileNote> {
+        .init(items: [], nextCursor: nil)
+    }
+    func users(
+        kind: MissCatUserListKind,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatProfilePage<MissCatProfileUser> {
+        .init(items: [], nextCursor: nil)
+    }
+    func setFollowing(_ following: Bool, userID: String) async throws {}
+
+    func uploadProfileImage(
+        data: Data,
+        filename: String,
+        progress: @escaping @Sendable (Double) -> Void
+    ) async throws -> String {
+        uploadWaiters.forEach { $0.resume() }
+        uploadWaiters.removeAll()
+        return await withCheckedContinuation { uploadContinuation = $0 }
+    }
+
+    func waitUntilUploadStarted() async {
+        if uploadContinuation != nil { return }
+        await withCheckedContinuation { uploadWaiters.append($0) }
+    }
+
+    func resolveUpload(fileID: String) {
+        uploadContinuation?.resume(returning: fileID)
+        uploadContinuation = nil
+    }
+
+    func deleteProfileImage(fileID: String) async throws {
+        deletedFileIDs.append(fileID)
+    }
+
+    func updateProfile(patch: MissCatProfileUpdatePatch) async throws -> MissCatProfileUser {
+        updatePatches.append(patch)
+        return makeUser(id: account.userID)
     }
 }
 

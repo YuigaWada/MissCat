@@ -136,6 +136,82 @@ final class MissCatCameraCaptureTests: XCTestCase {
         XCTAssertNil(retainedModel)
     }
 
+    @MainActor
+    func testStoppingWhileVideoPermissionIsSuspendedRejectsLateStartAndCanRestart() async {
+        let permission = SuspendedCameraVideoPermission()
+        let engine = CameraEngineSpy()
+        var engineCreations = 0
+        let model = MissCatCameraCaptureModel(
+            configuration: .profile,
+            videoAuthorizationStatus: { permission.status },
+            requestVideoAccess: { await permission.requestAccess() },
+            makeEngine: { _ in
+                engineCreations += 1
+                return engine
+            }
+        )
+
+        let suspendedStart = Task { await model.start() }
+        await permission.waitUntilRequested()
+        XCTAssertEqual(model.accessState, .requesting)
+
+        model.stop()
+        permission.resolve(with: .authorized)
+        await suspendedStart.value
+
+        XCTAssertEqual(model.accessState, .idle)
+        XCTAssertFalse(model.hasActiveEngine)
+        XCTAssertEqual(engineCreations, 0)
+        var counts = await engine.counts
+        XCTAssertEqual(counts.start, 0)
+        XCTAssertEqual(counts.stop, 0)
+
+        await model.start()
+
+        XCTAssertEqual(model.accessState, .ready)
+        XCTAssertTrue(model.hasActiveEngine)
+        XCTAssertEqual(engineCreations, 1)
+        counts = await engine.counts
+        XCTAssertEqual(counts.start, 1)
+
+        model.stop()
+        await waitUntil { await engine.stopCount == 1 }
+        XCTAssertEqual(model.accessState, .idle)
+        XCTAssertFalse(model.hasActiveEngine)
+    }
+
+    @MainActor
+    func testStoppingWhileEngineStartIsSuspendedStopsCandidateBeforePublication() async {
+        let engine = CameraEngineSpy(suspendsStart: true)
+        var callbacks: MissCatCameraEngineCallbacks?
+        let model = MissCatCameraCaptureModel(
+            configuration: .profile,
+            videoAuthorizationStatus: { .authorized },
+            requestVideoAccess: { true },
+            makeEngine: {
+                callbacks = $0
+                return engine
+            }
+        )
+
+        let suspendedStart = Task { await model.start() }
+        await engine.waitUntilStartCalled()
+        XCTAssertEqual(model.accessState, .requesting)
+        XCTAssertFalse(model.hasActiveEngine)
+
+        model.stop()
+        await engine.resolveStart()
+        await suspendedStart.value
+        await waitUntil { await engine.stopCount == 1 }
+
+        callbacks?.onError("late failure")
+        XCTAssertEqual(model.accessState, .idle)
+        XCTAssertFalse(model.hasActiveEngine)
+        let counts = await engine.counts
+        XCTAssertEqual(counts.start, 1)
+        XCTAssertEqual(counts.stop, 1)
+    }
+
     func testProfileAvatarProcessingProducesOrientedSquareJPEG() throws {
         let source = try XCTUnwrap(makeJPEG(width: 12, height: 8))
         let avatar = try XCTUnwrap(
@@ -237,4 +313,83 @@ final class MissCatCameraCaptureTests: XCTestCase {
             .deletingLastPathComponent()
         return try String(contentsOf: root.appendingPathComponent(relativePath), encoding: .utf8)
     }
+}
+
+@MainActor
+private final class SuspendedCameraVideoPermission {
+    private var requestContinuation: CheckedContinuation<Bool, Never>?
+    private var requestWaiters: [CheckedContinuation<Void, Never>] = []
+    private(set) var status: AVAuthorizationStatus = .notDetermined
+
+    func requestAccess() async -> Bool {
+        requestWaiters.forEach { $0.resume() }
+        requestWaiters.removeAll()
+        return await withCheckedContinuation { requestContinuation = $0 }
+    }
+
+    func waitUntilRequested() async {
+        if requestContinuation != nil { return }
+        await withCheckedContinuation { requestWaiters.append($0) }
+    }
+
+    func resolve(with status: AVAuthorizationStatus) {
+        self.status = status
+        requestContinuation?.resume(returning: status == .authorized)
+        requestContinuation = nil
+    }
+}
+
+private actor CameraEngineSpy: MissCatCameraEngineProtocol {
+    private let suspendsStart: Bool
+    private var startContinuation: CheckedContinuation<Void, Never>?
+    private var startWaiters: [CheckedContinuation<Void, Never>] = []
+    private(set) var startCount = 0
+    private(set) var stopCount = 0
+    var counts: (start: Int, stop: Int) { (startCount, stopCount) }
+
+    init(suspendsStart: Bool = false) {
+        self.suspendsStart = suspendsStart
+    }
+
+    func start() async -> Bool {
+        startCount += 1
+        startWaiters.forEach { $0.resume() }
+        startWaiters.removeAll()
+        if suspendsStart {
+            await withCheckedContinuation { startContinuation = $0 }
+        }
+        return true
+    }
+
+    func waitUntilStartCalled() async {
+        if startCount > 0 { return }
+        await withCheckedContinuation { startWaiters.append($0) }
+    }
+
+    func resolveStart() {
+        startContinuation?.resume()
+        startContinuation = nil
+    }
+    func stop() async { stopCount += 1 }
+    func capturePhoto() async {}
+    func startRecording(includeAudio: Bool) async -> MissCatCameraRecordingStart { .notStarted }
+    func stopRecording() async {}
+    func cancelRecording() async {}
+}
+
+@MainActor
+private func waitUntil(
+    timeoutNanoseconds: UInt64 = 2_000_000_000,
+    file: StaticString = #filePath,
+    line: UInt = #line,
+    _ condition: @escaping () async -> Bool
+) async {
+    let interval: UInt64 = 10_000_000
+    var elapsed: UInt64 = 0
+    while elapsed < timeoutNanoseconds {
+        if await condition() { return }
+        try? await Task.sleep(nanoseconds: interval)
+        elapsed += interval
+    }
+    XCTFail("Condition was not satisfied before timeout", file: file, line: line)
 }
