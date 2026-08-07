@@ -177,6 +177,36 @@ final class MissCatNativeMFMTests: XCTestCase {
         XCTAssertTrue(rendered.runs.allSatisfy { $0.inlinePresentationIntent == nil })
     }
 
+    // Fixtures mirror mfm.js test/parser.ts "italic alt 1" and
+    // "italic alt 2": ASCII word characters before a marker keep the
+    // complete identifier literal instead of starting emphasis.
+    func testOfficialItalicMarkerBoundariesPreserveIdentifiers() throws {
+        let identifiers = MissCatNativeMFMRenderer.render(
+            "before*abc*after before_abc_after foo_bar_baz"
+        )
+        let isolated = MissCatNativeMFMRenderer.render("before *abc* and _xyz_ after")
+
+        XCTAssertEqual(
+            String(identifiers.characters),
+            "before*abc*after before_abc_after foo_bar_baz"
+        )
+        XCTAssertTrue(identifiers.runs.allSatisfy { $0.inlinePresentationIntent == nil })
+        XCTAssertTrue(try intent(for: "abc", in: isolated).contains(.emphasized))
+        XCTAssertTrue(try intent(for: "xyz", in: isolated).contains(.emphasized))
+    }
+
+    func testBackslashEscapesFormattingFunctionsAndCustomEmojiMarkers() {
+        let source = #"\**bold** \*italic* \__strong__ \_emphasis_ \$[spin static] \:blobcat:"#
+        let expected = #"**bold** *italic* __strong__ _emphasis_ $[spin static] :blobcat:"#
+        let rendered = MissCatNativeMFMRenderer.render(source)
+        let segments = MissCatNativeMFMRenderer.segments(source)
+
+        XCTAssertEqual(String(rendered.characters), expected)
+        XCTAssertEqual(segmentText(segments), expected)
+        XCTAssertTrue(rendered.runs.allSatisfy { $0.inlinePresentationIntent == nil })
+        XCTAssertTrue(customEmojiNames(segments).isEmpty)
+    }
+
     func testInlineFormattingProducesAttributedStringSemantics() throws {
         let rendered = MissCatNativeMFMRenderer.render(
             "**bold** *italic* ~~strike~~ `code` <b>tag</b> <i>em</i> <s>gone</s>"
