@@ -26,6 +26,8 @@
 		D15C00000000000000000009 /* MissCatDiscoveryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D15C0000000000000000000A /* MissCatDiscoveryUITests.swift */; };
 		C0A900000000000000000001 /* MissCatNativeComposeAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A900000000000000000003 /* MissCatNativeComposeAPI.swift */; };
 		C0A900000000000000000002 /* MissCatNativeComposeAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A900000000000000000003 /* MissCatNativeComposeAPI.swift */; };
+		5EC100000000000000000002 /* MissCatNativeKeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC100000000000000000001 /* MissCatNativeKeychainStore.swift */; };
+		5EC100000000000000000003 /* MissCatNativeKeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC100000000000000000001 /* MissCatNativeKeychainStore.swift */; };
 		FEE100000000000000000001 /* MissCatShellFeedUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEE100000000000000000002 /* MissCatShellFeedUITests.swift */; };
 		C0DE00000000000000000001 /* MissCatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000002 /* MissCatApp.swift */; };
 		C0DE00000000000000000003 /* MissCatVisualTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000004 /* MissCatVisualTokens.swift */; };
@@ -317,6 +319,7 @@
 		D15C00000000000000000008 /* MissCatDiscoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatDiscoveryTests.swift; sourceTree = "<group>"; };
 		D15C0000000000000000000A /* MissCatDiscoveryUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatDiscoveryUITests.swift; sourceTree = "<group>"; };
 		C0A900000000000000000003 /* MissCatNativeComposeAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatNativeComposeAPI.swift; sourceTree = "<group>"; };
+		5EC100000000000000000001 /* MissCatNativeKeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatNativeKeychainStore.swift; sourceTree = "<group>"; };
 		FEE100000000000000000002 /* MissCatShellFeedUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatShellFeedUITests.swift; sourceTree = "<group>"; };
 		FEE100000000000000000003 /* MissCatUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MissCatUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0DE10000000000000000002 /* MissCatProfileCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatProfileCore.swift; sourceTree = "<group>"; };
@@ -905,6 +908,7 @@
 			isa = PBXGroup;
 			children = (
 				8D72E51B244AEA6500B30C3A /* App */,
+				5EC100000000000000000004 /* Security */,
 				8D3037042389088600BA6D38 /* Utilities */,
 				8D3037032389086800BA6D38 /* Extension */,
 				C11B00000000000000000003 /* Platform */,
@@ -1397,6 +1401,14 @@
 			path = Details;
 			sourceTree = "<group>";
 		};
+		5EC100000000000000000004 /* Security */ = {
+			isa = PBXGroup;
+			children = (
+				5EC100000000000000000001 /* MissCatNativeKeychainStore.swift */,
+			);
+			path = Security;
+			sourceTree = "<group>";
+		};
 		8D72E51B244AEA6500B30C3A /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -1874,6 +1886,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C0A900000000000000000002 /* MissCatNativeComposeAPI.swift in Sources */,
+				5EC100000000000000000003 /* MissCatNativeKeychainStore.swift in Sources */,
 				8D1A4BFD24DD7BFF00EFD826 /* ShareViewController.swift in Sources */,
 				C0DE0000000000000000001F /* ShareComposerView.swift in Sources */,
 				C0DE0000000000000000001B /* ShareCore.swift in Sources */,
@@ -1898,6 +1911,7 @@
 				AACC00000000000000000001 /* MissCatProfileFamilyView.swift in Sources */,
 				AACC00000000000000000003 /* MissCatLoginProfileFixture.swift in Sources */,
 				C0A900000000000000000001 /* MissCatNativeComposeAPI.swift in Sources */,
+				5EC100000000000000000002 /* MissCatNativeKeychainStore.swift in Sources */,
 				E0DE00000000000000000002 /* MissCatSettingsModels.swift in Sources */,
 				E0DE00000000000000000004 /* MissCatSettingsStores.swift in Sources */,
 				E0DE00000000000000000006 /* MissCatSettingsViews.swift in Sources */,
