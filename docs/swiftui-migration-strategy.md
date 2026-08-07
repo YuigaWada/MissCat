@@ -2,6 +2,10 @@
 
 Date: 2026-08-07
 
+Integration base and pull-request target: `origin/develop`. The historical
+`migration/swiftui-main` name below identifies an earlier migration baseline;
+it is not the integration target.
+
 Strategy baseline: `migration/swiftui-main` at `cdf01f1`
 
 Authority: `docs/legacy-functional-inventory.md`, `docs/swiftui-migration-acceptance-matrix.md`, and `docs/migration-test-matrix.md`
