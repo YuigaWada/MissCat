@@ -4,8 +4,8 @@
   "counts": {
     "total_swift": 64,
     "uikit_only": 2,
-    "swiftui_only": 25,
-    "hybrid": 3,
+    "swiftui_only": 26,
+    "hybrid": 2,
     "neutral": 34,
     "rx_files": 0,
     "polio_files": 0,

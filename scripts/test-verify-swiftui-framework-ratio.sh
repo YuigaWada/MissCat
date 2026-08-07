@@ -37,8 +37,8 @@ assert_json "$production_json" '
   expected = {
     "total_swift" => 64,
     "uikit_only" => 2,
-    "swiftui_only" => 25,
-    "hybrid" => 3,
+    "swiftui_only" => 26,
+    "hybrid" => 2,
     "neutral" => 34,
     "rx_files" => 0,
     "polio_files" => 0,
@@ -47,7 +47,7 @@ assert_json "$production_json" '
     "tracked_ib_artifacts" => 0
   }
   abort unless data.fetch("passed") && data.fetch("counts") == expected
-  abort unless data.fetch("pure_swiftui_progress").values_at("numerator", "denominator", "basis_points") == [25, 30, 8333]
+  abort unless data.fetch("pure_swiftui_progress").values_at("numerator", "denominator", "basis_points") == [26, 30, 8666]
 '
 
 production_complete_json="${fixture_dir}/production-complete.json"

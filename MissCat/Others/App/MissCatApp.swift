@@ -8,7 +8,6 @@
 import CryptoKit
 import Foundation
 import SwiftUI
-import UIKit
 
 @main
 struct MissCatApp: App {
@@ -341,7 +340,6 @@ private struct MissCatSharedKeychainE2EView: View {
 
     let mode: MissCatSharedKeychainE2EMode
     @State private var phase: Phase = .working
-    @State private var isPresentingShareSheet = false
 
     var body: some View {
         VStack(spacing: 24) {
@@ -358,8 +356,8 @@ private struct MissCatSharedKeychainE2EView: View {
             case .relaunched:
                 Text("true")
                     .accessibilityIdentifier("keychain-probe.relaunch-read")
-                Button("Open MissCat Share Extension") {
-                    isPresentingShareSheet = true
+                ShareLink(item: "MissCat non-live shared-Keychain fixture") {
+                    Text("Open MissCat Share Extension")
                 }
                 .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("keychain-probe.launch-share")
@@ -386,11 +384,6 @@ private struct MissCatSharedKeychainE2EView: View {
             case .verifyCleanup:
                 phase = verifyCleanedFixture() ? .cleanupVerified : .failed
             }
-        }
-        .sheet(isPresented: $isPresentingShareSheet) {
-            MissCatSharedKeychainActivityView(
-                activityItems: ["MissCat non-live shared-Keychain fixture"]
-            )
         }
     }
 
@@ -509,15 +502,6 @@ private struct MissCatSharedKeychainE2EView: View {
     }
 }
 
-private struct MissCatSharedKeychainActivityView: UIViewControllerRepresentable {
-    let activityItems: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
 #endif
 
 #if DEBUG
