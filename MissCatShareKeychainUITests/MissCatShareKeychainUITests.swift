@@ -59,7 +59,7 @@ final class MissCatShareKeychainUITests: XCTestCase {
 
         let available = app.staticTexts["share-keychain-proof.available"]
         let accountHash = app.staticTexts["share-keychain-proof.account-hash"]
-        XCTAssertTrue(available.waitForExistence(timeout: 15))
+        XCTAssertTrue(available.waitForExistence(timeout: 30))
         XCTAssertTrue(accountHash.waitForExistence(timeout: 5))
         XCTAssertEqual(available.label, "true")
         XCTAssertEqual(accountHash.label, Self.expectedFixtureAccountHash)

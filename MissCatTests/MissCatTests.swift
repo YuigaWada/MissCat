@@ -26,19 +26,92 @@ class MissCatTests: XCTestCase {
     }
 }
 
-final class AccountsListStoryboardRegressionTests: XCTestCase {
-    func testAccountsListSceneInstantiatesAndLoadsWithoutStaleOutlets() {
-        XCTAssertTrue(Thread.isMainThread)
+final class CodeOnlyInterfaceResourceTests: XCTestCase {
+    private let forbiddenInfoKeys = [
+        "NSMainNibFile",
+        "NSMainNibFile~ipad",
+        "UIMainStoryboardFile",
+        "UIMainStoryboardFile~ipad",
+        "UILaunchStoryboardName",
+        "UILaunchStoryboardName~ipad",
+        "UISceneStoryboardFile",
+    ]
 
-        let storyboard = UIStoryboard(
-            name: "Main",
-            bundle: Bundle(for: AccountsListViewController.self)
+    func testShippingTreeProjectAndInfoPlistsContainNoInterfaceBuilderResources() throws {
+        let interfaceFiles = ["MissCat", "MissCatShare"].flatMap { directory in
+            files(below: repositoryRoot.appendingPathComponent(directory)).filter {
+                ["storyboard", "xib"].contains($0.pathExtension.lowercased())
+            }
+        }
+        XCTAssertEqual(interfaceFiles, [])
+
+        let project = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("MissCat.xcodeproj/project.pbxproj"),
+            encoding: .utf8
         )
-        let viewController = storyboard.instantiateViewController(withIdentifier: "accounts-list")
+        for token in [".storyboard", ".xib", "PBXVariantGroup"] {
+            XCTAssertFalse(project.contains(token), "Project still references \(token)")
+        }
 
-        XCTAssertTrue(viewController is AccountsListViewController)
-        viewController.loadViewIfNeeded()
-        XCTAssertNotNil(viewController.view)
+        let appInfo = try infoPlist(at: "MissCat/Info.plist")
+        for key in forbiddenInfoKeys {
+            XCTAssertNil(appInfo[key], "App Info.plist still declares \(key)")
+        }
+        XCTAssertNotNil(appInfo["UILaunchScreen"] as? [String: Any])
+
+        let shareInfo = try infoPlist(at: "MissCatShare/Info.plist")
+        let shareExtension = try XCTUnwrap(shareInfo["NSExtension"] as? [String: Any])
+        XCTAssertNil(shareExtension["NSExtensionMainStoryboard"])
+        XCTAssertEqual(
+            shareExtension["NSExtensionPrincipalClass"] as? String,
+            "$(PRODUCT_MODULE_NAME).ShareViewController"
+        )
+    }
+
+    func testAppAndShareOwnedBuildProductsContainNoCompiledInterfaceBuilderResources() {
+        let artifacts = firstPartyFiles(below: Bundle.main.bundleURL).filter {
+            ["storyboardc", "nib"].contains($0.pathExtension.lowercased())
+        }
+        XCTAssertEqual(artifacts, [])
+    }
+
+    private func infoPlist(at relativePath: String) throws -> [String: Any] {
+        let data = try Data(contentsOf: repositoryRoot.appendingPathComponent(relativePath))
+        return try XCTUnwrap(
+            PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+        )
+    }
+
+    private func files(below root: URL) -> [URL] {
+        guard let enumerator = FileManager.default.enumerator(
+            at: root,
+            includingPropertiesForKeys: nil
+        ) else { return [] }
+        return (enumerator.allObjects as? [URL]) ?? []
+    }
+
+    private func firstPartyFiles(below root: URL) -> [URL] {
+        guard let enumerator = FileManager.default.enumerator(
+            at: root,
+            includingPropertiesForKeys: [.isDirectoryKey]
+        ) else { return [] }
+
+        var files: [URL] = []
+        while let url = enumerator.nextObject() as? URL {
+            if url.lastPathComponent == "Frameworks",
+               (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true {
+                enumerator.skipDescendants()
+                continue
+            }
+            files.append(url)
+        }
+        return files
+    }
+
+    private var repositoryRoot: URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
     }
 }
 
