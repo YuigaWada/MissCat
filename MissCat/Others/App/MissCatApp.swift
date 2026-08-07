@@ -55,6 +55,15 @@ final class ApplicationState: ObservableObject {
     func resolveInitialRoute() {
         guard root == .resolvingSession else { return }
 
+#if DEBUG
+        if MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
+            Theme.shared.reset()
+            Theme.shared.set()
+            root = .legacyApplication
+            return
+        }
+#endif
+
         let cache = Cache.UserDefaults.shared
         guard let currentUser = cache.getCurrentUser(),
               !currentUser.userId.isEmpty,
@@ -151,7 +160,22 @@ final class ApplicationState: ObservableObject {
 struct MissCatRootView: View {
     @EnvironmentObject private var applicationState: ApplicationState
 
+    @ViewBuilder
     var body: some View {
+#if DEBUG
+        if MissCatDiscoveryFixtureConfiguration.isEnabled {
+            MissCatDiscoveryFixtureRoot()
+        } else if MissCatNoteDetailFixtureConfiguration.isEnabled {
+            MissCatNoteDetailFixtureRoot()
+        } else {
+            applicationRoot
+        }
+#else
+        applicationRoot
+#endif
+    }
+
+    private var applicationRoot: some View {
         ZStack {
             #if DEBUG
             if MissCatShellFixtureLaunch.isRequested {

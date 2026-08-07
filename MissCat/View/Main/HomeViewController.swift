@@ -44,7 +44,7 @@ class HomeViewController: PolioPagerViewController {
     private var accountsListViewController: AccountsListViewController?
     
     // Tab
-    private lazy var search = self.generateSearchVC()
+    private var discoveryViewController: UIViewController?
     private var setViewControllers: [UIViewController] = []
     
     private lazy var navBar = NavBar()
@@ -100,8 +100,13 @@ class HomeViewController: PolioPagerViewController {
                     backgroundColor: colorPattern?.ui.base ?? .white,
                     normalColor: colorPattern?.ui.text ?? .black)
         }
-        
-        return items.count > 0 ? items : [TabItem(title: "")]
+
+        let discovery = TabItem(
+            title: "検索",
+            backgroundColor: colorPattern?.ui.base ?? .white,
+            normalColor: colorPattern?.ui.text ?? .black
+        )
+        return [discovery] + (items.isEmpty ? [TabItem(title: "")] : items)
     }
     
     /// 上タブのアイテムに対応したViewControllerを返す
@@ -114,7 +119,7 @@ class HomeViewController: PolioPagerViewController {
             setViewControllers = [UIViewController()]
         }
         
-        return [search] + setViewControllers
+        return [generateDiscoveryVC()] + setViewControllers
     }
     
     /// Theme.TabKindからVCを生成
@@ -145,6 +150,7 @@ class HomeViewController: PolioPagerViewController {
         setTheme()
         
         super.viewDidLoad()
+        searchBar.isHidden = true
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -163,7 +169,13 @@ class HomeViewController: PolioPagerViewController {
         guard !initialized else { return }
         
         setupFooterTab()
+#if DEBUG
+        if !MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
+            loadingBanner()
+        }
+#else
         loadingBanner()
+#endif
         setTheme()
         initialized = true
     }
@@ -182,6 +194,8 @@ class HomeViewController: PolioPagerViewController {
     /// - Parameter startingPage: どのpageがrelaunch後、最初に表示されるか
     func relaunchView(start startingPage: Page = .profile) {
         // main
+        (discoveryViewController as? MissCatDiscoveryHostingController)?.retire()
+        discoveryViewController = nil
         tabs = transformTabs() // タブ情報を更新する
         reloadPager()
         
@@ -227,6 +241,8 @@ class HomeViewController: PolioPagerViewController {
     // MARK: Design
     
     private func setupPolioPager() {
+        needSearchTab = false
+        initialIndex = tabs.isEmpty ? 0 : 1
         needBorder = true
         selectedBarHeight = 2
         selectedBar.layer.cornerRadius = 2
@@ -305,6 +321,13 @@ class HomeViewController: PolioPagerViewController {
     // MARK: Auth
     
     private func userAuth() {
+#if DEBUG
+        if MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
+            logined = true
+            currentInstance = MissCatDiscoveryOrdinaryRouteConfiguration.session.instance
+            return
+        }
+#endif
         guard let currentUser = Cache.UserDefaults.shared.getCurrentUser(),
               let apiKey = currentUser.apiKey,
               !apiKey.isEmpty
@@ -468,13 +491,14 @@ class HomeViewController: PolioPagerViewController {
         }
     }
     
-    private func generateSearchVC() -> SearchViewController {
-        guard let viewController = getViewController(name: "search") as? SearchViewController
-        else { fatalError("Internal Error.") }
-        
-        viewController.homeViewController = self
-        viewController.view.backgroundColor = .clear
-        return viewController
+    private func generateDiscoveryVC() -> UIViewController {
+        if let discoveryViewController { return discoveryViewController }
+        let controller = MissCatDiscoveryPageFactory.makeController(
+            owner: Cache.UserDefaults.shared.getCurrentUser()
+        )
+        controller.view.backgroundColor = .clear
+        discoveryViewController = controller
+        return controller
     }
     
     private func generateTimelineVC(type: TimelineType, of user: SecureUser) -> TimelineViewController {
@@ -835,7 +859,8 @@ extension HomeViewController: TimelineDelegate {
     
     func searchHashtag(tag: String) {
         moveTo(index: 0)
-        search.searchNote(with: tag)
+        let controller = generateDiscoveryVC()
+        (controller as? MissCatDiscoveryHostingController)?.handleHashtag(tag)
     }
     
     func openSettings() {

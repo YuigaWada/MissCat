@@ -18,6 +18,10 @@ public struct MissCatFeedSession: Equatable, Sendable {
     public var scope: MissCatShellAccountScope {
         MissCatShellAccountScope(instance: instance, userID: accountID, username: username)
     }
+
+    public var compositeAccountID: String {
+        MissCatAccountIdentity.storageKey(instance: instance, userId: accountID)
+    }
 }
 
 public enum MissCatFeedSource: Equatable, Sendable {
@@ -26,10 +30,10 @@ public enum MissCatFeedSource: Equatable, Sendable {
     case social
     case global
     case favorites
-    case user(userID: String)
-    case list(listID: String)
     case search(query: String)
     case hashtag(tag: String)
+    case user(userID: String, includeReplies: Bool, withFiles: Bool)
+    case userList(listID: String)
     case noteDetail(noteID: String)
 
     public var accessibilityName: String {
@@ -39,10 +43,10 @@ public enum MissCatFeedSource: Equatable, Sendable {
         case .social: "social"
         case .global: "global"
         case .favorites: "favorites"
-        case .user: "user"
-        case .list: "list"
         case .search: "search-results"
         case .hashtag: "hashtag-results"
+        case .user: "user-timeline"
+        case .userList: "user-list-timeline"
         case .noteDetail: "note-detail"
         }
     }
@@ -55,8 +59,13 @@ public enum MissCatFeedSource: Equatable, Sendable {
     public var supportsRealtime: Bool {
         switch self {
         case .home, .local, .social, .global: true
-        case .favorites, .user, .list, .search, .hashtag, .noteDetail: false
+        case .favorites, .search, .hashtag, .user, .userList, .noteDetail: false
         }
+    }
+
+    public var isNoteDetail: Bool {
+        if case .noteDetail = self { return true }
+        return false
     }
 }
 
@@ -290,6 +299,8 @@ public enum MissCatFeedAction: Equatable, Sendable {
     case removeReaction(noteID: String)
     case renote(noteID: String)
     case vote(noteID: String, choice: Int)
+    case delete(noteID: String)
+    case mute(userID: String)
 }
 
 public enum MissCatRealtimeEvent: Equatable, Sendable {

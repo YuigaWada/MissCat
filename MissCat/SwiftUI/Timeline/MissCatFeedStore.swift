@@ -30,6 +30,8 @@ public final class MissCatFeedStore: ObservableObject {
         case reaction(String)
         case renote(String)
         case vote(String)
+        case delete(String)
+        case mute(String)
     }
 
     private enum InitialContent {
@@ -340,6 +342,36 @@ public final class MissCatFeedStore: ObservableObject {
         }
     }
 
+    public func delete(noteID: String) async {
+        let mutationKey = MutationKey.delete(noteID)
+        guard inFlightMutations.insert(mutationKey).inserted else { return }
+        defer { inFlightMutations.remove(mutationKey) }
+
+        do {
+            try await repository.perform(.delete(noteID: noteID))
+            notes.removeAll { $0.id == noteID || $0.noteID == noteID }
+            synchronizeThread()
+            phase = notes.isEmpty ? .empty : .loaded
+        } catch {
+            actionErrorMessage = Self.message(for: error)
+        }
+    }
+
+    public func muteUser(userID: String) async {
+        let mutationKey = MutationKey.mute(userID)
+        guard inFlightMutations.insert(mutationKey).inserted else { return }
+        defer { inFlightMutations.remove(mutationKey) }
+
+        do {
+            try await repository.perform(.mute(userID: userID))
+            notes.removeAll { $0.author.id == userID }
+            synchronizeThread()
+            phase = notes.isEmpty ? .empty : .loaded
+        } catch {
+            actionErrorMessage = Self.message(for: error)
+        }
+    }
+
     public func stopRealtime() {
         realtimeGeneration = UUID()
         realtimeTask?.cancel()
@@ -528,6 +560,15 @@ public final class MissCatFeedStore: ObservableObject {
     }
 
     private static func message(for error: Error) -> String {
+        if let urlError = error as? URLError,
+           [
+               URLError.Code.notConnectedToInternet,
+               .networkConnectionLost,
+               .dataNotAllowed,
+           ].contains(urlError.code)
+        {
+            return "インターネットに接続できません。"
+        }
         let localized = error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
         return localized.isEmpty ? "通信に失敗しました。" : localized
     }

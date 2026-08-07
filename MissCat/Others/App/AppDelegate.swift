@@ -32,8 +32,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Firebase, or hydrate real cached accounts. Ordinary launches continue
         // through the complete startup path below.
         if MissCatShellFixtureLaunch.isRequested { return true }
+
+        // Automated tests must not trigger notification permission UI,
+        // Firebase registration, or saved-account network side effects. The
+        // ordinary application launch path below remains unchanged.
+        if MissCatNoteDetailFixtureConfiguration.isAutomatedTestRun
+            || MissCatDiscoveryFixtureConfiguration.isAutomatedTestRun
+            || MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
+            setupMissCat()
+            return true
+        }
 #endif
-        
         setupMissCat()
         setupFirebase()
         setupNotifications(with: application)

@@ -496,10 +496,15 @@ final class MissCatLegacyShellConfigurationProvider: MissCatShellConfigurationPr
             case .local: source = .local
             case .social: source = .social
             case .global: source = .global
-            case .user: source = .user(userID: tab.userId ?? scope.userID)
+            case .user:
+                source = .user(
+                    userID: tab.userId ?? scope.userID,
+                    includeReplies: false,
+                    withFiles: false
+                )
             case .list:
                 guard let listID = tab.listId, !listID.isEmpty else { return nil }
-                source = .list(listID: listID)
+                source = .userList(listID: listID)
             }
 
             let signature = "\(scope.id)|\(tab.kind.rawValue)|\(tab.listId ?? "")"

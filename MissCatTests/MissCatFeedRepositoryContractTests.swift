@@ -99,8 +99,16 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         }
         let subject = makeSubject()
 
-        _ = try await subject.fetchPage(source: .user(userID: "remote-user"), cursor: "older-user", limit: 12)
-        _ = try await subject.fetchPage(source: .list(listID: "cats-list"), cursor: "older-list", limit: 13)
+        _ = try await subject.fetchPage(
+            source: .user(userID: "remote-user", includeReplies: false, withFiles: false),
+            cursor: "older-user",
+            limit: 12
+        )
+        _ = try await subject.fetchPage(
+            source: .userList(listID: "cats-list"),
+            cursor: "older-list",
+            limit: 13
+        )
 
         XCTAssertEqual(
             requests.compactMap { $0.url?.path },

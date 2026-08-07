@@ -1,6 +1,7 @@
 import SwiftUI
 
 public struct MissCatNoteRow: View {
+    @Environment(\.openURL) private var openURL
     public let note: MissCatNote
     public let palette: MissCatVisualPalette
     public let expandsContentWarning: Bool
@@ -16,9 +17,16 @@ public struct MissCatNoteRow: View {
     public let onToggleReaction: (String, String) -> Void
     public let onToggleFavorite: (String) -> Void
     public let onVote: (String, Int) -> Void
+    public let onDelete: (String) -> Void
+    public let onMuteUser: (String) -> Void
+    public let onOverflowAction: (MissCatNoteOverflowAction) -> Void
+    public let contextRepository: (any MissCatNoteContextRepository)?
+    public let readiness: MissCatNoteVisualReadiness?
+    public let presentsMediaInternally: Bool
 
     @State private var isContentWarningExpanded: Bool
     @State private var revealedSensitiveAttachmentIDs = Set<String>()
+    @State private var selectedAttachment: MissCatNoteAttachment?
 
     public init(
         note: MissCatNote,
@@ -35,7 +43,13 @@ public struct MissCatNoteRow: View {
         onChooseReaction: @escaping (String) -> Void = { _ in },
         onToggleReaction: @escaping (String, String) -> Void = { _, _ in },
         onToggleFavorite: @escaping (String) -> Void = { _ in },
-        onVote: @escaping (String, Int) -> Void = { _, _ in }
+        onVote: @escaping (String, Int) -> Void = { _, _ in },
+        onDelete: @escaping (String) -> Void = { _ in },
+        onMuteUser: @escaping (String) -> Void = { _ in },
+        onOverflowAction: @escaping (MissCatNoteOverflowAction) -> Void = { _ in },
+        contextRepository: (any MissCatNoteContextRepository)? = nil,
+        readiness: MissCatNoteVisualReadiness? = nil,
+        presentsMediaInternally: Bool = true
     ) {
         self.note = note
         self.palette = palette
@@ -52,6 +66,12 @@ public struct MissCatNoteRow: View {
         self.onToggleReaction = onToggleReaction
         self.onToggleFavorite = onToggleFavorite
         self.onVote = onVote
+        self.onDelete = onDelete
+        self.onMuteUser = onMuteUser
+        self.onOverflowAction = onOverflowAction
+        self.contextRepository = contextRepository
+        self.readiness = readiness
+        self.presentsMediaInternally = presentsMediaInternally
         _isContentWarningExpanded = State(initialValue: expandsContentWarning || note.cw == nil)
     }
 
@@ -99,6 +119,10 @@ public struct MissCatNoteRow: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("note.row.\(note.id)")
+        .onAppear { registerRemoteAssets() }
+        .fullScreenCover(item: $selectedAttachment) { attachment in
+            MissCatMediaViewer(attachments: note.attachments, selectedID: attachment.id)
+        }
     }
 
     private var avatarColumn: some View {
@@ -106,17 +130,14 @@ public struct MissCatNoteRow: View {
             Button {
                 onOpenUser(note.author.id)
             } label: {
-                AsyncImage(url: note.author.avatarURL) { phase in
-                    switch phase {
-                    case let .success(image):
-                        image.resizable().scaledToFill()
-                    default:
-                        palette.muted.overlay {
-                            Image(systemName: "person.fill")
-                                .foregroundStyle(palette.base)
-                        }
-                    }
-                }
+                MissCatTrackedRemoteImage(
+                    url: note.author.avatarURL,
+                    key: assetKey(note.author.avatarURL),
+                    palette: palette,
+                    fallbackSymbol: "person.fill",
+                    contentMode: .fill,
+                    readiness: readiness
+                )
                 .frame(width: 50, height: 50)
                 .clipShape(Circle())
             }
@@ -194,13 +215,24 @@ public struct MissCatNoteRow: View {
 
             if isContentWarningExpanded {
                 if !note.text.isEmpty {
-                    Text(Self.linkified(note.text))
+                    Text(MissCatNativeMFMRenderer.render(note.text))
                         .font(.system(size: 14))
                         .foregroundStyle(palette.text)
                         .tint(palette.accent)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("note.\(note.id).body")
                         .onTapGesture { onOpenNote(note.noteID) }
+                }
+
+                if let contextRepository {
+                    ForEach(MissCatNativeMFMRenderer.previewURLs(in: note.text), id: \.absoluteString) { url in
+                        MissCatURLPreviewCard(
+                            sourceURL: url,
+                            repository: contextRepository,
+                            palette: palette,
+                            readiness: readiness
+                        )
+                    }
                 }
 
                 if !note.attachments.isEmpty {
@@ -252,23 +284,25 @@ public struct MissCatNoteRow: View {
         return Button {
             if sensitiveIsHidden {
                 revealedSensitiveAttachmentIDs.insert(attachment.id)
+            } else if presentsMediaInternally {
+                MissCatNoteMediaTapRouter.route(
+                    attachment,
+                    presentNatively: { selectedAttachment = $0 },
+                    legacyPresentation: onOpenAttachment
+                )
             } else {
                 onOpenAttachment(attachment)
             }
         } label: {
             ZStack {
-                AsyncImage(url: attachment.thumbnailURL ?? attachment.url) { phase in
-                    switch phase {
-                    case let .success(image):
-                        image.resizable().scaledToFill()
-                    default:
-                        palette.surface.overlay {
-                            Image(systemName: Self.symbol(for: attachment.kind))
-                                .font(.system(size: 28))
-                                .foregroundStyle(palette.strong)
-                        }
-                    }
-                }
+                MissCatTrackedRemoteImage(
+                    url: attachment.thumbnailURL ?? attachment.url,
+                    key: assetKey(attachment.thumbnailURL ?? attachment.url),
+                    palette: palette,
+                    fallbackSymbol: Self.symbol(for: attachment.kind),
+                    contentMode: .fill,
+                    readiness: readiness
+                )
                 .frame(maxWidth: .infinity)
                 .frame(height: single ? 210 : 130)
                 .clipped()
@@ -300,13 +334,14 @@ public struct MissCatNoteRow: View {
             onOpenNote(quoted.noteID)
         } label: {
             HStack(alignment: .top, spacing: 10) {
-                AsyncImage(url: quoted.author.avatarURL) { phase in
-                    if case let .success(image) = phase {
-                        image.resizable().scaledToFill()
-                    } else {
-                        palette.muted
-                    }
-                }
+                MissCatTrackedRemoteImage(
+                    url: quoted.author.avatarURL,
+                    key: assetKey(quoted.author.avatarURL),
+                    palette: palette,
+                    fallbackSymbol: "person.fill",
+                    contentMode: .fill,
+                    readiness: readiness
+                )
                 .frame(width: 32, height: 32)
                 .clipShape(Circle())
 
@@ -367,13 +402,15 @@ public struct MissCatNoteRow: View {
     }
 
     private var reactionChips: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 54), spacing: 5)], alignment: .leading, spacing: 5) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 5)], alignment: .leading, spacing: 5) {
             ForEach(note.reactions) { reaction in
                 Button {
                     onToggleReaction(note.noteID, reaction.name)
                 } label: {
                     HStack(spacing: 4) {
                         Text(reaction.name)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.72)
                         Text("\(reaction.count)")
                     }
                     .font(.system(size: 13))
@@ -413,16 +450,57 @@ public struct MissCatNoteRow: View {
                 identifier: "reaction"
             ) { onChooseReaction(note.noteID) }
 
-            actionButton(
-                symbol: note.isFavorite ? "star.fill" : "ellipsis",
-                count: nil,
-                label: note.isFavorite ? "お気に入り解除" : "その他・お気に入り",
-                identifier: "favorite"
-            ) { onToggleFavorite(note.noteID) }
+            overflowMenu
         }
         .frame(height: 40)
         .foregroundStyle(palette.strong)
         .accessibilityIdentifier("note.\(note.id).actions")
+    }
+
+    private var overflowMenu: some View {
+        Menu {
+            Button {
+                onToggleFavorite(note.noteID)
+                onOverflowAction(note.isFavorite ? .unfavorite : .favorite)
+            } label: {
+                Label(note.isFavorite ? "お気に入り解除" : "お気に入り", systemImage: "star")
+            }
+            .accessibilityIdentifier("note.\(note.id).overflow.favorite")
+
+            if let permalink = contextRepository?.notePermalink(noteID: note.noteID) {
+                Button {
+                    UIPasteboard.general.string = permalink.absoluteString
+                    onOverflowAction(.copyLink)
+                } label: { Label("リンクをコピー", systemImage: "doc.on.doc") }
+                    .accessibilityIdentifier("note.\(note.id).overflow.copy-link")
+
+                Button {
+                    openURL(permalink)
+                    onOverflowAction(.openInBrowser)
+                } label: { Label("ブラウザで開く", systemImage: "safari") }
+                    .accessibilityIdentifier("note.\(note.id).overflow.browser")
+            }
+
+            if contextRepository?.currentServerUserID == note.author.id {
+                Button(role: .destructive) {
+                    onDelete(note.noteID)
+                    onOverflowAction(.delete)
+                } label: { Label("削除", systemImage: "trash") }
+                    .accessibilityIdentifier("note.\(note.id).overflow.delete")
+            } else {
+                Button(role: .destructive) {
+                    onMuteUser(note.author.id)
+                    onOverflowAction(.muteUser)
+                } label: { Label("このユーザーをミュート", systemImage: "speaker.slash") }
+                    .accessibilityIdentifier("note.\(note.id).overflow.mute")
+            }
+        } label: {
+            Image(systemName: note.isFavorite ? "star.fill" : "ellipsis")
+                .font(.system(size: 15, weight: .bold))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .accessibilityLabel("その他")
+        .accessibilityIdentifier("note.\(note.id).action.overflow")
     }
 
     private func actionButton(
@@ -456,19 +534,17 @@ public struct MissCatNoteRow: View {
         }
     }
 
-    private static func linkified(_ text: String) -> AttributedString {
-        var attributed = AttributedString(text)
-        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
-            return attributed
+    private func registerRemoteAssets() {
+        [note.author.avatarURL, note.quotedNote?.author.avatarURL]
+            .compactMap { $0 }
+            .forEach { readiness?.register(assetKey($0)) }
+        note.attachments.compactMap { $0.thumbnailURL ?? $0.url }.forEach {
+            readiness?.register(assetKey($0))
         }
-        let nsRange = NSRange(text.startIndex..., in: text)
-        for match in detector.matches(in: text, range: nsRange) {
-            guard let url = match.url,
-                  let range = Range(match.range, in: text),
-                  let attributedRange = Range(range, in: attributed) else { continue }
-            attributed[attributedRange].link = url
-        }
-        return attributed
+    }
+
+    private func assetKey(_ url: URL?) -> String {
+        url.map { "note-asset:\($0.absoluteString)" } ?? ""
     }
 
     private static let relativeDateFormatter: RelativeDateTimeFormatter = {
@@ -476,4 +552,24 @@ public struct MissCatNoteRow: View {
         formatter.unitsStyle = .abbreviated
         return formatter
     }()
+}
+
+enum MissCatNoteMediaPresentationOwner: Equatable {
+    case nativeSwiftUIPager
+}
+
+/// Migrated note rows own media presentation. The legacy callback remains in
+/// the navigation action value for source compatibility while routes move in
+/// batches, but it must never start Agrume for a SwiftUI row.
+enum MissCatNoteMediaTapRouter {
+    @discardableResult
+    static func route(
+        _ attachment: MissCatNoteAttachment,
+        presentNatively: (MissCatNoteAttachment) -> Void,
+        legacyPresentation: (MissCatNoteAttachment) -> Void
+    ) -> MissCatNoteMediaPresentationOwner {
+        presentNatively(attachment)
+        _ = legacyPresentation
+        return .nativeSwiftUIPager
+    }
 }
