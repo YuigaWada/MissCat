@@ -811,13 +811,79 @@ private enum MissCatAuthenticationProbe {
         let instance = user.instance.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
 
         Task {
-            let result = await requestIdentity(
+            async let identityResult = requestIdentity(
                 instance: instance,
                 apiKey: apiKey,
                 savedUserID: savedUserID
             )
+            async let emojiResult = requestCustomEmojis(instance: instance, apiKey: apiKey)
+            async let timelineResult = requestTimeline(
+                instance: instance,
+                apiKey: apiKey,
+                userID: user.userId,
+                username: user.username
+            )
+            var result = await identityResult
+            result.merge(await emojiResult) { _, latest in latest }
+            result.merge(await timelineResult) { _, latest in latest }
             defaults.set(result, forKey: resultKey)
             defaults.synchronize()
+        }
+    }
+
+    private static func requestCustomEmojis(
+        instance: String,
+        apiKey: String
+    ) async -> [String: Any] {
+        do {
+            let client = try MissCatNativeAPIClient(
+                instance: instance,
+                accessToken: apiKey
+            )
+            let emojis = try await client.customEmojis()
+            return [
+                "customEmojisDecodeSuccess": true,
+                "customEmojiCount": emojis.count,
+            ]
+        } catch {
+            return [
+                "customEmojisDecodeSuccess": false,
+                "customEmojiCount": 0,
+            ]
+        }
+    }
+
+    private static func requestTimeline(
+        instance: String,
+        apiKey: String,
+        userID: String,
+        username: String
+    ) async -> [String: Any] {
+        let session = MissCatFeedSession(
+            accountID: userID,
+            username: username,
+            instance: instance,
+            apiKey: apiKey
+        )
+        let configuration = URLSessionConfiguration.ephemeral
+        let urlSession = URLSession(configuration: configuration)
+        defer { urlSession.invalidateAndCancel() }
+
+        do {
+            let repository = MissCatMisskeyFeedRepository(
+                session: session,
+                urlSession: urlSession
+            )
+            let page = try await repository.fetchPage(source: .home, cursor: nil, limit: 1)
+            return [
+                "timelineDecodeSuccess": true,
+                "timelineNoteCount": page.notes.count,
+            ]
+        } catch {
+            return [
+                "timelineDecodeSuccess": false,
+                "timelineNoteCount": 0,
+            ]
         }
     }
 
