@@ -56,6 +56,30 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
             XCTAssertEqual(body["i"] as? String, "account-token")
             XCTAssertEqual(body["untilId"] as? String, "older")
             XCTAssertEqual(body["limit"] as? Int, 1)
+            XCTAssertEqual(body["withRenotes"] as? Bool, true)
+            XCTAssertEqual(body["withFiles"] as? Bool, false)
+
+            switch request.url?.path {
+            case "/api/notes/timeline":
+                XCTAssertEqual(body["allowPartial"] as? Bool, false)
+                XCTAssertEqual(body["includeMyRenotes"] as? Bool, true)
+                XCTAssertEqual(body["includeRenotedMyNotes"] as? Bool, true)
+                XCTAssertEqual(body["includeLocalRenotes"] as? Bool, true)
+            case "/api/notes/local-timeline":
+                XCTAssertEqual(body["allowPartial"] as? Bool, false)
+                XCTAssertEqual(body["withReplies"] as? Bool, false)
+            case "/api/notes/hybrid-timeline":
+                XCTAssertEqual(body["allowPartial"] as? Bool, false)
+                XCTAssertEqual(body["includeMyRenotes"] as? Bool, true)
+                XCTAssertEqual(body["includeRenotedMyNotes"] as? Bool, true)
+                XCTAssertEqual(body["includeLocalRenotes"] as? Bool, true)
+                XCTAssertEqual(body["withReplies"] as? Bool, false)
+            case "/api/notes/global-timeline":
+                XCTAssertNil(body["allowPartial"])
+                XCTAssertNil(body["withReplies"])
+            default:
+                XCTFail("Unexpected timeline endpoint: \(request.url?.path ?? "nil")")
+            }
         }
         XCTAssertTrue(pages.allSatisfy(\.hasMore))
         let note = try XCTUnwrap(pages.first?.notes.first)

@@ -21,6 +21,8 @@ final class MockMissCatFeedRepository: MissCatFeedRepository {
     var requestedReplies: [RepliesRequest] = []
     var performedActions: [MissCatFeedAction] = []
     var fetchError: Error?
+    var pageErrorsByIndex: [Int: Error] = [:]
+    var pageDelayNanoseconds: UInt64 = 0
     var actionError: Error?
     var actionErrorsByIndex: [Int: Error] = [:]
     var failingActions: [MissCatFeedAction] = []
@@ -34,6 +36,11 @@ final class MockMissCatFeedRepository: MissCatFeedRepository {
         limit: Int
     ) async throws -> MissCatFeedPage {
         requestedPages.append(.init(source: source, cursor: cursor, limit: limit))
+        let pageIndex = requestedPages.count - 1
+        if pageDelayNanoseconds > 0 {
+            try await Task.sleep(nanoseconds: pageDelayNanoseconds)
+        }
+        if let pageError = pageErrorsByIndex[pageIndex] { throw pageError }
         if let fetchError { throw fetchError }
         return pages.isEmpty ? .init(notes: [], hasMore: false) : pages.removeFirst()
     }
@@ -129,6 +136,30 @@ final class MissCatFeedStoreTests: XCTestCase {
         XCTAssertEqual(repository.requestedPages.last?.cursor, "two")
     }
 
+    func testRapidPaginationIsExactlyOnceAndSuccessfulRetryClearsReadError() async {
+        let repository = MockMissCatFeedRepository()
+        repository.pages = [
+            .init(notes: [note("three"), note("two")], hasMore: true),
+            .init(notes: [note("one")], hasMore: false),
+        ]
+        repository.pageErrorsByIndex = [1: TestFeedError.failed]
+        let store = MissCatFeedStore(source: .global, repository: repository, pageSize: 2)
+
+        await store.loadInitial()
+        await store.loadNextPageIfNeeded(currentNoteID: "two")
+        XCTAssertEqual(store.actionErrorMessage, "test failure")
+
+        repository.pageDelayNanoseconds = 40_000_000
+        async let retryA: Void = store.loadNextPageIfNeeded(currentNoteID: "two")
+        async let retryB: Void = store.loadNextPageIfNeeded(currentNoteID: "two")
+        _ = await (retryA, retryB)
+
+        XCTAssertEqual(repository.requestedPages.count, 3, "Retry must issue one additional page request")
+        XCTAssertEqual(repository.requestedPages.last?.cursor, "two")
+        XCTAssertEqual(store.notes.map(\.id), ["three", "two", "one"])
+        XCTAssertNil(store.actionErrorMessage, "A successful read retry must dismiss its stale error")
+    }
+
     func testRealtimeInsertReactionAndDeleteUpdateLoadedFeed() async {
         let repository = MockMissCatFeedRepository()
         repository.pages = [.init(notes: [note("one")], hasMore: false)]
@@ -152,6 +183,35 @@ final class MissCatFeedStoreTests: XCTestCase {
         repository.realtimeContinuation?.yield(.removed(noteID: "two"))
         await waitUntil { store.notes.map(\.id) == ["one"] }
         XCTAssertEqual(store.notes.map(\.id), ["one"])
+    }
+
+    func testOtherUsersReactionEventsPreserveMyReactionSelection() async {
+        let repository = MockMissCatFeedRepository()
+        var selected = note("one")
+        selected.myReaction = "👍"
+        selected.reactions = [.init(name: "👍", count: 2, isMine: true)]
+        repository.pages = [.init(notes: [selected], hasMore: false)]
+        let store = MissCatFeedStore(source: .home, repository: repository)
+
+        await store.loadInitial()
+        await waitForRealtimeContinuation(repository)
+        repository.realtimeContinuation?.yield(
+            .reaction(noteID: "one", reaction: "👍", delta: 1, isMine: false)
+        )
+        repository.realtimeContinuation?.yield(
+            .reaction(noteID: "one", reaction: "👍", delta: -1, isMine: false)
+        )
+        await waitUntil { store.notes.first?.reactions.first?.count == 2 }
+
+        XCTAssertEqual(store.notes.first?.myReaction, "👍")
+        XCTAssertTrue(try! XCTUnwrap(store.notes.first?.reactions.first).isMine)
+
+        repository.realtimeContinuation?.yield(
+            .reaction(noteID: "one", reaction: "👍", delta: -1, isMine: true)
+        )
+        await waitUntil { store.notes.first?.myReaction == nil }
+        XCTAssertNil(store.notes.first?.myReaction)
+        XCTAssertFalse(try! XCTUnwrap(store.notes.first?.reactions.first).isMine)
     }
 
     func testFavoriteActionIsOptimisticAndRollsBackOnFailure() async {
@@ -573,6 +633,31 @@ final class MissCatFeedStoreTests: XCTestCase {
         XCTAssertEqual(provider.savedSelections.map(\.scope), [provider.primaryScope, provider.primaryScope])
     }
 
+    func testRapidTimelineSelectionSerializesNonCooperativePersistence() async {
+        let provider = NonCooperativeSelectionPersistenceProvider()
+        let store = MissCatShellStore(provider: provider)
+        await store.load()
+
+        store.selectTimeline("local", origin: .swipe)
+        await waitUntil { provider.pendingSelections.contains("local") }
+        store.selectTimeline("social", origin: .swipe)
+        await Task.yield()
+
+        XCTAssertEqual(
+            provider.pendingSelections,
+            ["local"],
+            "A newer selection must wait for the older non-cooperative write"
+        )
+
+        provider.resumeSave("local")
+        await waitUntil { provider.pendingSelections.contains("social") }
+        provider.resumeSave("social")
+        await store.waitForPendingPersistence()
+
+        XCTAssertEqual(provider.savedSelections, ["local", "social"])
+        XCTAssertEqual(store.selectedTimelineID, "social")
+    }
+
     func testShellStoreSwitchesExactScopeAndResetsConfiguredSelection() async {
         let provider = MockShellConfigurationProvider()
         let store = MissCatShellStore(provider: provider)
@@ -586,6 +671,26 @@ final class MissCatFeedStoreTests: XCTestCase {
         XCTAssertEqual(store.configuration?.currentScope, provider.secondaryScope)
         XCTAssertEqual(store.selectedTimelineID, "secondary-home")
         XCTAssertEqual(provider.switchedScopes, [provider.secondaryScope])
+    }
+
+    func testRemovedAccountRepositoryCannotBeReusedAfterConfigurationChange() async {
+        let provider = RemovingAccountShellConfigurationProvider()
+        let store = MissCatShellStore(provider: provider)
+        await store.load()
+
+        XCTAssertNotNil(store.repository(for: provider.primaryScope))
+        XCTAssertEqual(provider.repositoryRequests, [provider.primaryScope])
+
+        store.switchAccount(to: provider.secondaryScope)
+        await store.waitForPendingAccountSwitch()
+
+        XCTAssertNil(store.repository(for: provider.primaryScope))
+        XCTAssertEqual(
+            provider.repositoryRequests,
+            [provider.primaryScope],
+            "A removed account must be rejected before consulting or reusing a credential repository"
+        )
+        XCTAssertEqual(store.bannerMessage, MissCatShellConfigurationError.accountNotFound.localizedDescription)
     }
 
     func testShellStoreRejectsLateNonCooperativeAccountSwitch() async {
@@ -921,6 +1026,114 @@ private final class MockShellConfigurationProvider: MissCatShellConfigurationPro
                 MissCatTimelinePage(id: $0, title: $0, source: .home, accountScope: scope)
             },
             selectedTimelineID: pageIDs[0],
+            appearance: .init(isDark: false, accentHex: "2F7CF6")
+        )
+    }
+}
+
+@MainActor
+private final class NonCooperativeSelectionPersistenceProvider: MissCatShellConfigurationProviding {
+    private let scope = MissCatShellAccountScope(
+        instance: "selection.example",
+        userID: "selection-user",
+        username: "cat"
+    )
+    private let feedRepository = MockMissCatFeedRepository()
+    private var saveContinuations: [String: CheckedContinuation<Void, Never>] = [:]
+    private var pendingOrder: [String] = []
+    private(set) var savedSelections: [String] = []
+
+    var pendingSelections: [String] { pendingOrder }
+
+    func loadConfiguration() async throws -> MissCatShellConfiguration {
+        configuration
+    }
+
+    func switchAccount(to scope: MissCatShellAccountScope) async throws -> MissCatShellConfiguration {
+        throw MissCatShellConfigurationError.accountNotFound
+    }
+
+    func saveSelectedTimelineID(
+        _ selectedID: String,
+        for scope: MissCatShellAccountScope
+    ) async throws {
+        await withCheckedContinuation { continuation in
+            saveContinuations[selectedID] = continuation
+            pendingOrder.append(selectedID)
+        }
+        savedSelections.append(selectedID)
+    }
+
+    func resumeSave(_ selectedID: String) {
+        pendingOrder.removeAll { $0 == selectedID }
+        saveContinuations.removeValue(forKey: selectedID)?.resume()
+    }
+
+    func repository(for scope: MissCatShellAccountScope) throws -> any MissCatFeedRepository {
+        feedRepository
+    }
+
+    private var configuration: MissCatShellConfiguration {
+        let pages = ["home", "local", "social", "global"].map {
+            MissCatTimelinePage(id: $0, title: $0, source: .home, accountScope: scope)
+        }
+        return MissCatShellConfiguration(
+            currentScope: scope,
+            accounts: [MissCatShellAccount(scope: scope)],
+            timelinePages: pages,
+            selectedTimelineID: "home",
+            appearance: .init(isDark: false, accentHex: "2F7CF6")
+        )
+    }
+}
+
+@MainActor
+private final class RemovingAccountShellConfigurationProvider: MissCatShellConfigurationProviding {
+    let primaryScope = MissCatShellAccountScope(
+        instance: "removed.example",
+        userID: "shared",
+        username: "cat"
+    )
+    let secondaryScope = MissCatShellAccountScope(
+        instance: "active.example",
+        userID: "shared",
+        username: "cat"
+    )
+    private let primaryRepository = MockMissCatFeedRepository()
+    private let secondaryRepository = MockMissCatFeedRepository()
+    private(set) var repositoryRequests: [MissCatShellAccountScope] = []
+
+    func loadConfiguration() async throws -> MissCatShellConfiguration {
+        configuration(current: primaryScope, accounts: [primaryScope, secondaryScope])
+    }
+
+    func switchAccount(to scope: MissCatShellAccountScope) async throws -> MissCatShellConfiguration {
+        guard scope == secondaryScope else { throw MissCatShellConfigurationError.accountNotFound }
+        return configuration(current: secondaryScope, accounts: [secondaryScope])
+    }
+
+    func saveSelectedTimelineID(
+        _ selectedID: String,
+        for scope: MissCatShellAccountScope
+    ) async throws {}
+
+    func repository(for scope: MissCatShellAccountScope) throws -> any MissCatFeedRepository {
+        repositoryRequests.append(scope)
+        if scope == primaryScope { return primaryRepository }
+        if scope == secondaryScope { return secondaryRepository }
+        throw MissCatShellConfigurationError.accountNotFound
+    }
+
+    private func configuration(
+        current: MissCatShellAccountScope,
+        accounts: [MissCatShellAccountScope]
+    ) -> MissCatShellConfiguration {
+        let page = MissCatTimelinePage(id: "home", title: "Home", source: .home, accountScope: current)
+        return MissCatShellConfiguration(
+            currentScope: current,
+            accounts: accounts.map { MissCatShellAccount(scope: $0) },
+            timelinePages: [page],
+            selectedTimelineID: page.id,
             appearance: .init(isDark: false, accentHex: "2F7CF6")
         )
     }
