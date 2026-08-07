@@ -119,8 +119,6 @@ typealias MissCatFeedReconnectSleep = @Sendable (UInt64) async throws -> Void
 public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
     private let account: MissCatFeedSession
     private let urlSession: URLSession
-    private let encoder = JSONEncoder()
-    private let decoder = JSONDecoder()
     private let webSocketFactory: any MissCatFeedWebSocketFactory
     private let realtimeConfiguration: MissCatFeedRealtimeConfiguration
     private let makeStreamID: @Sendable () -> String
@@ -495,7 +493,7 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
         }
         let dto: FeedURLPreviewDTO
         do {
-            dto = try decoder.decode(FeedURLPreviewDTO.self, from: data)
+            dto = try JSONDecoder().decode(FeedURLPreviewDTO.self, from: data)
         } catch {
             throw MissCatURLPreviewError.invalidResponse
         }
@@ -560,7 +558,7 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
         let (data, response) = try await send(path, body: body)
         try validate(response, data: data)
         guard !data.isEmpty else { throw MissCatFeedRepositoryError.emptyResponse }
-        return try decoder.decode(Response.self, from: data)
+        return try JSONDecoder().decode(Response.self, from: data)
     }
 
     private func postWrite<Request: Encodable>(_ path: String, body: Request) async throws {
@@ -573,7 +571,7 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
         body: Request
     ) async throws -> (Data, URLResponse) {
         var request = try makeRequest(path: path)
-        request.httpBody = try encoder.encode(body)
+        request.httpBody = try JSONEncoder().encode(body)
         return try await urlSession.data(for: request)
     }
 
@@ -626,7 +624,7 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
             throw MissCatFeedRepositoryError.invalidResponse
         }
         guard (200 ..< 300).contains(http.statusCode) else {
-            let envelope = try? decoder.decode(FeedAPIErrorEnvelope.self, from: data)
+            let envelope = try? JSONDecoder().decode(FeedAPIErrorEnvelope.self, from: data)
             let message = envelope?.error.message
                 ?? HTTPURLResponse.localizedString(forStatusCode: http.statusCode)
             throw MissCatFeedRepositoryError.http(http.statusCode, message)

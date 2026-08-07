@@ -1,5 +1,4 @@
 import Foundation
-import ImageIO
 import SwiftUI
 
 public struct MissCatNoteRow: View {
@@ -799,6 +798,7 @@ private struct MissCatNativeMFMText: View {
             .font(font)
             .foregroundStyle(palette.text)
             .tint(palette.text)
+            .accessibilityLabel(MissCatNativeMFMRenderer.accessibilityText(source))
             .environment(\.openURL, OpenURLAction { url in
                 if let mention = MissCatNativeMFMRenderer.interactiveValue(from: url, kind: "mention") {
                     onOpenMention(mention)
@@ -847,8 +847,11 @@ private struct MissCatNativeMFMText: View {
             if let assetName = localEmojis[name] {
                 result = result + Text(Image(assetName).renderingMode(.original))
                     .baselineOffset(-3)
-            } else if let data = emojiStore.dataByName[name],
-                      let image = inlineImage(from: data, side: 18) {
+            } else if let decodedImage = emojiStore.imageByName[name] {
+                let image = Image(
+                    decorative: decodedImage,
+                    scale: CGFloat(decodedImage.height) / 18
+                )
                 result = result + Text(image)
                     .baselineOffset(-2)
             } else {
@@ -868,12 +871,6 @@ private struct MissCatNativeMFMText: View {
             .joined(separator: "|")
     }
 
-    private func inlineImage(from data: Data, side: CGFloat) -> Image? {
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
-              let image = CGImageSourceCreateImageAtIndex(source, 0, nil),
-              image.height > 0 else { return nil }
-        return Image(decorative: image, scale: CGFloat(image.height) / side)
-    }
 }
 
 private struct MissCatNoteOverflowPanel: View {

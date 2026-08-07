@@ -111,6 +111,55 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         )
     }
 
+    func testEmojiResolverDoesNotTrapOnNormalizedDuplicateKeysAndBareKeyWins() throws {
+        let result = MissCatEmojiURLResolver.mergedURLs(
+            explicit: [
+                ":foo:": "https://cdn.example/colon.webp",
+                "foo": "https://cdn.example/bare.webp",
+            ],
+            sources: ["fallback :foo: :other:"],
+            authorHost: nil,
+            instanceOrigin: URL(string: "https://example.invalid")
+        )
+
+        XCTAssertEqual(result["foo"], URL(string: "https://cdn.example/bare.webp"))
+        XCTAssertEqual(result["other"], URL(string: "https://example.invalid/emoji/other.webp"))
+    }
+
+    func testEmojiResolverRejectsUnsafeSchemesCredentialsAndProtocolRelativeURLs() {
+        let result = MissCatEmojiURLResolver.mergedURLs(
+            explicit: [
+                "file": "file:///tmp/secret.png",
+                "data": "data:image/png;base64,AAAA",
+                "http": "http://cdn.example/insecure.png",
+                "credential": "https://user:password@cdn.example/emoji.png",
+                "protocol": "//cdn.example/emoji.png",
+                "relative": "/emoji/safe.webp",
+            ],
+            sources: [],
+            authorHost: nil,
+            instanceOrigin: URL(string: "https://example.invalid")
+        )
+
+        XCTAssertEqual(result, [
+            "relative": URL(string: "https://example.invalid/emoji/safe.webp")!,
+        ])
+        XCTAssertNil(
+            MissCatEmojiURLResolver.canonicalURL(
+                for: "bad+name",
+                authorHost: nil,
+                instanceOrigin: URL(string: "https://example.invalid")
+            )
+        )
+        XCTAssertNil(
+            MissCatEmojiURLResolver.canonicalURL(
+                for: "safe",
+                authorHost: nil,
+                instanceOrigin: URL(string: "http://localhost:3000")
+            )
+        )
+    }
+
     func testRemoteTimelineSynthesizesAuthorScopedEmojiURLsForNamesBodyAndQuote() async throws {
         FeedURLProtocolStub.handler = { request in
             var remote = Self.noteJSON(id: "note-remote")

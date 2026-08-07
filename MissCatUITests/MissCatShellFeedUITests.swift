@@ -17,6 +17,13 @@ final class MissCatShellFeedUITests: XCTestCase {
         launchFixture()
         waitForReady(page: "home")
         waitForSynchronizedPagerSelection("home")
+        let remoteEmojiLabel = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", "misskey 絵文字"))
+            .firstMatch
+        XCTAssertTrue(
+            remoteEmojiLabel.waitForExistence(timeout: 5),
+            "Remote custom emoji must be decoded before visual-ready is published"
+        )
         captureStableFixture(page: "home", name: "shell-populated")
 
         app.buttons["main.timeline.local"].tap()

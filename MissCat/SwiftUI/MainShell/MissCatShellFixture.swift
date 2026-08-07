@@ -454,9 +454,14 @@ private final class MissCatShellFixtureRepository: MissCatNoteContextRepository 
                     id: "\(prefix)-3",
                     author: MissCatNoteAuthor(
                         id: "fixture-author-aqz",
-                        name: "aqz",
+                        name: "aqz :misskey:",
                         username: "aqz",
-                        localAvatarImageName: "TimelineFixtureAvatarAqz"
+                        localAvatarImageName: "TimelineFixtureAvatarAqz",
+                        emojis: [
+                            "misskey": URL(
+                                string: "https://raw.githubusercontent.com/misskey-dev/assets/main/icon.png"
+                            )!
+                        ]
                     ),
                     createdAt: MissCatShellFixtureLaunch.referenceDate.addingTimeInterval(-360),
                     text: "18時過ぎに停電したので1hは経ってるにゃ"

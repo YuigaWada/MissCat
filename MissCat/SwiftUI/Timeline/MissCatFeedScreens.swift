@@ -57,6 +57,7 @@ public struct MissCatFeedNavigationActions {
 /// thread screen use the same store and row behavior instead of seven independent stacks.
 public struct MissCatFeedView: View {
     @StateObject private var store: MissCatFeedStore
+    @StateObject private var readiness = MissCatNoteVisualReadiness()
     @Binding private var scrollPositionID: String?
     @State private var presentedSheet: PresentedSheet?
     @State private var pendingRenote: MissCatNote?
@@ -121,6 +122,14 @@ public struct MissCatFeedView: View {
         }
         .task { await store.loadInitial() }
         .onDisappear { store.cancelAllFeedTasks() }
+        .onChange(of: store.phase, initial: true) { _, phase in
+            switch phase {
+            case .loaded, .empty, .failed:
+                readiness.setModelTerminal(true)
+            case .idle, .loading:
+                readiness.setModelTerminal(false)
+            }
+        }
         .onChange(of: scrollToTopTrigger) { _, generation in
             guard generation > 0, let firstID = store.notes.first?.id else { return }
             withAnimation(.easeOut(duration: 0.2)) {
@@ -351,7 +360,8 @@ public struct MissCatFeedView: View {
                             pendingReport = note
                         },
                         onShare: navigationActions.share,
-                        contextRepository: contextRepository
+                        contextRepository: contextRepository,
+                        readiness: readiness
                     )
                     .id(note.id)
                     .task {
@@ -435,7 +445,7 @@ public struct MissCatFeedView: View {
     private var isVisuallyStable: Bool {
         switch store.phase {
         case .loaded, .empty, .failed:
-            true
+            readiness.isReady
         case .idle, .loading:
             allowsLoadingVisualReady
         }

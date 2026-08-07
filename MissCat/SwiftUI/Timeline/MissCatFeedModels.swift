@@ -82,7 +82,7 @@ enum MissCatFeedInstanceOrigin {
 /// while Misskey 2023.12+ also defines canonical `/emoji/<name>.webp` routes.
 enum MissCatEmojiURLResolver {
     private static let shortcodeExpression = try! NSRegularExpression(
-        pattern: #":([A-Za-z0-9_+\-]+(?:@[A-Za-z0-9.-]+)?):"#
+        pattern: #":([A-Za-z0-9_\-]+(?:@[A-Za-z0-9.-]+)?):"#
     )
 
     static func mergedURLs(
@@ -91,9 +91,29 @@ enum MissCatEmojiURLResolver {
         authorHost: String?,
         instanceOrigin: URL?
     ) -> [String: URL] {
-        var result = Dictionary(uniqueKeysWithValues: (values ?? [:]).compactMap { key, value in
-            resolvedExplicitURL(value, relativeTo: instanceOrigin).map { (normalizedName(key), $0) }
-        })
+        // Misskey's API promises bare names, but older forks have emitted both
+        // `foo` and `:foo:` in the same dictionary. Normalising those keys with
+        // Dictionary(uniqueKeysWithValues:) traps the process. Prefer the bare
+        // spelling deterministically and ignore invalid/duplicate candidates.
+        let explicitEntries = (values ?? [:]).sorted { lhs, rhs in
+            let lhsName = normalizedName(lhs.key)
+            let rhsName = normalizedName(rhs.key)
+            if lhsName != rhsName { return lhsName < rhsName }
+            let lhsIsBare = lhs.key == lhsName
+            let rhsIsBare = rhs.key == rhsName
+            if lhsIsBare != rhsIsBare { return lhsIsBare }
+            return lhs.key < rhs.key
+        }
+        var result: [String: URL] = [:]
+        for (key, value) in explicitEntries {
+            let name = normalizedName(key)
+            guard !name.isEmpty,
+                  isValidRouteName(name),
+                  result[name] == nil,
+                  let url = resolvedExplicitURL(value, relativeTo: instanceOrigin)
+            else { continue }
+            result[name] = url
+        }
         for source in sources.compactMap({ $0 }) {
             for name in shortcodeNames(in: source) where result[name] == nil {
                 result[name] = canonicalURL(
@@ -148,7 +168,8 @@ enum MissCatEmojiURLResolver {
         authorHost: String?,
         instanceOrigin: URL?
     ) -> URL? {
-        guard let instanceOrigin else { return nil }
+        guard let instanceOrigin,
+              isAllowedRemoteURL(instanceOrigin) else { return nil }
         var name = normalizedName(rawName)
         guard !name.isEmpty, !name.contains("/"), !name.contains("\\") else { return nil }
 
@@ -159,7 +180,7 @@ enum MissCatEmojiURLResolver {
                   !host.isEmpty {
             name += "@\(host.lowercased())"
         }
-        guard !name.isEmpty else { return nil }
+        guard !name.isEmpty, isValidRouteName(name) else { return nil }
         return instanceOrigin
             .appendingPathComponent("emoji", isDirectory: true)
             .appendingPathComponent("\(name).webp")
@@ -175,9 +196,30 @@ enum MissCatEmojiURLResolver {
     }
 
     private static func resolvedExplicitURL(_ rawValue: String, relativeTo origin: URL?) -> URL? {
+        guard !rawValue.hasPrefix("//") else { return nil }
         guard let url = URL(string: rawValue) else { return nil }
-        if url.scheme != nil { return url }
-        return origin.flatMap { URL(string: rawValue, relativeTo: $0)?.absoluteURL }
+        let resolved: URL?
+        if url.scheme != nil {
+            resolved = url
+        } else {
+            resolved = origin.flatMap { URL(string: rawValue, relativeTo: $0)?.absoluteURL }
+        }
+        return resolved.flatMap { isAllowedRemoteURL($0) ? $0 : nil }
+    }
+
+    static func isAllowedRemoteURL(_ url: URL) -> Bool {
+        guard url.scheme?.lowercased() == "https",
+              url.host?.isEmpty == false,
+              url.user == nil,
+              url.password == nil else { return false }
+        return true
+    }
+
+    private static func isValidRouteName(_ name: String) -> Bool {
+        name.range(
+            of: #"^[A-Za-z0-9_\-]+(?:@[A-Za-z0-9.-]+)?$"#,
+            options: .regularExpression
+        ) != nil
     }
 }
 

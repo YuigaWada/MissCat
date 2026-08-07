@@ -1,5 +1,7 @@
 import Combine
+import CoreGraphics
 import Foundation
+import ImageIO
 
 public struct MissCatURLPreview: Equatable, Sendable {
     public let sourceURL: URL
@@ -78,6 +80,53 @@ public struct MissCatReactionChoice: Identifiable, Equatable, Sendable {
     ]
 }
 
+enum MissCatReactionSelectionPolicy {
+    static let serverLikeValue = "\u{2764}"
+
+    static func selectableChoices(
+        catalog: [MissCatReactionChoice],
+        existingReactions: [MissCatReaction],
+        noteAuthorHost: String?,
+        reactionAcceptance: String?
+    ) -> [MissCatReactionChoice] {
+        if reactionAcceptance == "likeOnly" {
+            return [MissCatReactionChoice(value: serverLikeValue, label: serverLikeValue)]
+        }
+
+        let permittedCatalog = catalog.filter { choice in
+            if choice.isLocalOnly, noteAuthorHost != nil { return false }
+            if choice.isSensitive,
+               reactionAcceptance == "nonSensitiveOnly"
+                || reactionAcceptance == "nonSensitiveOnlyForLocalLikeOnlyForRemote" {
+                return false
+            }
+            return true
+        }
+        let permittedValues = Set(permittedCatalog.map(\.value))
+        let existingUnicode = existingReactions.compactMap { reaction -> MissCatReactionChoice? in
+            if permittedValues.contains(reaction.name) { return nil }
+            guard reaction.emojiURL == nil,
+                  isUnicodeEmoji(reaction.name) else { return nil }
+            return MissCatReactionChoice(value: reaction.name)
+        }
+        return unique(permittedCatalog + existingUnicode)
+    }
+
+    private static func isUnicodeEmoji(_ value: String) -> Bool {
+        guard !value.isEmpty,
+              !value.hasPrefix(":"),
+              !value.hasSuffix(":") else { return false }
+        return value.unicodeScalars.contains { scalar in
+            scalar.properties.isEmoji || scalar.properties.isEmojiPresentation
+        }
+    }
+
+    private static func unique(_ choices: [MissCatReactionChoice]) -> [MissCatReactionChoice] {
+        var values = Set<String>()
+        return choices.filter { values.insert($0.value).inserted }
+    }
+}
+
 public enum MissCatURLPreviewError: LocalizedError, Equatable {
     case unsupportedURL
     case invalidInstance
@@ -132,6 +181,9 @@ public enum MissCatMentionResolutionError: LocalizedError, Equatable {
 
 public enum MissCatNativeMFMRenderer {
     private static let ignoredTags = ["motion", "flip", "spin", "jump", "small"]
+    private static let customEmojiExpression = try! NSRegularExpression(
+        pattern: #":([A-Za-z0-9_\-]+(?:@[A-Za-z0-9.-]+)?):"#
+    )
 
     /// A Swift-native, side-effect-free presentation path for new screens.  It
     /// never bridges a caller-owned UIFont into CoreText.
@@ -188,6 +240,22 @@ public enum MissCatNativeMFMRenderer {
         return result
     }
 
+    public static func accessibilityText(_ source: String) -> String {
+        var result = String(render(source).characters)
+        let matches = customEmojiExpression.matches(
+            in: result,
+            range: NSRange(result.startIndex..., in: result)
+        )
+        for match in matches.reversed() {
+            guard match.numberOfRanges == 2,
+                  let markerRange = Range(match.range(at: 0), in: result),
+                  let nameRange = Range(match.range(at: 1), in: result) else { continue }
+            let name = String(result[nameRange])
+            result.replaceSubrange(markerRange, with: "\(name) 絵文字")
+        }
+        return result
+    }
+
     public static func interactiveValue(from url: URL, kind: String) -> String? {
         guard url.scheme == "misscat-mfm", url.host == kind else { return nil }
         let value = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
@@ -239,9 +307,11 @@ private extension String {
 @MainActor
 public final class MissCatNoteVisualReadiness: ObservableObject {
     @Published public private(set) var isReady = false
+    @Published public private(set) var hasFailures = false
 
     private var expected = Set<String>()
     private var terminal = Set<String>()
+    private var failed = Set<String>()
     private var modelIsTerminal = false
     private var stabilizationTask: Task<Void, Never>?
 
@@ -257,6 +327,16 @@ public final class MissCatNoteVisualReadiness: ObservableObject {
     public func complete(_ key: String) {
         guard !key.isEmpty else { return }
         terminal.insert(key)
+        failed.remove(key)
+        hasFailures = !failed.isEmpty
+        scheduleEvaluation()
+    }
+
+    public func fail(_ key: String) {
+        guard !key.isEmpty else { return }
+        terminal.insert(key)
+        failed.insert(key)
+        hasFailures = true
         scheduleEvaluation()
     }
 
@@ -268,12 +348,15 @@ public final class MissCatNoteVisualReadiness: ObservableObject {
     private func scheduleEvaluation() {
         stabilizationTask?.cancel()
         isReady = false
-        guard modelIsTerminal, expected.isSubset(of: terminal) else { return }
+        guard modelIsTerminal,
+              expected.isSubset(of: terminal),
+              expected.isDisjoint(with: failed) else { return }
         stabilizationTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 250_000_000)
             guard !Task.isCancelled, let self,
                   self.modelIsTerminal,
-                  self.expected.isSubset(of: self.terminal) else { return }
+                  self.expected.isSubset(of: self.terminal),
+                  self.expected.isDisjoint(with: self.failed) else { return }
             self.isReady = true
         }
     }
@@ -283,33 +366,105 @@ public final class MissCatNoteVisualReadiness: ObservableObject {
 final class MissCatCustomEmojiCache {
     static let shared = MissCatCustomEmojiCache()
 
-    private let storage = NSCache<NSURL, NSData>()
+    private let storage = NSCache<NSURL, CGImage>()
 
     init(countLimit: Int = 256) {
         storage.countLimit = countLimit
         storage.totalCostLimit = 32 * 1_024 * 1_024
     }
 
-    func data(for url: URL) -> Data? {
-        storage.object(forKey: url as NSURL) as Data?
+    func image(for url: URL) -> CGImage? {
+        storage.object(forKey: url as NSURL)
     }
 
-    func insert(_ data: Data, for url: URL) {
-        storage.setObject(data as NSData, forKey: url as NSURL, cost: data.count)
+    func insert(_ image: CGImage, for url: URL) {
+        storage.setObject(
+            image,
+            forKey: url as NSURL,
+            cost: image.bytesPerRow * image.height
+        )
     }
 }
 
 enum MissCatCustomEmojiLoadError: Error, Equatable {
+    case unsupportedURL
+    case unsupportedMIME
     case invalidResponse
+    case invalidImage
     case http(Int)
     case payloadTooLarge
+    case dimensionsTooLarge
+}
+
+enum MissCatCustomEmojiImageDecoder {
+    static let maximumPayloadBytes = 4_000_000
+    static let maximumDimension = 4_096
+    static let maximumDecodedPixels = 16_777_216
+
+    nonisolated static func decode(_ data: Data) throws -> CGImage {
+        guard !data.isEmpty,
+              data.count <= maximumPayloadBytes,
+              let source = CGImageSourceCreateWithData(data as CFData, nil),
+              CGImageSourceGetCount(source) > 0,
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil)
+                as? [CFString: Any],
+              let width = (properties[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue,
+              let height = (properties[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue
+        else { throw MissCatCustomEmojiLoadError.invalidImage }
+        try validateDimensions(width: width, height: height)
+        let options: [CFString: Any] = [
+            kCGImageSourceShouldCache: true,
+            kCGImageSourceShouldCacheImmediately: true,
+        ]
+        guard let image = CGImageSourceCreateImageAtIndex(source, 0, options as CFDictionary)
+        else { throw MissCatCustomEmojiLoadError.invalidImage }
+        return image
+    }
+
+    nonisolated static func validateDimensions(width: Int, height: Int) throws {
+        guard width > 0, height > 0 else {
+            throw MissCatCustomEmojiLoadError.invalidImage
+        }
+        guard width <= maximumDimension,
+              height <= maximumDimension,
+              width <= maximumDecodedPixels / height else {
+            throw MissCatCustomEmojiLoadError.dimensionsTooLarge
+        }
+    }
+
+    nonisolated static func decodeOffMain(_ data: Data) async throws -> CGImage {
+        try await Task.detached(priority: .utility) {
+            try decode(data)
+        }.value
+    }
+}
+
+enum MissCatCustomEmojiTransportPolicy {
+    static func validate(url: URL) throws {
+        guard MissCatEmojiURLResolver.isAllowedRemoteURL(url) else {
+            throw MissCatCustomEmojiLoadError.unsupportedURL
+        }
+    }
+
+    static func validate(response: HTTPURLResponse) throws {
+        guard (200 ..< 300).contains(response.statusCode) else {
+            throw MissCatCustomEmojiLoadError.http(response.statusCode)
+        }
+        guard response.mimeType?.lowercased().hasPrefix("image/") == true else {
+            throw MissCatCustomEmojiLoadError.unsupportedMIME
+        }
+        let expectedLength = response.expectedContentLength
+        guard expectedLength < 0
+                || expectedLength <= Int64(MissCatCustomEmojiImageDecoder.maximumPayloadBytes)
+        else { throw MissCatCustomEmojiLoadError.payloadTooLarge }
+    }
 }
 
 @MainActor
 final class MissCatCustomEmojiStore: ObservableObject {
     typealias DataLoader = @Sendable (URL) async throws -> Data
 
-    @Published private(set) var dataByName: [String: Data] = [:]
+    @Published private(set) var imageByName: [String: CGImage] = [:]
 
     private var emojis: [String: URL]
     private var readiness: MissCatNoteVisualReadiness?
@@ -345,34 +500,45 @@ final class MissCatCustomEmojiStore: ObservableObject {
         let entries = emojis.sorted { $0.key < $1.key }
         let currentReadiness = readiness
         let registeredKeys = Set(entries.map { assetKey($0.value) })
+        var terminalKeys = Set<String>()
         for (_, url) in entries {
             let key = assetKey(url)
             currentReadiness?.register(key)
         }
         defer {
-            registeredKeys.forEach { currentReadiness?.complete($0) }
+            // A disappearing/cancelled row must not leave the feed pending
+            // forever. Transport/decode failures are recorded separately and
+            // intentionally do not become visual-acceptance success.
+            registeredKeys.subtracting(terminalKeys).forEach {
+                currentReadiness?.complete($0)
+            }
         }
 
         for (name, url) in entries where loadedURLsByName[name] != url {
             guard !Task.isCancelled else { return }
-            dataByName[name] = nil
+            imageByName[name] = nil
             loadedURLsByName[name] = nil
-            if let data = cache.data(for: url) {
-                dataByName[name] = data
+            if let image = cache.image(for: url) {
+                imageByName[name] = image
                 loadedURLsByName[name] = url
                 currentReadiness?.complete(assetKey(url))
+                terminalKeys.insert(assetKey(url))
                 continue
             }
             do {
                 let data = try await loader(url)
                 try Task.checkCancellation()
-                cache.insert(data, for: url)
-                dataByName[name] = data
+                let image = try await MissCatCustomEmojiImageDecoder.decodeOffMain(data)
+                try Task.checkCancellation()
+                cache.insert(image, for: url)
+                imageByName[name] = image
                 loadedURLsByName[name] = url
+                currentReadiness?.complete(assetKey(url))
             } catch {
                 if error is CancellationError { return }
+                currentReadiness?.fail(assetKey(url))
             }
-            currentReadiness?.complete(assetKey(url))
+            terminalKeys.insert(assetKey(url))
         }
     }
 
@@ -390,20 +556,31 @@ final class MissCatCustomEmojiStore: ObservableObject {
     }
 
     static let liveLoader: DataLoader = { url in
+        try MissCatCustomEmojiTransportPolicy.validate(url: url)
         var request = URLRequest(url: url)
         request.cachePolicy = .returnCacheDataElseLoad
         request.timeoutInterval = 20
         request.setValue("image/avif,image/webp,image/apng,image/*,*/*;q=0.8", forHTTPHeaderField: "Accept")
         request.setValue("MissCat/SwiftUI", forHTTPHeaderField: "User-Agent")
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
         guard let http = response as? HTTPURLResponse else {
             throw MissCatCustomEmojiLoadError.invalidResponse
         }
-        guard (200 ..< 300).contains(http.statusCode) else {
-            throw MissCatCustomEmojiLoadError.http(http.statusCode)
+        try MissCatCustomEmojiTransportPolicy.validate(response: http)
+        var data = Data()
+        if http.expectedContentLength > 0 {
+            data.reserveCapacity(
+                min(
+                    Int(http.expectedContentLength),
+                    MissCatCustomEmojiImageDecoder.maximumPayloadBytes
+                )
+            )
         }
-        guard data.count <= 4_000_000 else {
-            throw MissCatCustomEmojiLoadError.payloadTooLarge
+        for try await byte in bytes {
+            guard data.count < MissCatCustomEmojiImageDecoder.maximumPayloadBytes else {
+                throw MissCatCustomEmojiLoadError.payloadTooLarge
+            }
+            data.append(byte)
         }
         return data
     }

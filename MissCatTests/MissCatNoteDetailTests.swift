@@ -155,6 +155,13 @@ final class MissCatNoteDetailTests: XCTestCase {
         )
     }
 
+    func testNativeMFMAccessibilityKeepsCustomEmojiNamesAvailableToVoiceOver() {
+        XCTAssertEqual(
+            MissCatNativeMFMRenderer.accessibilityText("hello :blobcat: :wave@remote.example:"),
+            "hello blobcat 絵文字 wave@remote.example 絵文字"
+        )
+    }
+
     func testPreviewURLDetectionIsStableDeduplicatedAndBounded() {
         let urls = MissCatNativeMFMRenderer.previewURLs(
             in: "https://one.test/a https://one.test/a https://two.test/b",
@@ -280,7 +287,7 @@ final class MissCatNoteDetailTests: XCTestCase {
     func testCustomEmojiStoreCachesSuccessfulLoadsAcrossViews() async {
         let url = URL(string: "https://example.test/emoji.webp")!
         let cache = MissCatCustomEmojiCache(countLimit: 2)
-        let probe = CustomEmojiLoaderProbe(data: Data([1, 2, 3]))
+        let probe = CustomEmojiLoaderProbe(data: Self.customEmojiPNGData)
         let first = MissCatCustomEmojiStore(
             emojis: ["cat": url],
             readiness: nil,
@@ -297,15 +304,18 @@ final class MissCatNoteDetailTests: XCTestCase {
         await second.load()
 
         XCTAssertEqual(probe.callCount, 1)
-        XCTAssertEqual(first.dataByName["cat"], Data([1, 2, 3]))
-        XCTAssertEqual(second.dataByName["cat"], Data([1, 2, 3]))
+        XCTAssertEqual(first.imageByName["cat"]?.width, 1)
+        XCTAssertEqual(second.imageByName["cat"]?.height, 1)
     }
 
     @MainActor
     func testCustomEmojiCancellationCompletesEveryReadinessRegistration() async throws {
         let readiness = MissCatNoteVisualReadiness()
         readiness.setModelTerminal(true)
-        let probe = CustomEmojiLoaderProbe(data: Data([1]), delayNanoseconds: 5_000_000_000)
+        let probe = CustomEmojiLoaderProbe(
+            data: Self.customEmojiPNGData,
+            delayNanoseconds: 5_000_000_000
+        )
         let store = MissCatCustomEmojiStore(
             emojis: [
                 "cat": URL(string: "https://example.test/cat.webp")!,
@@ -323,9 +333,81 @@ final class MissCatNoteDetailTests: XCTestCase {
         await task.value
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        XCTAssertTrue(store.dataByName.isEmpty)
+        XCTAssertTrue(store.imageByName.isEmpty)
         XCTAssertTrue(readiness.isReady)
         XCTAssertEqual(probe.callCount, 1)
+    }
+
+    @MainActor
+    func testCustomEmojiFailureBecomesTerminalWithoutPassingVisualAcceptance() async throws {
+        let readiness = MissCatNoteVisualReadiness()
+        readiness.setModelTerminal(true)
+        let store = MissCatCustomEmojiStore(
+            emojis: ["cat": URL(string: "https://example.test/cat.webp")!],
+            readiness: readiness,
+            cache: MissCatCustomEmojiCache(countLimit: 1),
+            loader: { _ in throw URLError(.cannotDecodeContentData) }
+        )
+
+        await store.load()
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        XCTAssertTrue(readiness.hasFailures)
+        XCTAssertFalse(readiness.isReady)
+        XCTAssertTrue(store.imageByName.isEmpty)
+    }
+
+    func testCustomEmojiTransportRejectsOversizedHeaderAndNonImageMIMEBeforeBody() throws {
+        let url = try XCTUnwrap(URL(string: "https://cdn.example/emoji.webp"))
+        let oversized = try XCTUnwrap(HTTPURLResponse(
+            url: url,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: [
+                "Content-Type": "image/webp",
+                "Content-Length": "4000001",
+            ]
+        ))
+        let wrongMIME = try XCTUnwrap(HTTPURLResponse(
+            url: url,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: ["Content-Type": "text/html"]
+        ))
+
+        XCTAssertThrowsError(try MissCatCustomEmojiTransportPolicy.validate(response: oversized)) {
+            XCTAssertEqual($0 as? MissCatCustomEmojiLoadError, .payloadTooLarge)
+        }
+        XCTAssertThrowsError(try MissCatCustomEmojiTransportPolicy.validate(response: wrongMIME)) {
+            XCTAssertEqual($0 as? MissCatCustomEmojiLoadError, .unsupportedMIME)
+        }
+        XCTAssertThrowsError(
+            try MissCatCustomEmojiTransportPolicy.validate(
+                url: URL(string: "file:///tmp/emoji.png")!
+            )
+        ) {
+            XCTAssertEqual($0 as? MissCatCustomEmojiLoadError, .unsupportedURL)
+        }
+    }
+
+    func testCustomEmojiDecoderBoundsCompressedAndDecodedMemory() async throws {
+        let image = try await MissCatCustomEmojiImageDecoder.decodeOffMain(Self.customEmojiPNGData)
+        XCTAssertEqual(image.width, 1)
+        XCTAssertEqual(image.height, 1)
+
+        XCTAssertThrowsError(
+            try MissCatCustomEmojiImageDecoder.validateDimensions(width: 4_097, height: 1)
+        ) {
+            XCTAssertEqual($0 as? MissCatCustomEmojiLoadError, .dimensionsTooLarge)
+        }
+        XCTAssertThrowsError(
+            try MissCatCustomEmojiImageDecoder.validateDimensions(width: 4_096, height: 4_097)
+        ) {
+            XCTAssertEqual($0 as? MissCatCustomEmojiLoadError, .dimensionsTooLarge)
+        }
+        XCTAssertThrowsError(try MissCatCustomEmojiImageDecoder.decode(Data(repeating: 0, count: 32))) {
+            XCTAssertEqual($0 as? MissCatCustomEmojiLoadError, .invalidImage)
+        }
     }
 
     @MainActor
@@ -420,6 +502,75 @@ final class MissCatNoteDetailTests: XCTestCase {
         let didRecover = await waitUntil { store.phase == .loaded }
         XCTAssertTrue(didRecover)
         XCTAssertTrue(store.choices.contains { $0.value == ":misscat:" })
+    }
+
+    func testReactionSelectionPolicyCoversEveryCurrentAcceptanceVariant() {
+        let catalog = [
+            MissCatReactionChoice(value: ":open:", emojiURL: URL(string: "https://cdn.example/open.webp")),
+            MissCatReactionChoice(
+                value: ":local:",
+                emojiURL: URL(string: "https://cdn.example/local.webp"),
+                isLocalOnly: true
+            ),
+            MissCatReactionChoice(
+                value: ":sensitive:",
+                emojiURL: URL(string: "https://cdn.example/sensitive.webp"),
+                isSensitive: true
+            ),
+        ]
+        let existing = [
+            MissCatReaction(name: ":role_denied:", count: 1, emojiURL: URL(string: "https://cdn.example/denied.webp")),
+            MissCatReaction(name: "😺", count: 2),
+            MissCatReaction(name: "like", count: 3),
+        ]
+
+        let unrestricted = MissCatReactionSelectionPolicy.selectableChoices(
+            catalog: catalog,
+            existingReactions: existing,
+            noteAuthorHost: nil,
+            reactionAcceptance: nil
+        )
+        XCTAssertEqual(Set(unrestricted.map(\.value)), [":open:", ":local:", ":sensitive:", "😺"])
+        XCTAssertFalse(unrestricted.contains { $0.value == ":role_denied:" || $0.value == "like" })
+
+        let likeOnly = MissCatReactionSelectionPolicy.selectableChoices(
+            catalog: catalog,
+            existingReactions: existing,
+            noteAuthorHost: nil,
+            reactionAcceptance: "likeOnly"
+        )
+        XCTAssertEqual(likeOnly.map(\.value), ["\u{2764}"])
+
+        let likeOnlyForRemote = MissCatReactionSelectionPolicy.selectableChoices(
+            catalog: catalog,
+            existingReactions: existing,
+            noteAuthorHost: nil,
+            reactionAcceptance: "likeOnlyForRemote"
+        )
+        XCTAssertEqual(Set(likeOnlyForRemote.map(\.value)), Set(unrestricted.map(\.value)))
+
+        for acceptance in [
+            "nonSensitiveOnly",
+            "nonSensitiveOnlyForLocalLikeOnlyForRemote",
+        ] {
+            let choices = MissCatReactionSelectionPolicy.selectableChoices(
+                catalog: catalog,
+                existingReactions: existing,
+                noteAuthorHost: nil,
+                reactionAcceptance: acceptance
+            )
+            XCTAssertFalse(choices.contains { $0.value == ":sensitive:" })
+            XCTAssertTrue(choices.contains { $0.value == ":local:" })
+        }
+
+        let remoteNote = MissCatReactionSelectionPolicy.selectableChoices(
+            catalog: catalog,
+            existingReactions: existing,
+            noteAuthorHost: "remote.example",
+            reactionAcceptance: nil
+        )
+        XCTAssertFalse(remoteNote.contains { $0.value == ":local:" })
+        XCTAssertTrue(remoteNote.contains { $0.value == ":open:" })
     }
 
     @MainActor
@@ -538,6 +689,10 @@ final class MissCatNoteDetailTests: XCTestCase {
             replies: [.init(id: "reply", author: reply, text: "reply")]
         )
     }
+
+    private static let customEmojiPNGData = Data(base64Encoded:
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+    )!
 
     private static func response(
         _ request: URLRequest,

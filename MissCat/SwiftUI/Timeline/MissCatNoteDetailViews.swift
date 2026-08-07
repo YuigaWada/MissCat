@@ -383,20 +383,12 @@ public struct MissCatReactionPickerView: View {
     }
 
     private var allChoices: [MissCatReactionChoice] {
-        var values = Set<String>()
-        let existing = existingReactions.map {
-            MissCatReactionChoice(value: $0.name, emojiURL: $0.emojiURL)
-        }
-        return (store.filteredChoices + existing).filter { choice in
-            guard values.insert(choice.value).inserted else { return false }
-            if choice.isLocalOnly, noteAuthorHost != nil { return false }
-            if choice.isSensitive,
-               reactionAcceptance == "nonSensitiveOnly"
-                || reactionAcceptance == "nonSensitiveOnlyForLocalLikeOnlyForRemote" {
-                return false
-            }
-            return true
-        }
+        MissCatReactionSelectionPolicy.selectableChoices(
+            catalog: store.filteredChoices,
+            existingReactions: existingReactions,
+            noteAuthorHost: noteAuthorHost,
+            reactionAcceptance: reactionAcceptance
+        )
     }
 }
 
