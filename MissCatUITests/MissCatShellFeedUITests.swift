@@ -16,17 +16,33 @@ final class MissCatShellFeedUITests: XCTestCase {
     func testTimelineTabsSupportTapAndSwipe() {
         launchFixture()
         waitForReady(page: "home")
+        waitForSynchronizedPagerSelection("home")
         captureStableFixture(page: "home", name: "shell-populated")
 
         app.buttons["main.timeline.local"].tap()
-        waitForPagerSelection("local")
+        waitForSynchronizedPagerSelection("local")
         waitForReady(page: "local")
 
         let pager = app.collectionViews.firstMatch
         XCTAssertTrue(pager.waitForExistence(timeout: 5))
+
         pager.swipeLeft()
-        waitForPagerSelection("global")
+        waitForSynchronizedPagerSelection("global")
         waitForReady(page: "global")
+
+        pager.swipeLeft()
+        waitForSynchronizedPagerSelection("global")
+
+        pager.swipeRight()
+        waitForSynchronizedPagerSelection("local")
+        waitForReady(page: "local")
+
+        pager.swipeRight()
+        waitForSynchronizedPagerSelection("home")
+        waitForReady(page: "home")
+
+        pager.swipeRight()
+        waitForSynchronizedPagerSelection("home")
     }
 
     func testFooterAccountPopoverAndCompositeScrollRestoration() {
@@ -106,11 +122,18 @@ final class MissCatShellFeedUITests: XCTestCase {
         app.descendants(matching: .any)[identifier]
     }
 
-    private func waitForPagerSelection(_ page: String) {
+    private func waitForSynchronizedPagerSelection(_ page: String) {
         let tab = app.buttons["main.timeline.\(page)"]
-        let predicate = NSPredicate(format: "isSelected == true")
-        expectation(for: predicate, evaluatedWith: tab)
+        expectation(
+            for: NSPredicate(format: "isSelected == true"),
+            evaluatedWith: tab
+        )
         waitForExpectations(timeout: 5)
+
+        XCTAssertTrue(tab.isSelected)
+        for otherPage in ["home", "local", "global"] where otherPage != page {
+            XCTAssertFalse(app.buttons["main.timeline.\(otherPage)"].isSelected)
+        }
     }
 
     private func waitForAccount(_ accountID: String) {
