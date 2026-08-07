@@ -2,10 +2,10 @@
   "schema_version": 1,
   "target": "MissCat",
   "counts": {
-    "total_swift": 64,
+    "total_swift": 65,
     "uikit_only": 2,
-    "swiftui_only": 26,
-    "hybrid": 2,
+    "swiftui_only": 29,
+    "hybrid": 0,
     "neutral": 34,
     "rx_files": 0,
     "polio_files": 0,
