@@ -100,9 +100,150 @@ final class MissCatShellFeedUITests: XCTestCase {
         XCTAssertTrue(element("main.banner.error").waitForExistence(timeout: 5))
     }
 
+    func testAccountsSettingsAcceptanceScreenshots() {
+        let screens = [
+            "accounts",
+            "accounts-empty",
+            "accounts-error",
+            "settings-root",
+            "design",
+            "reaction-instances",
+            "reactions",
+            "licenses",
+            "license-detail",
+            "about"
+        ]
+
+        captureAccountsSettingsScreens(screens)
+    }
+
+    func testDesignAndAboutAcceptanceScreenshots() {
+        captureAccountsSettingsScreens(["design", "about"])
+    }
+
+    private func captureAccountsSettingsScreens(_ screens: [String]) {
+        for screen in screens {
+            launchAccountsSettingsFixture(screen: screen)
+            waitForAccountsSettingsVisualReady(screen: screen)
+            let attachment = XCTAttachment(screenshot: app.screenshot())
+            attachment.name = "candidate-accounts-settings-\(screen)"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+            app.terminate()
+        }
+    }
+
+    func testAccountsNativeNavigationSwitchDeletionAndRetry() {
+        launchAccountsSettingsFixture(screen: "accounts")
+        waitForAccountsSettingsVisualReady(screen: "accounts")
+
+        app.buttons["accounts.profile.fixture-wada"].tap()
+        XCTAssertTrue(element("accounts.profile.screen").waitForExistence(timeout: 5))
+        app.buttons["accounts.profile.back"].tap()
+        XCTAssertTrue(element("accounts.visualReady").waitForExistence(timeout: 5))
+
+        app.buttons["accounts.switch.fixture-sub"].tap()
+        XCTAssertTrue(element("settings.banner").waitForExistence(timeout: 5))
+
+        app.buttons["accounts.add"].tap()
+        XCTAssertTrue(element("accounts.add.flow").waitForExistence(timeout: 5))
+        app.buttons["accounts.add.close"].tap()
+        XCTAssertTrue(element("accounts.visualReady").waitForExistence(timeout: 5))
+
+        app.buttons["accounts.edit"].tap()
+        app.buttons["accounts.delete.fixture-wada"].tap()
+        XCTAssertTrue(app.alerts["本当に削除しますか？"].waitForExistence(timeout: 5))
+        app.alerts.buttons["閉じる"].tap()
+        XCTAssertTrue(element("accounts.card.fixture-wada").exists)
+
+        app.buttons["accounts.delete.fixture-wada"].tap()
+        app.alerts.buttons["はい"].tap()
+        XCTAssertFalse(element("accounts.card.fixture-wada").waitForExistence(timeout: 1))
+
+        launchAccountsSettingsFixture(screen: "accounts-error")
+        XCTAssertTrue(element("settings.error").waitForExistence(timeout: 5))
+        app.buttons["再試行"].tap()
+        waitForAccountsSettingsVisualReady(screen: "accounts")
+        XCTAssertTrue(element("accounts.list").exists)
+    }
+
+    func testSettingsTypedNavigationAndInteractiveEditors() {
+        launchAccountsSettingsFixture(screen: "settings-root")
+        XCTAssertTrue(element("settings.root.visualReady").waitForExistence(timeout: 5))
+
+        app.buttons["settings.design"].tap()
+        XCTAssertTrue(element("settings.design.visualReady").waitForExistence(timeout: 5))
+        XCTAssertTrue(element("settings.design.add-tab").exists)
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+
+        app.buttons["settings.reactions"].tap()
+        XCTAssertTrue(element("settings.reactions.instances.visualReady").waitForExistence(timeout: 5))
+        app.buttons["settings.reactions.instance.fixture-wada"].tap()
+        XCTAssertTrue(element("settings.reactions.visualReady").waitForExistence(timeout: 5))
+        app.buttons["settings.reactions.add"].tap()
+        XCTAssertTrue(element("settings.reactions.picker.visualReady").waitForExistence(timeout: 5))
+        app.buttons["閉じる"].tap()
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+
+        app.buttons["settings.licenses"].tap()
+        XCTAssertTrue(element("settings.licenses.visualReady").waitForExistence(timeout: 5))
+        app.buttons["settings.license.MisskeyKit"].tap()
+        XCTAssertTrue(element("settings.license.detail.visualReady").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "MIT License")).firstMatch.exists)
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+
+        app.buttons["settings.about"].tap()
+        XCTAssertTrue(element("settings.about.visualReady").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["settings.about.yuigawada"].exists)
+        XCTAssertTrue(app.buttons["settings.about.wada"].exists)
+    }
+
     private func launchFixture(_ extraArguments: String...) {
         app.launchArguments = ["--swiftui-shell-fixture"] + extraArguments
         app.launch()
+    }
+
+    private func launchAccountsSettingsFixture(screen: String) {
+        app.terminate()
+        app.launchArguments = [
+            "--swiftui-accounts-settings-acceptance",
+            "--swiftui-accounts-settings-screen",
+            screen
+        ]
+        app.launch()
+    }
+
+    private func waitForAccountsSettingsVisualReady(screen: String) {
+        let identifier: String
+        switch screen {
+        case "accounts", "accounts-empty", "accounts-error":
+            identifier = "accounts.visualReady"
+        case "settings-root":
+            identifier = "settings.root.visualReady"
+        case "design":
+            identifier = "settings.design.visualReady"
+        case "reaction-instances":
+            identifier = "settings.reactions.instances.visualReady"
+        case "reactions":
+            identifier = "settings.reactions.visualReady"
+        case "licenses":
+            identifier = "settings.licenses.visualReady"
+        case "license-detail":
+            identifier = "settings.license.detail.visualReady"
+        case "about":
+            identifier = "settings.about.visualReady"
+        default:
+            XCTFail("Unknown Accounts/Settings fixture screen: \(screen)")
+            return
+        }
+        XCTAssertTrue(element(identifier).waitForExistence(timeout: 10), "Missing visualReady for \(screen)")
+        if screen == "about" {
+            let completed = NSPredicate(format: "value == %@", "true")
+            expectation(for: completed, evaluatedWith: element(identifier))
+            waitForExpectations(timeout: 3)
+        }
     }
 
     private func relaunchFixture(_ extraArguments: String...) {

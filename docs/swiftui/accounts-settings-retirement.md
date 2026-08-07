@@ -7,14 +7,17 @@ migration. It is intentionally narrower than the final authenticated-root cutove
 
 | Route | Principal content | Temporary boundary |
 | --- | --- | --- |
-| Accounts footer tab | `MissCatAccountsScreen` | `AccountsListViewController` is now only a `UIHostingController` container while `HomeViewController` owns the root. |
-| Accounts → add | `MissCatAddAccountView` using the existing native SwiftUI MiAuth flow | Full-screen `UIHostingController`; no legacy login controller. |
-| Accounts → profile | Existing `MissCatProfileScreen` | Existing profile bridge. |
+| Accounts footer tab | `MissCatAccountsRootView` / `MissCatAccountsScreen` | `AccountsListViewController` is only the temporary root `UIHostingController` container while `HomeViewController` owns the app shell. |
+| Accounts → add | `MissCatAddAccountView` using the existing native SwiftUI MiAuth flow | SwiftUI `fullScreenCover`; no UIKit presentation and no legacy login controller. |
+| Accounts → profile | Existing `MissCatProfileScreen` | Typed `MissCatAccountsRoute.profile(accountID:)` inside the Accounts `NavigationStack`; no UIKit profile destination. |
 | Profile cog / Settings cog | `MissCatSettingsRootView` | A hosting controller hides the legacy navigation bar while the SwiftUI `NavigationStack` is active. |
 | Design / reactions / licenses / About | Native SwiftUI destinations in the same navigation stack | Persistence adapters call the existing data stores only. |
 
-All tokens remain inside `Cache.UserDefaults` / Keychain-backed legacy adapters.
-The SwiftUI models and views receive account IDs and display metadata only.
+All tokens remain inside `Cache.UserDefaults` / Keychain-backed adapters. The
+Accounts route carries only the opaque local composite account identifier and
+display metadata. A token is resolved at the production profile destination
+boundary and passed directly to the existing profile repository; it is never a
+navigation value, accessibility value, fixture value, or log field.
 
 ## Explicitly retired ordinary controllers
 
@@ -41,8 +44,8 @@ truth needed for screenshot comparison. The final removal must verify:
 1. no storyboard identifier or segue references the retired scenes;
 2. the app launches directly into the native authenticated root;
 3. Accounts add/switch/delete, all Settings destinations, and back navigation pass E2E;
-4. deterministic 414×896 reference captures satisfy both >=0.90 changed-pixel
-   similarity and >=0.90 SSIM;
+4. deterministic 402×874-point iPhone 16 Pro / iOS 18.6 reference captures
+   satisfy both >=0.90 changed-pixel similarity and >=0.90 SSIM without masks;
 5. the project has no source-build entry for the retired controllers.
 
 ## Persistence invariants
@@ -55,4 +58,3 @@ truth needed for screenshot comparison. The final removal must verify:
   legacy instance-scoped `favs-<instance>` archive.
 - No credential, token, cookie, or authentication payload is logged or exposed to a
   SwiftUI state object.
-

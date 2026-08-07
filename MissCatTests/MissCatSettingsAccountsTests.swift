@@ -1,3 +1,4 @@
+import SwiftUI
 import XCTest
 @testable import MissCat
 
@@ -1067,6 +1068,26 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
             .about
         ]
         XCTAssertEqual(Set(routes).count, 6)
+    }
+
+    func testAccountsRouteCarriesOnlyOpaqueLocalAccountIdentity() {
+        let first = MissCatAccountsRoute.profile(accountID: "https://example.invalid|user-a")
+        let duplicate = MissCatAccountsRoute.profile(accountID: "https://example.invalid|user-a")
+        let second = MissCatAccountsRoute.profile(accountID: "https://example.invalid|user-b")
+
+        XCTAssertEqual(first, duplicate)
+        XCTAssertNotEqual(first, second)
+        XCTAssertEqual(Set([first, duplicate, second]).count, 2)
+    }
+
+    @MainActor
+    func testReactionPanelSettingsShortcutBuildsNativeSwiftUIHost() {
+        let controller = MissCatSettingsBridge.makeReactionSettingsController(
+            accountID: "https://example.invalid|fixture-user",
+            onClose: {}
+        )
+
+        XCTAssertTrue(controller is UIHostingController<AnyView>)
     }
 
     @MainActor
