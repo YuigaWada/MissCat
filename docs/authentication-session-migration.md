@@ -28,10 +28,11 @@ screen remains visible and its retry controls reopen the same pending MiAuth
 request. Token exchange and rollback-safe Keychain persistence remain in
 `MissCatAuthenticationService`.
 
-Non-cancellation browser failures keep an app-owned error state behind the
-ordinary error alert, so dismissing the alert still leaves a visible retry
-control for the same pending request. Callback receipt has its own confirmation
-state while the one-shot check and rollback-safe account install complete.
+Non-cancellation browser failures use one app-owned error state with stable,
+redacted copy and a visible retry control for the same pending request. Raw
+system error descriptions are neither rendered nor duplicated in the ordinary
+global alert. Callback receipt has its own confirmation state while the
+one-shot check and rollback-safe account install complete.
 
 ## Sign-up handoff
 

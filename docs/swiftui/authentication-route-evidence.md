@@ -48,6 +48,15 @@ sign-up, callback, and system-session cancellation followed by a same-request
 retry. Its URLs use the reserved `.invalid` TLD and it contains no live
 credential.
 
+The production-path contract does not stop at the fixture controller. It
+constructs `ApplicationState` with the real `MissCatAuthenticationService`, a
+deterministic MiAuth transport and account store, and a root session provider.
+It then exercises authorization creation, callback matching, the one-shot
+check, rollback-safe install, and authenticated root restore through
+`completeAuthenticationAndRestore`. A persistence-failure case verifies that
+the root is not restored, no account becomes current, and explicit retry
+remains available.
+
 ## Legacy visual source and capture readiness
 
 The repository has two Start baselines:
@@ -76,12 +85,17 @@ views now expose stable readiness identifiers for every required state:
 - `visual-ready.login-start.default|error`
 - `visual-ready.login-terms.top|bottom`
 - `visual-ready.login-instance.default|invalid`
+- `visual-ready.login-auth-registration`
 - `visual-ready.login-auth-browser.loading|error|callback`
 
-The Start readiness value stays `false` until its legacy 0.7-second entrance
-animation completes. Terms markers are overlays and do not change text layout.
-The production Start no longer forces light appearance, so the pinned light and
-dark cases can both be captured.
+The Start readiness element does not exist until its legacy 0.7-second entrance
+animation completes. Terms publishes top or bottom readiness only when the
+corresponding content edge is inside the measured scroll viewport; a long
+document's middle position publishes neither. Instance readiness exists only
+while its alert binding is presented, and sign-up registration cannot be
+mistaken for a MiAuth loading state. All markers are overlays and do not change
+content layout. The production Start no longer forces light appearance, so the
+pinned light and dark cases can both be captured.
 
 No screenshot was produced during this audit. Therefore the 36 cases remain
 unrecorded and surfaces 04–07 remain `migrating`; the `>=90%` changed-pixel and
