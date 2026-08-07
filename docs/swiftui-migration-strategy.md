@@ -327,13 +327,15 @@ If one condition fails, replace it with Apple frameworks or a small checked-in m
 
 ### Locked-source patch deadline
 
-The current `Podfile` mutates FloatingPanel, APNGKit, MisskeyKit, Eureka, and RxCocoa sources. These patches are grandfathered only to keep the legacy reference build available. Effective immediately:
+The shipping `Podfile` no longer mutates dependency sources. Its only
+post-install setting keeps the retained Firebase graph at the deployment
+target shared by the app. The former dependency-family patches remain banned:
 
 - no new dependency-family source patch may be added;
-- every existing patch has a named replacement endpoint/component and a hash/assertion so it fails loudly if upstream source changes;
+- every future compatibility workaround must have a named replacement endpoint/component and a hash/assertion so it fails loudly if upstream source changes;
 - a surface cannot change to `runtime_owner=swiftui` or `accepted` while its ordinary live path uses a patched API;
-- the current feed/compose use of patched MisskeyKit poll/upload APIs must move behind the native client before root cutover;
-- all patched Pods are removed from the shipping app/extension before the ordinary SwiftUI root cutover commit; a non-shipping legacy-reference configuration may retain the frozen patches only until its evidence is archived, after which G deletes the patch blocks and Pods entirely.
+- feed/compose compatibility behavior stays behind the native clients and their request fixtures;
+- patched Pods stay absent from the shipping app and extension.
 
 ### MisskeyKit strangler sequence
 

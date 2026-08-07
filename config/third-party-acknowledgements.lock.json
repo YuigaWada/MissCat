@@ -7,12 +7,6 @@
       "version": "8.0.0",
       "sourceURL": "https://github.com/firebase/firebase-ios-sdk.git",
       "acknowledgementSHA256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
-    },
-    {
-      "name": "MisskeyKit",
-      "version": "3.0.4",
-      "sourceURL": "https://github.com/yuigawada/MisskeyKit-for-iOS.git",
-      "acknowledgementSHA256": "b34352252acb77429df939b87b8ba0bb4cdb26d64df756dfc548b620d753c450"
     }
   ]
 }

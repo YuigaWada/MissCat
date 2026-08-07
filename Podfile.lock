@@ -46,19 +46,15 @@ PODS:
     - GoogleUtilities/Logger
   - GoogleUtilities/UserDefaults (7.4.1):
     - GoogleUtilities/Logger
-  - MisskeyKit (3.0.4):
-    - Starscream (= 3.1.1)
   - nanopb (2.30908.0):
     - nanopb/decode (= 2.30908.0)
     - nanopb/encode (= 2.30908.0)
   - nanopb/decode (2.30908.0)
   - nanopb/encode (2.30908.0)
   - PromisesObjC (1.2.12)
-  - Starscream (3.1.1)
 
 DEPENDENCIES:
   - Firebase/Messaging
-  - MisskeyKit
 
 SPEC REPOS:
   trunk:
@@ -69,10 +65,8 @@ SPEC REPOS:
     - FirebaseMessaging
     - GoogleDataTransport
     - GoogleUtilities
-    - MisskeyKit
     - nanopb
     - PromisesObjC
-    - Starscream
 
 SPEC CHECKSUMS:
   Firebase: 73c3e3b216ec1ecbc54d2ffdd4670c65c749edb1
@@ -82,11 +76,9 @@ SPEC CHECKSUMS:
   FirebaseMessaging: 1a33b4af3c8042ed6ddacb6c031894af2064bfab
   GoogleDataTransport: 11e3a5f2c190327df1a4a5d7e7ae3d4d5b9c9e4c
   GoogleUtilities: f8a43108b38a68eebe8b3540e1f4f2d28843ce20
-  MisskeyKit: 1cb91ffb613a9ecdbb1f05788c1c69ade345d806
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
   PromisesObjC: 3113f7f76903778cf4a0586bd1ab89329a0b7b97
-  Starscream: 4bb2f9942274833f7b4d296a55504dcfc7edb7b0
 
-PODFILE CHECKSUM: fac60f12991423e045ba5e4dadd9dd1d8915ba07
+PODFILE CHECKSUM: 7ce95ebdae4f4c9ec9cc2f5080412226ce70cefe
 
 COCOAPODS: 1.16.2

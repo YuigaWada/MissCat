@@ -117,7 +117,7 @@ and arbitrate terminal UI state so completion or cancellation wins only once.
 No mutation is automatically retried. A definite pre-commit failure may be
 retried explicitly; an unknown outcome may not.
 
-## Share credential proof and remaining MisskeyKit debt
+## Share credential proof and native compatibility boundary
 
 The signed share extension has an explicit DEBUG-only
 `--misscat-share-credential-proof` launch probe. It resolves the exact composite
@@ -126,9 +126,8 @@ Keychain credential, and stores only a boolean availability result plus a
 SHA-256 account-ID hash in app-group defaults. The raw account ID and credential
 are not returned, serialized, sent over the network, or logged.
 
-Compose writes in both the app and share extension now use only the native
-transport described above. `MissCatComposeService.swift` still imports
-MisskeyKit solely to bridge its legacy persisted `Visibility` enum, and the
-share `UserModel.swift` does the same when reading the legacy visibility value.
-Neither import is used for upload or note mutations; removing them belongs to
-the later persistence-format retirement.
+Compose writes in both the app and share extension use only the native
+transport described above. The persisted visibility values remain the stable
+Misskey raw strings (`public`, `home`, `followers`, and app-only `specified`),
+but are decoded into MissCat-owned enums. The app and share targets therefore
+do not need MisskeyKit models to preserve existing visibility preferences.
