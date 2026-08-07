@@ -251,6 +251,13 @@ class HomeViewController: PolioPagerViewController {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
     }
+
+    /// Transitional containment for the legacy PolioPager host. A nested typed
+    /// profile route owns horizontal gestures until it returns to Search; this
+    /// bridge goes away with PolioPager during the shell cutover.
+    func setOuterPagerSwipeEnabled(_ isEnabled: Bool) {
+        pageViewController.dataSource = isEnabled ? pageViewController : nil
+    }
     
     // MARK: Design
     

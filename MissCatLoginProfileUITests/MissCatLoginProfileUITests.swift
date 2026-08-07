@@ -213,6 +213,13 @@ final class MissCatLoginProfileUITests: XCTestCase {
         assertSingleBottomBar()
         capture("25-user-results-real-ordinary-route-current")
 
+        // Search itself still participates in the ordinary Home pager.
+        let searchRoot = element("profile.searchResults.root")
+        app.swipeLeft()
+        XCTAssertTrue(searchRoot.waitForNonExistence(timeout: 5))
+        app.swipeRight()
+        waitForSearchResults()
+
         app.buttons["profile.user.fixture-self"].tap()
         waitForProfile("profile.self.screen")
         XCTAssertTrue(app.buttons["profile.action.back"].isHittable)
@@ -229,8 +236,26 @@ final class MissCatLoginProfileUITests: XCTestCase {
         waitForSelectedTab("profile.tab.media")
         let pager = element("profile.timeline.pager")
         XCTAssertTrue(pager.waitForExistence(timeout: 5))
+
+        // Media is the trailing page: swiping left must saturate at the edge.
+        pager.swipeLeft()
+        waitForSelectedTab("profile.tab.media")
+
         pager.swipeRight()
         waitForSelectedTab("profile.tab.notesAndReplies")
+
+        // Walk to the leading page, prove its boundary, and return in the
+        // opposite direction so both real pager gestures are exercised.
+        pager.swipeRight()
+        waitForSelectedTab("profile.tab.notes")
+        pager.swipeRight()
+        waitForSelectedTab("profile.tab.notes")
+        pager.swipeLeft()
+        waitForSelectedTab("profile.tab.notesAndReplies")
+        pager.swipeLeft()
+        waitForSelectedTab("profile.tab.media")
+        pager.swipeLeft()
+        waitForSelectedTab("profile.tab.media")
 
         app.buttons["profile.action.settings"].tap()
         waitForValue("settings", identifier: "profile.realOrdinary.lastAction")

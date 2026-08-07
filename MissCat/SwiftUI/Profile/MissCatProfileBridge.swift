@@ -11,6 +11,7 @@ protocol MissCatProfileHomeRouting: AnyObject {
     func missCatProfileOpenSettings()
     func missCatProfileSelectRoot(_ section: MissCatRootSection)
     func missCatProfileCompose()
+    func missCatProfileNavigationDepthDidChange(_ depth: Int)
 }
 
 extension HomeViewController: MissCatProfileHomeRouting {
@@ -98,6 +99,10 @@ extension HomeViewController: MissCatProfileHomeRouting {
         }
 #endif
         tappedPost()
+    }
+
+    func missCatProfileNavigationDepthDidChange(_ depth: Int) {
+        setOuterPagerSwipeEnabled(depth == 0)
     }
 }
 
@@ -195,7 +200,10 @@ enum MissCatProfileBridge {
             onOpenImage: { [weak router] in router?.missCatProfileOpenImage($0) },
             onOpenSettings: { [weak router] in router?.missCatProfileOpenSettings() },
             onSelectRoot: { [weak router] in router?.missCatProfileSelectRoot($0) },
-            onCompose: { [weak router] in router?.missCatProfileCompose() }
+            onCompose: { [weak router] in router?.missCatProfileCompose() },
+            onNavigationDepthChanged: { [weak router] in
+                router?.missCatProfileNavigationDepthDidChange($0)
+            }
         )
     }
 

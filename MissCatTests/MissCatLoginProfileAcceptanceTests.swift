@@ -140,6 +140,8 @@ final class MissCatProfileBridgeWiringTests: XCTestCase {
         actions.onOpenSettings()
         MissCatRootSection.allCases.forEach(actions.onSelectRoot)
         actions.onCompose()
+        actions.onNavigationDepthChanged(1)
+        actions.onNavigationDepthChanged(0)
 
         XCTAssertEqual(
             router.events,
@@ -154,7 +156,9 @@ final class MissCatProfileBridgeWiringTests: XCTestCase {
                 "root:notifications",
                 "root:messages",
                 "root:profile",
-                "compose"
+                "compose",
+                "depth:1",
+                "depth:0"
             ]
         )
         XCTAssertTrue(router.openedUserOwner === owner)
@@ -231,6 +235,10 @@ private final class ProfileHomeRouterSpy: MissCatProfileHomeRouting {
 
     func missCatProfileCompose() {
         events.append("compose")
+    }
+
+    func missCatProfileNavigationDepthDidChange(_ depth: Int) {
+        events.append("depth:\(depth)")
     }
 }
 

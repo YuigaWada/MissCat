@@ -12,6 +12,7 @@ public struct MissCatProfileFamilyActions {
     public let onOpenSettings: () -> Void
     public let onSelectRoot: (MissCatRootSection) -> Void
     public let onCompose: () -> Void
+    public let onNavigationDepthChanged: (Int) -> Void
 
     public init(
         onExit: @escaping () -> Void = {},
@@ -19,7 +20,8 @@ public struct MissCatProfileFamilyActions {
         onOpenImage: @escaping (URL) -> Void = { _ in },
         onOpenSettings: @escaping () -> Void = {},
         onSelectRoot: @escaping (MissCatRootSection) -> Void = { _ in },
-        onCompose: @escaping () -> Void = {}
+        onCompose: @escaping () -> Void = {},
+        onNavigationDepthChanged: @escaping (Int) -> Void = { _ in }
     ) {
         self.onExit = onExit
         self.onOpenURL = onOpenURL
@@ -27,6 +29,7 @@ public struct MissCatProfileFamilyActions {
         self.onOpenSettings = onOpenSettings
         self.onSelectRoot = onSelectRoot
         self.onCompose = onCompose
+        self.onNavigationDepthChanged = onNavigationDepthChanged
     }
 }
 
@@ -73,7 +76,8 @@ public struct MissCatProfileFamilyView: View {
         onOpenImage: @escaping (URL) -> Void = { _ in },
         onOpenSettings: @escaping () -> Void = {},
         onSelectRoot: @escaping (MissCatRootSection) -> Void = { _ in },
-        onCompose: @escaping () -> Void = {}
+        onCompose: @escaping () -> Void = {},
+        onNavigationDepthChanged: @escaping (Int) -> Void = { _ in }
     ) {
         self.root = root
         self.account = account
@@ -86,7 +90,8 @@ public struct MissCatProfileFamilyView: View {
             onOpenImage: onOpenImage,
             onOpenSettings: onOpenSettings,
             onSelectRoot: onSelectRoot,
-            onCompose: onCompose
+            onCompose: onCompose,
+            onNavigationDepthChanged: onNavigationDepthChanged
         )
     }
 
@@ -124,6 +129,11 @@ public struct MissCatProfileFamilyView: View {
 #endif
             }
         }
+        .onAppear { actions.onNavigationDepthChanged(path.count) }
+        .onChange(of: path) { _, destinations in
+            actions.onNavigationDepthChanged(destinations.count)
+        }
+        .onDisappear { actions.onNavigationDepthChanged(0) }
     }
 
     @ViewBuilder
