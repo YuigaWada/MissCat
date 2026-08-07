@@ -37,12 +37,15 @@ final class MissCatNoteDetailTests: XCTestCase {
         }
 
         XCTAssertEqual(pasteboardOwners, ["MissCatSystemClipboardWriter.swift"])
-        for filename in ["MissCatNoteDetailCore.swift", "MissCatNoteRow.swift"] {
-            let file = productionRoot
-                .appendingPathComponent("SwiftUI/Timeline")
-                .appendingPathComponent(filename)
+        let timelineRoot = productionRoot.appendingPathComponent("SwiftUI/Timeline")
+        let timelineEnumerator = try XCTUnwrap(
+            FileManager.default.enumerator(at: timelineRoot, includingPropertiesForKeys: nil)
+        )
+        while let file = timelineEnumerator.nextObject() as? URL {
+            guard file.pathExtension == "swift" else { continue }
             let source = try String(contentsOf: file, encoding: .utf8)
-            XCTAssertFalse(source.contains("import UIKit"), "\(filename) must remain UIKit-free")
+            XCTAssertFalse(source.contains("import UIKit"), "\(file.lastPathComponent) must remain UIKit-free")
+            XCTAssertFalse(source.contains("UIPasteboard"), "\(file.lastPathComponent) must remain pasteboard-free")
         }
     }
 

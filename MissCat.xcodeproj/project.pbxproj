@@ -791,7 +791,6 @@
 				C0DE00000000000000000029 /* MissCatNoteRow.swift */,
 				C0DE0000000000000000002F /* MissCatTimelinePager.swift */,
 				B0A700000000000000000002 /* MissCatNoteDetailCore.swift */,
-				C11B00000000000000000002 /* MissCatSystemClipboardWriter.swift */,
 				B0A700000000000000000004 /* MissCatNoteDetailViews.swift */,
 				B0A700000000000000000008 /* MissCatNoteDetailFixture.swift */,
 			);
@@ -961,8 +960,17 @@
 				8D72E51B244AEA6500B30C3A /* App */,
 				8D3037042389088600BA6D38 /* Utilities */,
 				8D3037032389086800BA6D38 /* Extension */,
+				C11B00000000000000000003 /* Platform */,
 			);
 			path = Others;
+			sourceTree = "<group>";
+		};
+		C11B00000000000000000003 /* Platform */ = {
+			isa = PBXGroup;
+			children = (
+				C11B00000000000000000002 /* MissCatSystemClipboardWriter.swift */,
+			);
+			path = Platform;
 			sourceTree = "<group>";
 		};
 		8D4754F3240E1E4B00BAD410 /* NoteCell */ = {
