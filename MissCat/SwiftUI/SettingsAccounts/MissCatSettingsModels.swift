@@ -284,6 +284,12 @@ public enum MissCatSettingsRoute: Hashable {
     case about
 }
 
+/// Typed navigation owned by the SwiftUI Accounts feature.  Account IDs are
+/// local composite identifiers; credentials never become navigation values.
+public enum MissCatAccountsRoute: Hashable {
+    case profile(accountID: String)
+}
+
 public enum MissCatSettingsPresentation: Equatable, Sendable {
     case empty(title: String, message: String)
     case error(title: String, message: String)

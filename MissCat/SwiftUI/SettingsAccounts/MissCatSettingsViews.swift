@@ -261,7 +261,6 @@ public struct MissCatAccountsScreen: View {
                 identifier: "accounts.visualReady"
             )
         }
-        .accessibilityIdentifier("accounts.screen")
     }
 
     private var accountToolbar: some View {
@@ -277,7 +276,6 @@ public struct MissCatAccountsScreen: View {
         .font(.system(size: 17))
         .padding(.trailing, 25)
         .frame(height: MissCatSettingsLegacyMetrics.accountToolbarHeight)
-        .accessibilityIdentifier("accounts.toolbar")
     }
 
     @ViewBuilder
@@ -372,7 +370,11 @@ public struct MissCatAccountsScreen: View {
                 .stroke(palette.accent, lineWidth: 1)
         }
         .clipShape(RoundedRectangle(cornerRadius: MissCatSettingsLegacyMetrics.accountCornerRadius))
-        .accessibilityIdentifier("accounts.card.\(account.id)")
+        .overlay(alignment: .bottomTrailing) {
+            Color.clear
+                .frame(width: 1, height: 1)
+                .accessibilityIdentifier("accounts.card.\(account.id)")
+        }
     }
 
     @ViewBuilder
@@ -390,6 +392,87 @@ public struct MissCatAccountsScreen: View {
         )
         .clipShape(Circle())
         .accessibilityHidden(true)
+    }
+}
+
+/// SwiftUI-owned Accounts navigation. UIKit may host this view while the
+/// application shell is retired, but add-account and profile destinations stay
+/// inside this typed SwiftUI navigation tree.
+public struct MissCatAccountsRootView: View {
+    @State private var path: [MissCatAccountsRoute] = []
+    @State private var addAccountPresentation: AddAccountPresentation?
+
+    @StateObject private var store: MissCatAccountStore
+    private let palette: MissCatVisualPalette
+    private let profileDestination: (MissCatAccountSummary, @escaping () -> Void) -> AnyView
+    private let onAccountSwitched: () -> Void
+    private let onConfiguredTabsChanged: () -> Void
+
+    public init(
+        store: MissCatAccountStore,
+        palette: MissCatVisualPalette = .legacyLight,
+        profileDestination: @escaping (MissCatAccountSummary, @escaping () -> Void) -> AnyView,
+        onAccountSwitched: @escaping () -> Void = {},
+        onConfiguredTabsChanged: @escaping () -> Void = {}
+    ) {
+        _store = StateObject(wrappedValue: store)
+        self.palette = palette
+        self.profileDestination = profileDestination
+        self.onAccountSwitched = onAccountSwitched
+        self.onConfiguredTabsChanged = onConfiguredTabsChanged
+    }
+
+    public var body: some View {
+        NavigationStack(path: $path) {
+            MissCatAccountsScreen(
+                store: store,
+                palette: palette,
+                onAddAccount: { addAccountPresentation = .cancelable },
+                onOpenProfile: { path.append(.profile(accountID: $0.id)) },
+                onAccountSwitched: onAccountSwitched,
+                onConfiguredTabsChanged: onConfiguredTabsChanged,
+                onAllAccountsDeleted: { addAccountPresentation = .required }
+            )
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(for: MissCatAccountsRoute.self) { route in
+                switch route {
+                case let .profile(accountID):
+                    if let account = store.accounts.first(where: { $0.id == accountID }) {
+                        profileDestination(account) {
+                            if !path.isEmpty { path.removeLast() }
+                        }
+                    } else {
+                        MissCatSettingsErrorState(
+                            message: MissCatAccountManagementError.accountNotFound.localizedDescription,
+                            palette: palette,
+                            retry: {
+                                if !path.isEmpty { path.removeLast() }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+        .tint(palette.accent)
+        .fullScreenCover(item: $addAccountPresentation) { presentation in
+            MissCatAddAccountSheet(
+                allowsCancel: presentation == .cancelable,
+                onSuccess: {
+                    addAccountPresentation = nil
+                    store.load()
+                    onAccountSwitched()
+                },
+                onCancel: { addAccountPresentation = nil }
+            )
+            .interactiveDismissDisabled(presentation == .required)
+        }
+    }
+
+    private enum AddAccountPresentation: String, Identifiable {
+        case cancelable
+        case required
+
+        var id: String { rawValue }
     }
 }
 
@@ -455,7 +538,6 @@ public struct MissCatSettingsRootView: View {
                     .accessibilityIdentifier("settings.close")
                 }
             }
-            .accessibilityIdentifier("settings.root")
             .overlay(alignment: .bottomTrailing) {
                 MissCatSettingsVisualReadyMarker(ready: true, identifier: "settings.root.visualReady")
             }
@@ -496,15 +578,11 @@ public struct MissCatSettingsRootView: View {
                 onRootRelaunchRequired: onRootRelaunchRequired
             )
         case .reactionInstances:
-            MissCatReactionInstanceScreen(store: reactionStore, palette: palette) { account in
-                path.append(.reactions(accountID: account.id))
-            }
+            MissCatReactionInstanceScreen(store: reactionStore, palette: palette)
         case let .reactions(accountID):
             MissCatReactionSettingsScreen(store: reactionStore, accountID: accountID, palette: palette)
         case .licenses:
-            MissCatLicensesScreen(entries: licenses, palette: palette) { entry in
-                path.append(.license(name: entry.name))
-            }
+            MissCatLicensesScreen(entries: licenses, palette: palette)
         case let .license(name):
             MissCatLicenseDetailScreen(
                 entry: licenses.first(where: { $0.name == name }),
@@ -520,6 +598,8 @@ public struct MissCatDesignSettingsScreen: View {
     @ObservedObject private var store: MissCatDesignSettingsStore
     @Environment(\.self) private var environment
     @Environment(\.dismiss) private var dismiss
+    @State private var editMode: EditMode = .inactive
+    @State private var showsAccentPicker = false
     private let palette: MissCatVisualPalette
     private let onRootRelaunchRequired: () -> Void
 
@@ -535,12 +615,26 @@ public struct MissCatDesignSettingsScreen: View {
 
     public var body: some View {
         designList
-        .scrollContentBackground(.hidden)
-        .background(palette.base)
+        .listStyle(.insetGrouped)
+        .contentMargins(.top, 17, for: .scrollContent)
         .foregroundStyle(palette.text)
         .navigationTitle("デザイン")
         .navigationBarTitleDisplayMode(.inline)
-        .environment(\.editMode, .constant(.active))
+        .toolbarBackground(Color.white, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .environment(\.editMode, $editMode)
+        .toolbar {
+            if editMode.isEditing {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("完了") {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            editMode = .inactive
+                        }
+                    }
+                    .accessibilityIdentifier("settings.design.edit")
+                }
+            }
+        }
         .task { store.load() }
         .onDisappear { store.save(onRootRelaunchRequired: onRootRelaunchRequired) }
         .overlay { progressOverlay }
@@ -559,27 +653,55 @@ public struct MissCatDesignSettingsScreen: View {
                 identifier: "settings.design.visualReady"
             )
         }
-        .accessibilityIdentifier("settings.design.screen")
+        .sheet(isPresented: $showsAccentPicker) {
+            NavigationStack {
+                SwiftUI.ColorPicker("メインカラー", selection: accentBinding, supportsOpacity: false)
+                    .padding(20)
+                    .navigationTitle("メインカラー")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("完了") { showsAccentPicker = false }
+                        }
+                    }
+            }
+            .presentationDetents([.medium])
+        }
     }
 
     private var designList: some View {
         List {
             tabSettingsSection
             Section(header: Text("テーマ設定"), footer: EmptyView()) {
-                Picker("カラーモード", selection: modeBinding) {
+                HStack {
+                    Text("カラーモード")
+                    Spacer()
                     ForEach(MissCatThemeMode.allCases) { mode in
-                        Text(mode.rawValue).tag(mode)
+                        Button(mode.rawValue) { store.updateMode(mode) }
+                            .foregroundStyle(palette.muted)
+                            .frame(width: 55)
+                            .accessibilityIdentifier("settings.design.color-mode.\(mode.rawValue.lowercased())")
                     }
                 }
-                .pickerStyle(.segmented)
-                .accessibilityIdentifier("settings.design.color-mode")
 
-                SwiftUI.ColorPicker("メインカラー", selection: accentBinding, supportsOpacity: false)
+                Button { showsAccentPicker = true } label: {
+                    HStack {
+                        Text("メインカラー")
+                            .foregroundStyle(palette.text)
+                        Spacer()
+                        Circle()
+                            .fill(Color(hex: store.accentHex))
+                            .frame(width: 28, height: 28)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
                     .accessibilityIdentifier("settings.design.color-picker")
 
                 HStack {
                     Text("HEX")
                     TextField("2F7CF6", text: accentHexBinding)
+                        .foregroundStyle(palette.muted)
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
                         .multilineTextAlignment(.trailing)
@@ -607,6 +729,7 @@ public struct MissCatDesignSettingsScreen: View {
                     }
                 }
             }
+            .tint(palette.accent)
             .accessibilityIdentifier("settings.design.add-tab")
         } header: {
             Text("上タブ設定")
@@ -616,6 +739,23 @@ public struct MissCatDesignSettingsScreen: View {
     }
 
     private func tabRow(_ tab: MissCatSettingsTab) -> some View {
+        Group {
+            if editMode.isEditing {
+                editableTabRow(tab)
+            } else {
+                HStack(spacing: 10) {
+                    Text(tab.kind.legacyTitle)
+                        .frame(width: 70, alignment: .leading)
+                    Text(tab.name)
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture { editMode = .active }
+            }
+        }
+    }
+
+    private func editableTabRow(_ tab: MissCatSettingsTab) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 10) {
                 Text(tab.kind.legacyTitle)
@@ -652,7 +792,7 @@ public struct MissCatDesignSettingsScreen: View {
     }
 
     private var addableTabKinds: [MissCatSettingsTabKind] {
-        MissCatSettingsTabKind.allCases.filter { $0 != .user && $0 != .list }
+        MissCatSettingsTabKind.allCases
     }
 
     private var errorIsPresented: Binding<Bool> {
@@ -667,10 +807,6 @@ public struct MissCatDesignSettingsScreen: View {
             get: { store.accentHexDraft },
             set: { store.updateAccentHexDraft($0) }
         )
-    }
-
-    private var modeBinding: Binding<MissCatThemeMode> {
-        Binding(get: { store.mode }, set: store.updateMode)
     }
 
     private func tabNameBinding(for tab: MissCatSettingsTab) -> Binding<String> {
@@ -712,16 +848,13 @@ public struct MissCatDesignSettingsScreen: View {
 public struct MissCatReactionInstanceScreen: View {
     @ObservedObject private var store: MissCatReactionSettingsStore
     private let palette: MissCatVisualPalette
-    private let onSelect: (MissCatReactionAccount) -> Void
 
     public init(
         store: MissCatReactionSettingsStore,
-        palette: MissCatVisualPalette,
-        onSelect: @escaping (MissCatReactionAccount) -> Void
+        palette: MissCatVisualPalette
     ) {
         self.store = store
         self.palette = palette
-        self.onSelect = onSelect
     }
 
     public var body: some View {
@@ -732,7 +865,7 @@ public struct MissCatReactionInstanceScreen: View {
                 MissCatSettingsEmptyState(message: "インスタンスがありません", palette: palette)
             } else {
                 List(store.accounts) { account in
-                    Button { onSelect(account) } label: {
+                    NavigationLink(value: MissCatSettingsRoute.reactions(accountID: account.id)) {
                         HStack {
                             Text(account.instance)
                                 .font(.system(size: 17, weight: .bold))
@@ -742,7 +875,6 @@ public struct MissCatReactionInstanceScreen: View {
                         }
                         .frame(minHeight: 44)
                     }
-                    .buttonStyle(.plain)
                     .listRowBackground(palette.base)
                     .accessibilityIdentifier("settings.reactions.instance.\(account.id)")
                 }
@@ -760,7 +892,6 @@ public struct MissCatReactionInstanceScreen: View {
                 identifier: "settings.reactions.instances.visualReady"
             )
         }
-        .accessibilityIdentifier("settings.reactions.instances")
     }
 }
 
@@ -862,7 +993,6 @@ public struct MissCatReactionSettingsScreen: View {
                 identifier: "settings.reactions.visualReady"
             )
         }
-        .accessibilityIdentifier("settings.reactions.screen")
     }
 
     private func reactionCell(_ item: MissCatReactionItem) -> some View {
@@ -1018,7 +1148,6 @@ public struct MissCatReactionPicker: View {
                     .accessibilityIdentifier("settings.reactions.picker.mediaError")
             }
         }
-        .accessibilityIdentifier("settings.reactions.picker")
     }
 }
 
@@ -1061,23 +1190,20 @@ private struct MissCatReactionImage: UIViewRepresentable {
 public struct MissCatLicensesScreen: View {
     public let entries: [MissCatLicenseEntry]
     public let palette: MissCatVisualPalette
-    public let onSelect: (MissCatLicenseEntry) -> Void
 
     public init(
         entries: [MissCatLicenseEntry],
-        palette: MissCatVisualPalette,
-        onSelect: @escaping (MissCatLicenseEntry) -> Void
+        palette: MissCatVisualPalette
     ) {
         self.entries = entries
         self.palette = palette
-        self.onSelect = onSelect
     }
 
     public var body: some View {
         List {
             Section("License") {
                 ForEach(entries) { entry in
-                    Button { onSelect(entry) } label: {
+                    NavigationLink(value: MissCatSettingsRoute.license(name: entry.name)) {
                         HStack {
                             Text(entry.name)
                                 .font(.system(size: 17, weight: .bold))
@@ -1087,7 +1213,6 @@ public struct MissCatLicensesScreen: View {
                         }
                         .frame(height: 60)
                     }
-                    .buttonStyle(.plain)
                     .listRowBackground(palette.base)
                     .accessibilityIdentifier("settings.license.\(entry.id)")
                 }
@@ -1101,7 +1226,6 @@ public struct MissCatLicensesScreen: View {
         .overlay(alignment: .bottomTrailing) {
             MissCatSettingsVisualReadyMarker(ready: true, identifier: "settings.licenses.visualReady")
         }
-        .accessibilityIdentifier("settings.licenses.screen")
     }
 }
 
@@ -1129,7 +1253,6 @@ public struct MissCatLicenseDetailScreen: View {
         .overlay(alignment: .bottomTrailing) {
             MissCatSettingsVisualReadyMarker(ready: true, identifier: "settings.license.detail.visualReady")
         }
-        .accessibilityIdentifier("settings.license.detail")
     }
 }
 
@@ -1145,16 +1268,7 @@ public struct MissCatAboutScreen: View {
     }
 
     public var body: some View {
-        GeometryReader { proxy in
-            ZStack {
-                LinearGradient(
-                    colors: [Color(hex: "4691A3"), Color(hex: "5AB0C5"), Color(hex: "89D5E8")],
-                    startPoint: .bottomLeading,
-                    endPoint: .topTrailing
-                )
-                .ignoresSafeArea()
-
-                VStack(spacing: 0) {
+        VStack(spacing: 0) {
                     HStack {
                         Button { dismiss() } label: {
                             Image(systemName: "chevron.left")
@@ -1166,7 +1280,7 @@ public struct MissCatAboutScreen: View {
                         .accessibilityLabel("戻る")
                         Spacer()
                     }
-                    .padding(.leading, 20)
+                    .padding(.leading, 7)
 
                     Image("Logo")
                         .resizable()
@@ -1188,15 +1302,11 @@ public struct MissCatAboutScreen: View {
                         developerRow(
                             title: "YuigaWada",
                             account: "@YuigaWada",
-                            symbol: "bird",
-                            imageName: nil,
                             url: URL(string: "https://twitter.com/yuigawada")!
                         )
                         developerRow(
                             title: "wada",
                             account: "@wada",
-                            symbol: nil,
-                            imageName: "misskey",
                             url: URL(string: "https://misskey.io/@wada")!
                         )
                     }
@@ -1209,12 +1319,16 @@ public struct MissCatAboutScreen: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 10)
                     .padding(.bottom, 20)
-                }
-                .foregroundStyle(.white)
-                .opacity(appeared ? 1 : 0)
-                .offset(y: appeared ? 0 : -30)
+        }
+        .foregroundStyle(.white)
+        .opacity(appeared ? 1 : 0)
+        .offset(y: appeared ? 0 : -30)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            GeometryReader { proxy in
+                legacyGradient(size: proxy.size)
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            .ignoresSafeArea()
         }
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
@@ -1231,45 +1345,38 @@ public struct MissCatAboutScreen: View {
                 identifier: "settings.about.visualReady"
             )
         }
-        .accessibilityIdentifier("settings.about.screen")
+    }
+
+    private func legacyGradient(size: CGSize) -> LinearGradient {
+        let widthSquared = size.width * size.width
+        let heightSquared = size.height * size.height
+        let denominator = max(widthSquared + heightSquared, 1)
+        let deltaX = 2 * heightSquared / denominator
+        let deltaY = -2 * widthSquared / denominator
+
+        return LinearGradient(
+            colors: [Color(hex: "4691A3"), Color(hex: "5AB0C5"), Color(hex: "89D5E8")],
+            startPoint: UnitPoint(x: 0.5 - deltaX / 2, y: 0.5 - deltaY / 2),
+            endPoint: UnitPoint(x: 0.5 + deltaX / 2, y: 0.5 + deltaY / 2)
+        )
     }
 
     private func developerRow(
         title: String,
         account: String,
-        symbol: String?,
-        imageName: String?,
         url: URL
     ) -> some View {
         Button { openURL(url) } label: {
             HStack(spacing: 13) {
-                Group {
-                    if let imageName {
-                        Image(imageName).resizable().scaledToFill()
-                    } else {
-                        Image(systemName: "person.crop.circle.fill")
-                            .resizable()
-                            .foregroundStyle(.white.opacity(0.9))
-                    }
-                }
-                .frame(width: 51, height: 51)
-                .clipShape(Circle())
+                Image(systemName: "circle")
+                    .font(.system(size: 15, weight: .regular))
+                    .frame(width: 20, height: 20)
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(title).font(.system(size: 17))
-                    Text(account).font(.system(size: 13))
+                    Text(account).font(.system(size: 15))
                 }
                 Spacer()
-                if let symbol {
-                    Image(systemName: symbol == "bird" ? "link" : symbol)
-                        .foregroundStyle(.blue)
-                } else if let imageName {
-                    Image(imageName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 25, height: 25)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                }
             }
             .padding(.horizontal, 20)
             .frame(height: MissCatSettingsLegacyMetrics.aboutDeveloperRowHeight)

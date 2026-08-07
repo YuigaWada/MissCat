@@ -406,6 +406,12 @@ final class MissCatSettingsFixtureRepository:
     MissCatDesignSettingsManaging,
     MissCatReactionSettingsManaging
 {
+    enum AccountMode {
+        case populated
+        case empty
+        case failOnce
+    }
+
     static var isEnabled: Bool {
         #if DEBUG
         ProcessInfo.processInfo.arguments.contains("--misscat-settings-fixture")
@@ -417,8 +423,11 @@ final class MissCatSettingsFixtureRepository:
     private var accountSnapshot: MissCatAccountSnapshot
     private var designSnapshot: MissCatDesignSettingsSnapshot
     private var reactionSnapshots: [String: MissCatReactionSettingsSnapshot]
+    private var accountMode: AccountMode
+    private var accountLoadCount = 0
 
-    init() {
+    init(accountMode: AccountMode = .populated) {
+        self.accountMode = accountMode
         let first = MissCatAccountSummary(
             id: "fixture-wada",
             username: "wada",
@@ -431,7 +440,9 @@ final class MissCatSettingsFixtureRepository:
             displayName: "Sub Account",
             instance: "social.example"
         )
-        accountSnapshot = .init(accounts: [first, second], currentAccountID: first.id)
+        accountSnapshot = accountMode == .empty
+            ? .init(accounts: [], currentAccountID: nil)
+            : .init(accounts: [first, second], currentAccountID: first.id)
         designSnapshot = .init(
             tabs: [
                 .init(name: "@wada", kind: .home, accountID: first.id),
@@ -480,7 +491,13 @@ final class MissCatSettingsFixtureRepository:
         ]
     }
 
-    func loadAccounts() async throws -> MissCatAccountSnapshot { accountSnapshot }
+    func loadAccounts() async throws -> MissCatAccountSnapshot {
+        accountLoadCount += 1
+        if accountMode == .failOnce, accountLoadCount == 1 {
+            throw MissCatAccountManagementError.accountPersistenceFailed
+        }
+        return accountSnapshot
+    }
 
     func switchAccount(id: String) async throws -> MissCatAccountSnapshot {
         guard accountSnapshot.accounts.contains(where: { $0.id == id }) else {

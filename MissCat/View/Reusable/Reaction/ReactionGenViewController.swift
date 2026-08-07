@@ -173,9 +173,16 @@ class ReactionGenViewController: UIViewController, UISearchBarDelegate, UIScroll
         settingsButton.rx.tap.subscribe(onNext: { _ in
             // ReactionGenが閉じてから設定を開く
             self.dismiss(animated: true, completion: {
-                guard let reactionSettings = self.getViewController(name: "reaction-settings")
-                    as? ReactionSettingsViewController else { return }
-                self.parentNavigationController?.pushViewController(reactionSettings, animated: true)
+                guard let owner = self.owner,
+                      let navigationController = self.parentNavigationController
+                else { return }
+                let reactionSettings = MissCatSettingsBridge.makeReactionSettingsController(
+                    accountID: owner.accountIdentifier,
+                    onClose: { [weak navigationController] in
+                        navigationController?.popViewController(animated: true)
+                    }
+                )
+                navigationController.pushViewController(reactionSettings, animated: true)
             })
         }).disposed(by: disposeBag)
     }

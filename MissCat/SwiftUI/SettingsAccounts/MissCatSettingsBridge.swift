@@ -50,34 +50,17 @@ enum MissCatSettingsBridge {
         }
         let store = MissCatAccountStore(repository: repository)
         let palette = currentPalette
-        let view = MissCatAccountsScreen(
+        let view = MissCatAccountsRootView(
             store: store,
             palette: palette,
-            onAddAccount: { [weak home] in
-                guard let home else { return }
-                presentAddAccount(from: home, allowsCancel: true) {
-                    store.load()
-                    home.relaunchView(start: .profile)
-                }
-            },
-            onOpenProfile: { [weak home] account in
-                guard let home,
-                      let owner = Cache.UserDefaults.shared.getUser(userId: account.id),
-                      let userID = profileUserID(for: account, owner: owner)
-                else { return }
-                home.move2Profile(userId: userID, owner: owner)
+            profileDestination: { [weak home] account, dismiss in
+                makeProfileDestination(account: account, home: home, dismiss: dismiss)
             },
             onAccountSwitched: { [weak home] in
                 home?.relaunchView(start: .profile)
             },
             onConfiguredTabsChanged: { [weak home] in
                 home?.relaunchView(start: .profile)
-            },
-            onAllAccountsDeleted: { [weak home] in
-                guard let home else { return }
-                presentAddAccount(from: home, allowsCancel: false) {
-                    home.relaunchView(start: .profile)
-                }
             }
         )
         let host = UIHostingController(rootView: AnyView(view))
@@ -95,6 +78,39 @@ enum MissCatSettingsBridge {
         return host
     }
 
+    static func makeReactionSettingsController(
+        accountID: String,
+        onClose: @escaping () -> Void
+    ) -> UIViewController {
+        let repository: any MissCatReactionSettingsManaging
+        if MissCatSettingsFixtureRepository.isEnabled {
+            repository = MissCatSettingsFixtureRepository()
+        } else {
+            repository = MissCatLegacySettingsRepository()
+        }
+        let store = MissCatReactionSettingsStore(repository: repository)
+        let palette = currentPalette
+        let view = NavigationStack {
+            MissCatReactionSettingsScreen(
+                store: store,
+                accountID: accountID,
+                palette: palette
+            )
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(action: onClose) {
+                        Image(systemName: "chevron.left")
+                    }
+                    .accessibilityLabel("戻る")
+                    .accessibilityIdentifier("settings.reactions.close")
+                }
+            }
+        }
+        let controller = MissCatSettingsHostingController(rootView: AnyView(view))
+        controller.view.backgroundColor = UIColor(palette.base)
+        return controller
+    }
+
     static func profileUserID(
         for account: MissCatAccountSummary,
         owner: SecureUser
@@ -104,26 +120,48 @@ enum MissCatSettingsBridge {
         return owner.userId
     }
 
-    private static func presentAddAccount(
-        from source: UIViewController,
-        allowsCancel: Bool,
-        onSuccess: @escaping () -> Void
-    ) {
-        let model = MissCatAddAccountModel()
-        let view = MissCatAddAccountView(
-            model: model,
-            allowsCancel: allowsCancel,
-            onSuccess: { [weak source] in
-                source?.dismiss(animated: true, completion: onSuccess)
-            },
-            onCancel: { [weak source] in
-                source?.dismiss(animated: true)
-            }
+    private static func makeProfileDestination(
+        account: MissCatAccountSummary,
+        home: HomeViewController?,
+        dismiss: @escaping () -> Void
+    ) -> AnyView {
+        guard let owner = Cache.UserDefaults.shared.getUser(userId: account.id),
+              let userID = profileUserID(for: account, owner: owner),
+              let token = owner.apiKey,
+              !token.isEmpty
+        else {
+            return AnyView(MissCatSettingsErrorState(
+                message: MissCatAccountManagementError.accountNotFound.localizedDescription,
+                palette: currentPalette,
+                retry: dismiss
+            ))
+        }
+        let profileAccount = MissCatProfileAccount(
+            userID: owner.userId,
+            instance: owner.instance,
+            token: token
         )
-        let controller = UIHostingController(rootView: view)
-        controller.modalPresentationStyle = .fullScreen
-        controller.isModalInPresentation = !allowsCancel
-        source.present(controller, animated: true)
+        let store = MissCatProfileStore(account: profileAccount, userID: userID)
+        return AnyView(MissCatProfileScreen(
+            store: store,
+            palette: currentPalette,
+            onBack: dismiss,
+            onOpenURL: { [weak home] url in home?.openLink(url: url.absoluteString) },
+            onOpenImage: { [weak home] url in home?.showImage([url], start: 0) },
+            onSelectUser: { [weak home] selectedUserID in
+                home?.move2Profile(userId: selectedUserID, owner: owner)
+            },
+            onOpenSettings: { [weak home] in home?.openSettings() },
+            onSelectRoot: { [weak home] section in
+                switch section {
+                case .home: home?.emulateFooterTabTap(tab: .home)
+                case .notifications: home?.emulateFooterTabTap(tab: .notifications)
+                case .messages: home?.emulateFooterTabTap(tab: .messages)
+                case .profile: dismiss()
+                }
+            },
+            onCompose: { [weak home] in home?.tappedPost() }
+        ))
     }
 
     private static var currentPalette: MissCatVisualPalette {
@@ -270,6 +308,167 @@ struct MissCatAddAccountView: View {
         } message: {
             Text(model.errorMessage ?? "")
         }
-        .accessibilityIdentifier("accounts.add.flow")
+        .overlay(alignment: .bottomTrailing) {
+            Text("ready")
+                .font(.system(size: 1))
+                .frame(width: 1, height: 1)
+                .opacity(0.01)
+                .accessibilityIdentifier("accounts.add.flow")
+        }
     }
 }
+
+struct MissCatAddAccountSheet: View {
+    @StateObject private var model = MissCatAddAccountModel()
+    let allowsCancel: Bool
+    let onSuccess: () -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        MissCatAddAccountView(
+            model: model,
+            allowsCancel: allowsCancel,
+            onSuccess: onSuccess,
+            onCancel: onCancel
+        )
+    }
+}
+
+#if DEBUG
+enum MissCatAccountsSettingsAcceptanceLaunch {
+    enum Screen: String {
+        case accounts
+        case accountsEmpty = "accounts-empty"
+        case accountsError = "accounts-error"
+        case settingsRoot = "settings-root"
+        case design
+        case reactionInstances = "reaction-instances"
+        case reactions
+        case licenses
+        case licenseDetail = "license-detail"
+        case about
+    }
+
+    static let launchArgument = "--swiftui-accounts-settings-acceptance"
+    static var isRequested: Bool { CommandLine.arguments.contains(launchArgument) }
+
+    static var screen: Screen {
+        guard let index = CommandLine.arguments.firstIndex(of: "--swiftui-accounts-settings-screen"),
+              CommandLine.arguments.indices.contains(index + 1),
+              let value = Screen(rawValue: CommandLine.arguments[index + 1])
+        else { return .accounts }
+        return value
+    }
+}
+
+@MainActor
+struct MissCatAccountsSettingsAcceptanceView: View {
+    @StateObject private var accountStore: MissCatAccountStore
+    @StateObject private var designStore: MissCatDesignSettingsStore
+    @StateObject private var reactionStore: MissCatReactionSettingsStore
+
+    private let screen: MissCatAccountsSettingsAcceptanceLaunch.Screen
+    private let palette = MissCatVisualPalette.legacyLight
+    private let licenses = [
+        MissCatLicenseEntry(name: "Alamofire", text: "Copyright (c) Alamofire Software Foundation\n\nPermission is hereby granted, free of charge, to any person obtaining a copy."),
+        MissCatLicenseEntry(name: "MisskeyKit", text: "MIT License\n\nCopyright (c) MisskeyKit contributors\n\nPermission is hereby granted, free of charge."),
+        MissCatLicenseEntry(name: "RxSwift", text: "Copyright (c) ReactiveX\n\nLicensed under the MIT License.")
+    ]
+
+    init() {
+        let screen = MissCatAccountsSettingsAcceptanceLaunch.screen
+        let accountMode: MissCatSettingsFixtureRepository.AccountMode
+        switch screen {
+        case .accountsEmpty: accountMode = .empty
+        case .accountsError: accountMode = .failOnce
+        default: accountMode = .populated
+        }
+        let repository = MissCatSettingsFixtureRepository(accountMode: accountMode)
+        self.screen = screen
+        _accountStore = StateObject(wrappedValue: MissCatAccountStore(repository: repository))
+        _designStore = StateObject(wrappedValue: MissCatDesignSettingsStore(repository: repository))
+        _reactionStore = StateObject(wrappedValue: MissCatReactionSettingsStore(repository: repository))
+    }
+
+    @ViewBuilder
+    var body: some View {
+        switch screen {
+        case .accounts, .accountsEmpty, .accountsError:
+            MissCatAccountsRootView(
+                store: accountStore,
+                palette: palette,
+                profileDestination: { account, dismiss in
+                    AnyView(MissCatAcceptanceAccountProfile(account: account, dismiss: dismiss))
+                }
+            )
+        case .settingsRoot:
+            settingsRoot
+        case .design:
+            NavigationStack {
+                MissCatDesignSettingsScreen(store: designStore, palette: palette) {}
+            }
+        case .reactionInstances:
+            NavigationStack {
+                MissCatReactionInstanceScreen(store: reactionStore, palette: palette)
+            }
+        case .reactions:
+            NavigationStack {
+                MissCatReactionSettingsScreen(
+                    store: reactionStore,
+                    accountID: "fixture-wada",
+                    palette: palette
+                )
+            }
+        case .licenses:
+            NavigationStack {
+                MissCatLicensesScreen(entries: licenses, palette: palette)
+            }
+        case .licenseDetail:
+            NavigationStack {
+                MissCatLicenseDetailScreen(
+                    entry: licenses.first(where: { $0.name == "MisskeyKit" }),
+                    palette: palette
+                )
+            }
+        case .about:
+            NavigationStack { MissCatAboutScreen(appVersion: "1.0.2") }
+        }
+    }
+
+    private var settingsRoot: some View {
+        MissCatSettingsRootView(
+            designStore: designStore,
+            reactionStore: reactionStore,
+            palette: palette,
+            licenses: licenses,
+            appVersion: "1.0.2",
+            onRootRelaunchRequired: {}
+        )
+    }
+}
+
+private struct MissCatAcceptanceAccountProfile: View {
+    let account: MissCatAccountSummary
+    let dismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "person.crop.circle.fill")
+                .font(.system(size: 88))
+            Text(account.displayName).font(.title2)
+            Text("@\(account.username)@\(account.instance)")
+            Button("戻る", action: dismiss)
+                .accessibilityIdentifier("accounts.profile.back")
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white)
+        .overlay(alignment: .bottomTrailing) {
+            Text("ready")
+                .font(.system(size: 1))
+                .frame(width: 1, height: 1)
+                .opacity(0.01)
+                .accessibilityIdentifier("accounts.profile.screen")
+        }
+    }
+}
+#endif

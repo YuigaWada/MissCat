@@ -29,10 +29,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
 #if DEBUG
         // Visual/UI fixtures must not display system permission prompts, contact
-        // Firebase, or hydrate real cached accounts. Ordinary launches continue
-        // through the complete startup path below.
+        // Firebase, or hydrate real cached accounts. Unit-test hosts also avoid
+        // enqueueing a prompt that could leak into a later UI-test launch.
+        // Ordinary launches continue through the complete startup path below.
+        let isRunningUnitTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         if MissCatShellFixtureLaunch.isRequested
             || MissCatPersistenceProbeLaunch.isRequested
+            || MissCatAccountsSettingsAcceptanceLaunch.isRequested
+            || isRunningUnitTests
         {
             return true
         }
