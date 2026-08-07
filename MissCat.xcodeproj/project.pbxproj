@@ -17,7 +17,6 @@
 		5EC100000000000000000003 /* MissCatNativeKeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC100000000000000000001 /* MissCatNativeKeychainStore.swift */; };
 		5EC100000000000000000006 /* MissCatNativeKeychainProjectBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC100000000000000000005 /* MissCatNativeKeychainProjectBoundaryTests.swift */; };
 		5EC200000000000000000002 /* MissCatShippingSourceBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC200000000000000000001 /* MissCatShippingSourceBoundaryTests.swift */; };
-		8D0AC5B8237B5D0D00530508 /* Font Awesome 5 Brands-Regular-400.otf in Resources */ = {isa = PBXBuildFile; fileRef = 8D0AC5B5237B5AD900530508 /* Font Awesome 5 Brands-Regular-400.otf */; };
 		8D0AC5B9237B5D0D00530508 /* Font Awesome 5 Free-Regular-400.otf in Resources */ = {isa = PBXBuildFile; fileRef = 8D0AC5B6237B5AD900530508 /* Font Awesome 5 Free-Regular-400.otf */; };
 		8D0AC5BA237B5D0D00530508 /* Font Awesome 5 Free-Solid-900.otf in Resources */ = {isa = PBXBuildFile; fileRef = 8D0AC5B7237B5AD900530508 /* Font Awesome 5 Free-Solid-900.otf */; };
 		8D1A4BFD24DD7BFF00EFD826 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1A4BFC24DD7BFF00EFD826 /* ShareViewController.swift */; };
@@ -171,7 +170,6 @@
 		5EC100000000000000000005 /* MissCatNativeKeychainProjectBoundaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatNativeKeychainProjectBoundaryTests.swift; sourceTree = "<group>"; };
 		5EC200000000000000000001 /* MissCatShippingSourceBoundaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissCatShippingSourceBoundaryTests.swift; sourceTree = "<group>"; };
 		79F6B0FE88C5B7AC11743D98 /* MissCatEmojiCatalog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MissCatEmojiCatalog.swift; sourceTree = "<group>"; };
-		8D0AC5B5237B5AD900530508 /* Font Awesome 5 Brands-Regular-400.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Font Awesome 5 Brands-Regular-400.otf"; sourceTree = "<group>"; };
 		8D0AC5B6237B5AD900530508 /* Font Awesome 5 Free-Regular-400.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Font Awesome 5 Free-Regular-400.otf"; sourceTree = "<group>"; };
 		8D0AC5B7237B5AD900530508 /* Font Awesome 5 Free-Solid-900.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Font Awesome 5 Free-Solid-900.otf"; sourceTree = "<group>"; };
 		8D1A4BFA24DD7BFF00EFD826 /* MissCatShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MissCatShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -347,7 +345,6 @@
 				E0DE00000000000000000015 /* reaction-fixture.svg */,
 				E0DE00000000000000000019 /* reaction-fixture.invalid */,
 				8D4A2A1E237437C000503685 /* Assets.xcassets */,
-				8D0AC5B5237B5AD900530508 /* Font Awesome 5 Brands-Regular-400.otf */,
 				8D0AC5B6237B5AD900530508 /* Font Awesome 5 Free-Regular-400.otf */,
 				8D0AC5B7237B5AD900530508 /* Font Awesome 5 Free-Solid-900.otf */,
 			);
@@ -878,7 +875,6 @@
 				E0DE00000000000000000012 /* reaction-fixture.apngdata in Resources */,
 				E0DE00000000000000000014 /* reaction-fixture.svg in Resources */,
 				E0DE00000000000000000018 /* reaction-fixture.invalid in Resources */,
-				8D0AC5B8237B5D0D00530508 /* Font Awesome 5 Brands-Regular-400.otf in Resources */,
 				8D0AC5B9237B5D0D00530508 /* Font Awesome 5 Free-Regular-400.otf in Resources */,
 				8D0AC5BA237B5D0D00530508 /* Font Awesome 5 Free-Solid-900.otf in Resources */,
 				8D4A2A1F237437C000503685 /* Assets.xcassets in Resources */,

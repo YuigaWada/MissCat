@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-08-07",
+  "reviewed_commit": "93485c2a93193e957ce33a1b5e8d339fd90bcd92",
+  "evidence": [
+    "git ls-files",
+    "MissCat.xcodeproj/project.pbxproj file and resource memberships",
+    "MissCat/Info.plist declarations",
+    "MissCat/MissCat.entitlements declarations",
+    "tracked Swift runtime and dynamic-loader string search",
+    "documentation and test reference search"
+  ],
+  "removed_candidates": [
+    {
+      "path": "MissCat/Resources/Font Awesome 5 Brands-Regular-400.otf",
+      "tracked_at_audit": true,
+      "pbx_file_reference_at_audit": true,
+      "pbx_resource_membership_at_audit": true,
+      "info_plist_reference_at_audit": true,
+      "runtime_references": [],
+      "rationale": "No tracked shipping source used FontAwesome5Brands or selected the Brands family; only Free Regular and Free Solid families are rendered."
+    },
+    {
+      "path": "MissCat/Info.plist#BGTaskSchedulerPermittedIdentifiers",
+      "tracked_at_audit": true,
+      "pbx_file_reference_at_audit": true,
+      "pbx_resource_membership_at_audit": false,
+      "runtime_references": [],
+      "rationale": "No BGTaskScheduler registration or task handler exists in the shipping source."
+    },
+    {
+      "path": "MissCat/Info.plist#UIBackgroundModes",
+      "tracked_at_audit": true,
+      "pbx_file_reference_at_audit": true,
+      "pbx_resource_membership_at_audit": false,
+      "runtime_references": [],
+      "rationale": "Fetch, processing, and remote-notification modes had no shipping handlers; remote notification transport is explicitly deferred."
+    },
+    {
+      "path": "MissCat/Info.plist#LSApplicationQueriesSchemes:twitter",
+      "tracked_at_audit": true,
+      "pbx_file_reference_at_audit": true,
+      "pbx_resource_membership_at_audit": false,
+      "runtime_references": [],
+      "rationale": "The current About screen opens an HTTPS URL through SwiftUI openURL and never queries a twitter URL scheme."
+    },
+    {
+      "path": "MissCat/MissCat.entitlements#aps-environment",
+      "tracked_at_audit": true,
+      "pbx_file_reference_at_audit": true,
+      "pbx_resource_membership_at_audit": false,
+      "runtime_references": [],
+      "rationale": "APNs registration and remote push ingress are absent and explicitly deferred."
+    }
+  ],
+  "protected_resources": [
+    {
+      "path": "MissCat/Resources/Font Awesome 5 Free-Regular-400.otf",
+      "tracked": true,
+      "pbx_resource_membership": true,
+      "references": [
+        "MissCat/Info.plist#UIAppFonts",
+        "MissCat/SwiftUI/MainShell/MissCatMainShellView.swift"
+      ],
+      "rationale": "Shipping legacy-parity glyph family."
+    },
+    {
+      "path": "MissCat/Resources/Font Awesome 5 Free-Solid-900.otf",
+      "tracked": true,
+      "pbx_resource_membership": true,
+      "references": [
+        "MissCat/Info.plist#UIAppFonts",
+        "MissCat/SwiftUI/MainShell/MissCatMainShellView.swift",
+        "MissCat/SwiftUI/Timeline/MissCatNoteRow.swift"
+      ],
+      "rationale": "Shipping legacy-parity glyph family."
+    },
+    {
+      "path": "MissCat/Resources/SettingsFixtures",
+      "tracked": true,
+      "pbx_resource_membership": true,
+      "references": [
+        "MissCat/SwiftUI/SettingsAccounts/MissCatSettingsLegacyAdapters.swift",
+        "MissCatTests/MissCatSettingsAccountsTests.swift"
+      ],
+      "rationale": "Deterministic reaction-media coverage and acceptance fixtures."
+    },
+    {
+      "path": "images/ScreenShot",
+      "tracked": true,
+      "pbx_resource_membership": false,
+      "references": [
+        "docs/legacy-functional-inventory.md",
+        "docs/swiftui/legacy-visual-spec.md",
+        "docs/visual-acceptance-requirements.tsv"
+      ],
+      "rationale": "Eleven protected legacy visual baselines; never delete as application cache."
+    }
+  ],
+  "excluded_sensitive_paths": [
+    {
+      "path": "ApiServer/key",
+      "rationale": "Credential-shaped tracked legacy material was not opened, modified, copied, or deleted; security remediation requires separate authority and history rotation."
+    },
+    {
+      "path": "ApiServer/test",
+      "rationale": "Credential-shaped tracked legacy fixtures were not opened, modified, copied, or deleted; security remediation requires separate authority and history rotation."
+    }
+  ]
+}
