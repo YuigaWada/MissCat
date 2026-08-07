@@ -194,6 +194,12 @@ public final class MissCatShellStore: ObservableObject {
     private var configurationGeneration = 0
     private var accountSwitchTarget: MissCatShellAccountScope?
     private var repositories: [MissCatShellAccountScope: any MissCatFeedRepository] = [:]
+    private struct PendingTimelineSelection {
+        let selectedID: String
+        let scope: MissCatShellAccountScope
+    }
+    private var pendingTimelineSelection: PendingTimelineSelection?
+    private var persistenceGeneration: UInt64 = 0
     @Published private var timelineScrollPositions = MissCatTimelineScrollPositionState()
 
     public init(provider: any MissCatShellConfigurationProviding) {
@@ -257,18 +263,11 @@ public final class MissCatShellStore: ObservableObject {
 
         selectedTimelineID = state.selectedID
         timelineSelectionOrigin = origin
-        persistenceTask?.cancel()
-        let selectedID = state.selectedID
-        let scope = configuration.currentScope
-        persistenceTask = Task { @MainActor [weak self, provider] in
-            do {
-                try await provider.saveSelectedTimelineID(selectedID, for: scope)
-            } catch is CancellationError {
-                return
-            } catch {
-                self?.bannerMessage = Self.message(for: error)
-            }
-        }
+        pendingTimelineSelection = PendingTimelineSelection(
+            selectedID: state.selectedID,
+            scope: configuration.currentScope
+        )
+        startTimelinePersistenceIfNeeded()
     }
 
     @discardableResult
@@ -297,7 +296,7 @@ public final class MissCatShellStore: ObservableObject {
             return
         }
         guard scope != accountSwitchTarget else { return }
-        persistenceTask?.cancel()
+        cancelTimelinePersistence()
         configurationLoadTask?.cancel()
         configurationLoadTask = nil
         accountSwitchTask?.cancel()
@@ -335,6 +334,7 @@ public final class MissCatShellStore: ObservableObject {
 
     public func cancelConfigurationTasks() {
         configurationGeneration &+= 1
+        cancelTimelinePersistence()
         configurationLoadTask?.cancel()
         accountSwitchTask?.cancel()
         configurationLoadTask = nil
@@ -344,6 +344,10 @@ public final class MissCatShellStore: ObservableObject {
     }
 
     public func repository(for scope: MissCatShellAccountScope) -> (any MissCatFeedRepository)? {
+        guard configuration?.accounts.contains(where: { $0.scope == scope }) == true else {
+            bannerMessage = Self.message(for: MissCatShellConfigurationError.accountNotFound)
+            return nil
+        }
         if let repository = repositories[scope] { return repository }
         do {
             let repository = try provider.repository(for: scope)
@@ -381,9 +385,43 @@ public final class MissCatShellStore: ObservableObject {
     }
 
     private func apply(_ configuration: MissCatShellConfiguration) {
+        let authorizedScopes = Set(configuration.accounts.map(\.scope))
+        repositories = repositories.filter { authorizedScopes.contains($0.key) }
         self.configuration = configuration
         selectedTimelineID = configuration.selectedTimelineID
         timelineSelectionOrigin = .initial
+    }
+
+    private func startTimelinePersistenceIfNeeded() {
+        guard persistenceTask == nil else { return }
+        let generation = persistenceGeneration
+        persistenceTask = Task { @MainActor [weak self, provider] in
+            while let self,
+                  self.persistenceGeneration == generation,
+                  !Task.isCancelled,
+                  let pending = self.pendingTimelineSelection {
+                self.pendingTimelineSelection = nil
+                do {
+                    try await provider.saveSelectedTimelineID(
+                        pending.selectedID,
+                        for: pending.scope
+                    )
+                } catch is CancellationError {
+                    break
+                } catch {
+                    self.bannerMessage = Self.message(for: error)
+                }
+            }
+            guard let self, self.persistenceGeneration == generation else { return }
+            self.persistenceTask = nil
+        }
+    }
+
+    private func cancelTimelinePersistence() {
+        persistenceGeneration &+= 1
+        pendingTimelineSelection = nil
+        persistenceTask?.cancel()
+        persistenceTask = nil
     }
 
     private static func message(for error: Error) -> String {

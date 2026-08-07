@@ -143,6 +143,7 @@ public final class MissCatFeedStore: ObservableObject {
         paginationTask?.cancel()
         paginationTask = nil
         isLoadingNextPage = false
+        clearReadErrorIfNeeded()
         stopRealtime()
         contentGeneration &+= 1
         let generation = contentGeneration
@@ -193,6 +194,7 @@ public final class MissCatFeedStore: ObservableObject {
             await paginationTask.value
             return
         }
+        clearReadErrorIfNeeded()
         isLoadingNextPage = true
         let generation = contentGeneration
         let capturedScope = accountScope
@@ -575,7 +577,18 @@ public final class MissCatFeedStore: ObservableObject {
             phase = notes.isEmpty ? .empty : .loaded
         case let .reaction(noteID, reaction, delta, isMine):
             mutateNotes(noteID: noteID) { note in
-                Self.changeReaction(reaction, delta: delta, isMine: isMine && delta > 0, in: &note)
+                let wasMine = note.myReaction == reaction
+                    || note.reactions.first(where: { $0.name == reaction })?.isMine == true
+                let currentCount = note.reactions.first(where: { $0.name == reaction })?.count ?? 0
+                let boundedDelta = !isMine && wasMine && delta < 0 && currentCount + delta < 1
+                    ? 0
+                    : delta
+                Self.changeReaction(
+                    reaction,
+                    delta: boundedDelta,
+                    isMine: isMine ? delta > 0 : wasMine,
+                    in: &note
+                )
                 if isMine {
                     note.myReaction = delta > 0 ? reaction : nil
                 }
@@ -606,6 +619,12 @@ public final class MissCatFeedStore: ObservableObject {
             mutation(&notes[index])
         }
         synchronizeThread()
+    }
+
+    private func clearReadErrorIfNeeded() {
+        guard failedAction == nil else { return }
+        actionErrorMessage = nil
+        canRetryAction = false
     }
 
     private func synchronizeThread() {

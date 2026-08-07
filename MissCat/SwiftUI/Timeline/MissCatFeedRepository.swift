@@ -192,22 +192,57 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
         case .home:
             notes = try await post(
                 "notes/timeline",
-                body: FeedPageRequest(i: account.apiKey, limit: boundedLimit, untilId: cursor)
+                body: FeedTimelinePageRequest(
+                    i: account.apiKey,
+                    limit: boundedLimit,
+                    untilId: cursor,
+                    allowPartial: false,
+                    includeMyRenotes: true,
+                    includeRenotedMyNotes: true,
+                    includeLocalRenotes: true,
+                    withFiles: false,
+                    withRenotes: true
+                )
             )
         case .local:
             notes = try await post(
                 "notes/local-timeline",
-                body: FeedPageRequest(i: account.apiKey, limit: boundedLimit, untilId: cursor)
+                body: FeedTimelinePageRequest(
+                    i: account.apiKey,
+                    limit: boundedLimit,
+                    untilId: cursor,
+                    allowPartial: false,
+                    withFiles: false,
+                    withRenotes: true,
+                    withReplies: false
+                )
             )
         case .social:
             notes = try await post(
                 "notes/hybrid-timeline",
-                body: FeedPageRequest(i: account.apiKey, limit: boundedLimit, untilId: cursor)
+                body: FeedTimelinePageRequest(
+                    i: account.apiKey,
+                    limit: boundedLimit,
+                    untilId: cursor,
+                    allowPartial: false,
+                    includeMyRenotes: true,
+                    includeRenotedMyNotes: true,
+                    includeLocalRenotes: true,
+                    withFiles: false,
+                    withRenotes: true,
+                    withReplies: false
+                )
             )
         case .global:
             notes = try await post(
                 "notes/global-timeline",
-                body: FeedPageRequest(i: account.apiKey, limit: boundedLimit, untilId: cursor)
+                body: FeedTimelinePageRequest(
+                    i: account.apiKey,
+                    limit: boundedLimit,
+                    untilId: cursor,
+                    withFiles: false,
+                    withRenotes: true
+                )
             )
         case let .search(query):
             notes = try await post(
@@ -1146,6 +1181,46 @@ private struct FeedPageRequest: Encodable {
     let i: String
     let limit: Int
     let untilId: String?
+}
+
+/// Pins the ordinary timeline semantics instead of relying on server defaults
+/// that have changed between Misskey releases. Unsupported keys remain absent
+/// for endpoints whose current schema does not declare them.
+private struct FeedTimelinePageRequest: Encodable {
+    let i: String
+    let limit: Int
+    let untilId: String?
+    let allowPartial: Bool?
+    let includeMyRenotes: Bool?
+    let includeRenotedMyNotes: Bool?
+    let includeLocalRenotes: Bool?
+    let withFiles: Bool?
+    let withRenotes: Bool
+    let withReplies: Bool?
+
+    init(
+        i: String,
+        limit: Int,
+        untilId: String?,
+        allowPartial: Bool? = nil,
+        includeMyRenotes: Bool? = nil,
+        includeRenotedMyNotes: Bool? = nil,
+        includeLocalRenotes: Bool? = nil,
+        withFiles: Bool?,
+        withRenotes: Bool,
+        withReplies: Bool? = nil
+    ) {
+        self.i = i
+        self.limit = limit
+        self.untilId = untilId
+        self.allowPartial = allowPartial
+        self.includeMyRenotes = includeMyRenotes
+        self.includeRenotedMyNotes = includeRenotedMyNotes
+        self.includeLocalRenotes = includeLocalRenotes
+        self.withFiles = withFiles
+        self.withRenotes = withRenotes
+        self.withReplies = withReplies
+    }
 }
 
 private struct FeedSearchRequest: Encodable {
