@@ -1,7 +1,124 @@
 @testable import MissCat
+import CoreGraphics
 import Foundation
+import ImageIO
 import UIKit
+import UniformTypeIdentifiers
 import XCTest
+
+final class ShareExtensionSwiftUIBoundaryTests: XCTestCase {
+    func testOnlyPrincipalControllerRetainsTheRequiredUIKitBoundary() throws {
+        let entry = try source("MissCatShare/ShareViewController.swift")
+        let composer = try source("MissCatShare/ShareComposerView.swift")
+        let input = try source("MissCatShare/ShareInputLoader.swift")
+        let post = try source("MissCatShare/PostModel.swift")
+
+        XCTAssertTrue(entry.contains("import UIKit"))
+        XCTAssertTrue(entry.contains("import SwiftUI"))
+        XCTAssertTrue(entry.contains("final class ShareViewController: UIViewController"))
+        XCTAssertTrue(entry.contains("UIHostingController"))
+        XCTAssertTrue(entry.contains("extensionContext"))
+        for forbidden in ["UILabel", "UIStackView", "UIImage", "UIViewRepresentable"] {
+            XCTAssertFalse(entry.contains(forbidden), "Principal boundary leaked visual UIKit: \(forbidden)")
+        }
+
+        XCTAssertTrue(composer.contains("import SwiftUI"))
+        XCTAssertTrue(composer.contains("ShareCredentialReadProofView"))
+        XCTAssertTrue(composer.contains("share-keychain-proof.available"))
+        XCTAssertTrue(composer.contains("share-keychain-proof.account-hash"))
+        for source in [composer, input, post] {
+            XCTAssertFalse(source.contains("import UIKit"))
+            XCTAssertFalse(source.contains("UIImage"))
+            XCTAssertFalse(source.contains("UIGraphics"))
+            XCTAssertFalse(source.contains("UIViewControllerRepresentable"))
+        }
+    }
+
+    func testShareExtensionKeepsSystemPrincipalClassAndNativeSwiftUIRatioBaseline() throws {
+        let info = try source("MissCatShare/Info.plist")
+        let baselineData = try Data(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "config/swiftui-share-framework-ratio-baseline.json"
+            )
+        )
+        let baseline = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: baselineData) as? [String: Any]
+        )
+        let counts = try XCTUnwrap(baseline["counts"] as? [String: Int])
+
+        XCTAssertTrue(info.contains("com.apple.share-services"))
+        XCTAssertTrue(info.contains("NSExtensionPrincipalClass"))
+        XCTAssertTrue(info.contains("$(PRODUCT_MODULE_NAME).ShareViewController"))
+        XCTAssertEqual(baseline["target"] as? String, "MissCatShare")
+        XCTAssertEqual(counts["total_swift"], 8)
+        XCTAssertEqual(counts["uikit_only"], 0)
+        XCTAssertEqual(counts["swiftui_only"], 1)
+        XCTAssertEqual(counts["hybrid"], 1)
+        XCTAssertEqual(counts["neutral"], 6)
+    }
+
+    private func source(_ relativePath: String) throws -> String {
+        try String(
+            contentsOf: repositoryRoot.appendingPathComponent(relativePath),
+            encoding: .utf8
+        )
+    }
+
+    private var repositoryRoot: URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+    }
+}
+
+final class ShareImageCodecTests: XCTestCase {
+    func testPreviewDecodeAndJPEGPreparationRemainUIKitFreeAndBounded() throws {
+        let sourceData = try makePNG(width: 2_048, height: 8)
+        let preview = try XCTUnwrap(ShareImageCodec.decode(sourceData))
+        XCTAssertEqual(preview.width, 2_048)
+        XCTAssertEqual(preview.height, 8)
+
+        let jpeg = try ShareImageCodec.prepareJPEG(
+            sourceData,
+            maximumWidth: 1_024,
+            compressionQuality: 0.5
+        )
+        let imageSource = try XCTUnwrap(
+            CGImageSourceCreateWithData(jpeg as CFData, nil)
+        )
+        let prepared = try XCTUnwrap(CGImageSourceCreateImageAtIndex(imageSource, 0, nil))
+
+        XCTAssertEqual(CGImageSourceGetType(imageSource) as String?, UTType.jpeg.identifier)
+        XCTAssertEqual(prepared.width, 1_024)
+        XCTAssertEqual(prepared.height, 4)
+    }
+
+    private func makePNG(width: Int, height: Int) throws -> Data {
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let context = try XCTUnwrap(CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ))
+        context.setFillColor(CGColor(red: 0.1, green: 0.5, blue: 0.9, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        let image = try XCTUnwrap(context.makeImage())
+        let data = NSMutableData()
+        let destination = try XCTUnwrap(CGImageDestinationCreateWithData(
+            data,
+            UTType.png.identifier as CFString,
+            1,
+            nil
+        ))
+        CGImageDestinationAddImage(destination, image, nil)
+        XCTAssertTrue(CGImageDestinationFinalize(destination))
+        return data as Data
+    }
+}
 
 final class ShareContentNormalizerTests: XCTestCase {
     func testNormalizesTextURLAndImagesWithoutDuplicates() throws {
