@@ -5,6 +5,7 @@
 //  SwiftUI application entry point and migration boundary.
 //
 
+import CryptoKit
 import Foundation
 import SwiftUI
 import UIKit
@@ -263,13 +264,27 @@ struct LegacyApplicationView: UIViewControllerRepresentable {
 }
 
 #if DEBUG
+enum MissCatPersistenceProbeLaunch {
+    static var isRequested: Bool {
+        MissCatSharedKeychainE2EMode.current != nil
+    }
+}
+
 private enum MissCatSharedKeychainE2EMode {
     case prepare
+    case verifyRelaunch
     case cleanup
+    case verifyCleanup
 
     static var current: Self? {
+        if CommandLine.arguments.contains("--misscat-shared-keychain-e2e-verify-cleanup") {
+            return .verifyCleanup
+        }
         if CommandLine.arguments.contains("--misscat-shared-keychain-e2e-cleanup") {
             return .cleanup
+        }
+        if CommandLine.arguments.contains("--misscat-shared-keychain-e2e-verify-relaunch") {
+            return .verifyRelaunch
         }
         if CommandLine.arguments.contains("--misscat-shared-keychain-e2e") {
             return .prepare
@@ -285,7 +300,9 @@ private struct MissCatSharedKeychainE2EView: View {
     private enum Phase: Equatable {
         case working
         case ready
+        case relaunched
         case cleaned
+        case cleanupVerified
         case failed
     }
 
@@ -295,13 +312,20 @@ private struct MissCatSharedKeychainE2EView: View {
         static let resultKey = "share-credential-proof.available"
         static let accountHashKey = "share-credential-proof.account-hash"
         static let previousAccountKey = "share-credential-proof.previous-account"
+        static let credentialHashKey = "share-credential-proof.credential-hash"
+        static let deleteCommittedKey = "share-credential-proof.delete-committed"
         static let userID = "misscat-shared-keychain-fixture"
         static let username = "non-live-fixture"
         static let instance = "shared-keychain-probe.invalid"
-        static let credential = "misscat-non-live-fixture-credential-v1"
 
         static var accountIdentifier: String {
             MissCatAccountIdentity.storageKey(instance: instance, userId: userID)
+        }
+
+        static func hash(_ value: String) -> String {
+            SHA256.hash(data: Data(value.utf8))
+                .map { String(format: "%02x", $0) }
+                .joined()
         }
     }
 
@@ -321,6 +345,9 @@ private struct MissCatSharedKeychainE2EView: View {
             case .ready:
                 Text("Fixture ready")
                     .accessibilityIdentifier("keychain-probe.ready")
+            case .relaunched:
+                Text("true")
+                    .accessibilityIdentifier("keychain-probe.relaunch-read")
                 Button("Open MissCat Share Extension") {
                     isPresentingShareSheet = true
                 }
@@ -329,6 +356,9 @@ private struct MissCatSharedKeychainE2EView: View {
             case .cleaned:
                 Text("Fixture cleaned")
                     .accessibilityIdentifier("keychain-probe.cleaned")
+            case .cleanupVerified:
+                Text("true")
+                    .accessibilityIdentifier("keychain-probe.cleanup-verified")
             case .failed:
                 Text("Fixture operation failed")
                     .accessibilityIdentifier("keychain-probe.failed")
@@ -339,8 +369,12 @@ private struct MissCatSharedKeychainE2EView: View {
             switch mode {
             case .prepare:
                 phase = prepareFixture() ? .ready : .failed
+            case .verifyRelaunch:
+                phase = verifyRelaunchedFixture() ? .relaunched : .failed
             case .cleanup:
                 phase = cleanupFixture() ? .cleaned : .failed
+            case .verifyCleanup:
+                phase = verifyCleanedFixture() ? .cleanupVerified : .failed
             }
         }
         .sheet(isPresented: $isPresentingShareSheet) {
@@ -362,7 +396,11 @@ private struct MissCatSharedKeychainE2EView: View {
             ? stalePrevious
             : currentAccount
 
-        _ = cache.removeUser(userId: Fixture.accountIdentifier)
+        if cache.getUser(userId: Fixture.accountIdentifier) != nil,
+           !cache.removeUser(userId: Fixture.accountIdentifier)
+        {
+            return false
+        }
         if let previousAccount, previousAccount != Fixture.accountIdentifier {
             defaults.set(previousAccount, forKey: Fixture.previousAccountKey)
         } else {
@@ -370,25 +408,47 @@ private struct MissCatSharedKeychainE2EView: View {
         }
         defaults.removeObject(forKey: Fixture.resultKey)
         defaults.removeObject(forKey: Fixture.accountHashKey)
+        defaults.removeObject(forKey: Fixture.credentialHashKey)
+        defaults.removeObject(forKey: Fixture.deleteCommittedKey)
         defaults.set(false, forKey: Fixture.requestKey)
 
+        let credential = UUID().uuidString + UUID().uuidString
         let fixture = SecureUser(
             userId: Fixture.userID,
             username: Fixture.username,
             instance: Fixture.instance,
-            apiKey: Fixture.credential
+            apiKey: credential
         )
         guard let installed = cache.installAuthenticatedUser(fixture),
               installed.accountIdentifier == Fixture.accountIdentifier,
-              installed.apiKey == Fixture.credential,
+              installed.apiKey == credential,
               cache.getCurrentUserId() == Fixture.accountIdentifier
         else {
             return false
         }
 
+        defaults.set(Fixture.hash(credential), forKey: Fixture.credentialHashKey)
+        return defaults.synchronize()
+    }
+
+    private func verifyRelaunchedFixture() -> Bool {
+        guard let defaults = Foundation.UserDefaults(suiteName: Fixture.appGroup),
+              let expectedCredentialHash = defaults.string(forKey: Fixture.credentialHashKey),
+              !expectedCredentialHash.isEmpty,
+              let fixture = Cache.UserDefaults.shared.getUser(userId: Fixture.accountIdentifier),
+              fixture.accountIdentifier == Fixture.accountIdentifier,
+              let credential = fixture.apiKey,
+              !credential.isEmpty,
+              Fixture.hash(credential) == expectedCredentialHash,
+              Cache.UserDefaults.shared.getCurrentUserId() == Fixture.accountIdentifier
+        else {
+            return false
+        }
+
+        defaults.removeObject(forKey: Fixture.resultKey)
+        defaults.removeObject(forKey: Fixture.accountHashKey)
         defaults.set(true, forKey: Fixture.requestKey)
-        defaults.synchronize()
-        return true
+        return defaults.synchronize()
     }
 
     private func cleanupFixture() -> Bool {
@@ -411,9 +471,31 @@ private struct MissCatSharedKeychainE2EView: View {
         defaults.removeObject(forKey: Fixture.requestKey)
         defaults.removeObject(forKey: Fixture.resultKey)
         defaults.removeObject(forKey: Fixture.accountHashKey)
-        defaults.removeObject(forKey: Fixture.previousAccountKey)
-        defaults.synchronize()
+        defaults.removeObject(forKey: Fixture.credentialHashKey)
+        defaults.set(true, forKey: Fixture.deleteCommittedKey)
+        guard defaults.synchronize() else { return false }
         return cache.getUser(userId: Fixture.accountIdentifier) == nil
+    }
+
+    private func verifyCleanedFixture() -> Bool {
+        guard let defaults = Foundation.UserDefaults(suiteName: Fixture.appGroup),
+              defaults.bool(forKey: Fixture.deleteCommittedKey),
+              Cache.UserDefaults.shared.getUser(userId: Fixture.accountIdentifier) == nil,
+              let credentialAvailable = try? Cache.UserDefaults.shared
+                .hasPersistedCredentialForVerification(accountIdentifier: Fixture.accountIdentifier),
+              !credentialAvailable,
+              Cache.UserDefaults.shared.getCurrentUserId() != Fixture.accountIdentifier
+        else {
+            return false
+        }
+
+        defaults.removeObject(forKey: Fixture.requestKey)
+        defaults.removeObject(forKey: Fixture.resultKey)
+        defaults.removeObject(forKey: Fixture.accountHashKey)
+        defaults.removeObject(forKey: Fixture.previousAccountKey)
+        defaults.removeObject(forKey: Fixture.credentialHashKey)
+        defaults.removeObject(forKey: Fixture.deleteCommittedKey)
+        return defaults.synchronize()
     }
 }
 
@@ -465,14 +547,15 @@ private enum MissCatAuthenticationProbe {
         apiKey: String,
         savedUserID: String
     ) async -> [String: Any] {
-        guard let url = URL(string: "https://\(instance)/api/i") else {
+        let request: URLRequest
+        do {
+            request = try MissCatAuthenticatedIdentityRequestBuilder.request(
+                instance: instance,
+                accessToken: apiKey
+            )
+        } catch {
             return result(status: 0, decodeSuccess: false, savedUserIDMatches: false)
         }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try? JSONSerialization.data(withJSONObject: ["i": apiKey])
 
         let session = URLSession(configuration: .ephemeral)
         defer { session.invalidateAndCancel() }

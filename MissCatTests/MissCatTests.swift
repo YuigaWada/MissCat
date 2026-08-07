@@ -339,6 +339,33 @@ final class MiAuthAuthenticationTests: XCTestCase {
     private let secondSession = UUID(uuidString: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")!
     private let testToken = "unit-test-token-not-a-real-credential"
 
+    func testMiAuthCheckResponseAndIdentityRequestPreserveExactTokenAndInstance() throws {
+        let token = UUID().uuidString + "/" + UUID().uuidString
+        let responseData = try JSONSerialization.data(withJSONObject: [
+            "ok": true,
+            "token": token,
+            "user": ["id": "server-user-id", "username": "fixture-user"]
+        ])
+
+        let response = try JSONDecoder().decode(MissCatMiAuthCheckResponse.self, from: responseData)
+        let decodedToken = try XCTUnwrap(response.token)
+        XCTAssertTrue(decodedToken == token)
+
+        let request = try MissCatAuthenticatedIdentityRequestBuilder.request(
+            instance: "https://AUTH.Example.invalid:8443/",
+            accessToken: decodedToken
+        )
+        XCTAssertTrue(request.url?.scheme == "https")
+        XCTAssertTrue(request.url?.host == "auth.example.invalid")
+        XCTAssertTrue(request.url?.port == 8443)
+        XCTAssertTrue(request.url?.path == "/api/i")
+        XCTAssertTrue(request.httpMethod == "POST")
+        XCTAssertTrue(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
+        XCTAssertTrue(request.value(forHTTPHeaderField: "Authorization") == "Bearer " + token)
+        XCTAssertTrue(request.httpBody == Data("{}".utf8))
+        XCTAssertFalse(request.httpBody?.range(of: Data(token.utf8)) != nil)
+    }
+
     func testAuthorizationURLUsesNormalizedHTTPSInstanceAndEncodedOptions() async throws {
         let fixture = makeFixture()
 

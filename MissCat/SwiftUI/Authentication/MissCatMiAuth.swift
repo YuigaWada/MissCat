@@ -133,3 +133,27 @@ enum MissCatMiAuthRequestBuilder {
         return request
     }
 }
+
+/// Builds the authenticated identity request used to verify a credential after
+/// it has crossed the persistence boundary. Keep the token out of the JSON
+/// body so diagnostics can inspect the endpoint and payload shape without
+/// serializing credential material.
+enum MissCatAuthenticatedIdentityRequestBuilder {
+    static func request(instance rawInstance: String, accessToken: String) throws -> URLRequest {
+        guard !accessToken.isEmpty else {
+            throw MissCatAuthenticationService.AuthenticationError.missingAccessToken
+        }
+
+        let instance = try MissCatInstance.normalize(rawInstance)
+        guard let url = URL(string: "/api/i", relativeTo: instance.origin)?.absoluteURL else {
+            throw MissCatAuthenticationService.AuthenticationError.invalidInstance
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.httpBody = Data("{}".utf8)
+        return request
+    }
+}

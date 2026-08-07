@@ -31,7 +31,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Visual/UI fixtures must not display system permission prompts, contact
         // Firebase, or hydrate real cached accounts. Ordinary launches continue
         // through the complete startup path below.
-        if MissCatShellFixtureLaunch.isRequested { return true }
+        if MissCatShellFixtureLaunch.isRequested || MissCatPersistenceProbeLaunch.isRequested {
+            return true
+        }
 
         // Automated tests must not trigger notification permission UI,
         // Firebase registration, or saved-account network side effects. The

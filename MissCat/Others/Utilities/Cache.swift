@@ -542,6 +542,14 @@ extension Cache {
             return currentUser
         }
 
+#if DEBUG
+        /// Boolean-only hook for signed persistence tests. Credential material
+        /// never crosses this boundary or enters XCTest diagnostics.
+        func hasPersistedCredentialForVerification(accountIdentifier: String) throws -> Bool {
+            try apiKeyStore.apiKey(for: accountIdentifier)?.isEmpty == false
+        }
+#endif
+
         private enum AccountPersistenceError: Error {
             case keychainVerificationFailed
             case finalVerificationFailed

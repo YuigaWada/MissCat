@@ -14,6 +14,7 @@ final class MissCatShareKeychainUITests: XCTestCase {
         let app = XCUIApplication(bundleIdentifier: Self.appBundleIdentifier)
         addTeardownBlock {
             self.cleanupFixture(using: app)
+            self.verifyCleanup(using: app)
         }
 
         app.terminate()
@@ -25,6 +26,18 @@ final class MissCatShareKeychainUITests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.staticTexts["keychain-probe.ready"].waitForExistence(timeout: 15))
+
+        app.terminate()
+        app.launchArguments = [
+            "--misscat-shared-keychain-e2e-verify-relaunch",
+            "-AppleLanguages", "(en)",
+            "-AppleLocale", "en_US"
+        ]
+        app.launch()
+        let relaunchRead = app.staticTexts["keychain-probe.relaunch-read"]
+        XCTAssertTrue(relaunchRead.waitForExistence(timeout: 15))
+        XCTAssertEqual(relaunchRead.label, "true")
+
         app.buttons["keychain-probe.launch-share"].tap()
 
         let missCatActivity = app.descendants(matching: .any)
@@ -53,6 +66,11 @@ final class MissCatShareKeychainUITests: XCTestCase {
 
         cleanupFixture(using: app)
         XCTAssertTrue(app.staticTexts["keychain-probe.cleaned"].waitForExistence(timeout: 15))
+
+        verifyCleanup(using: app)
+        let cleanupVerified = app.staticTexts["keychain-probe.cleanup-verified"]
+        XCTAssertTrue(cleanupVerified.waitForExistence(timeout: 15))
+        XCTAssertEqual(cleanupVerified.label, "true")
     }
 
     private func cleanupFixture(using app: XCUIApplication) {
@@ -64,6 +82,17 @@ final class MissCatShareKeychainUITests: XCTestCase {
         ]
         app.launch()
         _ = app.staticTexts["keychain-probe.cleaned"].waitForExistence(timeout: 15)
+    }
+
+    private func verifyCleanup(using app: XCUIApplication) {
+        app.terminate()
+        app.launchArguments = [
+            "--misscat-shared-keychain-e2e-verify-cleanup",
+            "-AppleLanguages", "(en)",
+            "-AppleLocale", "en_US"
+        ]
+        app.launch()
+        _ = app.staticTexts["keychain-probe.cleanup-verified"].waitForExistence(timeout: 15)
     }
 
     private static var expectedFixtureAccountHash: String {
