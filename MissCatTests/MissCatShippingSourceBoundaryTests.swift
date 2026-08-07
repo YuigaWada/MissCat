@@ -98,9 +98,8 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
     }
 
     func testUnitTestUIKitImportsAreLimitedToSystemPasteboardIntegration() throws {
-        let unitTestRoot = repositoryRoot.appendingPathComponent("MissCatTests")
         let uikitSources = try repositorySwiftSources()
-            .filter { $0.path.hasPrefix(unitTestRoot.path + "/") }
+            .filter { $0.deletingLastPathComponent().lastPathComponent == "MissCatTests" }
             .filter { sourceURL in
                 let source = try String(contentsOf: sourceURL, encoding: .utf8)
                 return source.split(separator: "\n").contains("import UIKit")
