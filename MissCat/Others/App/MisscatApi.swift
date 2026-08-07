@@ -7,7 +7,6 @@
 //
 
 import FirebaseMessaging
-import MisskeyKit
 
 protocol ApiKeyManagerProtocol {
     var baseUrl: String { get }
@@ -18,7 +17,7 @@ struct MockApiKeyManager: ApiKeyManagerProtocol {
 }
 
 class MisscatApi {
-    private let misskey: MisskeyKit?
+    private let client: MissCatNativeAPIClient?
     private let owner: SecureUser
     private let apiKeyManager: ApiKeyManagerProtocol
     private let authSecret = "Q8Zgu-WDvN5EDT_emFGovQ"
@@ -30,7 +29,7 @@ class MisscatApi {
     init(apiKeyManager: ApiKeyManagerProtocol, and user: SecureUser) {
         self.apiKeyManager = apiKeyManager
         owner = user
-        misskey = MisskeyKit(from: user)
+        client = try? MissCatNativeAPIClient(owner: user)
     }
     
     /// 適切なendpointを生成し、sw/registerを叩く
@@ -40,7 +39,6 @@ class MisscatApi {
               !apiKey.isEmpty,
               !owner.userId.isEmpty else { return }
         
-        misskey?.auth.setAPIKey(apiKey)
         Messaging.messaging().token { token, error in
             guard error == nil else { print("Error fetching remote instance ID: \(error!)"); return }
             if let token = token {
@@ -50,11 +48,15 @@ class MisscatApi {
     }
     
     private func registerSw(userId: String, token: String) {
+        guard let client else { return }
         let endpoint = generateEndpoint(with: userId, and: token)
-        
-        misskey?.serviceWorker.register(endpoint: endpoint, auth: authSecret, publicKey: publicKey, result: { state, error in
-            guard error == nil, state != nil else { return }
-        })
+        Task {
+            _ = try? await client.registerServiceWorker(
+                endpoint: endpoint,
+                auth: authSecret,
+                publicKey: publicKey
+            )
+        }
     }
     
     private func generateEndpoint(with userId: String, and token: String) -> String {

@@ -29,9 +29,7 @@ final class ShareViewController: UIViewController {
         let selectedAccountID = accounts.contains(where: { $0.id == currentAccountID })
             ? currentAccountID
             : accounts.first?.id
-        let visibility = userModel.getCurrentVisibility()
-            .flatMap { ShareVisibility(rawValue: $0.rawValue) }
-            ?? .public
+        let visibility = userModel.getCurrentVisibility() ?? .public
 
         let viewModel = ShareComposerViewModel(
             accounts: accounts,

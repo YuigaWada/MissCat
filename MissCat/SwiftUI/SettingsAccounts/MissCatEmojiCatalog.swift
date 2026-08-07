@@ -1,8 +1,9 @@
-import MisskeyKit
+import Foundation
 
 /// Instance-scoped emoji catalog used by the native reaction settings screen.
 /// It preserves the eager post-login fetch while keeping rendering independent
 /// from the retired MFM/UIKit implementation.
+@MainActor
 final class MissCatEmojiCatalog {
     typealias CategorizedEmojis = [String: [MissCatEmojiArchive.EmojiModel]]
 
@@ -10,9 +11,9 @@ final class MissCatEmojiCatalog {
 
     static func prepare(for owner: SecureUser) {
         guard catalog(for: owner) == nil,
-              let misskey = MisskeyKit(from: owner)
+              let client = try? MissCatNativeAPIClient(owner: owner)
         else { return }
-        catalogs.append(MissCatEmojiCatalog(misskey: misskey, owner: owner))
+        catalogs.append(MissCatEmojiCatalog(client: client, owner: owner))
     }
 
     static func catalog(for owner: SecureUser) -> MissCatEmojiCatalog? {
@@ -24,27 +25,26 @@ final class MissCatEmojiCatalog {
 
     private let owner: SecureUser
 
-    private init(misskey: MisskeyKit, owner: SecureUser) {
+    private init(client: MissCatNativeAPIClient, owner: SecureUser) {
         self.owner = owner
-        misskey.emojis.getDefault { [weak self] emojis in
-            self?.categorizedDefaultEmojis = Self.categorizeDefaults(emojis ?? [])
-        }
-        misskey.emojis.getCustom { [weak self] emojis in
-            self?.categorizedCustomEmojis = Self.categorizeCustom(emojis ?? [])
+        categorizedDefaultEmojis = Self.categorizeDefaults(
+            MissCatReactionSettingsStore.legacyDefaults
+        )
+        Task { [weak self] in
+            guard let emojis = try? await client.customEmojis() else { return }
+            self?.categorizedCustomEmojis = Self.categorizeCustom(emojis)
         }
     }
 
     private static func categorizeDefaults(
-        _ emojis: [DefaultEmojiModel]
+        _ emojis: [String]
     ) -> CategorizedEmojis {
         emojis.reduce(into: CategorizedEmojis()) { result, emoji in
-            guard let raw = emoji.name, let character = emoji.char else { return }
-            let category = emoji.category?.rawValue.nonEmpty ?? "Others"
-            result[category, default: []].append(
+            result["Standard", default: []].append(
                 MissCatEmojiArchive.EmojiModel(
-                    rawEmoji: raw,
+                    rawEmoji: emoji,
                     isDefault: true,
-                    defaultEmoji: character,
+                    defaultEmoji: emoji,
                     customEmojiUrl: nil
                 )
             )
@@ -52,17 +52,16 @@ final class MissCatEmojiCatalog {
     }
 
     private static func categorizeCustom(
-        _ emojis: [EmojiModel]
+        _ emojis: [MissCatNativeEmoji]
     ) -> CategorizedEmojis {
         emojis.reduce(into: CategorizedEmojis()) { result, emoji in
-            guard let raw = emoji.name, let url = emoji.url else { return }
             let category = emoji.category?.nonEmpty ?? "Others"
             result[category, default: []].append(
                 MissCatEmojiArchive.EmojiModel(
-                    rawEmoji: raw,
+                    rawEmoji: emoji.name,
                     isDefault: false,
                     defaultEmoji: nil,
-                    customEmojiUrl: url
+                    customEmojiUrl: emoji.url
                 )
             )
         }

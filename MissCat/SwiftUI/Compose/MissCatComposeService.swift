@@ -1,12 +1,11 @@
 @preconcurrency import AVFoundation
 import Foundation
 import MediaPlayer
-import MisskeyKit
 import UIKit
 
 enum MissCatComposeLegacyVisibilityAdapter {
-    static func value(_ visibility: MissCatComposeVisibility) -> Visibility? {
-        Visibility(rawValue: visibility.rawValue)
+    static func value(_ visibility: MissCatComposeVisibility) -> MissCatVisibility? {
+        MissCatVisibility(rawValue: visibility.rawValue)
     }
 }
 

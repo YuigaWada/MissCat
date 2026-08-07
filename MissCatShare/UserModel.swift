@@ -195,8 +195,8 @@ class UserModel {
     
     // MARK: Visiblity
     
-    func getCurrentVisibility() -> Visibility? {
+    func getCurrentVisibility() -> ShareVisibility? {
         guard let raw = userDefaults.string(forKey: currentVisibilityKey) else { return nil }
-        return Visibility(rawValue: raw)
+        return ShareVisibility(rawValue: raw)
     }
 }

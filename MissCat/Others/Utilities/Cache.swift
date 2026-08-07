@@ -7,7 +7,13 @@
 //
 
 import Foundation
-import MisskeyKit
+
+enum MissCatVisibility: String, CaseIterable, Codable, Sendable {
+    case `public`
+    case home
+    case followers
+    case specified
+}
 
 protocol AccountAPIKeyStoring {
     func apiKey(for accountID: String) throws -> String?
@@ -777,12 +783,12 @@ extension Cache {
         
         // MARK: Visibility
         
-        func getCurrentVisibility() -> Visibility? {
+        func getCurrentVisibility() -> MissCatVisibility? {
             guard let raw = userDefaults.string(forKey: currentVisibilityKey) else { return nil }
-            return Visibility(rawValue: raw)
+            return MissCatVisibility(rawValue: raw)
         }
         
-        func setCurrentVisibility(_ visibility: Visibility) {
+        func setCurrentVisibility(_ visibility: MissCatVisibility) {
             userDefaults.set(visibility.rawValue, forKey: currentVisibilityKey)
         }
         
@@ -812,11 +818,21 @@ extension Cache {
         /// userRefill()で詰めきれなかったusernameを非同期で詰める
         func usernameRefill(with user: SecureUser) {
             guard user.username.isEmpty,
-                  let apiKey = user.apiKey else { return }
-            let misskey = MisskeyKit(from: user)
-            misskey?.users.i { info, _ in
-                guard let info = info else { return }
-                let secureUser = SecureUser(userId: user.userId, username: info.username ?? "", instance: user.instance, apiKey: apiKey)
+                  let apiKey = user.apiKey,
+                  let client = try? MissCatNativeAPIClient(owner: user)
+            else { return }
+            let userID = user.userId
+            let instance = user.instance
+            Task {
+                guard let info = try? await client.currentAccount(),
+                      info.id == userID
+                else { return }
+                let secureUser = SecureUser(
+                    userId: userID,
+                    username: info.username,
+                    instance: instance,
+                    apiKey: apiKey
+                )
                 _ = Cache.UserDefaults.shared.saveUser(secureUser)
             }
         }

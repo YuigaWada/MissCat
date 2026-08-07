@@ -1,5 +1,4 @@
 import Foundation
-import MisskeyKit
 
 enum MissCatAuthenticationCallbackMatcher {
     static func matches(
@@ -114,7 +113,6 @@ final class MissCatAuthenticationService {
         var state: PendingState
     }
 
-    private let misskey: MisskeyKit
     private let transport: MissCatMiAuthTransport
     private let uuidGenerator: () -> UUID
     private let accountStore: MissCatAuthenticationAccountStoring
@@ -124,13 +122,11 @@ final class MissCatAuthenticationService {
     private var pendingSession: PendingSession?
 
     init(
-        misskey: MisskeyKit = .shared,
         transport: MissCatMiAuthTransport = MissCatURLSessionMiAuthTransport(),
         uuidGenerator: @escaping () -> UUID = UUID.init,
         accountStore: MissCatAuthenticationAccountStoring = Cache.UserDefaults.shared,
         performsPostLoginActions: Bool = true
     ) {
-        self.misskey = misskey
         self.transport = transport
         self.uuidGenerator = uuidGenerator
         self.accountStore = accountStore
@@ -143,8 +139,6 @@ final class MissCatAuthenticationService {
     ) async throws -> URLRequest {
         let normalizedInstance = try MissCatInstance.normalize(instance)
         invalidatePendingAuthentication()
-        misskey.auth.setAPIKey("")
-        misskey.changeInstance(instance: normalizedInstance.identifier)
 
         switch intent {
         case .signUp:
@@ -244,9 +238,6 @@ final class MissCatAuthenticationService {
         else {
             throw AuthenticationError.couldNotPersistAccount
         }
-
-        misskey.changeInstance(instance: session.instance.identifier)
-        misskey.auth.setAPIKey(apiKey)
 
         if performsPostLoginActions {
             MissCatEmojiCatalog.prepare(for: persistedUser)
