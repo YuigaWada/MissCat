@@ -341,6 +341,41 @@ final class MissCatNoteDetailTests: XCTestCase {
         XCTAssertEqual(second.animationByName["second-name"]?.firstFrame.height, 1)
     }
 
+    @MainActor
+    func testCancellingOneCoalescedEmojiWaiterKeepsTheOtherLoadAlive() async {
+        let url = URL(string: "https://example.test/shared-cancellation.webp")!
+        let cache = MissCatCustomEmojiCache(countLimit: 2)
+        let probe = CustomEmojiLoaderProbe(
+            data: Self.customEmojiPNGData,
+            delayNanoseconds: 100_000_000
+        )
+        let cancelledStore = MissCatCustomEmojiStore(
+            emojis: ["cancelled": url],
+            readiness: nil,
+            cache: cache,
+            loader: { url in try await probe.load(url) }
+        )
+        let survivingStore = MissCatCustomEmojiStore(
+            emojis: ["surviving": url],
+            readiness: nil,
+            cache: cache,
+            loader: { url in try await probe.load(url) }
+        )
+
+        let cancelledTask = Task { await cancelledStore.load() }
+        let didStartLoading = await waitUntil { probe.callCount == 1 }
+        XCTAssertTrue(didStartLoading)
+        let survivingTask = Task { await survivingStore.load() }
+        try? await Task.sleep(nanoseconds: 20_000_000)
+        cancelledTask.cancel()
+        await cancelledTask.value
+        await survivingTask.value
+
+        XCTAssertEqual(probe.callCount, 1)
+        XCTAssertTrue(cancelledStore.animationByName.isEmpty)
+        XCTAssertEqual(survivingStore.animationByName["surviving"]?.firstFrame.width, 1)
+    }
+
     func testCustomEmojiLoopMetadataRejectsNonFiniteAndClampsOutOfRangeValues() {
         let formats: [(CFString, CFString)] = [
             (kCGImagePropertyGIFDictionary, kCGImagePropertyGIFLoopCount),
