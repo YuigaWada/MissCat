@@ -1,4 +1,5 @@
 import Combine
+import MisskeyKit
 import SwiftUI
 
 @MainActor
@@ -21,6 +22,7 @@ final class MissCatProductionAccountCoordinator: ObservableObject {
     let notificationScrollCoordinator = MissCatNotificationScrollCoordinator()
     private(set) var discoveryGeneration: MissCatDiscoveryAccountGeneration?
     private(set) var profileAccount: MissCatProfileAccount?
+    private(set) var composeSession: MissCatComposeProductionSession?
     private var people: [String: MissCatPerson] = [:]
     private var attachments: [String: MissCatNoteAttachment] = [:]
 
@@ -43,17 +45,21 @@ final class MissCatProductionAccountCoordinator: ObservableObject {
                 notificationRepository = repository
                 messagingRepository = repository
                 notificationStore = MissCatNotificationsStore(repository: repository)
+                composeSession = try MissCatProductionRootE2ELaunch.composeSession(
+                    for: session.currentAccount.id
+                )
                 phase = .ready(configuration)
                 return
             }
 #endif
             let configuration = try await shellProvider.loadConfiguration()
+            let savedUsers = Cache.UserDefaults.shared.getUsers()
             guard configuration.currentScope.userID == session.currentAccount.userID,
                   MissCatApplicationAccountID(
                     instance: configuration.currentScope.instance,
                     userID: configuration.currentScope.userID
                   ) == session.currentAccount.id,
-                  let user = Cache.UserDefaults.shared.getUsers().first(where: {
+                  let user = savedUsers.first(where: {
                     $0.accountIdentifier == session.currentAccount.id.rawValue
                   }),
                   let apiKey = user.apiKey,
@@ -94,6 +100,30 @@ final class MissCatProductionAccountCoordinator: ObservableObject {
                 instance: user.instance,
                 token: apiKey
             )
+            let savedUsersByAccountID = Dictionary(
+                uniqueKeysWithValues: savedUsers.map { ($0.accountIdentifier, $0) }
+            )
+            let composeAuthorizations: [MissCatComposeProductionSession.Authorization] = session.accounts.compactMap {
+                applicationAccount -> MissCatComposeProductionSession.Authorization? in
+                guard let savedUser = savedUsersByAccountID[applicationAccount.id.rawValue],
+                      let accessToken = savedUser.apiKey,
+                      !accessToken.isEmpty
+                else { return nil }
+                return try? MissCatComposeProductionSession.Authorization(
+                    accountID: savedUser.accountIdentifier,
+                    username: savedUser.username,
+                    instance: savedUser.instance,
+                    avatarURL: applicationAccount.avatarURL,
+                    accessToken: accessToken
+                )
+            }
+            composeSession = try MissCatComposeProductionSession(
+                authorizations: composeAuthorizations,
+                selectedAccountID: session.currentAccount.id.rawValue,
+                visibility: Cache.UserDefaults.shared.getCurrentVisibility()
+                    .flatMap { MissCatComposeVisibility(rawValue: $0.rawValue) }
+                    ?? .public
+            )
             phase = .ready(configuration)
         } catch is CancellationError {
             phase = .loading
@@ -117,6 +147,20 @@ final class MissCatProductionAccountCoordinator: ObservableObject {
 
     func scrollHomeToTop() {
         homeScrollToTopGeneration &+= 1
+    }
+
+    func persistComposeVisibility(
+        accountID: String,
+        visibility: MissCatComposeVisibility
+    ) {
+#if DEBUG
+        if MissCatProductionRootE2ELaunch.isRequested { return }
+#endif
+        guard accountID == session.currentAccount.id.rawValue,
+              Cache.UserDefaults.shared.getCurrentUserId() == session.currentAccount.id.rawValue,
+              let legacyVisibility = Visibility(rawValue: visibility.rawValue)
+        else { return }
+        Cache.UserDefaults.shared.setCurrentVisibility(legacyVisibility)
     }
 
     func remember(_ person: MissCatPerson) {
@@ -229,6 +273,7 @@ struct MissCatProductionApplicationRootView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("production.root")
+        .overlay(alignment: .topLeading) { productionRootE2EStateMarkers }
     }
 
     private func navigationRoot(_ configuration: MissCatShellConfiguration) -> some View {
@@ -462,11 +507,15 @@ struct MissCatProductionApplicationRootView: View {
     ) -> some View {
         switch destination {
         case let .compose(intent):
-            MissCatComposeScreen(
-                viewModel: composeViewModel(intent),
-                onComplete: rootStore.router.dismissFullScreen,
-                onCancel: rootStore.router.dismissFullScreen
-            )
+            if let viewModel = composeViewModel(intent) {
+                MissCatComposeScreen(
+                    viewModel: viewModel,
+                    onComplete: rootStore.router.dismissFullScreen,
+                    onCancel: rootStore.router.dismissFullScreen
+                )
+            } else {
+                unavailable("投稿")
+            }
         case let .media(attachmentID):
             if let attachment = coordinator.attachment(id: attachmentID) {
                 MissCatMediaViewer(attachments: [attachment], selectedID: attachment.id)
@@ -694,14 +743,29 @@ struct MissCatProductionApplicationRootView: View {
 
     private func composeViewModel(
         _ intent: MissCatApplicationComposeIntent
-    ) -> MissCatComposeViewModel {
+    ) -> MissCatComposeViewModel? {
         let mode = composeMode(intent)
+        guard let composeSession = coordinator.composeSession else { return nil }
 #if DEBUG
         if MissCatProductionRootE2ELaunch.isRequested {
-            return MissCatProductionRootE2EComposeFactory.makeViewModel(mode: mode)
+            return MissCatComposeFactory.makeViewModel(
+                mode: mode,
+                session: composeSession,
+                accountSelectionObserver: {
+                    MissCatProductionRootE2EState.shared.recordComposeSelection($0)
+                },
+                transport: MissCatProductionRootE2EComposeTransport(),
+                scopeSelectionObserver: {
+                    MissCatProductionRootE2EState.shared.recordComposeSubmissionScope($0)
+                }
+            )
         }
 #endif
-        return MissCatComposeFactory.makeViewModel(mode: mode)
+        return MissCatComposeFactory.makeViewModel(
+            mode: mode,
+            session: composeSession,
+            visibilityPersistence: coordinator.persistComposeVisibility
+        )
     }
 
     private func composeTarget(_ noteID: String) -> MissCatComposeTarget {
@@ -725,6 +789,37 @@ struct MissCatProductionApplicationRootView: View {
         MissCatProductionRootE2ELaunch.isRequested ? "production.root.visual-ready" : nil
 #else
         nil
+#endif
+    }
+
+    @ViewBuilder
+    private var productionRootE2EStateMarkers: some View {
+#if DEBUG
+        if MissCatProductionRootE2ELaunch.isRequested {
+            VStack(spacing: 0) {
+                Color.clear
+                    .frame(width: 1, height: 1)
+                    .accessibilityElement()
+                    .accessibilityIdentifier("production.root.persisted-account")
+                    .accessibilityValue(
+                        MissCatProductionRootE2EState.shared.persistedAccountID.rawValue
+                    )
+                Color.clear
+                    .frame(width: 1, height: 1)
+                    .accessibilityElement()
+                    .accessibilityIdentifier("production.root.compose-selection-request")
+                    .accessibilityValue(
+                        MissCatProductionRootE2EState.shared.lastComposeSelectionRequest ?? ""
+                    )
+                Color.clear
+                    .frame(width: 1, height: 1)
+                    .accessibilityElement()
+                    .accessibilityIdentifier("production.root.compose-submission-account")
+                    .accessibilityValue(
+                        MissCatProductionRootE2EState.shared.composeSubmissionAccountID ?? ""
+                    )
+            }
+        }
 #endif
     }
 }

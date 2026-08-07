@@ -34,12 +34,105 @@ final class MissCatComposeEnvironmentStore: MissCatComposeEnvironmentProviding {
     }
 
     func persistSelectedAccount(id: String) {
-        cache.changeCurrentUser(userId: id)
+        // The authenticated application root exclusively owns the persisted
+        // current account. A composer may select a submission identity only
+        // when its root-provided session explicitly exposes that identity.
+        _ = id
     }
 
     func persistVisibility(_ visibility: MissCatComposeVisibility) {
         guard let value = Visibility(rawValue: visibility.rawValue) else { return }
         cache.setCurrentVisibility(value)
+    }
+}
+
+/// Immutable credentials and presentation defaults captured from one
+/// authenticated root generation. Compose must never re-read a mutable global
+/// current account while this session is presented.
+struct MissCatComposeProductionSession: Sendable {
+    struct Authorization: Sendable {
+        let account: MissCatComposeAccount
+        let scope: MissCatComposeAccountScope
+
+        init(
+            accountID: String,
+            username: String,
+            instance: String,
+            avatarURL: URL? = nil,
+            accessToken: String
+        ) throws {
+            account = MissCatComposeAccount(
+                id: accountID,
+                username: username,
+                instance: instance,
+                avatarURL: avatarURL
+            )
+            scope = try MissCatComposeAccountScope(
+                accountID: accountID,
+                instance: instance,
+                accessToken: accessToken
+            )
+        }
+    }
+
+    let accounts: [MissCatComposeAccount]
+    let selectedAccountID: String
+    let scopesByAccountID: [String: MissCatComposeAccountScope]
+    let visibility: MissCatComposeVisibility
+
+    init(
+        authorizations: [Authorization],
+        selectedAccountID: String,
+        visibility: MissCatComposeVisibility
+    ) throws {
+        var seen = Set<String>()
+        let unique = authorizations.filter { seen.insert($0.account.id).inserted }
+        guard unique.contains(where: { $0.account.id == selectedAccountID }) else {
+            throw MissCatNativeComposeAPIError.invalidCredentials
+        }
+        accounts = unique.map(\.account)
+        self.selectedAccountID = selectedAccountID
+        scopesByAccountID = Dictionary(
+            uniqueKeysWithValues: unique.map { ($0.account.id, $0.scope) }
+        )
+        self.visibility = visibility
+    }
+}
+
+@MainActor
+final class MissCatSessionBoundComposeEnvironment: MissCatComposeEnvironmentProviding {
+    private let session: MissCatComposeProductionSession
+    private let accountSelectionObserver: (String) -> Void
+    private let visibilityPersistence: (String, MissCatComposeVisibility) -> Void
+    private var selectedAccountID: String
+
+    init(
+        session: MissCatComposeProductionSession,
+        accountSelectionObserver: @escaping (String) -> Void = { _ in },
+        visibilityPersistence: @escaping (String, MissCatComposeVisibility) -> Void = { _, _ in }
+    ) {
+        self.session = session
+        self.accountSelectionObserver = accountSelectionObserver
+        self.visibilityPersistence = visibilityPersistence
+        selectedAccountID = session.selectedAccountID
+    }
+
+    func load() async throws -> MissCatComposeBootstrap {
+        MissCatComposeBootstrap(
+            accounts: session.accounts,
+            selectedAccountID: selectedAccountID,
+            visibility: session.visibility
+        )
+    }
+
+    func persistSelectedAccount(id: String) {
+        guard session.scopesByAccountID[id] != nil else { return }
+        selectedAccountID = id
+        accountSelectionObserver(id)
+    }
+
+    func persistVisibility(_ visibility: MissCatComposeVisibility) {
+        visibilityPersistence(selectedAccountID, visibility)
     }
 }
 
@@ -74,6 +167,8 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
     }
 
     private let userProvider: (String) -> SecureUser?
+    private let injectedScopes: [String: MissCatComposeAccountScope]?
+    private let scopeSelectionObserver: (String) -> Void
     private let transport: any MissCatComposeHTTPTransport
     private let requestTimeout: TimeInterval
     private let journal: MissCatComposeOperationJournalStoring
@@ -86,6 +181,23 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
         journal: MissCatComposeOperationJournalStoring = MissCatComposeOperationJournal()
     ) {
         self.userProvider = userProvider
+        injectedScopes = nil
+        scopeSelectionObserver = { _ in }
+        self.transport = transport
+        self.requestTimeout = requestTimeout
+        self.journal = journal
+    }
+
+    init(
+        scopesByAccountID: [String: MissCatComposeAccountScope],
+        transport: any MissCatComposeHTTPTransport = MissCatComposeURLSessionTransport(),
+        requestTimeout: TimeInterval = MissCatNativeComposeAPIClient.defaultTimeout,
+        journal: MissCatComposeOperationJournalStoring = MissCatComposeOperationJournal(),
+        scopeSelectionObserver: @escaping (String) -> Void = { _ in }
+    ) {
+        userProvider = { _ in nil }
+        injectedScopes = scopesByAccountID
+        self.scopeSelectionObserver = scopeSelectionObserver
         self.transport = transport
         self.requestTimeout = requestTimeout
         self.journal = journal
@@ -121,19 +233,29 @@ final class MissCatComposePostService: MissCatComposeSubmitting {
         progress: @escaping (MissCatComposeUploadProgress) -> Void
     ) async throws {
 
-        guard let user = userProvider(submission.accountID),
-              user.accountIdentifier == submission.accountID,
-              let apiKey = user.apiKey,
-              !apiKey.isEmpty
-        else {
-            throw ServiceError.accountUnavailable
+        let scope: MissCatComposeAccountScope
+        if let injectedScopes {
+            guard let injectedScope = injectedScopes[submission.accountID],
+                  injectedScope.accountID == submission.accountID
+            else {
+                throw ServiceError.accountUnavailable
+            }
+            scope = injectedScope
+        } else {
+            guard let user = userProvider(submission.accountID),
+                  user.accountIdentifier == submission.accountID,
+                  let apiKey = user.apiKey,
+                  !apiKey.isEmpty
+            else {
+                throw ServiceError.accountUnavailable
+            }
+            scope = try MissCatComposeAccountScope(
+                accountID: submission.accountID,
+                instance: user.instance,
+                accessToken: apiKey
+            )
         }
-
-        let scope = try MissCatComposeAccountScope(
-            accountID: submission.accountID,
-            instance: user.instance,
-            accessToken: apiKey
-        )
+        scopeSelectionObserver(scope.accountID)
         let client = MissCatNativeComposeAPIClient(
             scope: scope,
             transport: transport,

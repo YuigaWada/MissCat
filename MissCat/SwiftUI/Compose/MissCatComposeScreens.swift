@@ -15,6 +15,32 @@ enum MissCatComposeFactory {
             nowPlayingProvider: MissCatNowPlayingProvider()
         )
     }
+
+    static func makeViewModel(
+        mode: MissCatComposeMode,
+        draft: MissCatComposeDraft = MissCatComposeDraft(),
+        session: MissCatComposeProductionSession,
+        accountSelectionObserver: @escaping (String) -> Void = { _ in },
+        visibilityPersistence: @escaping (String, MissCatComposeVisibility) -> Void = { _, _ in },
+        transport: any MissCatComposeHTTPTransport = MissCatComposeURLSessionTransport(),
+        scopeSelectionObserver: @escaping (String) -> Void = { _ in }
+    ) -> MissCatComposeViewModel {
+        MissCatComposeViewModel(
+            mode: mode,
+            draft: draft,
+            environment: MissCatSessionBoundComposeEnvironment(
+                session: session,
+                accountSelectionObserver: accountSelectionObserver,
+                visibilityPersistence: visibilityPersistence
+            ),
+            posting: MissCatComposePostService(
+                scopesByAccountID: session.scopesByAccountID,
+                transport: transport,
+                scopeSelectionObserver: scopeSelectionObserver
+            ),
+            nowPlayingProvider: MissCatNowPlayingProvider()
+        )
+    }
 }
 
 struct MissCatNewNoteComposerView: View {

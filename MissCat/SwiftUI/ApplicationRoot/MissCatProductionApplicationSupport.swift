@@ -19,7 +19,9 @@ final class MissCatProductionSessionAdapter: MissCatApplicationSessionProviding 
     func restoreSession() async throws -> MissCatApplicationSession? {
 #if DEBUG
         if MissCatProductionRootE2ELaunch.isRequested {
-            return MissCatProductionRootE2ELaunch.session
+            return MissCatProductionRootE2ELaunch.session(
+                for: MissCatProductionRootE2EState.shared.persistedAccountID
+            )
         }
 #endif
         guard let current = cache.getCurrentUser(),
@@ -40,6 +42,7 @@ final class MissCatProductionSessionAdapter: MissCatApplicationSessionProviding 
         if MissCatProductionRootE2ELaunch.isRequested {
             guard MissCatProductionRootE2ELaunch.session.accounts.contains(where: { $0.id == accountID })
             else { throw MissCatShellConfigurationError.accountNotFound }
+            MissCatProductionRootE2EState.shared.commitRootAccount(accountID)
             return MissCatProductionRootE2ELaunch.session(for: accountID)
         }
 #endif
@@ -156,6 +159,27 @@ enum MissCatProductionRootE2ELaunch {
 
     static var session: MissCatApplicationSession { session(for: primary.id) }
 
+    static func composeSession(
+        for accountID: MissCatApplicationAccountID
+    ) throws -> MissCatComposeProductionSession {
+        let authorizations = try [primary, secondary].map { account in
+            try MissCatComposeProductionSession.Authorization(
+                accountID: account.id.rawValue,
+                username: account.username,
+                instance: account.instance,
+                avatarURL: account.avatarURL,
+                accessToken: account.id == secondary.id
+                    ? "fixture-secondary-compose-token"
+                    : "fixture-primary-compose-token"
+            )
+        }
+        return try MissCatComposeProductionSession(
+            authorizations: authorizations,
+            selectedAccountID: accountID.rawValue,
+            visibility: .public
+        )
+    }
+
     static func session(for accountID: MissCatApplicationAccountID) -> MissCatApplicationSession {
         let current = accountID == secondary.id ? secondary : primary
         let tabs = ["home", "local", "global"].map {
@@ -175,48 +199,37 @@ enum MissCatProductionRootE2ELaunch {
 }
 
 @MainActor
-enum MissCatProductionRootE2EComposeFactory {
-    static func makeViewModel(mode: MissCatComposeMode) -> MissCatComposeViewModel {
-        MissCatComposeViewModel(
-            mode: mode,
-            environment: MissCatProductionRootE2EComposeEnvironment(),
-            posting: MissCatProductionRootE2EComposePosting(),
-            nowPlayingProvider: MissCatEmptyNowPlayingProvider()
-        )
-    }
-}
+final class MissCatProductionRootE2EState {
+    static let shared = MissCatProductionRootE2EState()
 
-@MainActor
-private final class MissCatProductionRootE2EComposeEnvironment:
-    MissCatComposeEnvironmentProviding
-{
-    func load() async throws -> MissCatComposeBootstrap {
-        let accounts = [
-            MissCatProductionRootE2ELaunch.primary,
-            MissCatProductionRootE2ELaunch.secondary,
-        ].map {
-            MissCatComposeAccount(
-                id: $0.id.rawValue,
-                username: $0.username,
-                instance: $0.instance
-            )
-        }
-        return MissCatComposeBootstrap(
-            accounts: accounts,
-            selectedAccountID: MissCatProductionRootE2ELaunch.secondary.id.rawValue,
-            visibility: .public
-        )
+    private(set) var persistedAccountID = MissCatProductionRootE2ELaunch.primary.id
+    private(set) var composeSelectionRequests: [String] = []
+    private(set) var composeSubmissionAccountID: String?
+
+    func commitRootAccount(_ accountID: MissCatApplicationAccountID) {
+        persistedAccountID = accountID
     }
 
-    func persistSelectedAccount(id: String) {}
-    func persistVisibility(_ visibility: MissCatComposeVisibility) {}
+    func recordComposeSelection(_ accountID: String) {
+        composeSelectionRequests.append(accountID)
+    }
+
+    func recordComposeSubmissionScope(_ accountID: String) {
+        composeSubmissionAccountID = accountID
+    }
+
+    var lastComposeSelectionRequest: String? { composeSelectionRequests.last }
 }
 
-@MainActor
-private final class MissCatProductionRootE2EComposePosting: MissCatComposeSubmitting {
-    func submit(
-        _ submission: MissCatComposeSubmission,
-        progress: @escaping (MissCatComposeUploadProgress) -> Void
-    ) async throws {}
+struct MissCatProductionRootE2EComposeTransport: MissCatComposeHTTPTransport {
+    func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        let response = HTTPURLResponse(
+            url: request.url!,
+            statusCode: 200,
+            httpVersion: "HTTP/1.1",
+            headerFields: ["Content-Type": "application/json"]
+        )!
+        return (Data(#"{"createdNote":{"id":"fixture-created-note"}}"#.utf8), response)
+    }
 }
 #endif
