@@ -103,6 +103,28 @@ final class MissCatFeedStoreTests: XCTestCase {
         )
     }
 
+    func testInitialEmptyFailureAndRetryReachTerminalStates() async {
+        let emptyRepository = MockMissCatFeedRepository()
+        emptyRepository.pages = [.init(notes: [], hasMore: false)]
+        let emptyStore = MissCatFeedStore(source: .local, repository: emptyRepository)
+        await emptyStore.loadInitial()
+        XCTAssertEqual(emptyStore.phase, .empty)
+        XCTAssertFalse(emptyStore.canLoadMore)
+
+        let retryRepository = MockMissCatFeedRepository()
+        retryRepository.pageErrorsByIndex = [0: TestFeedError.failed]
+        retryRepository.pages = [.init(notes: [note("recovered")], hasMore: false)]
+        let retryStore = MissCatFeedStore(source: .home, repository: retryRepository)
+        await retryStore.loadInitial()
+        XCTAssertEqual(retryStore.phase, .failed(message: "test failure"))
+
+        await retryStore.retry()
+        XCTAssertEqual(retryStore.phase, .loaded)
+        XCTAssertEqual(retryStore.notes.map(\.id), ["recovered"])
+        XCTAssertNil(retryStore.actionErrorMessage)
+        XCTAssertEqual(retryRepository.requestedPages.count, 2)
+    }
+
     func testRefreshPrependsNewNotesWithoutDuplicates() async {
         let repository = MockMissCatFeedRepository()
         repository.pages = [
@@ -212,6 +234,34 @@ final class MissCatFeedStoreTests: XCTestCase {
         await waitUntil { store.notes.first?.myReaction == nil }
         XCTAssertNil(store.notes.first?.myReaction)
         XCTAssertFalse(try! XCTUnwrap(store.notes.first?.reactions.first).isMine)
+    }
+
+    func testRealtimeDuplicateInsertAndPollVoteReconcileOneRow() async {
+        let repository = MockMissCatFeedRepository()
+        var initial = note("one")
+        initial.poll = MissCatPoll(
+            choices: [
+                .init(id: 0, text: "yes", votes: 0),
+                .init(id: 1, text: "no", votes: 0),
+            ],
+            allowsMultipleChoices: false
+        )
+        repository.pages = [.init(notes: [initial], hasMore: false)]
+        let store = MissCatFeedStore(source: .social, repository: repository)
+
+        await store.loadInitial()
+        await waitForRealtimeContinuation(repository)
+        var replacement = initial
+        replacement.text = "updated"
+        repository.realtimeContinuation?.yield(.inserted(replacement))
+        repository.realtimeContinuation?.yield(.inserted(replacement))
+        repository.realtimeContinuation?.yield(.pollVote(noteID: "one", choice: 1, isMine: true))
+        await waitUntil { store.notes.first?.poll?.choices[1].votes == 1 }
+
+        XCTAssertEqual(store.notes.count, 1)
+        XCTAssertEqual(store.notes.first?.text, "updated")
+        XCTAssertEqual(store.notes.first?.poll?.choices.map(\.votes), [0, 1])
+        XCTAssertEqual(store.notes.first?.poll?.choices.map(\.isVoted), [false, true])
     }
 
     func testFavoriteActionIsOptimisticAndRollsBackOnFailure() async {

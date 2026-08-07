@@ -101,6 +101,36 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         XCTAssertEqual(note.poll?.choices.first?.votes, 3)
     }
 
+    func testTimelineRepositoriesNeverSubstituteAnotherAccountsCredential() async throws {
+        var requests: [URLRequest] = []
+        FeedURLProtocolStub.handler = { request in
+            requests.append(request)
+            return Self.response(for: request, json: [Self.noteJSON(id: "bound-note")])
+        }
+        let other = MissCatMisskeyFeedRepository(
+            session: MissCatFeedSession(
+                accountID: "other-user",
+                username: "bob",
+                instance: "example.invalid",
+                apiKey: "other-token"
+            ),
+            urlSession: urlSession
+        )
+
+        _ = try await makeSubject().fetchPage(source: .home, cursor: nil, limit: 20)
+        _ = try await other.fetchPage(source: .global, cursor: nil, limit: 20)
+
+        XCTAssertEqual(requests.compactMap { $0.url?.path }, [
+            "/api/notes/timeline",
+            "/api/notes/global-timeline",
+        ])
+        let tokens = try requests.map {
+            let body = try XCTUnwrap($0.feedBodyData).feedJSONObject
+            return try XCTUnwrap(body["i"] as? String)
+        }
+        XCTAssertEqual(tokens, ["account-token", "other-token"])
+    }
+
     func testTimelineSynthesizesCanonicalEmojiURLsWhenModernPayloadOmitsEmojiMaps() async throws {
         FeedURLProtocolStub.handler = { request in
             var local = Self.noteJSON(id: "note-local")
