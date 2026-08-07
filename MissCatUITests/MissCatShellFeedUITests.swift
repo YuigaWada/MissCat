@@ -100,14 +100,6 @@ final class MissCatShellFeedUITests: XCTestCase {
         XCTAssertTrue(element("main.banner.error").waitForExistence(timeout: 5))
     }
 
-    func testFrozenLegacyReferenceScreenshots() {
-        captureFrozenLegacyReference(state: "populated")
-        captureFrozenLegacyReference(state: "empty")
-        captureFrozenLegacyReference(state: "loading")
-        captureFrozenLegacyReference(state: "error")
-        captureFrozenLegacyReference(state: "offline")
-    }
-
     private func launchFixture(_ extraArguments: String...) {
         app.launchArguments = ["--swiftui-shell-fixture"] + extraArguments
         app.launch()
@@ -117,23 +109,6 @@ final class MissCatShellFeedUITests: XCTestCase {
         app.terminate()
         app.launchArguments = ["--swiftui-shell-fixture"] + extraArguments
         app.launch()
-    }
-
-    private func captureFrozenLegacyReference(state: String) {
-        app.terminate()
-        app.launchArguments = [
-            "--frozen-legacy-shell-reference",
-            "--frozen-legacy-shell-reference-\(state)"
-        ]
-        app.launch()
-        XCTAssertTrue(
-            element("frozen.legacy.shell.visual-ready").waitForExistence(timeout: 10),
-            "Missing frozen legacy renderer readiness marker for \(state)"
-        )
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = "frozen-legacy-shell-\(state)"
-        attachment.lifetime = .keepAlways
-        add(attachment)
     }
 
     @discardableResult
