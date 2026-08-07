@@ -214,9 +214,11 @@ public struct MissCatDiscoveryScreen: View {
             HStack(spacing: 0) {
                 noteResults
                     .frame(width: proxy.size.width)
+                    .padding(.top, 8)
                     .simultaneousGesture(resultSwipeGesture)
                 userResults
                     .frame(width: proxy.size.width)
+                    .padding(.top, 8)
                     .simultaneousGesture(resultSwipeGesture)
             }
             .frame(width: proxy.size.width * 2, alignment: .leading)
