@@ -7,11 +7,12 @@
 
 import CryptoKit
 import Foundation
+import Observation
 import SwiftUI
 
 @main
 struct MissCatApp: App {
-    @StateObject private var applicationState = ApplicationState()
+    @State private var applicationState = ApplicationState()
 
     var body: some Scene {
         WindowGroup {
@@ -20,11 +21,11 @@ struct MissCatApp: App {
                 MissCatSharedKeychainE2EView(mode: probeMode)
             } else {
                 MissCatRootView()
-                    .environmentObject(applicationState)
+                    .environment(applicationState)
             }
 #else
             MissCatRootView()
-                .environmentObject(applicationState)
+                .environment(applicationState)
 #endif
         }
     }
@@ -34,11 +35,12 @@ struct MissCatApp: App {
 /// The application root store remains the single source of truth for account,
 /// navigation, and modal state.
 @MainActor
-final class ApplicationState: ObservableObject {
-    @Published private(set) var isCompletingAuthentication = false
-    @Published private(set) var canRetryAuthentication = false
-    @Published private(set) var authenticationFlowGeneration = 0
-    @Published var errorMessage: String?
+@Observable
+final class ApplicationState {
+    private(set) var isCompletingAuthentication = false
+    private(set) var canRetryAuthentication = false
+    private(set) var authenticationFlowGeneration = 0
+    var errorMessage: String?
 
     private let authenticationService = MissCatAuthenticationService()
     let applicationRootStore: MissCatApplicationRootStore
@@ -136,7 +138,7 @@ final class ApplicationState: ObservableObject {
 }
 
 struct MissCatRootView: View {
-    @EnvironmentObject private var applicationState: ApplicationState
+    @Environment(ApplicationState.self) private var applicationState
 
 #if DEBUG
     private let acceptanceFixture = MissCatLoginProfileFixtureRoute.parse()
@@ -220,6 +222,7 @@ struct MissCatRootView: View {
             }
         } message: {
             Text(applicationState.errorMessage ?? "")
+                .accessibilityIdentifier("visual-ready.login-start.error")
         }
     }
 
@@ -230,7 +233,7 @@ struct MissCatRootView: View {
 }
 
 private struct MissCatApplicationPhaseView: View {
-    @ObservedObject var applicationState: ApplicationState
+    let applicationState: ApplicationState
     @Bindable private var rootStore: MissCatApplicationRootStore
 
     init(applicationState: ApplicationState) {

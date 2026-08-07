@@ -92,6 +92,7 @@ public struct MissCatAuthenticationBrowserView: View {
     @State private var hasOpenedRegistration = false
     @State private var hasReportedCallback = false
     @State private var authenticationWasCancelled = false
+    @State private var authenticationFailureMessage: String?
 
     private let authenticationSessionRunner: AuthenticationSessionRunner?
     private let registrationURLHandler: RegistrationURLHandler?
@@ -165,6 +166,9 @@ public struct MissCatAuthenticationBrowserView: View {
             }
         }
         .accessibilityIdentifier("authentication.browser")
+        .overlay(alignment: .topLeading) {
+            MissCatAuthenticationMarker(identifier: visualReadyIdentifier)
+        }
         .onAppear(perform: openRegistrationIfNeeded)
         .task(id: authenticationTaskID) {
             await authenticateIfNeeded()
@@ -208,7 +212,22 @@ public struct MissCatAuthenticationBrowserView: View {
     @ViewBuilder
     private var authenticationStatus: some View {
         VStack(spacing: 18) {
-            if authenticationWasCancelled {
+            if hasReportedCallback {
+                Image(systemName: "checkmark.circle")
+                    .font(.system(size: 40, weight: .regular))
+                Text("認証結果を確認しています")
+                    .font(.headline)
+            } else if let authenticationFailureMessage {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.system(size: 40, weight: .regular))
+                Text(authenticationFailureMessage)
+                    .font(.headline)
+                    .multilineTextAlignment(.center)
+                Button("再試行", action: retryAuthentication)
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color(hex: "86B900"))
+                    .accessibilityIdentifier("authentication.retry")
+            } else if authenticationWasCancelled {
                 Image(systemName: "xmark.circle")
                     .font(.system(size: 40, weight: .regular))
                 Text("認証がキャンセルされました")
@@ -231,6 +250,16 @@ public struct MissCatAuthenticationBrowserView: View {
 
     private var authenticationTaskID: String {
         "\(stage.rawValue):\(attempt):\(activeRequest.url?.absoluteString ?? "missing")"
+    }
+
+    private var visualReadyIdentifier: String {
+        if hasReportedCallback {
+            return "visual-ready.login-auth-browser.callback"
+        }
+        if authenticationFailureMessage != nil || authenticationWasCancelled {
+            return "visual-ready.login-auth-browser.error"
+        }
+        return "visual-ready.login-auth-browser.loading"
     }
 
     private func openRegistrationIfNeeded() {
@@ -279,6 +308,7 @@ public struct MissCatAuthenticationBrowserView: View {
 
     private func retryAuthentication() {
         authenticationWasCancelled = false
+        authenticationFailureMessage = nil
         attempt += 1
     }
 
@@ -300,7 +330,9 @@ public struct MissCatAuthenticationBrowserView: View {
         do {
             let callbackURL = try await runAuthenticationSession(using: url)
             guard callbackMatches(callbackURL) else {
-                onFailure(MissCatAuthenticationBrowserError.invalidCallback)
+                let error = MissCatAuthenticationBrowserError.invalidCallback
+                authenticationFailureMessage = error.localizedDescription
+                onFailure(error)
                 return
             }
             guard !hasReportedCallback else { return }
@@ -310,6 +342,8 @@ public struct MissCatAuthenticationBrowserView: View {
             if MissCatAuthenticationBrowserPolicy.isCancellation(error) {
                 authenticationWasCancelled = true
             } else {
+                authenticationFailureMessage = (error as? LocalizedError)?.errorDescription
+                    ?? error.localizedDescription
                 onFailure(error)
             }
         }

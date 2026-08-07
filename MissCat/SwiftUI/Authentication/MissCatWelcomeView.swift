@@ -49,6 +49,7 @@ public struct MissCatWelcomeView: View {
     public let onChangeInstance: () -> Void
 
     @State private var controlsAreVisible = false
+    @State private var visualIsReady = false
 
     public init(
         instance: String = "misskey.io",
@@ -166,14 +167,28 @@ public struct MissCatWelcomeView: View {
         }
         .onAppear {
             controlsAreVisible = false
+            visualIsReady = false
             withAnimation(.easeInOut(duration: 0.7)) {
                 controlsAreVisible = true
             }
         }
-        .overlay(alignment: .topLeading) {
-            MissCatAuthenticationMarker(identifier: "welcome.screen")
+        .task {
+            do {
+                try await Task.sleep(for: .milliseconds(700))
+            } catch {
+                return
+            }
+            visualIsReady = true
         }
-        .preferredColorScheme(.light)
+        .overlay(alignment: .topLeading) {
+            VStack(spacing: 0) {
+                MissCatAuthenticationMarker(identifier: "welcome.screen")
+                MissCatAuthenticationMarker(
+                    identifier: "visual-ready.login-start.default",
+                    value: visualIsReady ? "true" : "false"
+                )
+            }
+        }
     }
 
     private func welcomeButton(

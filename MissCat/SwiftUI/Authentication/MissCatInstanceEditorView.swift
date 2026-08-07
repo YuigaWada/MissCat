@@ -51,7 +51,10 @@ public struct MissCatInstanceEditorView: View {
                 }
             }
             .overlay {
-                MissCatAuthenticationMarker(identifier: "instance.screen")
+                VStack(spacing: 0) {
+                    MissCatAuthenticationMarker(identifier: "instance.screen")
+                    MissCatAuthenticationMarker(identifier: visualReadyIdentifier)
+                }
             }
     }
 
@@ -73,6 +76,14 @@ public struct MissCatInstanceEditorView: View {
 
     nonisolated public static func resolve(_ value: String) -> String {
         normalize(value.isEmpty ? "misskey.io" : value)
+    }
+
+    private var visualReadyIdentifier: String {
+        let candidate = Self.resolve(draft)
+        if !draft.isEmpty, (try? MissCatInstance.normalize(candidate)) == nil {
+            return "visual-ready.login-instance.invalid"
+        }
+        return "visual-ready.login-instance.default"
     }
 
     private func apply() {

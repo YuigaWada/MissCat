@@ -159,7 +159,11 @@ final class MissCatProfileOrdinaryDiscoveryRepository:
 }
 
 enum MissCatLoginProfileFixtureRoute: Equatable {
-    case authentication(failPreparationOnce: Bool, failBrowserOnce: Bool)
+    case authentication(
+        failPreparationOnce: Bool,
+        failBrowserOnce: Bool,
+        cancelBrowserOnce: Bool
+    )
     case profile(
         failUnfollowOnce: Bool,
         failEditOnce: Bool,
@@ -172,7 +176,8 @@ enum MissCatLoginProfileFixtureRoute: Equatable {
         if arguments.contains("--login-profile-auth") {
             return .authentication(
                 failPreparationOnce: arguments.contains("--login-profile-auth-prepare-error"),
-                failBrowserOnce: arguments.contains("--login-profile-auth-browser-error")
+                failBrowserOnce: arguments.contains("--login-profile-auth-browser-error"),
+                cancelBrowserOnce: arguments.contains("--login-profile-auth-cancel-browser")
             )
         }
         if arguments.contains("--login-profile-profile") {
@@ -192,10 +197,11 @@ struct MissCatLoginProfileFixtureRoot: View {
 
     var body: some View {
         switch route {
-        case let .authentication(failPreparationOnce, failBrowserOnce):
+        case let .authentication(failPreparationOnce, failBrowserOnce, cancelBrowserOnce):
             MissCatAuthenticationFixtureHarness(
                 failPreparationOnce: failPreparationOnce,
-                failBrowserOnce: failBrowserOnce
+                failBrowserOnce: failBrowserOnce,
+                cancelBrowserOnce: cancelBrowserOnce
             )
         case let .profile(failUnfollowOnce, failEditOnce, startsAtSelfProfile, usesOuterShell):
             MissCatProfileFixtureHarness(
@@ -228,19 +234,36 @@ private final class MissCatAuthenticationFixtureController: ObservableObject {
     @Published var errorMessage: String?
     @Published var completed = false
     @Published private(set) var callbackCount = 0
+    @Published private(set) var authorizationRequestCount = 0
+    @Published private(set) var authenticationSessionRequestCount = 0
+    @Published private(set) var registrationOpenCount = 0
+    @Published private(set) var sessionIsPending = false
 
     private var shouldFailPreparation: Bool
     private var shouldFailBrowser: Bool
+    private var shouldCancelBrowser: Bool
+    private var requestedSessionResolution: SessionResolution?
 
-    init(failPreparationOnce: Bool, failBrowserOnce: Bool) {
+    private enum SessionResolution {
+        case complete
+        case cancel
+    }
+
+    init(
+        failPreparationOnce: Bool,
+        failBrowserOnce: Bool,
+        cancelBrowserOnce: Bool
+    ) {
         shouldFailPreparation = failPreparationOnce
         shouldFailBrowser = failBrowserOnce
+        shouldCancelBrowser = cancelBrowserOnce
     }
 
     func makeAuthorizationRequest(
         _ intent: MissCatAuthenticationIntent,
         instance: String
     ) async throws -> URLRequest {
+        authorizationRequestCount += 1
         guard (try? MissCatInstance.normalize(instance)) != nil else {
             throw FixtureError.invalidInstance
         }
@@ -272,15 +295,46 @@ private final class MissCatAuthenticationFixtureController: ObservableObject {
         precondition(url.scheme == "https")
         precondition(callbackScheme == MissCatAuthenticationBrowserPolicy.callbackScheme)
         _ = sessionKind
+        authenticationSessionRequestCount += 1
         if shouldFailBrowser {
             shouldFailBrowser = false
             throw FixtureError.browser
         }
-        return URL(string: "misscat://auth?session=fixture-session")!
+
+        requestedSessionResolution = nil
+        sessionIsPending = true
+        defer { sessionIsPending = false }
+        while requestedSessionResolution == nil {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+
+        switch requestedSessionResolution {
+        case .complete:
+            return URL(string: "misscat://auth?session=fixture-session")!
+        case .cancel:
+            throw CancellationError()
+        case nil:
+            preconditionFailure("A pending fixture session must resolve exactly once")
+        }
     }
 
     func openRegistration(_ url: URL) {
         precondition(url == URL(string: "https://fixture.invalid/signup"))
+        registrationOpenCount += 1
+    }
+
+    var sessionControlIsCancellation: Bool {
+        shouldCancelBrowser
+    }
+
+    func resolvePendingSession() {
+        guard sessionIsPending, requestedSessionResolution == nil else { return }
+        if shouldCancelBrowser {
+            shouldCancelBrowser = false
+            requestedSessionResolution = .cancel
+        } else {
+            requestedSessionResolution = .complete
+        }
     }
 
     func complete(_ url: URL) {
@@ -305,11 +359,16 @@ private final class MissCatAuthenticationFixtureController: ObservableObject {
 private struct MissCatAuthenticationFixtureHarness: View {
     @StateObject private var controller: MissCatAuthenticationFixtureController
 
-    init(failPreparationOnce: Bool, failBrowserOnce: Bool) {
+    init(
+        failPreparationOnce: Bool,
+        failBrowserOnce: Bool,
+        cancelBrowserOnce: Bool
+    ) {
         _controller = StateObject(
             wrappedValue: MissCatAuthenticationFixtureController(
                 failPreparationOnce: failPreparationOnce,
-                failBrowserOnce: failBrowserOnce
+                failBrowserOnce: failBrowserOnce,
+                cancelBrowserOnce: cancelBrowserOnce
             )
         )
     }
@@ -327,6 +386,9 @@ private struct MissCatAuthenticationFixtureHarness: View {
                 }
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("authentication.fixture.completed")
+                .overlay(alignment: .topLeading) {
+                    fixtureStateMarkers
+                }
             } else {
                 MissCatAuthenticationFlowView(
                     initialInstance: "misskey.io",
@@ -339,6 +401,23 @@ private struct MissCatAuthenticationFixtureHarness: View {
                     onFailure: controller.fail
                 )
                 .id(controller.generation)
+                .overlay(alignment: .bottom) {
+                    if controller.sessionIsPending {
+                        Button(
+                            controller.sessionControlIsCancellation
+                                ? "システム認証をキャンセル"
+                                : "認証を完了",
+                            action: controller.resolvePendingSession
+                        )
+                        .buttonStyle(.borderedProminent)
+                        .accessibilityIdentifier(
+                            controller.sessionControlIsCancellation
+                                ? "authentication.fixture.cancel-session"
+                                : "authentication.fixture.complete-session"
+                        )
+                        .padding(.bottom, 48)
+                    }
+                }
             }
         }
         .alert(
@@ -355,7 +434,23 @@ private struct MissCatAuthenticationFixtureHarness: View {
         } message: {
             Text(controller.errorMessage ?? "")
         }
-        .preferredColorScheme(.light)
+    }
+
+    private var fixtureStateMarkers: some View {
+        VStack(spacing: 0) {
+            MissCatAuthenticationMarker(
+                identifier: "authentication.fixture.session-request-count",
+                value: String(controller.authenticationSessionRequestCount)
+            )
+            MissCatAuthenticationMarker(
+                identifier: "authentication.fixture.authorization-request-count",
+                value: String(controller.authorizationRequestCount)
+            )
+            MissCatAuthenticationMarker(
+                identifier: "authentication.fixture.registration-open-count",
+                value: String(controller.registrationOpenCount)
+            )
+        }
     }
 }
 

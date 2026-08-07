@@ -78,7 +78,22 @@ final class MissCatProfileNavigationAcceptanceTests: XCTestCase {
                 "MissCat", "--login-profile-fixture", "--login-profile-auth",
                 "--login-profile-auth-prepare-error"
             ]),
-            .authentication(failPreparationOnce: true, failBrowserOnce: false)
+            .authentication(
+                failPreparationOnce: true,
+                failBrowserOnce: false,
+                cancelBrowserOnce: false
+            )
+        )
+        XCTAssertEqual(
+            MissCatLoginProfileFixtureRoute.parse([
+                "MissCat", "--login-profile-fixture", "--login-profile-auth",
+                "--login-profile-auth-cancel-browser"
+            ]),
+            .authentication(
+                failPreparationOnce: false,
+                failBrowserOnce: false,
+                cancelBrowserOnce: true
+            )
         )
         XCTAssertEqual(
             MissCatLoginProfileFixtureRoute.parse([

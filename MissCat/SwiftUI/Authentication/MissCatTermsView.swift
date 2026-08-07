@@ -22,6 +22,16 @@ public struct MissCatTermsView: View {
                     .padding(.horizontal, MissCatLegacyMetrics.termsTextHorizontalInset)
                     .padding(.vertical, MissCatLegacyMetrics.termsTextVerticalInset)
                     .textSelection(.enabled)
+                    .overlay(alignment: .topLeading) {
+                        MissCatAuthenticationMarker(
+                            identifier: "visual-ready.login-terms.top"
+                        )
+                    }
+                    .overlay(alignment: .bottomLeading) {
+                        MissCatAuthenticationMarker(
+                            identifier: "visual-ready.login-terms.bottom"
+                        )
+                    }
             }
             .accessibilityIdentifier("terms.text")
 

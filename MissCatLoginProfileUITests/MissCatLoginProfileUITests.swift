@@ -58,7 +58,7 @@ final class MissCatLoginProfileUITests: XCTestCase {
 
         app.buttons["welcome.login"].tap()
         app.buttons["terms.agree"].tap()
-        let complete = app.links["認証を完了"]
+        let complete = app.buttons["authentication.fixture.complete-session"]
         XCTAssertTrue(complete.waitForExistence(timeout: 10))
         complete.tap()
         XCTAssertTrue(element("authentication.fixture.completed").waitForExistence(timeout: 5))
@@ -83,7 +83,10 @@ final class MissCatLoginProfileUITests: XCTestCase {
         browserAlert.buttons["再試行"].tap()
         XCTAssertTrue(element("welcome.screen").waitForExistence(timeout: 5))
         advanceToAuthorization()
-        XCTAssertTrue(app.links["認証を完了"].waitForExistence(timeout: 10))
+        XCTAssertTrue(
+            app.buttons["authentication.fixture.complete-session"]
+                .waitForExistence(timeout: 10)
+        )
     }
 
     func testAuthenticationSystemCancellationRetriesTheSamePendingRequest() {
