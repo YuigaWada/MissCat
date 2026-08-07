@@ -10,9 +10,9 @@
 #if DEBUG
 import CryptoKit
 #endif
+import AuthenticationServices
 import Security
 import UIKit
-import WebKit
 import XCTest
 
 #if DEBUG
@@ -321,66 +321,63 @@ final class InstanceEditorBehaviorTests: XCTestCase {
 }
 
 final class AuthenticationCallbackSecurityTests: XCTestCase {
-    private let expected = "https://misscat.dev"
+    private let expected = "misscat://auth"
+    private let legacyExpected = "https://misscat.dev"
     private let sessionID = UUID(uuidString: "11111111-2222-3333-4444-555555555555")!
 
-    func testExactAndNormalizedCallbackOriginsMatch() throws {
-        XCTAssertTrue(matches("https://misscat.dev?session=11111111-2222-3333-4444-555555555555"))
-        XCTAssertTrue(matches("https://MISSCAT.DEV:443/?session=11111111-2222-3333-4444-555555555555"))
+    func testDedicatedApplicationCallbackMatchesExactly() throws {
+        XCTAssertTrue(matches("misscat://auth?session=11111111-2222-3333-4444-555555555555"))
+        XCTAssertTrue(matches("MISSCAT://AUTH/?session=11111111-2222-3333-4444-555555555555"))
     }
 
     func testSchemePortPathSessionAndShapeMustMatch() throws {
-        XCTAssertFalse(matches("https://misscat.dev"))
-        XCTAssertFalse(matches("http://misscat.dev?session=11111111-2222-3333-4444-555555555555"))
-        XCTAssertFalse(matches("https://misscat.dev:444/?session=11111111-2222-3333-4444-555555555555"))
-        XCTAssertFalse(matches("https://misscat.dev/callback?session=11111111-2222-3333-4444-555555555555"))
-        XCTAssertFalse(matches("https://misscat.dev/?session=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"))
-        XCTAssertFalse(matches("https://misscat.dev/?session=11111111-2222-3333-4444-555555555555&extra=true"))
-        XCTAssertFalse(matches("https://misscat.dev/?session=11111111-2222-3333-4444-555555555555#complete"))
+        XCTAssertFalse(matches("misscat://auth"))
+        XCTAssertFalse(matches("https://auth?session=11111111-2222-3333-4444-555555555555"))
+        XCTAssertFalse(matches("misscat://auth:444/?session=11111111-2222-3333-4444-555555555555"))
+        XCTAssertFalse(matches("misscat://auth/callback?session=11111111-2222-3333-4444-555555555555"))
+        XCTAssertFalse(matches("misscat://auth/?session=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"))
+        XCTAssertFalse(matches("misscat://auth/?session=11111111-2222-3333-4444-555555555555&extra=true"))
+        XCTAssertFalse(matches("misscat://auth/?session=11111111-2222-3333-4444-555555555555#complete"))
     }
 
     func testLookalikeEmbeddedAndEncodedCallbackURLsDoNotMatch() throws {
         let query = "session=11111111-2222-3333-4444-555555555555"
-        XCTAssertFalse(matches("https://misscat.dev.evil.invalid/?\(query)"))
-        XCTAssertFalse(matches("https://misscat.dev@evil.invalid/?\(query)"))
-        XCTAssertFalse(matches("https://evil.invalid/?next=https://misscat.dev&\(query)"))
-        XCTAssertFalse(matches("https://evil.invalid/#https://misscat.dev?\(query)"))
-        XCTAssertFalse(matches("https://evil.invalid/https%3A%2F%2Fmisscat.dev?\(query)"))
-        XCTAssertFalse(matches("https://%6Disscat.dev/?\(query)"))
-        XCTAssertFalse(matches("https://misscat.dev/?%73ession=11111111-2222-3333-4444-555555555555"))
+        XCTAssertFalse(matches("misscat://auth.evil.invalid/?\(query)"))
+        XCTAssertFalse(matches("misscat://auth@evil.invalid/?\(query)"))
+        XCTAssertFalse(matches("https://evil.invalid/?next=misscat://auth&\(query)"))
+        XCTAssertFalse(matches("https://evil.invalid/#misscat://auth?\(query)"))
+        XCTAssertFalse(matches("https://evil.invalid/misscat%3A%2F%2Fauth?\(query)"))
+        XCTAssertFalse(matches("misscat://%61uth/?\(query)"))
+        XCTAssertFalse(matches("misscat://auth/?%73ession=11111111-2222-3333-4444-555555555555"))
     }
 
-    func testCallbackGateReportsOnlyTheFirstMatchingNavigation() throws {
-        var gate = MissCatAuthenticationCallbackGate()
-        let attacker = try XCTUnwrap(URL(string: "https://evil.invalid/?next=https://misscat.dev"))
-        let callback = try XCTUnwrap(URL(string: "https://misscat.dev?session=11111111-2222-3333-4444-555555555555"))
-        let duplicate = try XCTUnwrap(URL(string: "https://misscat.dev/?session=11111111-2222-3333-4444-555555555555"))
-        let matcher: (URL) -> Bool = {
-            MissCatAuthenticationCallbackMatcher.matches(
-                $0,
-                expectedURLString: self.expected,
-                expectedSessionID: self.sessionID
-            )
-        }
-
-        XCTAssertFalse(gate.shouldReport(attacker, matching: matcher))
-        XCTAssertTrue(gate.shouldReport(callback, matching: matcher))
-        XCTAssertFalse(gate.shouldReport(callback, matching: matcher))
-        XCTAssertFalse(gate.shouldReport(duplicate, matching: matcher))
+    func testLegacyHTTPSCallbackRemainsStrictlyAcceptedDuringMigration() {
+        XCTAssertTrue(matches(
+            "https://misscat.dev?session=11111111-2222-3333-4444-555555555555",
+            expected: legacyExpected
+        ))
+        XCTAssertFalse(matches(
+            "https://misscat.dev.evil.invalid/?session=11111111-2222-3333-4444-555555555555",
+            expected: legacyExpected
+        ))
+        XCTAssertFalse(matches(
+            "https://misscat.dev/callback?session=11111111-2222-3333-4444-555555555555",
+            expected: legacyExpected
+        ))
     }
 
-    private func matches(_ value: String) -> Bool {
+    private func matches(_ value: String, expected: String? = nil) -> Bool {
         guard let url = URL(string: value) else { return false }
         return MissCatAuthenticationCallbackMatcher.matches(
             url,
-            expectedURLString: expected,
+            expectedURLString: expected ?? self.expected,
             expectedSessionID: sessionID
         )
     }
 }
 
 @MainActor
-final class AuthenticationWebsiteDataPolicyTests: XCTestCase {
+final class AuthenticationSessionPolicyTests: XCTestCase {
     private let loginRequest = URLRequest(
         url: URL(string: "https://misskey.io/miauth/test-session")!
     )
@@ -395,86 +392,38 @@ final class AuthenticationWebsiteDataPolicyTests: XCTestCase {
         XCTAssertEqual(browser.websiteDataPolicy, .preserveSession)
     }
 
-    func testNormalAuthenticationUsesPersistentDefaultWebsiteDataStore() {
-        let configuration = MissCatAuthenticationBrowserPolicy.configuration()
-
-        XCTAssertTrue(configuration.websiteDataStore.isPersistent)
-        XCTAssertTrue(configuration.websiteDataStore === WKWebsiteDataStore.default())
-    }
-
-    func testNormalLoginRetryAndRelaunchNeverClearWebsiteData() {
-        var loadCount = 0
-        var clearedHosts: [String] = []
-
-        for _ in 0..<3 {
-            let plan = MissCatAuthenticationBrowserPolicy.initialLoadPlan(
-                for: loginRequest,
-                websiteDataPolicy: .preserveSession
-            )
-            MissCatAuthenticationBrowserPolicy.performInitialLoad(
-                plan: plan,
-                load: { loadCount += 1 },
-                clearSelectedInstance: { host, completion in
-                    clearedHosts.append(host)
-                    completion()
-                }
-            )
-        }
-
-        XCTAssertEqual(loadCount, 3)
-        XCTAssertTrue(clearedHosts.isEmpty)
-    }
-
-    func testWebsiteDataClearingRequiresExplicitAccountSwitchAndLoadsOnce() {
-        let plan = MissCatAuthenticationBrowserPolicy.initialLoadPlan(
-            for: loginRequest,
-            websiteDataPolicy: .clearForExplicitAccountSwitch
-        )
-        var loadCount = 0
-        var clearedHosts: [String] = []
-
-        MissCatAuthenticationBrowserPolicy.performInitialLoad(
-            plan: plan,
-            load: { loadCount += 1 },
-            clearSelectedInstance: { host, completion in
-                clearedHosts.append(host)
-                completion()
-            }
-        )
-
-        XCTAssertEqual(clearedHosts, ["misskey.io"])
-        XCTAssertEqual(loadCount, 1)
-    }
-
-    func testExplicitClearScopesRecordsToSelectedInstanceDomain() {
-        XCTAssertTrue(MissCatAuthenticationBrowserPolicy.shouldClearRecord(
-            displayName: "misskey.io",
-            selectedHost: "misskey.io"
-        ))
-        XCTAssertTrue(MissCatAuthenticationBrowserPolicy.shouldClearRecord(
-            displayName: ".misskey.io",
-            selectedHost: "auth.misskey.io"
-        ))
-        XCTAssertFalse(MissCatAuthenticationBrowserPolicy.shouldClearRecord(
-            displayName: "misskey.io.evil.invalid",
-            selectedHost: "misskey.io"
-        ))
-        XCTAssertFalse(MissCatAuthenticationBrowserPolicy.shouldClearRecord(
-            displayName: "",
-            selectedHost: "misskey.io"
-        ))
-    }
-
-    func testInvalidExplicitClearRequestFallsBackToNonDestructiveLoad() {
-        let request = URLRequest(url: URL(string: "about:blank")!)
-
+    func testNormalAuthenticationUsesSharedBrowserSession() {
         XCTAssertEqual(
-            MissCatAuthenticationBrowserPolicy.initialLoadPlan(
-                for: request,
-                websiteDataPolicy: .clearForExplicitAccountSwitch
-            ),
-            .loadImmediately
+            MissCatAuthenticationBrowserPolicy.sessionKind(for: .preserveSession),
+            .shared
         )
+    }
+
+    func testExplicitAccountSwitchUsesEphemeralBrowserSession() {
+        XCTAssertEqual(
+            MissCatAuthenticationBrowserPolicy.sessionKind(for: .clearForExplicitAccountSwitch),
+            .ephemeral
+        )
+    }
+
+    func testNativeSessionUsesTheRegisteredCallbackScheme() {
+        XCTAssertEqual(MissCatAuthenticationBrowserPolicy.callbackScheme, "misscat")
+    }
+
+    func testUserCancellationIsNotPresentedAsAConnectionFailure() {
+        XCTAssertTrue(MissCatAuthenticationBrowserPolicy.isCancellation(CancellationError()))
+        XCTAssertTrue(MissCatAuthenticationBrowserPolicy.isCancellation(
+            NSError(
+                domain: ASWebAuthenticationSessionErrorDomain,
+                code: ASWebAuthenticationSessionError.Code.canceledLogin.rawValue
+            )
+        ))
+    }
+
+    func testUnrelatedNavigationFailureIsReported() {
+        XCTAssertFalse(MissCatAuthenticationBrowserPolicy.isCancellation(
+            URLError(.cannotConnectToHost)
+        ))
     }
 }
 
@@ -746,7 +695,7 @@ final class MiAuthAuthenticationTests: XCTestCase {
         XCTAssertEqual(items["name"]!, "MissCat")
         XCTAssertEqual(items["callback"]!, MissCatAuthenticationService.callbackURLString)
         XCTAssertEqual(items["permission"]!, MissCatAuthenticationService.appPermissions.joined(separator: ","))
-        XCTAssertTrue(url.absoluteString.contains("callback=https://misscat.dev"))
+        XCTAssertTrue(url.absoluteString.contains("callback=misscat://auth"))
         XCTAssertTrue(url.absoluteString.contains("permission=read:account"))
     }
 
@@ -787,6 +736,25 @@ final class MiAuthAuthenticationTests: XCTestCase {
         XCTAssertEqual(first.url?.path, "/miauth/11111111-2222-3333-4444-555555555555")
         XCTAssertEqual(second.url?.path, "/miauth/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
         XCTAssertNotEqual(first.url, second.url)
+    }
+
+    func testPendingSessionAcceptsCurrentAndLegacyCallbacksButRejectsLookalikes() async throws {
+        let fixture = makeFixture()
+        _ = try await fixture.service.makeAuthorizationRequest(intent: .logIn, instance: "misskey.io")
+        let session = firstSession.uuidString.lowercased()
+
+        XCTAssertTrue(fixture.service.callbackMatches(
+            URL(string: "misscat://auth?session=\(session)")!
+        ))
+        XCTAssertTrue(fixture.service.callbackMatches(
+            URL(string: "https://misscat.dev?session=\(session)")!
+        ))
+        XCTAssertFalse(fixture.service.callbackMatches(
+            URL(string: "misscat://auth.evil.invalid?session=\(session)")!
+        ))
+        XCTAssertFalse(fixture.service.callbackMatches(
+            URL(string: "https://misscat.dev.evil.invalid?session=\(session)")!
+        ))
     }
 
     func testInstanceNormalizationRejectsNonHTTPSAndURLSmuggling() throws {
@@ -979,7 +947,7 @@ final class MiAuthAuthenticationTests: XCTestCase {
     }
 
     private func callbackURL(sessionID: UUID) -> URL {
-        URL(string: "https://misscat.dev?session=\(sessionID.uuidString.lowercased())")!
+        URL(string: "misscat://auth?session=\(sessionID.uuidString.lowercased())")!
     }
 
     private func successResponse() -> MissCatMiAuthHTTPResponse {

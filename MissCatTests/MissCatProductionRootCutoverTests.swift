@@ -169,6 +169,30 @@ final class MissCatProductionRootCutoverTests: XCTestCase {
         XCTAssertFalse(app.contains("MissCatSharedKeychainActivityView"))
     }
 
+    func testAuthenticationUsesNativeSwiftUIWebSessionWithoutEmbeddedWebKit() throws {
+        let browser = try source(
+            named: "SwiftUI/Authentication/MissCatAuthenticationBrowserView.swift"
+        )
+        let info = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("MissCat/Info.plist"),
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(browser.contains("@Environment(\\.webAuthenticationSession)"))
+        XCTAssertTrue(browser.contains("authenticate(using:"))
+        XCTAssertTrue(browser.contains("authentication.browser"))
+        XCTAssertTrue(browser.contains("authentication.reload"))
+        XCTAssertTrue(browser.contains("@Environment(\\.openURL)"))
+        XCTAssertTrue(browser.contains("authentication.signup.continue"))
+        XCTAssertFalse(browser.contains("import WebKit"))
+        XCTAssertFalse(browser.contains("WKWebView"))
+        XCTAssertFalse(browser.contains("localStorage"))
+        XCTAssertFalse(browser.contains("UIViewRepresentable"))
+        XCTAssertFalse(browser.contains("UIViewControllerRepresentable"))
+        XCTAssertTrue(info.contains("CFBundleURLTypes"))
+        XCTAssertTrue(info.contains("<string>misscat</string>"))
+    }
+
     private func source(named relativePath: String) throws -> String {
         return try String(
             contentsOf: repositoryRoot.appendingPathComponent("MissCat/\(relativePath)"),
