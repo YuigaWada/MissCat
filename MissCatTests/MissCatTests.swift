@@ -532,7 +532,7 @@ final class MissCatNativeAPIClientTests: XCTestCase {
         assertAuthenticatedJSONRequest(request, body: [:])
     }
 
-    func testMetaDecodesOnlyCustomEmojiFieldsUsedBySettings() async throws {
+    func testEmojisEndpointDecodesOnlyCustomEmojiFieldsUsedBySettings() async throws {
         let transport = FakeNativeAPITransport([
             .init(
                 body: #"{"emojis":[{"name":"blobcat","url":"https://cdn.example/blobcat.webp","category":"Cats","aliases":["blob"]},{"name":"uncategorized","url":"https://cdn.example/u.png","category":null}]}"#,
@@ -553,7 +553,7 @@ final class MissCatNativeAPIClientTests: XCTestCase {
         ])
         let requests = await transport.recordedRequests()
         let request = try XCTUnwrap(requests.first)
-        XCTAssertEqual(request.url?.path, "/api/meta")
+        XCTAssertEqual(request.url?.path, "/api/emojis")
         assertAuthenticatedJSONRequest(request, body: [:])
     }
 
