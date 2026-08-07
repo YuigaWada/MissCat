@@ -181,6 +181,23 @@ final class MissCatShellFeedUITests: XCTestCase {
         XCTAssertTrue(element("profile.other.screen").waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["profile.action.back"].waitForExistence(timeout: 5))
         assertProductionAccountGenerationIsPrimary()
+
+        captureProductionRoute(name: "production-profile-route")
+        app.buttons["profile.count.followers"].tap()
+        waitForProductionRoute("profile-list:followers-fixture-author-0")
+        waitForProductionValue(identifier: "profile.userList.visualReady", value: "true")
+        XCTAssertTrue(element("profile.user.fixture-author-0").waitForExistence(timeout: 5))
+        captureProductionRoute(name: "production-profile-followers-route")
+
+        element("profile.user.fixture-author-0").tap()
+        waitForProductionRoute("profile:fixture-author-0")
+        XCTAssertTrue(element("profile.other.screen").waitForExistence(timeout: 5))
+        app.buttons["profile.action.back"].tap()
+        waitForProductionRoute("profile-list:followers-fixture-author-0")
+        XCTAssertTrue(app.buttons["production.route.back"].waitForExistence(timeout: 5))
+        app.buttons["production.route.back"].tap()
+        waitForProductionRoute("profile:fixture-author-0")
+        XCTAssertTrue(app.buttons["profile.action.back"].waitForExistence(timeout: 5))
         app.buttons["profile.action.back"].tap()
         waitForProductionRoute("root:home")
 
@@ -242,13 +259,8 @@ final class MissCatShellFeedUITests: XCTestCase {
         let shareLink = app.buttons["share.link"]
         XCTAssertTrue(shareLink.waitForExistence(timeout: 5))
         shareLink.tap()
-        let airDrop = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "label == %@", "AirDrop"))
-            .firstMatch
-        XCTAssertTrue(
-            airDrop.waitForExistence(timeout: 5),
-            "ShareLink must reach the system activity sheet"
-        )
+        waitForSystemShareSheet()
+        captureProductionRoute(name: "production-system-share-sheet")
     }
 
     func testFourConfiguredTimelineTabsSupportOrdinaryTapSwipeAndBoundaries() {
@@ -705,6 +717,41 @@ final class MissCatShellFeedUITests: XCTestCase {
         waitForProductionValue(identifier: "production.sheet.destination", value: destination)
     }
 
+    @discardableResult
+    private func waitForSystemShareSheet() -> XCUIElement {
+        let remoteContainerIdentifiers = [
+            "ActivityListView",
+            "ShareSheet.RemoteContainerView",
+            "UIActivityContentView",
+        ]
+        let remoteContainer = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier IN %@", remoteContainerIdentifiers))
+            .firstMatch
+        XCTAssertTrue(
+            remoteContainer.waitForExistence(timeout: 8),
+            "ShareLink must reach the system activity sheet"
+        )
+
+        // The share UI is owned by a remote system process, but XCTest projects it into
+        // the host app's accessibility tree. Keep the query rooted at `app`; do not launch
+        // or infer a second XCUIApplication from the remote process PID.
+        let auxiliarySystemControl = app.descendants(matching: .any)
+            .matching(
+                NSPredicate(
+                    format: "identifier == %@ OR (identifier == %@ AND label == %@)",
+                    "header.closeButton",
+                    "actionGroupCell",
+                    "Copy"
+                )
+            )
+            .firstMatch
+        XCTAssertTrue(
+            auxiliarySystemControl.waitForExistence(timeout: 5),
+            "System activity sheet must expose its close button or Copy action"
+        )
+        return remoteContainer
+    }
+
     private func waitForProductionValue(identifier: String, value: String) {
         let marker = element(identifier)
         XCTAssertTrue(marker.waitForExistence(timeout: 5), "Missing marker \(identifier)")
@@ -801,6 +848,13 @@ final class MissCatShellFeedUITests: XCTestCase {
 
     private func captureStableFixture(page: String, name: String) {
         waitForReady(page: page)
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    private func captureProductionRoute(name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name
         attachment.lifetime = .keepAlways

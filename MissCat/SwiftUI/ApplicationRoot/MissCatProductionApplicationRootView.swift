@@ -566,7 +566,9 @@ struct MissCatProductionApplicationRootView: View {
                 as? any MissCatNoteContextRepository,
                let url = repository.notePermalink(noteID: noteID) {
                 MissCatApplicationShareSheet(url: url)
-                    .accessibilityIdentifier("share.sheet")
+                    .overlay(alignment: .topLeading) {
+                        MissCatProductionAccessibilityMarker(identifier: "share.sheet")
+                    }
                     .overlay(alignment: .topLeading) {
                         productionSheetE2EMarker("share:\(noteID)")
                     }
@@ -1003,6 +1005,19 @@ private struct MissCatExternalURLDestination: View {
             Button("Safariで開く") { openURL(url) }
         }
         .navigationTitle("リンク")
+    }
+}
+
+private struct MissCatProductionAccessibilityMarker: View {
+    let identifier: String
+
+    var body: some View {
+        Color.clear
+            .frame(width: 1, height: 1)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(identifier)
+            .accessibilityIdentifier(identifier)
+            .allowsHitTesting(false)
     }
 }
 

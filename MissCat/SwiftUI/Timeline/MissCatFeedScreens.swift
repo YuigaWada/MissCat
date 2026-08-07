@@ -276,7 +276,9 @@ public struct MissCatFeedView: View {
             Text("@\(note.author.username) を運営に通報します。")
         }
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("feed.\(store.source.accessibilityName)")
+        .overlay(alignment: .topLeading) {
+            MissCatFeedAccessibilityMarker(identifier: "feed.\(store.source.accessibilityName)")
+        }
     }
 
     private var feedScrollView: some View {
@@ -962,10 +964,7 @@ public struct MissCatNoteDetailView: View {
         }
         .id(contextRepository?.accountIdentifier ?? "unscoped:\(noteID)")
         .overlay(alignment: .topLeading) {
-            Color.clear
-                .frame(width: 1, height: 1)
-                .accessibilityElement()
-                .accessibilityIdentifier("note.detail.screen")
+            MissCatFeedAccessibilityMarker(identifier: "note.detail.screen")
         }
     }
 
@@ -1190,6 +1189,19 @@ public struct MissCatNoteDetailView: View {
             || lowercased.contains("internet")
             || message.contains("オフライン")
             || message.contains("インターネット")
+    }
+}
+
+private struct MissCatFeedAccessibilityMarker: View {
+    let identifier: String
+
+    var body: some View {
+        Color.clear
+            .frame(width: 1, height: 1)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(identifier)
+            .accessibilityIdentifier(identifier)
+            .allowsHitTesting(false)
     }
 }
 

@@ -124,6 +124,7 @@ final class MissCatProductionRootCutoverTests: XCTestCase {
         let feed = try source(named: "SwiftUI/Timeline/MissCatFeedScreens.swift")
         let row = try source(named: "SwiftUI/Timeline/MissCatNoteRow.swift")
         let discovery = try source(named: "SwiftUI/Discovery/MissCatDiscoveryViews.swift")
+        let profileFamily = try source(named: "SwiftUI/Profile/MissCatProfileFamilyView.swift")
         let e2e = try String(
             contentsOf: repositoryRoot
                 .appendingPathComponent("MissCatUITests/MissCatShellFeedUITests.swift"),
@@ -133,6 +134,12 @@ final class MissCatProductionRootCutoverTests: XCTestCase {
         XCTAssertTrue(root.contains("applicationNavigationActions: discoveryNavigationActions"))
         XCTAssertTrue(root.contains("openSearch: { rootStore.router.open(.search(query: $0)) }"))
         XCTAssertTrue(root.contains("share: { rootStore.router.presentSheet(.share(noteID: $0)) }"))
+        XCTAssertTrue(root.contains("onOpenDestination: openProfileDestination"))
+        XCTAssertTrue(root.contains("case let .profileUserList(kind)"))
+        XCTAssertTrue(root.contains("case let .profileEditor(profile)"))
+        XCTAssertTrue(profileFamily.contains("if shellOwnership.ownsNavigationStack"))
+        XCTAssertTrue(profileFamily.contains("NavigationStack(path: $path)"))
+        XCTAssertTrue(profileFamily.contains("onOpenDestination"))
         XCTAssertTrue(root.contains("request.selectReaction(reaction)"))
         XCTAssertTrue(root.contains("productionSheetE2EMarker(\"reaction:\\(noteID)\")"))
         XCTAssertTrue(root.contains("productionSheetE2EMarker(\"share:\\(noteID)\")"))
@@ -143,6 +150,7 @@ final class MissCatProductionRootCutoverTests: XCTestCase {
 
         for destination in [
             "profile:fixture-author-0",
+            "profile-list:followers-fixture-author-0",
             "note:home-0",
             "discovery",
             "search:SwiftUI",
@@ -151,6 +159,7 @@ final class MissCatProductionRootCutoverTests: XCTestCase {
         ] {
             XCTAssertTrue(e2e.contains(destination), "Missing behavioral E2E for \(destination)")
         }
+        XCTAssertTrue(e2e.contains("profile.user.fixture-author-0"))
         XCTAssertTrue(e2e.contains("Failed optimistic mutation must roll the reaction chip back"))
         XCTAssertTrue(e2e.contains("ShareLink must reach the system activity sheet"))
         XCTAssertFalse(root.contains("UIViewControllerRepresentable"))
@@ -191,6 +200,105 @@ final class MissCatProductionRootCutoverTests: XCTestCase {
         XCTAssertFalse(browser.contains("UIViewControllerRepresentable"))
         XCTAssertTrue(info.contains("CFBundleURLTypes"))
         XCTAssertTrue(info.contains("<string>misscat</string>"))
+    }
+
+    func testSystemShareOracleUsesRemoteSystemIdentifiersInsteadOfAirDropAvailability() throws {
+        let e2e = try String(
+            contentsOf: repositoryRoot
+                .appendingPathComponent("MissCatUITests/MissCatShellFeedUITests.swift"),
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(e2e.contains("waitForSystemShareSheet()"))
+        XCTAssertTrue(e2e.contains("identifier IN %@"))
+        for identifier in [
+            "ActivityListView",
+            "ShareSheet.RemoteContainerView",
+            "UIActivityContentView",
+            "header.closeButton",
+            "actionGroupCell",
+        ] {
+            XCTAssertTrue(e2e.contains(identifier), "Missing system share oracle: \(identifier)")
+        }
+        XCTAssertTrue(e2e.contains("System activity sheet must expose its close button or Copy action"))
+        XCTAssertFalse(e2e.contains("AirDrop"))
+        XCTAssertFalse(e2e.contains("XCUIApplication(bundleIdentifier:"))
+    }
+
+    func testNoteDetailPreservesScreenAndThreadAccessibilityBoundaries() throws {
+        let feed = try source(named: "SwiftUI/Timeline/MissCatFeedScreens.swift")
+
+        XCTAssertTrue(
+            feed.contains(
+                ".overlay(alignment: .topLeading) {\n            MissCatFeedAccessibilityMarker(identifier: \"note.detail.screen\")\n        }"
+            )
+        )
+        XCTAssertTrue(feed.contains(".accessibilityIdentifier(\"note.detail.thread\")"))
+        XCTAssertTrue(feed.contains("Color.clear"))
+        XCTAssertTrue(feed.contains(".frame(width: 1, height: 1)"))
+        XCTAssertTrue(feed.contains(".accessibilityElement(children: .ignore)"))
+        XCTAssertTrue(feed.contains(".allowsHitTesting(false)"))
+        XCTAssertFalse(
+            feed.contains(
+                ".accessibilityElement(children: .contain)\n        .accessibilityIdentifier(\"note.detail.screen\")"
+            )
+        )
+    }
+
+    func testProductionRouteScreensKeepRootAndChildAccessibilityIDsIndependent() throws {
+        let root = try source(named: "SwiftUI/ApplicationRoot/MissCatProductionApplicationRootView.swift")
+        let feed = try source(named: "SwiftUI/Timeline/MissCatFeedScreens.swift")
+        let reactions = try source(named: "SwiftUI/Timeline/MissCatNoteDetailViews.swift")
+        let discovery = try source(named: "SwiftUI/Discovery/MissCatDiscoveryViews.swift")
+        let profile = try source(named: "SwiftUI/Profile/MissCatProfileViews.swift")
+
+        XCTAssertTrue(
+            discovery.contains(
+                ".overlay(alignment: .topLeading) {\n            MissCatDiscoveryAccessibilityMarker(identifier: \"home.discovery.native-page\")\n        }"
+            )
+        )
+        XCTAssertTrue(discovery.contains(".accessibilityIdentifier(\"discovery.trends.list\")"))
+        XCTAssertTrue(discovery.contains(".accessibilityIdentifier(\"discovery.trend.\\(trend.tag)\")"))
+        XCTAssertFalse(
+            discovery.contains(
+                ".id(generation.id)\n        .accessibilityIdentifier(\"home.discovery.native-page\")"
+            )
+        )
+
+        XCTAssertTrue(
+            feed.contains(
+                "MissCatFeedAccessibilityMarker(identifier: \"feed.\\(store.source.accessibilityName)\")"
+            )
+        )
+        XCTAssertTrue(feed.contains(".accessibilityIdentifier(\"feed.scroll\")"))
+        XCTAssertTrue(feed.contains(".accessibilityIdentifier(\"feed.banner.error\")"))
+        XCTAssertFalse(
+            feed.contains(
+                ".accessibilityElement(children: .contain)\n        .accessibilityIdentifier(\"feed.\\(store.source.accessibilityName)\")"
+            )
+        )
+
+        XCTAssertTrue(
+            root.contains(
+                "MissCatProductionAccessibilityMarker(identifier: \"share.sheet\")"
+            )
+        )
+        XCTAssertTrue(root.contains(".accessibilityIdentifier(\"share.link\")"))
+        XCTAssertTrue(root.contains("ShareLink(item: url)"))
+        XCTAssertFalse(
+            root.contains(
+                "MissCatApplicationShareSheet(url: url)\n                    .accessibilityIdentifier(\"share.sheet\")"
+            )
+        )
+
+        XCTAssertTrue(reactions.contains(".accessibilityIdentifier(\"reaction.picker\")"))
+        XCTAssertTrue(
+            reactions.contains(
+                ".accessibilityIdentifier(\"reaction.picker.choice.\\(choice.value)\")"
+            )
+        )
+        XCTAssertTrue(profile.contains("identifier: store.isCurrentUser ? \"profile.self.screen\" : \"profile.other.screen\""))
+        XCTAssertTrue(profile.contains("identifier: \"profile.count.followers\""))
     }
 
     private func source(named relativePath: String) throws -> String {

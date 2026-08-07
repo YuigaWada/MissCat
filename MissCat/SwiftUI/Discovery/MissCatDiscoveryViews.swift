@@ -641,6 +641,30 @@ private enum MissCatDiscoveryPalette {
     }
 }
 
+private struct MissCatDiscoveryUnavailableView: View {
+    var body: some View {
+        ContentUnavailableView(
+            "検索を利用できません",
+            systemImage: "person.crop.circle.badge.exclamationmark",
+            description: Text("アカウントを選択してください")
+        )
+        .accessibilityIdentifier("discovery.account-unavailable")
+    }
+}
+
+private struct MissCatDiscoveryAccessibilityMarker: View {
+    let identifier: String
+
+    var body: some View {
+        Color.clear
+            .frame(width: 1, height: 1)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(identifier)
+            .accessibilityIdentifier(identifier)
+            .allowsHitTesting(false)
+    }
+}
+
 struct MissCatDiscoveryRoot: View {
     @Environment(\.openURL) private var openURL
     @StateObject private var router = MissCatDiscoveryRouter()
@@ -670,7 +694,9 @@ struct MissCatDiscoveryRoot: View {
             }
         }
         .id(generation.id)
-        .accessibilityIdentifier("home.discovery.native-page")
+        .overlay(alignment: .topLeading) {
+            MissCatDiscoveryAccessibilityMarker(identifier: "home.discovery.native-page")
+        }
     }
 
     private func discoveryScreen(
