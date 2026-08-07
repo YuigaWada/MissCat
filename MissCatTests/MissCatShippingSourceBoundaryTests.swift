@@ -11,6 +11,7 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
         let sourceNames = try swiftSourceNames(in: appSources)
 
         XCTAssertEqual(sourceNames.count, 64)
+        XCTAssertTrue(sourceNames.contains("MissCatNativeAPI.swift"))
         for forbiddenMembership in [
             "ViewController.swift in Sources",
             "ViewModel.swift in Sources",
@@ -19,6 +20,7 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
             "Entity.swift in Sources",
             "RxEureka.swift in Sources",
             "SceneDelegate.swift in Sources",
+            "MisskeyKit+MissCat.swift in Sources",
         ] {
             XCTAssertFalse(appSources.contains(forbiddenMembership), forbiddenMembership)
         }
@@ -68,8 +70,14 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
             .split(separator: "\n")
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { $0.hasPrefix("pod ") }
-        XCTAssertEqual(Set(directPods), Set(["pod 'MisskeyKit'", "pod 'Firebase/Messaging'"]))
+        XCTAssertEqual(Set(directPods), Set(["pod 'Firebase/Messaging'"]))
         XCTAssertFalse(podfile.contains("target 'MissCatShare'"))
+
+        let lock = try source(named: "Podfile.lock")
+        for retiredPod in ["MisskeyKit", "Starscream"] {
+            XCTAssertFalse(lock.contains(retiredPod), "Retired pod remains locked: \(retiredPod)")
+            XCTAssertFalse(project.contains("\"\(retiredPod)\""), "Retired framework remains linked: \(retiredPod)")
+        }
     }
 
     private func assertNoLegacyDependencyOrLoader(in sourceURL: URL) throws {
@@ -152,6 +160,7 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
             "import FloatingPanel",
             "import Gifu",
             "import MessageKit",
+            "import MisskeyKit",
             "import PolioPager",
             "import RxCocoa",
             "import RxDataSources",
@@ -159,6 +168,7 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
             "import SVGKit",
             "import SkeletonView",
             "import SwiftLinkPreview",
+            "import Starscream",
             "import XLPagerTabStrip",
             "import iOSPhotoEditor",
         ])

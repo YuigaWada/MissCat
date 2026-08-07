@@ -1109,7 +1109,8 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
         XCTAssertEqual(instances.map(\.instance), ["misskey.example", "social.example"])
         XCTAssertEqual(licenses.map(\.name), expectedLicenseNames)
         XCTAssertEqual(licenses.count, expectedLicenseNames.count)
-        XCTAssertTrue(try XCTUnwrap(licenses.first { $0.name == "MisskeyKit" }).text.contains("MIT License"))
+        XCTAssertEqual(expectedLicenseNames, ["Firebase"])
+        XCTAssertFalse(try XCTUnwrap(licenses.first).text.isEmpty)
     }
 
     func testSettingsRoutesCoverAllLegacyDestinations() {
@@ -1118,7 +1119,7 @@ final class MissCatSettingsVisualContractTests: XCTestCase {
             .reactionInstances,
             .reactions(accountID: "fixture"),
             .licenses,
-            .license(name: "MisskeyKit"),
+            .license(name: "Firebase"),
             .about
         ]
         XCTAssertEqual(Set(routes).count, 6)
