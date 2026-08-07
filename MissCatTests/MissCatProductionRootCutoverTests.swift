@@ -87,11 +87,20 @@ final class MissCatProductionRootCutoverTests: XCTestCase {
 
     func testAppDelegateDeliversResolvedPushesToApplicationMailbox() throws {
         let source = try source(named: "Others/App/AppDelegate.swift")
+        let support = try source(
+            named: "SwiftUI/ApplicationRoot/MissCatProductionApplicationSupport.swift"
+        )
 
-        XCTAssertTrue(source.contains("MissCatApplicationPushIngress"))
-        XCTAssertTrue(source.contains("receive("))
+        XCTAssertTrue(source.contains("MissCatApplicationLifecycleCoordinator.shared"))
+        XCTAssertTrue(source.contains("registerForRemoteNotifications()"))
+        XCTAssertFalse(source.contains("MissCatApplicationPushIngress"))
+        XCTAssertFalse(source.contains("MissCatPushOwnerResolver"))
         XCTAssertFalse(source.contains("HomeViewController"))
         XCTAssertFalse(source.contains("rootViewController"))
+        XCTAssertTrue(support.contains("MissCatApplicationPushIngress"))
+        XCTAssertTrue(support.contains("MissCatApplicationPushResolver"))
+        XCTAssertTrue(support.contains("UNUserNotificationCenterDelegate"))
+        XCTAssertTrue(support.contains("MessagingDelegate"))
     }
 
     func testProductionComposeUsesRootBoundAuthorizedScopesInsteadOfGlobalAccountSelection() throws {

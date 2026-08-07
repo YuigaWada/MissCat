@@ -81,6 +81,54 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
         }
     }
 
+    func testUIKitShippingSourcesExposeOnlyApprovedOSAdapterSymbols() throws {
+        let project = try source(named: "MissCat.xcodeproj/project.pbxproj")
+        let appSources = try objectBlock(
+            identifier: "8D4A2A0E237437BE00503685",
+            in: project
+        )
+        let sourceNames = try swiftSourceNames(in: appSources)
+        let repositorySources = try repositorySwiftSources()
+        var UIKitSymbolsBySource: [String: Set<String>] = [:]
+
+        for sourceName in sourceNames {
+            let sourceURL = try XCTUnwrap(
+                repositorySources.first { $0.lastPathComponent == sourceName }
+            )
+            let contents = try String(contentsOf: sourceURL, encoding: .utf8)
+            guard contents.split(separator: "\n").contains("import UIKit") else { continue }
+            UIKitSymbolsBySource[sourceName] = try UIKitSymbols(in: contents)
+        }
+
+        XCTAssertEqual(
+            UIKitSymbolsBySource,
+            [
+                "AppDelegate.swift": [
+                    "UIApplication",
+                    "UIApplicationDelegate",
+                    "UIBackgroundFetchResult",
+                ],
+                "MissCatSystemClipboardWriter.swift": ["UIPasteboard"],
+            ]
+        )
+
+        let appDelegate = try source(named: "MissCat/Others/App/AppDelegate.swift")
+        XCTAssertFalse(appDelegate.contains("FirebaseApp"))
+        XCTAssertFalse(appDelegate.contains("Messaging.messaging"))
+        XCTAssertFalse(appDelegate.contains("UNUserNotificationCenter"))
+        XCTAssertFalse(appDelegate.contains("MissCatPushOwnerResolver"))
+        XCTAssertFalse(appDelegate.contains("MissCatApplicationPushIngress"))
+        XCTAssertFalse(appDelegate.contains("Cache.UserDefaults"))
+        XCTAssertFalse(appDelegate.contains("Theme.shared"))
+
+        let clipboard = try source(
+            named: "MissCat/Others/Platform/MissCatSystemClipboardWriter.swift"
+        )
+        XCTAssertEqual(clipboard.components(separatedBy: "public func ").count - 1, 1)
+        XCTAssertTrue(clipboard.contains("public func write("))
+        XCTAssertFalse(clipboard.contains("func read("))
+    }
+
     private func assertNoLegacyDependencyOrLoader(in sourceURL: URL) throws {
         let contents = try String(contentsOf: sourceURL, encoding: .utf8)
         for line in contents.split(separator: "\n", omittingEmptySubsequences: false) {
@@ -140,6 +188,15 @@ final class MissCatShippingSourceBoundaryTests: XCTestCase {
         let suffix = project[start.lowerBound...]
         let end = try XCTUnwrap(suffix.range(of: "\n\t\t};"))
         return String(suffix[..<end.upperBound])
+    }
+
+    private func UIKitSymbols(in source: String) throws -> Set<String> {
+        let expression = try NSRegularExpression(pattern: #"\bUI[A-Z][A-Za-z0-9_]*\b"#)
+        let range = NSRange(source.startIndex..<source.endIndex, in: source)
+        return Set(expression.matches(in: source, range: range).compactMap { match in
+            guard let range = Range(match.range, in: source) else { return nil }
+            return String(source[range])
+        })
     }
 
     private var legacySourcePrefixes: [String] {

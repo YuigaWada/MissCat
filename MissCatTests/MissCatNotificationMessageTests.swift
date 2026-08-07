@@ -528,6 +528,48 @@ final class MissCatNotificationMessageContractTests: XCTestCase {
         )
     }
 
+    func testApplicationPushResolverBuildsAccountScopedRefreshAndOpenActions() throws {
+        let account = MissCatPushAccountIdentity(
+            accountIdentifier: "instance.example|owner",
+            apiUserID: "owner",
+            instance: "instance.example"
+        )
+        let envelope = MissCatPushEnvelope(
+            ownerIdentifier: account.accountIdentifier,
+            notificationID: "notification"
+        )
+
+        let refresh = try XCTUnwrap(MissCatApplicationPushResolver.resolve(
+            envelope,
+            accounts: [account],
+            opensRoute: false
+        ))
+        let open = try XCTUnwrap(MissCatApplicationPushResolver.resolve(
+            envelope,
+            accounts: [account],
+            opensRoute: true
+        ))
+
+        XCTAssertEqual(refresh.accountID.rawValue, account.accountIdentifier)
+        XCTAssertEqual(refresh.action, .refreshNotifications(notificationID: "notification"))
+        XCTAssertEqual(open.action, .openNotification(notificationID: "notification"))
+        XCTAssertEqual(refresh.id, "instance.example|owner:notification:refresh")
+        XCTAssertEqual(open.id, "instance.example|owner:notification:open")
+    }
+
+    @MainActor
+    func testPushLifecycleStateRecordsRegistrationWithoutTransportTypes() {
+        let state = MissCatPushLifecycleState()
+
+        state.authorizationRequested()
+        state.remoteRegistrationRequested()
+        state.registered()
+        XCTAssertEqual(state.phase, .registered)
+
+        state.registrationFailed(message: "offline")
+        XCTAssertEqual(state.phase, .failed(message: "offline"))
+    }
+
     private func pushAccountsWithDuplicateUserID() -> [MissCatPushAccountIdentity] {
         ["first.example", "second.example"].map { instance in
             MissCatPushAccountIdentity(

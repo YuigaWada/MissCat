@@ -1,4 +1,5 @@
 @testable import MissCat
+import UIKit
 import XCTest
 
 final class MissCatNoteDetailTests: XCTestCase {
@@ -17,12 +18,22 @@ final class MissCatNoteDetailTests: XCTestCase {
     }
 
     @MainActor
-    func testSystemClipboardAdapterRoundTripsExactValue() {
+    func testSystemClipboardAdapterWritesExactValueAndPublishesFixtureProbe() {
         let writer = MissCatSystemClipboardWriter()
+        var observedValue: String?
+        let observer = NotificationCenter.default.addObserver(
+            forName: MissCatSystemClipboardWriter.didWriteNotification,
+            object: nil,
+            queue: nil
+        ) { notification in
+            observedValue = notification.object as? String
+        }
+        defer { NotificationCenter.default.removeObserver(observer) }
 
         writer.write("system pasteboard 🐈\nexact")
 
-        XCTAssertEqual(writer.read(), "system pasteboard 🐈\nexact")
+        XCTAssertEqual(UIPasteboard.general.string, "system pasteboard 🐈\nexact")
+        XCTAssertEqual(observedValue, "system pasteboard 🐈\nexact")
     }
 
     func testCustomCopyActionKeepsPasteboardInOneAuditableAdapterAndDomainStaysUIKitFree() throws {
@@ -46,6 +57,13 @@ final class MissCatNoteDetailTests: XCTestCase {
         }
 
         XCTAssertEqual(pasteboardOwners, ["MissCatSystemClipboardWriter.swift"])
+        let adapter = try String(
+            contentsOf: productionRoot
+                .appendingPathComponent("Others/Platform/MissCatSystemClipboardWriter.swift"),
+            encoding: .utf8
+        )
+        XCTAssertEqual(adapter.components(separatedBy: "public func ").count - 1, 1)
+        XCTAssertFalse(adapter.contains("func read("))
         let timelineRoot = productionRoot.appendingPathComponent("SwiftUI/Timeline")
         let timelineEnumerator = try XCTUnwrap(
             FileManager.default.enumerator(at: timelineRoot, includingPropertiesForKeys: nil)
