@@ -37,6 +37,79 @@ final class MissCatNativeMFMTests: XCTestCase {
         }
     }
 
+    func testDocumentedOfficialSyntaxCompatibilityMatrix() {
+        let cases: [(syntax: String, source: String, expected: String)] = [
+            ("mention", "@repo@p1.a9z.dev", "@repo@p1.a9z.dev"),
+            ("hashtag", "#Misskey", "#Misskey"),
+            ("URL", "https://example.test/path", "https://example.test/path"),
+            ("bracketed URL", "<https://example.test/path>", "https://example.test/path"),
+            ("labelled link", "[site](https://example.test/path)", "site"),
+            ("silent labelled link", "?[site](https://example.test/path)", "site"),
+            ("custom emoji", ":misskey:", ":misskey:"),
+            ("remote custom emoji", ":wave@remote.example:", ":wave@remote.example:"),
+            ("bold asterisk", "**bold**", "bold"),
+            ("bold tag", "<b>bold</b>", "bold"),
+            ("bold underscore", "__bold__", "bold"),
+            ("italic asterisk", "*italic*", "italic"),
+            ("italic tag", "<i>italic</i>", "italic"),
+            ("italic underscore", "_italic_", "italic"),
+            ("strike", "~~strike~~", "strike"),
+            ("strike tag", "<s>strike</s>", "strike"),
+            ("large legacy form", "***large***", "large"),
+            ("small", "<small>small</small>", "small"),
+            ("center", "<center>center</center>", "center"),
+            ("quote", "> quote", "▎ quote"),
+            ("ruby", "$[ruby Misskey ミスキー]", "Misskey（ミスキー）"),
+            ("unixtime", "$[unixtime 1701356400]", "🕒 2023-11-30 15:00:00 UTC"),
+            ("inline code", "`let value = 1`", "let value = 1"),
+            ("block code", "```swift\nlet value = 1\n```", "let value = 1"),
+            ("inline math", #"\(x + y\)"#, "x + y"),
+            ("block math", "\\[\nx + y\n\\]", "x + y"),
+            ("search", "misskey search", "misskey 🔍"),
+            ("tada", "$[tada static]", "static"),
+            ("jelly", "$[jelly static]", "static"),
+            ("twitch", "$[twitch static]", "static"),
+            ("shake", "$[shake static]", "static"),
+            ("spin", "$[spin static]", "static"),
+            ("jump", "$[jump static]", "static"),
+            ("bounce", "$[bounce static]", "static"),
+            ("flip", "$[flip.v static]", "static"),
+            ("x2", "$[x2 static]", "static"),
+            ("x3", "$[x3 static]", "static"),
+            ("x4", "$[x4 static]", "static"),
+            ("font", "$[font.serif static]", "static"),
+            ("blur", "$[blur static]", "static"),
+            ("rainbow", "$[rainbow.speed=2s static]", "static"),
+            ("sparkle", "$[sparkle static]", "static"),
+            ("rotate", "$[rotate.deg=30 static]", "static"),
+            ("position", "$[position.x=0.8,y=0.5 static]", "static"),
+            ("scale", "$[scale.x=4,y=2 static]", "static"),
+            ("foreground", "$[fg.color=f00 static]", "static"),
+            ("background", "$[bg.color=ff0 static]", "static"),
+            ("border", "$[border.style=dashed,width=2 static]", "static"),
+            ("clickable", "$[clickable.ev=fixture static]", "static"),
+        ]
+
+        for item in cases {
+            XCTAssertEqual(text(item.source), item.expected, item.syntax)
+        }
+    }
+
+    func testNestingEscapedPlainTextAndExplicitNewlinesStayLossless() {
+        XCTAssertEqual(
+            text("$[border.width=2 outer $[spin inner **bold**]]"),
+            "outer inner bold"
+        )
+        XCTAssertEqual(
+            text(#"<plain>\**not bold** \$[spin still literal]</plain>"#),
+            #"\**not bold** \$[spin still literal]"#
+        )
+        XCTAssertEqual(
+            text("first\n<center>second</center>\n> third"),
+            "first\nsecond\n▎ third"
+        )
+    }
+
     func testMotionFunctionsKeepNestedInteractiveContentWithoutExecutingEffects() {
         let rendered = MissCatNativeMFMRenderer.render(
             "$[spin.speed=5s $[tada :blobcat: @alice@example.test #SwiftUI https://example.test/path]]"
