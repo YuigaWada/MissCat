@@ -535,7 +535,7 @@ final class MissCatNativeAPIClientTests: XCTestCase {
     func testEmojisEndpointDecodesOnlyCustomEmojiFieldsUsedBySettings() async throws {
         let transport = FakeNativeAPITransport([
             .init(
-                body: #"{"emojis":[{"name":"blobcat","url":"https://cdn.example/blobcat.webp","category":"Cats","aliases":["blob"]},{"name":"uncategorized","url":"https://cdn.example/u.png","category":null}]}"#,
+                body: #"{"emojis":[{"name":"blobcat","url":"https://cdn.example/blobcat.webp","category":"Cats","aliases":["blob"]},{"name":"uncategorized","category":null}]}"#,
                 statusCode: 200
             )
         ])
@@ -549,7 +549,11 @@ final class MissCatNativeAPIClientTests: XCTestCase {
 
         XCTAssertEqual(emojis, [
             .init(name: "blobcat", url: "https://cdn.example/blobcat.webp", category: "Cats"),
-            .init(name: "uncategorized", url: "https://cdn.example/u.png", category: nil)
+            .init(
+                name: "uncategorized",
+                url: "https://misskey.example/emoji/uncategorized.webp",
+                category: nil
+            )
         ])
         let requests = await transport.recordedRequests()
         let request = try XCTUnwrap(requests.first)
