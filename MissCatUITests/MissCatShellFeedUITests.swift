@@ -1,5 +1,4 @@
 import XCTest
-import UIKit
 
 final class MissCatShellFeedUITests: XCTestCase {
     private var app: XCUIApplication!
@@ -337,12 +336,11 @@ final class MissCatShellFeedUITests: XCTestCase {
         confirmRenote.tap()
         XCTAssertTrue(renote.waitForExistence(timeout: 5))
 
-        UIPasteboard.general.string = nil
         app.buttons["note.home-0.action.overflow"].tap()
         let copyText = app.buttons["note.home-0.overflow.copy-text"]
         XCTAssertTrue(copyText.waitForExistence(timeout: 3))
         copyText.tap()
-        waitForPasteboard(
+        waitForClipboardValue(
             "SwiftUI native timeline fixture 🐈 @alice https://fixture.example/notes/home-0 #SwiftUI"
         )
 
@@ -352,7 +350,7 @@ final class MissCatShellFeedUITests: XCTestCase {
         let copyLink = app.buttons["note.home-0.overflow.copy-link"]
         XCTAssertTrue(copyLink.waitForExistence(timeout: 3))
         copyLink.tap()
-        waitForPasteboard("https://fixture.example/notes/home-0")
+        waitForClipboardValue("https://fixture.example/notes/home-0")
 
         XCTAssertTrue(overflow.waitForExistence(timeout: 3))
         overflow.tap()
@@ -791,12 +789,14 @@ final class MissCatShellFeedUITests: XCTestCase {
         return marker.value as? String ?? ""
     }
 
-    private func waitForPasteboard(_ expected: String, timeout: TimeInterval = 3) {
-        let deadline = Date().addingTimeInterval(timeout)
-        while UIPasteboard.general.string != expected, Date() < deadline {
-            RunLoop.current.run(until: Date().addingTimeInterval(0.02))
-        }
-        XCTAssertEqual(UIPasteboard.general.string, expected)
+    private func waitForClipboardValue(_ expected: String) {
+        let probe = element("fixture.clipboard.value")
+        XCTAssertTrue(probe.waitForExistence(timeout: 3))
+        expectation(
+            for: NSPredicate(format: "value == %@", expected),
+            evaluatedWith: probe
+        )
+        waitForExpectations(timeout: 3)
     }
 
     private func captureStableFixture(page: String, name: String) {

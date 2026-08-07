@@ -16,6 +16,15 @@ final class MissCatNoteDetailTests: XCTestCase {
         )
     }
 
+    @MainActor
+    func testSystemClipboardAdapterRoundTripsExactValue() {
+        let writer = MissCatSystemClipboardWriter()
+
+        writer.write("system pasteboard 🐈\nexact")
+
+        XCTAssertEqual(writer.read(), "system pasteboard 🐈\nexact")
+    }
+
     func testPasteboardAPIIsIsolatedToAuditableAdapterAndDomainStaysUIKitFree() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

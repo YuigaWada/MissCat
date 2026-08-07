@@ -53,6 +53,7 @@ struct MissCatShellFixtureView: View {
     @StateObject private var store: MissCatShellStore
     @State private var presentedRoute: MissCatShellFixtureRoute?
     @State private var selectedDestination: TimelineDestination?
+    @State private var clipboardProbeValue = ""
 
     init() {
         let provider = MissCatShellFixtureProvider(
@@ -111,6 +112,18 @@ struct MissCatShellFixtureView: View {
         }
         .task { await store.load() }
         .onDisappear { store.cancelConfigurationTasks() }
+        .onReceive(
+            NotificationCenter.default.publisher(for: MissCatSystemClipboardWriter.didWriteNotification)
+        ) { _ in
+            clipboardProbeValue = MissCatSystemClipboardWriter().read() ?? ""
+        }
+        .overlay(alignment: .topLeading) {
+            Color.clear
+                .frame(width: 1, height: 1)
+                .accessibilityElement()
+                .accessibilityIdentifier("fixture.clipboard.value")
+                .accessibilityValue(clipboardProbeValue)
+        }
         .sheet(item: $presentedRoute) { route in
             NavigationStack {
                 VStack(spacing: 12) {
