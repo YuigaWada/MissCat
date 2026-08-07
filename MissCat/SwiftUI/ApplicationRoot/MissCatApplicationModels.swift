@@ -99,6 +99,8 @@ public enum MissCatApplicationRoute: Hashable, Sendable {
     case note(id: String)
     case notification(id: String)
     case profile(userID: String)
+    case profileUserList(MissCatUserListKind)
+    case profileEditor(MissCatProfileUser)
     case userTimeline(userID: String, includesReplies: Bool, onlyFiles: Bool)
     case conversation(userID: String)
     case search(query: String)

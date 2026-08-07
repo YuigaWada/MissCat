@@ -408,7 +408,7 @@ struct MissCatProductionApplicationRootView: View {
             }
         case .profile:
             profileView(
-                userID: session.currentAccount.userID,
+                root: .profile(userID: session.currentAccount.userID),
                 palette: configuration.appearance.palette,
                 showsBack: false
             )
@@ -462,7 +462,17 @@ struct MissCatProductionApplicationRootView: View {
                 )
             } else { unavailable("通知") }
         case let .profile(userID):
-            profileView(userID: userID, palette: palette, showsBack: true)
+            profileView(root: .profile(userID: userID), palette: palette, showsBack: true)
+        case let .profileUserList(kind):
+            profileView(root: .userList(kind), palette: palette, showsBack: true)
+                .navigationBarBackButtonHidden(true)
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        productionRouteBackButton
+                    }
+                }
+        case let .profileEditor(profile):
+            profileView(root: .editProfile(profile), palette: palette, showsBack: true)
         case let .userTimeline(userID, includesReplies, onlyFiles):
             if let repository = coordinator.repository(for: configuration.currentScope) {
                 MissCatUserTimelineView(
@@ -589,7 +599,7 @@ struct MissCatProductionApplicationRootView: View {
     }
 
     private func profileView(
-        userID: String,
+        root: MissCatProfileFamilyView.Root,
         palette: MissCatVisualPalette,
         showsBack: Bool
     ) -> AnyView {
@@ -601,7 +611,7 @@ struct MissCatProductionApplicationRootView: View {
         }
         return AnyView(
             MissCatProfileFamilyView(
-                root: .profile(userID: userID),
+                root: root,
                 account: account,
                 palette: palette,
                 shellOwnership: .outerShell,
@@ -612,9 +622,21 @@ struct MissCatProductionApplicationRootView: View {
                 onOpenImage: { openURL($0) },
                 onOpenSettings: { rootStore.router.presentSheet(.settings) },
                 onSelectRoot: selectRoot,
-                onCompose: { rootStore.router.presentFullScreen(.compose(.new)) }
+                onCompose: { rootStore.router.presentFullScreen(.compose(.new)) },
+                onOpenDestination: openProfileDestination
             )
         )
+    }
+
+    private func openProfileDestination(_ destination: MissCatProfileFamilyDestination) {
+        switch destination {
+        case let .profile(userID):
+            rootStore.router.open(.profile(userID: userID))
+        case let .userList(kind):
+            rootStore.router.open(.profileUserList(kind))
+        case let .editProfile(profile):
+            rootStore.router.open(.profileEditor(profile))
+        }
     }
 
     private func settingsView(
@@ -954,6 +976,8 @@ struct MissCatProductionApplicationRootView: View {
         case let .note(id): return "note:\(id)"
         case let .notification(id): return "notification:\(id)"
         case let .profile(userID): return "profile:\(userID)"
+        case let .profileUserList(kind): return "profile-list:\(kind.id)"
+        case let .profileEditor(profile): return "profile-editor:\(profile.id)"
         case let .userTimeline(userID, includesReplies, onlyFiles):
             return "user-timeline:\(userID):\(includesReplies):\(onlyFiles)"
         case let .conversation(userID): return "conversation:\(userID)"

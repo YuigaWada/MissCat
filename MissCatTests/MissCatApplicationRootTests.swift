@@ -89,6 +89,47 @@ final class MissCatApplicationRootTests: XCTestCase {
         XCTAssertNil(router.fullScreenDestination)
     }
 
+    func testRouterPathObservationInvalidatesAfterTypedRouteMutation() {
+        let router = MissCatApplicationRouter()
+        let invalidatedPath = expectation(description: "Router path invalidated")
+
+        withObservationTracking {
+            _ = router.path
+        } onChange: {
+            invalidatedPath.fulfill()
+        }
+
+        router.open(.profile(userID: "fixture-author-0"))
+
+        wait(for: [invalidatedPath], timeout: 0.1)
+        XCTAssertEqual(router.path, [.profile(userID: "fixture-author-0")])
+    }
+
+    func testRouterKeepsNestedProfileFamilyDestinationsOnTheProductionStack() {
+        let router = MissCatApplicationRouter()
+        let profile = MissCatProfileUser(
+            id: "fixture-author-0",
+            name: "Route Author",
+            username: "route-author"
+        )
+
+        router.open(.profile(userID: profile.id))
+        router.open(.profileUserList(.followers(userID: profile.id)))
+        router.open(.profileEditor(profile))
+
+        XCTAssertEqual(
+            router.path,
+            [
+                .profile(userID: profile.id),
+                .profileUserList(.followers(userID: profile.id)),
+                .profileEditor(profile),
+            ]
+        )
+
+        router.pop()
+        XCTAssertEqual(router.path.last, .profileUserList(.followers(userID: profile.id)))
+    }
+
     func testMailboxQueuesBeforeReadinessFlushesFIFOAndRejectsWrongAccount() async {
         let firstAccount = account(instance: "one.example", userID: "one", username: "cat")
         let secondAccount = account(instance: "two.example", userID: "two", username: "dog")

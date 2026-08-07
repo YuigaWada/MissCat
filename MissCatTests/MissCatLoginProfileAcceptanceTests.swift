@@ -126,6 +126,8 @@ final class MissCatProfileNavigationAcceptanceTests: XCTestCase {
         XCTAssertEqual(state.lastAction, "none")
         state.record("settings")
         XCTAssertEqual(state.lastAction, "settings")
+        XCTAssertFalse(MissCatProfileShellOwnership.outerShell.ownsNavigationStack)
+        XCTAssertTrue(MissCatProfileShellOwnership.profileFamily.ownsNavigationStack)
     }
 }
 

@@ -3,6 +3,14 @@ import SwiftUI
 public enum MissCatProfileShellOwnership: Hashable, Sendable {
     case profileFamily
     case outerShell
+
+    public var ownsNavigationStack: Bool { self == .profileFamily }
+}
+
+public enum MissCatProfileFamilyDestination: Hashable, Sendable {
+    case profile(userID: String)
+    case userList(MissCatUserListKind)
+    case editProfile(MissCatProfileUser)
 }
 
 public struct MissCatProfileFamilyActions {
@@ -12,6 +20,7 @@ public struct MissCatProfileFamilyActions {
     public let onOpenSettings: () -> Void
     public let onSelectRoot: (MissCatRootSection) -> Void
     public let onCompose: () -> Void
+    public let onOpenDestination: (MissCatProfileFamilyDestination) -> Void
     public let onNavigationDepthChanged: (Int) -> Void
 
     public init(
@@ -21,6 +30,7 @@ public struct MissCatProfileFamilyActions {
         onOpenSettings: @escaping () -> Void = {},
         onSelectRoot: @escaping (MissCatRootSection) -> Void = { _ in },
         onCompose: @escaping () -> Void = {},
+        onOpenDestination: @escaping (MissCatProfileFamilyDestination) -> Void = { _ in },
         onNavigationDepthChanged: @escaping (Int) -> Void = { _ in }
     ) {
         self.onExit = onExit
@@ -29,6 +39,7 @@ public struct MissCatProfileFamilyActions {
         self.onOpenSettings = onOpenSettings
         self.onSelectRoot = onSelectRoot
         self.onCompose = onCompose
+        self.onOpenDestination = onOpenDestination
         self.onNavigationDepthChanged = onNavigationDepthChanged
     }
 }
@@ -44,13 +55,11 @@ public struct MissCatProfileFamilyView: View {
     public enum Root: Hashable, Sendable {
         case profile(userID: String)
         case searchResults(query: String)
-    }
-
-    public enum Destination: Hashable, Sendable {
-        case profile(userID: String)
         case userList(MissCatUserListKind)
         case editProfile(MissCatProfileUser)
     }
+
+    public typealias Destination = MissCatProfileFamilyDestination
 
     @State private var path: [Destination] = []
     @State private var editRequestCount = 0
@@ -79,6 +88,7 @@ public struct MissCatProfileFamilyView: View {
         onOpenSettings: @escaping () -> Void = {},
         onSelectRoot: @escaping (MissCatRootSection) -> Void = { _ in },
         onCompose: @escaping () -> Void = {},
+        onOpenDestination: @escaping (Destination) -> Void = { _ in },
         onNavigationDepthChanged: @escaping (Int) -> Void = { _ in }
     ) {
         self.root = root
@@ -94,6 +104,7 @@ public struct MissCatProfileFamilyView: View {
             onOpenSettings: onOpenSettings,
             onSelectRoot: onSelectRoot,
             onCompose: onCompose,
+            onOpenDestination: onOpenDestination,
             onNavigationDepthChanged: onNavigationDepthChanged
         )
     }
@@ -119,9 +130,15 @@ public struct MissCatProfileFamilyView: View {
     }
 
     public var body: some View {
-        NavigationStack(path: $path) {
-            rootView
-                .navigationDestination(for: Destination.self, destination: destination)
+        Group {
+            if shellOwnership.ownsNavigationStack {
+                NavigationStack(path: $path) {
+                    rootView
+                        .navigationDestination(for: Destination.self, destination: destination)
+                }
+            } else {
+                rootView
+            }
         }
         .overlay(alignment: .topLeading) {
             VStack(spacing: 0) {
@@ -152,6 +169,10 @@ public struct MissCatProfileFamilyView: View {
                 .overlay(alignment: .topLeading) {
                     MissCatProfileAccessibilityMarker(identifier: "profile.searchResults.root")
                 }
+        case let .userList(kind):
+            userList(kind: kind, title: kind.title)
+        case let .editProfile(profile):
+            editor(profile: profile)
         }
     }
 
@@ -184,7 +205,7 @@ public struct MissCatProfileFamilyView: View {
                 )
                 : true,
             onBack: {
-                if isRoot || path.isEmpty {
+                if shellOwnership == .outerShell || isRoot || path.isEmpty {
                     actions.onExit()
                 } else {
                     path.removeLast()
@@ -192,11 +213,11 @@ public struct MissCatProfileFamilyView: View {
             },
             onOpenURL: actions.onOpenURL,
             onOpenImage: actions.onOpenImage,
-            onSelectUser: { path.append(.profile(userID: $0)) },
-            onOpenUserList: { path.append(.userList($0)) },
+            onSelectUser: { openDestination(.profile(userID: $0)) },
+            onOpenUserList: { openDestination(.userList($0)) },
             onEditProfile: { profile in
                 editRequestCount += 1
-                path.append(.editProfile(profile))
+                openDestination(.editProfile(profile))
             },
             onOpenSettings: actions.onOpenSettings,
             onSelectRoot: actions.onSelectRoot,
@@ -224,8 +245,20 @@ public struct MissCatProfileFamilyView: View {
     }
 
     private func popEditor() {
+        if shellOwnership == .outerShell {
+            actions.onExit()
+            return
+        }
         guard !path.isEmpty else { return }
         path.removeLast()
+    }
+
+    private func openDestination(_ destination: Destination) {
+        if shellOwnership.ownsNavigationStack {
+            path.append(destination)
+        } else {
+            actions.onOpenDestination(destination)
+        }
     }
 
     @ViewBuilder
@@ -238,7 +271,7 @@ public struct MissCatProfileFamilyView: View {
         MissCatUserListScreen(
             store: store,
             palette: palette,
-            onSelectUser: { path.append(.profile(userID: $0)) }
+            onSelectUser: { openDestination(.profile(userID: $0)) }
         )
         .navigationTitle(title ?? "")
         .navigationBarTitleDisplayMode(.inline)
