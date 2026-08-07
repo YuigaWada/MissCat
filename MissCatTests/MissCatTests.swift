@@ -12,7 +12,6 @@ import CryptoKit
 #endif
 import AuthenticationServices
 import Security
-import UIKit
 import XCTest
 
 /// Test-only shared state with a single lock guarding every read and write.
@@ -172,20 +171,6 @@ final class MissCatAuthenticationBackupCodecTests: XCTestCase {
     }
 }
 #endif
-
-class MissCatTests: XCTestCase {
-    override func setUp() {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-    
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-    
-    func testExample() {
-        _ = NSTextAttachment()
-    }
-}
 
 final class CodeOnlyInterfaceResourceTests: XCTestCase {
     private let forbiddenInfoKeys = [

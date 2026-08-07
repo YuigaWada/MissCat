@@ -2,9 +2,40 @@
 import CoreGraphics
 import Foundation
 import ImageIO
-import UIKit
 import UniformTypeIdentifiers
 import XCTest
+
+private enum ShareTestImageFixture {
+    static func png(
+        width: Int = 2,
+        height: Int = 2,
+        color: CGColor
+    ) throws -> Data {
+        let context = try XCTUnwrap(CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ))
+        context.setFillColor(color)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+
+        let image = try XCTUnwrap(context.makeImage())
+        let encoded = NSMutableData()
+        let destination = try XCTUnwrap(CGImageDestinationCreateWithData(
+            encoded,
+            UTType.png.identifier as CFString,
+            1,
+            nil
+        ))
+        CGImageDestinationAddImage(destination, image, nil)
+        XCTAssertTrue(CGImageDestinationFinalize(destination))
+        return encoded as Data
+    }
+}
 
 final class ShareExtensionSwiftUIBoundaryTests: XCTestCase {
     func testOnlyPrincipalControllerRetainsTheRequiredUIKitBoundary() throws {
@@ -83,7 +114,11 @@ final class ShareExtensionSwiftUIBoundaryTests: XCTestCase {
 
 final class ShareImageCodecTests: XCTestCase {
     func testPreviewDecodeAndJPEGPreparationRemainUIKitFreeAndBounded() throws {
-        let sourceData = try makePNG(width: 2_048, height: 8)
+        let sourceData = try ShareTestImageFixture.png(
+            width: 2_048,
+            height: 8,
+            color: CGColor(red: 0.1, green: 0.5, blue: 0.9, alpha: 1)
+        )
         let preview = try XCTUnwrap(ShareImageCodec.decode(sourceData))
         XCTAssertEqual(preview.width, 2_048)
         XCTAssertEqual(preview.height, 8)
@@ -103,31 +138,6 @@ final class ShareImageCodecTests: XCTestCase {
         XCTAssertEqual(prepared.height, 4)
     }
 
-    private func makePNG(width: Int, height: Int) throws -> Data {
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let context = try XCTUnwrap(CGContext(
-            data: nil,
-            width: width,
-            height: height,
-            bitsPerComponent: 8,
-            bytesPerRow: width * 4,
-            space: colorSpace,
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ))
-        context.setFillColor(CGColor(red: 0.1, green: 0.5, blue: 0.9, alpha: 1))
-        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
-        let image = try XCTUnwrap(context.makeImage())
-        let data = NSMutableData()
-        let destination = try XCTUnwrap(CGImageDestinationCreateWithData(
-            data,
-            UTType.png.identifier as CFString,
-            1,
-            nil
-        ))
-        CGImageDestinationAddImage(destination, image, nil)
-        XCTAssertTrue(CGImageDestinationFinalize(destination))
-        return data as Data
-    }
 }
 
 final class ShareContentNormalizerTests: XCTestCase {
@@ -406,11 +416,9 @@ final class SharePostServiceTraceTests: XCTestCase {
             transport: transport,
             journal: ShareMemoryJournal()
         )
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 2, height: 2))
-        let imageData = renderer.image { context in
-            UIColor.systemBlue.setFill()
-            context.fill(CGRect(x: 0, y: 0, width: 2, height: 2))
-        }.pngData()!
+        let imageData = try ShareTestImageFixture.png(
+            color: CGColor(red: 0, green: 0.478, blue: 1, alpha: 1)
+        )
 
         try await service.submit(
             draft: ShareDraft(text: "shared text", imageData: [imageData]),
@@ -615,11 +623,9 @@ final class SharePostServiceTraceTests: XCTestCase {
             instance: "share-orphan.example",
             apiKey: "share-orphan-token"
         )
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 2, height: 2))
-        let imageData = renderer.image { context in
-            UIColor.systemOrange.setFill()
-            context.fill(CGRect(x: 0, y: 0, width: 2, height: 2))
-        }.pngData()!
+        let imageData = try ShareTestImageFixture.png(
+            color: CGColor(red: 1, green: 0.584, blue: 0, alpha: 1)
+        )
         let draft = ShareDraft(text: "share cleanup", imageData: [imageData])
         let transport = ShareTraceTransport(responses: [
             .success(status: 200, data: Data(#"{"id":"share-orphan-file"}"#.utf8)),

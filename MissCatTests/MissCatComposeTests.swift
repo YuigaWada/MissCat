@@ -1,7 +1,8 @@
 @testable import MissCat
+import CoreGraphics
 import Foundation
 import ImageIO
-import UIKit
+import UniformTypeIdentifiers
 import XCTest
 
 final class MissCatComposeSubmissionBuilderTests: XCTestCase {
@@ -466,8 +467,8 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
             requestTimeout: 12,
             journal: MemoryComposeJournal()
         )
-        let first = makeValidJPEG(red: 1, green: 0)
-        let second = makeValidJPEG(red: 0, green: 1)
+        let first = try makeValidJPEG(red: 1, green: 0)
+        let second = try makeValidJPEG(red: 0, green: 1)
         let submission = MissCatComposeSubmission(
             accountID: user.accountIdentifier,
             mode: .note,
@@ -893,7 +894,7 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
             media: [
                 MissCatComposeMedia(
                     kind: .image,
-                    data: makeValidJPEG(red: 1, green: 0),
+                    data: try makeValidJPEG(red: 1, green: 0),
                     filename: "known.jpeg",
                     mimeType: "image/jpeg"
                 )
@@ -950,7 +951,7 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
             media: [
                 MissCatComposeMedia(
                     kind: .image,
-                    data: makeValidJPEG(red: 0, green: 1),
+                    data: try makeValidJPEG(red: 0, green: 1),
                     filename: "orphan.jpeg",
                     mimeType: "image/jpeg"
                 )
@@ -1001,7 +1002,7 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
             media: [
                 MissCatComposeMedia(
                     kind: .image,
-                    data: makeValidJPEG(red: 1, green: 0),
+                    data: try makeValidJPEG(red: 1, green: 0),
                     filename: "orphan.jpeg",
                     mimeType: "image/jpeg"
                 )
@@ -1292,12 +1293,14 @@ final class MissCatNativeComposeAPIContractTests: XCTestCase {
         )
     }
 
-    private func makeValidJPEG(red: CGFloat, green: CGFloat) -> Data {
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 2, height: 2))
-        return renderer.image { context in
-            UIColor(red: red, green: green, blue: 0, alpha: 1).setFill()
-            context.fill(CGRect(x: 0, y: 0, width: 2, height: 2))
-        }.jpegData(compressionQuality: 1)!
+    private func makeValidJPEG(red: CGFloat, green: CGFloat) throws -> Data {
+        try ComposeTestImageFixture.data(
+            width: 2,
+            height: 2,
+            color: CGColor(red: red, green: green, blue: 0, alpha: 1),
+            type: .jpeg,
+            compressionQuality: 1
+        )
     }
 }
 
@@ -1316,8 +1319,8 @@ final class MissCatComposeImageCodecTests: XCTestCase {
     }
 
     func testJPEGPreparationPreservesSmallWidthAndLimitsLargeWidth() throws {
-        let small = makeImage(width: 320, height: 120)
-        let large = makeImage(width: 1_600, height: 800)
+        let small = try makeImage(width: 320, height: 120)
+        let large = try makeImage(width: 1_600, height: 800)
 
         let preparedSmall = try XCTUnwrap(
             MissCatComposeImageCodec.jpegData(
@@ -1338,17 +1341,13 @@ final class MissCatComposeImageCodecTests: XCTestCase {
         XCTAssertEqual(try dimensions(of: preparedLarge), CGSize(width: 1_024, height: 512))
     }
 
-    private func makeImage(width: CGFloat, height: CGFloat) -> Data {
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        let renderer = UIGraphicsImageRenderer(
-            size: CGSize(width: width, height: height),
-            format: format
+    private func makeImage(width: Int, height: Int) throws -> Data {
+        try ComposeTestImageFixture.data(
+            width: width,
+            height: height,
+            color: CGColor(red: 0.2, green: 0.6, blue: 0.8, alpha: 1),
+            type: .png
         )
-        return renderer.image { context in
-            UIColor(red: 0.2, green: 0.6, blue: 0.8, alpha: 1).setFill()
-            context.fill(CGRect(x: 0, y: 0, width: width, height: height))
-        }.pngData()!
     }
 
     private func dimensions(of data: Data) throws -> CGSize {
@@ -1359,6 +1358,43 @@ final class MissCatComposeImageCodecTests: XCTestCase {
         let width = try XCTUnwrap(properties[kCGImagePropertyPixelWidth] as? NSNumber)
         let height = try XCTUnwrap(properties[kCGImagePropertyPixelHeight] as? NSNumber)
         return CGSize(width: width.doubleValue, height: height.doubleValue)
+    }
+}
+
+private enum ComposeTestImageFixture {
+    static func data(
+        width: Int,
+        height: Int,
+        color: CGColor,
+        type: UTType,
+        compressionQuality: Double? = nil
+    ) throws -> Data {
+        let context = try XCTUnwrap(CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ))
+        context.setFillColor(color)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+
+        let image = try XCTUnwrap(context.makeImage())
+        let encoded = NSMutableData()
+        let destination = try XCTUnwrap(CGImageDestinationCreateWithData(
+            encoded,
+            type.identifier as CFString,
+            1,
+            nil
+        ))
+        let properties = compressionQuality.map {
+            [kCGImageDestinationLossyCompressionQuality: $0] as CFDictionary
+        }
+        CGImageDestinationAddImage(destination, image, properties)
+        XCTAssertTrue(CGImageDestinationFinalize(destination))
+        return encoded as Data
     }
 }
 
