@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "surface": "timeline-selftest",
+  "canvas": {
+    "width": 200,
+    "height": 120
+  },
+  "capture": {
+    "surface_id": "01",
+    "state": "timeline-region-selftest",
+    "appearance": "light",
+    "device": "fixture-device",
+    "orientation": "portrait",
+    "fixture": "timeline-region-selftest",
+    "locale": "ja-jp",
+    "content_size": "medium",
+    "visual_ready": "visual-ready.timeline-region-selftest"
+  },
+  "thresholds": {
+    "changed_similarity": 0.9,
+    "ssim": 0.9,
+    "action_edge_coverage": 0.9,
+    "edge_tolerance_pixels": 2,
+    "channel_delta": 8,
+    "amplification": 4
+  },
+  "required_region_ids": [
+    "timeline-tabs",
+    "note-body",
+    "note-actions"
+  ],
+  "regions": [
+    {
+      "id": "timeline-tabs",
+      "owner": "app",
+      "kind": "action",
+      "x": 0,
+      "y": 0,
+      "width": 200,
+      "height": 30
+    },
+    {
+      "id": "note-body",
+      "owner": "app",
+      "kind": "content",
+      "x": 0,
+      "y": 30,
+      "width": 200,
+      "height": 50
+    },
+    {
+      "id": "note-actions",
+      "owner": "app",
+      "kind": "action",
+      "x": 0,
+      "y": 80,
+      "width": 200,
+      "height": 40
+    }
+  ]
+}

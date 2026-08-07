@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "surface": "timeline-home",
+  "canvas": {
+    "width": 1242,
+    "height": 2688
+  },
+  "capture": {
+    "surface_id": "01",
+    "state": "home",
+    "appearance": "light",
+    "device": "iphone-11-pro-max-ios18.6",
+    "orientation": "portrait",
+    "fixture": "timeline-family--home",
+    "locale": "ja-jp",
+    "content_size": "medium",
+    "visual_ready": "visual-ready.timeline-family.home"
+  },
+  "thresholds": {
+    "changed_similarity": 0.9,
+    "ssim": 0.9,
+    "action_edge_coverage": 0.9,
+    "edge_tolerance_pixels": 2,
+    "channel_delta": 8,
+    "amplification": 4
+  },
+  "required_region_ids": [
+    "timeline-tabs",
+    "first-note-identity",
+    "first-note-content",
+    "first-note-actions",
+    "second-note-content",
+    "second-note-actions",
+    "third-note-content",
+    "third-note-actions",
+    "bottom-navigation"
+  ],
+  "regions": [
+    {
+      "id": "timeline-tabs",
+      "owner": "app",
+      "kind": "action",
+      "x": 0,
+      "y": 112,
+      "width": 1242,
+      "height": 150
+    },
+    {
+      "id": "first-note-identity",
+      "owner": "app",
+      "kind": "content",
+      "x": 40,
+      "y": 262,
+      "width": 1158,
+      "height": 170
+    },
+    {
+      "id": "first-note-content",
+      "owner": "app",
+      "kind": "content",
+      "x": 220,
+      "y": 410,
+      "width": 978,
+      "height": 520
+    },
+    {
+      "id": "first-note-actions",
+      "owner": "app",
+      "kind": "action",
+      "x": 220,
+      "y": 930,
+      "width": 978,
+      "height": 170
+    },
+    {
+      "id": "second-note-content",
+      "owner": "app",
+      "kind": "content",
+      "x": 40,
+      "y": 1100,
+      "width": 1158,
+      "height": 390
+    },
+    {
+      "id": "second-note-actions",
+      "owner": "app",
+      "kind": "action",
+      "x": 220,
+      "y": 1460,
+      "width": 978,
+      "height": 160
+    },
+    {
+      "id": "third-note-content",
+      "owner": "app",
+      "kind": "content",
+      "x": 40,
+      "y": 1620,
+      "width": 1158,
+      "height": 390
+    },
+    {
+      "id": "third-note-actions",
+      "owner": "app",
+      "kind": "action",
+      "x": 220,
+      "y": 1980,
+      "width": 978,
+      "height": 160
+    },
+    {
+      "id": "bottom-navigation",
+      "owner": "app",
+      "kind": "action",
+      "x": 0,
+      "y": 2390,
+      "width": 1242,
+      "height": 210
+    }
+  ]
+}
