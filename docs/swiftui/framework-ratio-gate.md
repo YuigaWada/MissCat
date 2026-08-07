@@ -26,9 +26,9 @@ The checked-in aggregate baseline is:
 
 | Scope | UIKit-only | SwiftUI-only | Hybrid | Neutral | Pure SwiftUI |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `MissCat` | 2 | 26 | 2 | 34 | 26 / 30 (86.667%) |
+| `MissCat` | 2 | 29 | 0 | 34 | 29 / 31 (93.548%) |
 | `MissCatShare` | 0 | 1 | 1 | 6 | 1 / 2 (50%) |
-| All shipping memberships | 2 | 27 | 3 | 40 | 27 / 32 (84.375%) |
+| All shipping memberships | 2 | 30 | 1 | 40 | 30 / 33 (90.909%) |
 
 The aggregate JSON also reports Rx, PolioPager, active legacy-loader file and
 reference counts, and tracked storyboard/XIB artifacts for both targets and the
@@ -43,7 +43,7 @@ scripts/verify-swiftui-framework-aggregate.rb --require-complete
 ```
 
 That mode currently fails for two explicit architectural reasons: the App
-target still has UIKit-only and UIKit/SwiftUI hybrid source members, and
+target still has UIKit-only source members, and
 `ShareViewController` is still the `NSExtensionPrincipalClass` hybrid boundary.
 The JSON exposes those reasons as structured `completion_blockers`; completion
 also requires zero Rx, PolioPager, active legacy-loader, and tracked IB debt.
