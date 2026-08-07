@@ -1,5 +1,5 @@
-import Combine
 import Foundation
+import Observation
 
 public struct MissCatTrend: Decodable, Equatable, Identifiable, Sendable {
     public let tag: String
@@ -228,24 +228,25 @@ private struct DiscoveryAPIErrorEnvelope: Decodable {
 }
 
 @MainActor
-public final class MissCatDiscoveryStore: ObservableObject {
-    @Published public var query = ""
-    @Published public private(set) var committedQuery = ""
-    @Published public var selectedTab: MissCatDiscoveryTab = .notes
-    @Published public private(set) var trends: [MissCatTrend] = []
-    @Published public private(set) var trendPhase: MissCatDiscoveryPhase = .idle
-    @Published public private(set) var noteResults = MissCatDiscoveryResultState<MissCatNote>()
-    @Published public private(set) var userResults = MissCatDiscoveryResultState<MissCatProfileUser>()
-    @Published public private(set) var accountIdentifier: String
-    @Published public private(set) var currentServerUserID: String
+@Observable
+public final class MissCatDiscoveryStore {
+    public var query = ""
+    public private(set) var committedQuery = ""
+    public var selectedTab: MissCatDiscoveryTab = .notes
+    public private(set) var trends: [MissCatTrend] = []
+    public private(set) var trendPhase: MissCatDiscoveryPhase = .idle
+    public private(set) var noteResults = MissCatDiscoveryResultState<MissCatNote>()
+    public private(set) var userResults = MissCatDiscoveryResultState<MissCatProfileUser>()
+    public private(set) var accountIdentifier: String
+    public private(set) var currentServerUserID: String
 
-    private let repository: MissCatDiscoveryRepository
-    private let pageSize: Int
-    private var generation = UUID()
-    private var trendGeneration = UUID()
-    private var trendTask: Task<Void, Never>?
-    private var noteTask: Task<Void, Never>?
-    private var userTask: Task<Void, Never>?
+    @ObservationIgnored private let repository: MissCatDiscoveryRepository
+    @ObservationIgnored private let pageSize: Int
+    @ObservationIgnored private var generation = UUID()
+    @ObservationIgnored private var trendGeneration = UUID()
+    @ObservationIgnored private var trendTask: Task<Void, Never>?
+    @ObservationIgnored private var noteTask: Task<Void, Never>?
+    @ObservationIgnored private var userTask: Task<Void, Never>?
 
     public init(repository: MissCatDiscoveryRepository, pageSize: Int = 20) {
         self.repository = repository
@@ -411,6 +412,7 @@ public final class MissCatDiscoveryStore: ObservableObject {
         let token = generation
         let repository = self.repository
         let query = committedQuery
+        let pageSize = self.pageSize
         if append {
             noteResults.isLoadingMore = true
             noteResults.paginationError = nil
@@ -420,14 +422,16 @@ public final class MissCatDiscoveryStore: ObservableObject {
 
         noteTask = Task { [weak self] in
             do {
-                guard let self else { return }
                 let page = try await repository.searchNotes(
                     query: query,
                     cursor: cursor,
-                    limit: self.pageSize
+                    limit: pageSize
                 )
                 try Task.checkCancellation()
-                guard self.generation == token, self.committedQuery == query else { return }
+                guard let self,
+                      self.generation == token,
+                      self.committedQuery == query
+                else { return }
                 let existing = append ? self.noteResults.items : []
                 self.noteResults.items = Self.uniqueNotes(existing + page.items)
                 self.noteResults.nextCursor = page.nextCursor
@@ -452,6 +456,7 @@ public final class MissCatDiscoveryStore: ObservableObject {
         let token = generation
         let repository = self.repository
         let query = committedQuery
+        let pageSize = self.pageSize
         if append {
             userResults.isLoadingMore = true
             userResults.paginationError = nil
@@ -461,14 +466,16 @@ public final class MissCatDiscoveryStore: ObservableObject {
 
         userTask = Task { [weak self] in
             do {
-                guard let self else { return }
                 let page = try await repository.searchUsers(
                     query: query,
                     offset: offset,
-                    limit: self.pageSize
+                    limit: pageSize
                 )
                 try Task.checkCancellation()
-                guard self.generation == token, self.committedQuery == query else { return }
+                guard let self,
+                      self.generation == token,
+                      self.committedQuery == query
+                else { return }
                 let existing = append ? self.userResults.items : []
                 self.userResults.items = Self.uniqueUsers(existing + page.items)
                 self.userResults.nextCursor = page.nextCursor

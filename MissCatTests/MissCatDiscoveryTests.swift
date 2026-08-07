@@ -330,6 +330,7 @@ final class MissCatDiscoveryTests: XCTestCase {
         )
 
         store = nil
+        XCTAssertNotNil(screen)
         XCTAssertNotNil(retainedStore)
 
         screen = nil

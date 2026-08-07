@@ -1,3 +1,4 @@
+import Observation
 import SwiftUI
 
 public struct MissCatDiscoveryNavigationActions {
@@ -25,7 +26,7 @@ public struct MissCatDiscoveryNavigationActions {
 /// Native discovery surface. Tap and horizontal swipe both drive the same tab
 /// selection, so there is one state owner for the result pages.
 public struct MissCatDiscoveryScreen: View {
-    @StateObject private var store: MissCatDiscoveryStore
+    @State private var store: MissCatDiscoveryStore
     @FocusState private var searchIsFocused: Bool
 
     private let instanceDisplayName: String
@@ -38,7 +39,7 @@ public struct MissCatDiscoveryScreen: View {
         palette: MissCatVisualPalette = .legacyLight,
         navigationActions: MissCatDiscoveryNavigationActions = .init()
     ) {
-        _store = StateObject(wrappedValue: store)
+        _store = State(initialValue: store)
         self.instanceDisplayName = instanceDisplayName
         self.palette = palette
         self.navigationActions = navigationActions
@@ -72,7 +73,8 @@ public struct MissCatDiscoveryScreen: View {
     }
 
     private var searchBar: some View {
-        HStack(spacing: 8) {
+        @Bindable var store = store
+        return HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(palette.strong)
@@ -530,8 +532,9 @@ public enum MissCatDiscoveryRoute: Hashable, Sendable {
 }
 
 @MainActor
-final class MissCatDiscoveryRouter: ObservableObject {
-    @Published var path: [MissCatDiscoveryRoute] = []
+@Observable
+final class MissCatDiscoveryRouter {
+    var path: [MissCatDiscoveryRoute] = []
     private var attachments: [String: MissCatNoteAttachment] = [:]
 
     func open(_ route: MissCatDiscoveryRoute) {
@@ -668,7 +671,7 @@ private struct MissCatDiscoveryAccessibilityMarker: View {
 
 struct MissCatDiscoveryRoot: View {
     @Environment(\.openURL) private var openURL
-    @StateObject private var router = MissCatDiscoveryRouter()
+    @State private var router = MissCatDiscoveryRouter()
 
     let generation: MissCatDiscoveryAccountGeneration
     let applicationNavigationActions: MissCatDiscoveryNavigationActions?
@@ -682,6 +685,7 @@ struct MissCatDiscoveryRoot: View {
     }
 
     var body: some View {
+        @Bindable var router = router
         Group {
             if let applicationNavigationActions {
                 discoveryScreen(navigationActions: applicationNavigationActions)
