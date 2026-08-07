@@ -24,6 +24,7 @@ public enum MissCatFeedRepositoryError: LocalizedError, Equatable {
     case emptyResponse
     case http(Int, String)
     case rejectedAction
+    case invalidReportComment
     case streamingUnavailable
 
     public var errorDescription: String? {
@@ -34,6 +35,7 @@ public enum MissCatFeedRepositoryError: LocalizedError, Equatable {
         case .emptyResponse: "サーバーからノートを取得できませんでした。"
         case let .http(_, message): message
         case .rejectedAction: "操作を完了できませんでした。"
+        case .invalidReportComment: "通報理由は1〜2048文字で入力してください。"
         case .streamingUnavailable: "リアルタイム接続を開始できませんでした。"
         }
     }
@@ -376,6 +378,19 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
                 "mute/create",
                 body: FeedUserRequest(i: account.apiKey, userId: userID)
             )
+        case let .block(userID):
+            try await postWrite(
+                "blocking/create",
+                body: FeedUserRequest(i: account.apiKey, userId: userID)
+            )
+        case let .report(userID, comment):
+            guard let comment = MissCatReportComment.normalized(comment) else {
+                throw MissCatFeedRepositoryError.invalidReportComment
+            }
+            try await postWrite(
+                "users/report-abuse",
+                body: FeedAbuseReportRequest(i: account.apiKey, userId: userID, comment: comment)
+            )
         }
     }
 
@@ -385,6 +400,26 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
     public func notePermalink(noteID: String) -> URL? {
         guard let origin = try? normalizedInstanceOrigin() else { return nil }
         return origin.appendingPathComponent("notes").appendingPathComponent(noteID)
+    }
+
+    public func resolveMention(_ acct: String) async throws -> String {
+        let normalized = acct.trimmingCharacters(in: CharacterSet(charactersIn: "@"))
+        let components = normalized.split(separator: "@", maxSplits: 1).map(String.init)
+        guard let username = components.first?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !username.isEmpty else {
+            throw MissCatMentionResolutionError.invalidAccount(acct)
+        }
+
+        let localHost = try normalizedInstanceOrigin().host?.lowercased()
+        let suppliedHost = components.count == 2
+            ? components[1].trimmingCharacters(in: .whitespacesAndNewlines)
+            : nil
+        let host = suppliedHost?.lowercased() == localHost ? nil : suppliedHost
+        let user: FeedUserDTO = try await post(
+            "users/show",
+            body: FeedUserShowRequest(i: account.apiKey, username: username, host: host)
+        )
+        return user.id
     }
 
     public func fetchURLPreview(for url: URL) async throws -> MissCatURLPreview {
@@ -554,7 +589,12 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
         let myReaction = content.myReaction
         let reactions = (content.reactions ?? [:])
             .map { name, count in
-                MissCatReaction(name: name, count: count, isMine: name == myReaction)
+                MissCatReaction(
+                    name: name,
+                    count: count,
+                    isMine: name == myReaction,
+                    emojiURL: reactionEmojiURL(for: name, in: content.reactionEmojis)
+                )
             }
             .sorted { $0.name < $1.name }
 
@@ -565,7 +605,8 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
                 author: convert(quoted.user),
                 text: quoted.text ?? "",
                 cw: nonEmpty(quoted.cw),
-                attachments: convert(quoted.files)
+                attachments: convert(quoted.files),
+                emojis: convertEmojis(quoted.emojis)
             )
         } else {
             quote = nil
@@ -604,7 +645,8 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
             isFavorite: isFavorite,
             poll: poll,
             quotedNote: quote,
-            renotedBy: isPureRenote ? convert(outer.user) : nil
+            renotedBy: isPureRenote ? convert(outer.user) : nil,
+            emojis: convertEmojis(content.emojis)
         )
     }
 
@@ -615,7 +657,8 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
             username: model.username,
             host: nonEmpty(model.host),
             avatarURL: model.avatarUrl.flatMap(URL.init(string:)),
-            isCat: model.isCat ?? false
+            isCat: model.isCat ?? false,
+            emojis: convertEmojis(model.emojis)
         )
     }
 
@@ -650,6 +693,21 @@ public final class MissCatMisskeyFeedRepository: MissCatNoteContextRepository {
     private static func nonEmpty(_ value: String?) -> String? {
         guard let value, !value.isEmpty else { return nil }
         return value
+    }
+
+    private static func convertEmojis(_ values: [String: String]?) -> [String: URL] {
+        Dictionary(uniqueKeysWithValues: (values ?? [:]).compactMap { name, rawURL in
+            URL(string: rawURL).map { (name, $0) }
+        })
+    }
+
+    private static func reactionEmojiURL(
+        for reaction: String,
+        in values: [String: String]?
+    ) -> URL? {
+        let normalizedName = reaction.trimmingCharacters(in: CharacterSet(charactersIn: ":"))
+        return values?[reaction].flatMap(URL.init(string:))
+            ?? values?[normalizedName].flatMap(URL.init(string:))
     }
 
     private static func parseDate(_ value: String?) -> Date? {
@@ -1050,6 +1108,18 @@ private struct FeedUserRequest: Encodable {
     let userId: String
 }
 
+private struct FeedUserShowRequest: Encodable {
+    let i: String
+    let username: String
+    let host: String?
+}
+
+private struct FeedAbuseReportRequest: Encodable {
+    let i: String
+    let userId: String
+    let comment: String
+}
+
 private struct FeedURLPreviewDTO: Decodable {
     let title: String?
     let description: String?
@@ -1083,6 +1153,7 @@ private final class FeedNoteDTO: Decodable {
     let tags: [String]?
     let poll: FeedPollDTO?
     let emojis: [String: String]?
+    let reactionEmojis: [String: String]?
     let reactions: [String: Int]?
     let renoteCount: Int
     let repliesCount: Int
@@ -1090,7 +1161,7 @@ private final class FeedNoteDTO: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case id, createdAt, text, cw, user, replyId, renote, visibility
-        case files, tags, poll, emojis, reactions, renoteCount, repliesCount, myReaction
+        case files, tags, poll, emojis, reactionEmojis, reactions, renoteCount, repliesCount, myReaction
     }
 
     required init(from decoder: Decoder) throws {
@@ -1107,6 +1178,7 @@ private final class FeedNoteDTO: Decodable {
         tags = try values.decodeIfPresent([String].self, forKey: .tags)
         poll = try values.decodeIfPresent(FeedPollDTO.self, forKey: .poll)
         emojis = try values.decodeIfPresent([String: String].self, forKey: .emojis)
+        reactionEmojis = try values.decodeIfPresent([String: String].self, forKey: .reactionEmojis)
         reactions = try values.decodeIfPresent([String: Int].self, forKey: .reactions)
         renoteCount = try values.decodeIfPresent(Int.self, forKey: .renoteCount) ?? 0
         repliesCount = try values.decodeIfPresent(Int.self, forKey: .repliesCount) ?? 0

@@ -1,5 +1,19 @@
 import Foundation
 
+enum MissCatReportComment {
+    static let maximumLength = 2_048
+
+    static func normalized(_ rawValue: String) -> String? {
+        let value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty, value.count <= maximumLength else { return nil }
+        return value
+    }
+
+    static func clamped(_ rawValue: String) -> String {
+        String(rawValue.prefix(maximumLength))
+    }
+}
+
 /// Account-scoped values needed by the feed stack. Keeping the API key here avoids
 /// coupling the SwiftUI feature to the legacy account cache and makes previews/tests injectable.
 public struct MissCatFeedSession: Equatable, Sendable {
@@ -75,7 +89,10 @@ public struct MissCatNoteAuthor: Equatable, Sendable {
     public var username: String
     public var host: String?
     public var avatarURL: URL?
+    public var localAvatarImageName: String?
     public var isCat: Bool
+    public var emojis: [String: URL]
+    public var localEmojis: [String: String]
 
     public init(
         id: String,
@@ -83,14 +100,20 @@ public struct MissCatNoteAuthor: Equatable, Sendable {
         username: String,
         host: String? = nil,
         avatarURL: URL? = nil,
-        isCat: Bool = false
+        localAvatarImageName: String? = nil,
+        isCat: Bool = false,
+        emojis: [String: URL] = [:],
+        localEmojis: [String: String] = [:]
     ) {
         self.id = id
         self.name = name
         self.username = username
         self.host = host
         self.avatarURL = avatarURL
+        self.localAvatarImageName = localAvatarImageName
         self.isCat = isCat
+        self.emojis = emojis
+        self.localEmojis = localEmojis
     }
 
     public var acct: String {
@@ -113,6 +136,7 @@ public struct MissCatNoteAttachment: Identifiable, Equatable, Sendable {
     public var kind: MissCatAttachmentKind
     public var url: URL?
     public var thumbnailURL: URL?
+    public var localImageName: String?
     public var isSensitive: Bool
     public var width: Int?
     public var height: Int?
@@ -123,6 +147,7 @@ public struct MissCatNoteAttachment: Identifiable, Equatable, Sendable {
         kind: MissCatAttachmentKind,
         url: URL?,
         thumbnailURL: URL? = nil,
+        localImageName: String? = nil,
         isSensitive: Bool = false,
         width: Int? = nil,
         height: Int? = nil
@@ -132,6 +157,7 @@ public struct MissCatNoteAttachment: Identifiable, Equatable, Sendable {
         self.kind = kind
         self.url = url
         self.thumbnailURL = thumbnailURL
+        self.localImageName = localImageName
         self.isSensitive = isSensitive
         self.width = width
         self.height = height
@@ -143,11 +169,13 @@ public struct MissCatReaction: Identifiable, Equatable, Sendable {
     public let name: String
     public var count: Int
     public var isMine: Bool
+    public var emojiURL: URL?
 
-    public init(name: String, count: Int, isMine: Bool = false) {
+    public init(name: String, count: Int, isMine: Bool = false, emojiURL: URL? = nil) {
         self.name = name
         self.count = count
         self.isMine = isMine
+        self.emojiURL = emojiURL
     }
 }
 
@@ -189,19 +217,22 @@ public struct MissCatQuotedNote: Equatable, Sendable {
     public let text: String
     public let cw: String?
     public let attachments: [MissCatNoteAttachment]
+    public let emojis: [String: URL]
 
     public init(
         noteID: String,
         author: MissCatNoteAuthor,
         text: String,
         cw: String? = nil,
-        attachments: [MissCatNoteAttachment] = []
+        attachments: [MissCatNoteAttachment] = [],
+        emojis: [String: URL] = [:]
     ) {
         self.noteID = noteID
         self.author = author
         self.text = text
         self.cw = cw
         self.attachments = attachments
+        self.emojis = emojis
     }
 }
 
@@ -226,6 +257,7 @@ public struct MissCatNote: Identifiable, Equatable, Sendable {
     public var poll: MissCatPoll?
     public var quotedNote: MissCatQuotedNote?
     public var renotedBy: MissCatNoteAuthor?
+    public var emojis: [String: URL]
 
     public init(
         id: String,
@@ -245,7 +277,8 @@ public struct MissCatNote: Identifiable, Equatable, Sendable {
         isFavorite: Bool = false,
         poll: MissCatPoll? = nil,
         quotedNote: MissCatQuotedNote? = nil,
-        renotedBy: MissCatNoteAuthor? = nil
+        renotedBy: MissCatNoteAuthor? = nil,
+        emojis: [String: URL] = [:]
     ) {
         self.id = id
         self.noteID = noteID ?? id
@@ -265,6 +298,7 @@ public struct MissCatNote: Identifiable, Equatable, Sendable {
         self.poll = poll
         self.quotedNote = quotedNote
         self.renotedBy = renotedBy
+        self.emojis = emojis
     }
 }
 
@@ -301,6 +335,8 @@ public enum MissCatFeedAction: Equatable, Sendable {
     case vote(noteID: String, choice: Int)
     case delete(noteID: String)
     case mute(userID: String)
+    case block(userID: String)
+    case report(userID: String, comment: String)
 }
 
 public enum MissCatRealtimeEvent: Equatable, Sendable {

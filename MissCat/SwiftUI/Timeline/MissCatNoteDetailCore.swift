@@ -85,6 +85,7 @@ public protocol MissCatNoteContextRepository: MissCatFeedRepository {
     func cachedURLPreview(for url: URL) -> MissCatURLPreview?
     func fetchURLPreview(for url: URL) async throws -> MissCatURLPreview
     func fetchReactionChoices() async throws -> [MissCatReactionChoice]
+    func resolveMention(_ acct: String) async throws -> String
 }
 
 public extension MissCatNoteContextRepository {
@@ -92,6 +93,22 @@ public extension MissCatNoteContextRepository {
 
     func fetchReactionChoices() async throws -> [MissCatReactionChoice] {
         MissCatReactionChoice.legacyDefaults
+    }
+
+    func resolveMention(_ acct: String) async throws -> String {
+        throw MissCatMentionResolutionError.unsupported(acct)
+    }
+}
+
+public enum MissCatMentionResolutionError: LocalizedError, Equatable {
+    case invalidAccount(String)
+    case unsupported(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .invalidAccount: "メンション先を特定できませんでした。"
+        case .unsupported: "この画面ではメンション先を開けません。"
+        }
     }
 }
 
@@ -103,9 +120,11 @@ public enum MissCatNativeMFMRenderer {
     public static func render(_ source: String) -> AttributedString {
         var normalized = source
         for tag in ignoredTags {
-            normalized = normalized
-                .replacingOccurrences(of: "<\(tag)>", with: "")
-                .replacingOccurrences(of: "</\(tag)>", with: "")
+            normalized = normalized.replacingOccurrences(
+                of: #"</?\#(tag)(?:\s+[^>]*)?>"#,
+                with: "",
+                options: [.regularExpression, .caseInsensitive]
+            )
         }
         normalized = normalized
             .replacingOccurrences(of: "***", with: "")
@@ -136,7 +155,25 @@ public enum MissCatNativeMFMRenderer {
                 result[attributedRange].link = url
             }
         }
+        applyInteractiveLinks(
+            pattern: #"(?<![A-Za-z0-9_@])@[A-Za-z0-9_.-]+(?:@[A-Za-z0-9.-]+)?"#,
+            kind: "mention",
+            trimmingPrefix: "@",
+            to: &result
+        )
+        applyInteractiveLinks(
+            pattern: #"(?<![A-Za-z0-9_])#[\p{L}\p{N}_]+"#,
+            kind: "hashtag",
+            trimmingPrefix: "#",
+            to: &result
+        )
         return result
+    }
+
+    public static func interactiveValue(from url: URL, kind: String) -> String? {
+        guard url.scheme == "misscat-mfm", url.host == kind else { return nil }
+        let value = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        return value.removingPercentEncoding?.nilIfEmpty
     }
 
     public static func previewURLs(in source: String, limit: Int = 1) -> [URL] {
@@ -154,6 +191,31 @@ public enum MissCatNativeMFMRenderer {
             return url
         }.prefix(limit).map { $0 }
     }
+
+    private static func applyInteractiveLinks(
+        pattern: String,
+        kind: String,
+        trimmingPrefix: Character,
+        to result: inout AttributedString
+    ) {
+        let text = String(result.characters)
+        guard let expression = try? NSRegularExpression(pattern: pattern) else { return }
+        let fullRange = NSRange(text.startIndex..., in: text)
+        for match in expression.matches(in: text, range: fullRange) {
+            guard let swiftRange = Range(match.range, in: text),
+                  let attributedRange = Range(swiftRange, in: result),
+                  result[attributedRange].link == nil else { continue }
+            let rawValue = text[swiftRange].drop(while: { $0 == trimmingPrefix })
+            guard !rawValue.isEmpty,
+                  let encoded = String(rawValue).addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+                  let url = URL(string: "misscat-mfm://\(kind)/\(encoded)") else { continue }
+            result[attributedRange].link = url
+        }
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? { isEmpty ? nil : self }
 }
 
 @MainActor
@@ -196,6 +258,134 @@ public final class MissCatNoteVisualReadiness: ObservableObject {
                   self.expected.isSubset(of: self.terminal) else { return }
             self.isReady = true
         }
+    }
+}
+
+@MainActor
+final class MissCatCustomEmojiCache {
+    static let shared = MissCatCustomEmojiCache()
+
+    private let storage = NSCache<NSURL, NSData>()
+
+    init(countLimit: Int = 256) {
+        storage.countLimit = countLimit
+        storage.totalCostLimit = 32 * 1_024 * 1_024
+    }
+
+    func data(for url: URL) -> Data? {
+        storage.object(forKey: url as NSURL) as Data?
+    }
+
+    func insert(_ data: Data, for url: URL) {
+        storage.setObject(data as NSData, forKey: url as NSURL, cost: data.count)
+    }
+}
+
+enum MissCatCustomEmojiLoadError: Error, Equatable {
+    case invalidResponse
+    case http(Int)
+    case payloadTooLarge
+}
+
+@MainActor
+final class MissCatCustomEmojiStore: ObservableObject {
+    typealias DataLoader = @Sendable (URL) async throws -> Data
+
+    @Published private(set) var dataByName: [String: Data] = [:]
+
+    private var emojis: [String: URL]
+    private var readiness: MissCatNoteVisualReadiness?
+    private let cache: MissCatCustomEmojiCache
+    private let loader: DataLoader
+    private var loadedURLsByName: [String: URL] = [:]
+
+    convenience init(
+        emojis: [String: URL],
+        readiness: MissCatNoteVisualReadiness?
+    ) {
+        self.init(
+            emojis: emojis,
+            readiness: readiness,
+            cache: .shared,
+            loader: Self.liveLoader
+        )
+    }
+
+    init(
+        emojis: [String: URL],
+        readiness: MissCatNoteVisualReadiness?,
+        cache: MissCatCustomEmojiCache,
+        loader: @escaping DataLoader
+    ) {
+        self.emojis = emojis
+        self.readiness = readiness
+        self.cache = cache
+        self.loader = loader
+    }
+
+    func load() async {
+        let entries = emojis.sorted { $0.key < $1.key }
+        let currentReadiness = readiness
+        let registeredKeys = Set(entries.map { assetKey($0.value) })
+        for (_, url) in entries {
+            let key = assetKey(url)
+            currentReadiness?.register(key)
+        }
+        defer {
+            registeredKeys.forEach { currentReadiness?.complete($0) }
+        }
+
+        for (name, url) in entries where loadedURLsByName[name] != url {
+            guard !Task.isCancelled else { return }
+            dataByName[name] = nil
+            loadedURLsByName[name] = nil
+            if let data = cache.data(for: url) {
+                dataByName[name] = data
+                loadedURLsByName[name] = url
+                currentReadiness?.complete(assetKey(url))
+                continue
+            }
+            do {
+                let data = try await loader(url)
+                try Task.checkCancellation()
+                cache.insert(data, for: url)
+                dataByName[name] = data
+                loadedURLsByName[name] = url
+            } catch {
+                if error is CancellationError { return }
+            }
+            currentReadiness?.complete(assetKey(url))
+        }
+    }
+
+    func load(
+        emojis: [String: URL],
+        readiness: MissCatNoteVisualReadiness?
+    ) async {
+        self.emojis = emojis
+        self.readiness = readiness
+        await load()
+    }
+
+    private func assetKey(_ url: URL) -> String {
+        "note-asset:\(url.absoluteString)"
+    }
+
+    static let liveLoader: DataLoader = { url in
+        var request = URLRequest(url: url)
+        request.cachePolicy = .returnCacheDataElseLoad
+        request.timeoutInterval = 20
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw MissCatCustomEmojiLoadError.invalidResponse
+        }
+        guard (200 ..< 300).contains(http.statusCode) else {
+            throw MissCatCustomEmojiLoadError.http(http.statusCode)
+        }
+        guard data.count <= 4_000_000 else {
+            throw MissCatCustomEmojiLoadError.payloadTooLarge
+        }
+        return data
     }
 }
 
@@ -403,11 +593,15 @@ public final class MissCatReactionPickerStore: ObservableObject {
 }
 
 public enum MissCatNoteOverflowAction: Equatable, Sendable {
+    case copyText
     case copyLink
+    case share
     case openInBrowser
     case share
     case favorite
     case unfavorite
     case muteUser
+    case blockUser
+    case reportUser
     case delete
 }

@@ -37,7 +37,7 @@ public struct MissCatTimelineTab: Identifiable, Equatable, Sendable {
 }
 
 /// The visual shell shared by the timeline, notifications, chat and account screens.
-/// Feature views are injected so this layer has no dependency on the legacy UIKit models.
+/// Feature views are injected so this layer has no dependency on legacy view models.
 public struct MissCatMainShellView<Content: View>: View {
     @Binding private var selectedTimelineID: String
     @Binding private var selectedSection: MissCatRootSection
@@ -184,8 +184,8 @@ public struct MissCatTimelineTabs: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 0) {
                     Button(action: onSearch) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 20, weight: .regular))
+                        Text("\u{f002}")
+                            .font(.custom("FontAwesome5Free-Solid", size: 15))
                             .foregroundStyle(palette.text)
                             .frame(width: searchWidth, height: MissCatLegacyMetrics.timelineTabsHeight)
                     }
@@ -454,8 +454,8 @@ public struct MissCatBottomBar: View {
 
     public var body: some View {
         HStack(spacing: MissCatLegacyMetrics.bottomBarItemSpacing) {
-            rootButton(.home, symbol: "house.fill", label: "ホーム")
-            rootButton(.notifications, symbol: "bell.fill", label: "通知")
+            rootButton(.home, glyph: "\u{f015}", label: "ホーム")
+            rootButton(.notifications, glyph: "\u{f0f3}", label: "通知")
 
             Button {
                 var state = MissCatFooterSelectionState(selectedSection: selectedSection)
@@ -469,8 +469,8 @@ public struct MissCatBottomBar: View {
                         height: MissCatLegacyMetrics.composeButtonDiameter
                     )
                     .overlay {
-                        Image(systemName: "square.and.pencil")
-                            .font(.system(size: 23, weight: .regular))
+                        Text("\u{f044}")
+                            .font(.custom("FontAwesome5Free-Regular", size: 20))
                             .foregroundStyle(.white)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -479,8 +479,8 @@ public struct MissCatBottomBar: View {
             .accessibilityLabel("投稿")
             .accessibilityIdentifier("main.action.compose")
 
-            rootButton(.messages, symbol: "star.fill", label: "ダイレクトメッセージ")
-            rootButton(.profile, symbol: "person.fill", label: "プロフィール")
+            rootButton(.messages, glyph: "\u{f005}", label: "ダイレクトメッセージ")
+            rootButton(.profile, glyph: "\u{f007}", label: "プロフィール")
         }
         .padding(.horizontal, 0)
         .frame(height: MissCatLegacyMetrics.bottomBarHeight)
@@ -496,7 +496,7 @@ public struct MissCatBottomBar: View {
 
     private func rootButton(
         _ destination: MissCatFooterDestination,
-        symbol: String,
+        glyph: String,
         label: String
     ) -> some View {
         let section = destination.rootSection ?? .home
@@ -511,8 +511,8 @@ public struct MissCatBottomBar: View {
                 onCompose()
             }
         } label: {
-            Image(systemName: symbol)
-                .font(.system(size: 21, weight: .semibold))
+            Text(glyph)
+                .font(.custom("FontAwesome5Free-Solid", size: 20))
                 .foregroundStyle(selectedSection == section ? palette.accent : Color(white: 0.67))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }

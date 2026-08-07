@@ -21,6 +21,7 @@ public struct MissCatFeedNavigationActions {
     public var openNote: (String) -> Void
     public var openAttachment: (MissCatNoteAttachment) -> Void
     public var openHashtag: (String) -> Void
+    public var openMention: (String) -> Void
     public var reply: (String) -> Void
     public var chooseReaction: (MissCatFeedReactionRequest) -> Void
     public var share: (String) -> Void
@@ -30,6 +31,7 @@ public struct MissCatFeedNavigationActions {
         openNote: @escaping (String) -> Void = { _ in },
         openAttachment: @escaping (MissCatNoteAttachment) -> Void = { _ in },
         openHashtag: @escaping (String) -> Void = { _ in },
+        openMention: @escaping (String) -> Void = { _ in },
         reply: @escaping (String) -> Void = { _ in },
         chooseReaction: @escaping (MissCatFeedReactionRequest) -> Void = { _ in },
         share: @escaping (String) -> Void = { _ in }
@@ -38,6 +40,7 @@ public struct MissCatFeedNavigationActions {
         self.openNote = openNote
         self.openAttachment = openAttachment
         self.openHashtag = openHashtag
+        self.openMention = openMention
         self.reply = reply
         self.chooseReaction = chooseReaction
         self.share = share
@@ -49,6 +52,11 @@ public struct MissCatFeedNavigationActions {
 public struct MissCatFeedView: View {
     @StateObject private var store: MissCatFeedStore
     @Binding private var scrollPositionID: String?
+    @State private var presentedSheet: PresentedSheet?
+    @State private var pendingRenote: MissCatNote?
+    @State private var pendingDestructiveAction: DestructiveAction?
+    @State private var pendingReport: MissCatNote?
+    @State private var reportComment = ""
 
     private let palette: MissCatVisualPalette
     private let emptyTitle: String
@@ -57,6 +65,7 @@ public struct MissCatFeedView: View {
     private let relativeDateReference: Date
     private let visualReadyIdentifier: String?
     private let allowsLoadingVisualReady: Bool
+    private let contextRepository: (any MissCatNoteContextRepository)?
 
     public init(
         source: MissCatFeedSource,
@@ -79,6 +88,7 @@ public struct MissCatFeedView: View {
             )
         )
         _scrollPositionID = scrollPositionID
+        contextRepository = repository as? any MissCatNoteContextRepository
         self.palette = palette
         self.emptyTitle = emptyTitle
         self.scrollToTopTrigger = scrollToTopTrigger
@@ -112,28 +122,159 @@ public struct MissCatFeedView: View {
             }
         }
         .overlay(alignment: .top) {
-            if let message = store.actionErrorMessage {
-                MissCatFeedStatusBanner(
-                    message: message,
-                    palette: palette,
-                    onDismiss: store.dismissActionError
-                )
-                .padding(.horizontal, 10)
-                .padding(.top, 8)
-                .transition(.move(edge: .top).combined(with: .opacity))
+            VStack(spacing: 6) {
+                if store.isRefreshing {
+                    HStack(spacing: 8) {
+                        ProgressView().tint(palette.accent)
+                        Text("更新中…")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(palette.text)
+                    }
+                    .padding(.horizontal, 12)
+                    .frame(height: 34)
+                    .background(palette.surface.opacity(0.98), in: Capsule())
+                    .shadow(color: .black.opacity(0.12), radius: 3, y: 1)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("feed.refreshing")
+                }
+
+                if let message = store.actionErrorMessage {
+                    MissCatFeedStatusBanner(
+                        message: message,
+                        palette: palette,
+                        onDismiss: store.dismissActionError
+                    )
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
             }
+            .padding(.horizontal, 10)
+            .padding(.top, 8)
         }
         .overlay(alignment: .bottomTrailing) {
-            if isVisuallyStable, let visualReadyIdentifier {
-                Text("visual-ready")
+            VStack(spacing: 0) {
+                Text("refresh-completed")
                     .font(.system(size: 1))
                     .opacity(0.01)
                     .frame(width: 1, height: 1)
-                    .accessibilityIdentifier(visualReadyIdentifier)
-                    .accessibilityValue(scrollPositionID ?? "top")
+                    .accessibilityIdentifier("feed.refresh.completed")
+                    .accessibilityValue("\(store.refreshCompletionGeneration)")
+
+                if isVisuallyStable, let visualReadyIdentifier {
+                    Text("visual-ready")
+                        .font(.system(size: 1))
+                        .opacity(0.01)
+                        .frame(width: 1, height: 1)
+                        .accessibilityIdentifier(visualReadyIdentifier)
+                        .accessibilityValue(scrollPositionID ?? "top")
+                }
             }
         }
         .animation(.easeInOut(duration: 0.2), value: store.actionErrorMessage)
+        .fullScreenCover(item: $presentedSheet) { sheet in
+            switch sheet.kind {
+            case .reaction:
+                if let contextRepository {
+                    MissCatReactionPickerView(
+                        noteID: sheet.note.noteID,
+                        existingReactions: sheet.note.reactions,
+                        repository: contextRepository,
+                        palette: palette
+                    ) { noteID, reaction in
+                        Task { await store.toggleReaction(noteID: noteID, reaction: reaction) }
+                    }
+                }
+            case .reply:
+                MissCatNoteComposeSheet(note: sheet.note, kind: .reply) {
+                    presentedSheet = nil
+                    Task { await store.refresh() }
+                }
+            case .quote:
+                MissCatNoteComposeSheet(note: sheet.note, kind: .quote) {
+                    presentedSheet = nil
+                    Task { await store.refresh() }
+                }
+            }
+        }
+        .confirmationDialog(
+            "Renote",
+            isPresented: Binding(
+                get: { pendingRenote != nil },
+                set: { if !$0 { pendingRenote = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            if let note = pendingRenote {
+                Button("Renote") {
+                    pendingRenote = nil
+                    Task { await store.renote(noteID: note.noteID) }
+                }
+                .accessibilityIdentifier("timeline.renote.confirm")
+                Button("引用Renote") {
+                    pendingRenote = nil
+                    presentedSheet = PresentedSheet(kind: .quote, note: note)
+                }
+                .accessibilityIdentifier("timeline.renote.quote")
+            }
+            Button("キャンセル", role: .cancel) { pendingRenote = nil }
+        }
+        .alert(
+            pendingDestructiveAction?.title ?? "確認",
+            isPresented: Binding(
+                get: { pendingDestructiveAction != nil },
+                set: { if !$0 { pendingDestructiveAction = nil } }
+            ),
+            presenting: pendingDestructiveAction
+        ) { action in
+            Button(action.actionTitle, role: .destructive) {
+                pendingDestructiveAction = nil
+                Task {
+                    switch action {
+                    case let .delete(note): await store.delete(noteID: note.noteID)
+                    case let .mute(note): await store.muteUser(userID: note.author.id)
+                    case let .block(note): await store.blockUser(userID: note.author.id)
+                    }
+                }
+            }
+            .accessibilityIdentifier("timeline.destructive.confirm")
+            Button("キャンセル", role: .cancel) { pendingDestructiveAction = nil }
+        } message: { action in
+            Text(action.message)
+        }
+        .alert(
+            "このユーザーを通報",
+            isPresented: Binding(
+                get: { pendingReport != nil },
+                set: {
+                    if !$0 {
+                        pendingReport = nil
+                        reportComment = ""
+                    }
+                }
+            ),
+            presenting: pendingReport
+        ) { note in
+            TextField("通報理由（必須）", text: $reportComment)
+                .accessibilityIdentifier("timeline.report.comment")
+                .onChange(of: reportComment) { _, value in
+                    if value.count > MissCatReportComment.maximumLength {
+                        reportComment = MissCatReportComment.clamped(value)
+                    }
+                }
+            Button("通報", role: .destructive) {
+                let comment = reportComment
+                pendingReport = nil
+                reportComment = ""
+                Task { await store.reportUser(userID: note.author.id, comment: comment) }
+            }
+            .disabled(MissCatReportComment.normalized(reportComment) == nil)
+            .accessibilityIdentifier("timeline.report.confirm")
+            Button("キャンセル", role: .cancel) {
+                pendingReport = nil
+                reportComment = ""
+            }
+        } message: { note in
+            Text("@\(note.author.username) を運営に通報します。")
+        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("feed.\(store.source.accessibilityName)")
     }
@@ -152,25 +293,34 @@ public struct MissCatFeedView: View {
                         onOpenNote: navigationActions.openNote,
                         onOpenAttachment: navigationActions.openAttachment,
                         onOpenHashtag: navigationActions.openHashtag,
-                        onReply: navigationActions.reply,
-                        onRenote: { noteID in
-                            Task { await store.renote(noteID: noteID) }
+                        onOpenMention: openMention,
+                        onReply: { _ in
+                            if contextRepository != nil {
+                                presentedSheet = PresentedSheet(kind: .reply, note: note)
+                            } else {
+                                navigationActions.reply(note.noteID)
+                            }
                         },
+                        onRenote: { _ in pendingRenote = note },
                         onChooseReaction: { noteID in
-                            navigationActions.chooseReaction(
-                                MissCatFeedReactionRequest(
-                                    noteID: noteID,
-                                    existingReactions: note.reactions,
-                                    selectReaction: { reaction in
-                                        Task {
-                                            await store.toggleReaction(
-                                                noteID: noteID,
-                                                reaction: reaction
-                                            )
+                            if contextRepository != nil {
+                                presentedSheet = PresentedSheet(kind: .reaction, note: note)
+                            } else {
+                                navigationActions.chooseReaction(
+                                    MissCatFeedReactionRequest(
+                                        noteID: noteID,
+                                        existingReactions: note.reactions,
+                                        selectReaction: { reaction in
+                                            Task {
+                                                await store.toggleReaction(
+                                                    noteID: noteID,
+                                                    reaction: reaction
+                                                )
+                                            }
                                         }
-                                    }
+                                    )
                                 )
-                            )
+                            }
                         },
                         onToggleReaction: { noteID, reaction in
                             Task { await store.toggleReaction(noteID: noteID, reaction: reaction) }
@@ -181,7 +331,15 @@ public struct MissCatFeedView: View {
                         onVote: { noteID, choice in
                             Task { await store.vote(noteID: noteID, choice: choice) }
                         },
-                        onShare: navigationActions.share
+                        onDelete: { _ in pendingDestructiveAction = .delete(note) },
+                        onMuteUser: { _ in pendingDestructiveAction = .mute(note) },
+                        onBlockUser: { _ in pendingDestructiveAction = .block(note) },
+                        onReportUser: { _ in
+                            reportComment = ""
+                            pendingReport = note
+                        },
+                        onShare: navigationActions.share,
+                        contextRepository: contextRepository
                     )
                     .id(note.id)
                     .task {
@@ -268,6 +426,57 @@ public struct MissCatFeedView: View {
             true
         case .idle, .loading:
             allowsLoadingVisualReady
+        }
+    }
+
+    private struct PresentedSheet: Identifiable {
+        enum Kind: String { case reaction, reply, quote }
+        let kind: Kind
+        let note: MissCatNote
+        var id: String { "\(kind.rawValue):\(note.noteID)" }
+    }
+
+    private func openMention(_ acct: String) {
+        guard let contextRepository else {
+            navigationActions.openMention(acct)
+            return
+        }
+        Task {
+            do {
+                navigationActions.openUser(try await contextRepository.resolveMention(acct))
+            } catch {
+                navigationActions.openMention(acct)
+            }
+        }
+    }
+
+    private enum DestructiveAction {
+        case delete(MissCatNote)
+        case mute(MissCatNote)
+        case block(MissCatNote)
+
+        var title: String {
+            switch self {
+            case .delete: "ノートを削除しますか？"
+            case .mute: "このユーザーをミュートしますか？"
+            case .block: "このユーザーをブロックしますか？"
+            }
+        }
+
+        var message: String {
+            switch self {
+            case .delete: "この操作は取り消せません。"
+            case .mute: "このユーザーのノートは表示されなくなります。"
+            case .block: "相互フォローが解除され、このユーザーとのやり取りが制限されます。"
+            }
+        }
+
+        var actionTitle: String {
+            switch self {
+            case .delete: "削除"
+            case .mute: "ミュート"
+            case .block: "ブロック"
+            }
         }
     }
 }
@@ -587,6 +796,8 @@ public struct MissCatNoteDetailView: View {
     @State private var presentedSheet: PresentedSheet?
     @State private var pendingRenote: MissCatNote?
     @State private var pendingDestructiveAction: DestructiveAction?
+    @State private var pendingReport: MissCatNote?
+    @State private var reportComment = ""
 
     public init(
         noteID: String,
@@ -694,6 +905,7 @@ public struct MissCatNoteDetailView: View {
                     switch action {
                     case let .delete(note): await store.delete(noteID: note.noteID)
                     case let .mute(note): await store.muteUser(userID: note.author.id)
+                    case let .block(note): await store.blockUser(userID: note.author.id)
                     }
                 }
             }
@@ -701,6 +913,41 @@ public struct MissCatNoteDetailView: View {
             Button("キャンセル", role: .cancel) { pendingDestructiveAction = nil }
         } message: { action in
             Text(action.message)
+        }
+        .alert(
+            "このユーザーを通報",
+            isPresented: Binding(
+                get: { pendingReport != nil },
+                set: {
+                    if !$0 {
+                        pendingReport = nil
+                        reportComment = ""
+                    }
+                }
+            ),
+            presenting: pendingReport
+        ) { note in
+            TextField("通報理由（必須）", text: $reportComment)
+                .accessibilityIdentifier("note.report.comment")
+                .onChange(of: reportComment) { _, value in
+                    if value.count > MissCatReportComment.maximumLength {
+                        reportComment = MissCatReportComment.clamped(value)
+                    }
+                }
+            Button("通報", role: .destructive) {
+                let comment = reportComment
+                pendingReport = nil
+                reportComment = ""
+                Task { await store.reportUser(userID: note.author.id, comment: comment) }
+            }
+            .disabled(MissCatReportComment.normalized(reportComment) == nil)
+            .accessibilityIdentifier("note.report.confirm")
+            Button("キャンセル", role: .cancel) {
+                pendingReport = nil
+                reportComment = ""
+            }
+        } message: { note in
+            Text("@\(note.author.username) を運営に通報します。")
         }
         .navigationTitle("Thread")
         .navigationBarTitleDisplayMode(.inline)
@@ -714,7 +961,12 @@ public struct MissCatNoteDetailView: View {
             }
         }
         .id(contextRepository?.accountIdentifier ?? "unscoped:\(noteID)")
-        .accessibilityIdentifier("note.detail.screen")
+        .overlay(alignment: .topLeading) {
+            Color.clear
+                .frame(width: 1, height: 1)
+                .accessibilityElement()
+                .accessibilityIdentifier("note.detail.screen")
+        }
     }
 
     @ViewBuilder
@@ -780,6 +1032,7 @@ public struct MissCatNoteDetailView: View {
                         onOpenNote: navigationActions.openNote,
                         onOpenAttachment: navigationActions.openAttachment,
                         onOpenHashtag: navigationActions.openHashtag,
+                        onOpenMention: openMention,
                         onReply: { _ in presentedSheet = PresentedSheet(kind: .reply, note: note) },
                         onRenote: { _ in pendingRenote = note },
                         onChooseReaction: { _ in
@@ -809,6 +1062,11 @@ public struct MissCatNoteDetailView: View {
                         onVote: { noteID, choice in Task { await store.vote(noteID: noteID, choice: choice) } },
                         onDelete: { _ in pendingDestructiveAction = .delete(note) },
                         onMuteUser: { _ in pendingDestructiveAction = .mute(note) },
+                        onBlockUser: { _ in pendingDestructiveAction = .block(note) },
+                        onReportUser: { _ in
+                            reportComment = ""
+                            pendingReport = note
+                        },
                         onShare: navigationActions.share,
                         contextRepository: contextRepository,
                         readiness: readiness
@@ -843,14 +1101,30 @@ public struct MissCatNoteDetailView: View {
         var id: String { "\(kind.rawValue):\(note.noteID)" }
     }
 
+    private func openMention(_ acct: String) {
+        guard let contextRepository else {
+            navigationActions.openMention(acct)
+            return
+        }
+        Task {
+            do {
+                navigationActions.openUser(try await contextRepository.resolveMention(acct))
+            } catch {
+                navigationActions.openMention(acct)
+            }
+        }
+    }
+
     private enum DestructiveAction {
         case delete(MissCatNote)
         case mute(MissCatNote)
+        case block(MissCatNote)
 
         var title: String {
             switch self {
             case .delete: "ノートを削除しますか？"
             case .mute: "このユーザーをミュートしますか？"
+            case .block: "このユーザーをブロックしますか？"
             }
         }
 
@@ -858,6 +1132,7 @@ public struct MissCatNoteDetailView: View {
             switch self {
             case .delete: "この操作は取り消せません。"
             case .mute: "このユーザーのノートは表示されなくなります。"
+            case .block: "相互フォローが解除され、このユーザーとのやり取りが制限されます。"
             }
         }
 
@@ -865,6 +1140,7 @@ public struct MissCatNoteDetailView: View {
             switch self {
             case .delete: "削除"
             case .mute: "ミュート"
+            case .block: "ブロック"
             }
         }
     }
@@ -907,7 +1183,7 @@ private struct MissCatNoteComposeSheet: View {
         )
         let mode: MissCatComposeMode = kind == .reply ? .reply(target) : .quote(target)
 #if DEBUG
-        let model = MissCatNoteOrdinaryRouteConfiguration.isEnabled
+        let model = MissCatNoteOrdinaryRouteConfiguration.isEnabled || MissCatShellFixtureLaunch.isRequested
             ? MissCatNoteOrdinaryRouteComposeFactory.makeViewModel(mode: mode)
             : MissCatComposeFactory.makeViewModel(mode: mode)
 #else
@@ -943,7 +1219,7 @@ private struct MissCatNoteComposeSheet: View {
                     if viewModel.draft.text.isEmpty {
                         Text(kind == .reply ? "返信を入力" : "コメントを入力")
                             .font(.system(size: 17))
-                            .foregroundStyle(Color(uiColor: .placeholderText))
+                            .foregroundStyle(MissCatVisualPalette.noteLegacyLight.strong.opacity(0.55))
                             .padding(.horizontal, 5)
                             .padding(.vertical, 8)
                     }

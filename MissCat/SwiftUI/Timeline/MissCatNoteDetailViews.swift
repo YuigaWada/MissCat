@@ -1,6 +1,5 @@
 import AVKit
 import SwiftUI
-import UIKit
 
 extension MissCatVisualPalette {
     static let noteLegacyLight = MissCatVisualPalette(

@@ -93,6 +93,7 @@ final class MissCatAuthenticationService {
         "write:notifications",
         "read:reactions",
         "write:reactions",
+        "write:report-abuse",
         "write:votes",
         "read:pages",
         "write:pages",

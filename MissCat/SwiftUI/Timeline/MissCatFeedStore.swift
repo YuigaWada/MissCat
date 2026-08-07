@@ -10,6 +10,7 @@ public final class MissCatFeedStore: ObservableObject {
     @Published public private(set) var notes: [MissCatNote] = []
     @Published public private(set) var thread: MissCatNoteThread?
     @Published public private(set) var isRefreshing = false
+    @Published public private(set) var refreshCompletionGeneration = 0
     @Published public private(set) var isLoadingNextPage = false
     @Published public private(set) var canLoadMore = true
     @Published public private(set) var isRealtimeConnected = false
@@ -34,6 +35,8 @@ public final class MissCatFeedStore: ObservableObject {
         case vote(String)
         case delete(String)
         case mute(String)
+        case block(String)
+        case report(String)
     }
 
     private enum InitialContent {
@@ -48,6 +51,8 @@ public final class MissCatFeedStore: ObservableObject {
         case vote(String, Int)
         case delete(String)
         case mute(String)
+        case block(String)
+        case report(String, String)
     }
 
     public init(
@@ -157,6 +162,7 @@ public final class MissCatFeedStore: ObservableObject {
                 }
                 guard let self, self.accepts(generation: generation, scope: capturedScope) else { return }
                 self.applyRefreshContent(content)
+                self.refreshCompletionGeneration &+= 1
                 self.refreshTask = nil
                 self.isRefreshing = false
                 self.startRealtimeIfNeeded()
@@ -235,6 +241,8 @@ public final class MissCatFeedStore: ObservableObject {
         case let .vote(noteID, choice): await vote(noteID: noteID, choice: choice)
         case let .delete(noteID): await delete(noteID: noteID)
         case let .mute(userID): await muteUser(userID: userID)
+        case let .block(userID): await blockUser(userID: userID)
+        case let .report(userID, comment): await reportUser(userID: userID, comment: comment)
         }
     }
 
@@ -404,6 +412,34 @@ public final class MissCatFeedStore: ObservableObject {
             phase = notes.isEmpty ? .empty : .loaded
         } catch {
             recordFailure(.mute(userID), error: error)
+        }
+    }
+
+    public func blockUser(userID: String) async {
+        let mutationKey = MutationKey.block(userID)
+        guard inFlightMutations.insert(mutationKey).inserted else { return }
+        defer { inFlightMutations.remove(mutationKey) }
+
+        do {
+            try await repository.perform(.block(userID: userID))
+            notes.removeAll { $0.author.id == userID }
+            synchronizeThread()
+            phase = notes.isEmpty ? .empty : .loaded
+        } catch {
+            recordFailure(.block(userID), error: error)
+        }
+    }
+
+    public func reportUser(userID: String, comment: String) async {
+        guard let normalized = MissCatReportComment.normalized(comment) else { return }
+        let mutationKey = MutationKey.report(userID)
+        guard inFlightMutations.insert(mutationKey).inserted else { return }
+        defer { inFlightMutations.remove(mutationKey) }
+
+        do {
+            try await repository.perform(.report(userID: userID, comment: normalized))
+        } catch {
+            recordFailure(.report(userID, normalized), error: error)
         }
     }
 
