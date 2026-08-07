@@ -200,22 +200,24 @@ private final class MissCatDiscoveryFixtureRepository: MissCatDiscoveryRepositor
     }
 
     private static func note(index: Int, query: String) -> MissCatNote {
-        .init(
+        let visibleQuery = query.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+        return .init(
             id: "fixture-note-\(index)",
             author: author(index: index),
             createdAt: Date(timeIntervalSince1970: 1_700_000_000 + Double(index * 60)),
-            text: "\(query) の検索結果 \(index + 1) — SwiftUIで同じ操作感を再現しています。",
-            reactions: [.init(name: "👍", count: index + 1)],
-            repliesCount: index % 3,
-            renoteCount: index % 4,
+            text: "\(visibleQuery) の検索結果 \(index + 1) — SwiftUIで同じ操作感を再現しています。",
+            reactions: [.init(name: "👍", count: 1)],
+            repliesCount: 0,
+            renoteCount: 0,
             tags: ["SwiftUI", "MissCat"]
         )
     }
 
     private static func user(index: Int, query: String) -> MissCatProfileUser {
-        .init(
+        let visibleQuery = query.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+        return .init(
             id: "fixture-user-\(index)",
-            name: index == 0 ? "だわくん 🧃" : "\(query) User \(index + 1)",
+            name: index == 0 ? "だわくん 🧃" : "\(visibleQuery) User \(index + 1)",
             username: index == 0 ? "wada" : "search\(index + 1)",
             description: "MissCatのSwiftUI検索fixtureユーザーです。",
             isCat: index.isMultiple(of: 3),

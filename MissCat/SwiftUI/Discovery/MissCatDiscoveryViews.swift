@@ -262,14 +262,11 @@ public struct MissCatDiscoveryScreen: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(store.noteResults.items) { note in
-                        MissCatNoteRow(
+                        MissCatDiscoveryLegacyNoteRow(
                             note: note,
                             palette: palette,
                             onOpenUser: navigationActions.openUser,
-                            onOpenNote: navigationActions.openNote,
-                            onOpenAttachment: navigationActions.openAttachment,
-                            onOpenHashtag: navigationActions.openHashtag,
-                            presentsMediaInternally: false
+                            onOpenNote: navigationActions.openNote
                         )
                         .contentShape(Rectangle())
                         .onTapGesture { navigationActions.openNote(note.noteID) }
@@ -314,7 +311,7 @@ public struct MissCatDiscoveryScreen: View {
                 LazyVStack(spacing: 0) {
                     ForEach(store.userResults.items) { user in
                         Button { navigationActions.openUser(user.id) } label: {
-                            MissCatUserRow(user: user, palette: palette)
+                            MissCatDiscoveryLegacyUserRow(user: user, palette: palette)
                         }
                         .buttonStyle(.plain)
                         .onAppear { store.loadMoreUsersIfNeeded(currentUserID: user.id) }
@@ -388,6 +385,122 @@ public struct MissCatDiscoveryScreen: View {
     private var capitalizedInstance: String {
         guard let first = instanceDisplayName.first else { return "このインスタンス" }
         return first.uppercased() + instanceDisplayName.dropFirst()
+    }
+}
+
+/// Search results preserve the compact geometry of the retired UIKit cells
+/// while retaining native SwiftUI routing at the row and avatar boundaries.
+private struct MissCatDiscoveryLegacyNoteRow: View {
+    let note: MissCatNote
+    let palette: MissCatVisualPalette
+    let onOpenUser: (String) -> Void
+    let onOpenNote: (String) -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Button { onOpenUser(note.author.id) } label: {
+                legacyAvatar(url: note.author.avatarURL)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(note.author.name)のプロフィール")
+
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Text(note.author.name)
+                        .font(.system(size: 14, weight: .semibold))
+                        .lineLimit(1)
+                    Text(note.author.acct)
+                        .font(.system(size: 11))
+                        .foregroundStyle(palette.strong)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .frame(height: 27)
+
+                Text(MissCatNativeMFMRenderer.render(note.text))
+                    .font(.system(size: 14))
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .padding(.top, 3)
+
+                Spacer(minLength: 0)
+
+                Text("↩  \(note.repliesCount)          ⇄  \(note.renoteCount)          ♡  \(note.reactions.reduce(0) { $0 + $1.count })          ···")
+                    .font(.system(size: 13))
+                    .foregroundStyle(palette.strong)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .foregroundStyle(palette.text)
+        .padding(.leading, 20)
+        .padding(.trailing, 20)
+        .padding(.top, 13)
+        .padding(.bottom, 10)
+        .frame(height: 148)
+        .background(palette.base)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(palette.border).frame(height: MissCatLegacyMetrics.hairlineWidth)
+        }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .contain)
+    }
+
+    private func legacyAvatar(url: URL?) -> some View {
+        AsyncImage(url: url) { phase in
+            if case let .success(image) = phase {
+                image.resizable().scaledToFill()
+            } else {
+                Circle().fill(palette.surface)
+            }
+        }
+        .frame(width: 50, height: 50)
+        .clipShape(Circle())
+    }
+}
+
+private struct MissCatDiscoveryLegacyUserRow: View {
+    let user: MissCatProfileUser
+    let palette: MissCatVisualPalette
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 10) {
+            AsyncImage(url: user.avatarURL) { phase in
+                if case let .success(image) = phase {
+                    image.resizable().scaledToFill()
+                } else {
+                    Circle().fill(palette.surface)
+                }
+            }
+            .frame(width: 50, height: 50)
+            .clipShape(Circle())
+
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Text(user.displayName)
+                        .font(.system(size: 15, weight: .semibold))
+                        .lineLimit(1)
+                    Text(user.acct)
+                        .font(.system(size: 12))
+                        .foregroundStyle(palette.strong)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                Text(user.description?.isEmpty == false ? user.description! : "自己紹介文はありません")
+                    .font(.system(size: 13))
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .foregroundStyle(palette.text)
+        .padding(.horizontal, 20)
+        .frame(height: 100)
+        .background(palette.base)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(palette.border.opacity(0.7)).frame(height: MissCatLegacyMetrics.hairlineWidth)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 
