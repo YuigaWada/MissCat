@@ -141,6 +141,29 @@ final class MissCatNativeMFMTests: XCTestCase {
         )
     }
 
+    func testMFMRenderSegmentsKeepCustomEmojiInsideNestedFunctions() {
+        let segments = MissCatNativeMFMRenderer.segments(
+            "$[spin safe :blobcat: @alice@example.test]"
+        )
+
+        XCTAssertEqual(segmentText(segments), "safe :blobcat: @alice@example.test")
+        XCTAssertEqual(customEmojiNames(segments), ["blobcat"])
+        let links = segments.compactMap { segment -> URL? in
+            guard case let .attributed(value) = segment else { return nil }
+            return value.runs.compactMap(\.link).first
+        }
+        XCTAssertTrue(links.contains(URL(string: "misscat-mfm://mention/alice@example.test")!))
+    }
+
+    func testMFMRenderSegmentsDoNotSubstituteEmojiInsidePlainTag() {
+        let segments = MissCatNativeMFMRenderer.segments(
+            "<plain>:blobcat: $[spin literal]</plain>"
+        )
+
+        XCTAssertEqual(segmentText(segments), ":blobcat: $[spin literal]")
+        XCTAssertTrue(customEmojiNames(segments).isEmpty)
+    }
+
     func testPlainTagDisablesNestedFormattingAndRouting() {
         let rendered = MissCatNativeMFMRenderer.render(
             "<plain>**bold** @alice #SwiftUI `code` $[x2 large] :blobcat:</plain>"
@@ -273,6 +296,22 @@ final class MissCatNativeMFMTests: XCTestCase {
 
     private func text(_ source: String) -> String {
         String(MissCatNativeMFMRenderer.render(source).characters)
+    }
+
+    private func segmentText(_ segments: [MissCatMFMRenderSegment]) -> String {
+        segments.map { segment in
+            switch segment {
+            case let .attributed(value): String(value.characters)
+            case let .customEmoji(name, _): ":\(name):"
+            }
+        }.joined()
+    }
+
+    private func customEmojiNames(_ segments: [MissCatMFMRenderSegment]) -> [String] {
+        segments.compactMap { segment in
+            guard case let .customEmoji(name, _) = segment else { return nil }
+            return name
+        }
     }
 
     private func intent(
