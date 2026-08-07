@@ -199,6 +199,7 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
             if path.hasSuffix("notes/children") {
                 XCTAssertEqual(body["noteId"] as? String, "root")
                 XCTAssertEqual(body["limit"] as? Int, 30)
+                XCTAssertNil(body["untilId"])
                 return Self.response(for: request, json: [Self.noteJSON(id: "child")])
             }
             let noteID = try XCTUnwrap(body["noteId"] as? String)
@@ -218,6 +219,26 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         XCTAssertEqual(thread.ancestors.map(\.id), ["parent"])
         XCTAssertEqual(thread.note.id, "root")
         XCTAssertEqual(thread.replies.map(\.id), ["child"])
+        XCTAssertEqual(thread.repliesCursor, "child")
+        XCTAssertFalse(thread.hasMoreReplies)
+    }
+
+    func testReplyPageUsesOfficialUntilIDCursorAndReportsTerminalPage() async throws {
+        var capturedBody: [String: Any] = [:]
+        FeedURLProtocolStub.handler = { request in
+            capturedBody = try XCTUnwrap(request.feedBodyData).feedJSONObject
+            return Self.response(for: request, json: [Self.noteJSON(id: "child-older")])
+        }
+        let subject = makeSubject()
+
+        let page = try await subject.fetchReplies(noteID: "root", cursor: "child-newer", limit: 2)
+
+        XCTAssertEqual(capturedBody["noteId"] as? String, "root")
+        XCTAssertEqual(capturedBody["untilId"] as? String, "child-newer")
+        XCTAssertEqual(capturedBody["limit"] as? Int, 2)
+        XCTAssertEqual(page.replies.map(\.id), ["child-older"])
+        XCTAssertEqual(page.nextCursor, "child-older")
+        XCTAssertFalse(page.hasMore)
     }
 
     func testActionsUseCurrentEndpointsAndExactBodies() async throws {
@@ -340,6 +361,91 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         } catch {
             XCTAssertEqual(error as? MissCatFeedRepositoryError, .invalidInstance)
             XCTAssertEqual(requestCount, 0)
+        }
+    }
+
+    func testFeedSessionRejectsEveryNonOriginAndNonHTTPSInstanceShape() {
+        let invalidInstances = [
+            "",
+            "http://trusted.example",
+            "https://trusted.example@evil.example",
+            "https://trusted.example/",
+            "https://trusted.example/path",
+            "https://trusted.example?query=1",
+            "https://trusted.example#fragment",
+            "https://trusted.example:0",
+            "https://trusted.example:65536",
+            "https://trusted.example:invalid",
+            "https://trusted.example:",
+            "https:///missing-host",
+        ]
+
+        for instance in invalidInstances {
+            let session = MissCatFeedSession(
+                accountID: "me",
+                username: "alice",
+                instance: instance,
+                apiKey: "never-leak-this-token"
+            )
+            XCTAssertNil(session.instanceOrigin, "Unexpectedly accepted \(instance)")
+        }
+    }
+
+    func testCanonicalHTTPSOriginPreservesHostAndNonDefaultPort() async throws {
+        var request: URLRequest?
+        FeedURLProtocolStub.handler = { captured in
+            request = captured
+            return Self.response(for: captured, json: [])
+        }
+        let session = MissCatFeedSession(
+            accountID: "me",
+            username: "alice",
+            instance: " TENANT.EXAMPLE:8443 ",
+            apiKey: "account-token"
+        )
+        let subject = MissCatMisskeyFeedRepository(session: session, urlSession: urlSession)
+
+        _ = try await subject.fetchPage(source: .home, cursor: nil, limit: 20)
+
+        XCTAssertEqual(session.instanceOrigin?.absoluteString, "https://tenant.example:8443")
+        XCTAssertEqual(request?.url?.absoluteString, "https://tenant.example:8443/api/notes/timeline")
+    }
+
+    func testMaliciousUserInfoAndHTTPFailClosedBeforeRESTOrStreamingRequest() async {
+        for instance in ["https://trusted.example@evil.example", "http://trusted.example"] {
+            var restRequestCount = 0
+            FeedURLProtocolStub.handler = { request in
+                restRequestCount += 1
+                XCTAssertFalse(request.description.contains("never-leak-this-token"))
+                return Self.response(for: request, json: [])
+            }
+            let socket = FeedFakeWebSocket()
+            let factory = FeedFakeWebSocketFactory(sockets: [socket])
+            let session = MissCatFeedSession(
+                accountID: "me",
+                username: "alice",
+                instance: instance,
+                apiKey: "never-leak-this-token"
+            )
+            let subject = MissCatMisskeyFeedRepository(
+                session: session,
+                urlSession: urlSession,
+                webSocketFactory: factory
+            )
+
+            do {
+                _ = try await subject.fetchPage(source: .home, cursor: nil, limit: 20)
+                XCTFail("Expected \(instance) to fail")
+            } catch {
+                XCTAssertEqual(error as? MissCatFeedRepositoryError, .invalidInstance)
+            }
+            var iterator = subject.realtimeEvents(source: .home, capturing: []).makeAsyncIterator()
+            let event = await iterator.next()
+
+            XCTAssertEqual(event, .failed(message: MissCatFeedRepositoryError.streamingUnavailable.localizedDescription))
+            XCTAssertEqual(restRequestCount, 0)
+            XCTAssertTrue(factory.requests.isEmpty)
+            XCTAssertEqual(socket.resumeCount, 0)
         }
     }
 

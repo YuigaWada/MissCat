@@ -344,6 +344,7 @@ private final class MissCatShellFixtureRepository: MissCatNoteContextRepository 
     private let mode: MissCatShellFixtureLaunch.Mode
     private let scope: MissCatShellAccountScope
     private var initialPageRequestCount = 0
+    private var detailThreadRequestCount = 0
 
     init(mode: MissCatShellFixtureLaunch.Mode, scope: MissCatShellAccountScope) {
         self.mode = mode
@@ -477,6 +478,7 @@ private final class MissCatShellFixtureRepository: MissCatNoteContextRepository 
     }
 
     func fetchThread(noteID: String, replyLimit: Int) async throws -> MissCatNoteThread {
+        detailThreadRequestCount += 1
         let note = MissCatNote(
             id: noteID,
             author: MissCatNoteAuthor(
@@ -491,7 +493,54 @@ private final class MissCatShellFixtureRepository: MissCatNoteContextRepository 
             repliesCount: 1,
             renoteCount: 2
         )
-        return MissCatNoteThread(ancestors: [], note: note, replies: [])
+        guard MissCatShellFixtureLaunch.paginationEnabled else {
+            return MissCatNoteThread(ancestors: [], note: note, replies: [])
+        }
+        if detailThreadRequestCount > 1 {
+            return MissCatNoteThread(
+                ancestors: [],
+                note: note,
+                replies: [Self.detailReply(id: "\(noteID)-reply-refreshed")],
+                repliesCursor: "\(noteID)-reply-refreshed",
+                hasMoreReplies: false
+            )
+        }
+        return MissCatNoteThread(
+            ancestors: [],
+            note: note,
+            replies: [Self.detailReply(id: "\(noteID)-reply-page1")],
+            repliesCursor: "\(noteID)-reply-page1",
+            hasMoreReplies: true
+        )
+    }
+
+    func fetchReplies(
+        noteID: String,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatNoteRepliesPage {
+        switch cursor {
+        case "\(noteID)-reply-page1":
+            return MissCatNoteRepliesPage(
+                replies: [
+                    Self.detailReply(id: "\(noteID)-reply-page1"),
+                    Self.detailReply(id: "\(noteID)-reply-page2"),
+                ],
+                nextCursor: "\(noteID)-reply-page2",
+                hasMore: true
+            )
+        case "\(noteID)-reply-page2":
+            return MissCatNoteRepliesPage(
+                replies: [
+                    Self.detailReply(id: "\(noteID)-reply-page2"),
+                    Self.detailReply(id: "\(noteID)-reply-page3"),
+                ],
+                nextCursor: "\(noteID)-reply-page3",
+                hasMore: false
+            )
+        default:
+            return MissCatNoteRepliesPage(replies: [], nextCursor: nil, hasMore: false)
+        }
     }
 
     func realtimeEvents(
@@ -540,6 +589,19 @@ private final class MissCatShellFixtureRepository: MissCatNoteContextRepository 
             throw MissCatMentionResolutionError.invalidAccount(acct)
         }
         return "fixture-mentioned-user"
+    }
+
+    private static func detailReply(id: String) -> MissCatNote {
+        MissCatNote(
+            id: id,
+            author: MissCatNoteAuthor(
+                id: "fixture-detail-replier",
+                name: "Reply Cat",
+                username: "replycat"
+            ),
+            createdAt: MissCatShellFixtureLaunch.referenceDate.addingTimeInterval(-900),
+            text: "Deterministic detail reply \(id)"
+        )
     }
 }
 

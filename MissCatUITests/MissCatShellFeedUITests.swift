@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 final class MissCatShellFeedUITests: XCTestCase {
     private var app: XCUIApplication!
@@ -336,9 +337,25 @@ final class MissCatShellFeedUITests: XCTestCase {
         confirmRenote.tap()
         XCTAssertTrue(renote.waitForExistence(timeout: 5))
 
+        UIPasteboard.general.string = nil
         app.buttons["note.home-0.action.overflow"].tap()
-        XCTAssertTrue(app.buttons["note.home-0.overflow.copy-text"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.buttons["note.home-0.overflow.copy-link"].exists)
+        let copyText = app.buttons["note.home-0.overflow.copy-text"]
+        XCTAssertTrue(copyText.waitForExistence(timeout: 3))
+        copyText.tap()
+        waitForPasteboard(
+            "SwiftUI native timeline fixture 🐈 @alice https://fixture.example/notes/home-0 #SwiftUI"
+        )
+
+        let overflow = app.buttons["note.home-0.action.overflow"]
+        XCTAssertTrue(overflow.waitForExistence(timeout: 3))
+        overflow.tap()
+        let copyLink = app.buttons["note.home-0.overflow.copy-link"]
+        XCTAssertTrue(copyLink.waitForExistence(timeout: 3))
+        copyLink.tap()
+        waitForPasteboard("https://fixture.example/notes/home-0")
+
+        XCTAssertTrue(overflow.waitForExistence(timeout: 3))
+        overflow.tap()
         XCTAssertTrue(app.buttons["note.home-0.overflow.share"].exists)
         XCTAssertTrue(app.buttons["note.home-0.overflow.block"].exists)
         let report = app.buttons["note.home-0.overflow.report"]
@@ -354,6 +371,42 @@ final class MissCatShellFeedUITests: XCTestCase {
         showDetail.tap()
         XCTAssertTrue(element("note.detail.screen").waitForExistence(timeout: 5))
         XCTAssertTrue(element("note.detail.thread").exists)
+
+        let thirdReply = element("note.row.home-0-reply-page3")
+        for _ in 0..<8 where !thirdReply.exists {
+            element("note.detail.thread").swipeUp()
+        }
+        XCTAssertTrue(thirdReply.waitForExistence(timeout: 5))
+        XCTAssertEqual(
+            app.descendants(matching: .any)
+                .matching(identifier: "note.row.home-0-reply-page1").count,
+            1
+        )
+        XCTAssertEqual(
+            app.descendants(matching: .any)
+                .matching(identifier: "note.row.home-0-reply-page2").count,
+            1
+        )
+        let terminal = element("note.detail.pagination.terminal")
+        XCTAssertTrue(terminal.waitForExistence(timeout: 3))
+        XCTAssertEqual(terminal.value as? String, "3")
+        XCTAssertEqual(element("note.detail.pagination.cursor").value as? String, "home-0-reply-page3")
+
+        let detailRefreshCompletion = element("note.detail.refresh.completed")
+        XCTAssertEqual(detailRefreshCompletion.value as? String, "0")
+        app.buttons["note.detail.refresh"].tap()
+        expectation(
+            for: NSPredicate(format: "value == %@", "1"),
+            evaluatedWith: detailRefreshCompletion
+        )
+        waitForExpectations(timeout: 5)
+        XCTAssertTrue(element("note.row.home-0-reply-refreshed").waitForExistence(timeout: 3))
+        XCTAssertFalse(element("note.row.home-0-reply-page2").exists)
+        XCTAssertEqual(element("note.detail.pagination.terminal").value as? String, "1")
+        XCTAssertEqual(
+            element("note.detail.pagination.cursor").value as? String,
+            "home-0-reply-refreshed"
+        )
 
         app.navigationBars.buttons.element(boundBy: 0).tap()
         XCTAssertTrue(feed.waitForExistence(timeout: 5))
@@ -736,6 +789,14 @@ final class MissCatShellFeedUITests: XCTestCase {
         expectation(for: predicate, evaluatedWith: marker)
         waitForExpectations(timeout: 5)
         return marker.value as? String ?? ""
+    }
+
+    private func waitForPasteboard(_ expected: String, timeout: TimeInterval = 3) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while UIPasteboard.general.string != expected, Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.02))
+        }
+        XCTAssertEqual(UIPasteboard.general.string, expected)
     }
 
     private func captureStableFixture(page: String, name: String) {

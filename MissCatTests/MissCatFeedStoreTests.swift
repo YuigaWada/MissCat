@@ -8,9 +8,17 @@ final class MockMissCatFeedRepository: MissCatFeedRepository {
         let limit: Int
     }
 
+    struct RepliesRequest: Equatable {
+        let noteID: String
+        let cursor: String?
+        let limit: Int
+    }
+
     var pages: [MissCatFeedPage] = []
+    var repliesPages: [MissCatNoteRepliesPage] = []
     var threadResult: MissCatNoteThread?
     var requestedPages: [PageRequest] = []
+    var requestedReplies: [RepliesRequest] = []
     var performedActions: [MissCatFeedAction] = []
     var fetchError: Error?
     var actionError: Error?
@@ -34,6 +42,14 @@ final class MockMissCatFeedRepository: MissCatFeedRepository {
         if let fetchError { throw fetchError }
         guard let threadResult else { throw TestFeedError.failed }
         return threadResult
+    }
+
+    func fetchReplies(noteID: String, cursor: String?, limit: Int) async throws -> MissCatNoteRepliesPage {
+        requestedReplies.append(.init(noteID: noteID, cursor: cursor, limit: limit))
+        if let fetchError { throw fetchError }
+        return repliesPages.isEmpty
+            ? .init(replies: [], nextCursor: nil, hasMore: false)
+            : repliesPages.removeFirst()
     }
 
     func realtimeEvents(
@@ -391,6 +407,68 @@ final class MissCatFeedStoreTests: XCTestCase {
         XCTAssertEqual(store.notes.map(\.id), ["ancestor", "root", "reply"])
         XCTAssertTrue(store.isThreadRoot(try! XCTUnwrap(store.notes.dropFirst().first)))
         XCTAssertFalse(store.canLoadMore)
+    }
+
+    func testDetailReplyPaginationAdvancesCursorDeduplicatesTerminatesAndRefreshes() async {
+        let repository = MockMissCatFeedRepository()
+        repository.threadResult = MissCatNoteThread(
+            ancestors: [note("ancestor")],
+            note: note("root"),
+            replies: [note("reply-1"), note("root")],
+            repliesCursor: "cursor-1",
+            hasMoreReplies: true
+        )
+        repository.repliesPages = [
+            .init(
+                replies: [note("reply-1"), note("reply-2")],
+                nextCursor: "cursor-2",
+                hasMore: true
+            ),
+            .init(
+                replies: [note("reply-2"), note("reply-3")],
+                nextCursor: "cursor-3",
+                hasMore: false
+            ),
+        ]
+        let store = MissCatFeedStore(
+            source: .noteDetail(noteID: "root"),
+            repository: repository,
+            pageSize: 2
+        )
+
+        await store.loadInitial()
+        XCTAssertEqual(store.notes.map(\.id), ["ancestor", "root", "reply-1"])
+        XCTAssertTrue(store.canLoadMore)
+
+        await store.loadNextPageIfNeeded(currentNoteID: "reply-1")
+        await store.loadNextPageIfNeeded(currentNoteID: "reply-2")
+        await store.loadNextPageIfNeeded(currentNoteID: "reply-3")
+
+        XCTAssertEqual(store.notes.map(\.id), ["ancestor", "root", "reply-1", "reply-2", "reply-3"])
+        XCTAssertEqual(store.thread?.replies.map(\.id), ["reply-1", "reply-2", "reply-3"])
+        XCTAssertEqual(
+            repository.requestedReplies,
+            [
+                .init(noteID: "root", cursor: "cursor-1", limit: 2),
+                .init(noteID: "root", cursor: "cursor-2", limit: 2),
+            ]
+        )
+        XCTAssertFalse(store.canLoadMore)
+        XCTAssertEqual(store.thread?.repliesCursor, "cursor-3")
+
+        repository.threadResult = MissCatNoteThread(
+            ancestors: [],
+            note: note("root"),
+            replies: [note("reply-refreshed")],
+            repliesCursor: "refresh-cursor",
+            hasMoreReplies: true
+        )
+        await store.refresh()
+
+        XCTAssertEqual(store.notes.map(\.id), ["root", "reply-refreshed"])
+        XCTAssertEqual(store.thread?.repliesCursor, "refresh-cursor")
+        XCTAssertTrue(store.canLoadMore)
+        XCTAssertEqual(store.refreshCompletionGeneration, 1)
     }
 
     func testTimelineSelectionUsesOneStateForTapSwipeAndReverseSwipe() {

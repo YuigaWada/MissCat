@@ -2,6 +2,50 @@
 import XCTest
 
 final class MissCatNoteDetailTests: XCTestCase {
+    @MainActor
+    func testClipboardActionsWriteExactTextAndPermalinkThroughBoundary() {
+        let writer = NoteDetailClipboardWriterSpy()
+        let actions = MissCatNoteClipboardActions(writer: writer)
+
+        actions.copyText("本文 🐈\nsecond line")
+        actions.copyLink(URL(string: "https://example.test/notes/note-1?view=full")!)
+
+        XCTAssertEqual(
+            writer.values,
+            ["本文 🐈\nsecond line", "https://example.test/notes/note-1?view=full"]
+        )
+    }
+
+    func testPasteboardAPIIsIsolatedToAuditableAdapterAndDomainStaysUIKitFree() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let productionRoot = repositoryRoot.appendingPathComponent("MissCat")
+        let enumerator = try XCTUnwrap(
+            FileManager.default.enumerator(
+                at: productionRoot,
+                includingPropertiesForKeys: nil
+            )
+        )
+        var pasteboardOwners: [String] = []
+        while let file = enumerator.nextObject() as? URL {
+            guard file.pathExtension == "swift" else { continue }
+            let source = try String(contentsOf: file, encoding: .utf8)
+            if source.contains("UIPasteboard") {
+                pasteboardOwners.append(file.lastPathComponent)
+            }
+        }
+
+        XCTAssertEqual(pasteboardOwners, ["MissCatSystemClipboardWriter.swift"])
+        for filename in ["MissCatNoteDetailCore.swift", "MissCatNoteRow.swift"] {
+            let file = productionRoot
+                .appendingPathComponent("SwiftUI/Timeline")
+                .appendingPathComponent(filename)
+            let source = try String(contentsOf: file, encoding: .utf8)
+            XCTAssertFalse(source.contains("import UIKit"), "\(filename) must remain UIKit-free")
+        }
+    }
+
     func testProductionSwiftUINoteMediaTapUsesOneNativeOwnerAndNeverInvokesLegacyViewer() {
         let attachment = MissCatNoteAttachment(
             id: "media",
@@ -497,6 +541,15 @@ final class MissCatNoteDetailTests: XCTestCase {
             body.append(buffer, count: count)
         }
         return body
+    }
+}
+
+@MainActor
+private final class NoteDetailClipboardWriterSpy: MissCatClipboardWriting {
+    private(set) var values: [String] = []
+
+    func write(_ value: String) {
+        values.append(value)
     }
 }
 
