@@ -47,8 +47,8 @@ public struct MissCatWelcomeView: View {
                         .init(color: Color(hex: MissCatLegacyColorHex.welcomeGradientMiddle), location: 0.5),
                         .init(color: Color(hex: MissCatLegacyColorHex.welcomeGradientTopTrailing), location: 1)
                     ],
-                    startPoint: .bottomLeading,
-                    endPoint: .topTrailing
+                    startPoint: layout.gradientStartPoint,
+                    endPoint: layout.gradientEndPoint
                 )
                 .frame(width: size.width, height: layout.canvasHeight)
                 .offset(y: layout.backgroundOffsetY)
@@ -63,7 +63,7 @@ public struct MissCatWelcomeView: View {
                     )
                     .position(
                         x: size.width / 2,
-                        y: layout.logoCenterY
+                        y: layout.logoCenterY + safeTop
                     )
                     .accessibilityHidden(true)
 
@@ -73,7 +73,7 @@ public struct MissCatWelcomeView: View {
                     .fixedSize()
                     .position(
                         x: size.width / 2,
-                        y: layout.taglineCenterY
+                        y: layout.taglineCenterY + safeTop
                     )
                     .modifier(WelcomeControlEntrance(isVisible: controlsAreVisible))
                     .accessibilityIdentifier("welcome.tagline")
@@ -86,7 +86,7 @@ public struct MissCatWelcomeView: View {
                 }
                 .padding(.horizontal, MissCatLegacyMetrics.welcomeHorizontalInset)
                 .frame(width: size.width, height: buttonHeight)
-                .position(x: size.width / 2, y: layout.buttonsTopY + buttonHeight / 2)
+                .position(x: size.width / 2, y: layout.buttonsTopY + safeTop + buttonHeight / 2)
                 .modifier(WelcomeControlEntrance(isVisible: controlsAreVisible))
 
                 Button(action: onChangeInstance) {
@@ -97,7 +97,7 @@ public struct MissCatWelcomeView: View {
                 }
                 .buttonStyle(.plain)
                 .fixedSize(horizontal: true, vertical: false)
-                .position(x: size.width / 2, y: layout.changeInstanceCenterY)
+                .position(x: size.width / 2, y: layout.changeInstanceCenterY + safeTop)
                 .modifier(WelcomeControlEntrance(isVisible: controlsAreVisible))
                 .accessibilityIdentifier("welcome.change-instance")
 
@@ -109,7 +109,7 @@ public struct MissCatWelcomeView: View {
                     .frame(width: size.width, height: MissCatLegacyMetrics.welcomeInstanceHeight)
                     .position(
                         x: size.width / 2,
-                        y: layout.instanceCenterY
+                        y: layout.instanceCenterY + safeTop
                     )
                     .modifier(WelcomeControlEntrance(isVisible: controlsAreVisible))
                     .accessibilityLabel("現在のインスタンス、\(instance)")
@@ -123,7 +123,9 @@ public struct MissCatWelcomeView: View {
                 controlsAreVisible = true
             }
         }
-        .accessibilityIdentifier("welcome.screen")
+        .overlay(alignment: .topLeading) {
+            MissCatAuthenticationMarker(identifier: "welcome.screen")
+        }
         .preferredColorScheme(.light)
     }
 

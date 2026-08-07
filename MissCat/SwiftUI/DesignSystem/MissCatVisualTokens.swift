@@ -80,7 +80,26 @@ struct MissCatWelcomeLayout {
     }
 
     var backgroundOffsetY: CGFloat {
-        -safeTop
+        0
+    }
+
+    /// `CAGradientLayer` interpolates in normalized layer coordinates, while
+    /// SwiftUI projects a linear gradient through the view's physical aspect
+    /// ratio. Extending these endpoints preserves the legacy 50/50 x/y blend.
+    private var legacyGradientSpan: (x: CGFloat, y: CGFloat) {
+        let ratio = contentSize.width / canvasHeight
+        let x = 2 / (1 + ratio * ratio)
+        return (x, x * ratio * ratio)
+    }
+
+    var gradientStartPoint: UnitPoint {
+        let span = legacyGradientSpan
+        return UnitPoint(x: 0.5 - span.x / 2, y: 0.5 + span.y / 2)
+    }
+
+    var gradientEndPoint: UnitPoint {
+        let span = legacyGradientSpan
+        return UnitPoint(x: 0.5 + span.x / 2, y: 0.5 - span.y / 2)
     }
 
     var logoCenterY: CGFloat {

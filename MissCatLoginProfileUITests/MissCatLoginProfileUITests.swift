@@ -1,0 +1,318 @@
+import XCTest
+
+final class MissCatLoginProfileUITests: XCTestCase {
+    private var app: XCUIApplication!
+
+    override func setUp() {
+        continueAfterFailure = false
+        app = XCUIApplication()
+    }
+
+    override func tearDown() {
+        app?.terminate()
+        app = nil
+    }
+
+    func testProductionLaunchWithoutFixtureArgumentsUsesSwiftUIAuthenticationRoot() {
+        app.launchArguments = []
+        app.launchEnvironment = [
+            "AppleLanguages": "(ja)",
+            "AppleLocale": "ja_JP",
+            "TZ": "Asia/Tokyo"
+        ]
+        app.launch()
+
+        XCTAssertTrue(element("authentication.flow").waitForExistence(timeout: 10))
+        XCTAssertTrue(element("welcome.screen").exists)
+        XCTAssertTrue(app.buttons["welcome.login"].exists)
+        XCTAssertTrue(app.buttons["welcome.signup"].exists)
+        XCTAssertFalse(element("profile.searchResults.root").exists)
+    }
+
+    func testAuthenticationInstanceValidationBackCancelAndCallback() {
+        launch("--login-profile-auth")
+        XCTAssertTrue(element("welcome.screen").waitForExistence(timeout: 10))
+        capture("04-start-current")
+
+        setInstance("javascript:alert(1)", captureName: "06-instance-selector-current")
+        app.buttons["welcome.login"].tap()
+        XCTAssertTrue(element("terms.screen").waitForExistence(timeout: 5))
+        capture("05-terms-current")
+        app.buttons["terms.agree"].tap()
+        let validationAlert = app.alerts["エラー"]
+        XCTAssertTrue(validationAlert.waitForExistence(timeout: 5))
+        XCTAssertTrue(validationAlert.staticTexts["インスタンスURLが正しくありません"].exists)
+        validationAlert.buttons["閉じる"].tap()
+
+        tapNavigationBack()
+        XCTAssertTrue(element("welcome.screen").waitForExistence(timeout: 5))
+        setInstance("https://fixture.invalid/")
+        XCTAssertTrue(element("welcome.instance").label.contains("fixture.invalid"))
+
+        app.buttons["welcome.login"].tap()
+        app.buttons["terms.agree"].tap()
+        XCTAssertTrue(element("authentication.browser").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["authentication.reload"].exists)
+        capture("07-auth-web-current")
+
+        // Cancelling the browser returns to Terms without creating a callback.
+        tapNavigationBack()
+        XCTAssertTrue(element("terms.screen").waitForExistence(timeout: 5))
+        tapNavigationBack()
+        XCTAssertTrue(element("welcome.screen").waitForExistence(timeout: 5))
+
+        app.buttons["welcome.login"].tap()
+        app.buttons["terms.agree"].tap()
+        let complete = app.links["認証を完了"]
+        XCTAssertTrue(complete.waitForExistence(timeout: 10))
+        complete.tap()
+        XCTAssertTrue(element("authentication.fixture.completed").waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["fixture callback count: 1"].exists)
+    }
+
+    func testAuthenticationPreparationAndBrowserErrorsRetryWithoutLiveNetwork() {
+        launch("--login-profile-auth", "--login-profile-auth-prepare-error")
+        advanceToAuthorization()
+        let preparationAlert = app.alerts["エラー"]
+        XCTAssertTrue(preparationAlert.waitForExistence(timeout: 5))
+        XCTAssertTrue(preparationAlert.staticTexts["認証の準備に失敗しました"].exists)
+        preparationAlert.buttons["再試行"].tap()
+        XCTAssertTrue(element("welcome.screen").waitForExistence(timeout: 5))
+        advanceToAuthorization()
+        XCTAssertTrue(element("authentication.browser").waitForExistence(timeout: 10))
+
+        relaunch("--login-profile-auth", "--login-profile-auth-browser-error")
+        advanceToAuthorization()
+        let browserAlert = app.alerts["エラー"]
+        XCTAssertTrue(browserAlert.waitForExistence(timeout: 10))
+        browserAlert.buttons["再試行"].tap()
+        XCTAssertTrue(element("welcome.screen").waitForExistence(timeout: 5))
+        advanceToAuthorization()
+        XCTAssertTrue(app.links["認証を完了"].waitForExistence(timeout: 10))
+    }
+
+    func testSearchResultProfileTabsAndRelationshipNavigation() {
+        launch("--login-profile-profile")
+        waitForUserList()
+        capture("25-user-results-current")
+        app.buttons["profile.user.fixture-target"].tap()
+        waitForProfile("profile.other.screen")
+        capture("26-profile-current")
+
+        app.buttons["profile.tab.media"].tap()
+        waitForSelectedTab("profile.tab.media")
+        let pager = element("profile.timeline.pager")
+        XCTAssertTrue(pager.waitForExistence(timeout: 5))
+        pager.swipeRight()
+        waitForSelectedTab("profile.tab.notesAndReplies")
+        pager.swipeRight()
+        waitForSelectedTab("profile.tab.notes")
+
+        app.buttons["profile.count.followers"].tap()
+        waitForUserList()
+        XCTAssertEqual(app.navigationBars.firstMatch.identifier, "Followers")
+        capture("27-followers-current")
+        app.buttons["profile.user.fixture-friend"].tap()
+        waitForProfile("profile.other.screen")
+        app.buttons["profile.action.back"].tap()
+        waitForUserList()
+        tapNavigationBack()
+        waitForProfile("profile.other.screen")
+    }
+
+    func testFollowUnfollowFailureRollsBackThenRetrySucceeds() {
+        launch("--login-profile-profile", "--login-profile-unfollow-error")
+        openTargetProfile()
+
+        app.buttons["profile.action.follow"].tap()
+        waitForButtonLabel("フォロー解除", identifier: "profile.action.follow")
+        app.buttons["profile.action.follow"].tap()
+        app.sheets.buttons["Unfollow"].tap()
+        let alert = app.alerts["フォロー操作に失敗しました"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        alert.buttons["閉じる"].tap()
+        waitForButtonLabel("フォロー解除", identifier: "profile.action.follow")
+
+        app.buttons["profile.action.follow"].tap()
+        app.sheets.buttons["Unfollow"].tap()
+        waitForButtonLabel("フォロー", identifier: "profile.action.follow")
+    }
+
+    func testEditCancelImageStateAndSuccessfulSave() {
+        launch("--login-profile-profile")
+        openSelfProfile()
+        capture("26-profile-self-current")
+        app.buttons["profile.action.edit"].tap()
+        waitForValue("1", identifier: "profile.edit.requestCount")
+        let editor = element("profile.edit.screen")
+        XCTAssertTrue(editor.waitForExistence(timeout: 5))
+        assertImageState("avatar=existing;banner=existing")
+        capture("28-edit-profile-current")
+
+        replaceText(identifier: "profile.edit.name", with: "破棄する名前")
+        app.buttons["profile.edit.close"].tap()
+        XCTAssertTrue(element("profile.self.screen").waitForExistence(timeout: 5))
+        app.buttons["profile.action.edit"].tap()
+        XCTAssertEqual(app.textFields["profile.edit.name"].value as? String, "だわくん")
+
+        removeImage(menu: "profile.edit.avatar", action: "profile.edit.avatar.remove")
+        removeImage(menu: "profile.edit.banner", action: "profile.edit.banner.remove")
+        assertImageState("avatar=removed;banner=removed")
+        replaceText(identifier: "profile.edit.name", with: "保存した名前")
+        app.buttons["profile.edit.save"].tap()
+        XCTAssertTrue(element("profile.self.screen").waitForExistence(timeout: 5))
+        XCTAssertTrue(element("profile.identity").label.contains("保存した名前"))
+    }
+
+    func testEditFailureRetainsDraftAndRetrySucceeds() {
+        launch("--login-profile-profile", "--login-profile-edit-error")
+        openSelfProfile()
+        app.buttons["profile.action.edit"].tap()
+        waitForValue("1", identifier: "profile.edit.requestCount")
+        replaceText(identifier: "profile.edit.name", with: "再試行する名前")
+        app.buttons["profile.edit.save"].tap()
+        XCTAssertTrue(app.buttons["profile.edit.retry"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.textFields["profile.edit.name"].value as? String, "再試行する名前")
+        app.buttons["profile.edit.retry"].tap()
+        XCTAssertTrue(element("profile.self.screen").waitForExistence(timeout: 5))
+        XCTAssertTrue(element("profile.identity").label.contains("再試行する名前"))
+    }
+
+    private func launch(_ arguments: String...) {
+        app.launchArguments = ["--login-profile-fixture"] + arguments
+        app.launchEnvironment = [
+            "AppleLanguages": "(ja)",
+            "AppleLocale": "ja_JP",
+            "TZ": "Asia/Tokyo"
+        ]
+        app.launch()
+    }
+
+    private func relaunch(_ arguments: String...) {
+        app.terminate()
+        launch(arguments)
+    }
+
+    private func launch(_ arguments: [String]) {
+        app.launchArguments = ["--login-profile-fixture"] + arguments
+        app.launchEnvironment = [
+            "AppleLanguages": "(ja)",
+            "AppleLocale": "ja_JP",
+            "TZ": "Asia/Tokyo"
+        ]
+        app.launch()
+    }
+
+    private func advanceToAuthorization() {
+        XCTAssertTrue(element("welcome.screen").waitForExistence(timeout: 10))
+        app.buttons["welcome.login"].tap()
+        XCTAssertTrue(app.buttons["terms.agree"].waitForExistence(timeout: 5))
+        app.buttons["terms.agree"].tap()
+    }
+
+    private func setInstance(_ value: String, captureName: String? = nil) {
+        app.buttons["welcome.change-instance"].tap()
+        // SwiftUI alert text fields are hosted by UIKit and do not consistently
+        // forward their SwiftUI accessibility identifier on current simulators.
+        let field = app.alerts.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        if let captureName { capture(captureName) }
+        field.tap()
+        field.typeText(value)
+        app.alerts.buttons["変更"].tap()
+    }
+
+    private func openTargetProfile() {
+        waitForUserList()
+        app.buttons["profile.user.fixture-target"].tap()
+        waitForProfile("profile.other.screen")
+    }
+
+    private func openSelfProfile() {
+        waitForUserList()
+        app.buttons["profile.user.fixture-self"].tap()
+        waitForProfile("profile.self.screen")
+    }
+
+    private func waitForUserList() {
+        XCTAssertTrue(element("profile.userList.visualReady").waitForExistence(timeout: 10))
+        XCTAssertTrue(element("profile.user.fixture-target").waitForExistence(timeout: 5) || element("profile.user.fixture-friend").exists)
+    }
+
+    private func waitForProfile(_ identifier: String) {
+        XCTAssertTrue(element(identifier).waitForExistence(timeout: 10))
+        let ready = element("profile.visualReady")
+        XCTAssertTrue(ready.waitForExistence(timeout: 10))
+        let predicate = NSPredicate(format: "value == %@", "true")
+        expectation(for: predicate, evaluatedWith: ready)
+        waitForExpectations(timeout: 10)
+    }
+
+    private func waitForSelectedTab(_ identifier: String) {
+        let tab = app.buttons[identifier]
+        let predicate = NSPredicate(format: "isSelected == true")
+        expectation(for: predicate, evaluatedWith: tab)
+        waitForExpectations(timeout: 5)
+    }
+
+    private func waitForButtonLabel(_ label: String, identifier: String) {
+        let button = app.buttons[identifier]
+        let predicate = NSPredicate(format: "label == %@", label)
+        expectation(for: predicate, evaluatedWith: button)
+        waitForExpectations(timeout: 5)
+    }
+
+    private func waitForValue(_ value: String, identifier: String) {
+        let marker = element(identifier)
+        XCTAssertTrue(marker.waitForExistence(timeout: 5))
+        let predicate = NSPredicate(format: "value == %@", value)
+        expectation(for: predicate, evaluatedWith: marker)
+        waitForExpectations(timeout: 5)
+    }
+
+    private func replaceText(identifier: String, with value: String) {
+        let field = app.textFields[identifier]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        field.press(forDuration: 1.0)
+        if app.menuItems["すべてを選択"].waitForExistence(timeout: 2) {
+            app.menuItems["すべてを選択"].tap()
+        } else if app.menuItems["Select All"].exists {
+            app.menuItems["Select All"].tap()
+        }
+        field.typeText(value)
+    }
+
+    private func removeImage(menu: String, action: String) {
+        app.buttons[menu].tap()
+        let identified = app.buttons[action]
+        if identified.waitForExistence(timeout: 2) {
+            identified.tap()
+        } else {
+            app.buttons["画像を削除"].tap()
+        }
+    }
+
+    private func assertImageState(_ value: String) {
+        let images = element("profile.edit.images")
+        XCTAssertTrue(images.waitForExistence(timeout: 5))
+        XCTAssertEqual(images.value as? String, value)
+    }
+
+    private func tapNavigationBack() {
+        let button = app.navigationBars.buttons.firstMatch
+        XCTAssertTrue(button.waitForExistence(timeout: 5))
+        button.tap()
+    }
+
+    private func element(_ identifier: String) -> XCUIElement {
+        app.descendants(matching: .any)[identifier]
+    }
+
+    private func capture(_ name: String) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+}

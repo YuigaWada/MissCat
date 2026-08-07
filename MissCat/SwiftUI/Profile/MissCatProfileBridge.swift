@@ -12,11 +12,11 @@ enum MissCatProfileBridge {
     ) -> UIViewController? {
         guard let account = account(from: owner) else { return nil }
         let palette = currentPalette
-        let store = MissCatProfileStore(account: account, userID: userID)
-        let view = MissCatProfileScreen(
-            store: store,
+        let view = MissCatProfileFamilyView(
+            root: .profile(userID: userID),
+            account: account,
             palette: palette,
-            onBack: { [weak home] in home?.navigationController?.popViewController(animated: true) },
+            onExit: { [weak home] in home?.navigationController?.popViewController(animated: true) },
             onOpenURL: { [weak home] url in
                 switch (url.scheme, url.host) {
                 case ("misscat", "user"):
@@ -28,9 +28,6 @@ enum MissCatProfileBridge {
                 }
             },
             onOpenImage: { [weak home] url in home?.showImage([url], start: 0) },
-            onSelectUser: { [weak home] selectedUserID in
-                home?.move2Profile(userId: selectedUserID, owner: owner)
-            },
             onOpenSettings: { [weak home] in home?.openSettings() },
             onSelectRoot: { [weak home] section in
                 guard let home else { return }
@@ -56,13 +53,11 @@ enum MissCatProfileBridge {
         home: HomeViewController?
     ) -> UIViewController? {
         guard let account = account(from: owner) else { return nil }
-        let store = MissCatUserListStore(account: account, kind: .search(query: query))
-        let view = MissCatUserListScreen(
-            store: store,
+        let view = MissCatProfileFamilyView(
+            root: .searchResults(query: query),
+            account: account,
             palette: currentPalette,
-            onSelectUser: { [weak home] userID in
-                home?.move2Profile(userId: userID, owner: owner)
-            }
+            onExit: { [weak home] in home?.navigationController?.popViewController(animated: true) }
         )
         let controller = UIHostingController(rootView: view)
         controller.view.backgroundColor = UIColor(currentPalette.base)

@@ -325,5 +325,27 @@ private struct MissCatWebView: UIViewRepresentable {
                 }
             }
         }
+
+        func webView(
+            _ webView: WKWebView,
+            didFail navigation: WKNavigation?,
+            withError error: Error
+        ) {
+            reportNavigationFailure(error)
+        }
+
+        func webView(
+            _ webView: WKWebView,
+            didFailProvisionalNavigation navigation: WKNavigation?,
+            withError error: Error
+        ) {
+            reportNavigationFailure(error)
+        }
+
+        private func reportNavigationFailure(_ error: Error) {
+            let nsError = error as NSError
+            guard nsError.domain != NSURLErrorDomain || nsError.code != NSURLErrorCancelled else { return }
+            onFailure(error)
+        }
     }
 }

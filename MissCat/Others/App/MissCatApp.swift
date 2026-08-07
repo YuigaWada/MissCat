@@ -161,6 +161,10 @@ final class ApplicationState: ObservableObject {
 struct MissCatRootView: View {
     @EnvironmentObject private var applicationState: ApplicationState
 
+#if DEBUG
+    private let acceptanceFixture = MissCatLoginProfileFixtureRoute.parse()
+#endif
+
     @ViewBuilder
     var body: some View {
 #if DEBUG
@@ -168,15 +172,17 @@ struct MissCatRootView: View {
             MissCatDiscoveryFixtureRoot()
         } else if MissCatNoteDetailFixtureConfiguration.isEnabled {
             MissCatNoteDetailFixtureRoot()
+        } else if let acceptanceFixture {
+            MissCatLoginProfileFixtureRoot(route: acceptanceFixture)
         } else {
-            rootContainer
+            productionRoot
         }
 #else
-        rootContainer
+        productionRoot
 #endif
     }
 
-    private var rootContainer: some View {
+    private var productionRoot: some View {
         ZStack {
             #if DEBUG
             if MissCatShellFixtureLaunch.isRequested {

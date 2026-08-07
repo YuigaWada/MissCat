@@ -41,6 +41,8 @@ public struct MissCatTermsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .missCatLegacyOnboardingNavigationBar()
         .background(Color(uiColor: .systemBackground))
-        .accessibilityIdentifier("terms.screen")
+        .overlay(alignment: .topLeading) {
+            MissCatAuthenticationMarker(identifier: "terms.screen")
+        }
     }
 }

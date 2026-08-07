@@ -22,7 +22,7 @@ public struct MissCatProfileAccount: Equatable, Sendable {
     }
 }
 
-public struct MissCatProfileUser: Codable, Equatable, Identifiable, Sendable {
+public struct MissCatProfileUser: Codable, Equatable, Hashable, Identifiable, Sendable {
     public let id: String
     public var name: String?
     public var username: String
@@ -236,7 +236,7 @@ public enum MissCatProfileTimelineTab: String, CaseIterable, Identifiable, Senda
     fileprivate var onlyFiles: Bool { self == .media }
 }
 
-public enum MissCatUserListKind: Equatable, Sendable {
+public enum MissCatUserListKind: Hashable, Sendable {
     case followers(userID: String)
     case following(userID: String)
     case search(query: String)

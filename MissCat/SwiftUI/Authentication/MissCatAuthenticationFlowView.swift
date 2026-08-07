@@ -83,7 +83,9 @@ public struct MissCatAuthenticationFlowView: View {
                     .accessibilityIdentifier("authentication.loading")
             }
         }
-        .accessibilityIdentifier("authentication.flow")
+        .overlay(alignment: .topLeading) {
+            MissCatAuthenticationMarker(identifier: "authentication.flow")
+        }
     }
 
     private var signUpLoginRequestProvider: (@MainActor () async throws -> URLRequest)? {
@@ -109,5 +111,20 @@ public struct MissCatAuthenticationFlowView: View {
                 onFailure(error)
             }
         }
+    }
+}
+
+struct MissCatAuthenticationMarker: View {
+    let identifier: String
+    var value = "true"
+
+    var body: some View {
+        Text("marker")
+            .font(.system(size: 1))
+            .frame(width: 1, height: 1)
+            .opacity(0.01)
+            .accessibilityLabel(identifier)
+            .accessibilityValue(value)
+            .accessibilityIdentifier(identifier)
     }
 }

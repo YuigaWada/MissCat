@@ -5,7 +5,6 @@ import UIKit
 public struct MissCatProfileScreen: View {
     @StateObject private var store: MissCatProfileStore
     @State private var presentedList: MissCatUserListKind?
-    @State private var showsEditor = false
     @State private var confirmsUnfollow = false
 
     private let palette: MissCatVisualPalette
@@ -14,6 +13,8 @@ public struct MissCatProfileScreen: View {
     private let onOpenURL: (URL) -> Void
     private let onOpenImage: (URL) -> Void
     private let onSelectUser: (String) -> Void
+    private let onOpenUserList: ((MissCatUserListKind) -> Void)?
+    private let onEditProfile: (MissCatProfileUser) -> Void
     private let onOpenSettings: () -> Void
     private let onSelectRoot: (MissCatRootSection) -> Void
     private let onCompose: () -> Void
@@ -26,6 +27,8 @@ public struct MissCatProfileScreen: View {
         onOpenURL: @escaping (URL) -> Void = { _ in },
         onOpenImage: @escaping (URL) -> Void = { _ in },
         onSelectUser: @escaping (String) -> Void = { _ in },
+        onOpenUserList: ((MissCatUserListKind) -> Void)? = nil,
+        onEditProfile: @escaping (MissCatProfileUser) -> Void = { _ in },
         onOpenSettings: @escaping () -> Void = {},
         onSelectRoot: @escaping (MissCatRootSection) -> Void = { _ in },
         onCompose: @escaping () -> Void = {}
@@ -37,12 +40,18 @@ public struct MissCatProfileScreen: View {
         self.onOpenURL = onOpenURL
         self.onOpenImage = onOpenImage
         self.onSelectUser = onSelectUser
+        self.onOpenUserList = onOpenUserList
+        self.onEditProfile = onEditProfile
         self.onOpenSettings = onOpenSettings
         self.onSelectRoot = onSelectRoot
         self.onCompose = onCompose
     }
 
     public var body: some View {
+        profileContent
+    }
+
+    private var profileContent: some View {
         VStack(spacing: 0) {
             profileHeader
                 .frame(height: MissCatProfileMetrics.headerHeight)
@@ -81,23 +90,6 @@ public struct MissCatProfileScreen: View {
         .sheet(item: $presentedList) { kind in
             userListDestination(kind)
         }
-        .sheet(isPresented: $showsEditor) {
-            if let profile = store.profile {
-                NavigationStack {
-                    MissCatProfileEditorScreen(
-                        store: MissCatProfileEditorStore(
-                            account: store.account,
-                            profile: profile,
-                            repositoryFactory: repositoryFactory
-                        ),
-                        palette: palette
-                    ) { updated in
-                        store.applyUpdatedProfile(updated)
-                        showsEditor = false
-                    }
-                }
-            }
-        }
         .confirmationDialog("フォロー解除", isPresented: $confirmsUnfollow) {
             Button("Unfollow", role: .destructive) { store.setFollowing(false) }
             Button("いいえ", role: .cancel) {}
@@ -117,12 +109,17 @@ public struct MissCatProfileScreen: View {
             Text(store.followErrorMessage ?? "")
         }
         .overlay(alignment: .topLeading) {
-            MissCatVisualReadyMarker(
-                ready: store.profilePhase == .loaded && store.timelines[store.selectedTab]?.phase.isTerminal == true,
-                identifier: "profile.visualReady"
-            )
+            VStack(spacing: 0) {
+                MissCatVisualReadyMarker(
+                    ready: store.profilePhase == .loaded && store.timelines[store.selectedTab]?.phase.isTerminal == true,
+                    identifier: "profile.visualReady"
+                )
+                MissCatVisualReadyMarker(
+                    ready: true,
+                    identifier: store.isCurrentUser ? "profile.self.screen" : "profile.other.screen"
+                )
+            }
         }
-        .accessibilityIdentifier(store.isCurrentUser ? "profile.self.screen" : "profile.other.screen")
     }
 
     @ViewBuilder
@@ -155,11 +152,11 @@ public struct MissCatProfileScreen: View {
                     onSettings: onOpenSettings,
                     onOpenImage: onOpenImage,
                     onNotes: { store.selectTab(.notes) },
-                    onFollowing: { presentedList = .following(userID: profile.id) },
-                    onFollowers: { presentedList = .followers(userID: profile.id) },
+                    onFollowing: { openUserList(.following(userID: profile.id)) },
+                    onFollowers: { openUserList(.followers(userID: profile.id)) },
                     onAction: {
                         if store.isCurrentUser {
-                            showsEditor = true
+                            onEditProfile(profile)
                         } else if store.isFollowing {
                             confirmsUnfollow = true
                         } else {
@@ -172,6 +169,14 @@ public struct MissCatProfileScreen: View {
                     return .handled
                 })
             }
+        }
+    }
+
+    private func openUserList(_ kind: MissCatUserListKind) {
+        if let onOpenUserList {
+            onOpenUserList(kind)
+        } else {
+            presentedList = kind
         }
     }
 
@@ -219,6 +224,8 @@ public struct MissCatProfileHeader: View {
                 } label: {
                     banner(width: proxy.size.width)
                 }
+                .frame(width: proxy.size.width, height: MissCatProfileMetrics.bannerHeight)
+                .contentShape(Rectangle())
                 .buttonStyle(.plain)
                 .disabled(profile.bannerURL == nil)
                 .accessibilityLabel("バナー画像を表示")
@@ -300,6 +307,7 @@ public struct MissCatProfileHeader: View {
                 .disabled(followPhase == .loading)
                 .position(x: proxy.size.width - 72.5, y: 412.5)
                 .buttonStyle(.plain)
+                .zIndex(1)
                 .accessibilityIdentifier(isCurrentUser ? "profile.action.edit" : "profile.action.follow")
 
                 if !isCurrentUser {
@@ -311,16 +319,22 @@ public struct MissCatProfileHeader: View {
             }
         }
         .clipped()
-        .accessibilityIdentifier("profile.header")
+        .overlay(alignment: .topLeading) {
+            MissCatVisualReadyMarker(ready: true, identifier: "profile.header")
+        }
     }
 
     private func banner(width: CGFloat) -> some View {
-        AsyncImage(url: profile.bannerURL) { phase in
-            if let image = phase.image {
-                image.resizable().scaledToFill()
+        Group {
+#if DEBUG
+            if profile.bannerURL?.scheme == "misscat-fixture" {
+                Image("SprashBack").resizable().scaledToFill()
             } else {
-                palette.muted
+                remoteBanner
             }
+#else
+            remoteBanner
+#endif
         }
         .frame(width: width, height: MissCatProfileMetrics.bannerHeight)
         .clipped()
@@ -329,6 +343,16 @@ public struct MissCatProfileHeader: View {
                 .frame(height: MissCatProfileMetrics.bannerHeight / 2)
         }
         .accessibilityIdentifier("profile.banner")
+    }
+
+    private var remoteBanner: some View {
+        AsyncImage(url: profile.bannerURL) { phase in
+            if let image = phase.image {
+                image.resizable().scaledToFill()
+            } else {
+                palette.muted
+            }
+        }
     }
 
     private func countButton(value: Int, label: String, identifier: String, action: @escaping () -> Void) -> some View {
@@ -392,7 +416,9 @@ public struct MissCatProfileTabBar: View {
         .frame(height: MissCatProfileMetrics.tabHeight)
         .background(palette.base)
         .overlay(alignment: .bottom) { Rectangle().fill(palette.border).frame(height: 0.5) }
-        .accessibilityIdentifier("profile.tabs")
+        .overlay(alignment: .topLeading) {
+            MissCatVisualReadyMarker(ready: true, identifier: "profile.tabs")
+        }
     }
 }
 
@@ -584,7 +610,9 @@ public struct MissCatFollowersScreen: View {
     public var body: some View {
         MissCatUserListScreen(store: store, palette: palette, onSelectUser: onSelectUser)
             .navigationTitle("Followers")
-            .accessibilityIdentifier("profile.followers.screen")
+            .overlay(alignment: .topLeading) {
+                MissCatVisualReadyMarker(ready: true, identifier: "profile.followers.screen")
+            }
     }
 }
 
@@ -602,7 +630,9 @@ public struct MissCatFollowingScreen: View {
     public var body: some View {
         MissCatUserListScreen(store: store, palette: palette, onSelectUser: onSelectUser)
             .navigationTitle("Following")
-            .accessibilityIdentifier("profile.following.screen")
+            .overlay(alignment: .topLeading) {
+                MissCatVisualReadyMarker(ready: true, identifier: "profile.following.screen")
+            }
     }
 }
 
@@ -652,9 +682,11 @@ public struct MissCatUserListScreen: View {
         .background(palette.base)
         .task { store.load() }
         .overlay(alignment: .topLeading) {
-            MissCatVisualReadyMarker(ready: store.phase.isTerminal, identifier: "profile.userList.visualReady")
+            VStack(spacing: 0) {
+                MissCatVisualReadyMarker(ready: store.phase.isTerminal, identifier: "profile.userList.visualReady")
+                MissCatVisualReadyMarker(ready: true, identifier: "profile.userList.screen")
+            }
         }
-        .accessibilityIdentifier("profile.userList.screen")
     }
 }
 
@@ -699,7 +731,9 @@ public struct MissCatUserSearchScreen: View {
         }
         .navigationTitle("ユーザー検索")
         .background(palette.base)
-        .accessibilityIdentifier("profile.search.screen")
+        .overlay(alignment: .topLeading) {
+            MissCatVisualReadyMarker(ready: true, identifier: "profile.search.screen")
+        }
     }
 }
 
@@ -744,15 +778,18 @@ public struct MissCatProfileEditorScreen: View {
     @Environment(\.dismiss) private var dismiss
 
     private let palette: MissCatVisualPalette
+    private let onCancel: (() -> Void)?
     private let onSaved: (MissCatProfileUser) -> Void
 
     public init(
         store: MissCatProfileEditorStore,
         palette: MissCatVisualPalette = .legacyLight,
+        onCancel: (() -> Void)? = nil,
         onSaved: @escaping (MissCatProfileUser) -> Void = { _ in }
     ) {
         _store = StateObject(wrappedValue: store)
         self.palette = palette
+        self.onCancel = onCancel
         self.onSaved = onSaved
     }
 
@@ -800,8 +837,13 @@ public struct MissCatProfileEditorScreen: View {
             ToolbarItem(placement: .cancellationAction) {
                 Button("閉じる") {
                     store.discardPendingChanges()
-                    dismiss()
+                    if let onCancel {
+                        onCancel()
+                    } else {
+                        dismiss()
+                    }
                 }
+                .accessibilityIdentifier("profile.edit.close")
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button("保存", action: store.save)
@@ -827,9 +869,11 @@ public struct MissCatProfileEditorScreen: View {
             .ignoresSafeArea()
         }
         .overlay(alignment: .topLeading) {
-            MissCatVisualReadyMarker(ready: store.phase != .loading, identifier: "profile.edit.visualReady")
+            VStack(spacing: 0) {
+                MissCatVisualReadyMarker(ready: store.phase != .loading, identifier: "profile.edit.visualReady")
+                MissCatVisualReadyMarker(ready: true, identifier: "profile.edit.screen")
+            }
         }
-        .accessibilityIdentifier("profile.edit.screen")
     }
 
     private var bannerEditor: some View {
@@ -838,11 +882,23 @@ public struct MissCatProfileEditorScreen: View {
                 if let data = store.bannerData, let image = UIImage(data: data) {
                     Image(uiImage: image).resizable().scaledToFill()
                 } else if let url = store.existingBannerURL {
+#if DEBUG
+                    if url.scheme == "misscat-fixture" {
+                        Image("SprashBack").resizable().scaledToFill()
+                    } else {
+                        AsyncImage(url: url) { image in
+                            image.resizable().scaledToFill()
+                        } placeholder: {
+                            palette.muted
+                        }
+                    }
+#else
                     AsyncImage(url: url) { image in
                         image.resizable().scaledToFill()
                     } placeholder: {
                         palette.muted
                     }
+#endif
                 } else {
                     palette.muted
                 }
@@ -856,6 +912,19 @@ public struct MissCatProfileEditorScreen: View {
                     if let data = store.avatarData, let image = UIImage(data: data) {
                         Image(uiImage: image).resizable().scaledToFill()
                     } else if let url = store.existingAvatarURL {
+#if DEBUG
+                        if url.scheme == "misscat-fixture" {
+                            Image("MissCat").resizable().scaledToFill()
+                        } else {
+                            AsyncImage(url: url) { image in
+                                image.resizable().scaledToFill()
+                            } placeholder: {
+                                Image(systemName: "person.crop.circle.fill")
+                                    .resizable()
+                                    .foregroundStyle(.white, palette.strong)
+                            }
+                        }
+#else
                         AsyncImage(url: url) { image in
                             image.resizable().scaledToFill()
                         } placeholder: {
@@ -863,6 +932,7 @@ public struct MissCatProfileEditorScreen: View {
                                 .resizable()
                                 .foregroundStyle(.white, palette.strong)
                         }
+#endif
                     } else {
                         Image(systemName: "person.crop.circle.fill")
                             .resizable()
@@ -879,7 +949,12 @@ public struct MissCatProfileEditorScreen: View {
             }
             .padding(16)
         }
-        .accessibilityIdentifier("profile.edit.images")
+        .overlay(alignment: .topLeading) {
+            MissCatValueMarker(
+                identifier: "profile.edit.images",
+                value: "avatar=\(imageState(.avatar));banner=\(imageState(.banner))"
+            )
+        }
     }
 
     private func imageMenu(title: String, pickerItem: Binding<PhotosPickerItem?>, target: CameraTarget) -> some View {
@@ -896,6 +971,7 @@ public struct MissCatProfileEditorScreen: View {
                 } label: {
                     Label("画像を削除", systemImage: "trash")
                 }
+                .accessibilityIdentifier("profile.edit.\(target.rawValue).remove")
             }
             if hasImageChange(target) {
                 Button {
@@ -903,6 +979,7 @@ public struct MissCatProfileEditorScreen: View {
                 } label: {
                     Label("変更を元に戻す", systemImage: "arrow.uturn.backward")
                 }
+                .accessibilityIdentifier("profile.edit.\(target.rawValue).reset")
             }
         } label: {
             Text(title)
@@ -927,6 +1004,19 @@ public struct MissCatProfileEditorScreen: View {
         switch target {
         case .avatar: return store.hasAvatarChange
         case .banner: return store.hasBannerChange
+        }
+    }
+
+    private func imageState(_ target: CameraTarget) -> String {
+        switch target {
+        case .avatar:
+            if store.avatarRemoved { return "removed" }
+            if store.avatarData != nil { return "replacement" }
+            return store.existingAvatarURL == nil ? "empty" : "existing"
+        case .banner:
+            if store.bannerRemoved { return "removed" }
+            if store.bannerData != nil { return "replacement" }
+            return store.existingBannerURL == nil ? "empty" : "existing"
         }
     }
 
@@ -1017,6 +1107,22 @@ private struct CircleImage: View {
     let diameter: CGFloat
 
     var body: some View {
+        Group {
+#if DEBUG
+            if url?.scheme == "misscat-fixture" {
+                Image("MissCat").resizable().scaledToFill()
+            } else {
+                remoteImage
+            }
+#else
+            remoteImage
+#endif
+        }
+        .frame(width: diameter, height: diameter)
+        .clipShape(Circle())
+    }
+
+    private var remoteImage: some View {
         AsyncImage(url: url) { phase in
             if let image = phase.image {
                 image.resizable().scaledToFill()
@@ -1026,8 +1132,6 @@ private struct CircleImage: View {
                     .foregroundStyle(.white, Color.gray)
             }
         }
-        .frame(width: diameter, height: diameter)
-        .clipShape(Circle())
     }
 }
 
@@ -1097,6 +1201,21 @@ private struct MissCatVisualReadyMarker: View {
             .opacity(0.01)
             .accessibilityLabel("visualReady")
             .accessibilityValue(ready ? "true" : "false")
+            .accessibilityIdentifier(identifier)
+    }
+}
+
+private struct MissCatValueMarker: View {
+    let identifier: String
+    let value: String
+
+    var body: some View {
+        Text("state")
+            .font(.system(size: 1))
+            .frame(width: 1, height: 1)
+            .opacity(0.01)
+            .accessibilityLabel(identifier)
+            .accessibilityValue(value)
             .accessibilityIdentifier(identifier)
     }
 }

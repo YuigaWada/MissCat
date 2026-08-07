@@ -50,7 +50,9 @@ public struct MissCatInstanceEditorView: View {
                     draft = ""
                 }
             }
-            .accessibilityIdentifier("instance.screen")
+            .overlay {
+                MissCatAuthenticationMarker(identifier: "instance.screen")
+            }
     }
 
     /// Mirrors `StartViewController.shapeInstance(_:)` so existing instance

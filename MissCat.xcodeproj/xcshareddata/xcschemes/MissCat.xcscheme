@@ -34,6 +34,20 @@
                ReferencedContainer = "container:MissCat.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AACC0000000000000000000B"
+               BuildableName = "MissCatLoginProfileUITests.xctest"
+               BlueprintName = "MissCatLoginProfileUITests"
+               ReferencedContainer = "container:MissCat.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -69,6 +83,16 @@
                BlueprintIdentifier = "B0A700000000000000000012"
                BuildableName = "MissCatNoteUITests.xctest"
                BlueprintName = "MissCatNoteUITests"
+               ReferencedContainer = "container:MissCat.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AACC0000000000000000000B"
+               BuildableName = "MissCatLoginProfileUITests.xctest"
+               BlueprintName = "MissCatLoginProfileUITests"
                ReferencedContainer = "container:MissCat.xcodeproj">
             </BuildableReference>
          </TestableReference>

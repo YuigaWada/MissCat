@@ -52,7 +52,11 @@ final class WelcomeVisualLayoutTests: XCTestCase {
         )
 
         XCTAssertEqual(layout.canvasHeight, 896, accuracy: 0.001)
-        XCTAssertEqual(layout.backgroundOffsetY, -48, accuracy: 0.001)
+        XCTAssertEqual(layout.backgroundOffsetY, 0, accuracy: 0.001)
+        XCTAssertEqual(layout.gradientStartPoint.x, -0.324067, accuracy: 0.000001)
+        XCTAssertEqual(layout.gradientStartPoint.y, 0.675933, accuracy: 0.000001)
+        XCTAssertEqual(layout.gradientEndPoint.x, 1.324067, accuracy: 0.000001)
+        XCTAssertEqual(layout.gradientEndPoint.y, 0.324067, accuracy: 0.000001)
         XCTAssertEqual(layout.logoCenterY + safeTop, 340, accuracy: 0.001)
         XCTAssertEqual(layout.taglineCenterY + safeTop, 409.5, accuracy: 0.001)
         XCTAssertEqual(layout.buttonHeight, 51, accuracy: 0.001)
