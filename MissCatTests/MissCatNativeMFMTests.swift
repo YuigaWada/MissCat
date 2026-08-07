@@ -240,26 +240,33 @@ final class MissCatNativeMFMTests: XCTestCase {
         }
     }
 
-    func testAnimatedEmojiViewOffersStableInlineAndReactionGeometry() throws {
+    func testAnimatedEmojiViewOffersStableBodyAuthorAndReactionGeometry() throws {
         let animation = try MissCatCustomEmojiImageDecoder.decodeAnimation(Self.twoFrameGIFData)
-        let inline = MissCatAnimatedEmojiGeometry.layout(
+        let body = MissCatAnimatedEmojiGeometry.layout(
             pixelWidth: 2,
             pixelHeight: 1,
-            role: .inlineBody
+            context: .timelineBody
+        )
+        let author = MissCatAnimatedEmojiGeometry.layout(
+            pixelWidth: 2,
+            pixelHeight: 1,
+            context: .timelineAuthor
         )
         let reaction = MissCatAnimatedEmojiGeometry.layout(
             pixelWidth: 2,
             pixelHeight: 1,
-            role: .reaction
+            context: .reaction
         )
 
-        XCTAssertEqual(inline.size, CGSize(width: 36, height: 18))
-        XCTAssertEqual(inline.firstTextBaseline, 16)
+        XCTAssertEqual(body.size, CGSize(width: 60, height: 30))
+        XCTAssertEqual(body.firstTextBaseline, 27)
+        XCTAssertEqual(author.size, CGSize(width: 50, height: 25))
+        XCTAssertEqual(author.firstTextBaseline, 22)
         XCTAssertEqual(reaction.size, CGSize(width: 60, height: 30))
         XCTAssertEqual(reaction.firstTextBaseline, 30)
         _ = MissCatAnimatedEmojiView(
             animation: animation,
-            role: .inlineBody,
+            context: .timelineBody,
             accessibilityLabel: ":fixture:"
         )
     }
