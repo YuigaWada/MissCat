@@ -796,6 +796,58 @@ final class MissCatFeedRepositoryContractTests: XCTestCase {
         task.cancel()
     }
 
+    func testPureRenoteSubscribesOuterAndCanonicalIDsAndReceivesOuterDelete() async throws {
+        let socket = FeedFakeWebSocket()
+        let factory = FeedFakeWebSocketFactory(sockets: [socket])
+        let subject = makeStreamingSubject(factory: factory, streamID: "stream-renote")
+        let recorder = FeedRealtimeEventRecorder()
+        let task = record(subject.realtimeEvents(source: .global, capturing: []), in: recorder)
+
+        await assertEventually(awaitValue { !socket.sentObjects.isEmpty })
+        socket.push(json: ["type": "connected", "body": ["id": "stream-renote"]])
+        await assertEventually(awaitValue {
+            let values = await recorder.snapshot()
+            return values.contains(.connected(true))
+        })
+
+        var outer = Self.noteJSON(id: "outer-renote")
+        outer["text"] = NSNull()
+        outer["renote"] = Self.noteJSON(id: "canonical-note")
+        socket.push(json: [
+            "type": "channel",
+            "body": [
+                "id": "stream-renote",
+                "type": "note",
+                "body": outer,
+            ],
+        ])
+
+        await assertEventually(awaitValue {
+            let subscribedIDs = Set(socket.sentObjects.compactMap { object -> String? in
+                guard object["type"] as? String == "subNote" else { return nil }
+                return (object["body"] as? [String: Any])?["id"] as? String
+            })
+            let values = await recorder.snapshot()
+            let inserted = values.contains { event in
+                guard case let .inserted(note) = event else { return false }
+                return note.id == "outer-renote" && note.noteID == "canonical-note"
+            }
+            return subscribedIDs == Set(["outer-renote", "canonical-note"]) && inserted
+        })
+
+        socket.push(json: Self.noteUpdated(
+            id: "outer-renote",
+            type: "deleted",
+            body: ["deletedAt": "2026-08-07T00:00:00.000Z"]
+        ))
+        await assertEventually(awaitValue {
+            let values = await recorder.snapshot()
+            return values.contains(.removed(noteID: "outer-renote"))
+        })
+
+        task.cancel()
+    }
+
     func testStreamingDecodesEveryCurrentNoteUpdatedVariantAndIsMine() async throws {
         let socket = FeedFakeWebSocket()
         let factory = FeedFakeWebSocketFactory(sockets: [socket])

@@ -29,6 +29,7 @@ final class MockMissCatFeedRepository: MissCatFeedRepository {
     var actionDelayNanoseconds: UInt64 = 0
     var realtimeContinuation: AsyncStream<MissCatRealtimeEvent>.Continuation?
     var realtimeRequestCount = 0
+    var realtimeCapturedNoteIDs: [[String]] = []
 
     func fetchPage(
         source: MissCatFeedSource,
@@ -64,6 +65,7 @@ final class MockMissCatFeedRepository: MissCatFeedRepository {
         capturing noteIDs: [String]
     ) -> AsyncStream<MissCatRealtimeEvent> {
         realtimeRequestCount += 1
+        realtimeCapturedNoteIDs.append(noteIDs)
         return AsyncStream { realtimeContinuation = $0 }
     }
 
@@ -262,6 +264,27 @@ final class MissCatFeedStoreTests: XCTestCase {
         XCTAssertEqual(store.notes.first?.text, "updated")
         XCTAssertEqual(store.notes.first?.poll?.choices.map(\.votes), [0, 1])
         XCTAssertEqual(store.notes.first?.poll?.choices.map(\.isVoted), [false, true])
+    }
+
+    func testPureRenoteRealtimeCapturesOuterAndCanonicalNoteIdentities() async {
+        let repository = MockMissCatFeedRepository()
+        let renote = MissCatNote(
+            id: "outer-renote",
+            noteID: "canonical-note",
+            author: MissCatNoteAuthor(id: "author", name: "Miss Cat", username: "misscat"),
+            text: "canonical content",
+            renotedBy: MissCatNoteAuthor(id: "renoter", name: "Renoter", username: "renoter")
+        )
+        repository.pages = [.init(notes: [renote], hasMore: false)]
+        let store = MissCatFeedStore(source: .global, repository: repository)
+
+        await store.loadInitial()
+        await waitForRealtimeContinuation(repository)
+
+        XCTAssertEqual(
+            Set(try! XCTUnwrap(repository.realtimeCapturedNoteIDs.first)),
+            Set(["outer-renote", "canonical-note"])
+        )
     }
 
     func testFavoriteActionIsOptimisticAndRollsBackOnFailure() async {
