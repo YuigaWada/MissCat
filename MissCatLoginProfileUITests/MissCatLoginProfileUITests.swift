@@ -208,26 +208,29 @@ final class MissCatLoginProfileUITests: XCTestCase {
         launchRealOrdinaryRoute()
         XCTAssertFalse(app.launchArguments.contains("--login-profile-fixture"))
 
-        waitForSearchResults()
+        waitForNativeProfileSearchResults()
         XCTAssertTrue(element("profile.realOrdinary.lastAction").waitForExistence(timeout: 5))
         assertSingleBottomBar()
         capture("25-user-results-real-ordinary-route-current")
 
-        // Search itself still participates in the ordinary Home pager.
-        let searchRoot = element("profile.searchResults.root")
+        // Native SwiftUI Search still participates in the ordinary Home pager.
+        let searchRoot = app.textFields["discovery.query"]
+        XCTAssertTrue(searchRoot.isHittable)
         app.swipeLeft()
-        XCTAssertTrue(searchRoot.waitForNonExistence(timeout: 5))
+        let hidden = NSPredicate(format: "isHittable == false")
+        expectation(for: hidden, evaluatedWith: searchRoot)
+        waitForExpectations(timeout: 5)
         app.swipeRight()
-        waitForSearchResults()
+        waitForNativeProfileSearchResults()
 
-        app.buttons["profile.user.fixture-self"].tap()
+        app.buttons["discovery.user.fixture-self"].tap()
         waitForProfile("profile.self.screen")
         XCTAssertTrue(app.buttons["profile.action.back"].isHittable)
         assertSingleBottomBar()
         app.buttons["profile.action.back"].tap()
-        waitForSearchResults()
+        waitForNativeProfileSearchResults()
 
-        app.buttons["profile.user.fixture-target"].tap()
+        app.buttons["discovery.user.fixture-target"].tap()
         waitForProfile("profile.other.screen")
         assertSingleBottomBar()
         capture("26-profile-real-ordinary-route-current")
@@ -277,7 +280,7 @@ final class MissCatLoginProfileUITests: XCTestCase {
         tapNavigationBack()
         waitForProfile("profile.other.screen")
         app.buttons["profile.action.back"].tap()
-        waitForSearchResults()
+        waitForNativeProfileSearchResults()
         assertSingleBottomBar()
 
         XCTAssertTrue(app.buttons["main.action.compose"].isHittable)
@@ -417,6 +420,13 @@ final class MissCatLoginProfileUITests: XCTestCase {
     private func waitForSearchResults() {
         XCTAssertTrue(element("profile.searchResults.root").waitForExistence(timeout: 10))
         waitForUserList()
+    }
+
+    private func waitForNativeProfileSearchResults() {
+        XCTAssertTrue(element("home.discovery.native-page").waitForExistence(timeout: 10))
+        XCTAssertTrue(element("discovery.users.list").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["discovery.user.fixture-target"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["discovery.user.fixture-self"].exists)
     }
 
     private func waitForProfile(_ identifier: String) {

@@ -562,12 +562,16 @@ final class MissCatDiscoveryAccountGeneration {
     let profileAccount: MissCatProfileAccount
     let store: MissCatDiscoveryStore
     let previewProfile: ((String) -> MissCatProfileUser)?
+    let profileRepositoryFactory: ((MissCatProfileAccount) -> MissCatProfileRepository)?
+    let profileActions: MissCatProfileFamilyActions?
 
     init(
         session: MissCatFeedSession,
         discoveryRepository: MissCatDiscoveryRepository? = nil,
         feedRepository: MissCatFeedRepository? = nil,
         previewProfile: ((String) -> MissCatProfileUser)? = nil,
+        profileRepositoryFactory: ((MissCatProfileAccount) -> MissCatProfileRepository)? = nil,
+        profileActions: MissCatProfileFamilyActions? = nil,
         pageSize: Int = 20
     ) {
         self.session = session
@@ -578,6 +582,8 @@ final class MissCatDiscoveryAccountGeneration {
         self.discoveryRepository = discovery
         self.feedRepository = feed
         self.previewProfile = previewProfile
+        self.profileRepositoryFactory = profileRepositoryFactory
+        self.profileActions = profileActions
         profileAccount = MissCatProfileAccount(
             userID: session.accountID,
             instance: session.instance,
@@ -627,6 +633,11 @@ final class MissCatDiscoveryHostingController: UIHostingController<AnyView> {
         accountCoordinator.generation.accountIdentifier
     }
 
+    var hasFullProfileFamilyRouting: Bool {
+        accountCoordinator.generation.profileRepositoryFactory != nil
+            && accountCoordinator.generation.profileActions != nil
+    }
+
     init(generation: MissCatDiscoveryAccountGeneration) {
         accountCoordinator = MissCatDiscoveryAccountCoordinator(generation: generation)
         super.init(rootView: AnyView(EmptyView()))
@@ -661,8 +672,35 @@ final class MissCatDiscoveryHostingController: UIHostingController<AnyView> {
 
 @MainActor
 enum MissCatDiscoveryPageFactory {
-    static func makeController(owner: SecureUser?) -> UIViewController {
+    static func makeController(
+        owner: SecureUser?,
+        home: HomeViewController? = nil
+    ) -> UIViewController {
 #if DEBUG
+        if MissCatProfileOrdinaryRouteConfiguration.isEnabled {
+            let configuration = MissCatProfileOrdinaryRouteConfiguration.self
+            let repository = configuration.discoveryRepository
+            let session = MissCatFeedSession(
+                accountID: configuration.owner.userId,
+                username: configuration.owner.username,
+                instance: configuration.owner.instance,
+                apiKey: configuration.account.token
+            )
+            let generation = MissCatDiscoveryAccountGeneration(
+                session: session,
+                discoveryRepository: repository,
+                feedRepository: repository,
+                profileRepositoryFactory: { _ in configuration.repository },
+                profileActions: MissCatProfileBridge.productionActions(
+                    owner: configuration.owner,
+                    router: home
+                )
+            )
+            generation.store.query = configuration.query
+            generation.store.select(.users)
+            generation.store.submitSearch()
+            return MissCatDiscoveryHostingController(generation: generation)
+        }
         if MissCatDiscoveryOrdinaryRouteConfiguration.isEnabled {
             let session = MissCatDiscoveryOrdinaryRouteConfiguration.session
             let repository = MissCatDiscoveryOrdinaryRouteRepository()
@@ -689,7 +727,14 @@ enum MissCatDiscoveryPageFactory {
             apiKey: apiKey
         )
         return MissCatDiscoveryHostingController(
-            generation: MissCatDiscoveryAccountGeneration(session: session)
+            generation: MissCatDiscoveryAccountGeneration(
+                session: session,
+                profileRepositoryFactory: { MissCatRESTProfileRepository(account: $0) },
+                profileActions: MissCatProfileBridge.productionActions(
+                    owner: owner,
+                    router: home
+                )
+            )
         )
     }
 
@@ -769,7 +814,19 @@ struct MissCatDiscoveryRoot: View {
             )
 
         case let .profile(userID):
-            if let previewProfile = generation.previewProfile {
+            if let repositoryFactory = generation.profileRepositoryFactory,
+               let baseActions = generation.profileActions {
+                MissCatProfileFamilyView(
+                    root: .profile(userID: userID),
+                    account: generation.profileAccount,
+                    palette: MissCatDiscoveryPageFactory.currentPalette,
+                    shellOwnership: .outerShell,
+                    rootProfileShowsBack: true,
+                    repositoryFactory: repositoryFactory,
+                    actions: profileActions(from: baseActions)
+                )
+                .onDisappear { baseActions.onNavigationDepthChanged(0) }
+            } else if let previewProfile = generation.previewProfile {
                 MissCatDiscoveryPreviewProfile(user: previewProfile(userID))
             } else {
                 MissCatProfileScreen(
@@ -857,6 +914,24 @@ struct MissCatDiscoveryRoot: View {
         default:
             openURL(url)
         }
+    }
+
+    private func profileActions(
+        from base: MissCatProfileFamilyActions
+    ) -> MissCatProfileFamilyActions {
+        MissCatProfileFamilyActions(
+            onExit: router.pop,
+            onOpenURL: base.onOpenURL,
+            onOpenImage: base.onOpenImage,
+            onOpenSettings: base.onOpenSettings,
+            onSelectRoot: base.onSelectRoot,
+            onCompose: base.onCompose,
+            onNavigationDepthChanged: { depth in
+                // The profile family is already one level below Discovery.
+                // Keep the legacy outer pager suspended until this route pops.
+                base.onNavigationDepthChanged(depth + 1)
+            }
+        )
     }
 }
 

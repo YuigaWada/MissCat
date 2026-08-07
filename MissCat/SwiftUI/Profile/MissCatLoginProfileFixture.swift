@@ -3,11 +3,11 @@ import Foundation
 import SwiftUI
 import UIKit
 
-/// Runs the production application root, Main.storyboard Home pager, legacy
-/// SearchViewController, and its production profile bridge without a saved
-/// account or a live network. The deterministic repository is injected only at
-/// Search's repository boundary; this is deliberately separate from the direct
-/// SwiftUI fixture above.
+/// Runs the production application root, Main.storyboard Home pager, native
+/// SwiftUI search-results host, and its production profile bridge without a
+/// saved account or a live network. Deterministic repositories are injected
+/// only at the native Discovery and Profile repository boundaries; this is
+/// deliberately separate from the direct SwiftUI fixture above.
 @MainActor
 enum MissCatProfileOrdinaryRouteConfiguration {
     static let launchArgument = "--login-profile-real-ordinary-route"
@@ -36,6 +36,11 @@ enum MissCatProfileOrdinaryRouteConfiguration {
         failEditOnce: false
     )
 
+    static let discoveryRepository = MissCatProfileOrdinaryDiscoveryRepository(
+        owner: owner,
+        profileRepository: repository
+    )
+
     private static weak var actionMarker: UILabel?
 
     static func installActionMarker(in view: UIView) {
@@ -55,6 +60,80 @@ enum MissCatProfileOrdinaryRouteConfiguration {
 
     static func record(_ action: String) {
         actionMarker?.accessibilityValue = action
+    }
+}
+
+/// DEBUG-only data seam for the production SwiftUI Discovery composition used
+/// by the durable Home -> Search -> Profile route test.
+final class MissCatProfileOrdinaryDiscoveryRepository:
+    MissCatDiscoveryRepository,
+    MissCatNoteContextRepository
+{
+    let accountIdentifier: String
+    let currentServerUserID: String
+
+    private let profileRepository: MissCatProfileRepository
+
+    init(owner: SecureUser, profileRepository: MissCatProfileRepository) {
+        accountIdentifier = MissCatAccountIdentity.storageKey(
+            instance: owner.instance,
+            userId: owner.userId
+        )
+        currentServerUserID = owner.userId
+        self.profileRepository = profileRepository
+    }
+
+    func fetchTrends() async throws -> [MissCatTrend] {
+        [.init(tag: "Profile", chart: [1, 2, 3], usersCount: 3)]
+    }
+
+    func searchNotes(
+        query: String,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatDiscoveryPage<MissCatNote> {
+        .init(items: [], nextCursor: nil)
+    }
+
+    func searchUsers(
+        query: String,
+        offset: Int,
+        limit: Int
+    ) async throws -> MissCatDiscoveryPage<MissCatProfileUser> {
+        guard offset == 0 else { return .init(items: [], nextCursor: nil) }
+        let page = try await profileRepository.users(
+            kind: .search(query: query),
+            cursor: nil,
+            limit: limit
+        )
+        return .init(items: page.items, nextCursor: nil)
+    }
+
+    func fetchPage(
+        source: MissCatFeedSource,
+        cursor: String?,
+        limit: Int
+    ) async throws -> MissCatFeedPage {
+        .init(notes: [], hasMore: false)
+    }
+
+    func fetchThread(noteID: String, replyLimit: Int) async throws -> MissCatNoteThread {
+        throw MissCatFeedRepositoryError.unsupportedSource
+    }
+
+    func realtimeEvents(
+        source: MissCatFeedSource,
+        capturing noteIDs: [String]
+    ) -> AsyncStream<MissCatRealtimeEvent> {
+        AsyncStream { $0.finish() }
+    }
+
+    func perform(_ action: MissCatFeedAction) async throws {}
+
+    func notePermalink(noteID: String) -> URL? { nil }
+
+    func fetchURLPreview(for url: URL) async throws -> MissCatURLPreview {
+        throw MissCatURLPreviewError.unsupportedURL
     }
 }
 

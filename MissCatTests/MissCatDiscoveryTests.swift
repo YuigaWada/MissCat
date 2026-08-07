@@ -277,6 +277,7 @@ final class MissCatDiscoveryTests: XCTestCase {
             controller.accountIdentifier,
             MissCatAccountIdentity.storageKey(instance: "factory.example", userId: "server-user")
         )
+        XCTAssertTrue(controller.hasFullProfileFamilyRouting)
         controller.retire()
     }
 

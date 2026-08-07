@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8D57CA4924412430005DCEB2 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D57CA4824412430005DCEB2 /* SearchViewController.swift */; };
-		8DF49FA224445B0500C4D2B2 /* TrendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DF49FA124445B0500C4D2B2 /* TrendViewController.swift */; };
 		AACC00000000000000000001 /* MissCatProfileFamilyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC00000000000000000002 /* MissCatProfileFamilyView.swift */; };
 		AACC00000000000000000003 /* MissCatLoginProfileFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC00000000000000000004 /* MissCatLoginProfileFixture.swift */; };
 		AACC00000000000000000005 /* MissCatLoginProfileAcceptanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC00000000000000000006 /* MissCatLoginProfileAcceptanceTests.swift */; };
@@ -1949,8 +1947,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8D57CA4924412430005DCEB2 /* SearchViewController.swift in Sources */,
-				8DF49FA224445B0500C4D2B2 /* TrendViewController.swift in Sources */,
 				D15C00000000000000000001 /* MissCatDiscoveryCore.swift in Sources */,
 				D15C00000000000000000003 /* MissCatDiscoveryViews.swift in Sources */,
 				D15C00000000000000000005 /* MissCatDiscoveryFixture.swift in Sources */,

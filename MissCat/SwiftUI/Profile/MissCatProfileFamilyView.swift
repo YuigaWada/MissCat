@@ -61,6 +61,7 @@ public struct MissCatProfileFamilyView: View {
     let palette: MissCatVisualPalette
     let shellOwnership: MissCatProfileShellOwnership
     let actions: MissCatProfileFamilyActions
+    private let rootProfileShowsBack: Bool?
     private let repositoryFactory: (MissCatProfileAccount) -> MissCatProfileRepository
 
     public init(
@@ -68,6 +69,7 @@ public struct MissCatProfileFamilyView: View {
         account: MissCatProfileAccount,
         palette: MissCatVisualPalette = .legacyLight,
         shellOwnership: MissCatProfileShellOwnership = .profileFamily,
+        rootProfileShowsBack: Bool? = nil,
         repositoryFactory: @escaping (MissCatProfileAccount) -> MissCatProfileRepository = {
             MissCatRESTProfileRepository(account: $0)
         },
@@ -83,6 +85,7 @@ public struct MissCatProfileFamilyView: View {
         self.account = account
         self.palette = palette
         self.shellOwnership = shellOwnership
+        self.rootProfileShowsBack = rootProfileShowsBack
         self.repositoryFactory = repositoryFactory
         actions = MissCatProfileFamilyActions(
             onExit: onExit,
@@ -100,6 +103,7 @@ public struct MissCatProfileFamilyView: View {
         account: MissCatProfileAccount,
         palette: MissCatVisualPalette = .legacyLight,
         shellOwnership: MissCatProfileShellOwnership = .profileFamily,
+        rootProfileShowsBack: Bool? = nil,
         repositoryFactory: @escaping (MissCatProfileAccount) -> MissCatProfileRepository = {
             MissCatRESTProfileRepository(account: $0)
         },
@@ -109,6 +113,7 @@ public struct MissCatProfileFamilyView: View {
         self.account = account
         self.palette = palette
         self.shellOwnership = shellOwnership
+        self.rootProfileShowsBack = rootProfileShowsBack
         self.repositoryFactory = repositoryFactory
         self.actions = actions
     }
@@ -171,11 +176,13 @@ public struct MissCatProfileFamilyView: View {
             ),
             palette: palette,
             repositoryFactory: repositoryFactory,
-            showsBack: MissCatProfileNavigationState.showsBack(
-                isRoot: isRoot,
-                userID: userID,
-                accountUserID: account.userID
-            ),
+            showsBack: isRoot
+                ? rootProfileShowsBack ?? MissCatProfileNavigationState.showsBack(
+                    isRoot: true,
+                    userID: userID,
+                    accountUserID: account.userID
+                )
+                : true,
             onBack: {
                 if isRoot || path.isEmpty {
                     actions.onExit()

@@ -109,11 +109,6 @@ class HomeViewController: PolioPagerViewController {
             backgroundColor: colorPattern?.ui.base ?? .white,
             normalColor: colorPattern?.ui.text ?? .black
         )
-#if DEBUG
-        if MissCatProfileOrdinaryRouteConfiguration.isEnabled {
-            return items.isEmpty ? [TabItem(title: "")] : items
-        }
-#endif
         return [discovery] + (items.isEmpty ? [TabItem(title: "")] : items)
     }
     
@@ -282,11 +277,8 @@ class HomeViewController: PolioPagerViewController {
     private func setupPolioPager() {
 #if DEBUG
         if MissCatProfileOrdinaryRouteConfiguration.isEnabled {
-            // PolioPager owns the legacy search field and adds its search page
-            // before the storyboard Search controller. The accepted probe uses
-            // -1 to select that real controller after PolioPager's adjustment.
-            needSearchTab = true
-            initialIndex = -1
+            needSearchTab = false
+            initialIndex = 0
         } else {
             needSearchTab = false
             initialIndex = tabs.isEmpty ? 0 : 1
@@ -560,17 +552,15 @@ class HomeViewController: PolioPagerViewController {
     private func generateDiscoveryVC() -> UIViewController {
         if let discoveryViewController { return discoveryViewController }
 #if DEBUG
-        if MissCatProfileOrdinaryRouteConfiguration.isEnabled {
-            guard let controller = getViewController(name: "search") as? SearchViewController
-            else { fatalError("Internal Error.") }
-            controller.homeViewController = self
-            controller.view.backgroundColor = .clear
-            discoveryViewController = controller
-            return controller
-        }
+        let owner = MissCatProfileOrdinaryRouteConfiguration.isEnabled
+            ? MissCatProfileOrdinaryRouteConfiguration.owner
+            : Cache.UserDefaults.shared.getCurrentUser()
+#else
+        let owner = Cache.UserDefaults.shared.getCurrentUser()
 #endif
         let controller = MissCatDiscoveryPageFactory.makeController(
-            owner: Cache.UserDefaults.shared.getCurrentUser()
+            owner: owner,
+            home: self
         )
         controller.view.backgroundColor = .clear
         discoveryViewController = controller
