@@ -49,6 +49,46 @@ final class MissCatCameraCaptureTests: XCTestCase {
         XCTAssertTrue(MissCatCameraConfiguration.compose.allowsVideo)
     }
 
+    func testAudioPermissionFlowDoesNotRequestWhenAlreadyResolved() {
+        var available = MissCatCameraAudioPermissionFlow()
+        XCTAssertFalse(available.begin(status: .authorized, hasAudioDevice: true))
+        XCTAssertEqual(available.state, .available)
+        XCTAssertTrue(available.state.recordsAudio)
+
+        var denied = MissCatCameraAudioPermissionFlow()
+        XCTAssertFalse(denied.begin(status: .denied, hasAudioDevice: true))
+        XCTAssertEqual(denied.state, .silentDenied)
+        XCTAssertFalse(denied.state.recordsAudio)
+        XCTAssertEqual(
+            denied.state.statusMessage,
+            "マイクが許可されていないため、ビデオは無音で録画されます。"
+        )
+
+        var unavailable = MissCatCameraAudioPermissionFlow()
+        XCTAssertFalse(unavailable.begin(status: .authorized, hasAudioDevice: false))
+        XCTAssertEqual(unavailable.state, .silentUnavailable)
+        XCTAssertFalse(unavailable.state.recordsAudio)
+    }
+
+    func testAudioPermissionRequestCanBeCancelledAndRetried() {
+        var flow = MissCatCameraAudioPermissionFlow()
+
+        XCTAssertTrue(flow.begin(status: .notDetermined, hasAudioDevice: true))
+        XCTAssertEqual(flow.state, .requesting)
+
+        flow.cancelRequest()
+        XCTAssertEqual(flow.state, .idle)
+
+        XCTAssertTrue(flow.begin(status: .notDetermined, hasAudioDevice: true))
+        flow.resolve(status: .denied, hasAudioDevice: true)
+        XCTAssertEqual(flow.state, .silentDenied)
+
+        flow.retry()
+        XCTAssertEqual(flow.state, .idle)
+        XCTAssertFalse(flow.begin(status: .authorized, hasAudioDevice: true))
+        XCTAssertEqual(flow.state, .available)
+    }
+
     func testProfileAvatarProcessingProducesOrientedSquareJPEG() throws {
         let source = try XCTUnwrap(makeJPEG(width: 12, height: 8))
         let avatar = try XCTUnwrap(
@@ -83,6 +123,21 @@ final class MissCatCameraCaptureTests: XCTestCase {
         XCTAssertTrue(camera.contains("AVCaptureMovieFileOutput"))
         XCTAssertTrue(camera.contains("CGImage"))
         XCTAssertTrue(camera.contains("videoRotationAngle"))
+        XCTAssertTrue(camera.contains("private actor MissCatCameraEngine"))
+        XCTAssertFalse(camera.contains("@unchecked Sendable"))
+        XCTAssertFalse(camera.contains("sessionQueue.async"))
+        XCTAssertTrue(camera.contains("camera.capture.audio-status"))
+        XCTAssertTrue(camera.contains("ビデオは無音で録画されます"))
+
+        let initialStart = try XCTUnwrap(
+            camera.range(of: "func start() async")?.lowerBound
+        )
+        let modeChange = try XCTUnwrap(
+            camera.range(of: "func modeChanged", range: initialStart..<camera.endIndex)?.lowerBound
+        )
+        let initialCameraStart = String(camera[initialStart..<modeChange])
+        XCTAssertFalse(initialCameraStart.contains("requestAccess(for: .audio)"))
+
         XCTAssertTrue(compose.contains("PhotosPicker("))
         XCTAssertTrue(profile.contains("PhotosPicker("))
         XCTAssertTrue(compose.contains("MissCatCameraCaptureView"))
